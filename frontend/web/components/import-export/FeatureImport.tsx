@@ -5,7 +5,6 @@ import { IonIcon } from '@ionic/react'
 import { informationCircle } from 'ionicons/icons'
 import AppActions from 'common/dispatcher/app-actions'
 import ProjectStore from 'common/stores/project-store'
-import { useGetFeatureExportsQuery } from 'common/services/useFeatureExport'
 import Radio from 'components/base/forms/Radio'
 import { ImportStrategy } from 'common/types/requests'
 import JSONUpload from 'components/JSONUpload'
@@ -13,12 +12,8 @@ import PanelSearch from 'components/PanelSearch'
 import {
   FeatureImportItem,
   FeatureState,
-  MultivariateFeatureStateValue,
-  MultivariateOption,
   ProjectFlag,
-  Res,
-  User,
-  UserGroupSummary,
+  TagStrategy,
 } from 'common/types/responses'
 import FeatureRow from 'components/FeatureRow'
 import Button from 'components/base/forms/Button'
@@ -28,6 +23,13 @@ import InfoMessage from 'components/InfoMessage'
 import WarningMessage from 'components/WarningMessage'
 import FeatureListStore from 'common/stores/feature-list-store'
 import SuccessMessage from 'components/SuccessMessage'
+import TableSearchFilter from 'components/tables/TableSearchFilter'
+import Utils from 'common/utils/utils'
+import TableTagFilter from 'components/tables/TableTagFilter'
+import TableFilterOptions from 'components/tables/TableFilterOptions'
+import { getViewMode, setViewMode } from 'common/useViewMode'
+import TableSortFilter, { SortValue } from 'components/tables/TableSortFilter'
+import { isArray } from 'lodash'
 
 type FeatureExportType = {
   projectId: string
@@ -41,7 +43,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
     ProjectStore.getEnvs()?.[0]?.api_key,
   )
   const [tags, setTags] = useState<(number | string)[]>([])
-  const [search, setSearch] = useState()
+  const [search, setSearch] = useState('')
   const [page, setPage] = useState(0)
   const env = ProjectStore.getEnvironment(environment)
   const [file, setFile] = useState<File | null>(null)
@@ -62,22 +64,40 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
       FeatureListStore.off('change', callback)
     }
   }, [])
+  const [showArchived, setShowArchived] = useState(false)
+
+  const [tagStrategy, setTagStrategy] = useState<TagStrategy>('UNION')
+  const [sort, setSort] = useState<SortValue>({
+    label: 'Name',
+    sortBy: 'name',
+    sortOrder: 'asc',
+  })
+
   useEffect(() => {
     if (previewEnvironment) {
       AppActions.getFeatures(
         projectId,
         previewEnvironment,
         true,
-        null,
+        search,
         null,
         page,
         {
-          search,
+          is_archived: showArchived,
+          tag_strategy: tagStrategy,
           tags: tags?.length ? tags : undefined,
         },
       )
     }
-  }, [previewEnvironment, tags, search, projectId, page])
+  }, [
+    previewEnvironment,
+    tagStrategy,
+    showArchived,
+    tags,
+    search,
+    projectId,
+    page,
+  ])
 
   const [createImport, { error, isLoading }] =
     useCreateFlagsmithProjectImportMutation({})
@@ -160,6 +180,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
               default_enabled: importItem.enabled,
               id: i,
               initial_value: importItem.value,
+              isNew: true,
               is_archived: false,
               is_server_key_only: importItem.is_server_key_only,
               multivariate_options: importItem.multivariate,
@@ -196,6 +217,32 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
     }
     return { featureStates: null, projectFlags: null }
   }, [fileData, currentFeatureStates, currentProjectflags, strategy, env])
+
+  const filteredProjectFlags = useMemo(() => {
+    return projectFlags?.filter((projectFlag) => {
+      if (!projectFlag.isNew) {
+        return true
+      }
+      // Filter out any tags/search criteria
+      if (
+        !!search &&
+        !projectFlag?.name.toLowerCase()?.includes(search.toLowerCase())
+      ) {
+        return false
+      }
+      if (showArchived) {
+        return false
+      }
+      if (
+        tagStrategy === 'INTERSECTION' &&
+        tags.length &&
+        !(tags.length === 1 && tags[0] === '')
+      ) {
+        return false
+      }
+    })
+  }, [projectFlags, search, tags, tagStrategy, showArchived])
+
   return (
     <div className='mt-4'>
       {success ? (
@@ -271,7 +318,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           setFileData(data)
         }}
       />
-      {!!projectFlags && (
+      {!!filteredProjectFlags && (
         <>
           <div className='my-2'>
             <strong>Preview</strong>
@@ -286,21 +333,92 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
             />
           </div>
           <PanelSearch
-            className='no-pad'
+            className='no-pad overflow-visible'
             id='features-list'
             renderSearchWithNoResults
             search={search}
-            items={projectFlags}
+            items={filteredProjectFlags?.filter((v) => {
+              return search ? v.name.toLowerCase().includes(search) : true
+            })}
+            header={
+              <Row className='table-header'>
+                <div className='table-column flex-row flex-fill'>
+                  <TableSearchFilter
+                    onChange={(e) => {
+                      setSearch(Utils.safeParseEventValue(e))
+                    }}
+                    value={search}
+                  />
+                  <Row className='flex-fill justify-content-end'>
+                    <TableTagFilter
+                      isLoading={FeatureListStore.isLoading}
+                      projectId={projectId}
+                      className='me-4'
+                      tagStrategy={tagStrategy}
+                      onChangeStrategy={setTagStrategy}
+                      value={tags}
+                      onToggleArchived={() => {
+                        setShowArchived(!showArchived)
+                      }}
+                      showArchived={showArchived}
+                      onChange={(tags) => {
+                        FeatureListStore.isLoading = true
+                        if (tags.includes('') && tags.length > 1) {
+                          if (!tags.includes('')) {
+                            setTags([''])
+                          } else {
+                            setTags(tags.filter((v) => !!v))
+                          }
+                        } else {
+                          setTags(tags)
+                        }
+                      }}
+                    />
+                    <TableFilterOptions
+                      title={'View'}
+                      className={'me-4'}
+                      value={getViewMode()}
+                      onChange={setViewMode}
+                      options={[
+                        {
+                          label: 'Default',
+                          value: 'default',
+                        },
+                        {
+                          label: 'Compact',
+                          value: 'compact',
+                        },
+                      ]}
+                    />
+                    <TableSortFilter
+                      isLoading={FeatureListStore.isLoading}
+                      value={sort}
+                      options={[
+                        {
+                          label: 'Name',
+                          value: 'name',
+                        },
+                        {
+                          label: 'Created Date',
+                          value: 'created_date',
+                        },
+                      ]}
+                      onChange={setSort}
+                    />
+                  </Row>
+                </div>
+              </Row>
+            }
             renderRow={(projectFlag: ProjectFlag, i: number) => (
               <FeatureRow
                 hideAudit
                 disableControls
                 size='sm'
                 environmentFlags={featureStates}
-                projectFlags={projectFlags}
+                projectFlags={filteredProjectFlags}
                 environmentId={previewEnvironment}
                 projectId={projectId}
-                index={i}
+                index={projectFlag?.id || i}
                 projectFlag={projectFlag}
               />
             )}

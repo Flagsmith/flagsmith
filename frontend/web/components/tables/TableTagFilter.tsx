@@ -11,9 +11,9 @@ import { TagStrategy } from 'common/types/responses'
 
 type TableFilterType = {
   projectId: string
-  value: number[] | undefined
+  value: (number | string)[] | undefined
   isLoading: boolean
-  onChange: (value: number[]) => void
+  onChange: (value: (number | string)[]) => void
   showArchived: boolean
   onToggleArchived: () => void
   className?: string
@@ -104,6 +104,7 @@ const TableTagFilter: FC<TableFilterType> = ({
           {filteredTags?.length === 0 && (
             <div className='text-center'>No tags</div>
           )}
+
           <TableFilterItem
             onClick={() => {
               if (!isLoading) {
@@ -120,6 +121,27 @@ const TableTagFilter: FC<TableFilterType> = ({
                   tag={Constants.archivedTag}
                 />
                 <div className='ml-2 text-overflow'>archived</div>
+              </Row>
+            }
+          />
+          <TableFilterItem
+            onClick={() => {
+              if (value?.includes('')) {
+                onChange((value || []).filter((v) => v !== ''))
+              } else {
+                onChange((value || []).concat(['']))
+              }
+            }}
+            isActive={value?.includes('')}
+            title={
+              <Row className='overflow-hidden'>
+                <Tag
+                  isDot
+                  selected={value?.includes('')}
+                  className='px-2 py-2 mr-1'
+                  tag={Constants.untaggedTag}
+                />
+                <div className='ml-2 text-overflow'>untagged</div>
               </Row>
             }
           />
