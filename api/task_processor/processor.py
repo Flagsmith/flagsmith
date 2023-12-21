@@ -1,6 +1,7 @@
 import logging
 import traceback
 import typing
+from datetime import timedelta
 
 from django.utils import timezone
 
@@ -13,6 +14,8 @@ from task_processor.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+UNREGISTERED_RECURRING_TASK_GRACE_PERIOD = timedelta(minutes=30)
 
 
 def run_tasks(num_tasks: int = 1) -> typing.List[TaskRun]:
@@ -57,9 +60,14 @@ def run_recurring_tasks(num_tasks: int = 1) -> typing.List[RecurringTaskRun]:
         task_runs = []
 
         for task in tasks:
-            # Remove the task if it's not registered anymore
             if not task.is_task_registered:
-                task.delete()
+                # This is necessary to ensure that old instances of the task processor,
+                # which may still be running during deployment, do not remove tasks added by new instances.
+                # Reference: https://github.com/Flagsmith/flagsmith/issues/2551
+                if (
+                    timezone.now() - task.created_at
+                ) > UNREGISTERED_RECURRING_TASK_GRACE_PERIOD:
+                    task.delete()
                 continue
 
             if task.should_execute:

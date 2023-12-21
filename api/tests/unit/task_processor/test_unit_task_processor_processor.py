@@ -1,3 +1,4 @@
+import logging
 import time
 import uuid
 from datetime import timedelta
@@ -5,6 +6,7 @@ from threading import Thread
 
 import pytest
 from django.utils import timezone
+from freezegun import freeze_time
 
 from organisations.models import Organisation
 from task_processor.decorators import (
@@ -19,7 +21,11 @@ from task_processor.models import (
     TaskResult,
     TaskRun,
 )
-from task_processor.processor import run_recurring_tasks, run_tasks
+from task_processor.processor import (
+    UNREGISTERED_RECURRING_TASK_GRACE_PERIOD,
+    run_recurring_tasks,
+    run_tasks,
+)
 from task_processor.task_registry import registered_tasks
 
 
@@ -150,10 +156,13 @@ def test_run_recurring_tasks_only_executes_tasks_after_interval_set_by_run_every
     assert RecurringTaskRun.objects.filter(task=task).count() == 1
 
 
-def test_run_recurring_tasks_deletes_the_task_if_it_is_not_registered(
-    db, run_by_processor
-):
+def test_run_recurring_tasks_does_nothing_if_unregistered_task_is_new(
+    db: None, run_by_processor: None, caplog: pytest.LogCaptureFixture
+) -> None:
     # Given
+    task_processor_logger = logging.getLogger("task_processor")
+    task_processor_logger.propagate = True
+
     task_identifier = "test_unit_task_processor_processor._a_task"
 
     @register_recurring_task(run_every=timedelta(milliseconds=100))
@@ -168,7 +177,35 @@ def test_run_recurring_tasks_deletes_the_task_if_it_is_not_registered(
 
     # Then
     assert len(task_runs) == 0
-    assert not RecurringTask.objects.filter(task_identifier=task_identifier).exists()
+    assert RecurringTask.objects.filter(task_identifier=task_identifier).exists()
+
+
+def test_run_recurring_tasks_deletes_the_task_if_unregistered_task_is_old(
+    db: None, run_by_processor: None, caplog: pytest.LogCaptureFixture
+) -> None:
+    # Given
+    task_processor_logger = logging.getLogger("task_processor")
+    task_processor_logger.propagate = True
+
+    task_identifier = "test_unit_task_processor_processor._a_task"
+
+    with freeze_time(timezone.now() - UNREGISTERED_RECURRING_TASK_GRACE_PERIOD):
+
+        @register_recurring_task(run_every=timedelta(milliseconds=100))
+        def _a_task():
+            pass
+
+    # now - remove the task from the registry
+    registered_tasks.pop(task_identifier)
+
+    # When
+    task_runs = run_recurring_tasks()
+
+    # Then
+    assert len(task_runs) == 0
+    assert (
+        RecurringTask.objects.filter(task_identifier=task_identifier).exists() is False
+    )
 
 
 def test_run_task_runs_task_and_creates_task_run_object_when_failure(db):
