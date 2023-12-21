@@ -6,10 +6,10 @@ from django.test import Client as DjangoClient
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from tests.integration.helpers import create_mv_option_with_api
 
 from app.utils import create_hash
 from organisations.models import Organisation
+from tests.integration.helpers import create_mv_option_with_api
 
 
 @pytest.fixture()
