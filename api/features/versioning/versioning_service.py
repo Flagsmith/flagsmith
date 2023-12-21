@@ -51,6 +51,7 @@ def get_environment_flags_list(
             "feature",
             "feature_state_value",
             "environment_feature_version",
+            "feature_segment",
             *additional_select_related_args,
         )
         .prefetch_related(*additional_prefetch_related_args)
@@ -64,7 +65,7 @@ def get_environment_flags_list(
     for feature_state in feature_states:
         key = (
             feature_state.feature_id,
-            feature_state.feature_segment_id,
+            getattr(feature_state.feature_segment, "segment_id", None),
             feature_state.identity_id,
         )
         current_feature_state = feature_states_dict.get(key)

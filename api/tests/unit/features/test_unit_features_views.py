@@ -22,11 +22,13 @@ from audit.constants import (
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
 )
 from audit.models import AuditLog, RelatedObjectType
+from conftest import WithEnvironmentPermissionsCallable
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.constants import (
     MANAGE_SEGMENT_OVERRIDES,
     UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
 )
 from environments.permissions.models import UserEnvironmentPermission
 from features.feature_types import MULTIVARIATE
@@ -37,6 +39,7 @@ from features.models import (
     FeatureStateValue,
 )
 from features.multivariate.models import MultivariateFeatureOption
+from features.versioning.models import EnvironmentFeatureVersion
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
@@ -2506,3 +2509,54 @@ def test_list_features_with_intersection_tag(
 
     assert response.data["results"][0]["id"] == feature2.id
     assert response.data["results"][0]["tags"] == [tag1.id, tag2.id]
+
+
+def test_simple_feature_state_returns_only_latest_versions(
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given
+    url = "%s?environment=%d" % (
+        reverse("api-v1:features:featurestates-list"),
+        environment_v2_versioning.id,
+    )
+
+    with_environment_permissions(
+        [VIEW_ENVIRONMENT], environment_id=environment_v2_versioning.id
+    )
+
+    # Let's create some new versions, with some segment overrides
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    feature_segment_v2 = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment_v2_versioning,
+        environment_feature_version=version_2,
+    )
+    FeatureState.objects.create(
+        feature_segment=feature_segment_v2,
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=version_2,
+    )
+    version_2.publish(staff_user)
+
+    version_3 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    version_3.publish(staff_user)
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 2
