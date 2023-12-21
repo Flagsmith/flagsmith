@@ -16,4 +16,5 @@ def test_get_version_info(api_client: APIClient) -> None:
         "ci_commit_sha": "unknown",
         "image_tag": "unknown",
         "is_enterprise": False,
+        "is_saas": False,
     }
