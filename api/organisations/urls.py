@@ -116,10 +116,11 @@ if settings.IS_RBAC_INSTALLED:
     nested_api_key_roles_routes = routers.NestedSimpleRouter(
         parent_router=organisations_router,
         lookup="api_key",
-
+    )
     nested_group_roles_routes = routers.NestedSimpleRouter(
         parent_router=organisations_router, parent_prefix=r"groups", lookup="group"
     )
+    organisations_router.register("roles", RoleViewSet, basename="organisation-roles")
 
     nested_roles_router = routers.NestedSimpleRouter(
         organisations_router, r"roles", lookup="role"
@@ -133,6 +134,7 @@ if settings.IS_RBAC_INSTALLED:
         prefix="roles",
         viewset=RolesbyMasterAPIPrefixViewSet,
         basename="role-api-keys",
+    )
     nested_group_roles_routes.register(
         prefix="roles",
         viewset=RolesByGroupViewSet,
