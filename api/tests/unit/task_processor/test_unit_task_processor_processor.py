@@ -6,6 +6,7 @@ from threading import Thread
 
 import pytest
 from django.utils import timezone
+from freezegun import freeze_time
 
 from organisations.models import Organisation
 from task_processor.decorators import (
@@ -188,17 +189,14 @@ def test_run_recurring_tasks_deletes_the_task_if_unregistered_task_is_old(
 
     task_identifier = "test_unit_task_processor_processor._a_task"
 
-    @register_recurring_task(run_every=timedelta(milliseconds=100))
-    def _a_task():
-        pass
+    with freeze_time(timezone.now() - UNREGISTERED_RECURRING_TASK_GRACE_PERIOD):
+
+        @register_recurring_task(run_every=timedelta(milliseconds=100))
+        def _a_task():
+            pass
 
     # now - remove the task from the registry
     registered_tasks.pop(task_identifier)
-
-    # make the task old
-    RecurringTask.objects.update(
-        created_at=timezone.now() - UNREGISTERED_RECURRING_TASK_GRACE_PERIOD
-    )
 
     # When
     task_runs = run_recurring_tasks()
