@@ -6,11 +6,11 @@ from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
-
-from conftest import (
+from tests.types import (
     WithEnvironmentPermissionsCallable,
     WithProjectPermissionsCallable,
 )
+
 from environments.models import Environment
 from environments.permissions.constants import (
     MANAGE_SEGMENT_OVERRIDES,
@@ -28,10 +28,13 @@ from users.models import FFAdminUser
 @pytest.mark.parametrize(
     "client, num_queries",
     [
-        (lazy_fixture("admin_client"), 2),  # 1 for paging, 1 for result
+        (
+            lazy_fixture("admin_client"),
+            3,
+        ),  # 1 for paging, 1 for result, 1 for getting the current live version
         (
             lazy_fixture("admin_master_api_key_client"),
-            3,
+            4,
         ),  # an extra one for master_api_key
     ],
 )

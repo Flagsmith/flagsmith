@@ -15,6 +15,7 @@ from pytest_django import DjangoAssertNumQueries
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
+from tests.types import WithEnvironmentPermissionsCallable
 
 from audit.constants import (
     FEATURE_DELETED_MESSAGE,
@@ -22,7 +23,6 @@ from audit.constants import (
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
 )
 from audit.models import AuditLog, RelatedObjectType
-from conftest import WithEnvironmentPermissionsCallable
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.constants import (

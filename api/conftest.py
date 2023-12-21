@@ -11,6 +11,10 @@ from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pytest_django.fixtures import SettingsWrapper
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
+from tests.types import (
+    WithEnvironmentPermissionsCallable,
+    WithProjectPermissionsCallable,
+)
 
 from api_keys.models import MasterAPIKey
 from environments.dynamodb.dynamodb_wrapper import (
@@ -59,16 +63,6 @@ from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
 from users.models import FFAdminUser, UserPermissionGroup
-
-# TODO:
-#   - move this file to the `tests/` dir and move these definitions to a `types.py` module.
-#   - migrate all existing typehints to use these
-WithProjectPermissionsCallable = typing.Callable[
-    [list[str], Project | None], UserProjectPermission
-]
-WithEnvironmentPermissionsCallable = typing.Callable[
-    [list[str], Project | None], UserEnvironmentPermission
-]
 
 trait_key = "key1"
 trait_value = "value1"
