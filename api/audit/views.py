@@ -10,12 +10,12 @@ from audit.permissions import (
     OrganisationAuditLogPermissions,
     ProjectAuditLogPermissions,
 )
-from organisations.models import OrganisationRole
 from audit.serializers import (
     AuditLogListSerializer,
     AuditLogRetrieveSerializer,
     AuditLogsQueryParamSerializer,
 )
+from organisations.models import OrganisationRole
 
 
 @method_decorator(

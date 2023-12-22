@@ -1,6 +1,6 @@
 import typing
 
-from drf_yasg2.utils import swagger_serializer_method
+from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 
 from audit.models import AuditLog
@@ -38,7 +38,7 @@ class AuditLogChangeDetailsSerializer(serializers.Serializer):
 class AuditLogRetrieveSerializer(serializers.ModelSerializer):
     author = UserListSerializer()
     environment = EnvironmentSerializerLight()
-    project = ProjectSerializer()
+    project = ProjectListSerializer()
     change_details = serializers.SerializerMethodField()
 
     class Meta:

@@ -5,7 +5,7 @@ import uuid
 from django.db import models
 from django.db.models import Manager
 from django.http import HttpRequest
-from simple_history.models import HistoricalRecords
+from simple_history.models import HistoricalRecords, ModelChange
 from softdelete.models import SoftDeleteManager, SoftDeleteObject
 
 from audit.related_object_type import RelatedObjectType
