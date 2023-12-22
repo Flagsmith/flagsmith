@@ -403,5 +403,6 @@ export type Res = {
   metadata: PagedResponse<metadata[]>
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
+  groupSummaries: UserGroupSummary[]
   // END OF TYPES
 }
