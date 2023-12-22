@@ -394,5 +394,6 @@ export type Res = {
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   changeRequests: PagedResponse<ChangeRequestSummary>
+  groupSummaries: UserGroupSummary[]
   // END OF TYPES
 }

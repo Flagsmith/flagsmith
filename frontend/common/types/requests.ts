@@ -140,5 +140,8 @@ export type Req = {
     live_from_after?: string
     committed?: boolean
   }>
+  getGroupSummaries: {
+    orgId: string
+  }
   // END OF TYPES
 }
