@@ -841,11 +841,13 @@ class OrganisationWebhookViewSetTestCase(TestCase):
 
 
 def test_get_subscription_metadata_when_subscription_information_cache_exist(
-    organisation, admin_client, chargebee_subscription
+    organisation: Organisation,
+    admin_client: APIClient,
+    chargebee_subscription: Subscription,
+    mocker: MagicMock,
 ):
     # Given
     expected_seats = 10
-    expected_projects = 5
     expected_projects = 3
     expected_api_calls = 100
     expected_chargebee_email = "test@example.com"
@@ -863,6 +865,8 @@ def test_get_subscription_metadata_when_subscription_information_cache_exist(
         args=[organisation.pk],
     )
 
+    mocker.patch("organisations.models.is_saas", return_value=True)
+
     # When
     response = admin_client.get(url)
 
@@ -878,7 +882,10 @@ def test_get_subscription_metadata_when_subscription_information_cache_exist(
 
 
 def test_get_subscription_metadata_when_subscription_information_cache_does_not_exist(
-    mocker, organisation, admin_client, chargebee_subscription
+    mocker: MockerFixture,
+    organisation: Organisation,
+    admin_client: APIClient,
+    chargebee_subscription: Subscription,
 ):
     # Given
     expected_seats = 10
@@ -886,6 +893,7 @@ def test_get_subscription_metadata_when_subscription_information_cache_does_not_
     expected_api_calls = 100
     expected_chargebee_email = "test@example.com"
 
+    mocker.patch("organisations.models.is_saas", return_value=True)
     get_subscription_metadata = mocker.patch(
         "organisations.models.get_subscription_metadata_from_id",
         return_value=ChargebeeObjMetadata(
