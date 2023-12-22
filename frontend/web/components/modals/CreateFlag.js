@@ -1295,7 +1295,6 @@ const CreateFlag = class extends Component {
                                                   )}
                                                 </Permission>
                                               </div>
-                                              ,
                                             </div>
                                           )}
                                         </div>

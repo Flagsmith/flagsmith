@@ -462,11 +462,14 @@ class TheComponent extends Component {
         ),
         feature: this.props.feature,
         feature_segment: null,
-        feature_state_value: Utils.valueToFeatureState(''),
+        feature_state_value: Utils.valueToFeatureState(
+          `${this.props.controlValue || ''}`,
+        ),
       },
       priority: value.length,
       segment: this.state.selectedSegment.value,
       segment_name: this.state.selectedSegment.label,
+      value: `${this.props.controlValue || ''}`,
     }
     this.props.onChange([newValue].concat(value))
     this.setState({ selectedSegment: null })
