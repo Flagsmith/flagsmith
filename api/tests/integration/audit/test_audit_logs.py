@@ -152,3 +152,29 @@ def test_retrieve_audit_log_for_feature_state_value_change(
     assert retrieve_response_json["change_details"][0]["field"] == "string_value"
     assert retrieve_response_json["change_details"][0]["new"] == new_value
     assert retrieve_response_json["change_details"][0]["old"] == default_feature_value
+
+
+def test_retrieve_audit_log_does_not_include_change_details_for_non_update(
+    admin_client: APIClient, project: int, environment: str
+) -> None:
+    # Given
+    # we list the audit log to get an audit record that was created when
+    # the environment was created in the fixture
+    list_audit_log_url = reverse("api-v1:audit-list")
+    list_response = admin_client.get(list_audit_log_url)
+
+    environment_update_result = next(
+        filter(
+            lambda r: r["log"].startswith("New Environment created"),
+            list_response.json()["results"],
+        )
+    )
+
+    # When
+    retrieve_audit_log_url = reverse(
+        "api-v1:audit-detail", args=[environment_update_result["id"]]
+    )
+    retrieve_response = admin_client.get(retrieve_audit_log_url)
+
+    # Then
+    assert retrieve_response.json()["change_details"] == []
