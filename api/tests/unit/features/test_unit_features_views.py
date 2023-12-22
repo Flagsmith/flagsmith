@@ -1,7 +1,6 @@
 import json
 import uuid
 from datetime import date, datetime, timedelta
-from typing import Callable
 from unittest import TestCase, mock
 
 import pytest
@@ -45,7 +44,10 @@ from projects.models import Project, UserProjectPermission
 from projects.permissions import CREATE_FEATURE, VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Segment
-from tests.types import WithEnvironmentPermissionsCallable
+from tests.types import (
+    WithEnvironmentPermissionsCallable,
+    WithProjectPermissionsCallable,
+)
 from users.models import FFAdminUser, UserPermissionGroup
 from util.tests import Helper
 from webhooks.webhooks import WebhookEventType
@@ -1692,7 +1694,7 @@ def test_list_features_group_owners(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
-    with_project_permissions: Callable[[list[str], int | None], UserProjectPermission],
+    with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])
@@ -2224,9 +2226,7 @@ def test_cannot_update_feature_of_a_feature_state(
 
 def test_create_segment_override__using_simple_feature_state_viewset__allows_manage_segment_overrides(
     staff_client: APIClient,
-    with_environment_permissions: Callable[
-        [list[str], int | None], UserEnvironmentPermission
-    ],
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
     environment: Environment,
     feature: Feature,
     segment: Segment,
@@ -2263,9 +2263,7 @@ def test_create_segment_override__using_simple_feature_state_viewset__allows_man
 
 def test_create_segment_override__using_simple_feature_state_viewset__denies_update_feature_state(
     staff_client: APIClient,
-    with_environment_permissions: Callable[
-        [list[str], int | None], UserEnvironmentPermission
-    ],
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
     environment: Environment,
     feature: Feature,
     segment: Segment,
@@ -2298,9 +2296,7 @@ def test_create_segment_override__using_simple_feature_state_viewset__denies_upd
 
 def test_update_segment_override__using_simple_feature_state_viewset__allows_manage_segment_overrides(
     staff_client: APIClient,
-    with_environment_permissions: Callable[
-        [list[str], int | None], UserEnvironmentPermission
-    ],
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
     environment: Environment,
     feature: Feature,
     segment: Segment,
@@ -2344,9 +2340,7 @@ def test_update_segment_override__using_simple_feature_state_viewset__allows_man
 
 def test_update_segment_override__using_simple_feature_state_viewset__denies_update_feature_state(
     staff_client: APIClient,
-    with_environment_permissions: Callable[
-        [list[str], int | None], UserEnvironmentPermission
-    ],
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
     environment: Environment,
     feature: Feature,
     segment: Segment,
@@ -2384,7 +2378,7 @@ def test_list_features_n_plus_1(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
-    with_project_permissions: Callable,
+    with_project_permissions: WithProjectPermissionsCallable,
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
 ) -> None:
@@ -2413,7 +2407,7 @@ def test_list_features_with_union_tag(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
-    with_project_permissions: Callable,
+    with_project_permissions: WithProjectPermissionsCallable,
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
 ) -> None:
@@ -2465,7 +2459,7 @@ def test_list_features_with_intersection_tag(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
-    with_project_permissions: Callable,
+    with_project_permissions: WithProjectPermissionsCallable,
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
 ) -> None:

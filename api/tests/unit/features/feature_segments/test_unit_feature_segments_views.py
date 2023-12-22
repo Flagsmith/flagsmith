@@ -1,5 +1,4 @@
 import json
-from typing import Callable
 
 import pytest
 from django.urls import reverse
@@ -162,7 +161,7 @@ def test_create_feature_segment_staff_with_permission(
     environment: Environment,
     staff_client: FFAdminUser,
     staff_user: FFAdminUser,
-    with_environment_permissions: Callable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
     # Given
     data = {
@@ -188,7 +187,7 @@ def test_create_feature_segment_staff_wrong_permission(
     environment: Environment,
     staff_client: FFAdminUser,
     staff_user: FFAdminUser,
-    with_environment_permissions: Callable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
 ):
     # Given
     data = {
@@ -275,7 +274,7 @@ def test_update_priority_for_staff(
     feature: Feature,
     staff_client: FFAdminUser,
     staff_user: FFAdminUser,
-    with_environment_permissions: Callable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
     # Given
     url = reverse("api-v1:features:feature-segment-update-priorities")
@@ -363,8 +362,8 @@ def test_get_feature_segment_by_uuid_for_staff(
     staff_user: FFAdminUser,
     environment: Environment,
     feature: Feature,
-    with_environment_permissions: Callable,
-    with_project_permissions: Callable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
     url = reverse(
@@ -425,7 +424,7 @@ def test_get_feature_segment_by_id_for_staff(
     staff_user: FFAdminUser,
     environment: Environment,
     feature: Feature,
-    with_environment_permissions: Callable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
 ):
     # Given
     url = reverse("api-v1:features:feature-segment-detail", args=[feature_segment.id])
