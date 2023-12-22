@@ -61,6 +61,7 @@ export type Project = {
   enable_dynamo_db: boolean
   migration_status: string
   use_edge_identities: boolean
+  show_edge_identity_overrides_for_feature: boolean
   prevent_flag_defaults: boolean
   enable_realtime_updates: boolean
   max_segments_allowed?: number | null
@@ -382,5 +383,6 @@ export type Res = {
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   userWithRoles: PagedResponse<Roles>
   groupWithRole: PagedResponse<Roles>
+  groupSummaries: UserGroupSummary[]
   // END OF TYPES
 }

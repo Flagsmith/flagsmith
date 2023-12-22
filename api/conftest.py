@@ -7,13 +7,16 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb
-from mypy_boto3_dynamodb.service_resource import Table
+from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pytest_django.fixtures import SettingsWrapper
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from api_keys.models import MasterAPIKey
-from environments.dynamodb.dynamodb_wrapper import DynamoEnvironmentV2Wrapper
+from environments.dynamodb.dynamodb_wrapper import (
+    DynamoEnvironmentV2Wrapper,
+    DynamoIdentityWrapper,
+)
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
@@ -150,10 +153,11 @@ def xero_subscription(organisation):
 
 
 @pytest.fixture()
-def chargebee_subscription(organisation):
+def chargebee_subscription(organisation: Organisation) -> Subscription:
     subscription = Subscription.objects.get(organisation=organisation)
     subscription.payment_method = CHARGEBEE
     subscription.subscription_id = "subscription-id"
+    subscription.plan = "scale-up-v2"
     subscription.save()
 
     # refresh organisation to load subscription
@@ -566,7 +570,36 @@ def dynamodb(aws_credentials):
 
 
 @pytest.fixture()
-def flagsmith_environments_v2_table(dynamodb) -> Table:
+def flagsmith_identities_table(dynamodb: DynamoDBServiceResource) -> Table:
+    return dynamodb.create_table(
+        TableName="flagsmith_identities",
+        KeySchema=[
+            {
+                "AttributeName": "composite_key",
+                "KeyType": "HASH",
+            },
+        ],
+        AttributeDefinitions=[
+            {"AttributeName": "composite_key", "AttributeType": "S"},
+            {"AttributeName": "environment_api_key", "AttributeType": "S"},
+            {"AttributeName": "identifier", "AttributeType": "S"},
+        ],
+        GlobalSecondaryIndexes=[
+            {
+                "IndexName": "environment_api_key-identifier-index",
+                "KeySchema": [
+                    {"AttributeName": "environment_api_key", "KeyType": "HASH"},
+                    {"AttributeName": "identifier", "KeyType": "RANGE"},
+                ],
+                "Projection": {"ProjectionType": "ALL"},
+            }
+        ],
+        BillingMode="PAY_PER_REQUEST",
+    )
+
+
+@pytest.fixture()
+def flagsmith_environments_v2_table(dynamodb: DynamoDBServiceResource) -> Table:
     return dynamodb.create_table(
         TableName="flagsmith_environments_v2",
         KeySchema=[
@@ -585,6 +618,15 @@ def flagsmith_environments_v2_table(dynamodb) -> Table:
         ],
         BillingMode="PAY_PER_REQUEST",
     )
+
+
+@pytest.fixture
+def dynamodb_identity_wrapper(
+    settings: SettingsWrapper,
+    flagsmith_identities_table: Table,
+) -> DynamoIdentityWrapper:
+    settings.IDENTITIES_TABLE_NAME_DYNAMO = flagsmith_identities_table.name
+    return DynamoIdentityWrapper()
 
 
 @pytest.fixture

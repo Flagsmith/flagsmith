@@ -13,7 +13,9 @@ from django_lifecycle import (
     LifecycleModelMixin,
     hook,
 )
+from simple_history.models import HistoricalRecords
 
+from app.utils import is_enterprise, is_saas
 from organisations.chargebee import (
     get_customer_id_from_subscription_id,
     get_max_api_calls_for_plan,
@@ -30,10 +32,12 @@ from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.subscriptions.constants import (
     CHARGEBEE,
     FREE_PLAN_ID,
+    FREE_PLAN_SUBSCRIPTION_METADATA,
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
     SUBSCRIPTION_BILLING_STATUSES,
     SUBSCRIPTION_PAYMENT_METHODS,
+    TRIAL_SUBSCRIPTION_ID,
     XERO,
 )
 from organisations.subscriptions.exceptions import (
@@ -43,8 +47,6 @@ from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseExportableWebhookModel
-
-TRIAL_SUBSCRIPTION_ID = "trial"
 
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
@@ -132,7 +134,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     @hook(BEFORE_DELETE)
     def cancel_subscription(self):
         if self.has_paid_subscription():
-            self.subscription.cancel()
+            self.subscription.prepare_for_cancel()
 
     @hook(AFTER_CREATE)
     def create_subscription(self):
@@ -198,7 +200,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
     subscription_id = models.CharField(max_length=100, blank=True, null=True)
     subscription_date = models.DateTimeField(blank=True, null=True)
     plan = models.CharField(max_length=100, null=True, blank=True, default=FREE_PLAN_ID)
-    max_seats = models.IntegerField(default=1)
+    max_seats = models.IntegerField(default=MAX_SEATS_IN_FREE_PLAN)
     max_api_calls = models.BigIntegerField(default=MAX_API_CALLS_IN_FREE_PLAN)
     cancellation_date = models.DateTimeField(blank=True, null=True)
     customer_id = models.CharField(max_length=100, blank=True, null=True)
@@ -218,6 +220,9 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
     )
     notes = models.CharField(max_length=500, blank=True, null=True)
 
+    # Intentionally avoid the AuditLog for subscriptions.
+    history = HistoricalRecords()
+
     def update_plan(self, plan_id):
         plan_metadata = get_plan_meta_data(plan_id)
         self.cancellation_date = None
@@ -230,6 +235,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
     def can_auto_upgrade_seats(self) -> bool:
         return self.plan in settings.AUTO_SEAT_UPGRADE_PLANS
 
+    @property
+    def is_free_plan(self) -> bool:
+        return self.plan == FREE_PLAN_ID
+
     @hook(AFTER_SAVE, when="cancellation_date", has_changed=True)
     @hook(AFTER_SAVE, when="subscription_id", has_changed=True)
     def update_mailer_lite_subscribers(self):
@@ -237,16 +246,63 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
             mailer_lite = MailerLite()
             mailer_lite.update_organisation_users(self.organisation.id)
 
-    def cancel(self, cancellation_date=timezone.now(), update_chargebee=True):
-        self.cancellation_date = cancellation_date
+    def save_as_free_subscription(self):
+        """
+        Wipes a subscription to a normal free plan.
+
+        The only normal field that is retained is the notes field.
+        """
+        self.subscription_id = None
+        self.subscription_date = None
+        self.plan = FREE_PLAN_ID
+        self.max_seats = MAX_SEATS_IN_FREE_PLAN
+        self.max_api_calls = MAX_API_CALLS_IN_FREE_PLAN
+        self.cancellation_date = None
+        self.customer_id = None
         self.billing_status = None
+        self.payment_method = None
+
         self.save()
-        # If the date is in the future, a recurring task takes it.
-        if cancellation_date <= timezone.now():
-            self.organisation.cancel_users()
+
+        if not getattr(self.organisation, "subscription_information_cache", None):
+            return
+
+        self.organisation.subscription_information_cache.delete()
+
+    def prepare_for_cancel(
+        self, cancellation_date=timezone.now(), update_chargebee=True
+    ) -> None:
+        """
+        This method get's a subscription ready for cancelation.
+
+        If cancellation_date is in the future some aspects are
+        reserved for a task after the date has passed.
+        """
+        # Avoid circular import.
+        from organisations.tasks import send_org_subscription_cancelled_alert
 
         if self.payment_method == CHARGEBEE and update_chargebee:
             cancel_chargebee_subscription(self.subscription_id)
+
+        send_org_subscription_cancelled_alert.delay(
+            kwargs={
+                "organisation_name": self.organisation.name,
+                "formatted_cancellation_date": cancellation_date.strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
+            }
+        )
+
+        if cancellation_date <= timezone.now():
+            # Since the date is immediate, wipe data right away.
+            self.organisation.cancel_users()
+            self.save_as_free_subscription()
+            return
+
+        # Since the date is in the future, a task takes it.
+        self.cancellation_date = cancellation_date
+        self.billing_status = None
+        self.save()
 
     def get_portal_url(self, redirect_url):
         if not self.subscription_id:
@@ -260,33 +316,55 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         return get_portal_url(self.customer_id, redirect_url)
 
     def get_subscription_metadata(self) -> BaseSubscriptionMetadata:
-        metadata = None
+        if self.is_free_plan:
+            # Free plan is the default everywhere, we should prevent
+            # increased access for all deployment types on the free
+            # plan.
+            return FREE_PLAN_SUBSCRIPTION_METADATA
 
-        if self.is_in_trial():
-            metadata = BaseSubscriptionMetadata(
-                seats=self.max_seats, api_calls=self.max_api_calls
-            )
-        elif self.payment_method == CHARGEBEE and self.subscription_id:
-            if self.organisation.has_subscription_information_cache():
-                # Getting the data from the subscription information cache because
-                # data is guaranteed to be up to date by using a Chargebee webhook.
-                metadata = ChargebeeObjMetadata(
-                    seats=self.organisation.subscription_information_cache.allowed_seats,
-                    api_calls=self.organisation.subscription_information_cache.allowed_30d_api_calls,
-                    projects=self.organisation.subscription_information_cache.allowed_projects,
-                    chargebee_email=self.organisation.subscription_information_cache.chargebee_email,
-                )
-            else:
-                metadata = get_subscription_metadata_from_id(self.subscription_id)
+        return (
+            self._get_subscription_metadata_for_saas()
+            if is_saas()
+            else self._get_subscription_metadata_for_self_hosted()
+        )
+
+    def _get_subscription_metadata_for_saas(self) -> BaseSubscriptionMetadata:
+        if self.payment_method == CHARGEBEE and self.subscription_id:
+            return self._get_subscription_metadata_for_chargebee()
         elif self.payment_method == XERO and self.subscription_id:
-            metadata = XeroSubscriptionMetadata(
+            return XeroSubscriptionMetadata(
                 seats=self.max_seats, api_calls=self.max_api_calls
             )
 
-        return metadata or BaseSubscriptionMetadata(
+        # Default fall through here means this is a manually added subscription
+        # or for a payment method that is not covered above. In this situation
+        # we want the response to be what is stored in the Django database.
+        # Note that Free plans are caught in the parent method above.
+        return BaseSubscriptionMetadata(
+            seats=self.max_seats, api_calls=self.max_api_calls
+        )
+
+    def _get_subscription_metadata_for_chargebee(self) -> ChargebeeObjMetadata:
+        if self.organisation.has_subscription_information_cache():
+            # Getting the data from the subscription information cache because
+            # data is guaranteed to be up to date by using a Chargebee webhook.
+            return ChargebeeObjMetadata(
+                seats=self.organisation.subscription_information_cache.allowed_seats,
+                api_calls=self.organisation.subscription_information_cache.allowed_30d_api_calls,
+                projects=self.organisation.subscription_information_cache.allowed_projects,
+                chargebee_email=self.organisation.subscription_information_cache.chargebee_email,
+            )
+
+        return get_subscription_metadata_from_id(self.subscription_id)
+
+    def _get_subscription_metadata_for_self_hosted(self) -> BaseSubscriptionMetadata:
+        if not is_enterprise():
+            return FREE_PLAN_SUBSCRIPTION_METADATA
+
+        return BaseSubscriptionMetadata(
             seats=self.max_seats,
             api_calls=self.max_api_calls,
-            projects=settings.MAX_PROJECTS_IN_FREE_PLAN,
+            projects=None,
         )
 
     def add_single_seat(self):

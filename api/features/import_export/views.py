@@ -1,7 +1,10 @@
 import json
 
+from django.conf import settings
 from django.db.models import QuerySet
+from django.http import Http404
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import ListAPIView, get_object_or_404
 from rest_framework.request import Request
@@ -9,7 +12,7 @@ from rest_framework.response import Response
 
 from environments.models import Environment
 
-from .models import FeatureExport
+from .models import FeatureExport, FlagsmithOnFlagsmithFeatureExport
 from .permissions import (
     CreateFeatureExportPermissions,
     DownloadFeatureExportPermissions,
@@ -74,6 +77,35 @@ def download_feature_export(request: Request, feature_export_id: int) -> Respons
     return response
 
 
+@swagger_auto_schema(
+    method="GET",
+    responses={200: "Flagsmith on Flagsmith File downloaded"},
+    operation_description="This endpoint is to download an feature export to enable flagsmith on flagsmith",
+)
+@api_view(["GET"])
+@permission_classes([permissions.AllowAny])
+def download_flagsmith_on_flagsmith(request: Request) -> Response:
+    if (
+        not settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID
+        or not settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID
+    ):
+        # No explicit settings on both feature settings, so 404.
+        raise Http404("This system is not configured for this download.")
+
+    fof = FlagsmithOnFlagsmithFeatureExport.objects.order_by("-created_at").first()
+
+    if fof is None:
+        raise Http404("There is no present downloadable export.")
+
+    response = Response(
+        json.loads(fof.feature_export.data), content_type="application/json"
+    )
+    response.headers[
+        "Content-Disposition"
+    ] = f"attachment; filename=flagsmith_on_flagsmith.{fof.id}.json"
+    return response
+
+
 class FeatureExportListView(ListAPIView):
     serializer_class = FeatureExportSerializer
     permission_classes = [FeatureExportListPermissions]
@@ -88,7 +120,6 @@ class FeatureExportListView(ListAPIView):
             if user.is_environment_admin(environment):
                 environment_ids.append(environment.id)
 
-        # Order by environment name to match environment list order.
         return FeatureExport.objects.filter(environment__in=environment_ids).order_by(
-            "environment__name"
+            "-created_at"
         )

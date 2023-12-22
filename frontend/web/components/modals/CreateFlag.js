@@ -175,6 +175,29 @@ const CreateFlag = class extends Component {
 
   userOverridesPage = (page) => {
     if (Utils.getIsEdge()) {
+      if (!Utils.getShouldHideIdentityOverridesTab(ProjectStore.model)) {
+        data
+          .get(
+            `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides?feature=${this.props.projectFlag.id}&page=${page}`,
+          )
+          .then((userOverrides) => {
+            this.setState({
+              userOverrides: userOverrides.results.map((v) => ({
+                ...v.feature_state,
+                identity: {
+                  id: v.identity_uuid,
+                  identifier: v.identifier,
+                },
+              })),
+              userOverridesPaging: {
+                count: userOverrides.count,
+                currentPage: page,
+                next: userOverrides.next,
+              },
+            })
+          })
+      }
+
       return
     }
     data
@@ -1272,7 +1295,6 @@ const CreateFlag = class extends Component {
                                                   )}
                                                 </Permission>
                                               </div>
-                                              ,
                                             </div>
                                           )}
                                         </div>
@@ -1314,20 +1336,22 @@ const CreateFlag = class extends Component {
                                             </Tooltip>
                                           }
                                           action={
-                                            <Button
-                                              onClick={() =>
-                                                this.changeIdentity(
-                                                  this.state.userOverrides,
-                                                )
-                                              }
-                                              type='button'
-                                              theme='secondary'
-                                              size='small'
-                                            >
-                                              {enabledIndentity
-                                                ? 'Enable All'
-                                                : 'Disable All'}
-                                            </Button>
+                                            !Utils.getIsEdge() && (
+                                              <Button
+                                                onClick={() =>
+                                                  this.changeIdentity(
+                                                    this.state.userOverrides,
+                                                  )
+                                                }
+                                                type='button'
+                                                theme='secondary'
+                                                size='small'
+                                              >
+                                                {enabledIndentity
+                                                  ? 'Enable All'
+                                                  : 'Disable All'}
+                                              </Button>
+                                            )
                                           }
                                           items={this.state.userOverrides}
                                           paging={
@@ -1350,32 +1374,35 @@ const CreateFlag = class extends Component {
                                             this.userOverridesPage(page)
                                           }
                                           searchPanel={
-                                            <div className='text-center mt-2 mb-2'>
-                                              <Flex className='text-left'>
-                                                <IdentitySelect
-                                                  isEdge={false}
-                                                  ignoreIds={this.state.userOverrides?.map(
-                                                    (v) => v.identity?.id,
-                                                  )}
-                                                  environmentId={
-                                                    this.props.environmentId
-                                                  }
-                                                  data-test='select-identity'
-                                                  placeholder='Create an Identity Override...'
-                                                  value={
-                                                    this.state.selectedIdentity
-                                                  }
-                                                  onChange={(
-                                                    selectedIdentity,
-                                                  ) =>
-                                                    this.setState(
-                                                      { selectedIdentity },
-                                                      this.addItem,
-                                                    )
-                                                  }
-                                                />
-                                              </Flex>
-                                            </div>
+                                            !Utils.getIsEdge() && (
+                                              <div className='text-center mt-2 mb-2'>
+                                                <Flex className='text-left'>
+                                                  <IdentitySelect
+                                                    isEdge={false}
+                                                    ignoreIds={this.state.userOverrides?.map(
+                                                      (v) => v.identity?.id,
+                                                    )}
+                                                    environmentId={
+                                                      this.props.environmentId
+                                                    }
+                                                    data-test='select-identity'
+                                                    placeholder='Create an Identity Override...'
+                                                    value={
+                                                      this.state
+                                                        .selectedIdentity
+                                                    }
+                                                    onChange={(
+                                                      selectedIdentity,
+                                                    ) =>
+                                                      this.setState(
+                                                        { selectedIdentity },
+                                                        this.addItem,
+                                                      )
+                                                    }
+                                                  />
+                                                </Flex>
+                                              </div>
+                                            )
                                           }
                                           renderRow={({
                                             enabled,
@@ -1402,6 +1429,7 @@ const CreateFlag = class extends Component {
                                                         identity,
                                                       })
                                                     }
+                                                    disabled={Utils.getIsEdge()}
                                                   />
                                                 </div>
                                                 <div className='font-weight-medium fs-small lh-sm'>
@@ -1413,7 +1441,8 @@ const CreateFlag = class extends Component {
                                                   className='table-column'
                                                   style={{ width: '188px' }}
                                                 >
-                                                  {feature_state_value && (
+                                                  {feature_state_value !==
+                                                    null && (
                                                     <FeatureValue
                                                       value={
                                                         feature_state_value

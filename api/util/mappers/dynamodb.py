@@ -6,6 +6,9 @@ from flag_engine.features.models import FeatureStateModel
 from pydantic import BaseModel
 
 from edge_api.identities.types import IdentityChangeset
+from environments.dynamodb.constants import (
+    ENVIRONMENTS_V2_ENVIRONMENT_META_DOCUMENT_KEY,
+)
 from environments.dynamodb.types import (
     IdentityOverridesV2Changeset,
     IdentityOverrideV2,
@@ -52,9 +55,12 @@ def map_environment_to_environment_document(
 def map_environment_to_environment_v2_document(
     environment: "Environment",
 ) -> Document:
+    environment_document = map_environment_to_environment_document(environment)
+    environment_api_key = environment_document.pop("api_key")
     return {
-        **map_environment_to_environment_document(environment),
-        "document_key": "META",
+        **environment_document,
+        "document_key": ENVIRONMENTS_V2_ENVIRONMENT_META_DOCUMENT_KEY,
+        "environment_api_key": environment_api_key,
         "environment_id": str(environment.id),
     }
 
@@ -189,6 +195,7 @@ DOCUMENT_VALUE_ENCODERS_BY_TYPE = {
     int: _decimal_encoder,
     float: _decimal_encoder,
     datetime: _isoformat_encoder,
+    Decimal: _noop_encoder,
 }
 
 

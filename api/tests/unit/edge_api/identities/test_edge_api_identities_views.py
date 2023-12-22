@@ -108,7 +108,7 @@ def test_get_edge_identity_overrides_for_a_feature(
 ) -> None:
     # Given
     base_url = reverse(
-        "api-v1:environments:edge-identity-overrides", args=[environment.pk]
+        "api-v1:environments:edge-identity-overrides", args=[environment.api_key]
     )
     url = f"{base_url}?feature={feature.id}"
     with_environment_permissions([VIEW_IDENTITIES])
@@ -119,7 +119,7 @@ def test_get_edge_identity_overrides_for_a_feature(
         mock_dynamodb_wrapper,
     )
 
-    mock_dynamodb_wrapper.get_identity_overrides_by_feature_id.return_value = [
+    mock_dynamodb_wrapper.get_identity_overrides_by_environment_id.return_value = [
         edge_identity_override_document,
         edge_identity_override_document_2,
     ]
@@ -159,7 +159,7 @@ def test_get_edge_identity_overrides_for_a_feature(
         },
     }
 
-    mock_dynamodb_wrapper.get_identity_overrides_by_feature_id.assert_called_once_with(
+    mock_dynamodb_wrapper.get_identity_overrides_by_environment_id.assert_called_once_with(
         environment_id=environment.id, feature_id=feature.id
     )
 
@@ -172,7 +172,7 @@ def test_user_without_manage_identities_permission_cannot_get_edge_identity_over
 ) -> None:
     # Given
     base_url = reverse(
-        "api-v1:environments:edge-identity-overrides", args=[environment.pk]
+        "api-v1:environments:edge-identity-overrides", args=[environment.api_key]
     )
     url = f"{base_url}?feature={feature.id}"
     with_environment_permissions([VIEW_ENVIRONMENT])

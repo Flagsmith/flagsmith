@@ -7,6 +7,7 @@ import {
   FlagsmithValue,
   MultivariateFeatureStateValue,
   MultivariateOption,
+  Organisation,
   Project as ProjectType,
   ProjectFlag,
   SegmentCondition,
@@ -130,6 +131,18 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getApproveChangeRequestPermission() {
     return 'APPROVE_CHANGE_REQUEST'
+  },
+  getCreateProjectPermission(organisation: Organisation) {
+    if (organisation?.restrict_project_create_to_admin) {
+      return 'ADMIN'
+    }
+    return 'CREATE_PROJECT'
+  },
+  getCreateProjectPermissionDescription(organisation: Organisation) {
+    if (organisation?.restrict_project_create_to_admin) {
+      return 'Administrator'
+    }
+    return 'Create Project'
   },
   getFeatureStatesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
@@ -346,10 +359,16 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
   getShouldHideIdentityOverridesTab(_project: ProjectType) {
     const project = _project || ProjectStore.model
-    if (project && project.use_edge_identities) {
-      return true
+    if (!Utils.getIsEdge()) {
+      return false
     }
-    return false
+
+    return !!(
+      !Utils.getFlagsmithHasFeature('show_edge_identity_overrides') ||
+      (project &&
+        project.use_edge_identities &&
+        !project.show_edge_identity_overrides_for_feature)
+    )
   },
 
   getShouldSendIdentityToTraits(_project: ProjectType) {

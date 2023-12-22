@@ -144,7 +144,7 @@ urlpatterns = [
         name="create-segment-override",
     ),
     path(
-        "<int:environment_pk>/edge-identity-overrides",
+        "<str:environment_api_key>/edge-identity-overrides",
         get_edge_identity_overrides,
         name="edge-identity-overrides",
     ),

@@ -14,9 +14,19 @@ from flag_engine.identities.models import IdentityModel
 from flag_engine.segments.evaluator import get_identity_segments
 from rest_framework.exceptions import NotFound
 
+if typing.TYPE_CHECKING:
+    from mypy_boto3_dynamodb.service_resource import Table
+    from mypy_boto3_dynamodb.type_defs import (
+        QueryOutputTableTypeDef,
+        TableAttributeValueTypeDef,
+        QueryInputRequestTypeDef,
+    )
+
 from environments.dynamodb.constants import (
+    DYNAMODB_MAX_BATCH_WRITE_ITEM_COUNT,
     ENVIRONMENTS_V2_PARTITION_KEY,
     ENVIRONMENTS_V2_SORT_KEY,
+    IDENTITIES_PAGINATION_LIMIT,
 )
 from environments.dynamodb.types import IdentityOverridesV2Changeset
 from environments.dynamodb.utils import (
@@ -25,9 +35,11 @@ from environments.dynamodb.utils import (
 from util.mappers import (
     map_environment_api_key_to_environment_api_key_document,
     map_environment_to_environment_document,
+    map_environment_to_environment_v2_document,
     map_identity_override_to_identity_override_document,
     map_identity_to_identity_document,
 )
+from util.util import iter_paired_chunks
 
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
@@ -39,32 +51,41 @@ logger = logging.getLogger()
 class BaseDynamoWrapper:
     table_name: str = None
 
-    def __init__(self):
-        self._table = None
+    def __init__(self) -> None:
+        self._table: typing.Optional["Table"] = None
+
+    @property
+    def table(self) -> typing.Optional["Table"]:
+        if not self._table:
+            self._table = self.get_table()
+        return self._table
+
+    def get_table_name(self) -> str:
+        return self.table_name
+
+    def get_table(self) -> typing.Optional["Table"]:
         if table_name := self.get_table_name():
-            self._table = boto3.resource(
-                "dynamodb", config=Config(tcp_keepalive=True)
-            ).Table(table_name)
+            return boto3.resource("dynamodb", config=Config(tcp_keepalive=True)).Table(
+                table_name
+            )
 
     @property
     def is_enabled(self) -> bool:
-        return self._table is not None
-
-    def get_table_name(self):
-        return self.table_name
+        return self.table is not None
 
 
 class DynamoIdentityWrapper(BaseDynamoWrapper):
-    table_name = settings.IDENTITIES_TABLE_NAME_DYNAMO
+    def get_table_name(self) -> str | None:
+        return settings.IDENTITIES_TABLE_NAME_DYNAMO
 
-    def query_items(self, *args, **kwargs):
-        return self._table.query(*args, **kwargs)
+    def query_items(self, *args, **kwargs) -> "QueryOutputTableTypeDef":
+        return self.table.query(*args, **kwargs)
 
     def put_item(self, identity_dict: dict):
-        self._table.put_item(Item=identity_dict)
+        self.table.put_item(Item=identity_dict)
 
     def write_identities(self, identities: Iterable["Identity"]):
-        with self._table.batch_writer() as batch:
+        with self.table.batch_writer() as batch:
             for identity in identities:
                 identity_document = map_identity_to_identity_document(identity)
                 # Since sort keys can not be greater than 1024
@@ -77,10 +98,10 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
                 batch.put_item(Item=identity_document)
 
     def get_item(self, composite_key: str) -> typing.Optional[dict]:
-        return self._table.get_item(Key={"composite_key": composite_key}).get("Item")
+        return self.table.get_item(Key={"composite_key": composite_key}).get("Item")
 
     def delete_item(self, composite_key: str):
-        self._table.delete_item(Key={"composite_key": composite_key})
+        self.table.delete_item(Key={"composite_key": composite_key})
 
     def get_item_from_uuid(self, uuid: str) -> dict:
         filter_expression = Key("identity_uuid").eq(uuid)
@@ -101,17 +122,39 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
             raise NotFound() from e
 
     def get_all_items(
-        self, environment_api_key: str, limit: int, start_key: dict = None
-    ):
+        self,
+        environment_api_key: str,
+        limit: int,
+        start_key: dict[str, "TableAttributeValueTypeDef"] | None = None,
+    ) -> "QueryOutputTableTypeDef":
         filter_expression = Key("environment_api_key").eq(environment_api_key)
-        query_kwargs = {
+        query_kwargs: "QueryInputRequestTypeDef" = {
             "IndexName": "environment_api_key-identifier-index",
-            "Limit": limit,
             "KeyConditionExpression": filter_expression,
+            "Limit": limit,
         }
         if start_key:
-            query_kwargs.update(ExclusiveStartKey=start_key)
+            query_kwargs["ExclusiveStartKey"] = start_key
         return self.query_items(**query_kwargs)
+
+    def iter_all_items_paginated(
+        self,
+        environment_api_key: str,
+        limit: int = IDENTITIES_PAGINATION_LIMIT,
+    ) -> typing.Generator[IdentityModel, None, None]:
+        last_evaluated_key = "initial"
+        get_all_items_kwargs = {
+            "environment_api_key": environment_api_key,
+            "limit": limit,
+        }
+        while last_evaluated_key:
+            query_response = self.get_all_items(
+                **get_all_items_kwargs,
+            )
+            for item in query_response["Items"]:
+                yield IdentityModel.parse_obj(item)
+            if last_evaluated_key := query_response.get("LastEvaluatedKey"):
+                get_all_items_kwargs["start_key"] = last_evaluated_key
 
     def search_items_with_identifier(
         self,
@@ -165,7 +208,7 @@ class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
     table_name = settings.ENVIRONMENTS_TABLE_NAME_DYNAMO
 
     def write_environments(self, environments: Iterable["Environment"]):
-        with self._table.batch_writer() as writer:
+        with self.table.batch_writer() as writer:
             for environment in environments:
                 writer.put_item(
                     Item=map_environment_to_environment_document(environment),
@@ -173,22 +216,22 @@ class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
 
     def get_item(self, api_key: str) -> dict:
         try:
-            return self._table.get_item(Key={"api_key": api_key})["Item"]
+            return self.table.get_item(Key={"api_key": api_key})["Item"]
         except KeyError as e:
             raise ObjectDoesNotExist() from e
 
 
 class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
-    def get_table_name(self):
+    def get_table_name(self) -> str | None:
         return settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO
 
-    def get_identity_overrides_by_feature_id(
+    def get_identity_overrides_by_environment_id(
         self,
         environment_id: int,
-        feature_id: int,
+        feature_id: int | None = None,
     ) -> typing.List[dict[str, Any]]:
         try:
-            response = self._table.query(
+            response = self.table.query(
                 KeyConditionExpression=Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
                     str(environment_id),
                 )
@@ -206,19 +249,31 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         self,
         changeset: IdentityOverridesV2Changeset,
     ) -> None:
-        with self._table.batch_writer() as writer:
-            for identity_override_to_delete in changeset.to_delete:
-                writer.delete_item(
-                    Key={
-                        ENVIRONMENTS_V2_PARTITION_KEY: identity_override_to_delete.environment_id,
-                        ENVIRONMENTS_V2_SORT_KEY: identity_override_to_delete.document_key,
-                    },
-                )
-            for identity_override_to_put in changeset.to_put:
+        for to_put, to_delete in iter_paired_chunks(
+            changeset.to_put,
+            changeset.to_delete,
+            chunk_size=DYNAMODB_MAX_BATCH_WRITE_ITEM_COUNT,
+        ):
+            with self.table.batch_writer() as writer:
+                for identity_override_to_delete in to_delete:
+                    writer.delete_item(
+                        Key={
+                            ENVIRONMENTS_V2_PARTITION_KEY: identity_override_to_delete.environment_id,
+                            ENVIRONMENTS_V2_SORT_KEY: identity_override_to_delete.document_key,
+                        },
+                    )
+                for identity_override_to_put in to_put:
+                    writer.put_item(
+                        Item=map_identity_override_to_identity_override_document(
+                            identity_override_to_put
+                        ),
+                    )
+
+    def write_environments(self, environments: Iterable["Environment"]) -> None:
+        with self.table.batch_writer() as writer:
+            for environment in environments:
                 writer.put_item(
-                    Item=map_identity_override_to_identity_override_document(
-                        identity_override_to_put
-                    ),
+                    Item=map_environment_to_environment_v2_document(environment),
                 )
 
 
@@ -229,7 +284,7 @@ class DynamoEnvironmentAPIKeyWrapper(BaseDynamoWrapper):
         self.write_api_keys([api_key])
 
     def write_api_keys(self, api_keys: Iterable["EnvironmentAPIKey"]):
-        with self._table.batch_writer() as writer:
+        with self.table.batch_writer() as writer:
             for api_key in api_keys:
                 writer.put_item(
                     Item=map_environment_api_key_to_environment_api_key_document(
