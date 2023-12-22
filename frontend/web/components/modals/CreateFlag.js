@@ -599,7 +599,6 @@ const CreateFlag = class extends Component {
                               <span className='fs-caption'>
                                 <IonIcon
                                   icon={closeIcon}
-                                  style={{ fontSize: '13px' }}
                                 />
                               </span>
                             </Row>
