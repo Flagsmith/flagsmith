@@ -223,9 +223,13 @@ class TheComponent extends Component {
                         </span>
                       }
                     >
-                      {`${isCompact && `${description}<br/>`}Created ${moment(
-                        created_date,
-                      ).format('Do MMM YYYY HH:mma')}`}
+                      {isCompact && description
+                        ? `${description}<br/>Created ${moment(
+                            created_date,
+                          ).format('Do MMM YYYY HH:mma')}`
+                        : `Created ${moment(created_date).format(
+                            'Do MMM YYYY HH:mma',
+                          )}`}
                     </Tooltip>
                   ) : (
                     name
