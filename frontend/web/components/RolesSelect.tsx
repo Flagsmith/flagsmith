@@ -39,7 +39,7 @@ const RoleSelect: FC<RoleSelectType> = ({
       title='Roles'
       isOpen={isOpen}
       onClose={onToggle}
-      className='inline-modal--tags'
+      className='inline-modal--sm'
     >
       <Input
         disabled={disabled}

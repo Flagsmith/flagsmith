@@ -45,10 +45,12 @@ __all__ = (
     "map_feature_to_engine",
     "map_identity_to_engine",
     "map_mv_option_to_engine",
+    "map_segment_to_engine",
+    "map_traits_to_engine",
 )
 
 
-def map_traits_to_trait_models(traits: Iterable["Trait"]) -> list[TraitModel]:
+def map_traits_to_engine(traits: Iterable["Trait"]) -> list[TraitModel]:
     return [
         TraitModel(trait_key=trait.trait_key, trait_value=trait.trait_value)
         for trait in traits
@@ -119,7 +121,8 @@ def map_webhook_config_to_engine(
 
 def map_feature_state_to_engine(
     feature_state: "FeatureState",
-    mv_fs_values: Iterable["MultivariateFeatureStateValue"],
+    *,
+    mv_fs_values: Optional[Iterable["MultivariateFeatureStateValue"]] = None,
 ) -> FeatureStateModel:
     feature = feature_state.feature
     feature_segment: Optional["FeatureSegment"] = feature_state.feature_segment
@@ -139,7 +142,7 @@ def map_feature_state_to_engine(
         feature_segment=feature_segment_model,
         feature=map_feature_to_engine(feature),
         multivariate_feature_state_values=[
-            map_mv_fs_value_to_engine(mv_fs_value) for mv_fs_value in mv_fs_values
+            map_mv_fs_value_to_engine(mv_fs_value) for mv_fs_value in mv_fs_values or []
         ],
     )
 
@@ -250,7 +253,7 @@ def map_environment_to_engine(
             feature_states=[
                 map_feature_state_to_engine(
                     feature_state,
-                    multivariate_feature_state_values_by_feature_state_id.pop(
+                    mv_fs_values=multivariate_feature_state_values_by_feature_state_id.pop(
                         feature_state.pk,
                     ),
                 )
@@ -277,7 +280,9 @@ def map_environment_to_engine(
     feature_state_models = [
         map_feature_state_to_engine(
             feature_state,
-            multivariate_feature_state_values_by_feature_state_id.pop(feature_state.pk),
+            mv_fs_values=multivariate_feature_state_values_by_feature_state_id.pop(
+                feature_state.pk,
+            ),
         )
         for feature_state in environment_feature_states
     ]
@@ -382,11 +387,13 @@ def map_identity_to_engine(
     identity_feature_state_models = [
         map_feature_state_to_engine(
             feature_state,
-            multivariate_feature_state_values_by_feature_state_id.pop(feature_state.pk),
+            mv_fs_values=multivariate_feature_state_values_by_feature_state_id.pop(
+                feature_state.pk,
+            ),
         )
         for feature_state in identity_feature_states
     ]
-    identity_trait_models = map_traits_to_trait_models(identity_traits)
+    identity_trait_models = map_traits_to_engine(identity_traits)
 
     return IdentityModel(
         # Attributes:

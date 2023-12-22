@@ -576,6 +576,10 @@ const controller = {
               : Promise.resolve(),
           ])
             .then(([features, environmentFeatures, feature]) => {
+              if (store.filter !== filter) {
+                //The filter has been changed since, ignore the api response. This will be resolved when moving to RTK.
+                return
+              }
               store.paging.next = features.next
               store.paging.pageSize = PAGE_SIZE
               store.paging.count = features.count
@@ -734,7 +738,10 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   const action = payload.action // this is our action from handleViewAction
 
   switch (action.actionType) {
-    case Actions.SEARCH_FLAGS:
+    case Actions.SEARCH_FLAGS: {
+      if (action.sort) {
+        store.sort = action.sort
+      }
       controller.searchFeatures(
         action.search,
         action.environmentId,
@@ -743,6 +750,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
         action.pageSize,
       )
       break
+    }
     case Actions.GET_FLAGS:
       store.search = action.search || ''
       if (action.sort) {

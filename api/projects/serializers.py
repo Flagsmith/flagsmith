@@ -34,6 +34,7 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "enable_realtime_updates",
             "only_allow_lower_case_feature_names",
             "feature_name_regex",
+            "show_edge_identity_overrides_for_feature",
         )
 
     def get_migration_status(self, obj: Project) -> str:

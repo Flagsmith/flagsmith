@@ -79,6 +79,7 @@ app.get('/config/project-overrides', (req, res) => {
     { name: 'sha', value: sha },
     { name: 'mixpanel', value: process.env.MIXPANEL_API_KEY },
     { name: 'crispChat', value: process.env.CRISP_WEBSITE_ID },
+    { name: 'fpr', value: process.env.FIRST_PROMOTER_ID },
     { name: 'zendesk', value: process.env.ZENDESK_WIDGET_ID },
     { name: 'sentry', value: process.env.SENTRY_API_KEY },
     {

@@ -114,6 +114,7 @@ export type Req = {
     user: string
   }
   getProjectFlags: { project: string }
+  getProjectFlag: { project: string; id: string }
   getRolesPermissionUsers: { organisation_id: string; role_id: string }
   deleteRolesPermissionUsers: {
     organisation_id: string
@@ -137,5 +138,8 @@ export type Req = {
   deleteRoleMasterApiKey: { org_id: number; role_id: number; id: string }
   createRoleMasterApiKey: { org_id: number; role_id: number }
   getMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
+  getGroupSummaries: {
+    orgId: string
+  }
   // END OF TYPES
 }

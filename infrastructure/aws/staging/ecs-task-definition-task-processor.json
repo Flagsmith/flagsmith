@@ -16,6 +16,10 @@
             "essential": true,
             "environment": [
                 {
+                    "name": "RUN_BY_PROCESSOR",
+                    "value": "True"
+                },
+                {
                     "name": "AWS_REGION",
                     "value": "eu-west-2"
                 },
@@ -44,6 +48,10 @@
                     "value": "flagsmith_environments"
                 },
                 {
+                    "name": "ENVIRONMENTS_V2_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_environments_v2"
+                },
+                {
                     "name": "GITHUB_CLIENT_ID",
                     "value": "cd16a9c1574074756876"
                 },
@@ -68,8 +76,8 @@
                     "value": "937916178726.2904626318658"
                 },
                 {
-                    "name":"EDGE_API_URL",
-                    "value":"https://edge.bullet-train-staging.win/api/v1/"
+                    "name": "EDGE_API_URL",
+                    "value": "https://edge.bullet-train-staging.win/api/v1/"
                 },
                 {
                     "name": "IDENTITY_MIGRATION_EVENT_BUS_NAME",
@@ -114,6 +122,18 @@
                 {
                     "name": "TASK_DELETE_BATCH_SIZE",
                     "value": "100000"
+                },
+                {
+                    "name": "INFLUXDB_ORG",
+                    "value": "ben.rometsch@bullet-train.io"
+                },
+                {
+                    "name": "INFLUXDB_URL",
+                    "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
+                },
+                {
+                    "name": "AWS_SSE_LOGS_BUCKET_NAME",
+                    "value": "flagsmith-fastly-logs-staging"
                 }
             ],
             "secrets": [
@@ -160,6 +180,10 @@
                 {
                     "name": "PIPEDRIVE_API_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:PIPEDRIVE_API_TOKEN::"
+                },
+                {
+                    "name": "INFLUXDB_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:INFLUXDB_TOKEN::"
                 }
             ],
             "logConfiguration": {
