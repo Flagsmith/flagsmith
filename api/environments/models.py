@@ -16,6 +16,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import (
     AFTER_CREATE,
+    AFTER_DELETE,
     AFTER_SAVE,
     AFTER_UPDATE,
     BEFORE_UPDATE,
@@ -449,10 +450,17 @@ class EnvironmentAPIKey(LifecycleModel):
     def is_valid(self) -> bool:
         return self.active and (not self.expires_at or self.expires_at > timezone.now())
 
-    @hook(AFTER_SAVE)
+    @hook(AFTER_SAVE, when="_should_update_dynamo", is_now=True)
     def send_to_dynamo(self):
-        if (
+        environment_api_key_wrapper.write_api_key(self)
+
+    @hook(AFTER_DELETE, when="_should_update_dynamo", is_now=True)
+    def delete_from_dynamo(self):
+        environment_api_key_wrapper.delete_api_key(self.key)
+
+    @property
+    def _should_update_dynamo(self) -> bool:
+        return (
             self.environment.project.enable_dynamo_db
             and environment_api_key_wrapper.is_enabled
-        ):
-            environment_api_key_wrapper.write_api_key(self)
+        )

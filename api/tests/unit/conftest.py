@@ -1,3 +1,5 @@
+import typing
+
 import pytest
 
 from environments.models import Environment
@@ -6,6 +8,12 @@ from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from projects.tags.models import Tag
 from users.models import FFAdminUser
+
+if typing.TYPE_CHECKING:
+    from mypy_boto3_dynamodb.service_resource import (
+        DynamoDBServiceResource,
+        Table,
+    )
 
 
 @pytest.fixture()
@@ -188,4 +196,16 @@ def project_two_environment(project_two: Project) -> Environment:
 def project_two_feature(project_two: Project) -> Feature:
     return Feature.objects.create(
         name="project_two_feature", project=project_two, initial_value="initial_value"
+    )
+
+
+@pytest.fixture()
+def flagsmith_environment_api_key_table(dynamodb: "DynamoDBServiceResource") -> "Table":
+    return dynamodb.create_table(
+        TableName="flagsmith_environment_api_key",
+        KeySchema=[{"AttributeName": "key", "KeyType": "HASH"}],
+        AttributeDefinitions=[
+            {"AttributeName": "key", "AttributeType": "S"},
+        ],
+        BillingMode="PAY_PER_REQUEST",
     )

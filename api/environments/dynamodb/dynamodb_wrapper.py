@@ -291,3 +291,6 @@ class DynamoEnvironmentAPIKeyWrapper(BaseDynamoWrapper):
                         api_key
                     )
                 )
+
+    def delete_api_key(self, key: str) -> None:
+        self.table.delete_item(Key={"key": key})
