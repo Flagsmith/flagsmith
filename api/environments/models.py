@@ -148,6 +148,20 @@ class Environment(
     def validate_use_v2_feature_versioning(self):
         raise FeatureVersioningError("Cannot revert from v2 feature versioning.")
 
+    @property
+    def _should_update_dynamo(self) -> bool:
+        return (
+            self.environment.project.enable_dynamo_db
+            and environment_api_key_wrapper.is_enabled
+        )
+
+    @hook(AFTER_DELETE)
+    def delete_from_dynamo(self):
+        if self.project.enable_dynamo_db and environment_wrapper.is_enabled:
+            from environments.tasks import delete_environment_from_dynamo
+
+            delete_environment_from_dynamo.delay(args=(self.api_key, self.id))
+
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
 

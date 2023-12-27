@@ -103,6 +103,14 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
     def delete_item(self, composite_key: str):
         self.table.delete_item(Key={"composite_key": composite_key})
 
+    def delete_all_items(self, environment_api_key: str):
+        with self.table.batch_writer() as writer:
+            for item in self.iter_all_items_paginated(
+                environment_api_key=environment_api_key,
+                projection_expression="composite_key",
+            ):
+                writer.delete_item(Key={"composite_key": item["composite_key"]})
+
     def get_item_from_uuid(self, uuid: str) -> dict:
         filter_expression = Key("identity_uuid").eq(uuid)
         query_kwargs = {
@@ -126,6 +134,7 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         environment_api_key: str,
         limit: int,
         start_key: dict[str, "TableAttributeValueTypeDef"] | None = None,
+        projection_expression: str = None,
     ) -> "QueryOutputTableTypeDef":
         filter_expression = Key("environment_api_key").eq(environment_api_key)
         query_kwargs: "QueryInputRequestTypeDef" = {
@@ -133,6 +142,9 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
             "KeyConditionExpression": filter_expression,
             "Limit": limit,
         }
+        if projection_expression:
+            query_kwargs["ProjectionExpression"] = projection_expression
+
         if start_key:
             query_kwargs["ExclusiveStartKey"] = start_key
         return self.query_items(**query_kwargs)
@@ -141,18 +153,20 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         self,
         environment_api_key: str,
         limit: int = IDENTITIES_PAGINATION_LIMIT,
-    ) -> typing.Generator[IdentityModel, None, None]:
+        projection_expression: str = None,
+    ) -> typing.Generator[dict, None, None]:
         last_evaluated_key = "initial"
         get_all_items_kwargs = {
             "environment_api_key": environment_api_key,
             "limit": limit,
+            "projection_expression": projection_expression,
         }
         while last_evaluated_key:
             query_response = self.get_all_items(
                 **get_all_items_kwargs,
             )
             for item in query_response["Items"]:
-                yield IdentityModel.parse_obj(item)
+                yield item
             if last_evaluated_key := query_response.get("LastEvaluatedKey"):
                 get_all_items_kwargs["start_key"] = last_evaluated_key
 
@@ -220,6 +234,9 @@ class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
         except KeyError as e:
             raise ObjectDoesNotExist() from e
 
+    def delete(self, api_key: str) -> None:
+        self.table.delete_item(Key={"api_key": api_key})
+
 
 class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
     def get_table_name(self) -> str | None:
@@ -275,6 +292,29 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
                 writer.put_item(
                     Item=map_environment_to_environment_v2_document(environment),
                 )
+
+    def delete_all_items(self, environment_id: int):
+        filter_expression = Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(environment_id)
+        query_kwargs: "QueryInputRequestTypeDef" = {
+            "IndexName": "environment_api_key-identifier-index",
+            "KeyConditionExpression": filter_expression,
+            "ProjectionExpression": "document_key",
+        }
+        query_response = self.table.query(
+            **query_kwargs,
+        )
+        last_evaluated_key = "initial"
+        while last_evaluated_key:
+            with self.table.batch_writer() as writer:
+                for item in query_response["Items"]:
+                    writer.delete_item(
+                        Key={
+                            ENVIRONMENTS_V2_PARTITION_KEY: environment_id,
+                            ENVIRONMENTS_V2_SORT_KEY: item["document_key"],
+                        },
+                    )
+            if last_evaluated_key := query_response.get("LastEvaluatedKey"):
+                query_kwargs["ExclusiveStartKey"] = last_evaluated_key
 
 
 class DynamoEnvironmentAPIKeyWrapper(BaseDynamoWrapper):
