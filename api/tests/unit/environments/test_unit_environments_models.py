@@ -811,7 +811,8 @@ def test_saving_environment_api_key_creates_dynamo_document_if_enabled(
 ):
     # Given
     mocker.patch(
-        "environments.models.environment_api_key_wrapper.get_table",
+        "environments.models.DynamoEnvironmentAPIKeyWrapper.table",
+        new_callable=mocker.PropertyMock,
         return_value=flagsmith_environment_api_key_table,
     )
     # When
@@ -831,7 +832,8 @@ def test_deleting_environment_api_key_deletes_dynamo_document_if_enabled(
 ):
     # Given
     mocker.patch(
-        "environments.models.environment_api_key_wrapper.get_table",
+        "environments.models.DynamoEnvironmentAPIKeyWrapper.table",
+        new_callable=mocker.PropertyMock,
         return_value=flagsmith_environment_api_key_table,
     )
     api_key = EnvironmentAPIKey.objects.create(

@@ -408,7 +408,7 @@ def test_identity_wrapper__iter_all_items_paginated__returns_expected(
     environment_api_key = "test_api_key"
     limit = 1
 
-    expected_engine_identity = IdentityModel.parse_obj(identity_document)
+    # expected_engine_identity = IdentityModel.parse_obj(identity_document)
     expected_next_page_key = "next_page_key"
 
     environment_document = map_environment_to_environment_document(environment)
@@ -439,18 +439,20 @@ def test_identity_wrapper__iter_all_items_paginated__returns_expected(
     with pytest.raises(StopIteration):
         next(iterator)
 
-    assert result_1 == expected_engine_identity
-    assert result_2 == expected_engine_identity
+    assert result_1 == identity_document
+    assert result_2 == identity_document
 
     mocked_get_all_items.assert_has_calls(
         [
             mocker.call(
                 environment_api_key=environment_api_key,
+                projection_expression=None,
                 limit=limit,
             ),
             mocker.call(
                 environment_api_key=environment_api_key,
                 limit=limit,
+                projection_expression=None,
                 start_key=expected_next_page_key,
             ),
         ]
