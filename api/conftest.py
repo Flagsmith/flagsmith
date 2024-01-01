@@ -695,5 +695,7 @@ def dynamo_environment_wrapper(
     flagsmith_environment_table: Table,
     settings: SettingsWrapper,
 ) -> DynamoEnvironmentWrapper:
-    settings.ENVIRONMENTS_TABLE_NAME_DYNAMO = flagsmith_environment_table.name
-    return DynamoEnvironmentWrapper()
+    wrapper = DynamoEnvironmentWrapper()
+
+    wrapper.table_name = flagsmith_environment_table.name
+    return wrapper
