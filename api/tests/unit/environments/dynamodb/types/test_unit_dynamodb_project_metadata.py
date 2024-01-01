@@ -2,6 +2,8 @@ from datetime import datetime
 from decimal import Decimal
 
 import pytest
+from mypy_boto3_dynamodb.service_resource import Table
+from pytest_mock import MockerFixture
 
 from environments.dynamodb.types import (
     DynamoProjectMetadata,
@@ -146,3 +148,21 @@ def test_finish_identity_migration_calls_put_item_with_correct_arguments(
             "triggered_at": None,
         }
     )
+
+
+def test_delete(flagsmith_project_metadata_table: Table, mocker: MockerFixture):
+    # Given
+    project_id = 1
+    mocked_dynamo_table = mocker.patch(
+        "environments.dynamodb.types.project_metadata_table",
+        flagsmith_project_metadata_table,
+    )
+    flagsmith_project_metadata_table.put_item(Item={"id": project_id})
+
+    project_metadata = DynamoProjectMetadata.get_or_new(project_id)
+
+    # When
+    project_metadata.delete()
+
+    # Then
+    assert mocked_dynamo_table.scan()["Count"] == 0

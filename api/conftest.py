@@ -15,6 +15,7 @@ from rest_framework.test import APIClient
 from api_keys.models import MasterAPIKey
 from environments.dynamodb.dynamodb_wrapper import (
     DynamoEnvironmentV2Wrapper,
+    DynamoEnvironmentWrapper,
     DynamoIdentityWrapper,
 )
 from environments.identities.models import Identity
@@ -59,6 +60,7 @@ from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
 from users.models import FFAdminUser, UserPermissionGroup
+from util.mappers import map_environment_to_environment_document
 
 trait_key = "key1"
 trait_value = "value1"
@@ -643,6 +645,18 @@ def flagsmith_environment_table(dynamodb: "DynamoDBServiceResource") -> "Table":
     )
 
 
+@pytest.fixture()
+def flagsmith_project_metadata_table(dynamodb: "DynamoDBServiceResource") -> "Table":
+    return dynamodb.create_table(
+        TableName="flagsmith_project_metadata",
+        KeySchema=[{"AttributeName": "id", "KeyType": "HASH"}],
+        AttributeDefinitions=[
+            {"AttributeName": "id", "AttributeType": "N"},
+        ],
+        BillingMode="PAY_PER_REQUEST",
+    )
+
+
 @pytest.fixture
 def dynamodb_identity_wrapper(
     settings: SettingsWrapper,
@@ -659,3 +673,27 @@ def dynamodb_wrapper_v2(
 ) -> DynamoEnvironmentV2Wrapper:
     settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = flagsmith_environments_v2_table.name
     return DynamoEnvironmentV2Wrapper()
+
+
+@pytest.fixture()
+def dynamo_enabled_project_environment_one_document(
+    flagsmith_environment_table: Table,
+    dynamo_enabled_project_environment_one: Environment,
+) -> dict:
+    environment_dict = map_environment_to_environment_document(
+        dynamo_enabled_project_environment_one
+    )
+
+    flagsmith_environment_table.put_item(
+        Item=environment_dict,
+    )
+    return environment_dict
+
+
+@pytest.fixture()
+def dynamo_environment_wrapper(
+    flagsmith_environment_table: Table,
+    settings: SettingsWrapper,
+) -> DynamoEnvironmentWrapper:
+    settings.ENVIRONMENTS_TABLE_NAME_DYNAMO = flagsmith_environment_table.name
+    return DynamoEnvironmentWrapper()

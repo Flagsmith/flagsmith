@@ -1,5 +1,6 @@
 import pytest
 from django.core.exceptions import ObjectDoesNotExist
+from mypy_boto3_dynamodb.service_resource import Table
 
 from environments.dynamodb import DynamoEnvironmentWrapper
 from environments.models import Environment
@@ -59,3 +60,18 @@ def test_get_item_raises_object_does_not_exists_if_get_item_does_not_return_any_
     # Then
     with pytest.raises(ObjectDoesNotExist):
         dynamo_environment_wrapper.get_item(api_key)
+
+
+def test_delete(
+    dynamo_enabled_project_environment_one_document: dict,
+    dynamo_environment_wrapper: DynamoEnvironmentWrapper,
+    flagsmith_environment_table: Table,
+):
+    # Given
+    api_key = dynamo_enabled_project_environment_one_document["api_key"]
+
+    # When
+    dynamo_environment_wrapper.delete(api_key)
+
+    # Then
+    assert flagsmith_environment_table.item_count == 0
