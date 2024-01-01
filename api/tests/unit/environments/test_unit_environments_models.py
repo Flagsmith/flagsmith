@@ -848,9 +848,32 @@ def test_deleting_environment_api_key_deletes_dynamo_document_if_enabled(
     assert "Item" not in response
 
 
+def test_deleting_environment_creates_task_to_delete_dynamo_document_if_enabled(
+    dynamo_enabled_project_environment_one: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocked_task = mocker.patch("environments.tasks.delete_environment_from_dynamo")
+    mocker.patch(
+        "environments.models.environment_wrapper",
+        new_callable=mocker.PropertyMock,
+        return_value=True,
+    )
+    # When
+    dynamo_enabled_project_environment_one.delete()
+
+    # Then
+    mocked_task.delay.assert_called_once_with(
+        args=(
+            dynamo_enabled_project_environment_one.api_key,
+            dynamo_enabled_project_environment_one.id,
+        )
+    )
+
+
 def test_delete_api_key_not_called_when_deleting_environment_api_key_for_non_edge_project(
-    environment_api_key, mocker
-):
+    environment_api_key: EnvironmentAPIKey, mocker: MockerFixture
+) -> None:
     # Given
     mocked_environment_api_key_wrapper = mocker.patch(
         "environments.models.environment_api_key_wrapper", autospec=True

@@ -154,3 +154,43 @@ def test_environment_v2_wrapper__write_environments__put_expected(
     results = flagsmith_environments_v2_table.scan()["Items"]
     assert len(results) == 1
     assert results[0] == map_environment_to_environment_v2_document(environment)
+
+
+def test_environment_v2_wrapper__delete_all_items(
+    flagsmith_environments_v2_table: Table,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+) -> None:
+    # Given
+    environment_api_key = "api_key"
+    environment_id = "10"
+
+    # Add some items to the table
+    for _ in range(10):
+        flagsmith_environments_v2_table.put_item(
+            Item={
+                "environment_api_key": environment_api_key,
+                "environment_id": environment_id,
+                "document_key": "some_key",
+            }
+        )
+
+    # Next, let's one items for a different environment
+    flagsmith_environments_v2_table.put_item(
+        Item={
+            "environment_api_key": "different_api_key",
+            "environment_id": "different_environment_id",
+            "document_key": "some_key",
+        }
+    )
+
+    # When
+    dynamodb_wrapper_v2.delete_all_items(environment_id=environment_id)
+
+    # Then
+    results = flagsmith_environments_v2_table.scan()["Items"]
+    assert len(results) == 1
+    assert results[0] == {
+        "environment_api_key": "different_api_key",
+        "environment_id": "different_environment_id",
+        "document_key": "some_key",
+    }

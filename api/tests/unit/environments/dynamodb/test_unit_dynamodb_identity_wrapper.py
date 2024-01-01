@@ -6,6 +6,8 @@ from core.constants import INTEGER
 from django.core.exceptions import ObjectDoesNotExist
 from flag_engine.identities.models import IdentityModel
 from flag_engine.segments.constants import IN
+from mypy_boto3_dynamodb.service_resource import Table
+from pytest_mock import MockerFixture
 from rest_framework.exceptions import NotFound
 
 from environments.dynamodb import DynamoIdentityWrapper
@@ -18,8 +20,6 @@ from util.mappers import (
 )
 
 if typing.TYPE_CHECKING:
-    from pytest_mock import MockerFixture
-
     from environments.models import Environment
     from projects.models import Project
 
@@ -457,3 +457,41 @@ def test_identity_wrapper__iter_all_items_paginated__returns_expected(
             ),
         ]
     )
+
+
+def test_delete_all_items__deletes_all_identities_for_the_environment(
+    flagsmith_identities_table: Table,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given
+    environment_api_key = "environment_one"
+
+    # Let's create 2 identities for the same environment
+    identity_one = {
+        "composite_key": "environment_one_identity_one",
+        "environment_api_key": "environment_one",
+        "identifier": "identity_one",
+    }
+    identity_two = {
+        "composite_key": "environment_one_identity_two",
+        "identifier": "identity_two",
+        "environment_api_key": "environment_one",
+    }
+
+    flagsmith_identities_table.put_item(Item=identity_one)
+    flagsmith_identities_table.put_item(Item=identity_two)
+
+    # Let's create another identity for a different environment
+    identity_three = {
+        "composite_key": "environment_two_identity_one",
+        "identifier": "identity_three",
+        "environment_api_key": "environment_two",
+    }
+    flagsmith_identities_table.put_item(Item=identity_three)
+
+    # When
+    dynamodb_identity_wrapper.delete_all_items(environment_api_key)
+
+    # Then
+    assert flagsmith_identities_table.scan()["Count"] == 1
+    assert flagsmith_identities_table.scan()["Items"][0] == identity_three

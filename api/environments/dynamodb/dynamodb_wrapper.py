@@ -296,7 +296,6 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
     def delete_all_items(self, environment_id: int):
         filter_expression = Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(environment_id)
         query_kwargs: "QueryInputRequestTypeDef" = {
-            "IndexName": "environment_api_key-identifier-index",
             "KeyConditionExpression": filter_expression,
             "ProjectionExpression": "document_key",
         }

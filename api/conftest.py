@@ -619,6 +619,30 @@ def flagsmith_environments_v2_table(dynamodb: DynamoDBServiceResource) -> Table:
     )
 
 
+@pytest.fixture()
+def flagsmith_environment_api_key_table(dynamodb: "DynamoDBServiceResource") -> "Table":
+    return dynamodb.create_table(
+        TableName="flagsmith_environment_api_key",
+        KeySchema=[{"AttributeName": "key", "KeyType": "HASH"}],
+        AttributeDefinitions=[
+            {"AttributeName": "key", "AttributeType": "S"},
+        ],
+        BillingMode="PAY_PER_REQUEST",
+    )
+
+
+@pytest.fixture()
+def flagsmith_environment_table(dynamodb: "DynamoDBServiceResource") -> "Table":
+    return dynamodb.create_table(
+        TableName="flagsmith_environments",
+        KeySchema=[{"AttributeName": "api_key", "KeyType": "HASH"}],
+        AttributeDefinitions=[
+            {"AttributeName": "api_key", "AttributeType": "S"},
+        ],
+        BillingMode="PAY_PER_REQUEST",
+    )
+
+
 @pytest.fixture
 def dynamodb_identity_wrapper(
     settings: SettingsWrapper,
