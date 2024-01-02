@@ -217,7 +217,9 @@ are all computed locally.
   Identities from the API. This means that you have to provide the full complement of Traits when requesting the Flags
   for a particular Identity. Our SDKs all provide relevant methods to achieve this.
 - [Identity overrides](../basic-features/managing-identities#identity-overrides) do not operate at all.
-- Analytics-based Integrations do not run.
+- [Analytics-based Integrations](/integrations/overview#analytics-platforms) do not run.
+  [Flag Analytics](/advanced-use/flag-analytics) do still work, if enabled within the
+  [SDK setup](/clients/server-side#configuring-the-sdk).
 - In circumstances where you need to target a specific identity, you can do this by creating a segment to target that
   specific user and subsequently adding a segment override for that segment.
 
