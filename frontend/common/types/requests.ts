@@ -133,5 +133,8 @@ export type Req = {
   createLaunchDarklyProjectImport: { project_id: string }
   getLaunchDarklyProjectImport: { project_id: string }
   getLaunchDarklyProjectsImport: { project_id: string; import_id: string }
+  getGroupSummaries: {
+    orgId: string
+  }
   // END OF TYPES
 }

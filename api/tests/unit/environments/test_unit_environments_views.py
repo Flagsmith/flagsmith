@@ -742,7 +742,7 @@ def test_create_environment_with_required_metadata_returns_201(
     assert response.status_code == status.HTTP_201_CREATED
     assert (
         response.json()["metadata"][0]["model_field"]
-        == required_a_environment_metadata_field.field.id
+        == required_a_environment_metadata_field.id
     )
     assert response.json()["metadata"][0]["field_value"] == str(field_value)
 
