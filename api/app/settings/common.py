@@ -55,20 +55,10 @@ HOSTED_SEATS_LIMIT = env.int("HOSTED_SEATS_LIMIT", default=0)
 
 MAX_PROJECTS_IN_FREE_PLAN = 1
 
-# Google Analytics Configuration
-GOOGLE_ANALYTICS_KEY = env("GOOGLE_ANALYTICS_KEY", default="")
-GOOGLE_SERVICE_ACCOUNT = env("GOOGLE_SERVICE_ACCOUNT", default=None)
-GA_TABLE_ID = env("GA_TABLE_ID", default=None)
-
-INFLUXDB_TOKEN = env.str("INFLUXDB_TOKEN", default="")
-INFLUXDB_BUCKET = env.str("INFLUXDB_BUCKET", default="")
-INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
-INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST", default=False)
 
-USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
 
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
@@ -288,17 +278,29 @@ if ENABLE_GZIP_COMPRESSION:
     # ref: https://docs.djangoproject.com/en/2.2/ref/middleware/#middleware-ordering
     MIDDLEWARE.insert(1, "django.middleware.gzip.GZipMiddleware")
 
+# Google Analytics Configuration
+GOOGLE_ANALYTICS_KEY = env("GOOGLE_ANALYTICS_KEY", default="")
+GOOGLE_SERVICE_ACCOUNT = env("GOOGLE_SERVICE_ACCOUNT", default=None)
+GA_TABLE_ID = env("GA_TABLE_ID", default=None)
+
 if GOOGLE_ANALYTICS_KEY:
     MIDDLEWARE.append("app_analytics.middleware.GoogleAnalyticsMiddleware")
 
-if INFLUXDB_TOKEN:
+# Influx configuration
+INFLUXDB_TOKEN = env.str("INFLUXDB_TOKEN", default="")
+INFLUXDB_BUCKET = env.str("INFLUXDB_BUCKET", default="")
+INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
+INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
+
+USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
+
+# NOTE: Because we use Postgres for analytics data in staging and Influx for tracking SSE data,
+# we need to support setting the influx configuration alongside using postgres for analytics.
+if USE_POSTGRES_FOR_ANALYTICS:
+    MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
+elif INFLUXDB_TOKEN:
     MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
 
-if USE_POSTGRES_FOR_ANALYTICS:
-    if INFLUXDB_BUCKET:
-        raise RuntimeError("Cannot use both InfluxDB and Postgres for analytics")
-
-    MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list("ALLOWED_ADMIN_IP_ADDRESSES", default=list())
 if len(ALLOWED_ADMIN_IP_ADDRESSES) > 0:
