@@ -62,16 +62,17 @@ def test_get_item_raises_object_does_not_exists_if_get_item_does_not_return_any_
         dynamo_environment_wrapper.get_item(api_key)
 
 
-def test_delete(
+def test_delete_removes_environment_from_dynamodb_table(
     dynamo_enabled_project_environment_one_document: dict,
     dynamo_environment_wrapper: DynamoEnvironmentWrapper,
     flagsmith_environment_table: Table,
 ):
     # Given
     api_key = dynamo_enabled_project_environment_one_document["api_key"]
+    assert flagsmith_environment_table.scan()["Count"] == 1
 
     # When
     dynamo_environment_wrapper.delete(api_key)
 
     # Then
-    assert flagsmith_environment_table.item_count == 0
+    assert flagsmith_environment_table.scan()["Count"] == 0
