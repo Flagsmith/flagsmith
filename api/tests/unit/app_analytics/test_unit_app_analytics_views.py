@@ -1,9 +1,17 @@
+import json
 from datetime import date, timedelta
 
 from app_analytics.dataclasses import UsageData
+from app_analytics.models import FeatureEvaluationRaw
 from app_analytics.views import SDKAnalyticsFlags
 from django.urls import reverse
+from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
+from rest_framework.test import APIClient
+
+from environments.identities.models import Identity
+from environments.models import Environment
+from features.models import Feature
 
 
 def test_sdk_analytics_does_not_allow_bad_data(mocker, settings, environment):
@@ -131,3 +139,34 @@ def test_get_total_usage_count_for_non_admin_user_returns_403(
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_set_sdk_analytics_flags_with_identifier(
+    api_client: APIClient,
+    environment: Environment,
+    settings: SettingsWrapper,
+    feature: Feature,
+    identity: Identity,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = True
+    url = reverse("api-v1:analytics-flags")
+    url += f"?identifier={identity.identifier}"
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    feature_request_count = 2
+    data = {feature.name: feature_request_count}
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    FeatureEvaluationRaw.objects.count == 1
+    feature_evaluation_raw = FeatureEvaluationRaw.objects.first()
+    assert feature_evaluation_raw.identifier == identity.identifier
+    assert feature_evaluation_raw.feature_name == feature.name
+    assert feature_evaluation_raw.environment_id == environment.id
+    assert feature_evaluation_raw.evaluation_count == feature_request_count
