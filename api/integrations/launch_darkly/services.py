@@ -258,7 +258,7 @@ def _clauses_to_segment(
                 "Can't map launch darkly operator: " + clause["op"] + ", skipping..."
             )
 
-    FeatureSegment.objects.create(
+    feature_segment = FeatureSegment.objects.create(
         feature=feature,
         segment=segment,
         environment=environment,
@@ -267,7 +267,7 @@ def _clauses_to_segment(
     # Enable rules by default. In LD, rules are enabled if the flag is on.
     FeatureState.objects.update_or_create(
         feature=feature,
-        segment=segment,
+        feature_segment=feature_segment,
         environment=environment,
         defaults={"enabled": True},
     )
