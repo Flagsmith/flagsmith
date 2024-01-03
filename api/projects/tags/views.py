@@ -29,11 +29,11 @@ class TagViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        project_id = self.kwargs["project_pk"]
+        project_id = int(self.kwargs["project_pk"])
         serializer.save(project_id=project_id)
 
     def perform_update(self, serializer):
-        project_id = self.kwargs["project_pk"]
+        project_id = int(self.kwargs["project_pk"])
         serializer.save(project_id=project_id)
 
     @action(
