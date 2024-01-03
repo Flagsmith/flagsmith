@@ -295,7 +295,7 @@ INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
 
 # NOTE: Because we use Postgres for analytics data in staging and Influx for tracking SSE data,
-# we need to support both configurations at the same time.if USE_POSTGRES_FOR_ANALYTICS:
+# we need to support setting the influx configuration alongside using postgres for analytics.
 if USE_POSTGRES_FOR_ANALYTICS:
     MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
 elif INFLUXDB_TOKEN:
