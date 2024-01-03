@@ -103,6 +103,7 @@ pydantic = "~1.10.9"
 pyngo = "~1.6.0"
 flagsmith = "^3.4.0"
 python-gnupg = "^0.5.1"
+scipy = "^1.11.4"
 
 [tool.poetry.group.auth-controller]
 optional = true
