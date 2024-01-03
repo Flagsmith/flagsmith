@@ -82,6 +82,7 @@ class LaunchDarklyClient:
         return list(
             self._iter_paginated_items(
                 collection_endpoint=endpoint,
+                additional_params={"summary": "0"},
             )
         )
 

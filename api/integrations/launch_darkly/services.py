@@ -1,13 +1,21 @@
+import logging
+import re
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Callable, Tuple
+from typing import Callable, Optional, Tuple
 
 from django.core import signing
 from django.utils import timezone
+from flag_engine.segments import constants
 from requests.exceptions import RequestException
 
 from environments.models import Environment
 from features.feature_types import MULTIVARIATE, STANDARD, FeatureType
-from features.models import Feature, FeatureState, FeatureStateValue
+from features.models import (
+    Feature,
+    FeatureSegment,
+    FeatureState,
+    FeatureStateValue,
+)
 from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
@@ -23,11 +31,13 @@ from integrations.launch_darkly.models import (
     LaunchDarklyImportRequest,
     LaunchDarklyImportStatus,
 )
+from integrations.launch_darkly.types import Clause
+from projects.models import Project
 from projects.tags.models import Tag
+from segments.models import Condition, Segment, SegmentRule
+from users.models import FFAdminUser
 
-if TYPE_CHECKING:  # pragma: no cover
-    from projects.models import Project
-    from users.models import FFAdminUser
+logger = logging.getLogger(__name__)
 
 
 def _sign_ld_value(value: str, user_id: int) -> str:
@@ -165,6 +175,87 @@ def _create_string_feature_states(
         )
 
 
+# Based on: https://docs.launchdarkly.com/sdk/concepts/flag-evaluation-rules#operators
+def _ld_operator_to_flagsmith_operator(ld_operator: str) -> Optional[str]:
+    return dict(
+        {
+            "in": constants.IN,
+            "endsWith": constants.REGEX,
+            "startsWith": constants.REGEX,
+            "matches": constants.REGEX,
+            "contains": constants.CONTAINS,
+            "lessThan": constants.LESS_THAN,
+            "lessThanOrEqual": constants.LESS_THAN_INCLUSIVE,
+            "greaterThan": constants.GREATER_THAN,
+            "greaterThanOrEqual": constants.GREATER_THAN_INCLUSIVE,
+            "before": constants.LESS_THAN,
+            "after": constants.GREATER_THAN,
+            "semVerEqual": constants.EQUAL,
+            "semVerLessThan": constants.LESS_THAN,
+            "semVerGreaterThan": constants.GREATER_THAN,
+            "segmentMatch": constants.REGEX,
+        }
+    ).get(ld_operator, None)
+
+
+# TODO: Not sure what happens if it is not `IN` and there are multiple values.
+def _convert_ld_value(values: list[str], ld_operator: str) -> str:
+    match ld_operator:
+        case "in":
+            return ",".join(values)
+        case "endsWith":
+            return ".*" + re.escape(values[0])
+        case "startsWith":
+            return re.escape(values[0]) + ".*"
+        case "matches" | "segmentMatch":
+            return re.escape(values[0]).replace("\\*", ".*")
+        case "contains":
+            return ".*" + re.escape(values[0]) + ".*"
+        case _:
+            return values[0]
+
+
+def _clauses_to_segment(
+    clauses: list[Clause],
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    name: str,
+) -> Segment:
+    segment = Segment.objects.create(name=name, project=project, feature=feature)
+
+    parent_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ANY_RULE)
+
+    child_rule = SegmentRule.objects.create(rule=parent_rule, type=SegmentRule.ANY_RULE)
+
+    for clause in clauses:
+        operator = _ld_operator_to_flagsmith_operator(clause["op"])
+        value = _convert_ld_value(clause["values"], clause["op"])
+        _property = clause["attribute"]
+
+        if operator is not None:
+            condition = Condition.objects.update_or_create(
+                rule=child_rule,
+                property=_property,
+                value=value,
+                operator=operator,
+                created_with_segment=True,
+            )
+            logger.warning("Condition created: " + str(condition))
+        else:
+            logger.warning(
+                "Can't map launch darkly operator: " + clause["op"] + ", skipping..."
+            )
+
+    FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment,
+    )
+
+    return segment
+
+
 def _create_mv_feature_states(
     ld_flag: ld_types.FeatureFlag,
     feature: Feature,
@@ -197,6 +288,21 @@ def _create_mv_feature_states(
             environment=environment,
             defaults={"enabled": is_flag_on},
         )
+
+        if "rules" in ld_flag_config and len(ld_flag_config["rules"]) > 0:
+            logger.warning("Rules: " + str(ld_flag_config["rules"]))
+            for index, rule in enumerate(ld_flag_config["rules"]):
+                variation = variation_values_by_idx[str(rule["variation"])]
+                description = rule.get("description", "Unknown")
+
+                logger.warning("Rule found: " + description + " : " + str(variation))
+                _clauses_to_segment(
+                    rule["clauses"],
+                    feature.project,
+                    feature,
+                    environment,
+                    "imported-" + str(index),
+                )
 
         cumulative_rollout = rollout_baseline = 0
 
