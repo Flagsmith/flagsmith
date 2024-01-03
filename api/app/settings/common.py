@@ -164,6 +164,7 @@ INSTALLED_APPS = [
     "softdelete",
     "metadata",
     "app_analytics",
+    "app_analytics.split_testing",
 ]
 
 SITE_ID = 1
