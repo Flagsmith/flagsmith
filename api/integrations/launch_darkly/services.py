@@ -177,25 +177,23 @@ def _create_string_feature_states(
 
 # Based on: https://docs.launchdarkly.com/sdk/concepts/flag-evaluation-rules#operators
 def _ld_operator_to_flagsmith_operator(ld_operator: str) -> Optional[str]:
-    return dict(
-        {
-            "in": constants.IN,
-            "endsWith": constants.REGEX,
-            "startsWith": constants.REGEX,
-            "matches": constants.REGEX,
-            "contains": constants.CONTAINS,
-            "lessThan": constants.LESS_THAN,
-            "lessThanOrEqual": constants.LESS_THAN_INCLUSIVE,
-            "greaterThan": constants.GREATER_THAN,
-            "greaterThanOrEqual": constants.GREATER_THAN_INCLUSIVE,
-            "before": constants.LESS_THAN,
-            "after": constants.GREATER_THAN,
-            "semVerEqual": constants.EQUAL,
-            "semVerLessThan": constants.LESS_THAN,
-            "semVerGreaterThan": constants.GREATER_THAN,
-            "segmentMatch": constants.REGEX,
-        }
-    ).get(ld_operator, None)
+    return {
+        "in": constants.IN,
+        "endsWith": constants.REGEX,
+        "startsWith": constants.REGEX,
+        "matches": constants.REGEX,
+        "contains": constants.CONTAINS,
+        "lessThan": constants.LESS_THAN,
+        "lessThanOrEqual": constants.LESS_THAN_INCLUSIVE,
+        "greaterThan": constants.GREATER_THAN,
+        "greaterThanOrEqual": constants.GREATER_THAN_INCLUSIVE,
+        "before": constants.LESS_THAN,
+        "after": constants.GREATER_THAN,
+        "semVerEqual": constants.EQUAL,
+        "semVerLessThan": constants.LESS_THAN,
+        "semVerGreaterThan": constants.GREATER_THAN,
+        "segmentMatch": constants.REGEX,
+    }.get(ld_operator, None)
 
 
 # TODO: Not sure what happens if it is not `IN` and there are multiple values.
@@ -224,8 +222,13 @@ def _clauses_to_segment(
 ) -> Segment:
     segment = Segment.objects.create(name=name, project=project, feature=feature)
 
+    # A parent rule has two children: one for the regular conditions and multiple for the negated conditions
+    # Mathematically, this is equivalent to:
+    # any(X, Y, !Z) = any(any(X,Y), none(Z))
+    # Or with more parameters,
+    # any(X, Y, !Z, !W) = any(any(X,Y), none(Z), none(W))
+    # Since there is no !X operation in Flagsmith, we wrap negated conditions in a none() rule.
     parent_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ANY_RULE)
-
     child_rule = SegmentRule.objects.create(rule=parent_rule, type=SegmentRule.ANY_RULE)
 
     for clause in clauses:
@@ -234,8 +237,16 @@ def _clauses_to_segment(
         _property = clause["attribute"]
 
         if operator is not None:
+            if clause["negate"] is True:
+                negated_child = SegmentRule.objects.create(
+                    rule=parent_rule, type=SegmentRule.NONE_RULE
+                )
+                rule = negated_child
+            else:
+                rule = child_rule
+
             condition = Condition.objects.update_or_create(
-                rule=child_rule,
+                rule=rule,
                 property=_property,
                 value=value,
                 operator=operator,
@@ -253,6 +264,13 @@ def _clauses_to_segment(
         environment=environment,
     )
 
+    # Enable rules by default. In LD, rules are enabled if the flag is on.
+    FeatureState.objects.update_or_create(
+        feature=feature,
+        segment=segment,
+        environment=environment,
+        defaults={"enabled": True},
+    )
     return segment
 
 
