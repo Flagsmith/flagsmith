@@ -1,3 +1,7 @@
+from app_analytics.split_testing.views import (
+    ConversionEventViewSet,
+    SplitTestViewSet,
+)
 from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
 from django.conf.urls import url
 from django.urls import include
@@ -27,6 +31,12 @@ schema_view = get_schema_view(
 traits_router = routers.DefaultRouter()
 traits_router.register(r"", SDKTraits, basename="sdk-traits")
 
+split_testing_router = routers.DefaultRouter()
+split_testing_router.register(
+    r"conversion-events", ConversionEventViewSet, basename="conversion-events"
+)
+split_testing_router.register(r"", SplitTestViewSet, basename="split-tests")
+
 app_name = "v1"
 
 urlpatterns = [
@@ -47,8 +57,13 @@ urlpatterns = [
     url(r"^flags/$", SDKFeatureStates.as_view(), name="flags"),
     url(r"^identities/$", SDKIdentities.as_view(), name="sdk-identities"),
     url(r"^traits/", include(traits_router.urls), name="traits"),
-    url(r"^analytics/flags/$", SDKAnalyticsFlags.as_view()),
-    url(r"^analytics/telemetry/$", SelfHostedTelemetryAPIView.as_view()),
+    url(r"^split-testing/", include(split_testing_router.urls), name="split-testing"),
+    url(r"^analytics/flags/$", SDKAnalyticsFlags.as_view(), name="analytics-flags"),
+    url(
+        r"^analytics/telemetry/$",
+        SelfHostedTelemetryAPIView.as_view(),
+        name="analytics-telemetry",
+    ),
     url(
         r"^environment-document/$",
         SDKEnvironmentAPIView.as_view(),
