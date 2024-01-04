@@ -35,7 +35,7 @@ class LaunchDarklyClient:
         self,
         collection_endpoint: str,
         additional_params: Optional[dict[str, str]] = None,
-    ) -> Iterator[dict[str, Any]]:
+    ) -> Iterator[dict[str, Any] | str]:
         params = {"limit": LAUNCH_DARKLY_API_ITEM_COUNT_LIMIT_PER_PAGE}
         if additional_params:
             params.update(additional_params)
@@ -105,6 +105,16 @@ class LaunchDarklyClient:
             self._iter_paginated_items(
                 collection_endpoint=endpoint,
                 additional_params={"kind": "flag"},
+            )
+        )
+
+    def get_segment_tags(self) -> list[str]:
+        """operationId: getTags"""
+        endpoint = "/api/v2/tags"
+        return list(
+            self._iter_paginated_items(
+                collection_endpoint=endpoint,
+                additional_params={"kind": "segment"},
             )
         )
 

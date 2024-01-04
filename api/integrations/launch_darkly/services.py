@@ -482,6 +482,38 @@ def _create_features_from_ld(
     ]
 
 
+def _create_segments_from_ld(
+    ld_segments: list[tuple[ld_types.UserSegment, str]],
+    tags_by_ld_tag: dict[str, Tag],
+    project_id: int,
+) -> list[Segment]:
+    """
+
+    :param ld_segments: A list of mapping from (env, segment).
+    """
+    for ld_segment, env in ld_segments:
+        if ld_segment["deleted"]:
+            continue
+
+        Segment.objects.create(
+            name="imported-" + env + "-" + ld_segment["name"],
+            project_id=project_id,
+        )
+
+        # TODO: Tagging segments is not supported yet.
+
+        # TODO: Create rules
+        logger.warning("Segment rules: " + str(ld_segment["rules"]))
+
+        # TODO: Import users
+        logger.warning("Included segment users: " + str(ld_segment["included"]))
+        logger.warning("Excluded segment users: " + str(ld_segment["excluded"]))
+        logger.warning("Included context users: " + str(ld_segment["includedContexts"]))
+        logger.warning("Excluded context users: " + str(ld_segment["excludedContexts"]))
+
+    return []
+
+
 def create_import_request(
     project: "Project",
     user: "FFAdminUser",
@@ -522,7 +554,18 @@ def process_import_request(
         try:
             ld_environments = ld_client.get_environments(project_key=ld_project_key)
             ld_flags = ld_client.get_flags(project_key=ld_project_key)
-            ld_tags = ld_client.get_flag_tags()
+            ld_flag_tags = ld_client.get_flag_tags()
+            ld_segment_tags = ld_client.get_segment_tags()
+            # Keyed by (segment, environment)
+            ld_segments: list[tuple[ld_types.UserSegment, str]] = []
+            for env in ld_environments:
+                ld_segments_for_env = ld_client.get_segments(
+                    project_key=ld_project_key,
+                    environment_key=env["key"],
+                )
+                for segment in ld_segments_for_env:
+                    ld_segments.append((segment, env["key"]))
+
         except RequestException as exc:
             _log_error(
                 import_request=import_request,
@@ -538,13 +581,24 @@ def process_import_request(
             ld_environments=ld_environments,
             project_id=import_request.project_id,
         )
-        tags_by_ld_tag = _create_tags_from_ld(
-            ld_tags=ld_tags,
+
+        segment_tags_by_ld_tag = _create_tags_from_ld(
+            ld_tags=ld_segment_tags,
+            project_id=import_request.project_id,
+        )
+        _create_segments_from_ld(
+            ld_segments=ld_segments,
+            tags_by_ld_tag=segment_tags_by_ld_tag,
+            project_id=import_request.project_id,
+        )
+
+        flag_tags_by_ld_tag = _create_tags_from_ld(
+            ld_tags=ld_flag_tags,
             project_id=import_request.project_id,
         )
         _create_features_from_ld(
             ld_flags=ld_flags,
             environments_by_ld_environment_key=environments_by_ld_environment_key,
-            tags_by_ld_tag=tags_by_ld_tag,
+            tags_by_ld_tag=flag_tags_by_ld_tag,
             project_id=import_request.project_id,
         )
