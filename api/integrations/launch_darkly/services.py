@@ -156,13 +156,56 @@ def _convert_ld_value(values: list[str], ld_operator: str) -> str:
             return values[0]
 
 
-def _create_segment_from_clauses(
+def _get_segment_name(name: str, env: str) -> str:
+    return f"{name} (Override for {env})"
+
+
+def _create_feature_segment_from_clauses(
     clauses: list[Clause],
     project: Project,
     feature: Feature,
     environment: Environment,
+    segments_by_ld_key: dict[str, Segment],
     name: str,
-) -> Segment:
+) -> None:
+    if "segmentMatch" in [clause["op"] for clause in clauses]:
+        if any(clause["op"] != "segmentMatch" for clause in clauses):
+            logger.warning(
+                f"Nested segment match is not supported, skipping for {feature.name} in {environment.name}"
+            )
+            return
+
+        if any(clause["negate"] is True for clause in clauses):
+            logger.warning(
+                f"Negated segment match is not supported, skipping for {feature.name} in {environment.name}"
+            )
+            return
+
+        # Complex rules that allow matching segments is not allowed in Flagsmith.
+        # We can only emulate a single segment match by enabling the segment rule.
+        all_targeted_segments: list[str] = sum(
+            [clause["values"] for clause in clauses], []
+        )
+        for index, targeted_segment_key in enumerate(all_targeted_segments):
+            targeted_segment_name = segments_by_ld_key[targeted_segment_key].name
+            segment = Segment.objects.get(name=targeted_segment_name, project=project)
+
+            feature_segment, _ = FeatureSegment.objects.update_or_create(
+                feature=feature,
+                segment=segment,
+                environment=environment,
+                priority=index,
+            )
+
+            # Enable rules by default. In LD, rules are enabled if the flag is on.
+            FeatureState.objects.update_or_create(
+                feature=feature,
+                feature_segment=feature_segment,
+                environment=environment,
+                defaults={"enabled": True},
+            )
+        return
+
     segment = Segment.objects.create(name=name, project=project, feature=feature)
 
     # A parent rule has two children: one for the regular conditions and multiple for the negated conditions
@@ -189,7 +232,7 @@ def _create_segment_from_clauses(
             else:
                 rule = child_rule
 
-            condition = Condition.objects.update_or_create(
+            condition, _ = Condition.objects.update_or_create(
                 rule=rule,
                 property=_property,
                 value=value,
@@ -197,15 +240,12 @@ def _create_segment_from_clauses(
                 created_with_segment=True,
             )
             logger.warning("Condition created: " + str(condition))
-        elif clause["op"] == "segmentMatch":
-            # TODO: Assign the segment to the feature
-            pass
         else:
             logger.warning(
                 "Can't map launch darkly operator: " + clause["op"] + ", skipping..."
             )
 
-    feature_segment = FeatureSegment.objects.create(
+    feature_segment, _ = FeatureSegment.objects.update_or_create(
         feature=feature,
         segment=segment,
         environment=environment,
@@ -218,7 +258,7 @@ def _create_segment_from_clauses(
         environment=environment,
         defaults={"enabled": True},
     )
-    return segment
+    return
 
 
 def _import_targets(
@@ -238,6 +278,7 @@ def _import_rules(
     feature: Feature,
     environment: Environment,
     variations_by_idx: dict[str, ld_types.Variation],
+    segments_by_ld_key: dict[str, Segment],
 ) -> None:
     if "rules" in ld_flag_config and len(ld_flag_config["rules"]) > 0:
         logger.warning("Rules: " + str(ld_flag_config["rules"]))
@@ -246,11 +287,12 @@ def _import_rules(
             description = rule.get("description", "Unknown")
 
             logger.warning("Rule found: " + description + " : " + str(variation))
-            _create_segment_from_clauses(
+            _create_feature_segment_from_clauses(
                 rule["clauses"],
                 feature.project,
                 feature,
                 environment,
+                segments_by_ld_key,
                 "imported-" + str(index),
             )
 
@@ -259,6 +301,7 @@ def _create_boolean_feature_states(
     ld_flag: ld_types.FeatureFlag,
     feature: Feature,
     environments_by_ld_environment_key: dict[str, Environment],
+    segments_by_ld_key: dict[str, Segment],
 ) -> None:
     variations_by_idx = {
         str(idx): variation for idx, variation in enumerate(ld_flag["variations"])
@@ -278,13 +321,16 @@ def _create_boolean_feature_states(
         )
 
         _import_targets(ld_flag_config, feature, environment)
-        _import_rules(ld_flag_config, feature, environment, variations_by_idx)
+        _import_rules(
+            ld_flag_config, feature, environment, variations_by_idx, segments_by_ld_key
+        )
 
 
 def _create_string_feature_states(
     ld_flag: ld_types.FeatureFlag,
     feature: Feature,
     environments_by_ld_environment_key: dict[str, Environment],
+    segments_by_ld_key: dict[str, Segment],
 ) -> None:
     variations_by_idx = {
         str(idx): variation for idx, variation in enumerate(ld_flag["variations"])
@@ -321,13 +367,16 @@ def _create_string_feature_states(
         )
 
         _import_targets(ld_flag_config, feature, environment)
-        _import_rules(ld_flag_config, feature, environment, variations_by_idx)
+        _import_rules(
+            ld_flag_config, feature, environment, variations_by_idx, segments_by_ld_key
+        )
 
 
 def _create_mv_feature_states(
     ld_flag: ld_types.FeatureFlag,
     feature: Feature,
     environments_by_ld_environment_key: dict[str, Environment],
+    segments_by_ld_key: dict[str, Segment],
 ) -> None:
     variations = ld_flag["variations"]
     variations_by_idx = {
@@ -403,7 +452,9 @@ def _create_mv_feature_states(
                 )
 
         _import_targets(ld_flag_config, feature, environment)
-        _import_rules(ld_flag_config, feature, environment, variations_by_idx)
+        _import_rules(
+            ld_flag_config, feature, environment, variations_by_idx, segments_by_ld_key
+        )
 
 
 def _get_feature_type_and_feature_state_factory(
@@ -430,6 +481,7 @@ def _create_feature_from_ld(
     ld_flag: ld_types.FeatureFlag,
     environments_by_ld_environment_key: dict[str, Environment],
     tags_by_ld_tag: dict[str, Tag],
+    segments_by_ld_key: dict[str, Segment],
     project_id: int,
 ) -> Feature:
     (
@@ -460,6 +512,7 @@ def _create_feature_from_ld(
         ld_flag=ld_flag,
         feature=feature,
         environments_by_ld_environment_key=environments_by_ld_environment_key,
+        segments_by_ld_key=segments_by_ld_key,
     )
 
     return feature
@@ -469,6 +522,7 @@ def _create_features_from_ld(
     ld_flags: list[ld_types.FeatureFlag],
     environments_by_ld_environment_key: dict[str, Environment],
     tags_by_ld_tag: dict[str, Tag],
+    segments_by_ld_key: dict[str, Segment],
     project_id: int,
 ) -> list[Feature]:
     return [
@@ -476,6 +530,7 @@ def _create_features_from_ld(
             ld_flag=ld_flag,
             environments_by_ld_environment_key=environments_by_ld_environment_key,
             tags_by_ld_tag=tags_by_ld_tag,
+            segments_by_ld_key=segments_by_ld_key,
             project_id=project_id,
         )
         for ld_flag in ld_flags
@@ -484,23 +539,28 @@ def _create_features_from_ld(
 
 def _create_segments_from_ld(
     ld_segments: list[tuple[ld_types.UserSegment, str]],
+    environments_by_ld_environment_key: dict[str, Environment],
     tags_by_ld_tag: dict[str, Tag],
     project_id: int,
-) -> list[Segment]:
+) -> dict[str, Segment]:
     """
 
     :param ld_segments: A list of mapping from (env, segment).
+    :return A mapping from ld segment key to Segment itself.
     """
+    segments_by_ld_key = {}
     for ld_segment, env in ld_segments:
         if ld_segment["deleted"]:
             continue
 
-        Segment.objects.create(
-            name="imported-" + env + "-" + ld_segment["name"],
+        segment, _ = Segment.objects.update_or_create(
+            name=_get_segment_name(ld_segment["name"], env),
             project_id=project_id,
         )
 
-        # TODO: Tagging segments is not supported yet.
+        segments_by_ld_key[ld_segment["key"]] = segment
+
+        # TODO: Tagging segments is not supported yet. https://github.com/Flagsmith/flagsmith/issues/3241
 
         # TODO: Create rules
         logger.warning("Segment rules: " + str(ld_segment["rules"]))
@@ -511,7 +571,7 @@ def _create_segments_from_ld(
         logger.warning("Included context users: " + str(ld_segment["includedContexts"]))
         logger.warning("Excluded context users: " + str(ld_segment["excludedContexts"]))
 
-    return []
+    return segments_by_ld_key
 
 
 def create_import_request(
@@ -586,8 +646,9 @@ def process_import_request(
             ld_tags=ld_segment_tags,
             project_id=import_request.project_id,
         )
-        _create_segments_from_ld(
+        segments_by_ld_key = _create_segments_from_ld(
             ld_segments=ld_segments,
+            environments_by_ld_environment_key=environments_by_ld_environment_key,
             tags_by_ld_tag=segment_tags_by_ld_tag,
             project_id=import_request.project_id,
         )
@@ -600,5 +661,6 @@ def process_import_request(
             ld_flags=ld_flags,
             environments_by_ld_environment_key=environments_by_ld_environment_key,
             tags_by_ld_tag=flag_tags_by_ld_tag,
+            segments_by_ld_key=segments_by_ld_key,
             project_id=import_request.project_id,
         )

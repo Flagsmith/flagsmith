@@ -1,4 +1,4 @@
-from typing import Any, Iterator, Optional
+from typing import Any, Iterator, Optional, TypeVar
 
 from requests import Session
 
@@ -8,6 +8,8 @@ from integrations.launch_darkly.constants import (
     LAUNCH_DARKLY_API_ITEM_COUNT_LIMIT_PER_PAGE,
     LAUNCH_DARKLY_API_VERSION,
 )
+
+T = TypeVar("T")
 
 
 class LaunchDarklyClient:
@@ -25,7 +27,7 @@ class LaunchDarklyClient:
         self,
         endpoint: str,
         params: Optional[dict[str, Any]] = None,
-    ) -> dict[str, Any]:
+    ) -> T:
         full_url = f"{LAUNCH_DARKLY_API_BASE_URL}{endpoint}"
         response = self.client_session.get(full_url, params=params)
         response.raise_for_status()
@@ -35,7 +37,7 @@ class LaunchDarklyClient:
         self,
         collection_endpoint: str,
         additional_params: Optional[dict[str, str]] = None,
-    ) -> Iterator[dict[str, Any] | str]:
+    ) -> Iterator[T]:
         params = {"limit": LAUNCH_DARKLY_API_ITEM_COUNT_LIMIT_PER_PAGE}
         if additional_params:
             params.update(additional_params)
@@ -126,5 +128,13 @@ class LaunchDarklyClient:
         return list(
             self._iter_paginated_items(
                 collection_endpoint=endpoint,
+                additional_params={"limit": "50"},
             )
         )
+
+    def get_segment(
+        self, project_key: str, environment_key: str, segment_key: str
+    ) -> ld_types.UserSegment:
+        """operationId: getSegment"""
+        endpoint = f"/api/v2/segments/{project_key}/{environment_key}/{segment_key}"
+        return self._get_json_response(endpoint=endpoint)
