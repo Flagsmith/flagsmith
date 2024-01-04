@@ -1073,3 +1073,6 @@ if LDAP_INSTALLED and LDAP_AUTH_URL:
     # The LDAP user username and password used by `sync_ldap_users_and_groups` command
     LDAP_SYNC_USER_USERNAME = env.str("LDAP_SYNC_USER_USERNAME", None)
     LDAP_SYNC_USER_PASSWORD = env.str("LDAP_SYNC_USER_PASSWORD", None)
+
+WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)
+WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
