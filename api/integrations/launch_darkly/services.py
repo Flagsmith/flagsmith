@@ -119,15 +119,156 @@ def _create_tags_from_ld(
     return tags_by_ld_tag
 
 
+# Based on: https://docs.launchdarkly.com/sdk/concepts/flag-evaluation-rules#operators
+def _ld_operator_to_flagsmith_operator(ld_operator: str) -> Optional[str]:
+    return {
+        "in": constants.IN,
+        "endsWith": constants.REGEX,
+        "startsWith": constants.REGEX,
+        "matches": constants.REGEX,
+        "contains": constants.CONTAINS,
+        "lessThan": constants.LESS_THAN,
+        "lessThanOrEqual": constants.LESS_THAN_INCLUSIVE,
+        "greaterThan": constants.GREATER_THAN,
+        "greaterThanOrEqual": constants.GREATER_THAN_INCLUSIVE,
+        "before": constants.LESS_THAN,
+        "after": constants.GREATER_THAN,
+        "semVerEqual": constants.EQUAL,
+        "semVerLessThan": constants.LESS_THAN,
+        "semVerGreaterThan": constants.GREATER_THAN,
+    }.get(ld_operator, None)
+
+
+# TODO: Not sure what happens if it is not `IN` and there are multiple values.
+def _convert_ld_value(values: list[str], ld_operator: str) -> str:
+    match ld_operator:
+        case "in":
+            return ",".join(values)
+        case "endsWith":
+            return ".*" + re.escape(values[0])
+        case "startsWith":
+            return re.escape(values[0]) + ".*"
+        case "matches" | "segmentMatch":
+            return re.escape(values[0]).replace("\\*", ".*")
+        case "contains":
+            return ".*" + re.escape(values[0]) + ".*"
+        case _:
+            return values[0]
+
+
+def _create_segment_from_clauses(
+    clauses: list[Clause],
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    name: str,
+) -> Segment:
+    segment = Segment.objects.create(name=name, project=project, feature=feature)
+
+    # A parent rule has two children: one for the regular conditions and multiple for the negated conditions
+    # Mathematically, this is equivalent to:
+    # any(X, Y, !Z) = any(any(X,Y), none(Z))
+    # Or with more parameters,
+    # any(X, Y, !Z, !W) = any(any(X,Y), none(Z), none(W))
+    # Here, any(X,Y) is the child rule. none(Z) and none(W) are the negated children.
+    # Since there is no !X operation in Flagsmith, we wrap negated conditions in a none() rule.
+    parent_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ANY_RULE)
+    child_rule = SegmentRule.objects.create(rule=parent_rule, type=SegmentRule.ANY_RULE)
+
+    for clause in clauses:
+        operator = _ld_operator_to_flagsmith_operator(clause["op"])
+        value = _convert_ld_value(clause["values"], clause["op"])
+        _property = clause["attribute"]
+
+        if operator is not None:
+            if clause["negate"] is True:
+                negated_child = SegmentRule.objects.create(
+                    rule=parent_rule, type=SegmentRule.NONE_RULE
+                )
+                rule = negated_child
+            else:
+                rule = child_rule
+
+            condition = Condition.objects.update_or_create(
+                rule=rule,
+                property=_property,
+                value=value,
+                operator=operator,
+                created_with_segment=True,
+            )
+            logger.warning("Condition created: " + str(condition))
+        elif clause["op"] == "segmentMatch":
+            # TODO: Assign the segment to the feature
+            pass
+        else:
+            logger.warning(
+                "Can't map launch darkly operator: " + clause["op"] + ", skipping..."
+            )
+
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment,
+    )
+
+    # Enable rules by default. In LD, rules are enabled if the flag is on.
+    FeatureState.objects.update_or_create(
+        feature=feature,
+        feature_segment=feature_segment,
+        environment=environment,
+        defaults={"enabled": True},
+    )
+    return segment
+
+
+def _import_targets(
+    ld_flag_config: ld_types.FeatureFlagConfig,
+    feature: Feature,
+    environment: Environment,
+) -> None:
+    if "targets" in ld_flag_config:
+        logger.warning("Targets: " + str(ld_flag_config["targets"]))
+
+    if "contextTargets" in ld_flag_config:
+        logger.warning("Context targets: " + str(ld_flag_config["contextTargets"]))
+
+
+def _import_rules(
+    ld_flag_config: ld_types.FeatureFlagConfig,
+    feature: Feature,
+    environment: Environment,
+    variations_by_idx: dict[str, ld_types.Variation],
+) -> None:
+    if "rules" in ld_flag_config and len(ld_flag_config["rules"]) > 0:
+        logger.warning("Rules: " + str(ld_flag_config["rules"]))
+        for index, rule in enumerate(ld_flag_config["rules"]):
+            variation = variations_by_idx[str(rule["variation"])]["value"]
+            description = rule.get("description", "Unknown")
+
+            logger.warning("Rule found: " + description + " : " + str(variation))
+            _create_segment_from_clauses(
+                rule["clauses"],
+                feature.project,
+                feature,
+                environment,
+                "imported-" + str(index),
+            )
+
+
 def _create_boolean_feature_states(
     ld_flag: ld_types.FeatureFlag,
     feature: Feature,
     environments_by_ld_environment_key: dict[str, Environment],
 ) -> None:
+    variations_by_idx = {
+        str(idx): variation for idx, variation in enumerate(ld_flag["variations"])
+    }
+
     for ld_environment_key, environment in environments_by_ld_environment_key.items():
         ld_flag_config = ld_flag["environments"][ld_environment_key]
         feature_state, _ = FeatureState.objects.update_or_create(
             feature=feature,
+            feature_segment=None,
             environment=environment,
             defaults={"enabled": ld_flag_config["on"]},
         )
@@ -135,6 +276,9 @@ def _create_boolean_feature_states(
         FeatureStateValue.objects.update_or_create(
             feature_state=feature_state,
         )
+
+        _import_targets(ld_flag_config, feature, environment)
+        _import_rules(ld_flag_config, feature, environment, variations_by_idx)
 
 
 def _create_string_feature_states(
@@ -166,112 +310,18 @@ def _create_string_feature_states(
 
         feature_state, _ = FeatureState.objects.update_or_create(
             feature=feature,
+            feature_segment=None,
             environment=environment,
             defaults={"enabled": is_flag_on},
         )
+
         FeatureStateValue.objects.update_or_create(
             feature_state=feature_state,
             defaults={"type": STRING, "string_value": string_value},
         )
 
-
-# Based on: https://docs.launchdarkly.com/sdk/concepts/flag-evaluation-rules#operators
-def _ld_operator_to_flagsmith_operator(ld_operator: str) -> Optional[str]:
-    return {
-        "in": constants.IN,
-        "endsWith": constants.REGEX,
-        "startsWith": constants.REGEX,
-        "matches": constants.REGEX,
-        "contains": constants.CONTAINS,
-        "lessThan": constants.LESS_THAN,
-        "lessThanOrEqual": constants.LESS_THAN_INCLUSIVE,
-        "greaterThan": constants.GREATER_THAN,
-        "greaterThanOrEqual": constants.GREATER_THAN_INCLUSIVE,
-        "before": constants.LESS_THAN,
-        "after": constants.GREATER_THAN,
-        "semVerEqual": constants.EQUAL,
-        "semVerLessThan": constants.LESS_THAN,
-        "semVerGreaterThan": constants.GREATER_THAN,
-        "segmentMatch": constants.REGEX,
-    }.get(ld_operator, None)
-
-
-# TODO: Not sure what happens if it is not `IN` and there are multiple values.
-def _convert_ld_value(values: list[str], ld_operator: str) -> str:
-    match ld_operator:
-        case "in":
-            return ",".join(values)
-        case "endsWith":
-            return ".*" + re.escape(values[0])
-        case "startsWith":
-            return re.escape(values[0]) + ".*"
-        case "matches" | "segmentMatch":
-            return re.escape(values[0]).replace("\\*", ".*")
-        case "contains":
-            return ".*" + re.escape(values[0]) + ".*"
-        case _:
-            return values[0]
-
-
-def _clauses_to_segment(
-    clauses: list[Clause],
-    project: Project,
-    feature: Feature,
-    environment: Environment,
-    name: str,
-) -> Segment:
-    segment = Segment.objects.create(name=name, project=project, feature=feature)
-
-    # A parent rule has two children: one for the regular conditions and multiple for the negated conditions
-    # Mathematically, this is equivalent to:
-    # any(X, Y, !Z) = any(any(X,Y), none(Z))
-    # Or with more parameters,
-    # any(X, Y, !Z, !W) = any(any(X,Y), none(Z), none(W))
-    # Since there is no !X operation in Flagsmith, we wrap negated conditions in a none() rule.
-    parent_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ANY_RULE)
-    child_rule = SegmentRule.objects.create(rule=parent_rule, type=SegmentRule.ANY_RULE)
-
-    for clause in clauses:
-        operator = _ld_operator_to_flagsmith_operator(clause["op"])
-        value = _convert_ld_value(clause["values"], clause["op"])
-        _property = clause["attribute"]
-
-        if operator is not None:
-            if clause["negate"] is True:
-                negated_child = SegmentRule.objects.create(
-                    rule=parent_rule, type=SegmentRule.NONE_RULE
-                )
-                rule = negated_child
-            else:
-                rule = child_rule
-
-            condition = Condition.objects.update_or_create(
-                rule=rule,
-                property=_property,
-                value=value,
-                operator=operator,
-                created_with_segment=True,
-            )
-            logger.warning("Condition created: " + str(condition))
-        else:
-            logger.warning(
-                "Can't map launch darkly operator: " + clause["op"] + ", skipping..."
-            )
-
-    feature_segment = FeatureSegment.objects.create(
-        feature=feature,
-        segment=segment,
-        environment=environment,
-    )
-
-    # Enable rules by default. In LD, rules are enabled if the flag is on.
-    FeatureState.objects.update_or_create(
-        feature=feature,
-        feature_segment=feature_segment,
-        environment=environment,
-        defaults={"enabled": True},
-    )
-    return segment
+        _import_targets(ld_flag_config, feature, environment)
+        _import_rules(ld_flag_config, feature, environment, variations_by_idx)
 
 
 def _create_mv_feature_states(
@@ -280,6 +330,9 @@ def _create_mv_feature_states(
     environments_by_ld_environment_key: dict[str, Environment],
 ) -> None:
     variations = ld_flag["variations"]
+    variations_by_idx = {
+        str(idx): variation for idx, variation in enumerate(variations)
+    }
     variation_values_by_idx: dict[str, str] = {}
     mv_feature_options_by_variation: dict[str, MultivariateFeatureOption] = {}
 
@@ -303,24 +356,10 @@ def _create_mv_feature_states(
 
         feature_state, _ = FeatureState.objects.update_or_create(
             feature=feature,
+            feature_segment=None,
             environment=environment,
             defaults={"enabled": is_flag_on},
         )
-
-        if "rules" in ld_flag_config and len(ld_flag_config["rules"]) > 0:
-            logger.warning("Rules: " + str(ld_flag_config["rules"]))
-            for index, rule in enumerate(ld_flag_config["rules"]):
-                variation = variation_values_by_idx[str(rule["variation"])]
-                description = rule.get("description", "Unknown")
-
-                logger.warning("Rule found: " + description + " : " + str(variation))
-                _clauses_to_segment(
-                    rule["clauses"],
-                    feature.project,
-                    feature,
-                    environment,
-                    "imported-" + str(index),
-                )
 
         cumulative_rollout = rollout_baseline = 0
 
@@ -362,6 +401,9 @@ def _create_mv_feature_states(
                     multivariate_feature_option=mv_feature_option,
                     defaults={"percentage_allocation": percentage_allocation},
                 )
+
+        _import_targets(ld_flag_config, feature, environment)
+        _import_rules(ld_flag_config, feature, environment, variations_by_idx)
 
 
 def _get_feature_type_and_feature_state_factory(

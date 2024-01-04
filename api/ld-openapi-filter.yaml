@@ -3,6 +3,7 @@ inverseOperationIds:
   - getProject
   - getEnvironmentsByProject
   - getFeatureFlags
+  - getSegments
 unusedComponents:
   - schemas
   - parameters

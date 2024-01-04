@@ -107,3 +107,14 @@ class LaunchDarklyClient:
                 additional_params={"kind": "flag"},
             )
         )
+
+    def get_segments(
+        self, project_key: str, environment_key: str
+    ) -> list[ld_types.UserSegment]:
+        """operationId: getSegments"""
+        endpoint = f"/api/v2/segments/{project_key}/{environment_key}"
+        return list(
+            self._iter_paginated_items(
+                collection_endpoint=endpoint,
+            )
+        )
