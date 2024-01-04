@@ -216,7 +216,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                 <FormGroup>
                   <PanelSearch
                     filterElement={
-                      <div className='text-right'>
+                      <div className='text-right me-2'>
                         <label className='me-2'>Include Feature-Specific</label>
                         <Switch onChange={setShowFeatureSpecific} />
                       </div>
