@@ -9,6 +9,7 @@ from core.constants import STRING
 from core.request_origin import RequestOrigin
 from django.test import TestCase, override_settings
 from django.utils import timezone
+from mypy_boto3_dynamodb.service_resource import Table
 from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
 from pytest_mock import MockerFixture
 
@@ -32,7 +33,6 @@ from util.mappers import map_environment_to_environment_document
 
 if typing.TYPE_CHECKING:
     from django.db.models import Model
-    from mypy_boto3_dynamodb.service_resource import Table
 
     from features.workflows.core.models import ChangeRequest
 
@@ -839,13 +839,13 @@ def test_deleting_environment_api_key_deletes_dynamo_document_if_enabled(
     api_key = EnvironmentAPIKey.objects.create(
         name="Some key", environment=dynamo_enabled_project_environment_one
     )
+    assert flagsmith_environment_api_key_table.scan()["Count"] == 1
 
     # When
     api_key.delete()
 
     # Then
-    response = flagsmith_environment_api_key_table.get_item(Key={"key": api_key.key})
-    assert "Item" not in response
+    assert flagsmith_environment_api_key_table.scan()["Count"] == 0
 
 
 def test_deleting_environment_creates_task_to_delete_dynamo_document_if_enabled(
@@ -855,10 +855,11 @@ def test_deleting_environment_creates_task_to_delete_dynamo_document_if_enabled(
     # Given
     mocked_task = mocker.patch("environments.tasks.delete_environment_from_dynamo")
     mocker.patch(
-        "environments.models.environment_wrapper",
+        "environments.models.DynamoEnvironmentWrapper.is_enabled",
         new_callable=mocker.PropertyMock,
         return_value=True,
     )
+
     # When
     dynamo_enabled_project_environment_one.delete()
 

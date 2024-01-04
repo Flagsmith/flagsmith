@@ -90,7 +90,6 @@ def dynamo_enabled_project_environment_one_document(
 @pytest.fixture()
 def dynamo_environment_wrapper(
     flagsmith_environment_table: Table,
-    settings: SettingsWrapper,
 ) -> DynamoEnvironmentWrapper:
     wrapper = DynamoEnvironmentWrapper()
 
