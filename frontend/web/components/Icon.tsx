@@ -50,6 +50,7 @@ export type IconName =
   | 'timer'
   | 'request'
   | 'people'
+  | 'system'
 
 export type IconType = React.DetailedHTMLProps<
   React.HTMLAttributes<SVGSVGElement>,

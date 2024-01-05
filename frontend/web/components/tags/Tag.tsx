@@ -6,6 +6,8 @@ import { Tag as TTag } from 'common/types/responses'
 import ToggleChip from 'components/ToggleChip'
 import Utils from 'common/utils/utils'
 import Format from 'common/utils/format'
+import Icon from 'components/Icon'
+import TagContent from 'components/tags/TagContent';
 
 type TagType = {
   className?: string
@@ -46,6 +48,7 @@ const Tag: FC<TagType> = ({
       />
     )
   }
+
   if (!hideNames && !!onClick) {
     return (
       <ToggleChip
@@ -53,7 +56,7 @@ const Tag: FC<TagType> = ({
         active={selected}
         onClick={onClick ? () => onClick(tag as TTag) : null}
       >
-        {tag.label}
+        <TagContent tag={tag} />
       </ToggleChip>
     )
   }
@@ -71,11 +74,11 @@ const Tag: FC<TagType> = ({
           }}
           className={cx('chip', className)}
         >
-          {Format.truncateText(`${tag.label}`, 12)}
+          <TagContent tag={tag} truncateTo={12} />
         </div>
       }
     >
-      {tag.label}
+      <TagContent tag={tag} />
     </Tooltip>
   ) : (
     <div
@@ -87,7 +90,7 @@ const Tag: FC<TagType> = ({
       }}
       className={cx('chip', className)}
     >
-      {tag.label}
+      <TagContent tag={tag} />
     </div>
   )
 }
