@@ -150,19 +150,27 @@ def test_finish_identity_migration_calls_put_item_with_correct_arguments(
     )
 
 
-def test_delete(flagsmith_project_metadata_table: Table, mocker: MockerFixture):
+def test_delete__removes_project_metadata_document_from_dynamodb(
+    flagsmith_project_metadata_table: Table, mocker: MockerFixture
+):
     # Given
-    project_id = 1
-    mocked_dynamo_table = mocker.patch(
+    first_project_id = 1
+    mocker.patch(
         "environments.dynamodb.types.project_metadata_table",
         flagsmith_project_metadata_table,
     )
-    flagsmith_project_metadata_table.put_item(Item={"id": project_id})
+    flagsmith_project_metadata_table.put_item(Item={"id": first_project_id})
+    # Let's add another item to make sure that only the correct item is deleted
+    second_project_id = 2
+    flagsmith_project_metadata_table.put_item(Item={"id": second_project_id})
 
-    project_metadata = DynamoProjectMetadata.get_or_new(project_id)
+    project_metadata = DynamoProjectMetadata.get_or_new(first_project_id)
 
     # When
     project_metadata.delete()
 
     # Then
-    assert mocked_dynamo_table.scan()["Count"] == 0
+    assert flagsmith_project_metadata_table.scan()["Count"] == 1
+    assert (
+        flagsmith_project_metadata_table.scan()["Items"][0]["id"] == second_project_id
+    )

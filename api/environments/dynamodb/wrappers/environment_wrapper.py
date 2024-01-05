@@ -53,7 +53,7 @@ class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
         except KeyError as e:
             raise ObjectDoesNotExist() from e
 
-    def delete(self, api_key: str) -> None:
+    def delete_environment(self, api_key: str) -> None:
         self.table.delete_item(Key={"api_key": api_key})
 
 
@@ -112,7 +112,7 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
                     Item=map_environment_to_environment_v2_document(environment),
                 )
 
-    def delete_all_items(self, environment_id: int):
+    def delete_environment(self, environment_id: int):
         environment_id = str(environment_id)
         filter_expression = Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(environment_id)
         query_kwargs: "QueryInputRequestTypeDef" = {

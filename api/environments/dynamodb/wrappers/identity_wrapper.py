@@ -59,7 +59,7 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
     def delete_item(self, composite_key: str):
         self.table.delete_item(Key={"composite_key": composite_key})
 
-    def delete_all_items(self, environment_api_key: str):
+    def delete_all_identities(self, environment_api_key: str):
         with self.table.batch_writer() as writer:
             for item in self.iter_all_items_paginated(
                 environment_api_key=environment_api_key,

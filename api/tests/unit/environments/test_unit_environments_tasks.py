@@ -80,7 +80,9 @@ def test_process_environment_update_with_project_audit_log(environment, mocker):
     )
 
 
-def test_delete_environment_from_dynamo(mocker: MockerFixture) -> None:
+def test_delete_environment__calls_internal_methods_correctly(
+    mocker: MockerFixture,
+) -> None:
     # Given
     environment_api_key = "test-api-key"
     environment_id = 10
@@ -96,11 +98,13 @@ def test_delete_environment_from_dynamo(mocker: MockerFixture) -> None:
     delete_environment_from_dynamo(environment_api_key, environment_id)
 
     # Then
-    mocked_environment_wrapper.delete.assert_called_once_with(environment_api_key)
+    mocked_environment_wrapper.delete_environment.assert_called_once_with(
+        environment_api_key
+    )
 
-    mocked_environment_v2_wrapper.delete_all_items.assert_called_once_with(
+    mocked_environment_v2_wrapper.delete_environment.assert_called_once_with(
         environment_id
     )
-    mocked_identity_wrapper.delete_all_items.assert_called_once_with(
+    mocked_identity_wrapper.delete_all_identities.assert_called_once_with(
         environment_api_key
     )

@@ -408,7 +408,6 @@ def test_identity_wrapper__iter_all_items_paginated__returns_expected(
     environment_api_key = "test_api_key"
     limit = 1
 
-    # expected_engine_identity = IdentityModel.parse_obj(identity_document)
     expected_next_page_key = "next_page_key"
 
     environment_document = map_environment_to_environment_document(environment)
@@ -459,7 +458,7 @@ def test_identity_wrapper__iter_all_items_paginated__returns_expected(
     )
 
 
-def test_delete_all_items__deletes_all_identities_for_the_environment(
+def test_delete_all_identities__deletes_all_identities_documents_from_dynamodb(
     flagsmith_identities_table: Table,
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
 ) -> None:
@@ -468,14 +467,14 @@ def test_delete_all_items__deletes_all_identities_for_the_environment(
 
     # Let's create 2 identities for the same environment
     identity_one = {
-        "composite_key": "environment_one_identity_one",
-        "environment_api_key": "environment_one",
+        "composite_key": f"{environment_api_key}_identity_one",
+        "environment_api_key": environment_api_key,
         "identifier": "identity_one",
     }
     identity_two = {
-        "composite_key": "environment_one_identity_two",
+        "composite_key": f"{environment_api_key}_identity_two",
         "identifier": "identity_two",
-        "environment_api_key": "environment_one",
+        "environment_api_key": environment_api_key,
     }
 
     flagsmith_identities_table.put_item(Item=identity_one)
@@ -490,7 +489,7 @@ def test_delete_all_items__deletes_all_identities_for_the_environment(
     flagsmith_identities_table.put_item(Item=identity_three)
 
     # When
-    dynamodb_identity_wrapper.delete_all_items(environment_api_key)
+    dynamodb_identity_wrapper.delete_all_identities(environment_api_key)
 
     # Then
     assert flagsmith_identities_table.scan()["Count"] == 1

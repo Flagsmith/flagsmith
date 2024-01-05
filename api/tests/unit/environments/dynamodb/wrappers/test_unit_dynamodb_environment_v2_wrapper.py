@@ -156,7 +156,7 @@ def test_environment_v2_wrapper__write_environments__put_expected(
     assert results[0] == map_environment_to_environment_v2_document(environment)
 
 
-def test_environment_v2_wrapper__delete_all_items__removes_items_from_dynamodb(
+def test_environment_v2_wrapper__delete_environment__deletes_related_data_from_dynamodb(
     flagsmith_environments_v2_table: Table,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
 ) -> None:
@@ -165,32 +165,34 @@ def test_environment_v2_wrapper__delete_all_items__removes_items_from_dynamodb(
     environment_id = "10"
 
     # Add some items to the table
-    for _ in range(10):
+    for i in range(10):
         flagsmith_environments_v2_table.put_item(
             Item={
                 "environment_api_key": environment_api_key,
                 "environment_id": environment_id,
-                "document_key": "some_key",
+                "document_key": f"identity_override:{i}",
             }
         )
 
     # Next, let's add an item for a different environment
+    environment_2_api_key = "different_api_key"
+    environment_2_id = "11"
     flagsmith_environments_v2_table.put_item(
         Item={
-            "environment_api_key": "different_api_key",
-            "environment_id": "different_environment_id",
-            "document_key": "some_key",
+            "environment_api_key": environment_2_api_key,
+            "environment_id": environment_2_id,
+            "document_key": "identity_override:1",
         }
     )
 
     # When
-    dynamodb_wrapper_v2.delete_all_items(environment_id=environment_id)
+    dynamodb_wrapper_v2.delete_environment(environment_id=environment_id)
 
     # Then
     results = flagsmith_environments_v2_table.scan()["Items"]
     assert len(results) == 1
     assert results[0] == {
-        "environment_api_key": "different_api_key",
-        "environment_id": "different_environment_id",
-        "document_key": "some_key",
+        "environment_api_key": environment_2_api_key,
+        "environment_id": environment_2_id,
+        "document_key": "identity_override:1",
     }
