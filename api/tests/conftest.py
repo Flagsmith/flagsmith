@@ -2,7 +2,7 @@ import pytest
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pytest_django.fixtures import SettingsWrapper
 
-from environments.dynamodb.dynamodb_wrapper import (
+from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
     DynamoEnvironmentWrapper,
     DynamoIdentityWrapper,

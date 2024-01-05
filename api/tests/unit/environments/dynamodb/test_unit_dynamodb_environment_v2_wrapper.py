@@ -3,7 +3,7 @@ import uuid
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_django.fixtures import SettingsWrapper
 
-from environments.dynamodb.dynamodb_wrapper import DynamoEnvironmentV2Wrapper
+from environments.dynamodb import DynamoEnvironmentV2Wrapper
 from environments.dynamodb.types import (
     IdentityOverridesV2Changeset,
     IdentityOverrideV2,

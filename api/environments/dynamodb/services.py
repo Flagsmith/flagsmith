@@ -3,7 +3,7 @@ from typing import Generator, Iterable
 
 from flag_engine.identities.models import IdentityModel
 
-from environments.dynamodb.dynamodb_wrapper import (
+from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
     DynamoIdentityWrapper,
 )

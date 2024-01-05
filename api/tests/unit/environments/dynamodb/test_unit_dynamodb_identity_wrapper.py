@@ -229,11 +229,11 @@ def test_write_identities_skips_identity_if_identifier_is_too_large(
 def test_is_enabled_is_false_if_dynamo_table_name_is_not_set(settings, mocker):
     # Given
     mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper.table_name",
+        "environments.dynamodb.wrappers.identity_wrapper.DynamoIdentityWrapper.table_name",
         None,
     )
+    mocked_boto3 = mocker.patch("environments.dynamodb.wrappers.base.boto3")
 
-    mocked_boto3 = mocker.patch("environments.dynamodb.dynamodb_wrapper.boto3")
     # When
     dynamo_identity_wrapper = DynamoIdentityWrapper()
 
@@ -247,8 +247,8 @@ def test_is_enabled_is_true_if_dynamo_table_name_is_set(settings, mocker):
     # Given
     table_name = "random_table_name"
     settings.IDENTITIES_TABLE_NAME_DYNAMO = table_name
-    mocked_config = mocker.patch("environments.dynamodb.dynamodb_wrapper.Config")
-    mocked_boto3 = mocker.patch("environments.dynamodb.dynamodb_wrapper.boto3")
+    mocked_config = mocker.patch("environments.dynamodb.wrappers.base.Config")
+    mocked_boto3 = mocker.patch("environments.dynamodb.wrappers.base.boto3")
 
     # When
     dynamo_identity_wrapper = DynamoIdentityWrapper()
@@ -276,7 +276,7 @@ def test_get_segment_ids_returns_correct_segment_ids(
 
     environment_document = map_environment_to_environment_document(environment)
     mocked_environment_wrapper = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoEnvironmentWrapper"
+        "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper"
     )
     mocked_environment_wrapper.return_value.get_item.return_value = environment_document
 
@@ -321,7 +321,7 @@ def test_get_segment_ids_returns_segment_using_in_operator_for_integer_traits(
 
     environment_document = map_environment_to_environment_document(environment)
     mocked_environment_wrapper = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoEnvironmentWrapper"
+        "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper"
     )
     mocked_environment_wrapper.return_value.get_item.return_value = environment_document
 
@@ -386,7 +386,7 @@ def test_get_segment_ids_with_identity_model(identity, environment, mocker):
 
     environment_document = map_environment_to_environment_document(environment)
     mocked_environment_wrapper = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoEnvironmentWrapper"
+        "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper"
     )
     mocked_environment_wrapper.return_value.get_item.return_value = environment_document
 
@@ -413,7 +413,7 @@ def test_identity_wrapper__iter_all_items_paginated__returns_expected(
 
     environment_document = map_environment_to_environment_document(environment)
     mocked_environment_wrapper = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoEnvironmentWrapper",
+        "environments.dynamodb.wrappers.environment_wrapper.DynamoEnvironmentWrapper",
         autospec=True,
     )
     mocked_environment_wrapper.return_value.get_item.return_value = environment_document
