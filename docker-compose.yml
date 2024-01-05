@@ -16,10 +16,11 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready']
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ['CMD-SHELL', 'pg_isready -d flagsmith -U postgres']
+      interval: 2s
+      timeout: 2s
+      retries: 20
+      start_period: 20s
 
   flagsmith:
     image: flagsmith/flagsmith:latest
@@ -52,19 +53,14 @@ services:
       # EMAIL_HOST_PASSWORD: smtp_account_password
       # EMAIL_PORT: 587 # optional
       # EMAIL_USE_TLS: 'true' # optional
-    healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'python -c "url = ''http://localhost:8000/health'';import requests;import sys;status =
-          requests.get(url).status_code;sys.exit(0 if 200 >= status < 300 else 1)"',
-        ]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 20s
     ports:
       - 8000:8000
+    healthcheck:
+      test: ['CMD-SHELL', 'python /app/scripts/healthcheck.py']
+      interval: 2s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
     depends_on:
       postgres:
         condition: service_healthy
@@ -77,6 +73,6 @@ services:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
       USE_POSTGRES_FOR_ANALYTICS: 'true'
     depends_on:
-      postgres:
+      flagsmith:
         condition: service_healthy
     command: run-task-processor
