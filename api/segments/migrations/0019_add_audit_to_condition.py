@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
                 ('id', models.IntegerField(auto_created=True, blank=True, db_index=True, verbose_name='ID')),
                 ('operator', models.CharField(choices=[('EQUAL', 'Exactly Matches'), ('GREATER_THAN', 'Greater than'), ('LESS_THAN', 'Less than'), ('CONTAINS', 'Contains'), ('GREATER_THAN_INCLUSIVE', 'Greater than or equal to'), ('LESS_THAN_INCLUSIVE', 'Less than or equal to'), ('NOT_CONTAINS', 'Does not contain'), ('NOT_EQUAL', 'Does not match'), ('REGEX', 'Matches regex'), ('PERCENTAGE_SPLIT', 'Percentage split'), ('MODULO', 'Modulo Operation'), ('IS_SET', 'Is set'), ('IS_NOT_SET', 'Is not set'), ('IN', 'In')], max_length=500)),
                 ('property', models.CharField(blank=True, max_length=1000, null=True)),
-                ('value', models.CharField(blank=True, max_length=1000, null=True)),
+                ('value', models.CharField(blank=True, max_length=settings.SEGMENT_CONDITION_VALUE_LIMIT, null=True)),
                 ('description', models.TextField(blank=True, null=True)),
                 ('created_with_segment', models.BooleanField(default=False, help_text='Field to denote whether a condition was created along with segment or added after creation.')),
                 ('history_id', models.AutoField(primary_key=True, serialize=False)),
