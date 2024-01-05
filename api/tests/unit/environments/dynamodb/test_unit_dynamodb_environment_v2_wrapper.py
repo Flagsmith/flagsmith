@@ -156,7 +156,7 @@ def test_environment_v2_wrapper__write_environments__put_expected(
     assert results[0] == map_environment_to_environment_v2_document(environment)
 
 
-def test_environment_v2_wrapper__delete_all_items(
+def test_environment_v2_wrapper__delete_all_items__removes_items_from_dynamodb(
     flagsmith_environments_v2_table: Table,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
 ) -> None:
@@ -174,7 +174,7 @@ def test_environment_v2_wrapper__delete_all_items(
             }
         )
 
-    # Next, let's one items for a different environment
+    # Next, let's add an item for a different environment
     flagsmith_environments_v2_table.put_item(
         Item={
             "environment_api_key": "different_api_key",
