@@ -151,7 +151,7 @@ def test_set_sdk_analytics_flags_with_identifier(
     # Given
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     url = reverse("api-v1:analytics-flags")
-    url += f"?identifier={identity.identifier}"
+    url += f"?identity_identifier={identity.identifier}"
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     feature_request_count = 2
     data = {feature.name: feature_request_count}
@@ -166,7 +166,7 @@ def test_set_sdk_analytics_flags_with_identifier(
 
     FeatureEvaluationRaw.objects.count == 1
     feature_evaluation_raw = FeatureEvaluationRaw.objects.first()
-    assert feature_evaluation_raw.identifier == identity.identifier
+    assert feature_evaluation_raw.identity_identifier == identity.identifier
     assert feature_evaluation_raw.feature_name == feature.name
     assert feature_evaluation_raw.environment_id == environment.id
     assert feature_evaluation_raw.evaluation_count == feature_request_count
