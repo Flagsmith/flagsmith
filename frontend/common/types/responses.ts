@@ -18,6 +18,18 @@ export type Operator = {
   warning?: string
   valuePlaceholder?: string
 }
+export type ChangeRequestSummary = {
+  id: number
+  readOnly: boolean
+  created_at: string
+  updated_at: string
+  description: string
+  user: number
+  committed_at: string | null
+  committed_by: number | null
+  deleted_at: string | null
+  live_from: string | null
+}
 export type SegmentCondition = {
   delete?: boolean
   description?: string
@@ -388,6 +400,7 @@ export type Res = {
     prefix: string
     roles: RolePermissionUser[]
   }
+  changeRequests: PagedResponse<ChangeRequestSummary>
   groupSummaries: UserGroupSummary[]
   // END OF TYPES
 }

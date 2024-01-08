@@ -178,7 +178,8 @@ the below variables will be ignored.
 
 #### Application Environment Variables
 
-- `ENV`: string representing the current running environment, e.g. 'local', 'dev', 'prod'. Defaults to 'local'
+- `ENVIRONMENT`: string representing the current running environment, such as "local", "dev", "staging" or "production".
+  Defaults to 'local'
 - `DJANGO_SECRET_KEY`: secret key required by Django, if one isn't provided one will be created using
   `django.core.management.utils.get_random_secret_key`. WARNING: If running multiple API instances, its vital that you
   define a shared DJANGO_SECRET_KEY.
@@ -237,7 +238,7 @@ the below variables will be ignored.
   String. Connection string to set up Flagsmith to send telemetry to Azure Application Insights.
 - [`OPENCENSUS_SAMPLING_RATE`](https://opencensus.io/tracing/sampling/probabilistic/): Float. The tracer sample rate.
 - `RESTRICT_ORG_CREATE_TO_SUPERUSERS`: Restricts all users from creating organisations unless they are
-  [marked as a superuser](/deployment/configuration/django-admin#Authentication).
+  [marked as a superuser](/deployment/configuration/django-admin#authentication).
 - `FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS`: Comma separated list of extra headers to allow when operating across domains.
   e.g. `'my-custom-header-1,my-custom-header-2'`. Defaults to `'sentry-trace,'`.
 - `FLAGSMITH_DOMAIN`: A custom domain for URLs pointing to your Flagsmith instance in email notifications. Note: if set,

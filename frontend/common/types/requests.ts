@@ -138,6 +138,13 @@ export type Req = {
   deleteRoleMasterApiKey: { org_id: number; role_id: number; id: string }
   createRoleMasterApiKey: { org_id: number; role_id: number }
   getMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
+  getChangeRequests: PagedRequest<{
+    search?: string
+    environmentId: string
+    feature_id?: number
+    live_from_after?: string
+    committed?: boolean
+  }>
   getGroupSummaries: {
     orgId: string
   }
