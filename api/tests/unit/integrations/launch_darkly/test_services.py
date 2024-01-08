@@ -108,14 +108,24 @@ def test_process_import_request__success__expected_status(
     # Feature names are correct.
     assert list(
         Feature.objects.filter(project=project).values_list("name", flat=True)
-    ) == ["flag1", "flag2_value", "flag3_multivalue", "flag4_multivalue", "flag5"]
+    ) == [
+        "flag1",
+        "flag2_value",
+        "flag3_multivalue",
+        "flag4_multivalue",
+        "flag5",
+        "TEST_TARGETED_CONTEXT",
+        "TEST_INDIVIDUAL_TARGET",
+        "TEST_SEGMENT_TARGET",
+        "TEST_COMBINED_TARGET",
+    ]
 
     # Tags are created and set as expected.
-    assert list(Tag.objects.filter(project=project).values_list("label", "color")) == [
+    assert set(Tag.objects.filter(project=project).values_list("label", "color")) == {
         ("testtag", "#3d4db6"),
         ("testtag2", "#3d4db6"),
         ("Imported", "#3d4db6"),
-    ]
+    }
     assert set(
         Feature.objects.filter(project=project).values_list("name", "tags__label")
     ) == {
@@ -126,6 +136,10 @@ def test_process_import_request__success__expected_status(
         ("flag5", "testtag"),
         ("flag5", "Imported"),
         ("flag5", "testtag2"),
+        ("TEST_TARGETED_CONTEXT", "Imported"),
+        ("TEST_INDIVIDUAL_TARGET", "Imported"),
+        ("TEST_SEGMENT_TARGET", "Imported"),
+        ("TEST_COMBINED_TARGET", "Imported"),
     }
 
     # Standard feature states have expected values.

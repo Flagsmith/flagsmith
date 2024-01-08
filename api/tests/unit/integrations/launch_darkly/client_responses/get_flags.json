@@ -651,5 +651,580 @@
         "value": false
       }
     ]
+  },
+  {
+    "_links": {
+      "parent": {
+        "href": "/api/v2/flags/carbon-stdlib",
+        "type": "application/json"
+      },
+      "self": {
+        "href": "/api/v2/flags/carbon-stdlib/TEST_TARGETED_CONTEXT",
+        "type": "application/json"
+      }
+    },
+    "_maintainer": {
+      "_id": "64f6f21653c76f12626d142a",
+      "_links": {
+        "self": {
+          "href": "/api/v2/members/64f6f21653c76f12626d142a",
+          "type": "application/json"
+        }
+      },
+      "email": "test@test.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "role": "owner"
+    },
+    "_version": 2,
+    "archived": false,
+    "clientSideAvailability": {
+      "usingEnvironmentId": false,
+      "usingMobileKey": false
+    },
+    "creationDate": 1704230740154,
+    "customProperties": {},
+    "defaults": {
+      "offVariation": 3,
+      "onVariation": 3
+    },
+    "deprecated": false,
+    "description": "",
+    "environments": {
+      "production": {
+        "_environmentName": "IntegrationTest",
+        "_site": {
+          "href": "/carbon-stdlib/integration-test/features/TEST_TARGETED_CONTEXT",
+          "type": "text/html"
+        },
+        "_summary": {
+          "prerequisites": 0,
+          "variations": {
+            "1": {
+              "contextTargets": 0,
+              "nullRules": 0,
+              "rules": 1,
+              "targets": 0
+            },
+            "2": {
+              "contextTargets": 0,
+              "nullRules": 0,
+              "rules": 1,
+              "targets": 0
+            },
+            "3": {
+              "contextTargets": 0,
+              "isFallthrough": true,
+              "isOff": true,
+              "nullRules": 0,
+              "rules": 0,
+              "targets": 0
+            }
+          }
+        },
+        "archived": false,
+        "lastModified": 1704730475810,
+        "on": true,
+        "salt": "9d5c8d03f09f441fb265a387cacf0834",
+        "sel": "aa8d74daed9a40788aff0c1b37ec31ad",
+        "trackEvents": false,
+        "trackEventsFallthrough": false,
+        "version": 14
+      },
+      "test": {
+        "_environmentName": "IntegrationTest",
+        "_site": {
+          "href": "/carbon-stdlib/integration-test/features/TEST_COMBINED_TARGET",
+          "type": "text/html"
+        },
+        "_summary": {
+          "prerequisites": 0,
+          "variations": {
+            "0": {
+              "contextTargets": 0,
+              "isFallthrough": true,
+              "nullRules": 0,
+              "rules": 2,
+              "targets": 1
+            },
+            "1": {
+              "contextTargets": 0,
+              "isOff": true,
+              "nullRules": 0,
+              "rules": 1,
+              "targets": 0
+            },
+            "2": {
+              "contextTargets": 0,
+              "nullRules": 1,
+              "rules": 1,
+              "targets": 1
+            }
+          }
+        },
+        "archived": false,
+        "lastModified": 1704731702475,
+        "on": true,
+        "salt": "62d11782290041459b93245c89eafcfc",
+        "sel": "6c19c49f3b0f454abedf5f87b9723f0b",
+        "trackEvents": false,
+        "trackEventsFallthrough": false,
+        "version": 2
+      }
+    },
+    "experiments": {
+      "baselineIdx": 0,
+      "items": []
+    },
+    "goalIds": [],
+    "includeInSnippet": false,
+    "key": "TEST_TARGETED_CONTEXT",
+    "kind": "multivariate",
+    "maintainerId": "60dc82f864c60f258d31fe60",
+    "name": "TEST_TARGETED_CONTEXT",
+    "tags": [],
+    "temporary": false,
+    "variationJsonSchema": null,
+    "variations": [
+      {
+        "_id": "dbb0e794-7ea0-40af-af9a-a7c45b9c414b",
+        "name": "Foo",
+        "value": 1
+      },
+      {
+        "_id": "99b6ed87-39c2-4d06-a1cd-26cf327d1a91",
+        "name": "Bar",
+        "value": 2
+      },
+      {
+        "_id": "b89ad09b-fa93-4a3a-bb1c-e98af8da0c83",
+        "name": "Zoo",
+        "value": 3
+      },
+      {
+        "_id": "b5199483-5ef4-430c-acab-f9c89ad9451c",
+        "name": "Default",
+        "value": -1
+      }
+    ]
+  },
+  {
+    "_links": {
+      "parent": {
+        "href": "/api/v2/flags/carbon-stdlib",
+        "type": "application/json"
+      },
+      "self": {
+        "href": "/api/v2/flags/carbon-stdlib/TEST_INDIVIDUAL_TARGET",
+        "type": "application/json"
+      }
+    },
+    "_maintainer": {
+      "_id": "64f6f21653c76f12626d142a",
+      "_links": {
+        "self": {
+          "href": "/api/v2/members/64f6f21653c76f12626d142a",
+          "type": "application/json"
+        }
+      },
+      "email": "test@test.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "role": "owner"
+    },
+    "_version": 1,
+    "archived": false,
+    "clientSideAvailability": {
+      "usingEnvironmentId": false,
+      "usingMobileKey": false
+    },
+    "creationDate": 1704301985357,
+    "customProperties": {},
+    "defaults": {
+      "offVariation": 1,
+      "onVariation": 0
+    },
+    "deprecated": false,
+    "description": "",
+    "environments": {
+      "production": {
+        "_environmentName": "IntegrationTest",
+        "_site": {
+          "href": "/carbon-stdlib/integration-test/features/TEST_INDIVIDUAL_TARGET",
+          "type": "text/html"
+        },
+        "_summary": {
+          "prerequisites": 0,
+          "variations": {
+            "0": {
+              "contextTargets": 0,
+              "isFallthrough": true,
+              "nullRules": 0,
+              "rules": 0,
+              "targets": 1
+            },
+            "1": {
+              "contextTargets": 0,
+              "isOff": true,
+              "nullRules": 0,
+              "rules": 0,
+              "targets": 1
+            }
+          }
+        },
+        "archived": false,
+        "lastModified": 1704302011358,
+        "on": false,
+        "salt": "2d3031f4e64c40648454778c6f4604c5",
+        "sel": "b1662f133b8044a68533e821c5e2fd0c",
+        "trackEvents": false,
+        "trackEventsFallthrough": false,
+        "version": 2
+      },
+      "test": {
+        "_environmentName": "IntegrationTest",
+        "_site": {
+          "href": "/carbon-stdlib/integration-test/features/TEST_INDIVIDUAL_TARGET",
+          "type": "text/html"
+        },
+        "_summary": {
+          "prerequisites": 0,
+          "variations": {
+            "0": {
+              "contextTargets": 0,
+              "isFallthrough": true,
+              "nullRules": 0,
+              "rules": 0,
+              "targets": 1
+            },
+            "1": {
+              "contextTargets": 0,
+              "isOff": true,
+              "nullRules": 0,
+              "rules": 0,
+              "targets": 1
+            }
+          }
+        },
+        "archived": false,
+        "lastModified": 1704302011358,
+        "on": false,
+        "salt": "2d3031f4e64c40648454778c6f4604c5",
+        "sel": "b1662f133b8044a68533e821c5e2fd0c",
+        "trackEvents": false,
+        "trackEventsFallthrough": false,
+        "version": 2
+      }
+    },
+    "experiments": {
+      "baselineIdx": 0,
+      "items": []
+    },
+    "goalIds": [],
+    "includeInSnippet": false,
+    "key": "TEST_INDIVIDUAL_TARGET",
+    "kind": "boolean",
+    "maintainerId": "60dc82f864c60f258d31fe60",
+    "name": "TEST_INDIVIDUAL_TARGET",
+    "tags": [],
+    "temporary": false,
+    "variationJsonSchema": null,
+    "variations": [
+      {
+        "_id": "cb2ad507-e2cd-457f-86aa-1e0d167fe813",
+        "name": "Enabled",
+        "value": true
+      },
+      {
+        "_id": "d260207e-5ea3-4fba-ada4-d1731cf9c6d3",
+        "name": "Disabled",
+        "value": false
+      }
+    ]
+  },
+  {
+    "_links": {
+      "parent": {
+        "href": "/api/v2/flags/carbon-stdlib",
+        "type": "application/json"
+      },
+      "self": {
+        "href": "/api/v2/flags/carbon-stdlib/TEST_SEGMENT_TARGET",
+        "type": "application/json"
+      }
+    },
+    "_maintainer": {
+      "_id": "64f6f21653c76f12626d142a",
+      "_links": {
+        "self": {
+          "href": "/api/v2/members/64f6f21653c76f12626d142a",
+          "type": "application/json"
+        }
+      },
+      "email": "test@test.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "role": "owner"
+    },
+    "_version": 1,
+    "archived": false,
+    "clientSideAvailability": {
+      "usingEnvironmentId": false,
+      "usingMobileKey": false
+    },
+    "creationDate": 1704302028410,
+    "customProperties": {},
+    "defaults": {
+      "offVariation": 1,
+      "onVariation": 0
+    },
+    "deprecated": false,
+    "description": "",
+    "environments": {
+      "production": {
+        "_environmentName": "IntegrationTest",
+        "_site": {
+          "href": "/carbon-stdlib/integration-test/features/TEST_SEGMENT_TARGET",
+          "type": "text/html"
+        },
+        "_summary": {
+          "prerequisites": 0,
+          "variations": {
+            "0": {
+              "contextTargets": 0,
+              "isFallthrough": true,
+              "nullRules": 0,
+              "rules": 1,
+              "targets": 0
+            },
+            "1": {
+              "contextTargets": 0,
+              "isOff": true,
+              "nullRules": 0,
+              "rules": 1,
+              "targets": 0
+            }
+          }
+        },
+        "archived": false,
+        "lastModified": 1704731410003,
+        "on": true,
+        "salt": "5060e69d01da4133a17c29e2edad4695",
+        "sel": "b224656f90014477920634bf6f50b19e",
+        "trackEvents": false,
+        "trackEventsFallthrough": false,
+        "version": 5
+      },
+      "test": {
+        "_environmentName": "IntegrationTest",
+        "_site": {
+          "href": "/carbon-stdlib/integration-test/features/TEST_SEGMENT_TARGET",
+          "type": "text/html"
+        },
+        "_summary": {
+          "prerequisites": 0,
+          "variations": {
+            "0": {
+              "contextTargets": 0,
+              "isFallthrough": true,
+              "nullRules": 0,
+              "rules": 1,
+              "targets": 0
+            },
+            "1": {
+              "contextTargets": 0,
+              "isOff": true,
+              "nullRules": 0,
+              "rules": 1,
+              "targets": 0
+            }
+          }
+        },
+        "archived": false,
+        "lastModified": 1704731410003,
+        "on": true,
+        "salt": "5060e69d01da4133a17c29e2edad4695",
+        "sel": "b224656f90014477920634bf6f50b19e",
+        "trackEvents": false,
+        "trackEventsFallthrough": false,
+        "version": 5
+      }
+    },
+    "experiments": {
+      "baselineIdx": 0,
+      "items": []
+    },
+    "goalIds": [],
+    "includeInSnippet": false,
+    "key": "TEST_SEGMENT_TARGET",
+    "kind": "boolean",
+    "maintainerId": "60dc82f864c60f258d31fe60",
+    "name": "TEST_SEGMENT_TARGET",
+    "tags": [],
+    "temporary": false,
+    "variationJsonSchema": null,
+    "variations": [
+      {
+        "_id": "63293a52-0462-42de-a531-6154053f4114",
+        "name": "Enabled",
+        "value": true
+      },
+      {
+        "_id": "9c0e62cf-8eb8-497e-97bb-2fa26c41feb3",
+        "name": "Disabled",
+        "value": false
+      }
+    ]
+  },
+  {
+    "_links": {
+      "parent": {
+        "href": "/api/v2/flags/carbon-stdlib",
+        "type": "application/json"
+      },
+      "self": {
+        "href": "/api/v2/flags/carbon-stdlib/TEST_COMBINED_TARGET",
+        "type": "application/json"
+      }
+    },
+    "_maintainer": {
+      "_id": "64f6f21653c76f12626d142a",
+      "_links": {
+        "self": {
+          "href": "/api/v2/members/64f6f21653c76f12626d142a",
+          "type": "application/json"
+        }
+      },
+      "email": "test@test.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "role": "owner"
+    },
+    "_version": 1,
+    "archived": false,
+    "clientSideAvailability": {
+      "usingEnvironmentId": false,
+      "usingMobileKey": false
+    },
+    "creationDate": 1704731583604,
+    "customProperties": {},
+    "defaults": {
+      "offVariation": 1,
+      "onVariation": 0
+    },
+    "deprecated": false,
+    "description": "",
+    "environments": {
+      "production": {
+        "_environmentName": "IntegrationTest",
+        "_site": {
+          "href": "/carbon-stdlib/integration-test/features/TEST_COMBINED_TARGET",
+          "type": "text/html"
+        },
+        "_summary": {
+          "prerequisites": 0,
+          "variations": {
+            "0": {
+              "contextTargets": 0,
+              "isFallthrough": true,
+              "nullRules": 0,
+              "rules": 2,
+              "targets": 1
+            },
+            "1": {
+              "contextTargets": 0,
+              "isOff": true,
+              "nullRules": 0,
+              "rules": 1,
+              "targets": 0
+            },
+            "2": {
+              "contextTargets": 0,
+              "nullRules": 1,
+              "rules": 1,
+              "targets": 1
+            }
+          }
+        },
+        "archived": false,
+        "lastModified": 1704731702475,
+        "on": true,
+        "salt": "62d11782290041459b93245c89eafcfc",
+        "sel": "6c19c49f3b0f454abedf5f87b9723f0b",
+        "trackEvents": false,
+        "trackEventsFallthrough": false,
+        "version": 2
+      },
+      "test": {
+        "_environmentName": "IntegrationTest",
+        "_site": {
+          "href": "/carbon-stdlib/integration-test/features/TEST_COMBINED_TARGET",
+          "type": "text/html"
+        },
+        "_summary": {
+          "prerequisites": 0,
+          "variations": {
+            "0": {
+              "contextTargets": 0,
+              "isFallthrough": true,
+              "nullRules": 0,
+              "rules": 2,
+              "targets": 1
+            },
+            "1": {
+              "contextTargets": 0,
+              "isOff": true,
+              "nullRules": 0,
+              "rules": 1,
+              "targets": 0
+            },
+            "2": {
+              "contextTargets": 0,
+              "nullRules": 1,
+              "rules": 1,
+              "targets": 1
+            }
+          }
+        },
+        "archived": false,
+        "lastModified": 1704731702475,
+        "on": true,
+        "salt": "62d11782290041459b93245c89eafcfc",
+        "sel": "6c19c49f3b0f454abedf5f87b9723f0b",
+        "trackEvents": false,
+        "trackEventsFallthrough": false,
+        "version": 2
+      }
+    },
+    "experiments": {
+      "baselineIdx": 0,
+      "items": []
+    },
+    "goalIds": [],
+    "includeInSnippet": false,
+    "key": "TEST_COMBINED_TARGET",
+    "kind": "multivariate",
+    "maintainerId": "60dc82f864c60f258d31fe60",
+    "name": "TEST_COMBINED_TARGET",
+    "tags": [],
+    "temporary": false,
+    "variationJsonSchema": null,
+    "variations": [
+      {
+        "_id": "a81d4ad4-6dd1-4d47-af8d-ebaf2eef1207",
+        "name": "Foo",
+        "value": "Foo"
+      },
+      {
+        "_id": "0f1da2cd-b7a3-4caa-a52a-603060e7034e",
+        "name": "Bar",
+        "value": "Bar"
+      },
+      {
+        "_id": "6ee4e91b-7b1f-4da1-a7bc-5f0eaca1c41e",
+        "name": "Zoo",
+        "value": "Zoo"
+      }
+    ]
   }
 ]
