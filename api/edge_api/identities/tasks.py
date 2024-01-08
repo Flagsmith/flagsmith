@@ -6,7 +6,7 @@ from django.utils import timezone
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from edge_api.identities.types import IdentityChangeset
-from environments.dynamodb.dynamodb_wrapper import DynamoEnvironmentV2Wrapper
+from environments.dynamodb import DynamoEnvironmentV2Wrapper
 from environments.models import Environment, Webhook
 from features.models import Feature, FeatureState
 from task_processor.decorators import register_task_handler
