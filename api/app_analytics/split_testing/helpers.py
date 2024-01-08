@@ -2,7 +2,21 @@ import numpy as np
 from scipy.stats import chi2_contingency
 
 
-def analyse_split_test(observed_matrix: np.array) -> tuple[float, float]:
+def analyse_split_test(
+    conversion_counts: list[int], evaluation_counts: list[int]
+) -> float:
+    """
+    Analyse conversion and evaluation counts against the chisquared
+    contingency test with correction enabled and with the important
+    log-likelihood argument set in order to accomplish what is
+    more commonly known as the G-Test with the p-value returned.
+    The p-value is a measure indicating the strength of evidence
+    against a null hypothesis with smaller values indicating more
+    statistical strength in the relationship being non-random.
+    """
+    # Reform input data to scipy's format.
+    observed_matrix = np.array([conversion_counts, evaluation_counts])
+
     # Replace zero values in order for the chi-squared results can
     # be fully calculated. Don't worry about false results since
     # the pvalue will be much too low to matter to the user.
@@ -17,20 +31,23 @@ def analyse_split_test(observed_matrix: np.array) -> tuple[float, float]:
         lambda_="log-likelihood",
     )
 
-    # Return the most important result, the pvalue, as well as a
-    # possibly useful statistic addition for the frontend.
     # Typically a pvalue of around 1% is ideal, though as large
     # as 5% is acceptable for some tests.
-    return results.pvalue, results.statistic
+    return results.pvalue
 
 
 def gather_split_test_metrics(
     evaluation_counts: dict[int, int], conversion_counts: dict[int, int]
-) -> tuple[float, float]:
+) -> float:
+    """
+    Take in evalaution counts (aka, views of the individual features) and
+    matches them up against the conversion counts in order to run the
+    split test analysis function above.
+    """
     _evaluation_counts = []
     _conversion_counts = []
     for mv_feature_option_id, evaluation_count in evaluation_counts.items():
         _evaluation_counts.append(evaluation_count)
         _conversion_counts.append(conversion_counts[mv_feature_option_id])
-    input_data = np.array([_conversion_counts, _evaluation_counts])
-    return analyse_split_test(input_data)
+
+    return analyse_split_test(_conversion_counts, _evaluation_counts)
