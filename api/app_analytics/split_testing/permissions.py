@@ -5,18 +5,23 @@ from rest_framework.viewsets import ModelViewSet
 from environments.models import Environment
 from environments.permissions.constants import VIEW_ENVIRONMENT
 
+from .serializers import SplitTestQuerySerializer
+
 
 class SplitTestPermissions(IsAuthenticated):
     def has_permission(self, request: Request, view: ModelViewSet) -> bool:
         if not super().has_permission(request, view):
             return False
 
-        environment_id = request.query_params.get("environment_id")
+        query_serializer = SplitTestQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
 
-        if not environment_id:
+        environment = Environment.objects.filter(
+            id=query_serializer.validated_data["environment_id"]
+        ).first()
+
+        if environment is None:
             return False
-
-        environment = Environment.objects.get(id=environment_id)
 
         return request.user.has_environment_permission(
             permission=VIEW_ENVIRONMENT, environment=environment
