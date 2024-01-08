@@ -15,6 +15,7 @@ type TooltipProps = {
   plainText: boolean
   place?: string | undefined
   title: JSX.Element // This is actually the Tooltip parent component
+  disabled?: boolean
 }
 
 const StyledTooltip = ({ children }: StyledTooltipProps) => (
@@ -36,6 +37,7 @@ const tooltipStyler = (plainText: boolean, children: string): string => {
 
 const Tooltip = ({
   children,
+  disabled,
   place,
   plainText,
   title,
@@ -51,15 +53,17 @@ const Tooltip = ({
       ) : (
         <span className='ion ion-ios-help' data-for={id} data-tip />
       )}
-      <ReactTooltip
-        html
-        id={id}
-        place={place || 'top'}
-        type='dark'
-        effect='solid'
-      >
-        {tooltipStyler(plainText, children)}
-      </ReactTooltip>
+      {!disabled && (
+        <ReactTooltip
+          html
+          id={id}
+          place={place || 'top'}
+          type='dark'
+          effect='solid'
+        >
+          {tooltipStyler(plainText, children)}
+        </ReactTooltip>
+      )}
     </span>
   )
 }

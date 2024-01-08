@@ -4,13 +4,13 @@ import ConfirmToggleFeature from './modals/ConfirmToggleFeature'
 import ConfirmRemoveFeature from './modals/ConfirmRemoveFeature'
 import CreateFlagModal from './modals/CreateFlag'
 import ProjectStore from 'common/stores/project-store'
-import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
 import { hasProtectedTag } from 'common/utils/hasProtectedTag'
 import SegmentsIcon from './svg/SegmentsIcon'
 import UsersIcon from './svg/UsersIcon' // we need this to make JSX compile
 import Icon from './Icon'
 import FeatureValue from './FeatureValue'
+import FeatureAction from './FeatureAction'
 
 export const width = [200, 65, 48, 75, 450]
 class TheComponent extends Component {
@@ -319,34 +319,7 @@ class TheComponent extends Component {
             }}
           />
         </div>
-        <div
-          className='table-column'
-          style={{ width: width[2] }}
-          onClick={(e) => {
-            e.stopPropagation()
-          }}
-        >
-          {AccountStore.getOrganisationRole() === 'ADMIN' &&
-            !this.props.hideAudit && (
-              <Tooltip
-                html
-                title={
-                  <div
-                    onClick={() => {
-                      this.context.router.history.push(
-                        `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
-                      )
-                    }}
-                    data-test={`feature-history-${this.props.index}`}
-                  >
-                    <Icon name='clock' width={24} fill='#9DA4AE' />
-                  </div>
-                }
-              >
-                Feature history
-              </Tooltip>
-            )}
-        </div>
+
         <div
           className='table-column'
           style={{ width: width[3] }}
@@ -354,43 +327,31 @@ class TheComponent extends Component {
             e.stopPropagation()
           }}
         >
-          {!this.props.hideRemove && (
-            <Permission
-              level='project'
-              permission='DELETE_FEATURE'
-              id={projectId}
-            >
-              {({ permission: removeFeaturePermission }) =>
-                Utils.renderWithPermission(
-                  removeFeaturePermission,
-                  Constants.projectPermissions('Delete Feature'),
-                  <Tooltip
-                    html
-                    title={
-                      <Button
-                        disabled={
-                          !removeFeaturePermission || readOnly || isProtected
-                        }
-                        onClick={() =>
-                          this.confirmRemove(projectFlag, () => {
-                            removeFlag(projectId, projectFlag)
-                          })
-                        }
-                        className='btn btn-with-icon'
-                        data-test={`remove-feature-btn-${this.props.index}`}
-                      >
-                        <Icon name='trash-2' width={20} fill='#656D7B' />
-                      </Button>
-                    }
-                  >
-                    {isProtected
-                      ? '<span>This feature has been tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>'
-                      : 'Remove feature'}
-                  </Tooltip>,
-                )
-              }
-            </Permission>
-          )}
+          <FeatureAction
+            projectId={projectId}
+            featureIndex={this.props.index}
+            readOnly={readOnly}
+            isProtected={isProtected}
+            hideAudit={
+              AccountStore.getOrganisationRole() !== 'ADMIN' ||
+              this.props.hideAudit
+            }
+            hideRemove={this.props.hideRemove}
+            onCopyName={() => {
+              navigator.clipboard.writeText(name)
+              toast('Copied to clipboard')
+            }}
+            onShowHistory={() =>
+              this.context.router.history.push(
+                `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
+              )
+            }
+            onRemove={() => {
+              this.confirmRemove(projectFlag, () => {
+                removeFlag(projectId, projectFlag)
+              })
+            }}
+          />
         </div>
       </Row>,
     )

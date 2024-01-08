@@ -218,6 +218,7 @@ export const createFeature = async (index:number, name:string, value?:string|boo
 };
 
 export const deleteFeature = async (index:number, name:string) => {
+    await click(byId(`feature-action-${index}`));
     await click(byId(`remove-feature-btn-${index}`));
     await setText('[name="confirm-feature-name"]', name);
     await click('#confirm-remove-feature-btn');

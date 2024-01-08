@@ -262,14 +262,10 @@ const FeaturesPage = class extends Component {
                                       <Switch disabled />
                                     </div>
                                     <div
-                                      className='table-column'
-                                      style={{ width: width[2] }}
-                                    ></div>
-                                    <div
-                                      className='table-column'
+                                      className='table-column text-center'
                                       style={{ width: width[3] }}
                                     >
-                                      Remove
+                                      Action
                                     </div>
                                   </Row>
                                 }
