@@ -16,3 +16,7 @@ class UsageDataQuerySerializer(serializers.Serializer):
 
 class UsageTotalCountSerializer(serializers.Serializer):
     count = serializers.IntegerField()
+
+
+class SDKAnalyticsFlagsQuerySerializer(serializers.Serializer):
+    identity_identifier = serializers.CharField(required=False, default=None)

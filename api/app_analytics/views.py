@@ -24,6 +24,7 @@ from organisations.models import Organisation
 
 from .permissions import UsageDataPermission
 from .serializers import (
+    SDKAnalyticsFlagsQuerySerializer,
     UsageDataQuerySerializer,
     UsageDataSerializer,
     UsageTotalCountSerializer,
@@ -74,18 +75,17 @@ class SDKAnalyticsFlags(GenericAPIView):
                 status=status.HTTP_200_OK,
             )
 
+        # TODO: Fix this in the v2 version of the API.
         # Since the post body data has bare names of features with counts,
         # if we put the identifier in the post body it could collide with
         # a feature name. It's more straightforward to set it as a query parm.
-        identifier = request.query_params.get("identifier")
-        if identifier:
-            assert isinstance(identifier, str)
-        else:
-            identifier = None
+        query_serializer = SDKAnalyticsFlagsQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+        identity_identifier = query_serializer.validated_data["identity_identifier"]
 
         if settings.USE_POSTGRES_FOR_ANALYTICS:
             track_feature_evaluation.delay(
-                args=(request.environment.id, request.data, identifier)
+                args=(request.environment.id, request.data, identity_identifier)
             )
         elif settings.INFLUXDB_TOKEN:
             track_feature_evaluation_influxdb(request.environment.id, request.data)
