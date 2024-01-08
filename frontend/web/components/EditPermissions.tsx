@@ -285,7 +285,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           organisation_id: role?.organisation,
           role_id: role?.id,
         },
-        { skip: !role },
+        { skip: !role || level !== 'organisation' },
       )
 
     const { data: projectPermissions, isLoading: projectIsLoading } =
@@ -301,7 +301,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
             envId ||
             // TODO: https://github.com/Flagsmith/flagsmith/issues/3020
             !role?.organisation ||
-            !Utils.getFlagsmithHasFeature('show_role_management'),
+            !Utils.getFlagsmithHasFeature('show_role_management') ||
+            level !== 'project',
         },
       )
 
@@ -316,7 +317,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           skip:
             !role ||
             !id ||
-            !Utils.getFlagsmithHasFeature('show_role_management'),
+            !Utils.getFlagsmithHasFeature('show_role_management') ||
+            level !== 'environment',
         },
       )
 
@@ -755,19 +757,21 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               />
             </FormGroup>
           )}
-        {Utils.getFlagsmithHasFeature('show_role_management') && (
-          <div className='px-4'>
-            <MyRoleSelect
-              orgId={id}
-              level={level}
-              value={rolesSelected?.map((v) => v.role)}
-              onAdd={addRole}
-              onRemove={removeOwner}
-              isOpen={showRoles}
-              onToggle={() => setShowRoles(!showRoles)}
-            />
-          </div>
-        )}
+        {Utils.getFlagsmithHasFeature('show_role_management') &&
+          level !== 'environment' &&
+          level !== 'project' && (
+            <div className='px-4'>
+              <MyRoleSelect
+                orgId={id}
+                level={level}
+                value={rolesSelected?.map((v) => v.role)}
+                onAdd={addRole}
+                onRemove={removeOwner}
+                isOpen={showRoles}
+                onToggle={() => setShowRoles(!showRoles)}
+              />
+            </div>
+          )}
         <div className='modal-footer'>
           {!role && (
             <Button className='mr-2' onClick={closeModal} theme='secondary'>

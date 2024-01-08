@@ -12,7 +12,7 @@ export const rolePermissionService = service
       >({
         invalidatesTags: (res) => [
           { id: 'LIST', type: 'rolePermission' },
-          { id: res?.id, type: 'rolePermission' },
+          { type: 'rolePermission' },
         ],
         query: (query: Req['updateRolePermission']) => ({
           body: query.body,
