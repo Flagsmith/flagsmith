@@ -10,9 +10,11 @@ import SegmentsIcon from './svg/SegmentsIcon'
 import UsersIcon from './svg/UsersIcon' // we need this to make JSX compile
 import Icon from './Icon'
 import FeatureValue from './FeatureValue'
-import FeatureAction from './FeatureAction'
+import { getViewMode } from 'common/useViewMode'
+import classNames from 'classnames'
+import Tag from './tags/Tag'
 
-export const width = [200, 65, 48, 75, 450]
+export const width = [200, 70, 55, 70, 450]
 class TheComponent extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -55,14 +57,15 @@ class TheComponent extends Component {
   }
 
   editFeature = (projectFlag, environmentFlag, tab) => {
+    if (this.props.disableControls) {
+      return
+    }
     API.trackEvent(Constants.events.VIEW_FEATURE)
 
     history.replaceState(
       {},
       null,
-      `${document.location.pathname}?feature=${projectFlag.id}${
-        tab ? `&tab=${tab}` : ''
-      }`,
+      `${document.location.pathname}?feature=${projectFlag.id}`,
     )
     openModal(
       `${this.props.permission ? 'Edit Feature' : 'Feature'}: ${
@@ -75,6 +78,7 @@ class TheComponent extends Component {
         projectFlag={projectFlag}
         noPermissions={!this.props.permission}
         environmentFlag={environmentFlag}
+        tab={tab}
         flagId={environmentFlag.id}
       />,
       'side-modal create-feature-modal',
@@ -86,6 +90,7 @@ class TheComponent extends Component {
 
   render() {
     const {
+      disableControls,
       environmentFlags,
       environmentId,
       permission,
@@ -103,21 +108,22 @@ class TheComponent extends Component {
     const changeRequestsEnabled = Utils.changeRequestsEnabled(
       environment && environment.minimum_change_request_approvals,
     )
-
+    const isCompact = getViewMode() === 'compact'
     if (this.props.condensed) {
-      return Utils.renderWithPermission(
-        permission,
-        Constants.environmentPermissions(
-          Utils.getManageFeaturePermissionDescription(changeRequestsEnabled),
-        ),
+      return (
         <Flex
-          onClick={() =>
+          onClick={() => {
+            if (disableControls) return
             !readOnly && this.editFeature(projectFlag, environmentFlags[id])
-          }
+          }}
           style={{
             ...(this.props.style || {}),
           }}
-          className='flex-row'
+          className={
+            (classNames('flex-row'),
+            { 'fs-small': isCompact },
+            this.props.className)
+          }
         >
           <div
             className={`table-column ${this.props.fadeEnabled && 'faded'}`}
@@ -132,6 +138,7 @@ class TheComponent extends Component {
               }`}
               checked={environmentFlags[id] && environmentFlags[id].enabled}
               onChange={() => {
+                if (disableControls) return
                 if (changeRequestsEnabled) {
                   this.editFeature(projectFlag, environmentFlags[id])
                   return
@@ -169,18 +176,21 @@ class TheComponent extends Component {
               data-test={`feature-value-${this.props.index}`}
             />
           </Flex>
-        </Flex>,
+        </Flex>
       )
     }
-    return Utils.renderWithPermission(
-      permission,
-      Constants.environmentPermissions(
-        Utils.getManageFeaturePermissionDescription(changeRequestsEnabled),
-      ),
+    return (
       <Row
-        className={`list-item ${readOnly ? '' : 'clickable'} ${
-          this.props.widget ? 'py-1' : 'py-2'
-        }`}
+        className={classNames(
+          `list-item ${readOnly ? '' : 'clickable'} ${
+            isCompact
+              ? 'py-0 list-item-xs fs-small'
+              : this.props.widget
+              ? 'py-1'
+              : 'py-2'
+          }`,
+          this.props.className,
+        )}
         key={id}
         space
         data-test={`feature-item-${this.props.index}`}
@@ -212,9 +222,13 @@ class TheComponent extends Component {
                         </span>
                       }
                     >
-                      {`Created ${moment(created_date).format(
-                        'Do MMM YYYY HH:mma',
-                      )}`}
+                      {isCompact && description
+                        ? `${description}<br/>Created ${moment(
+                            created_date,
+                          ).format('Do MMM YYYY HH:mma')}`
+                        : `Created ${moment(created_date).format(
+                            'Do MMM YYYY HH:mma',
+                          )}`}
                     </Tooltip>
                   ) : (
                     name
@@ -222,40 +236,76 @@ class TheComponent extends Component {
                 </span>
 
                 {!!projectFlag.num_segment_overrides && (
-                  <Tooltip
-                    title={
-                      <span
-                        className='chip me-2 chip--xs bg-primary text-white'
-                        style={{ border: 'none' }}
-                      >
-                        <SegmentsIcon className='chip-svg-icon' />
-                        <span>{projectFlag.num_segment_overrides}</span>
-                      </span>
-                    }
-                    place='top'
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      this.editFeature(projectFlag, environmentFlags[id], 1)
+                    }}
                   >
-                    {`${projectFlag.num_segment_overrides} Segment Override${
-                      projectFlag.num_segment_overrides !== 1 ? 's' : ''
-                    }`}
-                  </Tooltip>
+                    <Tooltip
+                      title={
+                        <span
+                          className='chip me-2 chip--xs bg-primary text-white'
+                          style={{ border: 'none' }}
+                        >
+                          <SegmentsIcon className='chip-svg-icon' />
+                          <span>{projectFlag.num_segment_overrides}</span>
+                        </span>
+                      }
+                      place='top'
+                    >
+                      {`${projectFlag.num_segment_overrides} Segment Override${
+                        projectFlag.num_segment_overrides !== 1 ? 's' : ''
+                      }`}
+                    </Tooltip>
+                  </div>
                 )}
                 {!!projectFlag.num_identity_overrides && (
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      this.editFeature(projectFlag, environmentFlags[id], 2)
+                    }}
+                  >
+                    <Tooltip
+                      title={
+                        <span
+                          className='chip me-2 chip--xs bg-primary text-white'
+                          style={{ border: 'none' }}
+                        >
+                          <UsersIcon className='chip-svg-icon' />
+                          <span>{projectFlag.num_identity_overrides}</span>
+                        </span>
+                      }
+                      place='top'
+                    >
+                      {`${
+                        projectFlag.num_identity_overrides
+                      } Identity Override${
+                        projectFlag.num_identity_overrides !== 1 ? 's' : ''
+                      }`}
+                    </Tooltip>
+                  </div>
+                )}
+                {projectFlag.is_server_key_only && (
                   <Tooltip
                     title={
                       <span
                         className='chip me-2 chip--xs bg-primary text-white'
                         style={{ border: 'none' }}
                       >
-                        <UsersIcon className='chip-svg-icon' />
-                        <span>{projectFlag.num_identity_overrides}</span>
+                        <span>{'Server-side only'}</span>
                       </span>
                     }
                     place='top'
                   >
-                    {`${projectFlag.num_identity_overrides} Identity Override${
-                      projectFlag.num_identity_overrides !== 1 ? 's' : ''
-                    }`}
+                    {
+                      'Prevent this feature from being accessed with client-side SDKs.'
+                    }
                   </Tooltip>
+                )}
+                {projectFlag.is_archived && (
+                  <Tag className='chip--xs' tag={Constants.archivedTag} />
                 )}
                 <TagValues
                   inline
@@ -263,7 +313,7 @@ class TheComponent extends Component {
                   value={projectFlag.tags}
                 />
               </Row>
-              {description && (
+              {description && !isCompact && (
                 <div
                   className='list-item-subtitle mt-1'
                   style={{ lineHeight: '20px', width: width[4] }}
@@ -319,41 +369,89 @@ class TheComponent extends Component {
             }}
           />
         </div>
-
         <div
-          className='table-column'
+          className='table-column text-right'
+          style={{ width: width[2] }}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
+          {AccountStore.getOrganisationRole() === 'ADMIN' &&
+            !this.props.hideAudit && (
+              <Tooltip
+                html
+                title={
+                  <div
+                    onClick={() => {
+                      if (disableControls) return
+                      this.context.router.history.push(
+                        `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
+                      )
+                    }}
+                    className='text-center'
+                    data-test={`feature-history-${this.props.index}`}
+                  >
+                    <Icon name='clock' width={24} fill='#9DA4AE' />
+                  </div>
+                }
+              >
+                Feature history
+              </Tooltip>
+            )}
+        </div>
+        <div
+          className='table-column text-right'
           style={{ width: width[3] }}
           onClick={(e) => {
             e.stopPropagation()
           }}
         >
-          <FeatureAction
-            projectId={projectId}
-            featureIndex={this.props.index}
-            readOnly={readOnly}
-            isProtected={isProtected}
-            hideAudit={
-              AccountStore.getOrganisationRole() !== 'ADMIN' ||
-              this.props.hideAudit
-            }
-            hideRemove={this.props.hideRemove}
-            onCopyName={() => {
-              navigator.clipboard.writeText(name)
-              toast('Copied to clipboard')
-            }}
-            onShowHistory={() =>
-              this.context.router.history.push(
-                `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
-              )
-            }
-            onRemove={() => {
-              this.confirmRemove(projectFlag, () => {
-                removeFlag(projectId, projectFlag)
-              })
-            }}
-          />
+          {!this.props.hideRemove && (
+            <Permission
+              level='project'
+              permission='DELETE_FEATURE'
+              id={projectId}
+            >
+              {({ permission: removeFeaturePermission }) =>
+                Utils.renderWithPermission(
+                  removeFeaturePermission,
+                  Constants.projectPermissions('Delete Feature'),
+                  <Tooltip
+                    html
+                    title={
+                      <Button
+                        disabled={
+                          !removeFeaturePermission || readOnly || isProtected
+                        }
+                        onClick={() => {
+                          if (disableControls) return
+                          this.confirmRemove(projectFlag, () => {
+                            removeFlag(projectId, projectFlag)
+                          })
+                        }}
+                        className={classNames('btn btn-with-icon', {
+                          'btn-sm': isCompact,
+                        })}
+                        data-test={`remove-feature-btn-${this.props.index}`}
+                      >
+                        <Icon
+                          name='trash-2'
+                          width={isCompact ? 16 : 20}
+                          fill='#656D7B'
+                        />
+                      </Button>
+                    }
+                  >
+                    {isProtected
+                      ? '<span>This feature has been tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>'
+                      : 'Remove feature'}
+                  </Tooltip>,
+                )
+              }
+            </Permission>
+          )}
         </div>
-      </Row>,
+      </Row>
     )
   }
 }

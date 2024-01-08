@@ -24,7 +24,6 @@ help integrating with your IDP.
 - Username and Password
 - Github OAuth (with configuration)
 - Google OAuth (with configuration)
-- SAML
 
 ## Enterprise Plan (SaaS, On Prem or Private Cloud)
 

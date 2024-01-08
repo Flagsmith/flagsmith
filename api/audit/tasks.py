@@ -1,7 +1,9 @@
 import logging
 import typing
+from datetime import datetime
 
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from audit.constants import (
     FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE,
@@ -9,18 +11,19 @@ from audit.constants import (
 )
 from audit.models import AuditLog, RelatedObjectType
 from task_processor.decorators import register_task_handler
+from task_processor.models import TaskPriority
 
 logger = logging.getLogger(__name__)
 
 
-@register_task_handler()
+@register_task_handler(priority=TaskPriority.HIGHEST)
 def create_feature_state_went_live_audit_log(feature_state_id: int):
     _create_feature_state_audit_log_for_change_request(
         feature_state_id, FEATURE_STATE_WENT_LIVE_MESSAGE
     )
 
 
-@register_task_handler()
+@register_task_handler(priority=TaskPriority.HIGHEST)
 def create_feature_state_updated_by_change_request_audit_log(feature_state_id: int):
     _create_feature_state_audit_log_for_change_request(
         feature_state_id, FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE
@@ -54,10 +57,11 @@ def _create_feature_state_audit_log_for_change_request(
         project=feature_state.environment.project,
         log=log,
         is_system_event=True,
+        created_date=feature_state.live_from,
     )
 
 
-@register_task_handler()
+@register_task_handler(priority=TaskPriority.HIGHEST)
 def create_audit_log_from_historical_record(
     history_instance_id: int,
     history_user_id: typing.Optional[int],
@@ -76,6 +80,9 @@ def create_audit_log_from_historical_record(
     user_model = get_user_model()
 
     instance = history_instance.instance
+    if instance.get_skip_create_audit_log():
+        return
+
     history_user = user_model.objects.filter(id=history_user_id).first()
 
     override_author = instance.get_audit_log_author(history_instance)
@@ -109,6 +116,7 @@ def create_audit_log_from_historical_record(
         related_object_type=related_object_type.name,
         log=log_message,
         master_api_key=history_instance.master_api_key,
+        created_date=history_instance.history_date,
         **instance.get_extra_audit_log_kwargs(history_instance),
     )
 
@@ -119,6 +127,7 @@ def create_segment_priorities_changed_audit_log(
     feature_segment_ids: typing.List[int],
     user_id: int = None,
     master_api_key_id: int = None,
+    changed_at: str = None,
 ):
     """
     This needs to be a separate task called by the view itself. This is because the OrderedModelBase class
@@ -162,4 +171,7 @@ def create_segment_priorities_changed_audit_log(
         related_object_id=feature.id,
         related_object_type=RelatedObjectType.FEATURE.name,
         master_api_key_id=master_api_key_id,
+        created_date=datetime.fromisoformat(changed_at)
+        if changed_at is not None
+        else timezone.now(),
     )

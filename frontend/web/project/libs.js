@@ -1,5 +1,4 @@
 import flagsmith from 'flagsmith';
-import 'ionicons/dist/css/ionicons.min.css';
 import * as Sentry from '@sentry/browser';
 // Optimise lodash
 import each from 'lodash/each';

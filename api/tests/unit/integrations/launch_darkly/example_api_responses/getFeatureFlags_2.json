@@ -1,0 +1,149 @@
+{
+    "_links": {
+        "first": {
+            "href": "/api/v2/flags/test-project-key?limit=3\u0026summary=true",
+            "type": "application/json"
+        },
+        "prev": {
+            "href": "/api/v2/flags/test-project-key?limit=3\u0026summary=true",
+            "type": "application/json"
+        },
+        "self": {
+            "href": "/api/v2/flags/test-project-key?limit=3\u0026offset=3\u0026summary=true",
+            "type": "application/json"
+        }
+    },
+    "items": [
+        {
+            "_links": {
+                "parent": {
+                    "href": "/api/v2/flags/test-project-key",
+                    "type": "application/json"
+                },
+                "self": {
+                    "href": "/api/v2/flags/test-project-key/flag5",
+                    "type": "application/json"
+                }
+            },
+            "_maintainer": {
+                "_id": "64f6f21653c76f12626d142a",
+                "_links": {
+                    "self": {
+                        "href": "/api/v2/members/64f6f21653c76f12626d142a",
+                        "type": "application/json"
+                    }
+                },
+                "email": "test@test.com",
+                "firstName": "John",
+                "lastName": "Doe",
+                "role": "owner"
+            },
+            "_version": 1,
+            "archived": false,
+            "clientSideAvailability": {
+                "usingEnvironmentId": false,
+                "usingMobileKey": false
+            },
+            "creationDate": 1695690165108,
+            "customProperties": {},
+            "defaults": {
+                "offVariation": 1,
+                "onVariation": 0
+            },
+            "description": "",
+            "environments": {
+                "production": {
+                    "_environmentName": "Production",
+                    "_site": {
+                        "href": "/default/production/features/flag5",
+                        "type": "text/html"
+                    },
+                    "_summary": {
+                        "prerequisites": 0,
+                        "variations": {
+                            "0": {
+                                "isFallthrough": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            },
+                            "1": {
+                                "isOff": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            }
+                        }
+                    },
+                    "archived": false,
+                    "lastModified": 1695690165274,
+                    "on": false,
+                    "salt": "ff624f87209e452b9cdd39340624e80b",
+                    "sel": "0bb098caac304ec092618f4b9b5a9255",
+                    "trackEvents": false,
+                    "trackEventsFallthrough": false,
+                    "version": 1
+                },
+                "test": {
+                    "_environmentName": "Test",
+                    "_site": {
+                        "href": "/default/test/features/flag5",
+                        "type": "text/html"
+                    },
+                    "_summary": {
+                        "prerequisites": 0,
+                        "variations": {
+                            "0": {
+                                "isFallthrough": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            },
+                            "1": {
+                                "isOff": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            }
+                        }
+                    },
+                    "archived": false,
+                    "lastModified": 1695690165274,
+                    "on": false,
+                    "salt": "3f4e3b81b4984723b18ff5c633322eb7",
+                    "sel": "bebca34e88d64257b050ac7745121467",
+                    "trackEvents": false,
+                    "trackEventsFallthrough": false,
+                    "version": 1
+                }
+            },
+            "experiments": {
+                "baselineIdx": 0,
+                "items": []
+            },
+            "goalIds": [],
+            "includeInSnippet": false,
+            "key": "flag5",
+            "kind": "boolean",
+            "maintainerId": "64f6f21653c76f12626d142a",
+            "name": "flag5",
+            "tags": [
+                "testtag",
+                "testtag2"
+            ],
+            "temporary": true,
+            "variationJsonSchema": null,
+            "variations": [
+                {
+                    "_id": "410d5e64-d96a-4aa6-ba3a-043be5ba5da2",
+                    "value": true
+                },
+                {
+                    "_id": "54e274c8-47c8-44e1-b962-9de78e745019",
+                    "value": false
+                }
+            ]
+        }
+    ],
+    "totalCount": 5
+}

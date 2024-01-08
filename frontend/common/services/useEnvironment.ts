@@ -6,6 +6,12 @@ export const environmentService = service
   .enhanceEndpoints({ addTagTypes: ['Environment'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      getEnvironment: builder.query<Res['environment'], Req['getEnvironment']>({
+        providesTags: (res) => [{ id: res?.id, type: 'Environment' }],
+        query: (query: Req['getEnvironment']) => ({
+          url: `environments/${query.id}/`,
+        }),
+      }),
       getEnvironments: builder.query<
         Res['environments'],
         Req['getEnvironments']
@@ -33,9 +39,21 @@ export async function getEnvironments(
     store.dispatch(environmentService.util.getRunningQueriesThunk()),
   )
 }
+export async function getEnvironment(
+  store: any,
+  data: Req['getEnvironment'],
+  options?: Parameters<
+    typeof environmentService.endpoints.getEnvironment.initiate
+  >[1],
+) {
+  return store.dispatch(
+    environmentService.endpoints.getEnvironment.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useGetEnvironmentQuery,
   useGetEnvironmentsQuery,
   // END OF EXPORTS
 } = environmentService

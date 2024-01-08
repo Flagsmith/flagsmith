@@ -5,7 +5,7 @@ import uuid
 from django.db import models
 from django.db.models import Manager
 from django.http import HttpRequest
-from simple_history.models import HistoricalRecords
+from simple_history.models import HistoricalRecords, ModelChange
 from softdelete.models import SoftDeleteManager, SoftDeleteObject
 
 from audit.related_object_type import RelatedObjectType
@@ -52,7 +52,7 @@ class SoftDeleteExportableModel(SoftDeleteObject, AbstractBaseExportableModel):
         abstract = True
 
 
-class BaseHistoricalModel(models.Model):
+class _BaseHistoricalModel(models.Model):
     include_in_audit = True
 
     master_api_key = models.ForeignKey(
@@ -61,6 +61,29 @@ class BaseHistoricalModel(models.Model):
 
     class Meta:
         abstract = True
+
+    def get_change_details(self) -> typing.Optional[typing.List[ModelChange]]:
+        if not self.history_type == "~":
+            # we only return the change details for updates
+            return
+
+        return [
+            change
+            for change in self.diff_against(self.prev_record).changes
+            if change.field not in self._change_details_excluded_fields
+        ]
+
+
+def base_historical_model_factory(
+    change_details_excluded_fields: typing.Sequence[str],
+) -> typing.Type[_BaseHistoricalModel]:
+    class BaseHistoricalModel(_BaseHistoricalModel):
+        _change_details_excluded_fields = set(change_details_excluded_fields)
+
+        class Meta:
+            abstract = True
+
+    return BaseHistoricalModel
 
 
 class _AbstractBaseAuditableModel(models.Model):
@@ -81,6 +104,9 @@ class _AbstractBaseAuditableModel(models.Model):
 
     class Meta:
         abstract = True
+
+    def get_skip_create_audit_log(self) -> bool:
+        return False
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         """Override if audit log records should be written when model is created"""
@@ -142,10 +168,11 @@ def get_history_user(
 
 def abstract_base_auditable_model_factory(
     historical_records_excluded_fields: typing.List[str] = None,
+    change_details_excluded_fields: typing.Sequence[str] = None,
 ) -> typing.Type[_AbstractBaseAuditableModel]:
     class Base(_AbstractBaseAuditableModel):
         history = HistoricalRecords(
-            bases=[BaseHistoricalModel],
+            bases=[base_historical_model_factory(change_details_excluded_fields or [])],
             excluded_fields=historical_records_excluded_fields or [],
             get_user=get_history_user,
             inherit=True,

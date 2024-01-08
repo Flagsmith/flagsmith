@@ -33,7 +33,7 @@ function run_task_processor() {
     if [[ -n "$ANALYTICS_DATABASE_URL" || -n "$DJANGO_DB_NAME_ANALYTICS" ]]; then
         python manage.py waitfordb --waitfor 30 --migrations --database analytics
     fi
-    python manage.py runprocessor --sleepintervalms 500
+    RUN_BY_PROCESSOR=1 python manage.py runprocessor --sleepintervalms 500
 }
 function migrate_identities(){
     python manage.py migrate_to_edge "$1"
@@ -55,6 +55,9 @@ function dump_organisation_to_s3(){
 function dump_organisation_to_local_fs(){
     python manage.py dumporganisationtolocalfs "$1" "$2"
 }
+function bootstrap(){
+    python manage.py bootstrap
+}
 # Note: `go_to_sleep` is deprecated and will be removed in a future release.
 function go_to_sleep(){
     echo "Sleeping for ${1} seconds before startup"
@@ -74,6 +77,7 @@ elif [ "$1" == "migrate-and-serve" ]; then
     if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     migrate
     migrate_analytics_db
+    bootstrap
     serve
 elif [ "$1" == "migrate-identities" ]; then
     migrate_identities "$2"

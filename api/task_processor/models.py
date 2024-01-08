@@ -3,12 +3,23 @@ import uuid
 from datetime import datetime
 
 import simplejson as json
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.utils import timezone
 
-from task_processor.exceptions import TaskProcessingError
+from task_processor.exceptions import TaskProcessingError, TaskQueueFullError
 from task_processor.managers import RecurringTaskManager, TaskManager
 from task_processor.task_registry import registered_tasks
+
+_django_json_encoder_default = DjangoJSONEncoder().default
+
+
+class TaskPriority(models.IntegerChoices):
+    LOWER = 100
+    LOW = 75
+    NORMAL = 50
+    HIGH = 25
+    HIGHEST = 0
 
 
 class AbstractBaseTask(models.Model):
@@ -36,8 +47,7 @@ class AbstractBaseTask(models.Model):
 
     @staticmethod
     def serialize_data(data: typing.Any):
-        # TODO: add datetime support if needed
-        return json.dumps(data)
+        return json.dumps(data, default=_django_json_encoder_default)
 
     @staticmethod
     def deserialize_data(data: typing.Any):
@@ -74,6 +84,9 @@ class Task(AbstractBaseTask):
     num_failures = models.IntegerField(default=0)
     completed = models.BooleanField(default=False)
     objects = TaskManager()
+    priority = models.SmallIntegerField(
+        default=None, null=True, choices=TaskPriority.choices
+    )
 
     class Meta:
         # We have customised the migration in 0004 to only apply this change to postgres databases
@@ -90,32 +103,36 @@ class Task(AbstractBaseTask):
     def create(
         cls,
         task_identifier: str,
+        scheduled_for: datetime,
+        priority: TaskPriority = TaskPriority.NORMAL,
+        queue_size: int = None,
         *,
         args: typing.Tuple[typing.Any] = None,
         kwargs: typing.Dict[str, typing.Any] = None,
     ) -> "Task":
+        if queue_size and cls._is_queue_full(task_identifier, queue_size):
+            raise TaskQueueFullError(
+                f"Queue for task {task_identifier} is full. "
+                f"Max queue size is {queue_size}"
+            )
         return Task(
             task_identifier=task_identifier,
+            scheduled_for=scheduled_for,
+            priority=priority,
             serialized_args=cls.serialize_data(args or tuple()),
             serialized_kwargs=cls.serialize_data(kwargs or dict()),
         )
 
     @classmethod
-    def schedule_task(
-        cls,
-        schedule_for: datetime,
-        task_identifier: str,
-        *,
-        args: typing.Tuple[typing.Any] = None,
-        kwargs: typing.Dict[str, typing.Any] = None,
-    ) -> "Task":
-        task = cls.create(
-            task_identifier=task_identifier,
-            args=args,
-            kwargs=kwargs,
+    def _is_queue_full(cls, task_identifier: str, queue_size: int) -> bool:
+        return (
+            cls.objects.filter(
+                task_identifier=task_identifier,
+                completed=False,
+                num_failures__lt=3,
+            ).count()
+            > queue_size
         )
-        task.scheduled_for = schedule_for
-        return task
 
     def mark_failure(self):
         super().mark_failure()

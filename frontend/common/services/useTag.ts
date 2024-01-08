@@ -1,6 +1,7 @@
 import { PagedResponse, Res, Tag } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
+import { sortBy } from 'lodash'
 
 export const tagService = service
   .enhanceEndpoints({ addTagTypes: ['Tag'] })
@@ -28,7 +29,7 @@ export const tagService = service
           url: `projects/${query.projectId}/tags/`,
         }),
         transformResponse(baseQueryReturnValue: PagedResponse<Tag>) {
-          return baseQueryReturnValue.results
+          return sortBy(baseQueryReturnValue.results, 'label')
         },
       }),
       updateTag: builder.mutation<Res['tag'], Req['updateTag']>({

@@ -84,3 +84,17 @@ django-collect-static:
 .PHONY: serve
 serve:
 	poetry run gunicorn --bind 0.0.0.0:8000 app.wsgi --reload
+
+.PHONY: generate-ld-client-types
+generate-ld-client-types:
+	curl -sSL https://app.launchdarkly.com/api/v2/openapi.json | \
+	npx openapi-format /dev/fd/0 \
+		--filterFile ld-openapi-filter.yaml | \
+	datamodel-codegen \
+		--output integrations/launch_darkly/types.py \
+		--output-model-type typing.TypedDict \
+		--target-python-version 3.10 \
+		--use-double-quotes \
+		--use-standard-collections \
+		--wrap-string-literal \
+		--special-field-name-prefix=

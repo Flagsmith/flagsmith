@@ -139,7 +139,7 @@ Released **25 October 2022**
 Released **20 October 2022**
 
 - Add functionality to support adding users to a default user group on joining an organisation
-- Add new index to identites to improve dashboard performance
+- Add new index to identities to improve dashboard performance
 - IS_SET and IS_NOT_SET segment operators
 - Add statsd metrics
 
@@ -401,12 +401,6 @@ new features and bug fixes since our last release:
   ![image](https://user-images.githubusercontent.com/8608314/101258436-6ea64580-371a-11eb-8afe-3626eb36bbbe.png)
 
 The remote config to use this is as follows:
-
-```json
-integrations:
-
-["data_dog"]
-```
 
 ```json
 integration_data

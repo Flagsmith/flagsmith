@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
-from environments.permissions.constants import UPDATE_FEATURE_STATE
+from environments.permissions.constants import MANAGE_SEGMENT_OVERRIDES
 from features.models import FeatureSegment
 
 
@@ -93,6 +93,8 @@ class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer):
             FeatureSegment.objects.filter(
                 id__in=[item["id"] for item in validated_attrs]
             )
+            .select_related("environment")
+            .prefetch_related("feature_states")
         )
 
         if not len(feature_segments) == len(attrs):
@@ -100,30 +102,49 @@ class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer):
                 "Some of the provided ids were not found."
             )
 
-        environments = set()
-        features = set()
+        environment_ids = set()
+        feature_ids = set()
 
         for feature_segment in feature_segments:
-            environments.add(feature_segment.environment)
-            features.add(feature_segment.feature)
+            environment_ids.add(feature_segment.environment_id)
+            feature_ids.add(feature_segment.feature_id)
 
-        if not len(environments) == len(features) == 1:
+        if not len(environment_ids) == len(feature_ids) == 1:
             raise serializers.ValidationError(
                 "All feature segments must belong to the same feature & environment."
             )
 
-        environment = environments.pop()
+        environment = feature_segments[0].environment
 
         if not self.context["request"].user.has_environment_permission(
-            UPDATE_FEATURE_STATE, environment
+            MANAGE_SEGMENT_OVERRIDES, environment
         ):
             raise PermissionDenied("You do not have permission to perform this action.")
+
+        if environment.use_v2_feature_versioning:
+            self._validate_unique_environment_feature_version(feature_segments)
 
         return validated_attrs
 
     def create(self, validated_data):
         id_priority_pairs = FeatureSegment.to_id_priority_tuple_pairs(validated_data)
         return FeatureSegment.update_priorities(id_priority_pairs)
+
+    @staticmethod
+    def _validate_unique_environment_feature_version(
+        feature_segments: list[FeatureSegment],
+    ) -> None:
+        feature_states = []
+        for feature_segment in feature_segments:
+            feature_states.extend(feature_segment.feature_states.all())
+        unique_versions = {
+            feature_state.environment_feature_version_id
+            for feature_state in feature_states
+        }
+        if not len(unique_versions) == 1:
+            raise serializers.ValidationError(
+                "All feature segments must be associated with the same environment feature version."
+            )
 
 
 class FeatureSegmentChangePrioritiesSerializer(serializers.ModelSerializer):

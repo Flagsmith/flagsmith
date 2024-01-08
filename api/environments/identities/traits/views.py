@@ -181,6 +181,7 @@ class SDKTraitsDeprecated(SDKAPIView):
 class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
     permission_classes = (EnvironmentKeyPermissions, TraitPersistencePermissions)
     authentication_classes = (EnvironmentKeyAuthentication,)
+    throttle_classes = []
 
     def get_serializer_class(self):
         if self.action == "increment_value":

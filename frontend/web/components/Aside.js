@@ -13,6 +13,9 @@ import Permission from 'common/providers/Permission'
 import Icon from './Icon'
 import ProjectSelect from './ProjectSelect'
 import AsideProjectButton from './AsideProjectButton'
+import Constants from 'common/constants'
+import { star, warning, pricetag } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 const Aside = class extends Component {
   static displayName = 'Aside'
@@ -88,8 +91,9 @@ const Aside = class extends Component {
 
   render() {
     const { asideIsVisible, disabled, toggleAside } = this.props
-    let integrations = Utils.getFlagsmithValue('integrations') || '[]'
-    integrations = JSON.parse(integrations)
+    const integrations = Object.keys(
+      JSON.parse(Utils.getFlagsmithValue('integration_data') || '{}'),
+    )
     const environmentId =
       (this.props.environmentId !== 'create' && this.props.environmentId) ||
       (ProjectStore.model &&
@@ -166,41 +170,36 @@ const Aside = class extends Component {
                               project && project.name ? (
                                 <Column className='mx-0'>
                                   <div>{project.name}</div>
-                                  {Utils.getFlagsmithHasFeature(
-                                    'edge_identities',
-                                  ) && (
-                                    <div className='mt-2'>
-                                      <span
-                                        style={{
-                                          border: 'none',
-                                        }}
-                                        className='chip chip--active bg-secondary'
+                                  <div className='mt-2'>
+                                    <span
+                                      style={{
+                                        border: 'none',
+                                      }}
+                                      className='chip chip--active bg-secondary'
+                                    >
+                                      <a
+                                        data-test={
+                                          Utils.getIsEdge()
+                                            ? 'edge-project'
+                                            : 'core-project'
+                                        }
+                                        href='https://docs.flagsmith.com/advanced-use/edge-api#enabling-the-edge-api'
+                                        className='text-white font-weight-bold'
                                       >
-                                        <a
-                                          data-test={
-                                            Utils.getIsEdge()
-                                              ? 'edge-project'
-                                              : 'core-project'
-                                          }
-                                          href='https://docs.flagsmith.com/advanced-use/edge-api#enabling-the-edge-api'
-                                          className='text-white font-weight-bold'
-                                        >
-                                          {Utils.getIsEdge() ? (
-                                            'Edge'
-                                          ) : Utils.isMigrating() ? (
-                                            <Tooltip title='Migrating to Edge'>
-                                              Depending on the amount of project
-                                              data, migrating can take a while.
-                                              Refresh the page to track
-                                              progress.
-                                            </Tooltip>
-                                          ) : (
-                                            'Core'
-                                          )}
-                                        </a>
-                                      </span>
-                                    </div>
-                                  )}
+                                        {Utils.getIsEdge() ? (
+                                          'Edge'
+                                        ) : Utils.isMigrating() ? (
+                                          <Tooltip title='Migrating to Edge'>
+                                            Depending on the amount of project
+                                            data, migrating can take a while.
+                                            Refresh the page to track progress.
+                                          </Tooltip>
+                                        ) : (
+                                          'Core'
+                                        )}
+                                      </a>
+                                    </span>
+                                  </div>
                                 </Column>
                               ) : (
                                 'No Project'
@@ -432,7 +431,7 @@ const Aside = class extends Component {
                                                 <Loader />
                                               </div>
                                             ) : (
-                                              <div className='aside__environment-nav list-unstyled mb-0'>
+                                              <div className='aside__environment-nav list-unstyled mb-0 mt-1'>
                                                 <NavLink
                                                   className='aside__environment-list-item'
                                                   id='features-link'
@@ -484,21 +483,32 @@ const Aside = class extends Component {
                                                     </span>
                                                   ) : null}
                                                 </NavLink>
-                                                {manageIdentityPermission && (
+                                                {Utils.renderWithPermission(
+                                                  manageIdentityPermission,
+                                                  Constants.environmentPermissions(
+                                                    'View Identities',
+                                                  ),
                                                   <NavLink
                                                     id='users-link'
-                                                    className='aside__environment-list-item mt-1'
+                                                    className={`aside__environment-list-item ${
+                                                      !manageIdentityPermission &&
+                                                      'disabled'
+                                                    } mt-1`}
                                                     exact
                                                     to={`/project/${project.id}/environment/${environment.api_key}/users`}
                                                   >
                                                     <span className='mr-2'>
                                                       <Icon
                                                         name='people'
-                                                        fill='#9DA4AE'
+                                                        fill={
+                                                          manageIdentityPermission
+                                                            ? '#9DA4AE'
+                                                            : '#696969'
+                                                        }
                                                       />
                                                     </span>
                                                     Identities
-                                                  </NavLink>
+                                                  </NavLink>,
                                                 )}
 
                                                 {environmentAdmin && (
@@ -557,14 +567,18 @@ const Aside = class extends Component {
                                 className='aside__nav-item'
                                 href='https://docs.flagsmith.com'
                               >
-                                <i className='icon mr-2 ion-ios-star aside__nav-item--icon' />
+                                <i className='icon mr-2 aside__nav-item--icon'>
+                                  <IonIcon icon={star} />
+                                </i>
                                 Super cool demo feature!
                               </a>
                             )}
 
                             {Utils.getFlagsmithHasFeature('broken_feature') && (
                               <Link to='/broken' className='aside__nav-item'>
-                                <i className='icon mr-2 ion-ios-warning aside__nav-item--icon' />
+                                <i className='icon mr-2 aside__nav-item--icon'>
+                                  <IonIcon icon={warning} />
+                                </i>
                                 Demo Broken Feature
                               </Link>
                             )}
@@ -575,7 +589,9 @@ const Aside = class extends Component {
                                     html
                                     title={
                                       <span>
-                                        <span className='ml-2 icon ion-ios-pricetag' />{' '}
+                                        <span className='ml-2 icon'>
+                                          <IonIcon icon={pricetag} />
+                                        </span>{' '}
                                         {this.state.version.tag}
                                       </span>
                                     }

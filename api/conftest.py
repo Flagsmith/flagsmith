@@ -1,8 +1,13 @@
+import os
 import typing
 
+import boto3
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
+from flag_engine.segments.constants import EQUAL
+from moto import mock_dynamodb
+from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -23,6 +28,7 @@ from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
+from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
 from metadata.models import (
     Metadata,
@@ -45,7 +51,7 @@ from projects.models import (
 )
 from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
-from segments.models import EQUAL, Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
 from users.models import FFAdminUser, UserPermissionGroup
 
@@ -77,9 +83,31 @@ def test_user_client(api_client, test_user):
 
 
 @pytest.fixture()
-def organisation(db, admin_user):
+def staff_user(django_user_model):
+    """
+    A non-admin user fixture.
+
+    To add to an environment with permissions use the fixture
+    with_environment_permissions, or similar with the fixture
+
+
+    This fixture is attached to the organisation fixture.
+    """
+    return django_user_model.objects.create(email="staff@example.com")
+
+
+@pytest.fixture()
+def staff_client(staff_user):
+    client = APIClient()
+    client.force_authenticate(user=staff_user)
+    return client
+
+
+@pytest.fixture()
+def organisation(db, admin_user, staff_user):
     org = Organisation.objects.create(name="Test Org")
     admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
+    staff_user.add_organisation(org, role=OrganisationRole.USER)
     return org
 
 
@@ -120,10 +148,11 @@ def xero_subscription(organisation):
 
 
 @pytest.fixture()
-def chargebee_subscription(organisation):
+def chargebee_subscription(organisation: Organisation) -> Subscription:
     subscription = Subscription.objects.get(organisation=organisation)
     subscription.payment_method = CHARGEBEE
     subscription.subscription_id = "subscription-id"
+    subscription.plan = "scale-up-v2"
     subscription.save()
 
     # refresh organisation to load subscription
@@ -154,6 +183,58 @@ def segment_rule(segment):
 @pytest.fixture()
 def environment(project):
     return Environment.objects.create(name="Test Environment", project=project)
+
+
+@pytest.fixture()
+def with_environment_permissions(
+    environment: Environment, staff_user: FFAdminUser
+) -> typing.Callable[[list[str], int | None], UserEnvironmentPermission]:
+    """
+    Add environment permissions to the staff_user fixture.
+    Defaults to associating to the environment fixture.
+    """
+
+    def _with_environment_permissions(
+        permission_keys: list[str], environment_id: int | None = None
+    ) -> UserEnvironmentPermission:
+        environment_id = environment_id or environment.id
+        uep, __ = UserEnvironmentPermission.objects.get_or_create(
+            environment_id=environment_id, user=staff_user
+        )
+        uep.permissions.add(*permission_keys)
+
+        return uep
+
+    return _with_environment_permissions
+
+
+@pytest.fixture()
+def with_project_permissions(
+    project: Project, staff_user: FFAdminUser
+) -> typing.Callable:
+    """
+    Add project permissions to the staff_user fixture.
+    Defaults to associating to the project fixture.
+    """
+
+    def _with_project_permissions(
+        permission_keys: list[str], project_id: typing.Optional[int] = None
+    ) -> UserProjectPermission:
+        project_id = project_id or project.id
+        upp, __ = UserProjectPermission.objects.get_or_create(
+            project_id=project_id, user=staff_user
+        )
+        upp.permissions.add(*permission_keys)
+
+        return upp
+
+    return _with_project_permissions
+
+
+@pytest.fixture()
+def environment_v2_versioning(environment):
+    enable_v2_versioning(environment.id)
+    return environment
 
 
 @pytest.fixture()
@@ -464,3 +545,71 @@ def project_content_type():
 @pytest.fixture
 def manage_user_group_permission(db):
     return OrganisationPermissionModel.objects.get(key=MANAGE_USER_GROUPS)
+
+
+@pytest.fixture()
+def aws_credentials():
+    """Mocked AWS Credentials for moto."""
+    os.environ["AWS_ACCESS_KEY_ID"] = "testing"
+    os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
+    os.environ["AWS_SECURITY_TOKEN"] = "testing"
+    os.environ["AWS_SESSION_TOKEN"] = "testing"
+    os.environ["AWS_DEFAULT_REGION"] = "eu-west-2"
+
+
+@pytest.fixture()
+def dynamodb(aws_credentials):
+    # TODO: move all wrapper tests to using moto
+    with mock_dynamodb():
+        yield boto3.resource("dynamodb")
+
+
+@pytest.fixture()
+def flagsmith_identities_table(dynamodb: DynamoDBServiceResource) -> Table:
+    return dynamodb.create_table(
+        TableName="flagsmith_identities",
+        KeySchema=[
+            {
+                "AttributeName": "composite_key",
+                "KeyType": "HASH",
+            },
+        ],
+        AttributeDefinitions=[
+            {"AttributeName": "composite_key", "AttributeType": "S"},
+            {"AttributeName": "environment_api_key", "AttributeType": "S"},
+            {"AttributeName": "identifier", "AttributeType": "S"},
+        ],
+        GlobalSecondaryIndexes=[
+            {
+                "IndexName": "environment_api_key-identifier-index",
+                "KeySchema": [
+                    {"AttributeName": "environment_api_key", "KeyType": "HASH"},
+                    {"AttributeName": "identifier", "KeyType": "RANGE"},
+                ],
+                "Projection": {"ProjectionType": "ALL"},
+            }
+        ],
+        BillingMode="PAY_PER_REQUEST",
+    )
+
+
+@pytest.fixture()
+def flagsmith_environments_v2_table(dynamodb: DynamoDBServiceResource) -> Table:
+    return dynamodb.create_table(
+        TableName="flagsmith_environments_v2",
+        KeySchema=[
+            {
+                "AttributeName": "environment_id",
+                "KeyType": "HASH",
+            },
+            {
+                "AttributeName": "document_key",
+                "KeyType": "RANGE",
+            },
+        ],
+        AttributeDefinitions=[
+            {"AttributeName": "environment_id", "AttributeType": "S"},
+            {"AttributeName": "document_key", "AttributeType": "S"},
+        ],
+        BillingMode="PAY_PER_REQUEST",
+    )

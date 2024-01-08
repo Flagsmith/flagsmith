@@ -1,144 +1,152 @@
 .pricing {
-	background:#f9f9f9;
-	padding: 60px 0;
+  background: #f9f9f9;
+  padding: 60px 0;
 }
 
-.pricing-panel{
-	align-self: stretch;
-	padding-left:8px;
-	padding-right:8px;
-	margin-bottom:20px;
+.pricing-container {
+  gap: 1rem;
+}
 
-	.panel{
-		display: flex;
-		flex-direction: column;
-		overflow:hidden;
-		min-height: 100%;
-	}
-	.panel-content{
-		background-size:contain;
-		padding:10px 10px 20px;
-		text-align: center;
-		border-bottom-left-radius: 0 !important;
-		border-bottom-right-radius: 0 !important;
-	}
-	.panel-footer {
-		display: flex;
-		flex-direction: column;
-		flex:1;
-	}
+.pricing-panel {
+  align-self: stretch;
+  border: 1px solid $basic-alpha-16;
+  border-radius: 12px;
+  position: relative;
+
+  .panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 100%;
+  }
+  .panel-content {
+    background-color: $primary-alfa-8;
+    border-radius: $border-radius-lg;
+  }
+  .panel-footer {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
 }
 
 .pricing-features {
-	padding: 0;
-	margin-left: 20px;
-	margin-bottom:5px;
-
-	li{
-		opacity: 0.75;
-
-		p{
-			margin-bottom:2px;
-			font-size:13px;
-		}
+  list-style: none;
+  .disabled {
+    color: $text-icon-light-grey;
+  }
+  svg {
+    vertical-align: bottom;
+  }
+  &-item {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+  }
+}
+.dark {
+	.pricing-type {
+		color: #d8d8d8;
 	}
 }
 .pricing-type {
-	color: #22354a;
-	margin-bottom: 0;
-	font-size:1.75em;
-	text-align: center;
-	font-weight:bold;
-}
-.pricing-price {
-	margin-bottom: 0;
-	text-align: center;
+  color: $basic-alpha-48;
+  font-size: $font-sm;
+  line-height: $line-height-sm;
+  text-align: center;
+  font-weight: 500;
 }
 
-.featured{
-	color: $bt-brand-secondary;
-	text-transform: uppercase;
-	font-size: 14px;
-	font-weight: bold;
-	text-align: center;
-	padding-top: 5px;
-	margin-bottom: 5px;
-	height: 24px;
+
+.featured {
+  background-color: $secondary500;
+  border-radius: $border-radius;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: bold;
+  padding: 6px 12px;
+  position: absolute;
+  top: -5px;
+  right: -5px;
 }
 
-.pricing-cta{
-	width:80%;
-	min-width: 170px;
-	background:$bt-brand-secondary;
-	margin:0 auto;
-	height:40px;
-	border-radius: 25px;
-	color:#fff;
-	padding:8px 30px 10px;
-	display: block;
-	text-align: center;
-	line-height: 40px;
-	padding: 0;
-	&.blue{
-		background:#22354a;
-		color:#fff !important;
-	}
+.pricing-cta {
+  width: 80%;
+  min-width: 170px;
+  background: $bt-brand-secondary;
+  margin: 0 auto;
+  height: 40px;
+  border-radius: 25px;
+  color: #fff;
+  padding: 8px 30px 10px;
+  display: block;
+  text-align: center;
+  line-height: 40px;
+  padding: 0;
+  &.blue {
+    background: #22354a;
+    color: #fff !important;
+  }
 
-	&:hover{
-		color:#fff;
-		text-decoration: none;
-		box-shadow:0 1px 10px 0 rgba(0,0,0,0.2);
-	}
-
-
+  &:hover {
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 1px 10px 0 rgba(0, 0, 0, 0.2);
+  }
 }
 
-.pricing-icon{
-	width:75px;
-	margin:10px auto;
+.pricing-icon {
+  width: 75px;
+  margin: 10px auto;
 }
 .dark {
-	.panel-footer {
-
-		background:darken($body-bg-dark,2)
-	}
-}
-.panel-footer{
-	background:darken($body-bg,2);
-	padding:10px;
-	text-align: left;
-	min-height: 240px;
-}
-
-.panel-grey{
-	background: #F5F8FD;
-	border-radius: $border-radius;
-	padding: 20px;
-	margin-bottom: 20px;
-
-	.question{
-		font-weight:bold;
-		margin-bottom:5px;
-	}
-
-	.answer{
-		font-size: 15px;
-		opacity: 0.65;
-
-		&:last-of-type{
-			margin-bottom:0;
-		}
-	}
+  .featured {
+    color: $text-icon-dark;
+  }
+  .pricing-panel {
+    background-color: $bg-dark300;
+    .panel-content {
+      background-color: $primary-alfa-16;
+      path {
+        fill: $text-icon-light;
+      }
+    }
+    .panel-footer {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+  }
 }
 
-.faq{
-	padding:60px 0;
+.panel-grey {
+  background: #f5f8fd;
+  border-radius: $border-radius;
+  padding: 20px;
+  margin-bottom: 20px;
+
+  .question {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+
+  .answer {
+    font-size: 15px;
+    opacity: 0.65;
+
+    &:last-of-type {
+      margin-bottom: 0;
+    }
+  }
 }
 
-.cta-container{
-	margin-top:60px;
+.faq {
+  padding: 60px 0;
+}
 
-	a{
-		width:300px;
-	}
+.cta-container {
+  margin-top: 60px;
+
+  a {
+    width: 300px;
+  }
 }

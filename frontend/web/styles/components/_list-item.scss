@@ -9,7 +9,7 @@
       vertical-align: sub;
     }
   }
-  &.change-request-item{
+  &.change-request-item {
     min-height: auto;
     padding: 20px 0px;
   }
@@ -28,6 +28,9 @@
   &-sm {
     min-height: 60px;
   }
+  &-xs {
+    min-height: 50px;
+  }
   a:hover svg {
     path {
       fill: $primary;
@@ -39,10 +42,13 @@
   .list-item {
     color: $text-icon-light;
     &.clickable:hover .btn-link {
-      color: white;
+      color: $primary400;
     }
-    .btn-link {
-      color: white;
+      .btn-link {
+      color: $primary400;
+      path {
+        fill: $primary400;
+      }
     }
   }
 }

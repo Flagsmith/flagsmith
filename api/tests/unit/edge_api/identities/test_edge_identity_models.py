@@ -1,10 +1,12 @@
 from datetime import timedelta
+from unittest.mock import MagicMock
 
 import pytest
 import shortuuid
 from django.utils import timezone
 from flag_engine.features.models import FeatureModel, FeatureStateModel
 from freezegun import freeze_time
+from pytest_mock import MockerFixture
 
 from edge_api.identities.models import EdgeIdentity
 from features.models import FeatureSegment, FeatureState, FeatureStateValue
@@ -263,12 +265,17 @@ def test_edge_identity_save_does_not_generate_audit_records_if_no_changes(
     mocked_generate_audit_log_records.delay.assert_not_called()
 
 
-def test_edge_identity_save_called_generate_audit_records_if_feature_override_added(
-    mocker, edge_identity_model, edge_identity_dynamo_wrapper_mock
-):
+def test_edge_identity_save_called__feature_override_added__expected_tasks_called(
+    mocker: MockerFixture,
+    edge_identity_model: EdgeIdentity,
+    edge_identity_dynamo_wrapper_mock: MagicMock,
+) -> None:
     # Given
     mocked_generate_audit_log_records = mocker.patch(
         "edge_api.identities.models.generate_audit_log_records"
+    )
+    mocked_update_flagsmith_environments_v2_identity_overrides = mocker.patch(
+        "edge_api.identities.models.update_flagsmith_environments_v2_identity_overrides"
     )
 
     feature_state_model = FeatureStateModel(
@@ -278,6 +285,20 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_ad
     edge_identity_model.add_feature_override(feature_state_model)
 
     user = mocker.MagicMock()
+
+    expected_changes = {
+        "feature_overrides": {
+            "test_feature": {
+                "change_type": "+",
+                "new": {
+                    **feature_state_model.dict(),
+                    "enabled": True,
+                    "feature_state_value": None,
+                },
+            }
+        }
+    }
+    expected_identity_uuid = str(edge_identity_model.identity_uuid)
 
     # When
     edge_identity_model.save(user=user)
@@ -289,26 +310,32 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_ad
             "environment_api_key": edge_identity_model.environment_api_key,
             "identifier": edge_identity_model.identifier,
             "user_id": user.id,
-            "changes": {
-                "feature_overrides": {
-                    "test_feature": {
-                        "change_type": "+",
-                        "new": {"enabled": True, "value": None},
-                    }
-                }
-            },
-            "identity_uuid": str(edge_identity_model.identity_uuid),
+            "changes": expected_changes,
+            "identity_uuid": expected_identity_uuid,
             "master_api_key_id": None,
+        }
+    )
+    mocked_update_flagsmith_environments_v2_identity_overrides.delay.assert_called_once_with(
+        kwargs={
+            "environment_api_key": edge_identity_model.environment_api_key,
+            "changes": expected_changes,
+            "identity_uuid": expected_identity_uuid,
+            "identifier": edge_identity_model.identifier,
         }
     )
 
 
-def test_edge_identity_save_called_generate_audit_records_if_feature_override_removed(
-    mocker, edge_identity_model, edge_identity_dynamo_wrapper_mock
-):
+def test_edge_identity_save_called__feature_override_removed__expected_tasks_called(
+    mocker: MockerFixture,
+    edge_identity_model: EdgeIdentity,
+    edge_identity_dynamo_wrapper_mock: MagicMock,
+) -> None:
     # Given
     mocked_generate_audit_log_records = mocker.patch(
         "edge_api.identities.models.generate_audit_log_records"
+    )
+    mocked_update_flagsmith_environments_v2_identity_overrides = mocker.patch(
+        "edge_api.identities.models.update_flagsmith_environments_v2_identity_overrides"
     )
 
     feature_state_model = FeatureStateModel(
@@ -319,9 +346,24 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_re
 
     user = mocker.MagicMock()
 
+    expected_changes = {
+        "feature_overrides": {
+            "test_feature": {
+                "change_type": "-",
+                "old": {
+                    **feature_state_model.dict(),
+                    "enabled": True,
+                    "feature_state_value": None,
+                },
+            }
+        }
+    }
+    expected_identity_uuid = str(edge_identity_model.identity_uuid)
+
     edge_identity_model.save(user=user)
     edge_identity_dynamo_wrapper_mock.reset_mock()
     mocked_generate_audit_log_records.reset_mock()
+    mocked_update_flagsmith_environments_v2_identity_overrides.reset_mock()
 
     edge_identity_model.remove_feature_override(feature_state_model)
 
@@ -335,16 +377,17 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_re
             "environment_api_key": edge_identity_model.environment_api_key,
             "identifier": edge_identity_model.identifier,
             "user_id": user.id,
-            "changes": {
-                "feature_overrides": {
-                    "test_feature": {
-                        "change_type": "-",
-                        "old": {"enabled": True, "value": None},
-                    }
-                }
-            },
-            "identity_uuid": str(edge_identity_model.identity_uuid),
+            "changes": expected_changes,
+            "identity_uuid": expected_identity_uuid,
             "master_api_key_id": None,
+        }
+    )
+    mocked_update_flagsmith_environments_v2_identity_overrides.delay.assert_called_once_with(
+        kwargs={
+            "environment_api_key": edge_identity_model.environment_api_key,
+            "changes": expected_changes,
+            "identity_uuid": expected_identity_uuid,
+            "identifier": edge_identity_model.identifier,
         }
     )
 
@@ -358,17 +401,20 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_re
     ),
 )
 def test_edge_identity_save_called_generate_audit_records_if_feature_override_updated(
-    initial_enabled,
-    initial_value,
-    new_enabled,
-    new_value,
-    mocker,
-    edge_identity_model,
-    edge_identity_dynamo_wrapper_mock,
-):
+    initial_enabled: bool,
+    initial_value: str,
+    new_enabled: bool,
+    new_value: str,
+    mocker: MockerFixture,
+    edge_identity_model: EdgeIdentity,
+    edge_identity_dynamo_wrapper_mock: MagicMock,
+) -> None:
     # Given
     mocked_generate_audit_log_records = mocker.patch(
         "edge_api.identities.models.generate_audit_log_records"
+    )
+    mocked_update_flagsmith_environments_v2_identity_overrides = mocker.patch(
+        "edge_api.identities.models.update_flagsmith_environments_v2_identity_overrides"
     )
 
     feature_state_model = FeatureStateModel(
@@ -380,9 +426,29 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_up
 
     user = mocker.MagicMock()
 
+    expected_changes = {
+        "feature_overrides": {
+            "test_feature": {
+                "change_type": "~",
+                "old": {
+                    **feature_state_model.dict(),
+                    "enabled": initial_enabled,
+                    "feature_state_value": initial_value,
+                },
+                "new": {
+                    **feature_state_model.dict(),
+                    "enabled": new_enabled,
+                    "feature_state_value": new_value,
+                },
+            }
+        }
+    }
+    expected_identity_uuid = str(edge_identity_model.identity_uuid)
+
     edge_identity_model.save(user=user)
     edge_identity_dynamo_wrapper_mock.reset_mock()
     mocked_generate_audit_log_records.reset_mock()
+    mocked_update_flagsmith_environments_v2_identity_overrides.reset_mock()
 
     feature_override = edge_identity_model.get_feature_state_by_featurestate_uuid(
         str(feature_state_model.featurestate_uuid)
@@ -400,16 +466,16 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_up
             "environment_api_key": edge_identity_model.environment_api_key,
             "identifier": edge_identity_model.identifier,
             "user_id": user.id,
-            "changes": {
-                "feature_overrides": {
-                    "test_feature": {
-                        "change_type": "~",
-                        "old": {"enabled": initial_enabled, "value": initial_value},
-                        "new": {"enabled": new_enabled, "value": new_value},
-                    }
-                }
-            },
-            "identity_uuid": str(edge_identity_model.identity_uuid),
+            "changes": expected_changes,
+            "identity_uuid": expected_identity_uuid,
             "master_api_key_id": None,
+        }
+    )
+    mocked_update_flagsmith_environments_v2_identity_overrides.delay.assert_called_once_with(
+        kwargs={
+            "environment_api_key": edge_identity_model.environment_api_key,
+            "changes": expected_changes,
+            "identity_uuid": expected_identity_uuid,
+            "identifier": edge_identity_model.identifier,
         }
     )

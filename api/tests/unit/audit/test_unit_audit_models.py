@@ -1,6 +1,8 @@
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from audit.serializers import AuditLogListSerializer
 from integrations.datadog.models import DataDogConfiguration
+from webhooks.webhooks import WebhookEventType
 
 
 def test_organisation_webhooks_are_called_when_audit_log_saved(project, mocker):
@@ -13,7 +15,13 @@ def test_organisation_webhooks_are_called_when_audit_log_saved(project, mocker):
     audit_log.save()
 
     # Then
-    mock_call_webhooks.assert_called()
+    mock_call_webhooks.delay.assert_called_once_with(
+        args=(
+            project.organisation.id,
+            AuditLogListSerializer(instance=audit_log).data,
+            WebhookEventType.AUDIT_LOG_CREATED.value,
+        )
+    )
 
 
 def test_data_dog_track_event_not_called_on_audit_log_saved_when_not_configured(
@@ -137,15 +145,15 @@ def test_audit_log_history_record(mocker):
     mocked_model_class = mocker.MagicMock()
     mocked_module = mocker.MagicMock(**{model_class_name: mocked_model_class})
     mocker.patch("audit.models.import_module", return_value=mocked_module)
-    mocked_model_class.objects.get.return_value = mocked_model
+    mocked_model_class.objects.filter.return_value.first.return_value = mocked_model
 
     # When
     record = audit_log.history_record
 
     # Then
     assert record == mocked_model
-    mocked_model_class.objects.get.assert_called_once_with(
-        id=audit_log.history_record_id
+    mocked_model_class.objects.filter.assert_called_once_with(
+        history_id=audit_log.history_record_id
     )
 
 
@@ -160,67 +168,33 @@ def test_audit_log_save_project_is_added_if_not_set(environment):
     assert audit_log.project == environment.project
 
 
-def test_creating_audit_logs_triggers_environment_update_message(environment, mocker):
+def test_creating_audit_logs_creates_process_environment_update_task(
+    environment, mocker
+):
     # Given
-    send_environment_update_message_for_environment = mocker.patch(
-        "audit.models.send_environment_update_message_for_environment"
+    process_environment_update = mocker.patch(
+        "environments.tasks.process_environment_update"
     )
 
     # When
     audit_log = AuditLog.objects.create(environment=environment)
 
     # Then
-    send_environment_update_message_for_environment.assert_called_once_with(environment)
+    process_environment_update.delay.assert_called_once_with(args=(audit_log.id,))
+
+    # and
+    environment.refresh_from_db()
     assert environment.updated_at == audit_log.created_date
 
 
-def test_creating_audit_logs_triggers_environment_update_message_for_environment_if_environment_is_present(
+def test_creating_audit_logs_for_change_request_does_not_trigger_process_environment_update(
     environment, mocker, project
 ):
     # Given
-    send_environment_update_message_for_environment = mocker.patch(
-        "audit.models.send_environment_update_message_for_environment"
+    process_environment_update = mocker.patch(
+        "environments.tasks.process_environment_update"
     )
-    send_environment_update_message_for_project = mocker.patch(
-        "audit.models.send_environment_update_message_for_project"
-    )
-    # When
-    audit_log = AuditLog.objects.create(environment=environment, project=project)
 
-    # Then
-    send_environment_update_message_for_environment.assert_called_once_with(environment)
-    send_environment_update_message_for_project.assert_not_called()
-    assert environment.updated_at == audit_log.created_date
-
-
-def test_creating_audit_logs_triggers_environment_update_message_for_project_if_environment_is_not_present(
-    environment, mocker, project
-):
-    # Given
-    send_environment_update_message_for_environment = mocker.patch(
-        "audit.models.send_environment_update_message_for_environment"
-    )
-    send_environment_update_message_for_project = mocker.patch(
-        "audit.models.send_environment_update_message_for_project"
-    )
-    # When
-    AuditLog.objects.create(project=project)
-
-    # Then
-    send_environment_update_message_for_project.assert_called_once_with(project)
-    send_environment_update_message_for_environment.assert_not_called()
-
-
-def test_creating_audit_logs_for_change_request_does_not_trigger_environment_update_message(
-    environment, mocker, project
-):
-    # Given
-    send_environment_update_message_for_environment = mocker.patch(
-        "audit.models.send_environment_update_message_for_environment"
-    )
-    send_environment_update_message_for_project = mocker.patch(
-        "audit.models.send_environment_update_message_for_project"
-    )
     # When
     audit_log = AuditLog.objects.create(
         project=project,
@@ -228,6 +202,5 @@ def test_creating_audit_logs_for_change_request_does_not_trigger_environment_upd
     )
 
     # Then
-    send_environment_update_message_for_environment.assert_not_called()
-    send_environment_update_message_for_project.assert_not_called()
+    process_environment_update.delay.assert_not_called()
     assert audit_log.created_date != environment.updated_at

@@ -11,6 +11,7 @@ import PanelSearch from './PanelSearch'
 import { sortBy } from 'lodash'
 import InfoMessage from './InfoMessage' // we need this to make JSX compile
 import Icon from './Icon'
+import { useGetGroupSummariesQuery } from 'common/services/useGroupSummary'
 const Panel = require('components/base/grid/Panel')
 
 type UserGroupsListType = {
@@ -29,9 +30,8 @@ const UserGroupsList: FC<UserGroupsListType> = ({
   showRemove,
 }) => {
   const [page, setPage] = useState(1)
-  const { data: userGroups, isLoading } = useGetGroupsQuery({
+  const { data: userGroups, isLoading } = useGetGroupSummariesQuery({
     orgId: `${orgId}`,
-    page,
   })
   const [deleteGroup] = useDeleteGroupMutation({})
   const isAdmin = AccountStore.isAdmin()
@@ -62,7 +62,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
         title={noTitle ? '' : 'Groups'}
         className='no-pad'
         itemHeight={64}
-        items={sortBy(userGroups?.results, 'name')}
+        items={sortBy(userGroups, 'name')}
         paging={userGroups}
         nextPage={() => setPage(page + 1)}
         prevPage={() => setPage(page - 1)}
@@ -92,23 +92,19 @@ const UserGroupsList: FC<UserGroupsListType> = ({
               openModal(
                 'Edit Group',
                 <CreateGroup isEdit orgId={orgId} group={group} />,
-                'side-modal create-feature-modal',
+                'side-modal',
               )
             }
           }
           return (
             <Row
               space
-              className='list-item clickable'
+              className='list-item list-item-sm clickable'
               key={id}
               data-test={`user-item-${index}`}
             >
               <Flex onClick={_onClick} className=' table-column px-3'>
-                <div className='mb-1 font-weight-medium'>{name}</div>
-                <div className='list-item-subtitle faint'>
-                  {users.length}
-                  {users.length === 1 ? ' Member' : ' Members'}
-                </div>
+                <div className='font-weight-medium'>{name}</div>
               </Flex>
 
               {onEditPermissions && isAdmin ? (

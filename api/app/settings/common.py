@@ -53,20 +53,12 @@ SECRET_KEY = env("DJANGO_SECRET_KEY", default=get_random_secret_key())
 
 HOSTED_SEATS_LIMIT = env.int("HOSTED_SEATS_LIMIT", default=0)
 
-# Google Analytics Configuration
-GOOGLE_ANALYTICS_KEY = env("GOOGLE_ANALYTICS_KEY", default="")
-GOOGLE_SERVICE_ACCOUNT = env("GOOGLE_SERVICE_ACCOUNT", default=None)
-GA_TABLE_ID = env("GA_TABLE_ID", default=None)
+MAX_PROJECTS_IN_FREE_PLAN = 1
 
-INFLUXDB_TOKEN = env.str("INFLUXDB_TOKEN", default="")
-INFLUXDB_BUCKET = env.str("INFLUXDB_BUCKET", default="")
-INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
-INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST", default=False)
 
-USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
 
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
@@ -117,7 +109,9 @@ INSTALLED_APPS = [
     "environments.identities",
     "environments.identities.traits",
     "features",
+    "features.import_export",
     "features.multivariate",
+    "features.versioning",
     "features.workflows.core",
     "segments",
     "app",
@@ -133,6 +127,7 @@ INSTALLED_APPS = [
     # health check plugins
     "health_check",
     "health_check.db",
+    "health_check.contrib.migrations",
     # Used for ordering models (e.g. FeatureSegment)
     "ordered_model",
     # Third party integrations
@@ -148,6 +143,7 @@ INSTALLED_APPS = [
     "integrations.webhook",
     "integrations.dynatrace",
     "integrations.flagsmith",
+    "integrations.launch_darkly",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -217,6 +213,8 @@ elif "DJANGO_DB_NAME" in os.environ:
 
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
+USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", "500/min")
+DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", default=[])
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -226,11 +224,13 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_THROTTLE_CLASSES": DEFAULT_THROTTLE_CLASSES,
     "DEFAULT_THROTTLE_RATES": {
         "login": LOGIN_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
+        "user": USER_THROTTLE_RATE,
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_RENDERER_CLASSES": [
@@ -278,17 +278,29 @@ if ENABLE_GZIP_COMPRESSION:
     # ref: https://docs.djangoproject.com/en/2.2/ref/middleware/#middleware-ordering
     MIDDLEWARE.insert(1, "django.middleware.gzip.GZipMiddleware")
 
+# Google Analytics Configuration
+GOOGLE_ANALYTICS_KEY = env("GOOGLE_ANALYTICS_KEY", default="")
+GOOGLE_SERVICE_ACCOUNT = env("GOOGLE_SERVICE_ACCOUNT", default=None)
+GA_TABLE_ID = env("GA_TABLE_ID", default=None)
+
 if GOOGLE_ANALYTICS_KEY:
     MIDDLEWARE.append("app_analytics.middleware.GoogleAnalyticsMiddleware")
 
-if INFLUXDB_TOKEN:
+# Influx configuration
+INFLUXDB_TOKEN = env.str("INFLUXDB_TOKEN", default="")
+INFLUXDB_BUCKET = env.str("INFLUXDB_BUCKET", default="")
+INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
+INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
+
+USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
+
+# NOTE: Because we use Postgres for analytics data in staging and Influx for tracking SSE data,
+# we need to support setting the influx configuration alongside using postgres for analytics.
+if USE_POSTGRES_FOR_ANALYTICS:
+    MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
+elif INFLUXDB_TOKEN:
     MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
 
-if USE_POSTGRES_FOR_ANALYTICS:
-    if INFLUXDB_TOKEN:
-        raise RuntimeError("Cannot use both InfluxDB and Postgres for analytics")
-
-    MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list("ALLOWED_ADMIN_IP_ADDRESSES", default=list())
 if len(ALLOWED_ADMIN_IP_ADDRESSES) > 0:
@@ -388,10 +400,25 @@ EMAIL_CONFIGURATION = {
 AWS_SES_REGION_NAME = env("AWS_SES_REGION_NAME", default=None)
 AWS_SES_REGION_ENDPOINT = env("AWS_SES_REGION_ENDPOINT", default=None)
 
-# Used on init to create admin user for the site, update accordingly before hitting /auth/init
-ALLOW_ADMIN_INITIATION_VIA_URL = True
-ADMIN_EMAIL = "admin@example.com"
-ADMIN_INITIAL_PASSWORD = "password"
+# Initialisation settings
+# If `ALLOW_ADMIN_INITIATION_VIA_CLI` setting is set to True, Flagsmith will attempt to create
+#   1. A superuser
+#   2. An organisation
+#   3. A project
+# with initial values on startup.
+# Initialisation is skipped if it's been performed before or if `ALLOW_ADMIN_INITIATION_VIA_CLI` is set to False.
+# Tweak (or set via environment) the settings below for custom names, etc.
+ALLOW_ADMIN_INITIATION_VIA_URL = env.bool(
+    "ALLOW_ADMIN_INITIATION_VIA_URL", default=True
+)
+ALLOW_ADMIN_INITIATION_VIA_CLI = env.bool(
+    "ALLOW_ADMIN_INITIATION_VIA_CLI", default=False
+)
+
+ADMIN_EMAIL = env("ADMIN_EMAIL", default="admin@example.com")
+ORGANISATION_NAME = env("ORGANISATION_NAME", default="Default Organisation")
+PROJECT_NAME = env("PROJECT_NAME", default="Default Project")
+
 
 AUTH_USER_MODEL = "users.FFAdminUser"
 
@@ -442,8 +469,18 @@ SWAGGER_SETTINGS = {
 LOGIN_URL = "/admin/login/"
 LOGOUT_URL = "/admin/logout/"
 
+# Enable E2E tests
+ENABLE_FE_E2E = env.bool("ENABLE_FE_E2E", default=False)
 # Email associated with user that is used by front end for end to end testing purposes
-FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
+E2E_TEST_EMAIL_DOMAIN = "flagsmithe2etestdomain.io"
+# User email address used for E2E Signup test
+E2E_SIGNUP_USER = f"e2e_signup_user@{E2E_TEST_EMAIL_DOMAIN}"
+# User email address used for Change email E2E test which is part of invite tests
+E2E_CHANGE_EMAIL_USER = f"e2e_change_email@{E2E_TEST_EMAIL_DOMAIN}"
+# User email address used for the rest of the E2E tests
+E2E_USER = f"e2e_user@{E2E_TEST_EMAIL_DOMAIN}"
+#  Identity for E2E segment tests
+E2E_IDENTITY = "test-identity"
 
 # SSL handling in Django
 SECURE_PROXY_SSL_HEADER_NAME = env.str(
@@ -500,6 +537,11 @@ else:
                 "propagate": False,
             },
             "app_analytics": {
+                "level": LOG_LEVEL,
+                "handlers": ["console"],
+                "propagate": False,
+            },
+            "webhooks": {
                 "level": LOG_LEVEL,
                 "handlers": ["console"],
                 "propagate": False,
@@ -733,6 +775,9 @@ DEFAULT_ORG_STORE_TRAITS_VALUE = env.bool("DEFAULT_ORG_STORE_TRAITS_VALUE", True
 # DynamoDB table name for storing environment
 ENVIRONMENTS_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_TABLE_NAME_DYNAMO", None)
 
+# V2 was created to improve storage over overrides data.
+ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_V2_TABLE_NAME_DYNAMO", None)
+
 # DynamoDB table name for storing identities
 IDENTITIES_TABLE_NAME_DYNAMO = env.str("IDENTITIES_TABLE_NAME_DYNAMO", None)
 
@@ -779,8 +824,7 @@ MAILERLITE_API_KEY = env.str("MAILERLITE_API_KEY", None)
 MAILERLITE_NEW_USER_GROUP_ID = env.int("MAILERLITE_NEW_USER_GROUP_ID", None)
 
 # Additional functionality for using SAML in Flagsmith SaaS
-SAML_MODULE_PATH = env("SAML_MODULE_PATH", os.path.join(BASE_DIR, "saml"))
-SAML_INSTALLED = os.path.exists(SAML_MODULE_PATH)
+SAML_INSTALLED = importlib.util.find_spec("saml") is not None
 
 if SAML_INSTALLED:
     SAML_REQUESTS_CACHE_LOCATION = "saml_requests_cache"
@@ -837,7 +881,10 @@ EDGE_ENABLED = (
 
 DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
 
-SERVE_FE_ASSETS = os.path.exists(BASE_DIR + "/app/templates/webpack/index.html")
+DISABLE_FLAGSMITH_UI = env.bool("DISABLE_FLAGSMITH_UI", default=False)
+SERVE_FE_ASSETS = not DISABLE_FLAGSMITH_UI and os.path.exists(
+    BASE_DIR + "/app/templates/webpack/index.html"
+)
 
 # Used to configure the number of application proxies that the API runs behind
 NUM_PROXIES = env.int("NUM_PROXIES", 1)
@@ -864,10 +911,19 @@ TASK_DELETE_INCLUDE_FAILED_TASKS = env.bool(
 )
 TASK_DELETE_RUN_TIME = env.time("TASK_DELETE_RUN_TIME", default="01:00")
 TASK_DELETE_RUN_EVERY = env.timedelta("TASK_DELETE_RUN_EVERY", default=86400)
+RECURRING_TASK_RUN_RETENTION_DAYS = env.int(
+    "RECURRING_TASK_RUN_RETENTION_DAYS", default=30
+)
 
 # Real time(server sent events) settings
 SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)
 SSE_AUTHENTICATION_TOKEN = env.str("SSE_AUTHENTICATION_TOKEN", None)
+AWS_SSE_LOGS_BUCKET_NAME = env.str("AWS_SSE_LOGS_BUCKET_NAME", None)
+
+RAW_ANALYTICS_DATA_RETENTION_DAYS = env.int("RAW_ANALYTICS_DATA_RETENTION_DAYS", 30)
+BUCKETED_ANALYTICS_DATA_RETENTION_DAYS = env.int(
+    "BUCKETED_ANALYTICS_DATA_RETENTION_DAYS", 90
+)
 
 DISABLE_INVITE_LINKS = env.bool("DISABLE_INVITE_LINKS", False)
 
@@ -929,3 +985,94 @@ FLAGSMITH_ON_FLAGSMITH_SERVER_KEY = env(
 FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = env(
     "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL", default=FLAGSMITH_ON_FLAGSMITH_API_URL
 )
+
+FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID = env.int(
+    "FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID",
+    default=None,
+)
+FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID = env.int(
+    "FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID",
+    default=None,
+)
+
+# LDAP setting
+LDAP_INSTALLED = importlib.util.find_spec("flagsmith_ldap")
+# The URL of the LDAP server.
+LDAP_AUTH_URL = env.str("LDAP_AUTH_URL", None)
+
+if LDAP_INSTALLED and LDAP_AUTH_URL:
+    AUTHENTICATION_BACKENDS.insert(0, "django_python3_ldap.auth.LDAPBackend")
+    INSTALLED_APPS.append("flagsmith_ldap")
+
+    # Initiate TLS on connection.
+    LDAP_AUTH_USE_TLS = env.bool("LDAP_AUTH_USE_TLS", False)
+
+    # The LDAP search base for looking up users.
+    LDAP_AUTH_SEARCH_BASE = env.str(
+        "LDAP_AUTH_SEARCH_BASE", "ou=people,dc=example,dc=com"
+    )
+
+    # The LDAP class that represents a user.
+    LDAP_AUTH_OBJECT_CLASS = env.str("LDAP_AUTH_OBJECT_CLASS", "inetOrgPerson")
+
+    # User model fields mapped to the LDAP
+    # attributes that represent them.
+    LDAP_AUTH_USER_FIELDS = env.dict(
+        "LDAP_AUTH_USER_FIELDS",
+        {
+            "username": "uid",
+            "first_name": "givenName",
+            "last_name": "sn",
+            "email": "mail",
+        },
+    )
+    # Sets the login domain for Active Directory users.
+    LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN = env.str(
+        "LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN", None
+    )
+
+    # Path to a callable that takes a dict of {model_field_name: value}, and returns
+    # a string of the username to bind to the LDAP server.
+    # Use this to support different types of LDAP server.
+    LDAP_AUTH_FORMAT_USERNAME = env.str(
+        "LDAP_AUTH_FORMAT_USERNAME",
+        "django_python3_ldap.utils.format_username_openldap",
+    )
+
+    # Set connection/receive timeouts (in seconds) on the underlying `ldap3` library.
+    LDAP_AUTH_CONNECT_TIMEOUT = env.int("LDAP_AUTH_CONNECT_TIMEOUT", None)
+    LDAP_AUTH_RECEIVE_TIMEOUT = env.int("LDAP_AUTH_RECEIVE_TIMEOUT", None)
+
+    # Set this to add newly created users to an organisation
+    LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID = env.int(
+        "LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID", None
+    )
+
+    # Path to a callable that takes a user model, a dict of {ldap_field_name: [value]}
+    # a LDAP connection object (to allow further lookups), and saves any additional
+    # user relationships based on the LDAP data.
+    LDAP_AUTH_SYNC_USER_RELATIONS = env.str(
+        "LDAP_AUTH_SYNC_USER_RELATIONS", "django_python3_ldap.utils.sync_user_relations"
+    )
+
+    # Path to a callable that takes a dict of {ldap_field_name: value},
+    # returning a list of [ldap_search_filter]. The search filters will then be AND'd
+    # together when creating the final search filter.
+    LDAP_AUTH_FORMAT_SEARCH_FILTERS = env.str(
+        "LDAP_AUTH_FORMAT_SEARCH_FILTERS",
+        default="django_python3_ldap.utils.format_search_filters",
+    )
+
+    # List of LDAP group DN's that needs to be synced.
+    LDAP_SYNCED_GROUPS = env.list("LDAP_SYNCED_GROUPS", default=[], delimiter=":")
+
+    # DN of the LDAP group that is allowed to login
+    # If None no group check will be performed.
+    LDAP_LOGIN_GROUP = env.str("LDAP_LOGIN_GROUP", None)
+
+    # The LDAP user username and password used by `sync_ldap_users_and_groups` command
+    LDAP_SYNC_USER_USERNAME = env.str("LDAP_SYNC_USER_USERNAME", None)
+    LDAP_SYNC_USER_PASSWORD = env.str("LDAP_SYNC_USER_PASSWORD", None)
+
+WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)
+WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)

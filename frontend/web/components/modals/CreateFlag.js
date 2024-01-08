@@ -31,6 +31,8 @@ import { setInterceptClose } from './base/ModalDefault'
 import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
 import FeatureValue from 'components/FeatureValue'
+import FlagOwnerGroups from 'components/FlagOwnerGroups'
+import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -56,7 +58,7 @@ const CreateFlag = class extends Component {
       : {
           multivariate_options: [],
         }
-    const { allowEditDescription } = this.props
+    const { allowEditDescription, tab } = this.props
     if (this.props.projectFlag) {
       this.userOverridesPage(1)
     }
@@ -84,7 +86,7 @@ const CreateFlag = class extends Component {
       name,
       period: 30,
       selectedIdentity: null,
-      tab: Utils.fromParam().tab || 0,
+      tab: tab || 0,
       tags: tags || [],
     }
     AppActions.getGroups(AccountStore.getOrganisation().id)
@@ -174,6 +176,29 @@ const CreateFlag = class extends Component {
 
   userOverridesPage = (page) => {
     if (Utils.getIsEdge()) {
+      if (!Utils.getShouldHideIdentityOverridesTab(ProjectStore.model)) {
+        data
+          .get(
+            `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides?feature=${this.props.projectFlag.id}&page=${page}`,
+          )
+          .then((userOverrides) => {
+            this.setState({
+              userOverrides: userOverrides.results.map((v) => ({
+                ...v.feature_state,
+                identity: {
+                  id: v.identity_uuid,
+                  identifier: v.identifier,
+                },
+              })),
+              userOverridesPaging: {
+                count: userOverrides.count,
+                currentPage: page,
+                next: userOverrides.next,
+              },
+            })
+          })
+      }
+
       return
     }
     data
@@ -515,12 +540,20 @@ const CreateFlag = class extends Component {
           >
             {({ permission: projectAdmin }) =>
               projectAdmin && (
-                <FormGroup className='mb-5 setting'>
-                  <FlagOwners
-                    projectId={this.props.projectId}
-                    id={projectFlag.id}
-                  />
-                </FormGroup>
+                <>
+                  <FormGroup className='mb-5 setting'>
+                    <FlagOwners
+                      projectId={this.props.projectId}
+                      id={projectFlag.id}
+                    />
+                  </FormGroup>
+                  <FormGroup className='mb-5 setting'>
+                    <FlagOwnerGroups
+                      projectId={this.props.projectId}
+                      id={projectFlag.id}
+                    />
+                  </FormGroup>
+                </>
               )
             }
           </Permission>
@@ -546,7 +579,7 @@ const CreateFlag = class extends Component {
           />
         </FormGroup>
 
-        {!identity && Utils.getFlagsmithHasFeature('is_server_key_only') && (
+        {!identity && (
           <FormGroup className='mb-5 setting'>
             <Row>
               <Switch
@@ -626,6 +659,13 @@ const CreateFlag = class extends Component {
 
     const Value = (error, projectAdmin, createFeature, hideValue) => (
       <>
+        {!!isEdit && (
+          <ExistingChangeRequestAlert
+            className='mb-4'
+            featureId={projectFlag.id}
+            environmentId={this.props.environmentId}
+          />
+        )}
         {!isEdit && (
           <FormGroup className='mb-4 mt-2'>
             <InputGroup
@@ -855,6 +895,12 @@ const CreateFlag = class extends Component {
                 this.save(createFlag, isSaving)
               }
 
+              const featureLimitAlert =
+                Utils.calculateRemainingLimitsPercentage(
+                  project.total_features,
+                  project.max_features_allowed,
+                )
+
               return (
                 <Permission
                   level='project'
@@ -890,6 +936,11 @@ const CreateFlag = class extends Component {
                                   }
                                 >
                                   <FormGroup>
+                                    {featureLimitAlert.percentage &&
+                                      Utils.displayLimitAlert(
+                                        'features',
+                                        featureLimitAlert.percentage,
+                                      )}
                                     <Tooltip
                                       title={
                                         <h5 className='mb-4'>
@@ -1115,38 +1166,61 @@ const CreateFlag = class extends Component {
                                               )}
                                           </Row>
                                           {this.props.segmentOverrides ? (
-                                            <SegmentOverrides
-                                              readOnly={noPermissions}
-                                              showEditSegment
-                                              showCreateSegment={
-                                                this.state.showCreateSegment
+                                            <Permission
+                                              level='environment'
+                                              permission={
+                                                'MANAGE_SEGMENT_OVERRIDES'
                                               }
-                                              setShowCreateSegment={(
-                                                showCreateSegment,
-                                              ) =>
-                                                this.setState({
-                                                  showCreateSegment,
-                                                })
-                                              }
-                                              feature={projectFlag.id}
-                                              projectId={this.props.projectId}
-                                              multivariateOptions={
-                                                multivariate_options
-                                              }
-                                              environmentId={
-                                                this.props.environmentId
-                                              }
-                                              value={
-                                                this.props.segmentOverrides
-                                              }
-                                              controlValue={initial_value}
-                                              onChange={(v) => {
-                                                this.setState({
-                                                  segmentsChanged: true,
-                                                })
-                                                this.props.updateSegments(v)
+                                              id={this.props.environmentId}
+                                            >
+                                              {({
+                                                permission:
+                                                  manageSegmentOverrides,
+                                              }) => {
+                                                const isReadOnly =
+                                                  !manageSegmentOverrides
+                                                return (
+                                                  <SegmentOverrides
+                                                    readOnly={isReadOnly}
+                                                    showEditSegment
+                                                    showCreateSegment={
+                                                      this.state
+                                                        .showCreateSegment
+                                                    }
+                                                    setShowCreateSegment={(
+                                                      showCreateSegment,
+                                                    ) =>
+                                                      this.setState({
+                                                        showCreateSegment,
+                                                      })
+                                                    }
+                                                    feature={projectFlag.id}
+                                                    projectId={
+                                                      this.props.projectId
+                                                    }
+                                                    multivariateOptions={
+                                                      multivariate_options
+                                                    }
+                                                    environmentId={
+                                                      this.props.environmentId
+                                                    }
+                                                    value={
+                                                      this.props
+                                                        .segmentOverrides
+                                                    }
+                                                    controlValue={initial_value}
+                                                    onChange={(v) => {
+                                                      this.setState({
+                                                        segmentsChanged: true,
+                                                      })
+                                                      this.props.updateSegments(
+                                                        v,
+                                                      )
+                                                    }}
+                                                  />
+                                                )
                                               }}
-                                            />
+                                            </Permission>
                                           ) : (
                                             <div className='text-center'>
                                               <Loader />
@@ -1175,48 +1249,60 @@ const CreateFlag = class extends Component {
                                                   }
                                                 </strong>
                                               </p>
-                                              <Permission
-                                                level='environment'
-                                                permission={Utils.getManageFeaturePermission(
-                                                  is4Eyes,
-                                                  identity,
-                                                )}
-                                                id={this.props.environmentId}
-                                              >
-                                                {({
-                                                  permission: savePermission,
-                                                }) =>
-                                                  Utils.renderWithPermission(
-                                                    savePermission,
-                                                    Constants.environmentPermissions(
-                                                      Utils.getManageFeaturePermissionDescription(
-                                                        is4Eyes,
-                                                        identity,
-                                                      ),
-                                                    ),
-                                                    <div className='text-right'>
-                                                      <Button
-                                                        onClick={
-                                                          saveFeatureSegments
-                                                        }
-                                                        type='button'
-                                                        data-test='update-feature-segments-btn'
-                                                        id='update-feature-segments-btn'
-                                                        disabled={
-                                                          isSaving ||
-                                                          !name ||
-                                                          invalid ||
-                                                          !savePermission
-                                                        }
-                                                      >
-                                                        {isSaving
-                                                          ? 'Updating'
-                                                          : 'Update Segment Overrides'}
-                                                      </Button>
-                                                    </div>,
-                                                  )
-                                                }
-                                              </Permission>
+                                              <div className='text-right'>
+                                                <Permission
+                                                  level='environment'
+                                                  permission={Utils.getManageFeaturePermission(
+                                                    is4Eyes,
+                                                    identity,
+                                                  )}
+                                                  id={this.props.environmentId}
+                                                >
+                                                  {({
+                                                    permission: savePermission,
+                                                  }) => (
+                                                    <Permission
+                                                      level='environment'
+                                                      permission={
+                                                        'MANAGE_SEGMENT_OVERRIDES'
+                                                      }
+                                                      id={
+                                                        this.props.environmentId
+                                                      }
+                                                    >
+                                                      {({
+                                                        permission:
+                                                          manageSegmentsOverrides,
+                                                      }) => {
+                                                        return Utils.renderWithPermission(
+                                                          manageSegmentsOverrides,
+                                                          Constants.environmentPermissions(
+                                                            'Manage segment overrides',
+                                                          ),
+                                                          <Button
+                                                            onClick={
+                                                              saveFeatureSegments
+                                                            }
+                                                            type='button'
+                                                            data-test='update-feature-segments-btn'
+                                                            id='update-feature-segments-btn'
+                                                            disabled={
+                                                              isSaving ||
+                                                              !name ||
+                                                              invalid ||
+                                                              !manageSegmentsOverrides
+                                                            }
+                                                          >
+                                                            {isSaving
+                                                              ? 'Updating'
+                                                              : 'Update Segment Overrides'}
+                                                          </Button>,
+                                                        )
+                                                      }}
+                                                    </Permission>
+                                                  )}
+                                                </Permission>
+                                              </div>
                                             </div>
                                           )}
                                         </div>
@@ -1258,20 +1344,22 @@ const CreateFlag = class extends Component {
                                             </Tooltip>
                                           }
                                           action={
-                                            <Button
-                                              onClick={() =>
-                                                this.changeIdentity(
-                                                  this.state.userOverrides,
-                                                )
-                                              }
-                                              type='button'
-                                              theme='secondary'
-                                              size='small'
-                                            >
-                                              {enabledIndentity
-                                                ? 'Enable All'
-                                                : 'Disable All'}
-                                            </Button>
+                                            !Utils.getIsEdge() && (
+                                              <Button
+                                                onClick={() =>
+                                                  this.changeIdentity(
+                                                    this.state.userOverrides,
+                                                  )
+                                                }
+                                                type='button'
+                                                theme='secondary'
+                                                size='small'
+                                              >
+                                                {enabledIndentity
+                                                  ? 'Enable All'
+                                                  : 'Disable All'}
+                                              </Button>
+                                            )
                                           }
                                           items={this.state.userOverrides}
                                           paging={
@@ -1294,32 +1382,35 @@ const CreateFlag = class extends Component {
                                             this.userOverridesPage(page)
                                           }
                                           searchPanel={
-                                            <div className='text-center mt-2 mb-2'>
-                                              <Flex className='text-left'>
-                                                <IdentitySelect
-                                                  isEdge={false}
-                                                  ignoreIds={this.state.userOverrides?.map(
-                                                    (v) => v.identity?.id,
-                                                  )}
-                                                  environmentId={
-                                                    this.props.environmentId
-                                                  }
-                                                  data-test='select-identity'
-                                                  placeholder='Create an Identity Override...'
-                                                  value={
-                                                    this.state.selectedIdentity
-                                                  }
-                                                  onChange={(
-                                                    selectedIdentity,
-                                                  ) =>
-                                                    this.setState(
-                                                      { selectedIdentity },
-                                                      this.addItem,
-                                                    )
-                                                  }
-                                                />
-                                              </Flex>
-                                            </div>
+                                            !Utils.getIsEdge() && (
+                                              <div className='text-center mt-2 mb-2'>
+                                                <Flex className='text-left'>
+                                                  <IdentitySelect
+                                                    isEdge={false}
+                                                    ignoreIds={this.state.userOverrides?.map(
+                                                      (v) => v.identity?.id,
+                                                    )}
+                                                    environmentId={
+                                                      this.props.environmentId
+                                                    }
+                                                    data-test='select-identity'
+                                                    placeholder='Create an Identity Override...'
+                                                    value={
+                                                      this.state
+                                                        .selectedIdentity
+                                                    }
+                                                    onChange={(
+                                                      selectedIdentity,
+                                                    ) =>
+                                                      this.setState(
+                                                        { selectedIdentity },
+                                                        this.addItem,
+                                                      )
+                                                    }
+                                                  />
+                                                </Flex>
+                                              </div>
+                                            )
                                           }
                                           renderRow={({
                                             enabled,
@@ -1346,6 +1437,7 @@ const CreateFlag = class extends Component {
                                                         identity,
                                                       })
                                                     }
+                                                    disabled={Utils.getIsEdge()}
                                                   />
                                                 </div>
                                                 <div className='font-weight-medium fs-small lh-sm'>
@@ -1357,7 +1449,8 @@ const CreateFlag = class extends Component {
                                                   className='table-column'
                                                   style={{ width: '188px' }}
                                                 >
-                                                  {feature_state_value && (
+                                                  {feature_state_value !==
+                                                    null && (
                                                     <FeatureValue
                                                       value={
                                                         feature_state_value
@@ -1484,6 +1577,11 @@ const CreateFlag = class extends Component {
                                   !isEdit ? 'create-feature-tab px-3' : '',
                                 )}
                               >
+                                {featureLimitAlert.percentage &&
+                                  Utils.displayLimitAlert(
+                                    'features',
+                                    featureLimitAlert.percentage,
+                                  )}
                                 {Value(
                                   error,
                                   projectAdmin,
@@ -1520,7 +1618,8 @@ const CreateFlag = class extends Component {
                                         isSaving ||
                                         !name ||
                                         invalid ||
-                                        !regexValid
+                                        !regexValid ||
+                                        featureLimitAlert.percentage >= 100
                                       }
                                     >
                                       {isSaving ? 'Creating' : 'Create Feature'}
@@ -1529,7 +1628,6 @@ const CreateFlag = class extends Component {
                                 )}
                               </div>
                             )}
-
                             {identity && (
                               <div className='pr-3'>
                                 {identity ? (

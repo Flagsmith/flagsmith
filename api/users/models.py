@@ -11,8 +11,6 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
-from environments.models import Environment
-from environments.permissions.models import UserEnvironmentPermission
 from organisations.models import (
     Organisation,
     OrganisationRole,
@@ -29,7 +27,7 @@ from permissions.permission_service import (
     is_user_project_admin,
     user_has_organisation_permission,
 )
-from projects.models import Project, UserProjectPermission
+from projects.models import Project
 from users.abc import UserABC
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
@@ -37,6 +35,7 @@ from users.exceptions import InvalidInviteError
 from users.utils.mailer_lite import MailerLite
 
 if typing.TYPE_CHECKING:
+    from environments.models import Environment
     from organisations.invites.models import (
         AbstractBaseInviteModel,
         Invite,
@@ -217,11 +216,9 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def remove_organisation(self, organisation):
         UserOrganisation.objects.filter(user=self, organisation=organisation).delete()
-        UserProjectPermission.objects.filter(
-            user=self, project__organisation=organisation
-        ).delete()
-        UserEnvironmentPermission.objects.filter(
-            user=self, environment__project__organisation=organisation
+        self.project_permissions.filter(project__organisation=organisation).delete()
+        self.environment_permissions.filter(
+            environment__project__organisation=organisation
         ).delete()
         self.permission_groups.remove(*organisation.permission_groups.all())
 
@@ -238,36 +235,61 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def get_user_organisation(
         self, organisation: typing.Union["Organisation", int]
     ) -> UserOrganisation:
+        organisation_id = getattr(organisation, "id", organisation)
+
         try:
-            return self.userorganisation_set.get(organisation=organisation)
-        except UserOrganisation.DoesNotExist:
+            # Since the user list view relies on this data, we prefetch it in
+            # the queryset, hence we can't use `userorganisation_set.get()`
+            # and instead use this next(filter()) approach. Since most users
+            # won't have more than ~1 organisation, we can accept the performance
+            # hit in the case that we are only getting the organisation for a
+            # single user.
+            return next(
+                filter(
+                    lambda uo: uo.organisation_id == organisation_id,
+                    self.userorganisation_set.all(),
+                )
+            )
+        except StopIteration:
             logger.warning(
-                "User %d is not part of organisation %d"
-                % (self.id, getattr(organisation, "id", organisation))
+                "User %d is not part of organisation %d" % (self.id, organisation_id)
             )
 
-    def get_permitted_projects(self, permission_key: str) -> QuerySet[Project]:
-        return get_permitted_projects_for_user(self, permission_key)
+    def get_permitted_projects(
+        self, permission_key: str, tag_ids: typing.List[int] = None
+    ) -> QuerySet[Project]:
+        return get_permitted_projects_for_user(self, permission_key, tag_ids)
 
-    def has_project_permission(self, permission: str, project: Project) -> bool:
+    def has_project_permission(
+        self, permission: str, project: Project, tag_ids: typing.List[int] = None
+    ) -> bool:
         if self.is_project_admin(project):
             return True
-        return project in self.get_permitted_projects(permission)
+        return project in self.get_permitted_projects(permission, tag_ids=tag_ids)
 
     def has_environment_permission(
-        self, permission: str, environment: Environment
+        self,
+        permission: str,
+        environment: "Environment",
+        tag_ids: typing.List[int] = None,
     ) -> bool:
         return environment in self.get_permitted_environments(
-            permission, environment.project
+            permission, environment.project, tag_ids=tag_ids
         )
 
     def is_project_admin(self, project: Project) -> bool:
         return is_user_project_admin(self, project)
 
     def get_permitted_environments(
-        self, permission_key: str, project: Project
-    ) -> QuerySet[Environment]:
-        return get_permitted_environments_for_user(self, project, permission_key)
+        self,
+        permission_key: str,
+        project: Project,
+        tag_ids: typing.List[int] = None,
+        prefetch_metadata: bool = False,
+    ) -> QuerySet["Environment"]:
+        return get_permitted_environments_for_user(
+            self, project, permission_key, tag_ids, prefetch_metadata=prefetch_metadata
+        )
 
     @staticmethod
     def send_alert_to_admin_users(subject, message):
@@ -293,7 +315,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def is_environment_admin(
         self,
-        environment: Environment,
+        environment: "Environment",
     ) -> bool:
         return is_user_environment_admin(self, environment)
 
@@ -359,6 +381,7 @@ class UserPermissionGroup(models.Model):
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="permission_groups"
     )
+    ldap_dn = models.CharField(blank=True, null=True, unique=True, max_length=255)
     is_default = models.BooleanField(
         default=False,
         help_text="If set to true, all new users will be added to this group",

@@ -80,6 +80,7 @@ Current variables used between 'frontend/environment.js' and 'frontend/common/pr
   automatically.
 - `GOOGLE_ANALYTICS_API_KEY`: Google Analytics key to track API usage.
 - `CRISP_WEBSITE_ID`: Crisp Chat widget Website key.
+- `FIRST_PROMOTER_ID`: First Promoter ID for checkout affiliates.
 - `ALLOW_SIGNUPS`: **DEPRECATED in favour of PREVENT_SIGNUP** Determines whether to prevent manual signups without
   invites. Set it to any value to allow signups.
 - `PREVENT_SIGNUP`: Determines whether to prevent manual signups without invites. Set it to any value to prevent
@@ -90,6 +91,7 @@ Current variables used between 'frontend/environment.js' and 'frontend/common/pr
 - `AMPLITUDE_API_KEY`: The Amplitude key to use for behaviour tracking.
 - `MIXPANEL_API_KEY`: Mixpanel analytics key to use for behaviour tracking.
 - `SENTRY_API_KEY`: Sentry key for error reporting.
+- `ALBACROSS_CLIENT_ID`: Albacross client ID key for behaviour tracking.
 - `STATIC_ASSET_CDN_URL`: Used for replacing local static paths with a cdn, .e.g https://cdn.flagsmith.com. Defaults to
   `/`, i.e. no CDN.
 - `BASE_URL`: Used for specifying a base url path that's ignored during routing if serving from a subdirectory.

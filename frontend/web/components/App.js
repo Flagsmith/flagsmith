@@ -20,9 +20,10 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
 import Button from './base/forms/Button'
-import Icon from 'components/Icon'
+import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 import InfoMessage from './InfoMessage'
+import OrganisationLimit from './OrganisationLimit'
 
 const App = class extends Component {
   static propTypes = {
@@ -40,7 +41,6 @@ const App = class extends Component {
     lastProjectId: '',
     pin: '',
     showAnnouncement: true,
-    totalApiCalls: 0,
   }
 
   constructor(props, context) {
@@ -75,7 +75,6 @@ const App = class extends Component {
       }).then((res) => {
         this.setState({
           activeOrganisation: AccountStore.getOrganisation().id,
-          totalApiCalls: res?.data?.totals.total,
         })
       })
     }
@@ -276,18 +275,20 @@ const App = class extends Component {
       )
     }
     if (AccountStore.forced2Factor()) {
-      return <AccountSettingsPage />
+      return <AccountSettingsPage isLoginPage={true} />
     }
     const projectNotLoaded =
       !ProjectStore.model && document.location.href.includes('project/')
     if (document.location.href.includes('widget')) {
       return <div>{this.props.children}</div>
     }
-    const announcementValue = JSON.parse(
-      Utils.getFlagsmithValue('announcement'),
-    )
+    const announcementValue = Utils.getFlagsmithJSONValue('announcement', null)
     const dismissed = flagsmith.getTrait('dismissed_announcement')
-    const showBanner = !dismissed || dismissed !== announcementValue.id
+    const showBanner =
+      announcementValue &&
+      (!dismissed || dismissed !== announcementValue.id) &&
+      Utils.getFlagsmithHasFeature('announcement') &&
+      this.state.showAnnouncement
 
     return (
       <Provider store={getStore()}>
@@ -410,10 +411,7 @@ const App = class extends Component {
                                       >
                                         {({ permission }) => (
                                           <>
-                                            {(!!permission ||
-                                              Utils.getFlagsmithHasFeature(
-                                                'group_admins',
-                                              )) && (
+                                            {!!permission && (
                                               <NavLink
                                                 id='org-settings-link'
                                                 activeClassName='active'
@@ -477,34 +475,41 @@ const App = class extends Component {
                   )}
                   {isMobile && pageHasAside && asideIsVisible ? null : (
                     <div>
-                      <ButterBar />
+                      <ButterBar
+                        billingStatus={
+                          AccountStore.getOrganisation()?.subscription
+                            .billing_status
+                        }
+                      />
                       {projectNotLoaded ? (
                         <div className='text-center'>
                           <Loader />
                         </div>
                       ) : (
                         <Fragment>
-                          {user &&
-                            showBanner &&
-                            Utils.getFlagsmithHasFeature('announcement') &&
-                            this.state.showAnnouncement && (
-                              <Row>
-                                <InfoMessage
-                                  title={announcementValue.title}
-                                  infoMessageClass={'announcement'}
-                                  isClosable={announcementValue.isClosable}
-                                  close={() =>
-                                    this.closeAnnouncement(announcementValue.id)
-                                  }
-                                  buttonText={announcementValue.buttonText}
-                                  url={announcementValue.url}
-                                >
-                                  <div>
-                                    <div>{announcementValue.description}</div>
-                                  </div>
-                                </InfoMessage>
-                              </Row>
-                            )}
+                          {user && (
+                            <OrganisationLimit
+                              id={AccountStore.getOrganisation()?.id}
+                            />
+                          )}
+                          {user && showBanner && (
+                            <Row>
+                              <InfoMessage
+                                title={announcementValue.title}
+                                infoMessageClass={'announcement'}
+                                isClosable={announcementValue.isClosable}
+                                close={() =>
+                                  this.closeAnnouncement(announcementValue.id)
+                                }
+                                buttonText={announcementValue.buttonText}
+                                url={announcementValue.url}
+                              >
+                                <div>
+                                  <div>{announcementValue.description}</div>
+                                </div>
+                              </InfoMessage>
+                            </Row>
+                          )}
                           {this.props.children}
                         </Fragment>
                       )}

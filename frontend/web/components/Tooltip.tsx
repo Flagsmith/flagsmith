@@ -3,6 +3,8 @@ import { renderToStaticMarkup } from 'react-dom/server'
 
 import * as DOMPurify from 'dompurify'
 import Utils from 'common/utils/utils'
+import { informationCircle } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 const ReactTooltip = require('react-tooltip')
 
@@ -15,20 +17,29 @@ type TooltipProps = {
   plainText: boolean
   place?: string | undefined
   title: JSX.Element // This is actually the Tooltip parent component
-  disabled?: boolean
+  noIcon?: boolean
 }
 
 const StyledTooltip = ({ children }: StyledTooltipProps) => (
   <div className='flex-row'>
-    <div className='icon--tooltip ion-ios-information-circle mr-1'></div>
+    <div className='icon--new-tooltip mr-1'>
+      <IonIcon icon={informationCircle} />
+    </div>
     <span>{`${children}`}</span>
   </div>
 )
 
-const tooltipStyler = (plainText: boolean, children: string): string => {
-  const html = renderToStaticMarkup(
-    <StyledTooltip>{plainText ? children : '{{html}}'}</StyledTooltip>,
+const tooltipStyler = (
+  plainText: boolean,
+  children: string,
+  noIcon?: boolean,
+): string => {
+  const tooltip = noIcon ? (
+    <span>{plainText ? children : '{{html}}'}</span>
+  ) : (
+    <StyledTooltip>{plainText ? children : '{{html}}'}</StyledTooltip>
   )
+  const html = renderToStaticMarkup(tooltip)
   if (plainText) {
     return html
   }
@@ -37,7 +48,7 @@ const tooltipStyler = (plainText: boolean, children: string): string => {
 
 const Tooltip = ({
   children,
-  disabled,
+  noIcon,
   place,
   plainText,
   title,
@@ -53,7 +64,7 @@ const Tooltip = ({
       ) : (
         <span className='ion ion-ios-help' data-for={id} data-tip />
       )}
-      {!disabled && (
+      {!!children && (
         <ReactTooltip
           html
           id={id}
@@ -61,7 +72,7 @@ const Tooltip = ({
           type='dark'
           effect='solid'
         >
-          {tooltipStyler(plainText, children)}
+          {tooltipStyler(plainText, children, noIcon)}
         </ReactTooltip>
       )}
     </span>

@@ -12,6 +12,11 @@ import Constants from 'common/constants'
 import JSONReference from 'components/JSONReference'
 import PageTitle from 'components/PageTitle'
 import Icon from 'components/Icon'
+import { getStore } from 'common/store'
+import { getRoles } from 'common/services/useRole'
+import { getRolesProjectPermissions } from 'common/services/useRolePermission'
+import AccountStore from 'common/stores/account-store'
+import ImportPage from './ImportPage'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -22,7 +27,7 @@ const ProjectSettingsPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = {}
+    this.state = { roles: [] }
     AppActions.getProject(this.props.match.params.projectId)
     this.getPermissions()
   }
@@ -39,6 +44,28 @@ const ProjectSettingsPage = class extends Component {
 
   componentDidMount = () => {
     API.trackPage(Constants.pages.PROJECT_SETTINGS)
+    if (Utils.getFlagsmithHasFeature('show_role_management')) {
+      getRoles(
+        getStore(),
+        { organisation_id: AccountStore.getOrganisation().id },
+        { forceRefetch: true },
+      ).then((roles) => {
+        getRolesProjectPermissions(
+          getStore(),
+          {
+            organisation_id: AccountStore.getOrganisation().id,
+            project_id: this.props.match.params.projectId,
+            role_id: roles.data.results[0].id,
+          },
+          { forceRefetch: true },
+        ).then((res) => {
+          const matchingItems = roles.data.results.filter((item1) =>
+            res.data.results.some((item2) => item2.role === item1.id),
+          )
+          this.setState({ roles: matchingItems })
+        })
+      })
+    }
   }
 
   onSave = () => {
@@ -347,51 +374,50 @@ const ProjectSettingsPage = class extends Component {
                           />
                         )}
                       </FormGroup>
-                      {!Utils.getIsEdge() &&
-                        this.props.hasFeature('edge_identities') && (
-                          <FormGroup className='mt-4 col-md-6'>
-                            <Row className='mb-2'>
-                              <h5 className='mb-0 mr-3'>
-                                Global Edge API Opt in
-                              </h5>
-                              <Button
-                                disabled={isSaving || Utils.isMigrating()}
-                                onClick={() =>
-                                  openConfirm(
-                                    'Are you sure?',
-                                    'This will migrate your project to the Global Edge API.',
-                                    () => {
-                                      this.migrate(project)
-                                    },
-                                  )
-                                }
-                                size='xSmall'
-                                theme='outline'
-                              >
-                                {this.state.migrating || Utils.isMigrating()
-                                  ? 'Migrating to Edge'
-                                  : 'Start Migration'}{' '}
-                                <Icon
-                                  name='arrow-right'
-                                  width={16}
-                                  fill='#6837FC'
-                                />
-                              </Button>
-                            </Row>
-                            <p className='fs-small lh-sm'>
-                              Migrate your project onto our Global Edge API.
-                              Existing Core API endpoints will continue to work
-                              whilst the migration takes place. Find out more{' '}
-                              <a
-                                href='https://docs.flagsmith.com/advanced-use/edge-api'
-                                className='btn-link'
-                              >
-                                here
-                              </a>
-                              .
-                            </p>
-                          </FormGroup>
-                        )}
+                      {!Utils.getIsEdge() && (
+                        <FormGroup className='mt-4 col-md-6'>
+                          <Row className='mb-2'>
+                            <h5 className='mb-0 mr-3'>
+                              Global Edge API Opt in
+                            </h5>
+                            <Button
+                              disabled={isSaving || Utils.isMigrating()}
+                              onClick={() =>
+                                openConfirm(
+                                  'Are you sure?',
+                                  'This will migrate your project to the Global Edge API.',
+                                  () => {
+                                    this.migrate(project)
+                                  },
+                                )
+                              }
+                              size='xSmall'
+                              theme='outline'
+                            >
+                              {this.state.migrating || Utils.isMigrating()
+                                ? 'Migrating to Edge'
+                                : 'Start Migration'}{' '}
+                              <Icon
+                                name='arrow-right'
+                                width={16}
+                                fill='#6837FC'
+                              />
+                            </Button>
+                          </Row>
+                          <p className='fs-small lh-sm'>
+                            Migrate your project onto our Global Edge API.
+                            Existing Core API endpoints will continue to work
+                            whilst the migration takes place. Find out more{' '}
+                            <a
+                              href='https://docs.flagsmith.com/advanced-use/edge-api'
+                              className='btn-link'
+                            >
+                              here
+                            </a>
+                            .
+                          </p>
+                        </FormGroup>
+                      )}
                       <hr className='py-0 my-4' />
                       <FormGroup className='mt-4 col-md-6'>
                         <Row space>
@@ -452,7 +478,7 @@ const ProjectSettingsPage = class extends Component {
                         </form>
                       </div>
                     </TabItem>
-                    <TabItem tabLabel='Members'>
+                    <TabItem tabLabel='Permissions'>
                       <EditPermissions
                         onSaveUser={() => {
                           this.getPermissions()
@@ -461,6 +487,15 @@ const ProjectSettingsPage = class extends Component {
                         tabClassName='flat-panel'
                         id={this.props.match.params.projectId}
                         level='project'
+                        roleTabTitle='Project Permissions'
+                        role
+                        roles={this.state.roles}
+                      />
+                    </TabItem>
+                    <TabItem data-test='js-import-page' tabLabel='Import'>
+                      <ImportPage
+                        projectId={this.props.match.params.projectId}
+                        projectName={project.name}
                       />
                     </TabItem>
                   </Tabs>

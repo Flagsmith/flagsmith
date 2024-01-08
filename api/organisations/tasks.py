@@ -1,9 +1,16 @@
+from datetime import timedelta
+
+from django.utils import timezone
+
 from organisations import subscription_info_cache
-from organisations.models import Organisation
+from organisations.models import Organisation, Subscription
 from organisations.subscriptions.subscription_service import (
     get_subscription_metadata,
 )
-from task_processor.decorators import register_task_handler
+from task_processor.decorators import (
+    register_recurring_task,
+    register_task_handler,
+)
 from users.models import FFAdminUser
 
 from .subscriptions.constants import SubscriptionCacheEntity
@@ -32,6 +39,17 @@ def send_org_over_limit_alert(organisation_id):
 
 
 @register_task_handler()
+def send_org_subscription_cancelled_alert(
+    organisation_name: str,
+    formatted_cancellation_date: str,
+):
+    FFAdminUser.send_alert_to_admin_users(
+        subject=f"Organisation {organisation_name} has cancelled their subscription",
+        message=f"Organisation {organisation_name} has cancelled their subscription on {formatted_cancellation_date}",
+    )
+
+
+@register_task_handler()
 def update_organisation_subscription_information_influx_cache():
     subscription_info_cache.update_caches((SubscriptionCacheEntity.INFLUX,))
 
@@ -41,3 +59,17 @@ def update_organisation_subscription_information_cache():
     subscription_info_cache.update_caches(
         (SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.INFLUX)
     )
+
+
+@register_recurring_task(
+    run_every=timedelta(hours=12),
+)
+def finish_subscription_cancellation():
+    now = timezone.now()
+    previously = now + timedelta(hours=-24)
+    for subscription in Subscription.objects.filter(
+        cancellation_date__lt=now,
+        cancellation_date__gt=previously,
+    ):
+        subscription.organisation.cancel_users()
+        subscription.save_as_free_subscription()

@@ -32,3 +32,10 @@
 		}
 	}
 }
+
+.dark{
+	.paging{
+		background-color: $bg-dark400;
+		border-top: 1px solid $white-alpha-16;
+	}
+}

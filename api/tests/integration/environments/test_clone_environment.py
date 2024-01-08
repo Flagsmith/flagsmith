@@ -18,7 +18,7 @@ from tests.integration.helpers import (
 def test_clone_environment_clones_feature_states_with_value(
     client, project, environment, environment_api_key, feature
 ):
-    # Firstly, let's update feature state value of the source enviroment
+    # Firstly, let's update feature state value of the source environment
     # fetch the feature state id to update
     feature_state = get_env_feature_states_list_with_api(
         client, {"environment": environment, "feature": feature}
@@ -52,7 +52,7 @@ def test_clone_environment_clones_feature_states_with_value(
         client, {"environment": environment}
     )
 
-    # Now, fetch the feature states of the clone enviroment
+    # Now, fetch the feature states of the clone environment
     clone_env_feature_states = get_env_feature_states_list_with_api(
         client, {"environment": res.json()["id"]}
     )
@@ -81,13 +81,13 @@ def test_clone_environment_clones_feature_states_with_value(
 def test_clone_environment_creates_admin_permission_with_the_current_user(
     admin_user, admin_client, environment, environment_api_key
 ):
-    # Firstly, let's create the clone of the enviroment
+    # Firstly, let's create the clone of the environment
     env_name = "Cloned env"
     url = reverse("api-v1:environments:environment-clone", args=[environment_api_key])
     res = admin_client.post(url, {"name": env_name})
     clone_env_api_key = res.json()["api_key"]
 
-    # Now, fetch the permission of the newly creatd enviroment
+    # Now, fetch the permission of the newly creatd environment
     perm_url = reverse(
         "api-v1:environments:environment-user-permissions-list",
         args=[clone_env_api_key],

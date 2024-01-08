@@ -198,7 +198,7 @@ const CreateGroup = class extends Component {
                     this.save()
                   }}
                 >
-                  <FormGroup className='my-4 mx-3'>
+                  <FormGroup className='m-4'>
                     <InputGroup
                       title='Group name*'
                       ref={(e) => (this.input = e)}
@@ -219,6 +219,7 @@ const CreateGroup = class extends Component {
                       name='Name*'
                       unsaved={this.props.isEdit && this.state.groupNameEdited}
                       placeholder='E.g. Developers'
+                      className='mb-5'
                     />
                     <InputGroup
                       title='External ID'
@@ -240,9 +241,10 @@ const CreateGroup = class extends Component {
                       name='Name*'
                       unsaved={this.props.isEdit && this.state.externalIdEdited}
                       placeholder='Add an optional external reference ID'
+                      className='mb-5'
                     />
 
-                    <Row className='mb-4'>
+                    <Row className='mb-5'>
                       <Tooltip
                         title={
                           <Row>
@@ -267,7 +269,7 @@ const CreateGroup = class extends Component {
                       </Tooltip>
                     </Row>
 
-                    <div className='mb-4'>
+                    <div className='mb-5'>
                       <label>Group members</label>
                       <div>
                         <Select
@@ -336,14 +338,12 @@ const CreateGroup = class extends Component {
                                     )}
                                 </div>
                               </Flex>
-                              {Utils.getFlagsmithHasFeature('group_admins') && (
-                                <div
-                                  style={{ paddingLeft: 5, width: widths[0] }}
-                                  className='table-column'
-                                >
-                                  Admin
-                                </div>
-                              )}
+                              <div
+                                style={{ paddingLeft: 5, width: widths[0] }}
+                                className='table-column'
+                              >
+                                Admin
+                              </div>
                               <div
                                 className='table-column text-center'
                                 style={{ width: widths[1] }}
@@ -373,16 +373,14 @@ const CreateGroup = class extends Component {
                                   {email}
                                 </div>
                               </Flex>
-                              {Utils.getFlagsmithHasFeature('group_admins') && (
-                                <div style={{ width: widths[0] }}>
-                                  <Switch
-                                    onChange={(e) => {
-                                      this.toggleUser(id, e, true)
-                                    }}
-                                    checked={isGroupAdmin}
-                                  />
-                                </div>
-                              )}
+                              <div style={{ width: widths[0] }}>
+                                <Switch
+                                  onChange={(e) => {
+                                    this.toggleUser(id, e, true)
+                                  }}
+                                  checked={isGroupAdmin}
+                                />
+                              </div>
                               <div
                                 className='table-column text-center'
                                 style={{ width: widths[1] }}

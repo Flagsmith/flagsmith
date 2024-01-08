@@ -1,3 +1,4 @@
+import logging
 import time
 import uuid
 from datetime import timedelta
@@ -5,6 +6,7 @@ from threading import Thread
 
 import pytest
 from django.utils import timezone
+from freezegun import freeze_time
 
 from organisations.models import Organisation
 from task_processor.decorators import (
@@ -15,17 +17,26 @@ from task_processor.models import (
     RecurringTask,
     RecurringTaskRun,
     Task,
+    TaskPriority,
     TaskResult,
     TaskRun,
 )
-from task_processor.processor import run_recurring_tasks, run_tasks
+from task_processor.processor import (
+    UNREGISTERED_RECURRING_TASK_GRACE_PERIOD,
+    run_recurring_tasks,
+    run_tasks,
+)
 from task_processor.task_registry import registered_tasks
 
 
 def test_run_task_runs_task_and_creates_task_run_object_when_success(db):
     # Given
     organisation_name = f"test-org-{uuid.uuid4()}"
-    task = Task.create(_create_organisation.task_identifier, args=(organisation_name,))
+    task = Task.create(
+        _create_organisation.task_identifier,
+        scheduled_for=timezone.now(),
+        args=(organisation_name,),
+    )
     task.save()
 
     # When
@@ -145,10 +156,13 @@ def test_run_recurring_tasks_only_executes_tasks_after_interval_set_by_run_every
     assert RecurringTaskRun.objects.filter(task=task).count() == 1
 
 
-def test_run_recurring_tasks_deletes_the_task_if_it_is_not_registered(
-    db, run_by_processor
-):
+def test_run_recurring_tasks_does_nothing_if_unregistered_task_is_new(
+    db: None, run_by_processor: None, caplog: pytest.LogCaptureFixture
+) -> None:
     # Given
+    task_processor_logger = logging.getLogger("task_processor")
+    task_processor_logger.propagate = True
+
     task_identifier = "test_unit_task_processor_processor._a_task"
 
     @register_recurring_task(run_every=timedelta(milliseconds=100))
@@ -163,12 +177,40 @@ def test_run_recurring_tasks_deletes_the_task_if_it_is_not_registered(
 
     # Then
     assert len(task_runs) == 0
-    assert not RecurringTask.objects.filter(task_identifier=task_identifier).exists()
+    assert RecurringTask.objects.filter(task_identifier=task_identifier).exists()
+
+
+def test_run_recurring_tasks_deletes_the_task_if_unregistered_task_is_old(
+    db: None, run_by_processor: None, caplog: pytest.LogCaptureFixture
+) -> None:
+    # Given
+    task_processor_logger = logging.getLogger("task_processor")
+    task_processor_logger.propagate = True
+
+    task_identifier = "test_unit_task_processor_processor._a_task"
+
+    with freeze_time(timezone.now() - UNREGISTERED_RECURRING_TASK_GRACE_PERIOD):
+
+        @register_recurring_task(run_every=timedelta(milliseconds=100))
+        def _a_task():
+            pass
+
+    # now - remove the task from the registry
+    registered_tasks.pop(task_identifier)
+
+    # When
+    task_runs = run_recurring_tasks()
+
+    # Then
+    assert len(task_runs) == 0
+    assert (
+        RecurringTask.objects.filter(task_identifier=task_identifier).exists() is False
+    )
 
 
 def test_run_task_runs_task_and_creates_task_run_object_when_failure(db):
     # Given
-    task = Task.create(_raise_exception.task_identifier)
+    task = Task.create(_raise_exception.task_identifier, scheduled_for=timezone.now())
     task.save()
 
     # When
@@ -188,7 +230,7 @@ def test_run_task_runs_task_and_creates_task_run_object_when_failure(db):
 
 def test_run_task_runs_failed_task_again(db):
     # Given
-    task = Task.create(_raise_exception.task_identifier)
+    task = Task.create(_raise_exception.task_identifier, scheduled_for=timezone.now())
     task.save()
 
     # When
@@ -248,26 +290,42 @@ def test_run_task_does_nothing_if_no_tasks(db):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_run_task_runs_tasks_in_correct_order():
+def test_run_task_runs_tasks_in_correct_priority():
     # Given
     # 2 tasks
     task_1 = Task.create(
-        _create_organisation.task_identifier, args=("task 1 organisation",)
+        _create_organisation.task_identifier,
+        scheduled_for=timezone.now(),
+        args=("task 1 organisation",),
+        priority=TaskPriority.HIGH,
     )
     task_1.save()
 
     task_2 = Task.create(
-        _create_organisation.task_identifier, args=("task 2 organisation",)
+        _create_organisation.task_identifier,
+        scheduled_for=timezone.now(),
+        args=("task 2 organisation",),
+        priority=TaskPriority.HIGH,
     )
     task_2.save()
+
+    task_3 = Task.create(
+        _create_organisation.task_identifier,
+        scheduled_for=timezone.now(),
+        args=("task 3 organisation",),
+        priority=TaskPriority.HIGHEST,
+    )
+    task_3.save()
 
     # When
     task_runs_1 = run_tasks()
     task_runs_2 = run_tasks()
+    task_runs_3 = run_tasks()
 
     # Then
-    assert task_runs_1[0].task == task_1
-    assert task_runs_2[0].task == task_2
+    assert task_runs_1[0].task == task_3
+    assert task_runs_2[0].task == task_1
+    assert task_runs_3[0].task == task_2
 
 
 @pytest.mark.django_db(transaction=True)
@@ -280,12 +338,16 @@ def test_run_tasks_skips_locked_tasks():
     # 2 tasks
     # One which is configured to just sleep for 3 seconds, to simulate a task
     # being held for a short period of time
-    task_1 = Task.create(_sleep.task_identifier, args=(3,))
+    task_1 = Task.create(
+        _sleep.task_identifier, scheduled_for=timezone.now(), args=(3,)
+    )
     task_1.save()
 
     # and another which should create an organisation
     task_2 = Task.create(
-        _create_organisation.task_identifier, args=("task 2 organisation",)
+        _create_organisation.task_identifier,
+        scheduled_for=timezone.now(),
+        args=("task 2 organisation",),
     )
     task_2.save()
 
@@ -313,7 +375,11 @@ def test_run_more_than_one_task(db):
     for _ in range(num_tasks):
         organisation_name = f"test-org-{uuid.uuid4()}"
         tasks.append(
-            Task.create(_create_organisation.task_identifier, args=(organisation_name,))
+            Task.create(
+                _create_organisation.task_identifier,
+                scheduled_for=timezone.now(),
+                args=(organisation_name,),
+            )
         )
     Task.objects.bulk_create(tasks)
 

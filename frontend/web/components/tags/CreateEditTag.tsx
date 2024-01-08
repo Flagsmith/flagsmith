@@ -1,10 +1,11 @@
-import React, { FC, KeyboardEvent, useEffect, useState } from 'react'
+import React, { FC, KeyboardEvent, useEffect, useMemo, useState } from 'react'
 import { Tag as TTag } from 'common/types/responses'
 import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
 import Utils from 'common/utils/utils'
 import {
   useCreateTagMutation,
+  useGetTagsQuery,
   useUpdateTagMutation,
 } from 'common/services/useTag'
 
@@ -12,6 +13,7 @@ import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
 import Tag from './Tag'
 import InlineModal from 'components/InlineModal'
+import ErrorMessage from 'components/ErrorMessage'
 
 type CreateEditTagType = {
   projectId: string
@@ -42,6 +44,18 @@ const CreateEditTag: FC<CreateEditTagType> = ({
     editTag,
     { data: editData, isLoading: saving, isSuccess: editSuccess },
   ] = useUpdateTagMutation()
+
+  const { data: tags } = useGetTagsQuery({ projectId })
+  const existingTag = useMemo(() => {
+    if (tag?.label && tags) {
+      const lowercaseTag = tag?.label.toLowerCase()
+      return tags?.find((tag) => {
+        return tag.label.toLowerCase() === lowercaseTag
+      })
+    }
+    return false
+  }, [tags, tag?.label])
+
   const tagsSaving = creating || saving
 
   useEffect(() => {
@@ -98,7 +112,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
       onBack={onBack}
       showBack
       onClose={onClose}
-      className='inline-modal--tags pb-0'
+      className='inline-modal--sm pb-0'
       bottom={
         <Row className='justify-content-end'>
           <Button onClick={onClose} type='button' theme='secondary'>
@@ -114,12 +128,15 @@ const CreateEditTag: FC<CreateEditTagType> = ({
                     onClick={save}
                     type='button'
                     disabled={
-                      tagsSaving || !tag?.color || !tag?.label || !permission
+                      !!existingTag ||
+                      tagsSaving ||
+                      !tag?.color ||
+                      !tag?.label ||
+                      !permission
                     }
                   >
                     Save Tag
                   </Button>
-                  ,
                 </div>,
               )
             }
@@ -129,8 +146,11 @@ const CreateEditTag: FC<CreateEditTagType> = ({
     >
       <div>
         <InputGroup
+          size='xSmall'
           value={tag?.label}
+          className='mb-0'
           id='tag-label'
+          autoFocus
           inputProps={{
             className: 'full-width mb-2',
             name: 'create-tag-name',
@@ -142,7 +162,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
         <InputGroup
           title='Select a color'
           component={
-            <Row className={'gap-4'}>
+            <Row className={'gap-3'}>
               {Constants.tagColors.map((color) => (
                 <div key={color} className='tag--select'>
                   <Tag
@@ -156,6 +176,9 @@ const CreateEditTag: FC<CreateEditTagType> = ({
           }
           className='select-colour'
         />
+        {existingTag && (
+          <ErrorMessage error={'A tag already exists with this name'} />
+        )}
       </div>
     </InlineModal>
   )

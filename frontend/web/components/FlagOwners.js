@@ -3,6 +3,10 @@ import data from 'common/data/base/_data'
 import UserSelect from './UserSelect'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from './Icon'
+import { close } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
+import { getProjectFlag } from 'common/services/useProjectFlag'
+import { getStore } from 'common/store'
 
 class TheComponent extends Component {
   state = {}
@@ -11,14 +15,13 @@ class TheComponent extends Component {
   }
 
   getData = () => {
-    data
-      .get(
-        `${Project.api}projects/${this.props.projectId}/features/${this.props.id}/`,
-      )
-      .then((res) => {
-        const owners = (res.owners || []).map((v) => v.id)
-        this.setState({ owners })
-      })
+    getProjectFlag(getStore(), {
+      id: this.props.id,
+      project: this.props.projectId,
+    }).then((res) => {
+      const owners = (res.data.owners || []).map((v) => v.id)
+      this.setState({ owners })
+    })
   }
 
   addOwner = (id) => {
@@ -60,7 +63,8 @@ class TheComponent extends Component {
                 }}
               >
                 <label className='cols-sm-2 control-label'>
-                  Assignees <Icon name='setting' width={20} fill={'#656D7B'} />
+                  Assigned users{' '}
+                  <Icon name='setting' width={20} fill={'#656D7B'} />
                 </label>
               </Row>
               <Row style={{ rowGap: '12px' }}>
@@ -74,10 +78,14 @@ class TheComponent extends Component {
                       <span className='font-weight-bold'>
                         {u.first_name} {u.last_name}
                       </span>
-                      <span className='chip-icon ion ion-ios-close' />
+                      <span className='chip-icon ion'>
+                        <IonIcon icon={close} />
+                      </span>
                     </Row>
                   ))}
-                {!ownerUsers.length && <div>This flag has no assignees</div>}
+                {!ownerUsers.length && (
+                  <div>This flag has no assigned users</div>
+                )}
               </Row>
 
               <UserSelect

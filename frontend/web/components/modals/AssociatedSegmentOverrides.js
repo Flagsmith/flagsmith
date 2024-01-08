@@ -9,6 +9,9 @@ import SegmentOverrides from 'components/SegmentOverrides'
 import FlagSelect from 'components/FlagSelect'
 import InfoMessage from 'components/InfoMessage'
 import EnvironmentSelect from 'components/EnvironmentSelect'
+import SegmentOverrideLimit from 'components/SegmentOverrideLimit'
+import { getStore } from 'common/store'
+import { getEnvironment } from 'common/services/useEnvironment'
 
 class TheComponent extends Component {
   state = {
@@ -107,6 +110,7 @@ class TheComponent extends Component {
           id={this.props.id}
           projectId={this.props.projectId}
           environmentId={this.state.selectedEnv}
+          readOnly={this.props.readOnly}
         />
       </div>
     )
@@ -130,6 +134,10 @@ class TheComponent extends Component {
           </a>
           .
         </InfoMessage>
+        <SegmentOverrideLimit
+          id={environment.api_key}
+          maxSegmentOverridesAllowed={ProjectStore.getMaxSegmentOverridesAllowed()}
+        />
         <div>
           <InputGroup
             component={
@@ -189,6 +197,7 @@ class TheComponent extends Component {
                     id={this.props.id}
                     projectId={this.props.projectId}
                     environmentId={v.env.api_key}
+                    readOnly={this.props.readOnly}
                   />
                 </div>
               </div>
@@ -289,6 +298,7 @@ export default class SegmentOverridesInner extends Component {
       originalSegmentOverrides,
       projectFlag,
       projectId,
+      readOnly,
       segmentOverrides,
       updateSegments,
     } = this.props
@@ -359,11 +369,14 @@ export default class SegmentOverridesInner extends Component {
                 value={segmentOverride}
                 controlValue={projectFlag.feature_state_value}
                 onChange={updateSegments}
+                readOnly={readOnly}
               />
               <div className='text-right'>
-                <Button disabled={this.state.isSaving} onClick={save}>
-                  {this.state.isSaving ? 'Saving' : 'Save'}
-                </Button>
+                {!readOnly && (
+                  <Button disabled={this.state.isSaving} onClick={save}>
+                    {this.state.isSaving ? 'Saving' : 'Save'}
+                  </Button>
+                )}
               </div>
             </div>
           )
@@ -374,14 +387,37 @@ export default class SegmentOverridesInner extends Component {
 }
 
 class SegmentOverridesInnerAdd extends Component {
-  state = {}
+  state = { totalSegmentOverrides: 0 }
+
+  fetchTotalSegmentOverrides() {
+    const { environmentId } = this.props
+    const env = ProjectStore.getEnvs().find((v) => v.name === environmentId)
+
+    if (!env) {
+      return
+    }
+
+    const id = env.api_key
+
+    getEnvironment(getStore(), { id }).then((res) => {
+      this.setState({
+        totalSegmentOverrides: res.data.total_segment_overrides,
+      })
+    })
+  }
 
   componentDidMount() {
     ES6Component(this)
+    this.fetchTotalSegmentOverrides()
   }
 
+  componentDidUpdate(prevProps) {
+    if (prevProps.environmentId !== this.props.environmentId) {
+      this.fetchTotalSegmentOverrides()
+    }
+  }
   render() {
-    const { environmentId, id, ignoreFlags, projectId } = this.props
+    const { environmentId, id, ignoreFlags, projectId, readOnly } = this.props
     const addValue = (featureId, feature) => {
       const env = ProjectStore.getEnvs().find((v) => v.name === environmentId)
       const item = {
@@ -409,19 +445,25 @@ class SegmentOverridesInnerAdd extends Component {
       // const newValue = ;
       // updateSegments(segmentOverrides.concat([newValue]))
     }
+    const segmentOverrideLimitAlert =
+      this.state.totalSegmentOverrides >=
+      ProjectStore.getMaxSegmentOverridesAllowed()
 
     return (
       <FeatureListProvider>
         {() => {
           return (
             <div className='mt-2'>
-              <FlagSelect
-                onlyInclude={this.props.feature}
-                placeholder='Create a Segment Override...'
-                projectId={projectId}
-                ignore={ignoreFlags}
-                onChange={addValue}
-              />
+              {!readOnly && (
+                <FlagSelect
+                  disabled={!!segmentOverrideLimitAlert}
+                  onlyInclude={this.props.feature}
+                  placeholder='Create a Segment Override...'
+                  projectId={projectId}
+                  ignore={ignoreFlags}
+                  onChange={addValue}
+                />
+              )}
             </div>
           )
         }}

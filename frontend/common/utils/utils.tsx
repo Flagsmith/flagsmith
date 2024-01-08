@@ -7,6 +7,7 @@ import {
   FlagsmithValue,
   MultivariateFeatureStateValue,
   MultivariateOption,
+  Organisation,
   Project as ProjectType,
   ProjectFlag,
   SegmentCondition,
@@ -14,6 +15,8 @@ import {
 import flagsmith from 'flagsmith'
 import { ReactNode } from 'react'
 import _ from 'lodash'
+import ErrorMessage from 'components/ErrorMessage'
+import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
 
 const semver = require('semver')
@@ -54,25 +57,40 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return 100 - total
   },
 
-  calculaterRemainingCallsPercentage(value, total) {
-    const minRemainingPercentage = 30
+  calculateRemainingLimitsPercentage(
+    total: number | undefined,
+    max: number | undefined,
+    threshold = 90,
+  ) {
     if (total === 0) {
       return 0
     }
-
-    const percentage = (value / total) * 100
-    const remainingPercentage = 100 - percentage
-
-    if (remainingPercentage <= minRemainingPercentage) {
-      return true
+    const percentage = (total / max) * 100
+    if (percentage >= threshold) {
+      return {
+        percentage: Math.floor(percentage),
+      }
     }
-    return false
+    return 0
   },
 
   changeRequestsEnabled(value: number | null | undefined) {
     return typeof value === 'number'
   },
 
+  displayLimitAlert(type: string, percentage: number | undefined) {
+    const envOrProject =
+      type === 'segment overrides' ? 'environment' : 'project'
+    return percentage >= 100 ? (
+      <ErrorMessage
+        error={`Your ${envOrProject} reached the limit of ${type}, please contact support to discuss increasing this limit.`}
+      />
+    ) : percentage ? (
+      <WarningMessage
+        warningMessage={`Your ${envOrProject} is  using ${percentage}% of the total allowance of ${type}.`}
+      />
+    ) : null
+  },
   escapeHtml(html: string) {
     const text = document.createTextNode(html)
     const p = document.createElement('p')
@@ -114,13 +132,21 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getApproveChangeRequestPermission() {
     return 'APPROVE_CHANGE_REQUEST'
   },
+  getCreateProjectPermission(organisation: Organisation) {
+    if (organisation?.restrict_project_create_to_admin) {
+      return 'ADMIN'
+    }
+    return 'CREATE_PROJECT'
+  },
+  getCreateProjectPermissionDescription(organisation: Organisation) {
+    if (organisation?.restrict_project_create_to_admin) {
+      return 'Administrator'
+    }
+    return 'Create Project'
+  },
   getFeatureStatesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      project &&
-      project.use_edge_identities
-    ) {
+    if (project && project.use_edge_identities) {
       return 'edge-featurestates'
     }
     return 'featurestates'
@@ -186,16 +212,15 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getFlagsmithHasFeature(key: string) {
     return flagsmith.hasFeature(key)
   },
+  getFlagsmithJSONValue(key: string, defaultValue: any) {
+    return flagsmith.getValue(key, { fallback: defaultValue, json: true })
+  },
   getFlagsmithValue(key: string) {
     return flagsmith.getValue(key)
   },
   getIdentitiesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      project &&
-      project.use_edge_identities
-    ) {
+    if (project && project.use_edge_identities) {
       return 'edge-identities'
     }
     return 'identities'
@@ -203,11 +228,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getIsEdge() {
     const model = ProjectStore.model as null | ProjectType
 
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      ProjectStore.model &&
-      model?.use_edge_identities
-    ) {
+    if (ProjectStore.model && model?.use_edge_identities) {
       return true
     }
     return false
@@ -330,11 +351,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getSDKEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
 
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      project &&
-      project.use_edge_identities
-    ) {
+    if (project && project.use_edge_identities) {
       return Project.flagsmithClientEdgeAPI
     }
     return Project.api
@@ -342,23 +359,21 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
   getShouldHideIdentityOverridesTab(_project: ProjectType) {
     const project = _project || ProjectStore.model
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      project &&
-      project.use_edge_identities
-    ) {
-      return true
+    if (!Utils.getIsEdge()) {
+      return false
     }
-    return false
+
+    return !!(
+      !Utils.getFlagsmithHasFeature('show_edge_identity_overrides') ||
+      (project &&
+        project.use_edge_identities &&
+        !project.show_edge_identity_overrides_for_feature)
+    )
   },
 
   getShouldSendIdentityToTraits(_project: ProjectType) {
     const project = _project || ProjectStore.model
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      project &&
-      project.use_edge_identities
-    ) {
+    if (project && project.use_edge_identities) {
       return false
     }
     return true
@@ -366,11 +381,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
   getShouldUpdateTraitOnDelete(_project: ProjectType) {
     const project = _project || ProjectStore.model
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      project &&
-      project.use_edge_identities
-    ) {
+    if (project && project.use_edge_identities) {
       return true
     }
     return false
@@ -383,20 +394,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getTraitEndpoint(environmentId: string, userId: string) {
     const model = ProjectStore.model as null | ProjectType
 
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      model?.use_edge_identities
-    ) {
+    if (model?.use_edge_identities) {
       return `${Project.api}environments/${environmentId}/edge-identities/${userId}/list-traits/`
     }
     return `${Project.api}environments/${environmentId}/identities/${userId}/traits/`
   },
 
   getTraitEndpointMethod(id?: number) {
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      (ProjectStore.model as ProjectType | null)?.use_edge_identities
-    ) {
+    if ((ProjectStore.model as ProjectType | null)?.use_edge_identities) {
       return 'put'
     }
     return id ? 'put' : 'post'
@@ -436,10 +441,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   getUpdateTraitEndpoint(environmentId: string, userId: string, id?: string) {
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      (ProjectStore.model as ProjectType | null)?.use_edge_identities
-    ) {
+    if ((ProjectStore.model as ProjectType | null)?.use_edge_identities) {
       return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`
     }
     return `${
@@ -456,9 +458,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      (model?.migration_status === 'MIGRATION_IN_PROGRESS' ||
-        model?.migration_status === 'MIGRATION_SCHEDULED')
+      model?.migration_status === 'MIGRATION_IN_PROGRESS' ||
+      model?.migration_status === 'MIGRATION_SCHEDULED'
     ) {
       return true
     }

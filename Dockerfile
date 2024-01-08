@@ -1,12 +1,21 @@
 # Step 1 - Build Front End Application
 FROM node:16 AS build-frontend
 
-# Copy the entire project - Webpack puts compiled assets into the Django folder
+# Copy the files required to install npm packages
 WORKDIR /app
-COPY . .
+COPY frontend/package.json frontend/package-lock.json frontend/.npmrc ./frontend/.nvmrc ./frontend/
+COPY frontend/bin/ ./frontend/bin/
+COPY frontend/env/ ./frontend/env/
 
-RUN cd frontend && npm ci --quiet --production
-ENV ENV=prod
+# since ENV is only used for the purposes of copying the correct
+# project_${env}.js file to common/project.js, this is a build arg
+# which subsequently gets set as an environment variable. This is
+# done to avoid confusion since it is not a required run time var.
+ARG ENV=selfhosted
+RUN cd frontend && ENV=${ENV} npm ci --quiet --production
+
+# Copy the entire project - Webpack puts compiled assets into the Django folder
+COPY . .
 ENV STATIC_ASSET_CDN_URL=/static/
 RUN cd frontend && npm run bundledjango
 
@@ -18,6 +27,11 @@ COPY api/pyproject.toml api/poetry.lock api/Makefile ./
 ARG POETRY_VIRTUALENVS_CREATE=false
 RUN make install-poetry
 ENV PATH="$PATH:/root/.local/bin"
+
+ARG GH_TOKEN
+RUN if [ -n "${GH_TOKEN}" ]; \
+  then echo "https://${GH_TOKEN}:@github.com" > ${HOME}/.git-credentials \
+  && git config --global credential.helper store; fi;
 
 ARG POETRY_OPTS
 RUN make install-packages opts="${POETRY_OPTS}"

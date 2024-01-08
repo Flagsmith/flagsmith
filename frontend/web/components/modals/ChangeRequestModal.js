@@ -6,6 +6,8 @@ import MyGroupsSelect from 'components/MyGroupsSelect'
 import { getMyGroups } from 'common/services/useMyGroup'
 import { getStore } from 'common/store'
 import DateSelect from 'components/DateSelect'
+import { close } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 const ChangeRequestModal = class extends Component {
   static displayName = 'ChangeRequestModal'
@@ -152,10 +154,7 @@ const ChangeRequestModal = class extends Component {
               </div>
               {!this.props.changeRequest &&
                 this.props.showAssignees &&
-                (!Utils.getFlagsmithHasFeature('disable_users_as_reviewers') ||
-                  Utils.getFlagsmithHasFeature(
-                    'enable_groups_as_reviewers',
-                  )) && (
+                !Utils.getFlagsmithHasFeature('disable_users_as_reviewers') && (
                   <FormGroup className='mb-4'>
                     <InputGroup
                       component={
@@ -175,7 +174,9 @@ const ChangeRequestModal = class extends Component {
                                   <span className='font-weight-bold'>
                                     {u.first_name} {u.last_name}
                                   </span>
-                                  <span className='chip-icon ion ion-ios-close' />
+                                  <span className='chip-icon ion'>
+                                    <IonIcon icon={close} />
+                                  </span>
                                 </Row>
                               ))}
                               <Button
@@ -188,34 +189,32 @@ const ChangeRequestModal = class extends Component {
                               </Button>
                             </Row>
                           )}
-                          {Utils.getFlagsmithHasFeature(
-                            'enable_groups_as_reviewers',
-                          ) && (
-                            <Row>
-                              <strong style={{ width: 70 }}> Groups: </strong>
-                              {ownerGroups.map((u) => (
-                                <Row
-                                  key={u.id}
-                                  onClick={() => this.removeOwner(u.id, false)}
-                                  className='chip'
-                                  style={{ marginBottom: 4, marginTop: 4 }}
-                                >
-                                  <span className='font-weight-bold'>
-                                    {u.name}
-                                  </span>
-                                  <span className='chip-icon ion ion-ios-close' />
-                                </Row>
-                              ))}
-                              <Button
-                                theme='text'
-                                onClick={() =>
-                                  this.setState({ showGroups: true })
-                                }
+                          <Row>
+                            <strong style={{ width: 70 }}> Groups: </strong>
+                            {ownerGroups.map((u) => (
+                              <Row
+                                key={u.id}
+                                onClick={() => this.removeOwner(u.id, false)}
+                                className='chip'
+                                style={{ marginBottom: 4, marginTop: 4 }}
                               >
-                                Add group
-                              </Button>
-                            </Row>
-                          )}
+                                <span className='font-weight-bold'>
+                                  {u.name}
+                                </span>
+                                <span className='chip-icon ion'>
+                                  <IonIcon icon={close} />
+                                </span>
+                              </Row>
+                            ))}
+                            <Button
+                              theme='text'
+                              onClick={() =>
+                                this.setState({ showGroups: true })
+                              }
+                            >
+                              Add group
+                            </Button>
+                          </Row>
                         </div>
                       }
                       onChange={(e) =>
@@ -251,19 +250,18 @@ const ChangeRequestModal = class extends Component {
                     }
                   />
                 )}
-              {!this.props.changeRequest &&
-                Utils.getFlagsmithHasFeature('enable_groups_as_reviewers') && (
-                  <MyGroupsSelect
-                    orgId={AccountStore.getOrganisation().id}
-                    value={this.state.approvals.map((v) => v.group)}
-                    onAdd={this.addOwner}
-                    onRemove={this.removeOwner}
-                    isOpen={this.state.showGroups}
-                    onToggle={() =>
-                      this.setState({ showGroups: !this.state.showGroups })
-                    }
-                  />
-                )}
+              {!this.props.changeRequest && (
+                <MyGroupsSelect
+                  orgId={AccountStore.getOrganisation().id}
+                  value={this.state.approvals.map((v) => v.group)}
+                  onAdd={this.addOwner}
+                  onRemove={this.removeOwner}
+                  isOpen={this.state.showGroups}
+                  onToggle={() =>
+                    this.setState({ showGroups: !this.state.showGroups })
+                  }
+                />
+              )}
 
               <FormGroup className='text-right mt-2'>
                 <Button

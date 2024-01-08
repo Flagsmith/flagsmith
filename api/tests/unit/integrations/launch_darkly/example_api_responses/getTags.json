@@ -1,0 +1,13 @@
+{
+    "items": [
+        "testtag",
+        "testtag2"
+    ],
+    "_links": {
+        "self": {
+            "href": "/api/v2/tags",
+            "type": "application/json"
+        }
+    },
+    "totalCount": 2
+}

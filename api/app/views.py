@@ -25,10 +25,7 @@ def index(request):
         return HttpResponse(status=405, content_type="application/json")
 
     template = loader.get_template("webpack/index.html")
-    context = {
-        "linkedin_api_key": settings.LINKEDIN_API_KEY,
-    }
-    return HttpResponse(template.render(context, request))
+    return HttpResponse(template.render(request=request))
 
 
 def project_overrides(request):
@@ -47,6 +44,7 @@ def project_overrides(request):
         "flagsmithRealtime": "ENABLE_FLAGSMITH_REALTIME",
         "flagsmithClientAPI": "FLAGSMITH_ON_FLAGSMITH_API_URL",
         "ga": "GOOGLE_ANALYTICS_API_KEY",
+        "fpr": "FIRST_PROMOTER_ID",
         "headway": "HEADWAY_API_KEY",
         "hideInviteLinks": "DISABLE_INVITE_LINKS",
         "linkedin_api_key": "LINKEDIN_API_KEY",

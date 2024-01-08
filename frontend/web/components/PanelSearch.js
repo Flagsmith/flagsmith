@@ -98,7 +98,7 @@ const PanelSearch = class extends Component {
         </div>
       )
     }
-    if (children && children.length > 100 && this.props.itemHeight) {
+    if (children && children?.length > 100 && this.props.itemHeight) {
       return (
         <div>
           <AutoSizer disableHeight>
@@ -116,7 +116,7 @@ const PanelSearch = class extends Component {
         </div>
       )
     }
-    return children.map(this.props.renderRow)
+    return children?.map(this.props.renderRow)
   }
 
   render() {
@@ -212,7 +212,7 @@ const PanelSearch = class extends Component {
               {!!this.props.filterRow && (
                 <Row>
                   {this.props.showExactFilter && (
-                    <div style={{ width: 140 }}>
+                    <div className='me-3' style={{ width: 140 }}>
                       <Select
                         size='select-sm'
                         styles={{
@@ -269,7 +269,7 @@ const PanelSearch = class extends Component {
                       }}
                       type='text'
                       value={search}
-                      className='ml-3'
+                      className='me-3'
                       size='small'
                       placeholder='Search'
                       search
@@ -328,8 +328,11 @@ const PanelSearch = class extends Component {
               goToPage={goToPage}
             />
           )}
-
-          {this.props.renderFooter && this.props.renderFooter()}
+          {this.props.renderFooter && (
+            <footer className='panel-footer'>
+              {this.props.renderFooter()}
+            </footer>
+          )}
         </div>
       </Panel>
     )

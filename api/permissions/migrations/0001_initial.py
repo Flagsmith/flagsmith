@@ -2,9 +2,22 @@
 
 from django.db import migrations, models
 
-from environments.permissions.constants import ENVIRONMENT_PERMISSIONS
 from permissions.models import PROJECT_PERMISSION_TYPE, ENVIRONMENT_PERMISSION_TYPE
 from projects.permissions import PROJECT_PERMISSIONS
+from environments.permissions.constants import VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE, MANAGE_IDENTITIES, CREATE_CHANGE_REQUEST, APPROVE_CHANGE_REQUEST
+ENVIRONMENT_PERMISSIONS = [
+    (VIEW_ENVIRONMENT, "View permission for the given environment."),
+    (UPDATE_FEATURE_STATE, "Update the state or value for a given feature state."),
+    (MANAGE_IDENTITIES, "Manage identities in the given environment."),
+    (
+        CREATE_CHANGE_REQUEST,
+        "Permission to create change requests in the given environment.",
+    ),
+    (
+        APPROVE_CHANGE_REQUEST,
+        "Permission to approve change requests in the given environment.",
+    ),
+]
 
 
 def insert_default_project_permissions(apps, schema_model):

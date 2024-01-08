@@ -6,24 +6,24 @@ The Edge API is only available with on our SaaS platform. It does not form part 
 
 :::
 
-[The Flagsmith Architecture](/guides-and-examples/integration-approaches#flags-are-evaluated-server-side) is based
-around a server-side flag engine. This comes with a number of benefits, but it can increase latency, especially when the
-calls are being made from a location that is far from the EU; the location of our current API. It also provides a single
-point of failure in the event of an AWS region-wide outage.
+[The Flagsmith Architecture](/clients/overview#remote-evaluation) is based around a server-side flag engine. This comes
+with a number of benefits, but it can increase latency, especially when the calls are being made from a location that is
+far from the EU; the location of our current API. It also provides a single point of failure in the event of an AWS
+region-wide outage.
 
 The Edge API solves both of these issues. It provides a datastore and Edge compute API that is replicated across 8 AWS
 regions, with latency-based routing and global failover in the event of a region outage.
 
 The Edge API provides API service from the following AWS regions:
 
-- Europe (London) - eu-west-2
-- US East (Ohio) - us-east-2
-- US West (N. California) - us-west-1
-- Asia Pacific (Mumbai) - ap-south-1
-- Asia Pacific (Sydney) - ap-southeast-2
-- South America (São Paulo) - sa-east-1
-- Asia Pacific (Seoul) - ap-northeast-2
-- Asia Pacific (Singapore) - ap-southeast-1
+- Europe (London) - `eu-west-2`
+- US East (Ohio) - `us-east-2`
+- US West (N. California) - `us-west-1`
+- Asia Pacific (Mumbai) - `ap-south-1`
+- Asia Pacific (Sydney) - `ap-southeast-2`
+- South America (São Paulo) - `sa-east-1`
+- Asia Pacific (Seoul) - `ap-northeast-2`
+- Asia Pacific (Singapore) - `ap-southeast-1`
 
 ## Enabling the Edge API
 
@@ -80,6 +80,13 @@ button. This will start a job that can take between 1 minute and 1 hour, dependi
 job is complete, all the Identities that were present in your Core API will be present in the Edge API.
 
 The Core API will continue to work normally during and following the migration.
+
+:::caution
+
+As of Dec 1st, 2023, we will no longer be replicating Identities from the Core API to our Edge API. Please ensure your
+applications are fully migrated before this point in time.
+
+:::
 
 If you have a product like a mobile app, where you cannot immediately force your users to upgrade (as opposed to a web
 app, for example), you will likely generate Identity writes to the old Core API.
