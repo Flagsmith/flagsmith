@@ -42,6 +42,5 @@ declare global {
     children: ReactNode
     place?: string
     html?: boolean
-    disabled?: boolean
   }>
 }

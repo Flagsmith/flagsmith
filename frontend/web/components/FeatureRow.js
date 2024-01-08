@@ -10,6 +10,7 @@ import SegmentsIcon from './svg/SegmentsIcon'
 import UsersIcon from './svg/UsersIcon' // we need this to make JSX compile
 import Icon from './Icon'
 import FeatureValue from './FeatureValue'
+import FeatureAction from './FeatureAction'
 import { getViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
 import Tag from './tags/Tag'
@@ -369,87 +370,42 @@ class TheComponent extends Component {
             }}
           />
         </div>
+
         <div
-          className='table-column text-right'
-          style={{ width: width[2] }}
+          className='table-column'
+          style={{ width: isCompact ? width[2] : width[3] }}
           onClick={(e) => {
             e.stopPropagation()
           }}
         >
-          {AccountStore.getOrganisationRole() === 'ADMIN' &&
-            !this.props.hideAudit && (
-              <Tooltip
-                html
-                title={
-                  <div
-                    onClick={() => {
-                      if (disableControls) return
-                      this.context.router.history.push(
-                        `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
-                      )
-                    }}
-                    className='text-center'
-                    data-test={`feature-history-${this.props.index}`}
-                  >
-                    <Icon name='clock' width={24} fill='#9DA4AE' />
-                  </div>
-                }
-              >
-                Feature history
-              </Tooltip>
-            )}
-        </div>
-        <div
-          className='table-column text-right'
-          style={{ width: width[3] }}
-          onClick={(e) => {
-            e.stopPropagation()
-          }}
-        >
-          {!this.props.hideRemove && (
-            <Permission
-              level='project'
-              permission='DELETE_FEATURE'
-              id={projectId}
-            >
-              {({ permission: removeFeaturePermission }) =>
-                Utils.renderWithPermission(
-                  removeFeaturePermission,
-                  Constants.projectPermissions('Delete Feature'),
-                  <Tooltip
-                    html
-                    title={
-                      <Button
-                        disabled={
-                          !removeFeaturePermission || readOnly || isProtected
-                        }
-                        onClick={() => {
-                          if (disableControls) return
-                          this.confirmRemove(projectFlag, () => {
-                            removeFlag(projectId, projectFlag)
-                          })
-                        }}
-                        className={classNames('btn btn-with-icon', {
-                          'btn-sm': isCompact,
-                        })}
-                        data-test={`remove-feature-btn-${this.props.index}`}
-                      >
-                        <Icon
-                          name='trash-2'
-                          width={isCompact ? 16 : 20}
-                          fill='#656D7B'
-                        />
-                      </Button>
-                    }
-                  >
-                    {isProtected
-                      ? '<span>This feature has been tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>'
-                      : 'Remove feature'}
-                  </Tooltip>,
-                )
-              }
-            </Permission>
-          )}
+          <FeatureAction
+            projectId={projectId}
+            featureIndex={this.props.index}
+            readOnly={readOnly}
+            isProtected={isProtected}
+            isCompact={isCompact}
+            hideAudit={
+              AccountStore.getOrganisationRole() !== 'ADMIN' ||
+              this.props.hideAudit
+            }
+            hideRemove={this.props.hideRemove}
+            onShowHistory={() => {
+              if (disableControls) return
+              this.context.router.history.push(
+                `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
+              )
+            }}
+            onRemove={() => {
+              if (disableControls) return
+              this.confirmRemove(projectFlag, () => {
+                removeFlag(projectId, projectFlag)
+              })
+            }}
+            onCopyName={() => {
+              navigator.clipboard.writeText(name)
+              toast('Copied to clipboard')
+            }}
+          />
         </div>
       </Row>
     )

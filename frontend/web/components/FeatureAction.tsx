@@ -1,5 +1,5 @@
 import { FC, useCallback, useLayoutEffect, useRef, useState } from 'react'
-import cn from 'classnames'
+import classNames from 'classnames'
 
 import useOutsideClick from 'common/useOutsideClick'
 import Utils from 'common/utils/utils'
@@ -15,6 +15,7 @@ interface FeatureActionProps {
   isProtected: boolean
   hideAudit: boolean
   hideRemove: boolean
+  isCompact?: boolean
   onCopyName: () => void
   onShowHistory: () => void
   onRemove: () => void
@@ -39,6 +40,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
   featureIndex,
   hideAudit,
   hideRemove,
+  isCompact,
   isProtected,
   onCopyName,
   onRemove,
@@ -86,11 +88,17 @@ export const FeatureAction: FC<FeatureActionProps> = ({
     <div className='feature-action'>
       <div ref={btnRef}>
         <Button
-          className='btn btn-with-icon'
+          className={classNames('btn btn-with-icon', {
+            'btn-sm': isCompact,
+          })}
           data-test={`feature-action-${featureIndex}`}
           onClick={() => setIsOpen(true)}
         >
-          <Icon name='more-vertical' width={18} fill='#6837FC' />
+          <Icon
+            name='more-vertical'
+            width={isCompact ? 16 : 18}
+            fill='#6837FC'
+          />
         </Button>
       </div>
 
@@ -127,10 +135,9 @@ export const FeatureAction: FC<FeatureActionProps> = ({
                   Constants.projectPermissions('Delete Feature'),
                   <Tooltip
                     html
-                    disabled={!isProtected}
                     title={
                       <div
-                        className={cn('feature-action__item', {
+                        className={classNames('feature-action__item', {
                           'feature-action__item_disabled':
                             !removeFeaturePermission || readOnly || isProtected,
                         })}
@@ -142,9 +149,8 @@ export const FeatureAction: FC<FeatureActionProps> = ({
                       </div>
                     }
                   >
-                    {
-                      '<span>This feature has been tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>'
-                    }
+                    {isProtected &&
+                      '<span>This feature has been tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>'}
                   </Tooltip>,
                 )
               }
