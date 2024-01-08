@@ -32,6 +32,7 @@ import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
 import FeatureValue from 'components/FeatureValue'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
+import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -658,6 +659,13 @@ const CreateFlag = class extends Component {
 
     const Value = (error, projectAdmin, createFeature, hideValue) => (
       <>
+        {!!isEdit && (
+          <ExistingChangeRequestAlert
+            className='mb-4'
+            featureId={projectFlag.id}
+            environmentId={this.props.environmentId}
+          />
+        )}
         {!isEdit && (
           <FormGroup className='mb-4 mt-2'>
             <InputGroup

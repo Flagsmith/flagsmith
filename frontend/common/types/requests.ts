@@ -137,6 +137,13 @@ export type Req = {
   deleteUserWihRole: { org_id: string; user_id: string; role_id: string }
   getGroupWithRole: { org_id: string; group_id: string }
   deleteGroupWithRole: { org_id: string; group_id: string; role_id: string }
+  getChangeRequests: PagedRequest<{
+    search?: string
+    environmentId: string
+    feature_id?: number
+    live_from_after?: string
+    committed?: boolean
+  }>
   getGroupSummaries: {
     orgId: string
   }
