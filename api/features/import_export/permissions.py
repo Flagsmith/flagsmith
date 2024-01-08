@@ -1,6 +1,7 @@
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
+from rest_framework.viewsets import GenericViewSet
 
 from environments.models import Environment
 from features.import_export.models import FeatureExport
@@ -56,3 +57,28 @@ class FeatureExportListPermissions(IsAuthenticated):
         # The user will only see environment feature exports
         # that the user is an environment admin.
         return request.user.has_project_permission(VIEW_PROJECT, project)
+
+
+class FeatureImportListPermissions(IsAuthenticated):
+    def has_permission(self, request: Request, view: GenericViewSet) -> bool:
+        if not super().has_permission(request, view):
+            return False
+
+        project = Project.objects.get(id=view.kwargs["project_pk"])
+        # The user will only see environment feature imports
+        # that the user is an environment admin.
+        return request.user.has_project_permission(VIEW_PROJECT, project)
+
+
+class FeatureImportRetrievePermissions(IsAuthenticated):
+    def has_permission(self, request: Request, view: GenericViewSet) -> bool:
+        if not super().has_permission(request, view):
+            return False
+
+        feature_import = view.get_queryset().filter(pk=view.kwargs["pk"]).first()
+
+        if not feature_import:
+            return False
+
+        environment = feature_import.environment
+        return request.user.is_environment_admin(environment)
