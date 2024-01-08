@@ -300,20 +300,25 @@ const FeaturesPage = class extends Component {
                                       />
                                       <Row className='flex-fill justify-content-end'>
                                         <TableTagFilter
+                                          useLocalStorage
                                           isLoading={FeatureListStore.isLoading}
                                           projectId={projectId}
                                           className='me-4'
                                           title='Tags'
                                           value={this.state.tags}
-                                          onToggleArchived={() => {
-                                            FeatureListStore.isLoading = true
-                                            this.setState(
-                                              {
-                                                showArchived:
-                                                  !this.state.showArchived,
-                                              },
-                                              this.filter,
-                                            )
+                                          onToggleArchived={(value) => {
+                                            if (
+                                              value !== this.state.showArchived
+                                            ) {
+                                              FeatureListStore.isLoading = true
+                                              this.setState(
+                                                {
+                                                  showArchived:
+                                                    !this.state.showArchived,
+                                                },
+                                                this.filter,
+                                              )
+                                            }
                                           }}
                                           showArchived={this.state.showArchived}
                                           onClearAll={() => {

@@ -16,6 +16,10 @@
             "essential": true,
             "environment": [
                 {
+                    "name": "RUN_BY_PROCESSOR",
+                    "value": "True"
+                },
+                {
                     "name": "AWS_REGION",
                     "value": "eu-west-2"
                 },
@@ -124,12 +128,12 @@
                     "value": "ben.rometsch@bullet-train.io"
                 },
                 {
-                    "name": "INFLUXDB_URL",
-                    "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
+                    "name": "INFLUXDB_BUCKET",
+                    "value": "api_staging"
                 },
                 {
-                    "name": "SSE_INFLUXDB_BUCKET",
-                    "value": "sse_staging"
+                    "name": "INFLUXDB_URL",
+                    "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
                 },
                 {
                     "name": "AWS_SSE_LOGS_BUCKET_NAME",
