@@ -3,9 +3,6 @@ from rest_framework import serializers
 
 from .models import MasterAPIKey
 
-if settings.IS_RBAC_INSTALLED:
-    from rbac.serializers import MasterAPIKeyRoleSerializer
-
 
 class MasterAPIKeySerializer(serializers.ModelSerializer):
     key = serializers.CharField(
@@ -14,8 +11,6 @@ class MasterAPIKeySerializer(serializers.ModelSerializer):
         "for every endpoint apart from create",
     )
     is_admin = serializers.BooleanField(default=True)
-    if settings.IS_RBAC_INSTALLED:
-        roles = MasterAPIKeyRoleSerializer(many=True, read_only=True, source="role")
 
     class Meta:
         model = MasterAPIKey
@@ -28,7 +23,6 @@ class MasterAPIKeySerializer(serializers.ModelSerializer):
             "expiry_date",
             "key",
             "is_admin",
-            *([] if not settings.IS_RBAC_INSTALLED else ["roles"]),
         )
         read_only_fields = ("prefix", "created", "key")
 
