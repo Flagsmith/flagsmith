@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 from app_analytics.analytics_db_service import ANALYTICS_READ_BUCKET_SIZE
 from django.conf import settings
@@ -65,7 +65,7 @@ def clean_up_old_analytics_data():
 def track_feature_evaluation(
     environment_id: int,
     feature_evaluations: dict[str, int],
-    identifier: Optional[str] = None,
+    identity_identifier: str | None = None,
 ) -> None:
     feature_evaluation_objects = []
     for feature_name, evaluation_count in feature_evaluations.items():
@@ -74,7 +74,7 @@ def track_feature_evaluation(
                 feature_name=feature_name,
                 environment_id=environment_id,
                 evaluation_count=evaluation_count,
-                identifier=identifier,
+                identity_identifier=identity_identifier,
             )
         )
     FeatureEvaluationRaw.objects.bulk_create(feature_evaluation_objects)
