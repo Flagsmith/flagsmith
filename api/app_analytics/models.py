@@ -78,8 +78,8 @@ class FeatureEvaluationRaw(models.Model):
     evaluation_count = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # Identity identifier stored for tracking multivariate split testing.
-    identifier = models.CharField(max_length=2000, null=True, default=None)
+    # Stored for tracking multivariate split testing.
+    identity_identifier = models.CharField(max_length=2000, null=True, default=None)
 
 
 class FeatureEvaluationBucket(AbstractBucket):

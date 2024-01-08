@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='featureevaluationraw',
-            name='identifier',
+            name='identity_identifier',
             field=models.CharField(default=None, max_length=2000, null=True),
         ),
         migrations.SeparateDatabaseAndState(
