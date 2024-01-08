@@ -36,5 +36,8 @@ class SplitTestSerializer(serializers.ModelSerializer):
             "evaluation_count",
             "conversion_count",
             "pvalue",
-            "statistic",
         )
+
+
+class SplitTestQuerySerializer(serializers.Serializer):
+    environment_id = serializers.IntegerField()
