@@ -655,11 +655,11 @@
   {
     "_links": {
       "parent": {
-        "href": "/api/v2/flags/carbon-stdlib",
+        "href": "/api/v2/flags/test-project-key",
         "type": "application/json"
       },
       "self": {
-        "href": "/api/v2/flags/carbon-stdlib/TEST_TARGETED_CONTEXT",
+        "href": "/api/v2/flags/test-project-key/TEST_TARGETED_CONTEXT",
         "type": "application/json"
       }
     },
@@ -691,10 +691,10 @@
     "deprecated": false,
     "description": "",
     "environments": {
-      "production": {
-        "_environmentName": "IntegrationTest",
+      "test": {
+        "_environmentName": "Test",
         "_site": {
-          "href": "/carbon-stdlib/integration-test/features/TEST_TARGETED_CONTEXT",
+          "href": "/default/test/features/TEST_TARGETED_CONTEXT",
           "type": "text/html"
         },
         "_summary": {
@@ -723,53 +723,223 @@
           }
         },
         "archived": false,
+        "contextTargets": [],
+        "fallthrough": {
+          "variation": 3
+        },
         "lastModified": 1704730475810,
+        "offVariation": 3,
         "on": true,
+        "prerequisites": [],
+        "rules": [
+          {
+            "_id": "a132f4aa-ad51-43c6-8d03-f18d6a5b205d",
+            "clauses": [
+              {
+                "_id": "2dd8bad3-b0f2-446f-ad32-3b106da30cac",
+                "attribute": "foo",
+                "contextKind": "user",
+                "negate": false,
+                "op": "startsWith",
+                "values": [
+                  "abc",
+                  "dogac"
+                ]
+              }
+            ],
+            "ref": "90a06678-943a-4fa3-9e6d-fa7438ec1650",
+            "trackEvents": false,
+            "variation": 1
+          },
+          {
+            "_id": "c034ec70-fcb3-4c15-9bea-b9fa0b341b4f",
+            "clauses": [
+              {
+                "_id": "e4cf5790-6212-4f41-bef4-fcbdb8b4a6a6",
+                "attribute": "p2",
+                "contextKind": "user",
+                "negate": false,
+                "op": "in",
+                "values": [
+                  "abc",
+                  "dogac"
+                  ]
+                }
+              ],
+              "ref": "4a1cbae4-dcf8-4c0e-a79a-44152385b0bb",
+              "trackEvents": false,
+              "variation": 2
+          },
+          {
+            "_id": "61853466-1677-4ade-9c7f-735788dc98eb",
+            "clauses": [
+              {
+                "_id": "403bc17a-aaca-41bf-add6-419c5641bd79",
+                "attribute": "p1",
+                "contextKind": "user",
+                "negate": false,
+                "op": "endsWith",
+                "values": [
+                  "bar"
+                ]
+              },
+              {
+                "_id": "82436c5f-85eb-425d-a7c9-fc44ca467fb9",
+                "attribute": "p2",
+                "contextKind": "user",
+                "negate": true,
+                "op": "contains",
+                "values": [
+                  "forbidden",
+                  "words"
+                ]
+              }
+            ],
+            "description": "Reverted And",
+            "ref": "4aaccd97-6288-42dd-9171-f91f2d804ba7",
+            "trackEvents": false,
+            "variation": 0
+          },
+          {
+            "_id": "9688e67a-87f1-4a24-962c-157c4421303e",
+            "clauses": [
+              {
+                "_id": "cc992651-29fd-417a-8f4b-edba27e7e26e",
+                "attribute": "p1",
+                "contextKind": "user",
+                "negate": false,
+                "op": "lessThanOrEqual",
+                "values": [
+                  5
+                ]
+              },
+              {
+                "_id": "2742358a-d236-4061-9fe2-75bf998529cf",
+                "attribute": "p2",
+                "contextKind": "user",
+                "negate": false,
+                "op": "greaterThanOrEqual",
+                "values": [
+                  1
+                ]
+              }
+            ],
+            "description": "Regular And",
+            "ref": "7784e9ea-0505-432c-ad29-3806585cb117",
+            "trackEvents": false,
+            "variation": 1
+          },
+          {
+            "_id": "97ca7f20-a8b2-431a-a425-48f3bc28c6df",
+            "clauses": [
+              {
+                "_id": "38ef7979-b516-4ed3-9e61-41df7508955c",
+                "attribute": "p1",
+                "contextKind": "user",
+                "negate": true,
+                "op": "in",
+                "values": ["this", "that"]
+              }
+            ],
+            "description": "Just Not",
+            "ref": "0455939e-4c46-49de-b107-ea8b246a79dd",
+            "trackEvents": false,
+            "variation": 2
+            }
+        ],
         "salt": "9d5c8d03f09f441fb265a387cacf0834",
         "sel": "aa8d74daed9a40788aff0c1b37ec31ad",
+        "targets": [],
         "trackEvents": false,
         "trackEventsFallthrough": false,
         "version": 14
       },
-      "test": {
-        "_environmentName": "IntegrationTest",
+      "production": {
+        "_environmentName": "Production",
         "_site": {
-          "href": "/carbon-stdlib/integration-test/features/TEST_COMBINED_TARGET",
+          "href": "/default/test/features/TEST_TARGETED_CONTEXT",
           "type": "text/html"
         },
         "_summary": {
           "prerequisites": 0,
           "variations": {
-            "0": {
-              "contextTargets": 0,
-              "isFallthrough": true,
-              "nullRules": 0,
-              "rules": 2,
-              "targets": 1
-            },
             "1": {
               "contextTargets": 0,
-              "isOff": true,
               "nullRules": 0,
               "rules": 1,
               "targets": 0
             },
             "2": {
               "contextTargets": 0,
-              "nullRules": 1,
+              "nullRules": 0,
               "rules": 1,
-              "targets": 1
+              "targets": 0
+            },
+            "3": {
+              "contextTargets": 0,
+              "isFallthrough": true,
+              "isOff": true,
+              "nullRules": 0,
+              "rules": 0,
+              "targets": 0
             }
           }
         },
         "archived": false,
-        "lastModified": 1704731702475,
+        "contextTargets": [],
+        "fallthrough": {
+          "variation": 3
+        },
+        "lastModified": 1704730475810,
+        "offVariation": 3,
         "on": true,
-        "salt": "62d11782290041459b93245c89eafcfc",
-        "sel": "6c19c49f3b0f454abedf5f87b9723f0b",
+        "prerequisites": [],
+        "rules": [
+          {
+            "_id": "a132f4aa-ad51-43c6-8d03-f18d6a5b205d",
+            "clauses": [
+              {
+                "_id": "2dd8bad3-b0f2-446f-ad32-3b106da30cac",
+                "attribute": "foo",
+                "contextKind": "user",
+                "negate": false,
+                "op": "startsWith",
+                "values": [
+                  "abc",
+                  "dogac"
+                ]
+              }
+            ],
+            "ref": "90a06678-943a-4fa3-9e6d-fa7438ec1650",
+            "trackEvents": false,
+            "variation": 1
+          },
+          {
+            "_id": "c034ec70-fcb3-4c15-9bea-b9fa0b341b4f",
+            "clauses": [
+              {
+                "_id": "e4cf5790-6212-4f41-bef4-fcbdb8b4a6a6",
+                "attribute": "p2",
+                "contextKind": "user",
+                "negate": false,
+                "op": "in",
+                "values": [
+                  "abc",
+                  "dogac"
+                ]
+              }
+            ],
+            "ref": "4a1cbae4-dcf8-4c0e-a79a-44152385b0bb",
+            "trackEvents": false,
+            "variation": 2
+          }
+        ],
+        "salt": "9d5c8d03f09f441fb265a387cacf0834",
+        "sel": "aa8d74daed9a40788aff0c1b37ec31ad",
+        "targets": [],
         "trackEvents": false,
         "trackEventsFallthrough": false,
-        "version": 2
+        "version": 14
       }
     },
     "experiments": {
@@ -811,11 +981,11 @@
   {
     "_links": {
       "parent": {
-        "href": "/api/v2/flags/carbon-stdlib",
+        "href": "/api/v2/flags/test-project-key",
         "type": "application/json"
       },
       "self": {
-        "href": "/api/v2/flags/carbon-stdlib/TEST_INDIVIDUAL_TARGET",
+        "href": "/api/v2/flags/test-project-key/TEST_INDIVIDUAL_TARGET",
         "type": "application/json"
       }
     },
@@ -847,10 +1017,10 @@
     "deprecated": false,
     "description": "",
     "environments": {
-      "production": {
-        "_environmentName": "IntegrationTest",
+      "test": {
+        "_environmentName": "Test",
         "_site": {
-          "href": "/carbon-stdlib/integration-test/features/TEST_INDIVIDUAL_TARGET",
+          "href": "/default/test/features/TEST_INDIVIDUAL_TARGET",
           "type": "text/html"
         },
         "_summary": {
@@ -873,18 +1043,52 @@
           }
         },
         "archived": false,
+        "contextTargets": [
+          {
+            "contextKind": "user",
+            "values": [],
+            "variation": 0
+          },
+          {
+            "contextKind": "user",
+            "values": [],
+            "variation": 1
+          }
+        ],
+        "fallthrough": {
+          "variation": 0
+        },
         "lastModified": 1704302011358,
+        "offVariation": 1,
         "on": false,
+        "prerequisites": [],
+        "rules": [],
         "salt": "2d3031f4e64c40648454778c6f4604c5",
         "sel": "b1662f133b8044a68533e821c5e2fd0c",
+        "targets": [
+          {
+            "contextKind": "user",
+            "values": [
+              "user-1005"
+            ],
+            "variation": 0
+          },
+          {
+            "contextKind": "user",
+            "values": [
+              "user-10006"
+            ],
+            "variation": 1
+          }
+        ],
         "trackEvents": false,
         "trackEventsFallthrough": false,
         "version": 2
       },
-      "test": {
-        "_environmentName": "IntegrationTest",
+      "production": {
+        "_environmentName": "Production",
         "_site": {
-          "href": "/carbon-stdlib/integration-test/features/TEST_INDIVIDUAL_TARGET",
+          "href": "/default/test/features/TEST_INDIVIDUAL_TARGET",
           "type": "text/html"
         },
         "_summary": {
@@ -907,10 +1111,44 @@
           }
         },
         "archived": false,
+        "contextTargets": [
+          {
+            "contextKind": "user",
+            "values": [],
+            "variation": 0
+          },
+          {
+            "contextKind": "user",
+            "values": [],
+            "variation": 1
+          }
+        ],
+        "fallthrough": {
+          "variation": 0
+        },
         "lastModified": 1704302011358,
+        "offVariation": 1,
         "on": false,
+        "prerequisites": [],
+        "rules": [],
         "salt": "2d3031f4e64c40648454778c6f4604c5",
         "sel": "b1662f133b8044a68533e821c5e2fd0c",
+        "targets": [
+          {
+            "contextKind": "user",
+            "values": [
+              "user-1005"
+            ],
+            "variation": 0
+          },
+          {
+            "contextKind": "user",
+            "values": [
+              "user-10006"
+            ],
+            "variation": 1
+          }
+        ],
         "trackEvents": false,
         "trackEventsFallthrough": false,
         "version": 2
@@ -945,11 +1183,11 @@
   {
     "_links": {
       "parent": {
-        "href": "/api/v2/flags/carbon-stdlib",
+        "href": "/api/v2/flags/test-project-key",
         "type": "application/json"
       },
       "self": {
-        "href": "/api/v2/flags/carbon-stdlib/TEST_SEGMENT_TARGET",
+        "href": "/api/v2/flags/test-project-key/TEST_SEGMENT_TARGET",
         "type": "application/json"
       }
     },
@@ -981,10 +1219,10 @@
     "deprecated": false,
     "description": "",
     "environments": {
-      "production": {
-        "_environmentName": "IntegrationTest",
+      "test": {
+        "_environmentName": "Test",
         "_site": {
-          "href": "/carbon-stdlib/integration-test/features/TEST_SEGMENT_TARGET",
+          "href": "/default/test/features/TEST_SEGMENT_TARGET",
           "type": "text/html"
         },
         "_summary": {
@@ -1007,18 +1245,64 @@
           }
         },
         "archived": false,
+        "contextTargets": [],
+        "fallthrough": {
+          "variation": 0
+        },
         "lastModified": 1704731410003,
+        "offVariation": 1,
         "on": true,
+        "prerequisites": [],
+        "rules": [
+          {
+            "_id": "dca5eadf-851e-4696-bb45-0fcce26944ba",
+            "clauses": [
+              {
+                "_id": "9a145ec9-5caa-4518-83b8-82796b58cbdf",
+                "attribute": "segmentMatch",
+                "contextKind": "user",
+                "negate": false,
+                "op": "segmentMatch",
+                "values": [
+                  "user-list"
+                ]
+              }
+            ],
+            "ref": "4d09daad-1642-4817-901a-dbebe9b612d8",
+            "trackEvents": false,
+            "variation": 0
+          },
+          {
+            "_id": "d866a669-b439-4506-9ae6-83ea0e30ea38",
+            "clauses": [
+              {
+                "_id": "2e357024-9f04-4086-bb07-77eee8f3147f",
+                "attribute": "segmentMatch",
+                "contextKind": "user",
+                "negate": false,
+                "op": "segmentMatch",
+                "values": [
+                  "dynamic-list",
+                  "dynamic-list-2"
+                ]
+              }
+            ],
+            "ref": "7cc2a75d-311c-4d9a-849f-33f148b1e27c",
+            "trackEvents": false,
+            "variation": 1
+          }
+        ],
         "salt": "5060e69d01da4133a17c29e2edad4695",
         "sel": "b224656f90014477920634bf6f50b19e",
+        "targets": [],
         "trackEvents": false,
         "trackEventsFallthrough": false,
         "version": 5
       },
-      "test": {
-        "_environmentName": "IntegrationTest",
+      "production": {
+        "_environmentName": "Production",
         "_site": {
-          "href": "/carbon-stdlib/integration-test/features/TEST_SEGMENT_TARGET",
+          "href": "/default/test/features/TEST_SEGMENT_TARGET",
           "type": "text/html"
         },
         "_summary": {
@@ -1041,10 +1325,56 @@
           }
         },
         "archived": false,
+        "contextTargets": [],
+        "fallthrough": {
+          "variation": 0
+        },
         "lastModified": 1704731410003,
+        "offVariation": 1,
         "on": true,
+        "prerequisites": [],
+        "rules": [
+          {
+            "_id": "dca5eadf-851e-4696-bb45-0fcce26944ba",
+            "clauses": [
+              {
+                "_id": "9a145ec9-5caa-4518-83b8-82796b58cbdf",
+                "attribute": "segmentMatch",
+                "contextKind": "user",
+                "negate": false,
+                "op": "segmentMatch",
+                "values": [
+                  "user-list"
+                ]
+              }
+            ],
+            "ref": "4d09daad-1642-4817-901a-dbebe9b612d8",
+            "trackEvents": false,
+            "variation": 0
+          },
+          {
+            "_id": "d866a669-b439-4506-9ae6-83ea0e30ea38",
+            "clauses": [
+              {
+                "_id": "2e357024-9f04-4086-bb07-77eee8f3147f",
+                "attribute": "segmentMatch",
+                "contextKind": "user",
+                "negate": false,
+                "op": "segmentMatch",
+                "values": [
+                  "dynamic-list",
+                  "dynamic-list-2"
+                ]
+              }
+            ],
+            "ref": "7cc2a75d-311c-4d9a-849f-33f148b1e27c",
+            "trackEvents": false,
+            "variation": 1
+          }
+        ],
         "salt": "5060e69d01da4133a17c29e2edad4695",
         "sel": "b224656f90014477920634bf6f50b19e",
+        "targets": [],
         "trackEvents": false,
         "trackEventsFallthrough": false,
         "version": 5
@@ -1079,11 +1409,11 @@
   {
     "_links": {
       "parent": {
-        "href": "/api/v2/flags/carbon-stdlib",
+        "href": "/api/v2/flags/test-project-key",
         "type": "application/json"
       },
       "self": {
-        "href": "/api/v2/flags/carbon-stdlib/TEST_COMBINED_TARGET",
+        "href": "/api/v2/flags/test-project-key/TEST_COMBINED_TARGET",
         "type": "application/json"
       }
     },
@@ -1107,7 +1437,7 @@
       "usingMobileKey": false
     },
     "creationDate": 1704731583604,
-    "customProperties": {},
+    "customProperties": { },
     "defaults": {
       "offVariation": 1,
       "onVariation": 0
@@ -1115,10 +1445,10 @@
     "deprecated": false,
     "description": "",
     "environments": {
-      "production": {
-        "_environmentName": "IntegrationTest",
+      "test": {
+        "_environmentName": "Test",
         "_site": {
-          "href": "/carbon-stdlib/integration-test/features/TEST_COMBINED_TARGET",
+          "href": "/default/test/features/TEST_COMBINED_TARGET",
           "type": "text/html"
         },
         "_summary": {
@@ -1147,18 +1477,107 @@
           }
         },
         "archived": false,
+        "contextTargets": [
+          {
+            "contextKind": "user",
+            "values": [ ],
+            "variation": 0
+          },
+          {
+            "contextKind": "user",
+            "values": [ ],
+            "variation": 2
+          }
+        ],
+        "fallthrough": {
+          "variation": 0
+        },
         "lastModified": 1704731702475,
+        "offVariation": 1,
         "on": true,
+        "prerequisites": [ ],
+        "rules": [
+          {
+            "_id": "23b14914-3136-40f5-a64a-cdb3110a5277",
+            "clauses": [
+              {
+                "_id": "8aae5525-86e8-4e39-895a-2f1681d484e7",
+                "attribute": "segmentMatch",
+                "contextKind": "user",
+                "negate": false,
+                "op": "segmentMatch",
+                "values": [
+                  "user-list"
+                ]
+              }
+            ],
+            "ref": "b820af6a-08dc-40a0-bf3c-538b86512858",
+            "trackEvents": false,
+            "variation": 0
+          },
+          {
+            "_id": "56725db6-3d2a-4ed6-a2a1-60ef94ac62d5",
+            "clauses": [
+              {
+                "_id": "053eb4a5-e103-4d60-a89a-9e47e308dd82",
+                "attribute": "p1",
+                "contextKind": "user",
+                "negate": false,
+                "op": "in",
+                "values": [
+                  "a",
+                  "b",
+                  "c"
+                ]
+              }
+            ],
+            "ref": "4007fe69-9745-4efe-b46a-899203df4a46",
+            "rollout": {
+              "contextKind": "user",
+              "variations": [
+                {
+                  "variation": 0,
+                  "weight": 50000
+                },
+                {
+                  "variation": 1,
+                  "weight": 50000
+                },
+                {
+                  "variation": 2,
+                  "weight": 0
+                }
+              ]
+            },
+            "trackEvents": false
+          }
+        ],
         "salt": "62d11782290041459b93245c89eafcfc",
         "sel": "6c19c49f3b0f454abedf5f87b9723f0b",
+        "targets": [
+          {
+            "contextKind": "user",
+            "values": [
+              "user1"
+            ],
+            "variation": 0
+          },
+          {
+            "contextKind": "user",
+            "values": [
+              "user2"
+            ],
+            "variation": 2
+          }
+        ],
         "trackEvents": false,
         "trackEventsFallthrough": false,
         "version": 2
       },
-      "test": {
-        "_environmentName": "IntegrationTest",
+      "production": {
+        "_environmentName": "Production",
         "_site": {
-          "href": "/carbon-stdlib/integration-test/features/TEST_COMBINED_TARGET",
+          "href": "/default/test/features/TEST_COMBINED_TARGET",
           "type": "text/html"
         },
         "_summary": {
@@ -1187,10 +1606,99 @@
           }
         },
         "archived": false,
+        "contextTargets": [
+          {
+            "contextKind": "user",
+            "values": [ ],
+            "variation": 0
+          },
+          {
+            "contextKind": "user",
+            "values": [ ],
+            "variation": 2
+          }
+        ],
+        "fallthrough": {
+          "variation": 0
+        },
         "lastModified": 1704731702475,
+        "offVariation": 1,
         "on": true,
+        "prerequisites": [ ],
+        "rules": [
+          {
+            "_id": "23b14914-3136-40f5-a64a-cdb3110a5277",
+            "clauses": [
+              {
+                "_id": "8aae5525-86e8-4e39-895a-2f1681d484e7",
+                "attribute": "segmentMatch",
+                "contextKind": "user",
+                "negate": false,
+                "op": "segmentMatch",
+                "values": [
+                  "user-list"
+                ]
+              }
+            ],
+            "ref": "b820af6a-08dc-40a0-bf3c-538b86512858",
+            "trackEvents": false,
+            "variation": 0
+          },
+          {
+            "_id": "56725db6-3d2a-4ed6-a2a1-60ef94ac62d5",
+            "clauses": [
+              {
+                "_id": "053eb4a5-e103-4d60-a89a-9e47e308dd82",
+                "attribute": "p1",
+                "contextKind": "user",
+                "negate": false,
+                "op": "in",
+                "values": [
+                  "a",
+                  "b",
+                  "c"
+                ]
+              }
+            ],
+            "ref": "4007fe69-9745-4efe-b46a-899203df4a46",
+            "rollout": {
+              "contextKind": "user",
+              "variations": [
+                {
+                  "variation": 0,
+                  "weight": 50000
+                },
+                {
+                  "variation": 1,
+                  "weight": 50000
+                },
+                {
+                  "variation": 2,
+                  "weight": 0
+                }
+              ]
+            },
+            "trackEvents": false
+          }
+        ],
         "salt": "62d11782290041459b93245c89eafcfc",
         "sel": "6c19c49f3b0f454abedf5f87b9723f0b",
+        "targets": [
+          {
+            "contextKind": "user",
+            "values": [
+              "user1"
+            ],
+            "variation": 0
+          },
+          {
+            "contextKind": "user",
+            "values": [
+              "user2"
+            ],
+            "variation": 2
+          }
+        ],
         "trackEvents": false,
         "trackEventsFallthrough": false,
         "version": 2
@@ -1198,15 +1706,15 @@
     },
     "experiments": {
       "baselineIdx": 0,
-      "items": []
+      "items": [ ]
     },
-    "goalIds": [],
+    "goalIds": [ ],
     "includeInSnippet": false,
     "key": "TEST_COMBINED_TARGET",
     "kind": "multivariate",
     "maintainerId": "60dc82f864c60f258d31fe60",
     "name": "TEST_COMBINED_TARGET",
-    "tags": [],
+    "tags": [ ],
     "temporary": false,
     "variationJsonSchema": null,
     "variations": [

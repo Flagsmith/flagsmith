@@ -13,6 +13,7 @@ from integrations.launch_darkly.services import (
 )
 from projects.models import Project
 from projects.tags.models import Tag
+from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
 
 
@@ -43,7 +44,7 @@ def test_create_import_request__return_expected(
 
     assert result.status == {
         "requested_environment_count": 2,
-        "requested_flag_count": 5,
+        "requested_flag_count": 9,
     }
     assert signing.loads(result.ld_token, salt=expected_salt) == ld_token
     assert result.ld_project_key == ld_project_key
@@ -235,3 +236,64 @@ def test_process_import_request__success__expected_status(
     # Tags are imported correctly.
     tagged_feature = Feature.objects.get(project=project, name="flag5")
     [tag.label for tag in tagged_feature.tags.all()] == ["testtag", "testtag2"]
+
+
+def test_process_import_request__segments_imported(
+    project: Project,
+    import_request: LaunchDarklyImportRequest,
+):
+    # When
+    process_import_request(import_request)
+
+    # Then
+    segments = Segment.objects.filter(project=project, feature_id=None)
+
+    assert set(segments.values_list("name", flat=True)) == {
+        # Segments
+        "User List (Override for test)",
+        "User List (Override for production)",
+        "Dynamic List (Override for test)",
+        "Dynamic List (Override for production)",
+        "Dynamic List 2 (Override for test)",
+        "Dynamic List 2 (Override for production)",
+    }
+
+
+def test_process_import_request__rules_imported(
+    project: Project,
+    import_request: LaunchDarklyImportRequest,
+):
+    # When
+    process_import_request(import_request)
+
+    # Then
+    segments = Segment.objects.filter(project=project).exclude(feature_id=None)
+
+    assert set(segments.values_list("name", flat=True)) == {
+        # Feature Segments
+        "Regular And",
+        "Reverted And",
+        "Just Not",
+        # Feature Segments without descriptions
+        "imported-56725db6-3d2a-4ed6-a2a1-60ef94ac62d5",
+        "imported-a132f4aa-ad51-43c6-8d03-f18d6a5b205d",
+        "imported-c034ec70-fcb3-4c15-9bea-b9fa0b341b4f",
+    }
+
+    and_rule = SegmentRule.objects.get(segment__name="Regular And")
+    and_subrules = SegmentRule.objects.filter(rule=and_rule)
+    and_subconditions = Condition.objects.filter(rule__in=and_subrules)
+    assert and_subrules.count() == 1
+    assert and_subrules.get().type == SegmentRule.ALL_RULE
+    assert and_subconditions.count() == 2
+
+    reverted_and_rule = SegmentRule.objects.get(segment__name="Reverted And")
+    reverted_and_subrules = SegmentRule.objects.filter(rule=reverted_and_rule).all()
+    assert reverted_and_subrules.count() == 2
+    assert list(reverted_and_subrules)[0].type == SegmentRule.NONE_RULE
+    assert list(reverted_and_subrules)[1].type == SegmentRule.ALL_RULE
+
+    just_not_rule = SegmentRule.objects.get(segment__name="Just Not")
+    just_not_subrules = SegmentRule.objects.filter(rule=just_not_rule).all()
+    assert just_not_subrules.count() == 1
+    assert list(just_not_subrules)[0].type == SegmentRule.NONE_RULE

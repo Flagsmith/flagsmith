@@ -139,25 +139,65 @@ def _ld_operator_to_flagsmith_operator(ld_operator: str) -> Optional[str]:
     }.get(ld_operator, None)
 
 
-# TODO: Not sure what happens if it is not `IN` and there are multiple values.
-def _convert_ld_value(values: list[str], ld_operator: str) -> str:
+def _convert_ld_values(values: list[str], ld_operator: str) -> list[str]:
     match ld_operator:
         case "in":
-            return ",".join(values)
+            return list([",".join(values)])
         case "endsWith":
-            return ".*" + re.escape(values[0])
+            return [".*" + re.escape(value) for value in values]
         case "startsWith":
-            return re.escape(values[0]) + ".*"
+            return [re.escape(value) + ".*" for value in values]
         case "matches" | "segmentMatch":
-            return re.escape(values[0]).replace("\\*", ".*")
-        case "contains":
-            return ".*" + re.escape(values[0]) + ".*"
+            return [re.escape(value).replace("\\*", ".*") for value in values]
         case _:
-            return values[0]
+            return [value for value in values]
 
 
 def _get_segment_name(name: str, env: str) -> str:
     return f"{name} (Override for {env})"
+
+
+def _create_feature_segment_from_segment_match(
+    clauses: list[Clause],
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    segments_by_ld_key: dict[str, Segment],
+) -> None:
+    if any(clause["op"] != "segmentMatch" for clause in clauses):
+        logger.warning(
+            f"Nested segment match is not supported, skipping for {feature.name} in {environment.name}"
+        )
+        return
+
+    if any(clause["negate"] is True for clause in clauses):
+        logger.warning(
+            f"Negated segment match is not supported, skipping for {feature.name} in {environment.name}"
+        )
+        return
+
+        # Complex rules that allow matching segments is not allowed in Flagsmith.
+        # We can only emulate a single segment match by enabling the segment rule.
+    all_targeted_segments: list[str] = sum([clause["values"] for clause in clauses], [])
+    for index, targeted_segment_key in enumerate(all_targeted_segments):
+        targeted_segment_name = segments_by_ld_key[targeted_segment_key].name
+        segment = Segment.objects.get(name=targeted_segment_name, project=project)
+
+        feature_segment, _ = FeatureSegment.objects.update_or_create(
+            feature=feature,
+            segment=segment,
+            environment=environment,
+            priority=index,
+        )
+
+        # Enable rules by default. In LD, rules are enabled if the flag is on.
+        FeatureState.objects.update_or_create(
+            feature=feature,
+            feature_segment=feature_segment,
+            environment=environment,
+            defaults={"enabled": True},
+        )
+    return
 
 
 def _create_feature_segment_from_clauses(
@@ -169,77 +209,71 @@ def _create_feature_segment_from_clauses(
     name: str,
 ) -> None:
     if "segmentMatch" in [clause["op"] for clause in clauses]:
-        if any(clause["op"] != "segmentMatch" for clause in clauses):
-            logger.warning(
-                f"Nested segment match is not supported, skipping for {feature.name} in {environment.name}"
-            )
-            return
-
-        if any(clause["negate"] is True for clause in clauses):
-            logger.warning(
-                f"Negated segment match is not supported, skipping for {feature.name} in {environment.name}"
-            )
-            return
-
-        # Complex rules that allow matching segments is not allowed in Flagsmith.
-        # We can only emulate a single segment match by enabling the segment rule.
-        all_targeted_segments: list[str] = sum(
-            [clause["values"] for clause in clauses], []
+        _create_feature_segment_from_segment_match(
+            clauses=clauses,
+            project=project,
+            feature=feature,
+            environment=environment,
+            segments_by_ld_key=segments_by_ld_key,
         )
-        for index, targeted_segment_key in enumerate(all_targeted_segments):
-            targeted_segment_name = segments_by_ld_key[targeted_segment_key].name
-            segment = Segment.objects.get(name=targeted_segment_name, project=project)
 
-            feature_segment, _ = FeatureSegment.objects.update_or_create(
-                feature=feature,
-                segment=segment,
-                environment=environment,
-                priority=index,
-            )
-
-            # Enable rules by default. In LD, rules are enabled if the flag is on.
-            FeatureState.objects.update_or_create(
-                feature=feature,
-                feature_segment=feature_segment,
-                environment=environment,
-                defaults={"enabled": True},
-            )
-        return
-
-    segment = Segment.objects.create(name=name, project=project, feature=feature)
+    segment, _ = Segment.objects.update_or_create(
+        name=name, project=project, feature=feature
+    )
 
     # A parent rule has two children: one for the regular conditions and multiple for the negated conditions
     # Mathematically, this is equivalent to:
-    # any(X, Y, !Z) = any(any(X,Y), none(Z))
+    # all(X, Y, !Z) = all(X, Y, none(Z))
     # Or with more parameters,
-    # any(X, Y, !Z, !W) = any(any(X,Y), none(Z), none(W))
-    # Here, any(X,Y) is the child rule. none(Z) and none(W) are the negated children.
+    # all(X, Y, !Z, !W) = all(X, Y, none(Z), none(W))
     # Since there is no !X operation in Flagsmith, we wrap negated conditions in a none() rule.
-    parent_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ANY_RULE)
-    child_rule = SegmentRule.objects.create(rule=parent_rule, type=SegmentRule.ANY_RULE)
+    parent_rule, _ = SegmentRule.objects.get_or_create(
+        segment=segment, type=SegmentRule.ALL_RULE
+    )
+    # TODO: Delete existing rules if parent_rule already exists.
+
+    if any(clause["negate"] is True for clause in clauses):
+        negated_child = SegmentRule.objects.create(
+            rule=parent_rule, type=SegmentRule.NONE_RULE
+        )
+    if any(clause["negate"] is False for clause in clauses):
+        child_rule = SegmentRule.objects.create(
+            rule=parent_rule, type=SegmentRule.ALL_RULE
+        )
 
     for clause in clauses:
         operator = _ld_operator_to_flagsmith_operator(clause["op"])
-        value = _convert_ld_value(clause["values"], clause["op"])
+        values = _convert_ld_values(clause["values"], clause["op"])
         _property = clause["attribute"]
 
         if operator is not None:
+            # Negated conditions are wrapped in a none() rule, otherwise they are added to the all() rule.
             if clause["negate"] is True:
-                negated_child = SegmentRule.objects.create(
-                    rule=parent_rule, type=SegmentRule.NONE_RULE
-                )
-                rule = negated_child
+                target_rule = negated_child
             else:
-                rule = child_rule
+                target_rule = child_rule
 
-            condition, _ = Condition.objects.update_or_create(
-                rule=rule,
-                property=_property,
-                value=value,
-                operator=operator,
-                created_with_segment=True,
-            )
-            logger.warning("Condition created: " + str(condition))
+            # Multiple values are OR-ed together.
+            # Example: X matches ["a", "b"] is equivalent to X == "a" OR X == "b" in LD.
+            if len(values) > 1:
+                # Create an "ANY" rule under the regular rule.
+                # If values was a single value, we would have just used "target_rule" instead.
+                any_rule = SegmentRule.objects.create(
+                    rule=target_rule, type=SegmentRule.ANY_RULE
+                )
+
+                target_rule = any_rule
+
+            for value in values:
+                condition, _ = Condition.objects.update_or_create(
+                    rule=target_rule,
+                    property=_property,
+                    value=value,
+                    operator=operator,
+                    created_with_segment=True,
+                )
+                logger.warning("Condition created: " + str(condition))
+
         else:
             logger.warning(
                 "Can't map launch darkly operator: " + clause["op"] + ", skipping..."
@@ -251,6 +285,7 @@ def _create_feature_segment_from_clauses(
         environment=environment,
     )
 
+    # TODO: Multistate values are not supported yet.
     # Enable rules by default. In LD, rules are enabled if the flag is on.
     FeatureState.objects.update_or_create(
         feature=feature,
@@ -282,18 +317,22 @@ def _import_rules(
 ) -> None:
     if "rules" in ld_flag_config and len(ld_flag_config["rules"]) > 0:
         logger.warning("Rules: " + str(ld_flag_config["rules"]))
-        for index, rule in enumerate(ld_flag_config["rules"]):
-            variation = variations_by_idx[str(rule["variation"])]["value"]
-            description = rule.get("description", "Unknown")
+        for rule in ld_flag_config["rules"]:
+            variation = (
+                variations_by_idx[str(rule["variation"])]["value"]
+                if "variation" in rule
+                else rule["rollout"]
+            )
+            rule_name = rule.get("description", "imported-" + rule["_id"])
 
-            logger.warning("Rule found: " + description + " : " + str(variation))
+            logger.warning("Rule found: " + rule_name + " : " + str(variation))
             _create_feature_segment_from_clauses(
                 rule["clauses"],
                 feature.project,
                 feature,
                 environment,
                 segments_by_ld_key,
-                "imported-" + str(index),
+                rule_name,
             )
 
 
