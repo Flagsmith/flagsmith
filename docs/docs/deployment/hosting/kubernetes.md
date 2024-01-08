@@ -266,7 +266,7 @@ By default, Flagsmith uses Postgres to store time series data. You can alternati
 - SDK API traffic
 - SDK Flag Evaluations
 
-[You need to perform some additional steps to configure InfluxDB.](/deployment/overview#influxdb).
+[You need to perform some additional steps to configure InfluxDB.](/deployment/overview#time-series-data-via-influxdb).
 
 ### Task Processor
 

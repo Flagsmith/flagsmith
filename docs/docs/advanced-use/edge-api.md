@@ -6,10 +6,10 @@ The Edge API is only available with on our SaaS platform. It does not form part 
 
 :::
 
-[The Flagsmith Architecture](/guides-and-examples/integration-approaches#flags-are-evaluated-server-side) is based
-around a server-side flag engine. This comes with a number of benefits, but it can increase latency, especially when the
-calls are being made from a location that is far from the EU; the location of our current API. It also provides a single
-point of failure in the event of an AWS region-wide outage.
+[The Flagsmith Architecture](/clients/overview#remote-evaluation) is based around a server-side flag engine. This comes
+with a number of benefits, but it can increase latency, especially when the calls are being made from a location that is
+far from the EU; the location of our current API. It also provides a single point of failure in the event of an AWS
+region-wide outage.
 
 The Edge API solves both of these issues. It provides a datastore and Edge compute API that is replicated across 8 AWS
 regions, with latency-based routing and global failover in the event of a region outage.

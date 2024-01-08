@@ -11,8 +11,8 @@ import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
 :::tip
 
 Server Side SDKs can run in 2 different modes: `Local Evaluation` and `Remote Evaluation`. We recommend
-[reading up about the differences](overview#remote-and-local-evaluation-modes) first before integrating the SDKS into
-your applications.
+[reading up about the differences](/clients/overview#server-side-sdks) first before integrating the SDKS into your
+applications.
 
 Once you've got that understood, lets get the SDKs integrated!
 
