@@ -45,7 +45,7 @@ class Command(BaseCommand):
             "--graceperiodms",
             type=int,
             help="Number of millis before running task is considered 'stuck'.",
-            default=3000,
+            default=20000,
         )
         parser.add_argument(
             "--queuepopsize",
