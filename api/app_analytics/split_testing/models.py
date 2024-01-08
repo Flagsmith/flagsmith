@@ -21,20 +21,13 @@ class ConversionEvent(models.Model):
 
 
 class SplitTest(models.Model):
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["environment", "feature", "multivariate_feature_option"],
-                name="unique_environment_feature_mvfo",
-            )
-        ]
-
     environment = models.ForeignKey(
         Environment, related_name="split_tests", on_delete=models.CASCADE
     )
     feature = models.ForeignKey(
         Feature, related_name="split_tests", on_delete=models.CASCADE
     )
+
     multivariate_feature_option = models.ForeignKey(
         MultivariateFeatureOption, on_delete=models.CASCADE
     )
@@ -46,10 +39,18 @@ class SplitTest(models.Model):
     # from the ConversionEvent model for matching identifiers.
     conversion_count = models.PositiveIntegerField()
 
-    # Split test metrics, where the pvalue is the most useful.
+    # The pvalue is the most useful split test metric for knowing
+    # which of the candidates are statistically successful.
     # See the analyse_split_test helpers function for more details.
     pvalue = models.FloatField(null=False)
-    statistic = models.FloatField(null=False)
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["environment", "feature", "multivariate_feature_option"],
+                name="unique_environment_feature_mvfo",
+            )
+        ]
