@@ -6,6 +6,8 @@ from core.constants import INTEGER
 from django.core.exceptions import ObjectDoesNotExist
 from flag_engine.identities.models import IdentityModel
 from flag_engine.segments.constants import IN
+from mypy_boto3_dynamodb.service_resource import Table
+from pytest_mock import MockerFixture
 from rest_framework.exceptions import NotFound
 
 from environments.dynamodb import DynamoIdentityWrapper
@@ -18,8 +20,6 @@ from util.mappers import (
 )
 
 if typing.TYPE_CHECKING:
-    from pytest_mock import MockerFixture
-
     from environments.models import Environment
     from projects.models import Project
 
@@ -229,11 +229,11 @@ def test_write_identities_skips_identity_if_identifier_is_too_large(
 def test_is_enabled_is_false_if_dynamo_table_name_is_not_set(settings, mocker):
     # Given
     mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper.table_name",
+        "environments.dynamodb.wrappers.identity_wrapper.DynamoIdentityWrapper.table_name",
         None,
     )
+    mocked_boto3 = mocker.patch("environments.dynamodb.wrappers.base.boto3")
 
-    mocked_boto3 = mocker.patch("environments.dynamodb.dynamodb_wrapper.boto3")
     # When
     dynamo_identity_wrapper = DynamoIdentityWrapper()
 
@@ -247,8 +247,8 @@ def test_is_enabled_is_true_if_dynamo_table_name_is_set(settings, mocker):
     # Given
     table_name = "random_table_name"
     settings.IDENTITIES_TABLE_NAME_DYNAMO = table_name
-    mocked_config = mocker.patch("environments.dynamodb.dynamodb_wrapper.Config")
-    mocked_boto3 = mocker.patch("environments.dynamodb.dynamodb_wrapper.boto3")
+    mocked_config = mocker.patch("environments.dynamodb.wrappers.base.Config")
+    mocked_boto3 = mocker.patch("environments.dynamodb.wrappers.base.boto3")
 
     # When
     dynamo_identity_wrapper = DynamoIdentityWrapper()
@@ -276,7 +276,7 @@ def test_get_segment_ids_returns_correct_segment_ids(
 
     environment_document = map_environment_to_environment_document(environment)
     mocked_environment_wrapper = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoEnvironmentWrapper"
+        "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper"
     )
     mocked_environment_wrapper.return_value.get_item.return_value = environment_document
 
@@ -321,7 +321,7 @@ def test_get_segment_ids_returns_segment_using_in_operator_for_integer_traits(
 
     environment_document = map_environment_to_environment_document(environment)
     mocked_environment_wrapper = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoEnvironmentWrapper"
+        "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper"
     )
     mocked_environment_wrapper.return_value.get_item.return_value = environment_document
 
@@ -386,7 +386,7 @@ def test_get_segment_ids_with_identity_model(identity, environment, mocker):
 
     environment_document = map_environment_to_environment_document(environment)
     mocked_environment_wrapper = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoEnvironmentWrapper"
+        "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper"
     )
     mocked_environment_wrapper.return_value.get_item.return_value = environment_document
 
@@ -408,12 +408,11 @@ def test_identity_wrapper__iter_all_items_paginated__returns_expected(
     environment_api_key = "test_api_key"
     limit = 1
 
-    expected_engine_identity = IdentityModel.parse_obj(identity_document)
     expected_next_page_key = "next_page_key"
 
     environment_document = map_environment_to_environment_document(environment)
     mocked_environment_wrapper = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoEnvironmentWrapper",
+        "environments.dynamodb.wrappers.environment_wrapper.DynamoEnvironmentWrapper",
         autospec=True,
     )
     mocked_environment_wrapper.return_value.get_item.return_value = environment_document
@@ -439,19 +438,59 @@ def test_identity_wrapper__iter_all_items_paginated__returns_expected(
     with pytest.raises(StopIteration):
         next(iterator)
 
-    assert result_1 == expected_engine_identity
-    assert result_2 == expected_engine_identity
+    assert result_1 == identity_document
+    assert result_2 == identity_document
 
     mocked_get_all_items.assert_has_calls(
         [
             mocker.call(
                 environment_api_key=environment_api_key,
+                projection_expression=None,
                 limit=limit,
             ),
             mocker.call(
                 environment_api_key=environment_api_key,
                 limit=limit,
+                projection_expression=None,
                 start_key=expected_next_page_key,
             ),
         ]
     )
+
+
+def test_delete_all_identities__deletes_all_identities_documents_from_dynamodb(
+    flagsmith_identities_table: Table,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given
+    environment_api_key = "environment_one"
+
+    # Let's create 2 identities for the same environment
+    identity_one = {
+        "composite_key": f"{environment_api_key}_identity_one",
+        "environment_api_key": environment_api_key,
+        "identifier": "identity_one",
+    }
+    identity_two = {
+        "composite_key": f"{environment_api_key}_identity_two",
+        "identifier": "identity_two",
+        "environment_api_key": environment_api_key,
+    }
+
+    flagsmith_identities_table.put_item(Item=identity_one)
+    flagsmith_identities_table.put_item(Item=identity_two)
+
+    # Let's create another identity for a different environment
+    identity_three = {
+        "composite_key": "environment_two_identity_one",
+        "identifier": "identity_three",
+        "environment_api_key": "environment_two",
+    }
+    flagsmith_identities_table.put_item(Item=identity_three)
+
+    # When
+    dynamodb_identity_wrapper.delete_all_identities(environment_api_key)
+
+    # Then
+    assert flagsmith_identities_table.scan()["Count"] == 1
+    assert flagsmith_identities_table.scan()["Items"][0] == identity_three

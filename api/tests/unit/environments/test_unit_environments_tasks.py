@@ -1,5 +1,8 @@
+from pytest_mock import MockerFixture
+
 from audit.models import AuditLog
 from environments.tasks import (
+    delete_environment_from_dynamo,
     process_environment_update,
     rebuild_environment_document,
 )
@@ -74,4 +77,34 @@ def test_process_environment_update_with_project_audit_log(environment, mocker):
     mock_send_environment_update_message_for_environment.assert_not_called()
     mock_send_environment_update_message_for_project.assert_called_once_with(
         environment.project
+    )
+
+
+def test_delete_environment__calls_internal_methods_correctly(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    environment_api_key = "test-api-key"
+    environment_id = 10
+
+    mocked_environment_wrapper = mocker.patch("environments.tasks.environment_wrapper")
+    mocked_environment_v2_wrapper = mocker.patch(
+        "environments.tasks.environment_v2_wrapper"
+    )
+    DynamoIdentityWrapper = mocker.patch("environments.tasks.DynamoIdentityWrapper")
+    mocked_identity_wrapper = DynamoIdentityWrapper.return_value
+
+    # When
+    delete_environment_from_dynamo(environment_api_key, environment_id)
+
+    # Then
+    mocked_environment_wrapper.delete_environment.assert_called_once_with(
+        environment_api_key
+    )
+
+    mocked_environment_v2_wrapper.delete_environment.assert_called_once_with(
+        environment_id
+    )
+    mocked_identity_wrapper.delete_all_identities.assert_called_once_with(
+        environment_api_key
     )

@@ -1,6 +1,13 @@
 from audit.models import AuditLog
-from environments.dynamodb import DynamoEnvironmentWrapper
-from environments.models import Environment
+from environments.dynamodb import (
+    DynamoEnvironmentWrapper,
+    DynamoIdentityWrapper,
+)
+from environments.models import (
+    Environment,
+    environment_v2_wrapper,
+    environment_wrapper,
+)
 from sse import (
     send_environment_update_message_for_environment,
     send_environment_update_message_for_project,
@@ -31,3 +38,16 @@ def process_environment_update(audit_log_id: int):
         send_environment_update_message_for_environment(audit_log.environment)
     else:
         send_environment_update_message_for_project(audit_log.project)
+
+
+@register_task_handler()
+def delete_environment_from_dynamo(api_key: str, environment_id: str):
+    # Delete environment
+    environment_wrapper.delete_environment(api_key)
+
+    # Delete identities
+    identity_wrapper = DynamoIdentityWrapper()
+    identity_wrapper.delete_all_identities(api_key)
+
+    # Delete environment_v2 documents
+    environment_v2_wrapper.delete_environment(environment_id)

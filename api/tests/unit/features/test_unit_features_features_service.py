@@ -20,7 +20,7 @@ from util.mappers.engine import (
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
-    from environments.dynamodb.dynamodb_wrapper import (
+    from environments.dynamodb import (
         DynamoEnvironmentV2Wrapper,
         DynamoIdentityWrapper,
     )

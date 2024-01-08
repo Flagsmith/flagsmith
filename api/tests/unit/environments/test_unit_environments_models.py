@@ -9,7 +9,9 @@ from core.constants import STRING
 from core.request_origin import RequestOrigin
 from django.test import TestCase, override_settings
 from django.utils import timezone
+from mypy_boto3_dynamodb.service_resource import Table
 from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
+from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
@@ -802,12 +804,16 @@ def test_get_hide_disabled_flags(
     assert environment.get_hide_disabled_flags() is expected_result
 
 
-def test_saving_environment_api_key_calls_put_item_with_correct_arguments_if_enabled(
-    dynamo_enabled_project_environment_one, mocker
+def test_saving_environment_api_key_creates_dynamo_document_if_enabled(
+    dynamo_enabled_project_environment_one: Environment,
+    mocker: MockerFixture,
+    flagsmith_environment_api_key_table: "Table",
 ):
     # Given
-    mocked_environment_api_key_wrapper = mocker.patch(
-        "environments.models.environment_api_key_wrapper", autospec=True
+    mocker.patch(
+        "environments.models.DynamoEnvironmentAPIKeyWrapper.table",
+        new_callable=mocker.PropertyMock,
+        return_value=flagsmith_environment_api_key_table,
     )
     # When
     api_key = EnvironmentAPIKey.objects.create(
@@ -815,7 +821,69 @@ def test_saving_environment_api_key_calls_put_item_with_correct_arguments_if_ena
     )
 
     # Then
-    mocked_environment_api_key_wrapper.write_api_key.assert_called_with(api_key)
+    response = flagsmith_environment_api_key_table.get_item(Key={"key": api_key.key})
+    assert response["Item"]["key"] == api_key.key
+
+
+def test_deleting_environment_api_key_deletes_dynamo_document_if_enabled(
+    dynamo_enabled_project_environment_one: Environment,
+    mocker: MockerFixture,
+    flagsmith_environment_api_key_table: "Table",
+):
+    # Given
+    mocker.patch(
+        "environments.models.DynamoEnvironmentAPIKeyWrapper.table",
+        new_callable=mocker.PropertyMock,
+        return_value=flagsmith_environment_api_key_table,
+    )
+    api_key = EnvironmentAPIKey.objects.create(
+        name="Some key", environment=dynamo_enabled_project_environment_one
+    )
+    assert flagsmith_environment_api_key_table.scan()["Count"] == 1
+
+    # When
+    api_key.delete()
+
+    # Then
+    assert flagsmith_environment_api_key_table.scan()["Count"] == 0
+
+
+def test_deleting_environment_creates_task_to_delete_dynamo_document_if_enabled(
+    dynamo_enabled_project_environment_one: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocked_task = mocker.patch("environments.tasks.delete_environment_from_dynamo")
+    mocker.patch(
+        "environments.models.DynamoEnvironmentWrapper.is_enabled",
+        new_callable=mocker.PropertyMock,
+        return_value=True,
+    )
+
+    # When
+    dynamo_enabled_project_environment_one.delete()
+
+    # Then
+    mocked_task.delay.assert_called_once_with(
+        args=(
+            dynamo_enabled_project_environment_one.api_key,
+            dynamo_enabled_project_environment_one.id,
+        )
+    )
+
+
+def test_delete_api_key_not_called_when_deleting_environment_api_key_for_non_edge_project(
+    environment_api_key: EnvironmentAPIKey, mocker: MockerFixture
+) -> None:
+    # Given
+    mocked_environment_api_key_wrapper = mocker.patch(
+        "environments.models.environment_api_key_wrapper", autospec=True
+    )
+    # When
+    environment_api_key.delete()
+
+    # Then
+    mocked_environment_api_key_wrapper.delete_api_key.assert_not_called()
 
 
 def test_put_item_not_called_when_saving_environment_api_key_for_non_edge_project(

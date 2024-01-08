@@ -1,6 +1,6 @@
 import typing
 
-from environments.dynamodb.dynamodb_wrapper import DynamoEnvironmentV2Wrapper
+from environments.dynamodb import DynamoEnvironmentV2Wrapper
 from environments.dynamodb.types import IdentityOverrideV2
 
 ddb_environment_v2_wrapper = DynamoEnvironmentV2Wrapper()
