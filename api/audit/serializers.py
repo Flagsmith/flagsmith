@@ -59,10 +59,15 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):
     @swagger_serializer_method(
         serializer_or_field=AuditLogChangeDetailsSerializer(many=True)
     )
-    def get_change_details(self, instance: AuditLog) -> typing.List[typing.Dict]:
-        return AuditLogChangeDetailsSerializer(
-            instance=instance.history_record.get_change_details(), many=True
-        ).data
+    def get_change_details(
+        self, instance: AuditLog
+    ) -> typing.List[typing.Dict[str, typing.Any]]:
+        if history_record := instance.history_record:
+            return AuditLogChangeDetailsSerializer(
+                instance=history_record.get_change_details(), many=True
+            ).data
+
+        return []
 
 
 class AuditLogsQueryParamSerializer(serializers.Serializer):
