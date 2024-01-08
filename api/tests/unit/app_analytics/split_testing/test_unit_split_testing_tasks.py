@@ -76,13 +76,13 @@ def test_update_split_tests(
         feature_name=feature1.name,
         environment_id=environment.id,
         evaluation_count=2,
-        identifier=identity1.identifier,
+        identity_identifier=identity1.identifier,
     )
     FeatureEvaluationRaw.objects.create(
         feature_name=feature2.name,
         environment_id=environment.id,
         evaluation_count=1,
-        identifier=identity1.identifier,
+        identity_identifier=identity1.identifier,
     )
 
     # Create evaluation for only feature2 for identity2
@@ -90,7 +90,7 @@ def test_update_split_tests(
         feature_name=feature2.name,
         environment_id=environment.id,
         evaluation_count=1,
-        identifier=identity2.identifier,
+        identity_identifier=identity2.identifier,
     )
 
     # Create evaluation for only feature2 for identity3
@@ -98,7 +98,7 @@ def test_update_split_tests(
         feature_name=feature2.name,
         environment_id=environment.id,
         evaluation_count=1,
-        identifier=identity3.identifier,
+        identity_identifier=identity3.identifier,
     )
 
     # Create duplicate evaluations for only feature1 for identity4
@@ -106,13 +106,13 @@ def test_update_split_tests(
         feature_name=feature1.name,
         environment_id=environment.id,
         evaluation_count=1,
-        identifier=identity4.identifier,
+        identity_identifier=identity4.identifier,
     )
     FeatureEvaluationRaw.objects.create(
         feature_name=feature1.name,
         environment_id=environment.id,
         evaluation_count=1,
-        identifier=identity4.identifier,
+        identity_identifier=identity4.identifier,
     )
 
     # Create conversion events for identity3 and identity 4
@@ -136,4 +136,3 @@ def test_update_split_tests(
     assert sum([st.conversion_count for st in split_tests]) == 2
     for st in split_tests:
         assert st.pvalue == 1.0
-        assert st.statistic == 0.0

@@ -74,10 +74,11 @@ def test_split_test_list(
     with_environment_permissions: Callable[[list[str], int], None],
     environment: Environment,
     project: Project,
+    django_assert_num_queries: Callable[[int], None],
 ) -> None:
     # Given
     feature = Feature.objects.create(
-        name="single feature for test",
+        name="single_feature_for_test",
         project=project,
         initial_value="200",
         is_server_key_only=True,
@@ -110,7 +111,6 @@ def test_split_test_list(
         evaluation_count=100,
         conversion_count=10,
         pvalue=0.2,
-        statistic=15,
     )
 
     SplitTest.objects.create(
@@ -120,7 +120,6 @@ def test_split_test_list(
         evaluation_count=111,
         conversion_count=20,
         pvalue=0.2,
-        statistic=15,
     )
 
     # Create unrelated environment split test for filtering.
@@ -131,15 +130,16 @@ def test_split_test_list(
         evaluation_count=100,
         conversion_count=10,
         pvalue=0.2,
-        statistic=15,
     )
 
     with_environment_permissions([VIEW_ENVIRONMENT])
     url = reverse("api-v1:split-tests-list")
     url = f"{url}?environment_id={environment.id}"
+    expected_query_count = 6
 
     # When
-    response = staff_client.get(url)
+    with django_assert_num_queries(expected_query_count):
+        response = staff_client.get(url)
 
     # Then
     assert response.data["count"] == 2
