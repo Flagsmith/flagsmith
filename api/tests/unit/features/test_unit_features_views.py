@@ -2223,6 +2223,74 @@ def test_cannot_update_feature_of_a_feature_state(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
+def test_create_feature_with_required_metadata_returns_400(
+    project,
+    client,
+    required_a_segment_metadata_field,
+):
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    description = "This is the description"
+    field_value = 10
+    content_type = 9999
+    data = {
+        "name": "Test feature",
+        "description": description,
+        "metadata": [
+            {
+                "model_field": content_type,
+                "field_value": field_value,
+            },
+        ],
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_create_feature_with_optional_metadata_returns_201(
+    project,
+    client,
+    optional_b_feature_metadata_field,
+):
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    description = "This is the description"
+    field_value = 10
+    data = {
+        "name": "Test feature",
+        "description": description,
+        "metadata": [
+            {
+                "model_field": optional_b_feature_metadata_field.id,
+                "field_value": field_value,
+            },
+        ],
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert (
+        response.json()["metadata"][0]["model_field"]
+        == optional_b_feature_metadata_field.id
+    )
+    assert response.json()["metadata"][0]["field_value"] == str(field_value)
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_create_feature_with_required_metadata_returns_201(
     project,
     client,
