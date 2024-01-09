@@ -99,9 +99,18 @@ def test_split_test_list(
     )
     multivariate_feature_option2 = MultivariateFeatureOption.objects.create(
         feature=feature,
-        default_percentage_allocation=70,
+        default_percentage_allocation=30,
         type=STRING,
         string_value="mv_feature_option2",
+    )
+
+    SplitTest.objects.create(
+        environment=environment,
+        feature=feature,
+        multivariate_feature_option=None,
+        evaluation_count=123,
+        conversion_count=12,
+        pvalue=0.2,
     )
 
     SplitTest.objects.create(
@@ -142,30 +151,37 @@ def test_split_test_list(
         response = staff_client.get(url)
 
     # Then
-    assert response.data["count"] == 2
+    assert response.data["count"] == 3
 
     result1 = response.data["results"][0]
-    assert result1["conversion_count"] == 10
-    assert result1["evaluation_count"] == 100
+    assert result1["conversion_count"] == 12
+    assert result1["evaluation_count"] == 123
     assert result1["feature"]["id"] == feature.id
     assert result1["feature"]["name"] == feature.name
-    assert (
-        result1["multivariate_feature_option"]["id"] == multivariate_feature_option1.id
-    )
-    assert result1["multivariate_feature_option"]["type"] == "unicode"
-    assert (
-        result1["multivariate_feature_option"]["string_value"] == "mv_feature_option1"
-    )
+    assert result1["multivariate_feature_option"] is None
 
     result2 = response.data["results"][1]
-    assert result2["conversion_count"] == 20
-    assert result2["evaluation_count"] == 111
+    assert result2["conversion_count"] == 10
+    assert result2["evaluation_count"] == 100
     assert result2["feature"]["id"] == feature.id
     assert result2["feature"]["name"] == feature.name
     assert (
-        result2["multivariate_feature_option"]["id"] == multivariate_feature_option2.id
+        result2["multivariate_feature_option"]["id"] == multivariate_feature_option1.id
     )
     assert result2["multivariate_feature_option"]["type"] == "unicode"
     assert (
-        result2["multivariate_feature_option"]["string_value"] == "mv_feature_option2"
+        result2["multivariate_feature_option"]["string_value"] == "mv_feature_option1"
+    )
+
+    result3 = response.data["results"][2]
+    assert result3["conversion_count"] == 20
+    assert result3["evaluation_count"] == 111
+    assert result3["feature"]["id"] == feature.id
+    assert result3["feature"]["name"] == feature.name
+    assert (
+        result3["multivariate_feature_option"]["id"] == multivariate_feature_option2.id
+    )
+    assert result3["multivariate_feature_option"]["type"] == "unicode"
+    assert (
+        result3["multivariate_feature_option"]["string_value"] == "mv_feature_option2"
     )
