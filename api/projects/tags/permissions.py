@@ -9,16 +9,13 @@ class TagPermissions(BasePermission):
         project_pk = view.kwargs.get("project_pk")
         if not project_pk:
             return False
-
         project = Project.objects.get(pk=project_pk)
 
         if request.user.is_project_admin(project):
             return True
 
-        if view.action == "list" and request.user.has_project_permission(
-            VIEW_PROJECT, project
-        ):
-            return True
+        if view.action in ["list", "get_by_uuid"]:
+            return request.user.has_project_permission(VIEW_PROJECT, project)
 
         # move on to object specific permissions
         return view.detail
