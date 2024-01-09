@@ -232,14 +232,7 @@ def _create_feature_segment_from_clauses(
     )
     # TODO: Delete existing rules if parent_rule already exists.
 
-    if any(clause["negate"] is True for clause in clauses):
-        negated_child = SegmentRule.objects.create(
-            rule=parent_rule, type=SegmentRule.NONE_RULE
-        )
-    if any(clause["negate"] is False for clause in clauses):
-        child_rule = SegmentRule.objects.create(
-            rule=parent_rule, type=SegmentRule.ALL_RULE
-        )
+    negated_child = None
 
     for clause in clauses:
         operator = _ld_operator_to_flagsmith_operator(clause["op"])
@@ -249,20 +242,17 @@ def _create_feature_segment_from_clauses(
         if operator is not None:
             # Negated conditions are wrapped in a none() rule, otherwise they are added to the all() rule.
             if clause["negate"] is True:
+                if negated_child is None:
+                    negated_child = SegmentRule.objects.create(
+                        rule=parent_rule, type=SegmentRule.NONE_RULE
+                    )
+
                 target_rule = negated_child
             else:
-                target_rule = child_rule
-
-            # Multiple values are OR-ed together.
-            # Example: X matches ["a", "b"] is equivalent to X == "a" OR X == "b" in LD.
-            if len(values) > 1:
-                # Create an "ANY" rule under the regular rule.
-                # If values was a single value, we would have just used "target_rule" instead.
-                any_rule = SegmentRule.objects.create(
-                    rule=target_rule, type=SegmentRule.ANY_RULE
+                child_rule = SegmentRule.objects.create(
+                    rule=parent_rule, type=SegmentRule.ANY_RULE
                 )
-
-                target_rule = any_rule
+                target_rule = child_rule
 
             for value in values:
                 condition, _ = Condition.objects.update_or_create(

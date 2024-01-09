@@ -818,7 +818,7 @@
                 "attribute": "p2",
                 "contextKind": "user",
                 "negate": false,
-                "op": "greaterThanOrEqual",
+                "op": "greaterThan",
                 "values": [
                   1
                 ]

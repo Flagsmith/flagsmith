@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from django.core import signing
+from flag_engine.segments import constants as segment_constants
 from requests.exceptions import HTTPError, RequestException, Timeout
 
 from environments.models import Environment
@@ -283,20 +284,72 @@ def test_process_import_request__rules_imported(
         "imported-dca5eadf-851e-4696-bb45-0fcce26944ba",
     }
 
+    # Tests for "Regular And"
+
     and_rule = SegmentRule.objects.get(segment__name="Regular And")
+    # Parents are always "ALL" rules.
+    assert and_rule.type == SegmentRule.ALL_RULE
+
     and_subrules = SegmentRule.objects.filter(rule=and_rule)
+    assert and_subrules.count() == 2
+    # UI needs to have subrules as `ANY_RULE` to display properly.
+    assert list(and_subrules)[0].type == SegmentRule.ANY_RULE
+    assert list(and_subrules)[1].type == SegmentRule.ANY_RULE
+
     and_subconditions = Condition.objects.filter(rule__in=and_subrules)
-    assert and_subrules.count() == 1
-    assert and_subrules.get().type == SegmentRule.ALL_RULE
     assert and_subconditions.count() == 2
+    assert set(and_subconditions.values_list("property", "operator", "value")) == {
+        ("p1", segment_constants.LESS_THAN_INCLUSIVE, "5"),
+        ("p2", segment_constants.GREATER_THAN, "1"),
+    }
+
+    # Tests for "Reverted And"
 
     reverted_and_rule = SegmentRule.objects.get(segment__name="Reverted And")
+    # Parents are always "ALL" rules.
+    assert reverted_and_rule.type == SegmentRule.ALL_RULE
+
     reverted_and_subrules = SegmentRule.objects.filter(rule=reverted_and_rule).all()
     assert reverted_and_subrules.count() == 2
-    assert list(reverted_and_subrules)[0].type == SegmentRule.NONE_RULE
-    assert list(reverted_and_subrules)[1].type == SegmentRule.ALL_RULE
+    assert list(reverted_and_subrules)[0].type == SegmentRule.ANY_RULE
+    assert list(reverted_and_subrules)[1].type == SegmentRule.NONE_RULE
 
+    reverted_and_any_subrule_conditions = Condition.objects.filter(
+        rule=reverted_and_subrules[0]
+    )
+    assert reverted_and_any_subrule_conditions.count() == 1
+    assert set(
+        reverted_and_any_subrule_conditions.values_list("property", "operator", "value")
+    ) == {
+        ("p1", segment_constants.REGEX, ".*bar"),
+    }
+
+    reverted_and_none_subrule_conditions = Condition.objects.filter(
+        rule=reverted_and_subrules[1]
+    )
+    assert reverted_and_none_subrule_conditions.count() == 2
+    assert set(
+        reverted_and_none_subrule_conditions.values_list(
+            "property", "operator", "value"
+        )
+    ) == {
+        ("p2", segment_constants.CONTAINS, "forbidden"),
+        ("p2", segment_constants.CONTAINS, "words"),
+    }
+
+    # Tests for "Just Not
     just_not_rule = SegmentRule.objects.get(segment__name="Just Not")
+    # Parents are always "ALL" rules.
+    assert just_not_rule.type == SegmentRule.ALL_RULE
+
     just_not_subrules = SegmentRule.objects.filter(rule=just_not_rule).all()
     assert just_not_subrules.count() == 1
     assert list(just_not_subrules)[0].type == SegmentRule.NONE_RULE
+
+    just_not_subrule_conditions = Condition.objects.filter(rule=just_not_subrules[0])
+    assert just_not_subrule_conditions.count() == 1
+    assert set(
+        just_not_subrule_conditions.values_list("property", "operator", "value")
+    ) == {
+        ("p1", segment_constants.IN, "this,that"),
+    }
