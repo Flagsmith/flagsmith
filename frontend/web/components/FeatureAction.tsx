@@ -88,6 +88,10 @@ export const FeatureAction: FC<FeatureActionProps> = ({
     <div className='feature-action'>
       <div ref={btnRef}>
         <Button
+          style={{
+            lineHeight: 0,
+            padding: isCompact ? '0.625rem' : '0.875rem',
+          }}
           className={classNames('btn btn-with-icon', {
             'btn-sm': isCompact,
           })}
