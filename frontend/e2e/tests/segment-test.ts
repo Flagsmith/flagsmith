@@ -36,7 +36,7 @@ export const testSegment1 = async () => {
   await click(byId('create-organisation-btn'))
   await setText('[name="orgName"]', 'Bullet Train Ltd 2')
   await click('#create-org-btn')
-  await waitForElementVisible(byId('project-select-page'))
+  await waitForElementVisible(byId('projec-manage-widget'))
 
   log('Create Project')
 
@@ -151,7 +151,7 @@ export const testSegment2 = async () => {
   await click(byId('create-organisation-btn'))
   await setText('[name="orgName"]', 'Bullet Train Ltd 3')
   await click('#create-org-btn')
-  await waitForElementVisible(byId('project-select-page'))
+  await waitForElementVisible(byId('projec-manage-widget'))
 
   log('Create Project')
 
@@ -159,7 +159,6 @@ export const testSegment2 = async () => {
   await setText(byId('projectName'), 'My Segment Test Project 2')
   await click(byId('create-project-btn'))
   await waitForElementVisible(byId('features-page'))
-
 
   log('Create segments')
   await gotoSegments()
@@ -249,7 +248,7 @@ export const testSegment3 = async () => {
   await click(byId('create-organisation-btn'))
   await setText('[name="orgName"]', 'Bullet Train Ltd 4')
   await click('#create-org-btn')
-  await waitForElementVisible(byId('project-select-page'))
+  await waitForElementVisible(byId('projec-manage-widget'))
 
   log('Create Project')
 

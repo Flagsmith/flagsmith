@@ -23,6 +23,8 @@ import Format from 'common/utils/format'
 import CreateRole from 'components/modals/CreateRole'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
+import OrganisationManageWidget from 'components/OrganisationManageWidget'
+import ProjectManageWidget from 'components/ProjectManageWidget'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 
@@ -366,7 +368,6 @@ const OrganisationSettingsPage = class extends Component {
 
     return (
       <div className='app-container container'>
-        <PageTitle title='Manage' />
         <AccountProvider onSave={this.onSave} onRemove={this.onRemove}>
           {({ isSaving, organisation }, { deleteOrganisation }) =>
             !!organisation && (
@@ -398,11 +399,29 @@ const OrganisationSettingsPage = class extends Component {
                     (!autoSeats && usedSeats)
                   return (
                     <div>
+                      <div className='py-4'>
+                        <OrganisationManageWidget />
+                      </div>
+
                       <Tabs
                         value={this.state.tab || 0}
                         onChange={(tab) => this.setState({ tab })}
                         className='mt-0'
                       >
+                        {!!AccountStore.getOrganisation() && (
+                          <TabItem tabLabel='Projects'>
+                            <h5 className='mt-4 mb-2'>Projects</h5>
+
+                            <p className='fs-small lh-sm mb-4'>
+                              Projects let you create and manage a set of
+                              features and configure them between multiple app
+                              environments.
+                            </p>
+
+                            <ProjectManageWidget />
+                          </TabItem>
+                        )}
+
                         <TabItem tabLabel='General'>
                           <FormGroup className='mt-4'>
                             <h5 className='mb-5'>General Settings</h5>

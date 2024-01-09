@@ -347,44 +347,6 @@ const App = class extends Component {
                             <React.Fragment>
                               <nav className='my-3 my-md-0 hidden-xs-down flex-row navbar-right space'>
                                 <Row>
-                                  {!!AccountStore.getOrganisation() && (
-                                    <NavLink
-                                      id='projects-link'
-                                      data-test='projects-link'
-                                      activeClassName='active'
-                                      className='nav-link'
-                                      to={'/projects'}
-                                    >
-                                      <span className='mr-1'>
-                                        <Icon
-                                          name='layout'
-                                          width={20}
-                                          fill='#9DA4AE'
-                                        />
-                                      </span>
-                                      Projects
-                                    </NavLink>
-                                  )}
-                                  <NavLink
-                                    id='account-settings-link'
-                                    data-test='account-settings-link'
-                                    activeClassName='active'
-                                    className='nav-link'
-                                    to={
-                                      projectId
-                                        ? `/project/${projectId}/environment/${environmentId}/account`
-                                        : '/account'
-                                    }
-                                  >
-                                    <span className='mr-1'>
-                                      <Icon
-                                        name='person'
-                                        width={20}
-                                        fill='#9DA4AE'
-                                      />
-                                    </span>
-                                    Account
-                                  </NavLink>
                                   {AccountStore.getOrganisationRole() ===
                                   'ADMIN' ? (
                                     <NavLink
@@ -395,12 +357,12 @@ const App = class extends Component {
                                     >
                                       <span className='mr-1'>
                                         <Icon
-                                          name='setting'
+                                          name='layout'
                                           width={20}
                                           fill='#9DA4AE'
                                         />
                                       </span>
-                                      {'Manage'}
+                                      {'Organisation'}
                                     </NavLink>
                                   ) : (
                                     !!AccountStore.getOrganisation() && (
@@ -421,9 +383,9 @@ const App = class extends Component {
                                                 <span
                                                   style={{ marginRight: 4 }}
                                                 >
-                                                  <Icon name='setting' />
+                                                  <Icon name='layout' />
                                                 </span>
-                                                {'Manage'}
+                                                {'Organisation'}
                                               </NavLink>
                                             )}
                                           </>
@@ -433,6 +395,26 @@ const App = class extends Component {
                                   )}
                                 </Row>
                                 <Row>
+                                  <NavLink
+                                    id='account-settings-link'
+                                    data-test='account-settings-link'
+                                    activeClassName='active'
+                                    className='nav-link mr-4'
+                                    to={
+                                      projectId
+                                        ? `/project/${projectId}/environment/${environmentId}/account`
+                                        : '/account'
+                                    }
+                                  >
+                                    <span className='mr-1'>
+                                      <Icon
+                                        name='person'
+                                        width={20}
+                                        fill='#9DA4AE'
+                                      />
+                                    </span>
+                                    Account
+                                  </NavLink>
                                   <Button
                                     href='https://docs.flagsmith.com'
                                     target='_blank'
