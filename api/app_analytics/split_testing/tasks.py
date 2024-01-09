@@ -11,7 +11,10 @@ from environments.identities.models import Identity
 from environments.models import Environment
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureStateValue
-from task_processor.decorators import register_recurring_task
+from task_processor.decorators import (
+    register_recurring_task,
+    register_task_handler,
+)
 
 # TODO: This if-statement will be replaced with a separate
 #       repository installation like LDAP.
@@ -25,38 +28,46 @@ if settings.USE_POSTGRES_FOR_ANALYTICS:
 
 def _update_split_tests() -> None:
     assert settings.USE_POSTGRES_FOR_ANALYTICS
-
-    features = Feature.objects.filter(
-        type=MULTIVARIATE,
-    ).prefetch_related("feature_states", "multivariate_options")
-
+    features = Feature.objects.filter(type=MULTIVARIATE)
     for feature in features:
-        environment_ids = feature.feature_states.all().values_list(
-            "environment_id", flat=True
+        # Split the work into multiple tasks to avoid the time
+        # limit on how long a task can run before being stale.
+        update_features_split_tests.delay(
+            kwargs={"feature_id": feature.id},
         )
 
-        qs_values_list = FeatureEvaluationRaw.objects.filter(
-            feature_name=feature.name,
-            environment_id__in=environment_ids,
-            identity_identifier__isnull=False,
-        ).values_list("environment_id", "identity_identifier")
 
-        # Eliminate duplicate identifiers
-        qs_values_list = qs_values_list.distinct()
+@register_task_handler()
+def update_features_split_tests(feature_id: int) -> None:
+    assert settings.USE_POSTGRES_FOR_ANALYTICS
 
-        environment_identifiers = defaultdict(list)
-        for environment_id, identity_identifier in qs_values_list:
-            environment_identifiers[environment_id].append(identity_identifier)
+    feature = Feature.objects.get(id=feature_id)
+    environment_ids = feature.feature_states.all().values_list(
+        "environment_id", flat=True
+    )
 
-        for (
-            environment_id,
-            evaluated_identity_identifiers,
-        ) in environment_identifiers.items():
-            _save_environment_split_test(
-                feature=feature,
-                environment_id=environment_id,
-                evaluated_identity_identifiers=evaluated_identity_identifiers,
-            )
+    qs_values_list = FeatureEvaluationRaw.objects.filter(
+        feature_name=feature.name,
+        environment_id__in=environment_ids,
+        identity_identifier__isnull=False,
+    ).values_list("environment_id", "identity_identifier")
+
+    # Eliminate duplicate identifiers
+    qs_values_list = qs_values_list.distinct()
+
+    environment_identifiers = defaultdict(list)
+    for environment_id, identity_identifier in qs_values_list:
+        environment_identifiers[environment_id].append(identity_identifier)
+
+    for (
+        environment_id,
+        evaluated_identity_identifiers,
+    ) in environment_identifiers.items():
+        _save_environment_split_test(
+            feature=feature,
+            environment_id=environment_id,
+            evaluated_identity_identifiers=evaluated_identity_identifiers,
+        )
 
 
 def _save_environment_split_test(
