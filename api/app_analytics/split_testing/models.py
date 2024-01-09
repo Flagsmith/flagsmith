@@ -29,7 +29,7 @@ class SplitTest(models.Model):
     )
 
     multivariate_feature_option = models.ForeignKey(
-        MultivariateFeatureOption, on_delete=models.CASCADE
+        MultivariateFeatureOption, on_delete=models.CASCADE, null=True
     )
 
     # Populated from the existing split testing tasks.py to the
