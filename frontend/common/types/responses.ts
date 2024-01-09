@@ -313,11 +313,17 @@ export type RolePermissionUser = {
 }
 
 export type metadata = {
-  id: 0
+  id: number
   name: string
   type: number
   description?: string
-  organisation: 0
+  organisation: number
+}
+
+export type ContentType = {
+  id: number
+  app_label: string
+  model: stringß
 }
 
 export type Res = {
@@ -404,5 +410,6 @@ export type Res = {
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   groupSummaries: UserGroupSummary[]
+  supportedContentType: ContentType[]
   // END OF TYPES
 }

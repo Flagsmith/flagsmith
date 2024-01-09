@@ -157,5 +157,6 @@ export type Req = {
   getGroupSummaries: {
     orgId: string
   }
+  getSupportedContentType: { org_id: string }
   // END OF TYPES
 }
