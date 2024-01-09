@@ -71,7 +71,9 @@ const OrganisationSettingsPage = class extends Component {
   }
 
   onSave = () => {
-    toast('Saved organisation')
+    this.setState({ name: null }, () => {
+      toast('Saved organisation')
+    })
   }
 
   confirmRemove = (organisation, cb) => {
