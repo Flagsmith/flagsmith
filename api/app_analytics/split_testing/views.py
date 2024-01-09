@@ -1,4 +1,4 @@
-from django.db.models import QuerySet
+from django.db.models import F, QuerySet
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, viewsets
@@ -38,5 +38,9 @@ class SplitTestViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
 
         # In order to keep split test results in the same order
         # between refreshes, order first by the feature name then
-        # by the multivariate feature option id.
-        return qs.order_by("feature__name", "multivariate_feature_option")
+        # by the control (the null multivariate) and lastly by
+        # the multivariate feature option id.
+        return qs.order_by(
+            "feature__name",
+            F("multivariate_feature_option").asc(nulls_first=True),
+        )
