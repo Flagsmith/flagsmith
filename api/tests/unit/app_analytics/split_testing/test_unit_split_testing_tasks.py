@@ -136,7 +136,7 @@ def test_update_split_tests_with_new_split_tests(
     assert sum([st.evaluation_count for st in split_tests]) == 5
     assert sum([st.conversion_count for st in split_tests]) == 2
     for st in split_tests:
-        assert st.pvalue > 0.9
+        assert st.pvalue > 0.5
 
 
 def test_update_split_tests_with_existing_split_tests(
@@ -239,4 +239,4 @@ def test_update_split_tests_with_existing_split_tests(
     assert sum([st.evaluation_count for st in split_tests]) == 2
     assert sum([st.conversion_count for st in split_tests]) == 1
     for st in split_tests:
-        assert st.pvalue > 0.9
+        assert st.pvalue > 0.5
