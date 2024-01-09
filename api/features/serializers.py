@@ -257,8 +257,7 @@ class FeatureSerializerWithMetadata(
     def get_project(self, validated_data: dict = None) -> Project:
         view = self.context.get("view")
 
-        if view and "project_pk" in view.kwargs:
-            project_pk = view.kwargs["project_pk"]
+        if view and (project_pk := view.kwargs.get("project_pk")):
             try:
                 return Project.objects.get(pk=project_pk)
             except Project.DoesNotExist:
