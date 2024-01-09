@@ -10,7 +10,7 @@ from django.utils import timezone
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.feature_types import MULTIVARIATE
-from features.models import Feature
+from features.models import Feature, FeatureStateValue
 from task_processor.decorators import register_recurring_task
 
 # TODO: This if-statement will be replaced with a separate
@@ -79,6 +79,10 @@ def _save_environment_split_test(
         evaluation_counts[mv_option.id] = 0
         conversion_counts[mv_option.id] = 0
 
+    # For when falling back to the control group ie, FeatureStateValue.
+    evaluation_counts[None] = 0
+    conversion_counts[None] = 0
+
     # Only consider identities that have observed the evalauted
     # feature, since the conversion event can be viewed by others
     # who have not seen the feature at all, and thus out of scope.
@@ -94,9 +98,18 @@ def _save_environment_split_test(
             environment.use_identity_composite_key_for_hashing
         )
         mvfo = feature_state.get_multivariate_feature_state_value(identity_hash_key)
-        evaluation_counts[mvfo.id] += 1
+
+        # Use the null id for the control group.
+        if isinstance(mvfo, FeatureStateValue):
+            _id = None
+
+        # Use the normal multivariate feature option id otherwise.
+        else:
+            _id = mvfo.id
+
+        evaluation_counts[_id] += 1
         if evaluated_identity in conversion_identities:
-            conversion_counts[mvfo.id] += 1
+            conversion_counts[_id] += 1
 
     pvalue = gather_split_test_metrics(
         evaluation_counts,
@@ -113,9 +126,14 @@ def _save_environment_split_test(
     for mv_feature_option_id, evaluation_count in evaluation_counts.items():
         conversion_count = conversion_counts[mv_feature_option_id]
 
-        existing_split_test = qs_existing_split_tests.filter(
-            multivariate_feature_option_id=mv_feature_option_id
-        ).first()
+        if mv_feature_option_id is None:
+            existing_split_test = qs_existing_split_tests.filter(
+                multivariate_feature_option_id__isnull=True
+            ).first()
+        else:
+            existing_split_test = qs_existing_split_tests.filter(
+                multivariate_feature_option_id=mv_feature_option_id
+            ).first()
 
         if existing_split_test:
             existing_split_test.evaluation_count = evaluation_count
