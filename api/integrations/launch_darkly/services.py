@@ -119,8 +119,15 @@ def _create_tags_from_ld(
     return tags_by_ld_tag
 
 
-# Based on: https://docs.launchdarkly.com/sdk/concepts/flag-evaluation-rules#operators
 def _ld_operator_to_flagsmith_operator(ld_operator: str) -> Optional[str]:
+    """
+    Convert a Launch Darkly operator to its closest Flagsmith equivalent. If not convertible, return None.
+
+    Based on: https://docs.launchdarkly.com/sdk/concepts/flag-evaluation-rules#operators
+
+    :param ld_operator: the operator of the targeting rule.
+    :return: the closest Flagsmith equivalent of the given Launch Darkly operator.
+    """
     return {
         "in": constants.IN,
         "endsWith": constants.REGEX,
@@ -140,8 +147,21 @@ def _ld_operator_to_flagsmith_operator(ld_operator: str) -> Optional[str]:
 
 
 def _convert_ld_values(values: list[str], ld_operator: str) -> list[str]:
+    """
+    Convert "values" of a Launch Darkly clause to Flagsmith compatible values. Some matching is converted to
+    regex and some matching is consolidated into a single value. For example, if "in" operator is used, we join
+    the values using the comma separator to make it Flagsmith-compliant.
+
+    Note that a separate Clause should be created for each value in the lis and those clauses should be "OR"ed.
+    This is how Launch Darkly handles multiple values for a single operator such as less than.
+
+    :param values: the list of values from Launch Darkly's targeting rule.
+    :param ld_operator: the operator of the targeting rule.
+    :return: a list of values that is Flagsmith-compliant.
+    """
     match ld_operator:
         case "in":
+            # TODO: How to escape the comma itself?
             return list([",".join(values)])
         case "endsWith":
             return [".*" + re.escape(value) for value in values]
@@ -154,33 +174,59 @@ def _convert_ld_values(values: list[str], ld_operator: str) -> list[str]:
 
 
 def _get_segment_name(name: str, env: str) -> str:
+    """
+    Generate a unique and descriptive name for the segment. This name is re-used on consecutive imports to
+    prevent duplicate segments.
+
+    :param name: Name of the Launch Darkly segment.
+    :param env: Environment name of the Launch Darkly segment.
+    :return: A unique and descriptive name for the segment targeting a specific environment.
+    """
     return f"{name} (Override for {env})"
 
 
-def _create_feature_segment_from_segment_match(
+def _create_feature_segments_for_segment_match_clauses(
     clauses: list[Clause],
     project: Project,
     feature: Feature,
     environment: Environment,
     segments_by_ld_key: dict[str, Segment],
-) -> None:
+) -> list[FeatureSegment]:
+    """
+    Creates a feature segment if a rule contains "segmentMatch" operator. This shouldn't be used if clauses
+    doesn't contain "segmentMatch" operator. Instead use "_create_feature_segment_from_clauses".
+
+    This method can only accept clauses that contains "segmentMatch" operator. If there are other operators,
+    we can't create corresponding Feature Segments. This is a technical limitation of how "FeatureSegment" is
+    implemented in Flagsmith.
+
+    :param clauses: a list of clauses from Launch Darkly's targeting rule.
+    :param feature: the feature to target for the segment.
+    :param segments_by_ld_key: a mapping from Launch Darkly segment key to Segment. Used to find right segment
+    from the "segmentMatch" operator
+    :return: a list of "FeatureSegment" operators created for each "segmentMatch" operator.
+    """
+
     if any(clause["op"] != "segmentMatch" for clause in clauses):
         logger.warning(
             f"Nested segment match is not supported, skipping for {feature.name} in {environment.name}"
         )
-        return
+        return []
 
     if any(clause["negate"] is True for clause in clauses):
         logger.warning(
             f"Negated segment match is not supported, skipping for {feature.name} in {environment.name}"
         )
-        return
+        return []
 
-        # Complex rules that allow matching segments is not allowed in Flagsmith.
-        # We can only emulate a single segment match by enabling the segment rule.
+    # Complex rules that allow matching segments is not allowed in Flagsmith.
+    # We can only emulate a single segment match by enabling the segment rule.
     all_targeted_segments: list[str] = sum([clause["values"] for clause in clauses], [])
+    feature_states: list[FeatureState] = []
     for index, targeted_segment_key in enumerate(all_targeted_segments):
         targeted_segment_name = segments_by_ld_key[targeted_segment_key].name
+
+        # We assume segment is already created.
         segment = Segment.objects.get(name=targeted_segment_name, project=project)
 
         feature_segment, _ = FeatureSegment.objects.update_or_create(
@@ -191,42 +237,32 @@ def _create_feature_segment_from_segment_match(
         )
 
         # Enable rules by default. In LD, rules are enabled if the flag is on.
-        FeatureState.objects.update_or_create(
+        feature_state, _ = FeatureState.objects.update_or_create(
             feature=feature,
             feature_segment=feature_segment,
             environment=environment,
             defaults={"enabled": True},
         )
-    return
+
+        feature_states.append(feature_state)
+
+    return feature_states
 
 
-def _create_feature_segment_from_clauses(
+def _create_segment_rule_for_segment(
+    segment: Segment,
     clauses: list[Clause],
-    project: Project,
-    feature: Feature,
-    environment: Environment,
-    segments_by_ld_key: dict[str, Segment],
-    name: str,
-) -> None:
-    if "segmentMatch" in [clause["op"] for clause in clauses]:
-        _create_feature_segment_from_segment_match(
-            clauses=clauses,
-            project=project,
-            feature=feature,
-            environment=environment,
-            segments_by_ld_key=segments_by_ld_key,
-        )
+) -> SegmentRule:
+    """
+    Create the SegmentRule for the given segment and clauses. This method doesn't handle any feature-specific
+    segments. Use "_create_feature_segment_from_clauses" for that.
 
-    segment, _ = Segment.objects.update_or_create(
-        name=name, project=project, feature=feature
-    )
+    :param segment: the segment to create the rule for.
+    :param clauses: a list of clauses from Launch Darkly's segment rule. This describes which identities belong
+    to the given segment.
+    :return: the SegmentRule created for the given segment.
+    """
 
-    # A parent rule has two children: one for the regular conditions and multiple for the negated conditions
-    # Mathematically, this is equivalent to:
-    # all(X, Y, !Z) = all(X, Y, none(Z))
-    # Or with more parameters,
-    # all(X, Y, !Z, !W) = all(X, Y, none(Z), none(W))
-    # Since there is no !X operation in Flagsmith, we wrap negated conditions in a none() rule.
     parent_rule, _ = SegmentRule.objects.get_or_create(
         segment=segment, type=SegmentRule.ALL_RULE
     )
@@ -235,13 +271,16 @@ def _create_feature_segment_from_clauses(
     negated_child = None
 
     for clause in clauses:
-        operator = _ld_operator_to_flagsmith_operator(clause["op"])
-        values = _convert_ld_values(clause["values"], clause["op"])
         _property = clause["attribute"]
+        operator = _ld_operator_to_flagsmith_operator(clause["op"])
+        values = _convert_ld_values(
+            [str(value) for value in clause["values"]], clause["op"]
+        )
 
         if operator is not None:
-            # Negated conditions are wrapped in a none() rule, otherwise they are added to the all() rule.
+            # Since there is no !X operation in Flagsmith, we wrap negated conditions in a none() rule.
             if clause["negate"] is True:
+                # Create a negated child if it doesn't exist.
                 if negated_child is None:
                     negated_child = SegmentRule.objects.create(
                         rule=parent_rule, type=SegmentRule.NONE_RULE
@@ -249,11 +288,15 @@ def _create_feature_segment_from_clauses(
 
                 target_rule = negated_child
             else:
+                # Create a new child rule if it doesn't exist. Each child rule is "AND"ed together because
+                # parent_rule has type of `ALL`. Also note that each Condition added to this child rule is
+                # "OR"ed together. This is also how Launch Darkly works.
                 child_rule = SegmentRule.objects.create(
                     rule=parent_rule, type=SegmentRule.ANY_RULE
                 )
                 target_rule = child_rule
 
+            # Create a condition for each value. Each condition is "OR"ed together.
             for value in values:
                 condition, _ = Condition.objects.update_or_create(
                     rule=target_rule,
@@ -262,28 +305,77 @@ def _create_feature_segment_from_clauses(
                     operator=operator,
                     created_with_segment=True,
                 )
-                logger.warning("Condition created: " + str(condition))
 
         else:
             logger.warning(
                 "Can't map launch darkly operator: " + clause["op"] + ", skipping..."
             )
 
+    return parent_rule
+
+
+def _create_feature_segment_from_clauses(
+    clauses: list[Clause],
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    segments_by_ld_key: dict[str, Segment],
+    rule_name: str,
+) -> list[FeatureState]:
+    """
+    Create one or multiple feature-specific segment for the given clauses. Note that "segmentMatch" operator
+    is not fully supported. If "segmentMatch" is used, we create a feature rule for the given segment(s) instead
+    of a feature-specific segment. Thus, we return multiple feature states if there are multiple segments being
+    targeted.
+
+    Also note that "segmentMatch" operator is not supported for nested rules. If a nested rule contains
+    "segmentMatch", it can't use any other targeting operators. This is because we convert "segmentMatch" into
+    a segment specific feature value, thus no further filter can be applied.
+
+    :param clauses: a list of clauses from Launch Darkly's targeting rule.
+    :param feature: the feature to target for identities.
+    :param segments_by_ld_key: a mapping from Launch Darkly segment key to Segment. Used for "segmentMatch" op.
+    :param rule_name: the name of the rule this feature-specific segment is created for.
+    :return: a list of FeatureState objects for the newly created feature-specific segments.
+    """
+    # There is no "segmentMatch" operator in flagsmith, instead we create a targeting rule for that
+    # specific segment.
+    if "segmentMatch" in [clause["op"] for clause in clauses]:
+        return _create_feature_segments_for_segment_match_clauses(
+            clauses=clauses,
+            project=project,
+            feature=feature,
+            environment=environment,
+            segments_by_ld_key=segments_by_ld_key,
+        )
+
+    # Create a feature specific segment for the rule.
+    segment, _ = Segment.objects.update_or_create(
+        name=rule_name, project=project, feature=feature
+    )
+
+    # Create a targeting rule for the new feature-specific segment.
+    _create_segment_rule_for_segment(
+        segment=segment,
+        clauses=clauses,
+    )
+
+    # Tie the feature and segment together.
     feature_segment, _ = FeatureSegment.objects.update_or_create(
         feature=feature,
         segment=segment,
         environment=environment,
     )
 
-    # TODO: Multistate values are not supported yet.
     # Enable rules by default. In LD, rules are enabled if the flag is on.
-    FeatureState.objects.update_or_create(
-        feature=feature,
-        feature_segment=feature_segment,
-        environment=environment,
-        defaults={"enabled": True},
-    )
-    return
+    return [
+        FeatureState.objects.update_or_create(
+            feature=feature,
+            feature_segment=feature_segment,
+            environment=environment,
+            defaults={"enabled": True},
+        )[0]
+    ]
 
 
 def _import_targets(
@@ -291,6 +383,14 @@ def _import_targets(
     feature: Feature,
     environment: Environment,
 ) -> None:
+    """
+    Import the individual targeting rules for the given Launch Darkly's feature flag.
+
+    :param ld_flag_config: the feature flag config from Launch Darkly.
+    :param feature: the feature to target for identities.
+    :return:
+    """
+    # TODO: Update flag states for individual targets.
     if "targets" in ld_flag_config:
         logger.warning("Targets: " + str(ld_flag_config["targets"]))
 
@@ -304,19 +404,36 @@ def _import_rules(
     environment: Environment,
     variations_by_idx: dict[str, ld_types.Variation],
     segments_by_ld_key: dict[str, Segment],
+    mv_feature_options_by_variation: dict[str, MultivariateFeatureOption],
 ) -> None:
-    if "rules" in ld_flag_config and len(ld_flag_config["rules"]) > 0:
-        logger.warning("Rules: " + str(ld_flag_config["rules"]))
+    """
+    Import each rule in the given Launch Darkly's feature flag as a feature-specific segment in Flagsmith.
+
+    :param ld_flag_config: the feature flag config from Launch Darkly.
+    :param feature: the feature to import the rules to.
+    :param variations_by_idx: a mapping from variation index to variation. Used for multivariate flags.
+    :param segments_by_ld_key: a mapping from Launch Darkly segment key to Segment. Used for "segmentMatch" op.
+    :param mv_feature_options_by_variation: a mapping from variation index to MultivariateFeatureOption if the
+    flag is multivariate. Used for setting multivariate flag weights.
+    """
+    # For each rule in LD's flag,
+    if "rules" in ld_flag_config:
         for rule in ld_flag_config["rules"]:
+            # Find the corresponding targeted variation, note that this is "None" if a rollout is used.
             variation = (
                 variations_by_idx[str(rule["variation"])]["value"]
                 if "variation" in rule
-                else rule["rollout"]
+                else None
             )
-            rule_name = rule.get("description", "imported-" + rule["_id"])
+            # Find the corresponding rollout, note that this is "None" if a variation is used. (100% rollout)
+            rollout = rule["rollout"] if "rollout" in rule else None
 
-            logger.warning("Rule found: " + rule_name + " : " + str(variation))
-            _create_feature_segment_from_clauses(
+            # Generate a unique and descriptive name for the rule. This name is re-used on consecutive imports
+            # to prevent duplicate rules.
+            rule_name = rule.get("description", "imported-" + rule["_id"])
+            # Create the feature segment for the given rule and get the feature state objects from those
+            # newly created feature-specific segments.
+            feature_states = _create_feature_segment_from_clauses(
                 rule["clauses"],
                 feature.project,
                 feature,
@@ -324,6 +441,30 @@ def _import_rules(
                 segments_by_ld_key,
                 rule_name,
             )
+
+            # For Multivariate flags, we need to set targeting rules for each variation.
+            if len(mv_feature_options_by_variation) > 0:
+                # For each feature state,
+                for feature_state in feature_states:
+                    if variation is not None:
+                        for variation in mv_feature_options_by_variation:
+                            mv_feature_option = mv_feature_options_by_variation[
+                                variation
+                            ]
+                            # We expect only one variation to be set as the control.
+                            # Control value is set to 100% and rest is set to 0%.
+                            MultivariateFeatureStateValue.objects.update_or_create(
+                                feature_state=feature_state,
+                                multivariate_feature_option=mv_feature_option,
+                                defaults={
+                                    "percentage_allocation": 100
+                                    if str(rule["variation"]) == variation
+                                    else 0
+                                },
+                            )
+                    elif rollout is not None:
+                        logger.warning("Rollout is: " + str(rollout))
+                        # TODO: Complete rollout logic
 
 
 def _create_boolean_feature_states(
@@ -351,7 +492,12 @@ def _create_boolean_feature_states(
 
         _import_targets(ld_flag_config, feature, environment)
         _import_rules(
-            ld_flag_config, feature, environment, variations_by_idx, segments_by_ld_key
+            ld_flag_config,
+            feature,
+            environment,
+            variations_by_idx,
+            segments_by_ld_key,
+            mv_feature_options_by_variation={},
         )
 
 
@@ -397,7 +543,12 @@ def _create_string_feature_states(
 
         _import_targets(ld_flag_config, feature, environment)
         _import_rules(
-            ld_flag_config, feature, environment, variations_by_idx, segments_by_ld_key
+            ld_flag_config,
+            feature,
+            environment,
+            variations_by_idx,
+            segments_by_ld_key,
+            mv_feature_options_by_variation={},
         )
 
 
@@ -482,7 +633,12 @@ def _create_mv_feature_states(
 
         _import_targets(ld_flag_config, feature, environment)
         _import_rules(
-            ld_flag_config, feature, environment, variations_by_idx, segments_by_ld_key
+            ld_flag_config,
+            feature,
+            environment,
+            variations_by_idx,
+            segments_by_ld_key,
+            mv_feature_options_by_variation=mv_feature_options_by_variation,
         )
 
 
@@ -573,6 +729,7 @@ def _create_segments_from_ld(
     project_id: int,
 ) -> dict[str, Segment]:
     """
+    Create segments from the given Launch Darkly segments. This also creates inclusion rules for segments.
 
     :param ld_segments: A list of mapping from (env, segment).
     :return A mapping from ld segment key to Segment itself.
@@ -582,6 +739,7 @@ def _create_segments_from_ld(
         if ld_segment["deleted"]:
             continue
 
+        # Make sure consecutive updates do not create the same segment.
         segment, _ = Segment.objects.update_or_create(
             name=_get_segment_name(ld_segment["name"], env),
             project_id=project_id,
@@ -591,8 +749,21 @@ def _create_segments_from_ld(
 
         # TODO: Tagging segments is not supported yet. https://github.com/Flagsmith/flagsmith/issues/3241
 
-        # TODO: Create rules
-        logger.warning("Segment rules: " + str(ld_segment["rules"]))
+        # Create the segment rule for the segment.
+        rules = ld_segment["rules"]
+        for rule in rules:
+            _create_segment_rule_for_segment(
+                segment,
+                rule["clauses"],
+            )
+
+        # Create an empty rule if there are no rules. This is required to create an "SegmentRule" object.
+        # Otherwise UI fails to display the segment.
+        if len(rules) == 0:
+            _create_segment_rule_for_segment(
+                segment,
+                [],
+            )
 
         # TODO: Import users
         logger.warning("Included segment users: " + str(ld_segment["included"]))

@@ -279,9 +279,6 @@ def test_process_import_request__rules_imported(
         "imported-56725db6-3d2a-4ed6-a2a1-60ef94ac62d5",
         "imported-a132f4aa-ad51-43c6-8d03-f18d6a5b205d",
         "imported-c034ec70-fcb3-4c15-9bea-b9fa0b341b4f",
-        "imported-23b14914-3136-40f5-a64a-cdb3110a5277",
-        "imported-d866a669-b439-4506-9ae6-83ea0e30ea38",
-        "imported-dca5eadf-851e-4696-bb45-0fcce26944ba",
     }
 
     # Tests for "Regular And"
