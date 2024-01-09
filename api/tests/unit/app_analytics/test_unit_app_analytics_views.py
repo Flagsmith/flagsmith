@@ -40,7 +40,11 @@ def test_sdk_analytics_allows_valid_data(mocker, settings, environment, feature)
     settings.INFLUXDB_TOKEN = "some-token"
 
     data = {feature.name: 12}
-    request = mocker.MagicMock(data=data, environment=environment)
+    request = mocker.MagicMock(
+        data=data,
+        environment=environment,
+        query_params={},
+    )
 
     view = SDKAnalyticsFlags(request=request)
 
