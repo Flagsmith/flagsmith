@@ -4,12 +4,12 @@ from unittest import mock
 import pytest
 from django.urls import reverse
 from rest_framework import status
+
+from features.feature_types import MULTIVARIATE
 from tests.integration.helpers import (
     create_feature_with_api,
     create_mv_option_with_api,
 )
-
-from features.feature_types import MULTIVARIATE
 
 variant_1_value = "variant-1-value"
 variant_2_value = "variant-2-value"

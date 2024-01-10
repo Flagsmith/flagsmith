@@ -1,4 +1,3 @@
-from typing import Callable
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -19,6 +18,7 @@ from projects.permissions import (
     VIEW_PROJECT,
     NestedProjectPermissions,
 )
+from tests.types import WithProjectPermissionsCallable
 from users.models import FFAdminUser, UserPermissionGroup
 
 
@@ -66,7 +66,7 @@ def test_project_admin_can_list_features(
 def test_project_user_with_read_access_can_list_features(
     staff_user: FFAdminUser,
     project: Project,
-    with_project_permissions: Callable[[list[str], int], None],
+    with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
@@ -258,7 +258,7 @@ def test_project_admin_can_view_feature(
 def test_project_user_with_view_project_permission_can_view_feature(
     staff_user: FFAdminUser,
     project: Project,
-    with_project_permissions: Callable[[list[str], int], None],
+    with_project_permissions: WithProjectPermissionsCallable,
     feature: Feature,
 ) -> None:
     # Given
@@ -344,7 +344,7 @@ def test_project_admin_can_edit_feature(
 def test_project_user_cannot_edit_feature(
     action: str,
     staff_user: FFAdminUser,
-    with_project_permissions: Callable[[list[str], int], None],
+    with_project_permissions: WithProjectPermissionsCallable,
     feature: Feature,
 ) -> None:
     # Given
@@ -398,7 +398,7 @@ def test_project_admin_can_delete_feature(
 
 def test_project_user_with_delete_feature_permission_can_delete_feature(
     staff_user: FFAdminUser,
-    with_project_permissions: Callable[[list[str], int], None],
+    with_project_permissions: WithProjectPermissionsCallable,
     feature: Feature,
 ) -> None:
     # Given

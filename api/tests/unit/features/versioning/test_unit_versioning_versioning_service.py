@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.db.models import Q
 from django.utils import timezone
 
@@ -6,6 +8,7 @@ from environments.models import Environment
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.versioning_service import (
+    get_current_live_environment_feature_version,
     get_environment_flags_list,
     get_environment_flags_queryset,
 )
@@ -145,3 +148,32 @@ def test_get_environment_flags_v2_versioning_returns_latest_live_versions_of_fea
         environment_feature_1_version_2_feature_state,
         environment_feature_2_version_1_feature_state,
     }
+
+
+def test_get_current_live_environment_feature_version(
+    environment_v2_versioning: Environment, staff_user: FFAdminUser, feature: Feature
+) -> None:
+    # Given
+    # The initial version
+    version_1 = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    # and an unpublished version
+    EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    # and a version that is published but not yet live
+    future_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    future_version.publish(staff_user, live_from=timezone.now() + timedelta(days=1))
+
+    # When
+    latest_version = get_current_live_environment_feature_version(
+        environment_id=environment_v2_versioning.id, feature_id=feature.id
+    )
+
+    # Then
+    assert latest_version == version_1

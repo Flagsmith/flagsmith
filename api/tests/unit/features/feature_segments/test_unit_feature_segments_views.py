@@ -1,30 +1,39 @@
 import json
-from typing import Callable
 
 import pytest
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from environments.models import Environment
 from environments.permissions.constants import (
     MANAGE_SEGMENT_OVERRIDES,
     UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
 )
-from features.models import Feature, FeatureSegment
+from features.models import Feature, FeatureSegment, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from projects.models import Project, UserProjectPermission
 from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
+from tests.types import (
+    WithEnvironmentPermissionsCallable,
+    WithProjectPermissionsCallable,
+)
 from users.models import FFAdminUser
 
 
 @pytest.mark.parametrize(
     "client, num_queries",
     [
-        (lazy_fixture("admin_client"), 2),  # 1 for paging, 1 for result
+        (
+            lazy_fixture("admin_client"),
+            3,
+        ),  # 1 for paging, 1 for result, 1 for getting the current live version
         (
             lazy_fixture("admin_master_api_key_client"),
-            3,
+            4,
         ),  # an extra one for master_api_key
     ],
 )
@@ -152,7 +161,7 @@ def test_create_feature_segment_staff_with_permission(
     environment: Environment,
     staff_client: FFAdminUser,
     staff_user: FFAdminUser,
-    with_environment_permissions: Callable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
     # Given
     data = {
@@ -178,7 +187,7 @@ def test_create_feature_segment_staff_wrong_permission(
     environment: Environment,
     staff_client: FFAdminUser,
     staff_user: FFAdminUser,
-    with_environment_permissions: Callable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
 ):
     # Given
     data = {
@@ -265,7 +274,7 @@ def test_update_priority_for_staff(
     feature: Feature,
     staff_client: FFAdminUser,
     staff_user: FFAdminUser,
-    with_environment_permissions: Callable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
     # Given
     url = reverse("api-v1:features:feature-segment-update-priorities")
@@ -353,8 +362,8 @@ def test_get_feature_segment_by_uuid_for_staff(
     staff_user: FFAdminUser,
     environment: Environment,
     feature: Feature,
-    with_environment_permissions: Callable,
-    with_project_permissions: Callable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
     url = reverse(
@@ -415,7 +424,7 @@ def test_get_feature_segment_by_id_for_staff(
     staff_user: FFAdminUser,
     environment: Environment,
     feature: Feature,
-    with_environment_permissions: Callable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
 ):
     # Given
     url = reverse("api-v1:features:feature-segment-detail", args=[feature_segment.id])
@@ -519,3 +528,71 @@ def test_creating_segment_override_reaching_max_limit(
         == "The environment has reached the maximum allowed segments overrides limit."
     )
     assert environment.feature_segments.count() == 1
+
+
+def test_get_feature_segments_only_returns_latest_version(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    project: Project,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given
+    url = "%s?feature=%d&environment=%d" % (
+        reverse("api-v1:features:feature-segment-list"),
+        feature.id,
+        environment_v2_versioning.id,
+    )
+    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([VIEW_ENVIRONMENT])
+
+    # grab the current version (v0)
+    version_0 = EnvironmentFeatureVersion.objects.get(
+        feature=feature, environment=environment_v2_versioning
+    )
+    assert version_0
+
+    # now let's create a new version with a segment override
+    version_1 = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+    feature_segment_v1 = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment_v2_versioning,
+        environment_feature_version=version_1,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        feature_segment=feature_segment_v1,
+        environment_feature_version=version_1,
+    )
+    version_1.publish(staff_user, persist=True)
+
+    # and let's create another new version, which will trigger a duplication
+    # of the feature segment into the new version
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    version_2.publish(published_by=staff_user, persist=True)
+
+    # Let's grab the latest versioned feature segment, so we can check for it's
+    # (exclusive) existence in the response from the API.
+    feature_segment_v2 = FeatureSegment.objects.get(
+        feature=feature, segment=segment, environment_feature_version=version_2
+    )
+    assert feature_segment_v2 != feature_segment_v1
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["id"] == feature_segment_v2.id

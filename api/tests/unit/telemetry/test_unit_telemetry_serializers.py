@@ -2,6 +2,7 @@ from unittest import mock
 
 from django.test import override_settings
 from telemetry.serializers import TelemetrySerializer
+
 from tests.unit.telemetry.helpers import get_example_telemetry_data
 
 

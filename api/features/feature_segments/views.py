@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
+from environments.models import Environment
 from features.feature_segments.serializers import (
     FeatureSegmentChangePrioritiesSerializer,
     FeatureSegmentCreateSerializer,
@@ -14,6 +15,9 @@ from features.feature_segments.serializers import (
     FeatureSegmentQuerySerializer,
 )
 from features.models import FeatureSegment
+from features.versioning.versioning_service import (
+    get_current_live_environment_feature_version,
+)
 from projects.permissions import VIEW_PROJECT
 
 from .permissions import FeatureSegmentPermissions
@@ -53,6 +57,17 @@ class FeatureSegmentViewSet(
                 data=self.request.query_params
             )
             filter_serializer.is_valid(raise_exception=True)
+
+            environment_id = filter_serializer.validated_data["environment"]
+            environment = Environment.objects.get(id=environment_id)
+            if environment.use_v2_feature_versioning:
+                queryset = queryset.filter(
+                    environment_feature_version=get_current_live_environment_feature_version(
+                        environment_id=environment_id,
+                        feature_id=filter_serializer.validated_data["feature"],
+                    )
+                )
+
             return queryset.select_related("segment").filter(**filter_serializer.data)
 
         return queryset

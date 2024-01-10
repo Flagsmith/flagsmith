@@ -3,6 +3,7 @@ from unittest import mock
 
 import responses
 from telemetry.telemetry import SelfHostedTelemetryWrapper
+
 from tests.unit.telemetry.helpers import get_example_telemetry_data
 
 

@@ -4,6 +4,7 @@ from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
 
 from features.models import FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
@@ -50,6 +51,7 @@ def get_environment_flags_list(
             "feature",
             "feature_state_value",
             "environment_feature_version",
+            "feature_segment",
             *additional_select_related_args,
         )
         .prefetch_related(*additional_prefetch_related_args)
@@ -63,7 +65,7 @@ def get_environment_flags_list(
     for feature_state in feature_states:
         key = (
             feature_state.feature_id,
-            feature_state.feature_segment_id,
+            getattr(feature_state.feature_segment, "segment_id", None),
             feature_state.identity_id,
         )
         current_feature_state = feature_states_dict.get(key)
@@ -71,6 +73,21 @@ def get_environment_flags_list(
             feature_states_dict[key] = feature_state
 
     return list(feature_states_dict.values())
+
+
+def get_current_live_environment_feature_version(
+    environment_id: int, feature_id: int
+) -> EnvironmentFeatureVersion | None:
+    return (
+        EnvironmentFeatureVersion.objects.filter(
+            environment_id=environment_id,
+            feature_id=feature_id,
+            published_at__isnull=False,
+            live_from__lte=timezone.now(),
+        )
+        .order_by("-live_from")
+        .first()
+    )
 
 
 def _build_environment_flags_qs_filter(

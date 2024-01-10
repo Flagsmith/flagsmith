@@ -1,5 +1,3 @@
-from typing import Callable
-
 from django.urls import reverse
 from pytest_mock import MockerFixture
 from rest_framework import status
@@ -16,6 +14,7 @@ from environments.permissions.constants import (
 )
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import Feature
+from tests.types import WithEnvironmentPermissionsCallable
 
 
 def test_edge_identity_view_set_get_permissions():
@@ -97,7 +96,7 @@ def test_edge_identity_viewset_returns_404_for_invalid_environment_key(admin_cli
 
 def test_get_edge_identity_overrides_for_a_feature(
     staff_client: APIClient,
-    with_environment_permissions: Callable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
     mocker: MockerFixture,
     feature: Feature,
     environment: Environment,
@@ -166,7 +165,7 @@ def test_get_edge_identity_overrides_for_a_feature(
 
 def test_user_without_manage_identities_permission_cannot_get_edge_identity_overrides_for_a_feature(
     staff_client: APIClient,
-    with_environment_permissions: Callable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
     feature: Feature,
     environment: Environment,
 ) -> None:
