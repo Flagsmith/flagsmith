@@ -6,7 +6,7 @@ import { informationCircle } from 'ionicons/icons'
 import AppActions from 'common/dispatcher/app-actions'
 import ProjectStore from 'common/stores/project-store'
 import Radio from 'components/base/forms/Radio'
-import { ImportStrategy } from 'common/types/requests'
+import { ImportStrategy } from 'common/types/responses'
 import JSONUpload from 'components/JSONUpload'
 import PanelSearch from 'components/PanelSearch'
 import {
@@ -29,7 +29,7 @@ import TableTagFilter from 'components/tables/TableTagFilter'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
 import { getViewMode, setViewMode } from 'common/useViewMode'
 import TableSortFilter, { SortValue } from 'components/tables/TableSortFilter'
-import { isArray } from 'lodash'
+import { useGetFeatureImportsQuery } from 'common/services/useFeatureImport'
 
 type FeatureExportType = {
   projectId: string
@@ -42,6 +42,9 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   const [previewEnvironment, setPreviewEnvironment] = useState<string>(
     ProjectStore.getEnvs()?.[0]?.api_key,
   )
+  const { data: featureImports, refetch } = useGetFeatureImportsQuery({
+    projectId,
+  })
   const [tags, setTags] = useState<(number | string)[]>([])
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(0)
@@ -115,6 +118,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           setSuccess(true)
           setFile(null)
           setFileData(null)
+          refetch()
         } else {
           toast('Failed to import flags')
         }
@@ -243,13 +247,25 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
     })
   }, [projectFlags, search, tags, tagStrategy, showArchived])
 
+  const processingImport = useMemo(() => {
+    return featureImports?.find(
+      (featureImport) => featureImport.status === 'PROCESSING',
+    )
+  }, [featureImports])
+  if (processingImport) {
+    return (
+      <div className='mt-4'>
+        <InfoMessage>
+          Your import is processing, it may take several minutes for the import
+          to complete.
+        </InfoMessage>
+      </div>
+    )
+  }
   return (
     <div className='mt-4'>
       {success ? (
-        <SuccessMessage>
-          Your import is processing, it may take several minutes for the import
-          to complete.
-        </SuccessMessage>
+        <SuccessMessage>Your import has been processed.</SuccessMessage>
       ) : (
         <InfoMessage>
           The selected environment will inherit the imported environment's

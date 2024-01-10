@@ -1,4 +1,11 @@
-import { Account, Segment, Tag, FeatureStateValue, Role } from './responses'
+import {
+  Account,
+  Segment,
+  Tag,
+  FeatureStateValue,
+  Role,
+  ImportStrategy,
+} from './responses'
 
 export type PagedRequest<T> = T & {
   page?: number
@@ -7,7 +14,6 @@ export type PagedRequest<T> = T & {
 }
 export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
-export type ImportStrategy = 'SKIP' | 'OVERWRITE_DESTRUCTIVE'
 export type Req = {
   getSegments: PagedRequest<{
     q?: string
@@ -151,6 +157,9 @@ export type Req = {
     environment_id: number | string
     strategy: ImportStrategy
     file: File
+  }
+  getFeatureImports: {
+    projectId: string
   }
   // END OF TYPES
 }

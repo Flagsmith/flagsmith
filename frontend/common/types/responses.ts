@@ -46,6 +46,8 @@ export type Environment = {
   name: string
   api_key: string
   description?: string
+  banner_text?: string
+  banner_colour?: string
   project: number
   minimum_change_request_approvals?: number
   allow_client_traits: boolean
@@ -71,13 +73,23 @@ export type Project = {
   total_segments?: number
   environments: Environment[]
 }
+export type ImportStrategy = 'SKIP' | 'OVERWRITE_DESTRUCTIVE'
 
-export type ExportStatus = 'SUCCESS' | 'PROCESSING' | 'FAILED'
+export type ImportExportStatus = 'SUCCESS' | 'PROCESSING' | 'FAILED'
+
+export type FeatureImport = {
+  id: number
+  status: ImportExportStatus
+  strategy: string
+  environment_id: number
+  created_at: string
+}
+
 export type FeatureExport = {
   id: string
   name: string
   environment_id: string
-  status: ExportStatus
+  status: ImportExportStatus
   created_at: string
 }
 export type FeatureImportItem = {
@@ -402,5 +414,6 @@ export type Res = {
   featureExport: { id: string }
   featureExports: PagedResponse<FeatureExport>
   flagsmithProjectImport: { id: string }
+  featureImports: FeatureImport[]
   // END OF TYPES
 }
