@@ -461,6 +461,10 @@ def test_process_import_request__rules_imported(
         "imported-56725db6-3d2a-4ed6-a2a1-60ef94ac62d5",
         "imported-a132f4aa-ad51-43c6-8d03-f18d6a5b205d",
         "imported-c034ec70-fcb3-4c15-9bea-b9fa0b341b4f",
+        # Individual targeting rules converted as custom segments
+        "individual-targeting-variation-0",
+        "individual-targeting-variation-1",
+        "individual-targeting-variation-2",
     }
 
     # Tests for "Regular And"

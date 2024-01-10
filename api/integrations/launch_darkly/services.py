@@ -392,6 +392,7 @@ def _import_targets(
     ld_flag_config: ld_types.FeatureFlagConfig,
     feature: Feature,
     environment: Environment,
+    segments_by_ld_key: dict[str, Segment],
     mv_feature_options_by_variation: dict[str, MultivariateFeatureOption],
 ) -> None:
     """
@@ -404,7 +405,35 @@ def _import_targets(
     flag is multivariate.
     """
     if "targets" in ld_flag_config:
+        # Identifiers are grouped by their variation index. So each target has the same variation index.
         for target in ld_flag_config["targets"]:
+            # Create a segment override for those identities. This is a work-around to support individual
+            # targeting in local evaluation mode.
+            feature_states = _create_feature_segment_from_clauses(
+                import_request=import_request,
+                clauses=[
+                    {
+                        "attribute": "key",
+                        "op": "in",
+                        "values": target["values"],
+                        "negate": False,
+                    }
+                ],
+                project=feature.project,
+                feature=feature,
+                environment=environment,
+                segments_by_ld_key=segments_by_ld_key,
+                rule_name=f"individual-targeting-variation-{target['variation']}",
+            )
+
+            _set_imported_mv_feature_state_values(
+                variation_idx=str(target["variation"]),
+                rollout=None,
+                feature_states=feature_states,
+                mv_feature_options_by_variation=mv_feature_options_by_variation,
+            )
+
+            # Create individual identity targets.
             for identifier in target["values"]:
                 identity, _ = Identity.objects.get_or_create(
                     identifier=identifier,
@@ -419,7 +448,7 @@ def _import_targets(
                     ]
                 )
 
-                # If not multivariate, we can just set the feature state directly.
+                # Set identity overrides.
                 if len(mv_feature_options_by_variation) == 0:
                     FeatureState.objects.update_or_create(
                         feature=feature,
@@ -448,12 +477,84 @@ def _import_targets(
                         },
                     )
 
-    if "contextTargets" in ld_flag_config:
-        _log_error(
-            import_request=import_request,
-            error_message=f"Context targets are not supported, skipping context targets for feature"
-            f" {feature.name} in environment {environment.name}",
-        )
+    if "contextTargets" in ld_flag_config and len(ld_flag_config["contextTargets"]) > 0:
+        if (
+            sum(
+                [
+                    len(context_target["values"])
+                    for context_target in ld_flag_config["contextTargets"]
+                ]
+            )
+            > 0
+        ):
+            _log_error(
+                import_request=import_request,
+                error_message=f"Context targets are not supported, skipping context targets for feature"
+                f" {feature.name} in environment {environment.name}",
+            )
+
+
+def _set_imported_mv_feature_state_values(
+    variation_idx: Optional[str],
+    rollout: Optional[ld_types.Rollout],
+    feature_states: list[FeatureState],
+    mv_feature_options_by_variation: dict[str, MultivariateFeatureOption],
+) -> None:
+    """
+    Set the feature states and multivariate feature states for recently imported flags.
+    If none of 'variation_idx' and 'rollout' is set, nothing is done. If the flag is not multivariate,
+    nothing is done.
+
+    :param variation_idx: the variation index to set as the control value. This is the launch darkly variation
+    index, not the index of the variation in Flagsmith.
+    :param rollout: the rollout to set as the control value coming from Launch Darkly.
+    :param feature_states: the feature states to set the values for.
+    :param mv_feature_options_by_variation: a mapping from variation index to MultivariateFeatureOption if the
+    flag is multivariate.
+    """
+
+    # For Multivariate flags, we need to set targeting rules for each variation.
+    if len(mv_feature_options_by_variation) > 0:
+        # For each feature state,
+        for feature_state in feature_states:
+            if variation_idx is not None:
+                for mv_variation in mv_feature_options_by_variation:
+                    mv_feature_option = mv_feature_options_by_variation[mv_variation]
+                    # We expect only one variation to be set as the control.
+                    # Control value is set to 100% and rest is set to 0%.
+                    MultivariateFeatureStateValue.objects.update_or_create(
+                        feature_state=feature_state,
+                        multivariate_feature_option=mv_feature_option,
+                        defaults={
+                            "percentage_allocation": 100
+                            if variation_idx == mv_variation
+                            else 0
+                        },
+                    )
+            elif rollout is not None:
+                cumulative_rollout = rollout_baseline = 0
+                for weighted_variation in rollout["variations"]:
+                    # Find the corresponding variation value.
+                    weight = weighted_variation["weight"]
+                    cumulative_rollout += weight / 1000
+                    cumulative_rollout_rounded = round(cumulative_rollout)
+
+                    # LD has weights between 0-100,000. Flagsmith has weights between 0-100.
+                    # While scaling down, we need to keep track of the cumulative rollout so the
+                    # values will add up to 100%.
+                    percentage_allocation = (
+                        cumulative_rollout_rounded - rollout_baseline
+                    )
+                    rollout_baseline = cumulative_rollout_rounded
+
+                    mv_feature_option = mv_feature_options_by_variation[
+                        str(weighted_variation["variation"])
+                    ]
+                    MultivariateFeatureStateValue.objects.update_or_create(
+                        feature_state=feature_state,
+                        multivariate_feature_option=mv_feature_option,
+                        defaults={"percentage_allocation": percentage_allocation},
+                    )
 
 
 def _import_rules(
@@ -461,7 +562,6 @@ def _import_rules(
     ld_flag_config: ld_types.FeatureFlagConfig,
     feature: Feature,
     environment: Environment,
-    variations_by_idx: dict[str, ld_types.Variation],
     segments_by_ld_key: dict[str, Segment],
     mv_feature_options_by_variation: dict[str, MultivariateFeatureOption],
 ) -> None:
@@ -470,23 +570,21 @@ def _import_rules(
 
     :param ld_flag_config: the feature flag config from Launch Darkly.
     :param feature: the feature to import the rules to.
-    :param variations_by_idx: a mapping from variation index to variation. Used for multivariate flags.
     :param segments_by_ld_key: a mapping from Launch Darkly segment key to Segment. Used for "segmentMatch" op.
     :param mv_feature_options_by_variation: a mapping from variation index to MultivariateFeatureOption if the
     flag is multivariate. Used for setting multivariate flag weights.
     """
+
+    if "prerequisites" in ld_flag_config and len(ld_flag_config["prerequisites"]) > 0:
+        _log_error(
+            import_request=import_request,
+            error_message=f"Prerequisites are not supported, skipping prerequisites for feature"
+            f" {feature.name} in environment {environment.name}",
+        )
+
     # For each rule in LD's flag,
     if "rules" in ld_flag_config:
         for rule in ld_flag_config["rules"]:
-            # Find the corresponding targeted variation, note that this is "None" if a rollout is used.
-            variation = (
-                variations_by_idx[str(rule["variation"])]["value"]
-                if "variation" in rule
-                else None
-            )
-            # Find the corresponding rollout, note that this is "None" if a variation is used. (100% rollout)
-            rollout = rule["rollout"] if "rollout" in rule else None
-
             # Generate a unique and descriptive name for the rule. This name is re-used on consecutive imports
             # to prevent duplicate rules.
             rule_name = rule.get("description", "imported-" + rule["_id"])
@@ -502,52 +600,12 @@ def _import_rules(
                 rule_name=rule_name,
             )
 
-            # For Multivariate flags, we need to set targeting rules for each variation.
-            if len(mv_feature_options_by_variation) > 0:
-                # For each feature state,
-                for feature_state in feature_states:
-                    if variation is not None:
-                        for variation in mv_feature_options_by_variation:
-                            mv_feature_option = mv_feature_options_by_variation[
-                                variation
-                            ]
-                            # We expect only one variation to be set as the control.
-                            # Control value is set to 100% and rest is set to 0%.
-                            MultivariateFeatureStateValue.objects.update_or_create(
-                                feature_state=feature_state,
-                                multivariate_feature_option=mv_feature_option,
-                                defaults={
-                                    "percentage_allocation": 100
-                                    if str(rule["variation"]) == variation
-                                    else 0
-                                },
-                            )
-                    elif rollout is not None:
-                        cumulative_rollout = rollout_baseline = 0
-                        for weighted_variation in rollout["variations"]:
-                            # Find the corresponding variation value.
-                            weight = weighted_variation["weight"]
-                            cumulative_rollout += weight / 1000
-                            cumulative_rollout_rounded = round(cumulative_rollout)
-
-                            # LD has weights between 0-100,000. Flagsmith has weights between 0-100.
-                            # While scaling down, we need to keep track of the cumulative rollout so the
-                            # values will add up to 100%.
-                            percentage_allocation = (
-                                cumulative_rollout_rounded - rollout_baseline
-                            )
-                            rollout_baseline = cumulative_rollout_rounded
-
-                            mv_feature_option = mv_feature_options_by_variation[
-                                str(weighted_variation["variation"])
-                            ]
-                            MultivariateFeatureStateValue.objects.update_or_create(
-                                feature_state=feature_state,
-                                multivariate_feature_option=mv_feature_option,
-                                defaults={
-                                    "percentage_allocation": percentage_allocation
-                                },
-                            )
+            _set_imported_mv_feature_state_values(
+                variation_idx=rule.get("variation", None),
+                rollout=rule.get("rollout", None),
+                feature_states=feature_states,
+                mv_feature_options_by_variation=mv_feature_options_by_variation,
+            )
 
 
 def _create_boolean_feature_states(
@@ -557,10 +615,6 @@ def _create_boolean_feature_states(
     environments_by_ld_environment_key: dict[str, Environment],
     segments_by_ld_key: dict[str, Segment],
 ) -> None:
-    variations_by_idx = {
-        str(idx): variation for idx, variation in enumerate(ld_flag["variations"])
-    }
-
     for ld_environment_key, environment in environments_by_ld_environment_key.items():
         ld_flag_config = ld_flag["environments"][ld_environment_key]
         feature_state, _ = FeatureState.objects.update_or_create(
@@ -579,6 +633,7 @@ def _create_boolean_feature_states(
             ld_flag_config=ld_flag_config,
             feature=feature,
             environment=environment,
+            segments_by_ld_key=segments_by_ld_key,
             mv_feature_options_by_variation={},
         )
         _import_rules(
@@ -586,7 +641,6 @@ def _create_boolean_feature_states(
             ld_flag_config=ld_flag_config,
             feature=feature,
             environment=environment,
-            variations_by_idx=variations_by_idx,
             segments_by_ld_key=segments_by_ld_key,
             mv_feature_options_by_variation={},
         )
@@ -638,6 +692,7 @@ def _create_string_feature_states(
             ld_flag_config=ld_flag_config,
             feature=feature,
             environment=environment,
+            segments_by_ld_key=segments_by_ld_key,
             mv_feature_options_by_variation={},
         )
         _import_rules(
@@ -645,7 +700,6 @@ def _create_string_feature_states(
             ld_flag_config=ld_flag_config,
             feature=feature,
             environment=environment,
-            variations_by_idx=variations_by_idx,
             segments_by_ld_key=segments_by_ld_key,
             mv_feature_options_by_variation={},
         )
@@ -659,9 +713,6 @@ def _create_mv_feature_states(
     segments_by_ld_key: dict[str, Segment],
 ) -> None:
     variations = ld_flag["variations"]
-    variations_by_idx = {
-        str(idx): variation for idx, variation in enumerate(variations)
-    }
     variation_values_by_idx: dict[str, str] = {}
     mv_feature_options_by_variation: dict[str, MultivariateFeatureOption] = {}
 
@@ -736,6 +787,7 @@ def _create_mv_feature_states(
             ld_flag_config=ld_flag_config,
             feature=feature,
             environment=environment,
+            segments_by_ld_key=segments_by_ld_key,
             mv_feature_options_by_variation=mv_feature_options_by_variation,
         )
         _import_rules(
@@ -743,7 +795,6 @@ def _create_mv_feature_states(
             ld_flag_config=ld_flag_config,
             feature=feature,
             environment=environment,
-            variations_by_idx=variations_by_idx,
             segments_by_ld_key=segments_by_ld_key,
             mv_feature_options_by_variation=mv_feature_options_by_variation,
         )
