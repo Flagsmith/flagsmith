@@ -508,6 +508,9 @@ const ChangeRequestsPage = class extends Component {
                       </Panel>
                       {environmentFlag && changeRequest ? (
                         <DiffFeature
+                          noChangesMessage={
+                            'This change request contains no changes.'
+                          }
                           tabTheme={'pill'}
                           oldState={[
                             {

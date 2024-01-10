@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { FeatureState } from 'common/types/responses'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
@@ -14,10 +14,12 @@ import DiffString from './DiffString'
 import DiffEnabled from './DiffEnabled'
 import DiffSegments from './DiffSegments'
 import DiffVariations from './DiffVariations'
+import InfoMessage from 'components/InfoMessage'
 
 type FeatureDiffType = {
   oldState: FeatureState[]
   newState: FeatureState[]
+  noChangesMessage?: string
   featureId: number
   projectId: string
   tabTheme?: string
@@ -26,6 +28,7 @@ type FeatureDiffType = {
 const DiffFeature: FC<FeatureDiffType> = ({
   featureId,
   newState,
+  noChangesMessage,
   oldState,
   projectId,
   tabTheme,
@@ -39,7 +42,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
 
   const diff = getFeatureStateDiff(oldEnv, newEnv)
   const { totalChanges } = diff
-  const [value, setValue] = useState(totalChanges ? 0 : 1)
+  const [value, setValue] = useState(0)
 
   const { data: segments } = useGetSegmentsQuery({
     projectId,
@@ -47,6 +50,15 @@ const DiffFeature: FC<FeatureDiffType> = ({
 
   const segmentDiffs = getSegmentDiff(oldState, newState, segments?.results)
   const variationDiffs = getVariationDiff(oldEnv, newEnv, feature)
+  const totalSegmentChanges = segmentDiffs?.totalChanges
+  const totalVariationChanges = variationDiffs?.totalChanges
+  useEffect(() => {
+    if (!totalChanges && (totalSegmentChanges || totalVariationChanges)) {
+      setValue(1)
+    }
+  }, [totalSegmentChanges, totalVariationChanges, totalChanges])
+  const hideValue =
+    !totalChanges && (diff.newValue === null || diff.newValue === undefined)
   return (
     <div className='p-2'>
       {!feature ? (
@@ -54,76 +66,95 @@ const DiffFeature: FC<FeatureDiffType> = ({
           <Loader />
         </div>
       ) : (
-        <Tabs
-          hideNavOnSingleTab
-          theme={tabTheme}
-          onChange={setValue}
-          value={value}
-        >
-          <TabItem
-            tabLabel={
-              <div>
-                Value
-                {totalChanges ? (
-                  <span className='unread'>{totalChanges}</span>
-                ) : null}
-              </div>
-            }
+        <>
+          {!totalChanges &&
+            !totalSegmentChanges &&
+            !totalVariationChanges &&
+            noChangesMessage && <InfoMessage>{noChangesMessage}</InfoMessage>}
+          <Tabs
+            hideNavOnSingleTab
+            theme={tabTheme}
+            onChange={setValue}
+            value={value}
           >
-            <div>
-              <div className='flex-row mt-4 table-header'>
-                <div className='table-column flex-row flex flex-1'>Value</div>
-                <div className='table-column flex-row text-center'>Enabled</div>
-              </div>
-              <div className='flex-row pt-4 list-item'>
-                <div className='table-column flex flex-1'>
-                  <div>
-                    <DiffString
-                      oldValue={diff.oldValue}
-                      newValue={diff.newValue}
-                    />
-                  </div>
-                </div>
-                <div className='table-column text-center'>
-                  <DiffEnabled
-                    oldValue={diff.oldEnabled}
-                    newValue={diff.newEnabled}
-                  />
-                </div>
-              </div>
-            </div>
-          </TabItem>
-          {!!variationDiffs?.diffs?.length && (
             <TabItem
               tabLabel={
                 <div>
-                  Variations{' '}
-                  {variationDiffs.totalChanges ? (
-                    <span className='unread'>
-                      {variationDiffs.totalChanges}
-                    </span>
+                  Value
+                  {totalChanges ? (
+                    <span className='unread'>{totalChanges}</span>
                   ) : null}
                 </div>
               }
             >
-              <DiffVariations diffs={variationDiffs.diffs} />
-            </TabItem>
-          )}
-          {!!segmentDiffs?.diffs.length && (
-            <TabItem
-              tabLabel={
-                <div>
-                  Segment Overrides
-                  {!!segmentDiffs.totalChanges && (
-                    <span className='unread'>{segmentDiffs.totalChanges}</span>
-                  )}
+              <div className='panel-content'>
+                <div className='search-list'>
+                  <div className='flex-row mt-2 table-header'>
+                    {!hideValue && (
+                      <div className='table-column flex-row flex flex-1'>
+                        Value
+                      </div>
+                    )}
+                    <div className='table-column flex-row text-center'>
+                      Enabled
+                    </div>
+                  </div>
+                  <div className='flex-row pt-4 list-item list-item-sm'>
+                    {!hideValue && (
+                      <div className='table-column flex flex-1'>
+                        <div>
+                          <DiffString
+                            oldValue={diff.oldValue}
+                            newValue={diff.newValue}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className='table-column text-center'>
+                      <DiffEnabled
+                        oldValue={diff.oldEnabled}
+                        newValue={diff.newEnabled}
+                      />
+                    </div>
+                  </div>
                 </div>
-              }
-            >
-              <DiffSegments diffs={segmentDiffs.diffs} />
+              </div>
             </TabItem>
-          )}
-        </Tabs>
+            {!!variationDiffs?.diffs?.length && (
+              <TabItem
+                tabLabel={
+                  <div>
+                    Variations{' '}
+                    {variationDiffs.totalChanges ? (
+                      <span className='unread'>
+                        {variationDiffs.totalChanges}
+                      </span>
+                    ) : null}
+                  </div>
+                }
+              >
+                <DiffVariations diffs={variationDiffs.diffs} />
+              </TabItem>
+            )}
+            {!!segmentDiffs?.diffs.length && (
+              <TabItem
+                tabLabel={
+                  <div>
+                    Segment Overrides
+                    {!!segmentDiffs.totalChanges && (
+                      <span className='unread'>
+                        {segmentDiffs.totalChanges}
+                      </span>
+                    )}
+                  </div>
+                }
+              >
+                <DiffSegments diffs={segmentDiffs.diffs} />
+              </TabItem>
+            )}
+          </Tabs>
+        </>
       )}
     </div>
   )
