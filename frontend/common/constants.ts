@@ -213,12 +213,6 @@ export default {
     primary: '#6837fc',
     white: '#ffffff',
   },
-  contentTypes: {
-    environment: 30,
-    flag: 39,
-    project: 27,
-    segment: 55,
-  },
   defaultRule: {
     operator: 'EQUAL',
     property: '',

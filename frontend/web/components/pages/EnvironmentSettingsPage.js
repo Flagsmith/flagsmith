@@ -16,7 +16,7 @@ import Constants from 'common/constants'
 import Switch from 'components/Switch'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
-import MyMetadataSelect from 'components/MyMetadataSelect'
+import OrganisationMetadataSelect from 'components/OrganisationMetadataSelect'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 import { getRolesEnvironmentPermissions } from 'common/services/useRolePermission'
@@ -852,7 +852,7 @@ const EnvironmentSettingsPage = class extends Component {
                             }
                           />
                         </FormGroup>
-                        <MyMetadataSelect
+                        <OrganisationMetadataSelect
                           contentType={30}
                           isOpen={this.state.showMetadataList}
                           onToggle={() =>

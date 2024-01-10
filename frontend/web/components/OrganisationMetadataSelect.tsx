@@ -4,12 +4,12 @@ import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataMo
 
 import MetadataSelect, { MetadataSelectType } from './MetadataSelect' // we need this to make JSX compile
 
-type MyMetadataSelectType = MetadataSelectType & {
+type OrganisationMetadataSelectType = MetadataSelectType & {
   orgId: string
   contentType: number
 }
 
-const MyMetadataSelect: FC<MyMetadataSelectType> = ({
+const OrganisationMetadataSelect: FC<OrganisationMetadataSelectType> = ({
   contentType,
   orgId,
   ...props
@@ -34,4 +34,4 @@ const MyMetadataSelect: FC<MyMetadataSelectType> = ({
   return <MetadataSelect {...props} metadata={metadataList} />
 }
 
-export default MyMetadataSelect
+export default OrganisationMetadataSelect

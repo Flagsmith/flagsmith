@@ -26,14 +26,11 @@ export async function getSupportedContentType(
     typeof supportedContentTypeService.endpoints.getSupportedContentType.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     supportedContentTypeService.endpoints.getSupportedContentType.initiate(
       data,
       options,
     ),
-  )
-  return Promise.all(
-    store.dispatch(supportedContentTypeService.util.getRunningQueriesThunk()),
   )
 }
 // END OF FUNCTION_EXPORTS

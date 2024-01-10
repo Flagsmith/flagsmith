@@ -5,7 +5,7 @@ import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import PageTitle from 'components/PageTitle'
 import CondensedRow from 'components/CondensedRow'
-import MyMetadataSelect from 'components/MyMetadataSelect'
+import OrganisationMetadataSelect from 'components/OrganisationMetadataSelect'
 
 const CreateEnvironmentPage = class extends Component {
   static displayName = 'CreateEnvironmentPage'
@@ -154,7 +154,7 @@ const CreateEnvironmentPage = class extends Component {
                                       }
                                     />
                                   </FormGroup>
-                                  <MyMetadataSelect
+                                  <OrganisationMetadataSelect
                                     contentType={30}
                                     isOpen={showMetadataList}
                                     onToggle={() =>

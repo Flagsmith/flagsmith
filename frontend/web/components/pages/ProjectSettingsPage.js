@@ -235,7 +235,7 @@ const ProjectSettingsPage = class extends Component {
     )
   }
 
-  editMetadata = (id, contentTypeList) => {
+  editMetadata = (id, contentTypeList, supportedContentTypes) => {
     openModal(
       `Edit Metadata`,
       <CreateMetadata
@@ -244,6 +244,7 @@ const ProjectSettingsPage = class extends Component {
         id={id}
         onComplete={this.metadataUpdated}
         projectId={this.props.match.params.projectId}
+        supportedContentTypes={supportedContentTypes}
       />,
       'side-modal create-feature-modal',
     )
@@ -272,6 +273,26 @@ const ProjectSettingsPage = class extends Component {
           onSave={this.onSave}
         >
           {({ deleteProject, editProject, isLoading, isSaving, project }) => {
+            console.log('DEBUG: project', project)
+            const featureContentType = Utils.getContentType(
+              project.supportedContentTypes,
+              'model',
+              'feature',
+            )
+            const segmentContentType = Utils.getContentType(
+              project.supportedContentTypes,
+              'model',
+              'feature',
+            )
+            const environmentContentType = Utils.getContentType(
+              project.supportedContentTypes,
+              'model',
+              'feature',
+            )
+            console.log(
+              'DEBUG: project.supportedContentTypes:',
+              project.supportedContentTypes,
+            )
             if (
               !this.state.populatedProjectState &&
               project?.feature_name_regex
@@ -659,6 +680,7 @@ const ProjectSettingsPage = class extends Component {
                                     this.editMetadata(
                                       metadata.id,
                                       metadata.content_type_fields,
+                                      project.supportedContentTypes,
                                     )
                                   }}
                                 >
@@ -679,21 +701,19 @@ const ProjectSettingsPage = class extends Component {
                                       {metadata.content_type_fields.find(
                                         (m) =>
                                           m.content_type ===
-                                          Constants.contentTypes.environment,
+                                          environmentContentType,
                                       ) ? (
                                         <>
                                           {metadata.content_type_fields.some(
                                             (field) =>
                                               field.content_type ===
-                                              Constants.contentTypes
-                                                .environment,
+                                              environmentContentType,
                                           ) ? (
                                             <>
                                               {metadata.content_type_fields.some(
                                                 (field) =>
                                                   field.content_type ===
-                                                    Constants.contentTypes
-                                                      .environment &&
+                                                    environmentContentType &&
                                                   field.is_required_for &&
                                                   field.is_required_for.length >
                                                     0,
@@ -743,21 +763,19 @@ const ProjectSettingsPage = class extends Component {
                                     >
                                       {metadata.content_type_fields.find(
                                         (m) =>
-                                          m.content_type ===
-                                          Constants.contentTypes.segment,
+                                          m.content_type === segmentContentType,
                                       ) ? (
                                         <>
                                           {metadata.content_type_fields.some(
                                             (field) =>
                                               field.content_type ===
-                                              Constants.contentTypes.segment,
+                                              segmentContentType,
                                           ) ? (
                                             <>
                                               {metadata.content_type_fields.some(
                                                 (field) =>
                                                   field.content_type ===
-                                                    Constants.contentTypes
-                                                      .segment &&
+                                                    segmentContentType &&
                                                   field.is_required_for &&
                                                   field.is_required_for.length >
                                                     0,
@@ -804,6 +822,7 @@ const ProjectSettingsPage = class extends Component {
                                       this.editMetadata(
                                         metadata.id,
                                         metadata.content_type_fields,
+                                        project.supportedContentTypes,
                                       )
                                     }}
                                   >
@@ -814,26 +833,25 @@ const ProjectSettingsPage = class extends Component {
                                         this.editMetadata(
                                           metadata.id,
                                           metadata.content_type_fields,
+                                          project.supportedContentTypes,
                                         )
                                       }}
                                     >
                                       {metadata.content_type_fields.find(
                                         (m) =>
-                                          m.content_type ===
-                                          Constants.contentTypes.flag,
+                                          m.content_type === featureContentType,
                                       ) ? (
                                         <>
                                           {metadata.content_type_fields.some(
                                             (field) =>
                                               field.content_type ===
-                                              Constants.contentTypes.flag,
+                                              featureContentType,
                                           ) ? (
                                             <>
                                               {metadata.content_type_fields.some(
                                                 (field) =>
                                                   field.content_type ===
-                                                    Constants.contentTypes
-                                                      .flag &&
+                                                    featureContentType &&
                                                   field.is_required_for &&
                                                   field.is_required_for.length >
                                                     0,
