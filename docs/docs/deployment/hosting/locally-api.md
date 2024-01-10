@@ -249,7 +249,8 @@ the below variables will be ignored.
 - `SEGMENT_CONDITION_VALUE_LIMIT`: Configure the size of the segment condition value in bytes. Default is 1000.
   Minimum 0. Maximum 2000000 (2MB). Note that this environment variable changes the length of the column in the database
   and hence should not be modified for already running instances of flagsmith. It should only be used for new
-  installations, and should not be modified.
+  installations, and should not be modified. WARNING: setting this to a higher limit may prevent imports to our SaaS
+  platform if required in the future.
 
 #### Security Environment Variables
 
