@@ -4,7 +4,6 @@ import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
 import { useGetSegmentsQuery } from 'common/services/useSegment'
-import { sortBy } from 'lodash'
 import {
   getFeatureStateDiff,
   getSegmentDiff,

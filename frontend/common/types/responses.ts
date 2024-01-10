@@ -151,8 +151,8 @@ export type AuditLogItem = {
 export type AuditLogDetail = AuditLogItem & {
   change_details: {
     field: string
-    old: string
-    new: string
+    old: FlagsmithValue
+    new: FlagsmithValue
   }[]
 }
 export type Subscription = {
@@ -417,6 +417,6 @@ export type Res = {
   featureVersions: PagedResponse<FeatureVersion>
   users: User[]
   enableFeatureVersioning: { id: string }
-  auditLogItem: { id: string }
+  auditLogItem: AuditLogDetail
   // END OF TYPES
 }

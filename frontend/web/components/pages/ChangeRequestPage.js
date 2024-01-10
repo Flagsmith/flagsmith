@@ -21,6 +21,7 @@ import { close } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import { useGetSegmentsQuery } from 'common/services/useSegment'
 import DiffFeature from 'components/diff/DiffFeature'
+import Breadcrumb from 'components/Breadcrumb'
 
 const labelWidth = 120
 
@@ -284,31 +285,19 @@ const ChangeRequestsPage = class extends Component {
                 id='change-requests-page'
                 className='app-container container-fluid mt-1'
               >
-                <nav aria-label='breadcrumb'>
-                  <ol className='breadcrumb mb-2 py-1"'>
-                    <li className='breadcrumb-item fs-small lh-sm'>
-                      <Link
-                        className='fw-normal'
-                        to={`/project/${
-                          this.props.match.params.projectId
-                        }/environment/${
-                          this.props.match.params.environmentId
-                        }/${
-                          isScheduled ? 'scheduled-changes' : 'change-requests'
-                        }`}
-                      >
-                        {isScheduled ? 'Scheduling' : 'Change request'}
-                      </Link>
-                    </li>
-                    <li
-                      className='breadcrumb-item active fs-small lh-sm text-muted'
-                      aria-current='page'
-                      style={{ opacity: 0.6 }}
-                    >
-                      {changeRequest.title}
-                    </li>
-                  </ol>
-                </nav>
+                <Breadcrumb
+                  items={[
+                    {
+                      title: isScheduled ? 'Scheduling' : 'Change requests',
+                      url: `/project/${
+                        this.props.match.params.projectId
+                      }/environment/${this.props.match.params.environmentId}/${
+                        isScheduled ? 'scheduled-changes' : 'change-requests'
+                      }`,
+                    },
+                  ]}
+                  currentPage={changeRequest.title}
+                />
                 <PageTitle
                   cta={
                     !changeRequest?.committed_at && (
