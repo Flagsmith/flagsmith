@@ -346,7 +346,7 @@ def test_list_feature_import_with_filtered_environments(
     staff_user: FFAdminUser,
     project: Project,
     environment: Environment,
-    with_project_permissions: Callable[[list[str], int], None],
+    with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])
