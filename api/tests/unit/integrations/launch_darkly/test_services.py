@@ -259,6 +259,93 @@ def test_process_import_request__segments_imported(
         "Dynamic List 2 (Override for production)",
     }
 
+    # Tests for "Dynamic List (Override for test)"
+    dynamic_list_test_segment = Segment.objects.get(
+        name="Dynamic List (Override for test)"
+    )
+    dynamic_list_test_segment_rule = SegmentRule.objects.get(
+        segment=dynamic_list_test_segment
+    )
+    # Parents are always "ALL" rules.
+    assert dynamic_list_test_segment_rule.type == SegmentRule.ALL_RULE
+
+    dynamic_list_test_segment_subrules = SegmentRule.objects.filter(
+        rule=dynamic_list_test_segment_rule
+    )
+    assert dynamic_list_test_segment_subrules.count() == 1
+    # UI needs to have subrules as `ANY_RULE` to display properly.
+    assert list(dynamic_list_test_segment_subrules)[0].type == SegmentRule.ANY_RULE
+
+    dynamic_list_test_segment_subrule_conditions = Condition.objects.filter(
+        rule=dynamic_list_test_segment_subrules[0]
+    )
+    assert set(
+        dynamic_list_test_segment_subrule_conditions.values_list(
+            "property", "operator", "value"
+        )
+    ) == {
+        ("email", segment_constants.REGEX, ".*@gmail\\.com"),
+    }
+
+    # Tests for "Dynamic List 2 (Override for production)"
+    dynamic_list_2_production_segment = Segment.objects.get(
+        name="Dynamic List 2 (Override for production)"
+    )
+    dynamic_list_2_production_segment_rule = SegmentRule.objects.get(
+        segment=dynamic_list_2_production_segment
+    )
+    # Parents are always "ALL" rules.
+    assert dynamic_list_2_production_segment_rule.type == SegmentRule.ALL_RULE
+
+    dynamic_list_2_production_segment_subrules = SegmentRule.objects.filter(
+        rule=dynamic_list_2_production_segment_rule
+    )
+    assert dynamic_list_2_production_segment_subrules.count() == 3
+    # UI needs to have subrules as `ANY_RULE` to display properly.
+    assert (
+        list(dynamic_list_2_production_segment_subrules)[0].type == SegmentRule.ANY_RULE
+    )
+    assert (
+        list(dynamic_list_2_production_segment_subrules)[1].type == SegmentRule.ANY_RULE
+    )
+    assert (
+        list(dynamic_list_2_production_segment_subrules)[2].type == SegmentRule.ANY_RULE
+    )
+
+    dynamic_list_2_production_segment_subrule_0_conditions = Condition.objects.filter(
+        rule=dynamic_list_2_production_segment_subrules[0]
+    )
+
+    assert set(
+        dynamic_list_2_production_segment_subrule_0_conditions.values_list(
+            "property", "operator", "value"
+        )
+    ) == {
+        ("p1", segment_constants.IN, "1,2"),
+    }
+
+    dynamic_list_2_production_segment_subrule_1_conditions = Condition.objects.filter(
+        rule=dynamic_list_2_production_segment_subrules[1]
+    )
+    assert set(
+        dynamic_list_2_production_segment_subrule_1_conditions.values_list(
+            "property", "operator", "value"
+        )
+    ) == {
+        ("p2", segment_constants.GREATER_THAN, "1.0.0"),
+    }
+
+    dynamic_list_2_production_segment_subrule_2_conditions = Condition.objects.filter(
+        rule=dynamic_list_2_production_segment_subrules[2]
+    )
+    assert set(
+        dynamic_list_2_production_segment_subrule_2_conditions.values_list(
+            "property", "operator", "value"
+        )
+    ) == {
+        ("p3", segment_constants.REGEX, "foo[0-9]{0,1}"),
+    }
+
 
 def test_process_import_request__rules_imported(
     project: Project,

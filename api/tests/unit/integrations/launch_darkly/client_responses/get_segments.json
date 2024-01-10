@@ -141,9 +141,9 @@
                     {
                         "_id": "a316fd6a-1e0b-4ed0-a5db-c71868ecb691",
                         "attribute": "p3",
-                        "op": "startsWith",
+                        "op": "matches",
                         "values": [
-                            "foo"
+                            "foo[0-9]{0,1}"
                         ],
                         "contextKind": "user",
                         "negate": false

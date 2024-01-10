@@ -167,8 +167,6 @@ def _convert_ld_values(values: list[str], ld_operator: str) -> list[str]:
             return [".*" + re.escape(value) for value in values]
         case "startsWith":
             return [re.escape(value) + ".*" for value in values]
-        case "matches" | "segmentMatch":
-            return [re.escape(value).replace("\\*", ".*") for value in values]
         case _:
             return [value for value in values]
 
@@ -758,7 +756,7 @@ def _create_segments_from_ld(
             )
 
         # Create an empty rule if there are no rules. This is required to create an "SegmentRule" object.
-        # Otherwise UI fails to display the segment.
+        # Otherwise, UI fails to display the segment.
         if len(rules) == 0:
             _create_segment_rule_for_segment(
                 segment,
