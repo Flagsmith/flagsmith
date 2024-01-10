@@ -16,6 +16,9 @@ const DiffEnabled: FC<DiffType> = ({ newValue, oldValue }) => {
       </>
     )
   }
+  if (oldValue === newValue) {
+    return <Switch checked={newValue} />
+  }
   return (
     <>
       <div className={'flex-row'}>
