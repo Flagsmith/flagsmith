@@ -44,11 +44,11 @@ export default class Feature extends PureComponent {
 
     const enabledString = isEdit ? 'Enabled' : 'Enabled by default'
     const disabled = hide_from_client
-    const controlValue = Utils.calculateControl(multivariate_options)
+    const controlPercentage = Utils.calculateControl(multivariate_options)
     const valueString = identity
       ? 'User override'
       : !!multivariate_options && multivariate_options.length
-      ? `Control Value - ${controlValue}%`
+      ? `Control Value - ${controlPercentage}%`
       : `Value (optional)${' - these can be set per environment'}`
 
     const showValue = !(
@@ -104,6 +104,7 @@ export default class Feature extends PureComponent {
                 disabled
                 select
                 controlValue={environmentFlag.feature_state_value}
+                controlPercentage={controlPercentage}
                 variationOverrides={this.props.identityVariations}
                 setVariations={this.props.onChangeIdentityVariations}
                 updateVariation={() => {}}
@@ -121,7 +122,8 @@ export default class Feature extends PureComponent {
               {(!!environmentVariations || !isEdit) && (
                 <VariationOptions
                   disabled={!!identity || readOnly}
-                  controlValue={controlValue}
+                  controlValue={environmentFlag.feature_state_value}
+                  controlPercentage={controlPercentage}
                   variationOverrides={environmentVariations}
                   updateVariation={this.props.updateVariation}
                   weightTitle={
