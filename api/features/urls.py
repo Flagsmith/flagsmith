@@ -5,7 +5,6 @@ from rest_framework_nested import routers
 
 from features.feature_segments.views import FeatureSegmentViewSet
 from features.import_export.views import (
-    FeatureImportRetrieve,
     create_feature_export,
     download_feature_export,
     download_flagsmith_on_flagsmith,
@@ -20,11 +19,6 @@ from features.views import (
 router = routers.DefaultRouter()
 router.register(r"featurestates", SimpleFeatureStateViewSet, basename="featurestates")
 router.register(r"feature-segments", FeatureSegmentViewSet, basename="feature-segment")
-router.register(
-    r"feature-import-retrieve",
-    FeatureImportRetrieve,
-    basename="feature-import-retrieve",
-)
 
 app_name = "features"
 
