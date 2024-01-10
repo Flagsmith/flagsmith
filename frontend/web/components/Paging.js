@@ -30,15 +30,25 @@ export default class Paging extends PureComponent {
       (currentIndex || currentIndex + 1) + spaceBetween,
     )
     const range = _.range(from, to)
-    const noPages = range.length < 2
+    const noPages = range.length < 1
     if (noPages && !(paging.next || paging.previous)) {
       return null
     }
     return (
-      <Row className=' paging py-0' style={isLoading ? { opacity: 0.5 } : {}}>
+      <Row
+        className='paging justify-content-end table-column py-2'
+        style={isLoading ? { opacity: 0.5 } : {}}
+      >
+        {!!paging.count && (
+          <span className='fs-caption text-muted'>
+            {currentIndex * paging.pageSize + 1}-
+            {Math.min((currentIndex + 1) * paging.pageSize, paging.count)} of{' '}
+            {paging.count}
+          </span>
+        )}
         <Button
           disabled={isLoading || !paging.previous}
-          className='icon btn-paging mt-1'
+          className='icon fs-small page'
           onClick={() => prevPage()}
         >
           <div>
@@ -53,7 +63,7 @@ export default class Paging extends PureComponent {
                   role='button'
                   className={cn({
                     'active': currentIndex === 1,
-                    page: true,
+                    'fs-small page': true,
                   })}
                   onClick={
                     paging.currentPage === 1 + 1 ? undefined : () => goToPage(1)
@@ -63,7 +73,7 @@ export default class Paging extends PureComponent {
                 </div>
                 <div
                   className={cn({
-                    page: true,
+                    'fs-small page': true,
                   })}
                 >
                   ...
@@ -77,7 +87,7 @@ export default class Paging extends PureComponent {
                   role='button'
                   className={cn({
                     'active': currentIndex === index,
-                    page: true,
+                    'fs-small page': true,
                   })}
                   onClick={
                     paging.currentPage === index + 1
@@ -130,7 +140,7 @@ export default class Paging extends PureComponent {
           )
         )}
         <Button
-          className='icon btn-paging mt-1'
+          className='icon fs-small page'
           disabled={isLoading || !paging.next}
           onClick={() => nextPage()}
         >
