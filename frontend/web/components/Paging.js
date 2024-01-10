@@ -71,13 +71,15 @@ export default class Paging extends PureComponent {
                 >
                   {1}
                 </div>
-                <div
-                  className={cn({
-                    'fs-small page': true,
-                  })}
-                >
-                  ...
-                </div>
+                {!range.includes(1) && !noPages && (
+                  <div
+                    className={cn({
+                      'fs-small page': true,
+                    })}
+                  >
+                    ...
+                  </div>
+                )}
               </>
             )}
             {!noPages &&
@@ -98,7 +100,7 @@ export default class Paging extends PureComponent {
                   {index + 1}
                 </div>
               ))}
-            {!noPages && !range.includes(lastPage - 1) && (
+            {!noPages && !range.includes(lastPage - 2) && (
               <>
                 <div
                   className={cn({
@@ -112,11 +114,15 @@ export default class Paging extends PureComponent {
                 >
                   ...
                 </div>
+              </>
+            )}
+            {!noPages && !range.includes(lastPage - 1) && (
+              <>
                 <div
                   role='button'
                   className={cn({
                     'active': currentIndex === lastPage,
-                    page: true,
+                    'page fs-small': true,
                   })}
                   onClick={
                     paging.currentPage === lastPage
