@@ -139,6 +139,13 @@ export type AuditLogItem = {
   is_system_event: boolean
 }
 
+export type AuditLogDetail = AuditLogItem & {
+  change_details: {
+    field: string
+    old: string
+    new: string
+  }[]
+}
 export type Subscription = {
   id: number
   uuid: string
@@ -381,5 +388,6 @@ export type Res = {
   environment: Environment
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
+  auditLogItem: { id: string }
   // END OF TYPES
 }

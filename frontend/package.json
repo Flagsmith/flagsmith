@@ -139,7 +139,7 @@
     "@types/classnames": "^2.3.1",
     "@types/color": "^3.0.3",
     "@types/dompurify": "^3.0.2",
-    "@types/react-router": "^5.1.19",
+    "@types/react-router": "^4.4.5",
     "@types/react-router-dom": "^4.3.1",
     "@types/react-select": "^2.0.3",
     "@typescript-eslint/eslint-plugin": "5.4.0",
@@ -156,7 +156,7 @@
     "eslint-plugin-sort-keys-fix": "^1.1.2",
     "nodemon": "^3.0.1",
     "raw-loader": "0.5.1",
-    "ssgrtk": "^0.3.4",
+    "ssgrtk": "^0.3.5",
     "testcafe": "^3.2.0",
     "typescript": "4.6.4"
   },
