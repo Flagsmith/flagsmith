@@ -15,6 +15,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import (
     AFTER_CREATE,
+    AFTER_DELETE,
     AFTER_SAVE,
     AFTER_UPDATE,
     BEFORE_UPDATE,
@@ -64,7 +65,9 @@ environment_api_key_wrapper = DynamoEnvironmentAPIKeyWrapper()
 
 class Environment(
     LifecycleModel,
-    abstract_base_auditable_model_factory(RelatedObjectType.ENVIRONMENT),
+    abstract_base_auditable_model_factory(
+        RelatedObjectType.ENVIRONMENT, change_details_excluded_fields=["updated_at"]
+    ),
     SoftDeleteObject,
 ):
     name = models.CharField(max_length=2000)
@@ -144,6 +147,13 @@ class Environment(
     @hook(BEFORE_UPDATE, when="use_v2_feature_versioning", was=True, is_now=False)
     def validate_use_v2_feature_versioning(self):
         raise FeatureVersioningError("Cannot revert from v2 feature versioning.")
+
+    @hook(AFTER_DELETE)
+    def delete_from_dynamo(self):
+        if self.project.enable_dynamo_db and environment_wrapper.is_enabled:
+            from environments.tasks import delete_environment_from_dynamo
+
+            delete_environment_from_dynamo.delay(args=(self.api_key, self.id))
 
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
@@ -444,10 +454,17 @@ class EnvironmentAPIKey(LifecycleModel):
     def is_valid(self) -> bool:
         return self.active and (not self.expires_at or self.expires_at > timezone.now())
 
-    @hook(AFTER_SAVE)
+    @hook(AFTER_SAVE, when="_should_update_dynamo", is_now=True)
     def send_to_dynamo(self):
-        if (
+        environment_api_key_wrapper.write_api_key(self)
+
+    @hook(AFTER_DELETE, when="_should_update_dynamo", is_now=True)
+    def delete_from_dynamo(self):
+        environment_api_key_wrapper.delete_api_key(self.key)
+
+    @property
+    def _should_update_dynamo(self) -> bool:
+        return (
             self.environment.project.enable_dynamo_db
             and environment_api_key_wrapper.is_enabled
-        ):
-            environment_api_key_wrapper.write_api_key(self)
+        )

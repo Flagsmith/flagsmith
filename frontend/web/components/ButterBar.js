@@ -55,8 +55,8 @@ class ButterBar extends Component {
               <span className='icon-alert mr-2'>
                 <Icon name='warning' fill='#fff' />
               </span>
-              There was a problem with your paid subscription. Please check your payment
-              method to keep your subscription active.
+              There was a problem with your paid subscription. Please check your
+              payment method to keep your subscription active.
             </div>
           )}
       </>

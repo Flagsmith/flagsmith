@@ -1,5 +1,4 @@
 import json
-from typing import Callable
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -19,6 +18,7 @@ from features.import_export.models import (
 from projects.models import Project
 from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
+from tests.types import WithProjectPermissionsCallable
 from users.models import FFAdminUser
 
 
@@ -66,7 +66,7 @@ def test_list_feature_export_with_filtered_environments(
     staff_client: APIClient,
     project: Project,
     environment: Environment,
-    with_project_permissions: Callable[[list[str], int], None],
+    with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])

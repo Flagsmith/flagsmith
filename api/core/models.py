@@ -68,7 +68,7 @@ class SoftDeleteExportableModel(SoftDeleteObject, AbstractBaseExportableModel):
         abstract = True
 
 
-class BaseHistoricalModel(models.Model):
+class _BaseHistoricalModel(models.Model):
     include_in_audit = True
 
     ip_address = models.GenericIPAddressField(null=True, blank=True)
@@ -78,6 +78,29 @@ class BaseHistoricalModel(models.Model):
 
     class Meta:
         abstract = True
+
+    def get_change_details(self) -> typing.Optional[typing.List[ModelChange]]:
+        if not self.history_type == "~":
+            # we only return the change details for updates
+            return
+
+        return [
+            change
+            for change in self.diff_against(self.prev_record).changes
+            if change.field not in self._change_details_excluded_fields
+        ]
+
+
+def base_historical_model_factory(
+    change_details_excluded_fields: typing.Sequence[str],
+) -> typing.Type[_BaseHistoricalModel]:
+    class BaseHistoricalModel(_BaseHistoricalModel):
+        _change_details_excluded_fields = set(change_details_excluded_fields)
+
+        class Meta:
+            abstract = True
+
+    return BaseHistoricalModel
 
 
 class _AbstractBaseAuditableModel(models.Model):
@@ -456,6 +479,7 @@ def abstract_base_auditable_model_factory(
     audited_m2m_fields: typing.Sequence[str] | None = None,
     *,
     default_messages: bool = False,
+    change_details_excluded_fields: typing.Sequence[str] = None,
 ) -> typing.Type[_AbstractBaseAuditableModel]:
     """Create abstract base for model with history and audit methods"""
 
@@ -465,7 +489,7 @@ def abstract_base_auditable_model_factory(
     # type ignored due to https://github.com/microsoft/pyright/issues/5326
     class AuditableBaseWithHistory(AuditableBase):  # type: ignore
         history = HistoricalRecords(
-            bases=[BaseHistoricalModel],
+            bases=[base_historical_model_factory(change_details_excluded_fields or [])],
             excluded_fields=unaudited_fields or (),
             m2m_fields=audited_m2m_fields or (),
             get_user=_get_history_user,
@@ -495,7 +519,7 @@ def register_auditable_model(
     register(
         model,
         app,
-        bases=[BaseHistoricalModel],
+        bases=[_BaseHistoricalModel],
         excluded_fields=unaudited_fields or (),
         m2m_fields=audited_m2m_fields or (),
         get_user=_get_history_user,

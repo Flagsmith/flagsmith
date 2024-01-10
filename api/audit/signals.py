@@ -4,7 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from audit.models import AuditLog, RelatedObjectType
-from audit.serializers import AuditLogSerializer
+from audit.serializers import AuditLogListSerializer
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
@@ -16,13 +16,15 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=AuditLog)
 def call_webhooks(sender, instance: AuditLog, **kwargs):
-    data = AuditLogSerializer(instance=instance).data
+    data = AuditLogListSerializer(instance=instance).data
 
     if not (organisation := instance.organisation):
         logger.warning("Audit log without organisation. Not sending webhook.")
         return
 
-    call_organisation_webhooks(organisation, data, WebhookEventType.AUDIT_LOG_CREATED)
+    call_organisation_webhooks.delay(
+        args=(organisation.id, data, WebhookEventType.AUDIT_LOG_CREATED.value)
+    )
 
 
 def _get_integration_config(instance, integration_name):

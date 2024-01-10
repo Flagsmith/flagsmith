@@ -28,6 +28,7 @@ from projects.models import (
 )
 from projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
 from segments.models import Condition, SegmentRule
+from tests.types import WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser
 from util.tests import Helper
 
@@ -625,7 +626,7 @@ def test_create_environment_without_required_metadata_returns_400(
 def test_view_environment_with_staff__query_count_is_expected(
     staff_client: APIClient,
     environment: Environment,
-    with_environment_permissions: Callable[[list[str], int], None],
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
     project: Project,
     django_assert_num_queries: Callable[[int], None],
     environment_metadata_a: Metadata,
