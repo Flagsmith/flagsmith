@@ -94,7 +94,7 @@ const AuditLogItemPage: FC<AuditLogItemPageType> = ({ match }) => {
                     {data?.change_details?.map((v) => (
                       <Row key={v.field} className='list-item'>
                         <div className='flex-fill font-weight-medium px-2'>
-                          {Format.camelCase(v.field)}
+                          {Format.camelCase(Format.enumeration.get(v.field))}
                         </div>
                         <div className='px-2'>
                           {v.field === 'enabled' ? (
