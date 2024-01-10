@@ -380,6 +380,7 @@ const UserPage = class extends Component {
                                         />
                                         <Row className='flex-fill justify-content-end'>
                                           <TableTagFilter
+                                            useLocalStorage
                                             projectId={projectId}
                                             className='me-4'
                                             title='Tags'
@@ -387,15 +388,20 @@ const UserPage = class extends Component {
                                             isLoading={
                                               FeatureListStore.isLoading
                                             }
-                                            onToggleArchived={() => {
-                                              FeatureListStore.isLoading = true
-                                              this.setState(
-                                                {
-                                                  showArchived:
-                                                    !this.state.showArchived,
-                                                },
-                                                this.filter,
-                                              )
+                                            onToggleArchived={(value) => {
+                                              if (
+                                                value !==
+                                                this.state.showArchived
+                                              ) {
+                                                FeatureListStore.isLoading = true
+                                                this.setState(
+                                                  {
+                                                    showArchived:
+                                                      !this.state.showArchived,
+                                                  },
+                                                  this.filter,
+                                                )
+                                              }
                                             }}
                                             showArchived={
                                               this.state.showArchived

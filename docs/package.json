@@ -11,8 +11,9 @@
     "clear": "docusaurus clear",
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
-    "write-heading-ids": "docusaurus write-heading-ids"
-  },
+    "write-heading-ids": "docusaurus write-heading-ids",
+    "prettier": "npx prettier --check docs",
+    "prettier:fix": "npx prettier --write --check docs"},
   "dependencies": {
     "@docusaurus/core": "3.0.1",
     "@docusaurus/plugin-google-tag-manager": "^3.0.1",
