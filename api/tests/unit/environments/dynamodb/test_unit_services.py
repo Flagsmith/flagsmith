@@ -1,7 +1,7 @@
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_mock import MockerFixture
 
-from environments.dynamodb.dynamodb_wrapper import (
+from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
     DynamoIdentityWrapper,
 )
