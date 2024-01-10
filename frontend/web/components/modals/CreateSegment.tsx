@@ -37,7 +37,7 @@ import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
-import MyMetadataSelect from 'components/MyMetadataSelect'
+import OrganisationMetadataSelect from 'components/OrganisationMetadataSelect'
 import Permission from 'common/providers/Permission'
 
 type PageType = {
@@ -437,7 +437,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 </Button>
               }
             />
-            <MyMetadataSelect
+            <OrganisationMetadataSelect
               contentType={55}
               isOpen={showMetadataList}
               onToggle={() => setShowMetadataList(!showMetadataList)}

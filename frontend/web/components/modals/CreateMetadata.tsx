@@ -12,15 +12,16 @@ import {
   useUpdateMetadataModelFieldMutation,
   useDeleteMetadataModelFieldMutation,
 } from 'common/services/useMetadataModelField'
+// import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 
 import Constants from 'common/constants'
-import constants from 'common/constants'
 
 type CreateMetadataType = {
   id?: string
   isEdit?: boolean
   metadataModelFieldList?: Array
   projectId?: string
+  supportedContentTypes?: supportedContentTypes[]
 }
 
 type MetadataType = {
@@ -36,6 +37,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   metadataModelFieldList,
   onComplete,
   projectId,
+  supportedContentTypes,
 }) => {
   const metadataTypes: MetadataType = [
     { id: 1, label: 'int', value: 'int' },
@@ -46,6 +48,14 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   ]
   const orgId = AccountStore.getOrganisation().id
   const { data, isLoading } = useGetMetadataQuery({ id }, { skip: !id })
+  // const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
+  //   org_id: orgId,
+  // })
+  // if (supportedContentTypes) {
+  //   const contentTypeExample = Utils.getContentType(supportedContentTypes, 'model', 'project')
+
+  //   console.log('DEBUG: contentTypeExample:', contentTypeExample)
+  // }
 
   const [createMetadata, { isLoading: creating, isSuccess: created }] =
     useCreateMetadataMutation()
@@ -56,6 +66,26 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   const [updateMetadataField] = useUpdateMetadataModelFieldMutation()
 
   const [deleteMetadataModelField] = useDeleteMetadataModelFieldMutation()
+  const featureContentType = Utils.getContentType(
+    supportedContentTypes,
+    'model',
+    'feature',
+  )
+  const segmentContentType = Utils.getContentType(
+    supportedContentTypes,
+    'model',
+    'segment',
+  )
+  const environmentContentType = Utils.getContentType(
+    supportedContentTypes,
+    'model',
+    'environment',
+  )
+  const projectContentType = Utils.getContentType(
+    supportedContentTypes,
+    'model',
+    'project',
+  )
   useEffect(() => {
     if (data && !isLoading) {
       setName(data.name)
@@ -69,37 +99,37 @@ const CreateMetadata: FC<CreateMetadataType> = ({
       )
       setFlagsEnabled(
         !!metadataModelFieldList.find(
-          (i) => i.content_type == Constants.contentTypes.flag,
+          (i) => i.content_type == featureContentType,
         ),
       )
       setSegmentsEnabled(
         !!metadataModelFieldList.find(
-          (i) => i.content_type == Constants.contentTypes.segment,
+          (i) => i.content_type == segmentContentType,
         ),
       )
       setEnvironmentEnabled(
         !!metadataModelFieldList.find(
-          (i) => i.content_type == Constants.contentTypes.environment,
+          (i) => i.content_type == environmentContentType,
         ),
       )
       setFlagRequired(
         !!metadataModelFieldList.find(
           (i) =>
-            i.content_type == Constants.contentTypes.flag &&
+            i.content_type == featureContentType &&
             i?.is_required_for.length > 0,
         ),
       )
       setSegmentRequired(
         !!metadataModelFieldList.find(
           (i) =>
-            i.content_type == Constants.contentTypes.segment &&
+            i.content_type == segmentContentType &&
             i?.is_required_for.length > 0,
         ),
       )
       setEnvironmentRequired(
         !!metadataModelFieldList.find(
           (i) =>
-            i.content_type == Constants.contentTypes.environment &&
+            i.content_type == environmentContentType &&
             i?.is_required_for.length > 0,
         ),
       )
@@ -229,7 +259,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 onChange={() => {
                   setEnvironmentEnabled(!environmentEnabled)
                   handleMetadataModelField(
-                    Constants.contentTypes.environment,
+                    environmentContentType,
                     !environmentEnabled,
                   )
                 }}
@@ -242,7 +272,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 onChange={() => {
                   setEnvironmentRequired(!environmentRequired)
                   handleRequiredMetadataModelField(
-                    Constants.contentTypes.environment,
+                    environmentContentType,
                     !environmentRequired,
                   )
                 }}
@@ -257,10 +287,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 checked={segmentEnabled}
                 onChange={() => {
                   setSegmentsEnabled(!segmentEnabled)
-                  handleMetadataModelField(
-                    Constants.contentTypes.segment,
-                    !segmentEnabled,
-                  )
+                  handleMetadataModelField(segmentContentType, !segmentEnabled)
                 }}
                 className='ml-0'
               />
@@ -271,7 +298,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 onChange={() => {
                   setSegmentRequired(!segmentRequired)
                   handleRequiredMetadataModelField(
-                    Constants.contentTypes.segment,
+                    segmentContentType,
                     !segmentRequired,
                   )
                 }}
@@ -286,10 +313,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 checked={flagEnabled}
                 onChange={() => {
                   setFlagsEnabled(!flagEnabled)
-                  handleMetadataModelField(
-                    Constants.contentTypes.flag,
-                    !flagEnabled,
-                  )
+                  handleMetadataModelField(featureContentType, !flagEnabled)
                 }}
                 className='ml-0'
               />
@@ -300,7 +324,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 onChange={() => {
                   setFlagRequired(!flagRequired)
                   handleRequiredMetadataModelField(
-                    Constants.contentTypes.flag,
+                    featureContentType,
                     !flagRequired,
                   )
                 }}
@@ -368,7 +392,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                   }
                   const isRequiredFor = [
                     {
-                      content_type: constants.contentTypes.project,
+                      content_type: projectContentType,
                       object_id: Number(projectId),
                     },
                   ]
