@@ -340,6 +340,7 @@ export const createSegment = async (
   rules?: Rule[],
 ) => {
   await click(byId('show-create-segment-btn'))
+  await click(byId('add-rule'))
   await setText(byId('segmentID'), id)
   for (let x = 0; x < rules.length; x++) {
     const rule = rules[x]
