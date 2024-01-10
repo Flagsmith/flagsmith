@@ -16,6 +16,15 @@ const DiffString: FC<DiffType> = ({
   newValue,
   oldValue,
 }) => {
+  if (E2E) {
+    return (
+      <>
+        <div data-test={'old-value'}>{oldValue}</div>
+        <div data-test={'new-value'}>{newValue}</div>
+      </>
+    )
+  }
+
   if (oldValue === newValue) {
     if (oldValue === null || oldValue === '') {
       return null

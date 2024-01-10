@@ -24,13 +24,18 @@ const DiffVariations: FC<DiffVariationsType> = ({ diffs }) => {
       {diffs?.map((diff, i) => (
         <Row key={i} className='list-item list-item-sm'>
           <div className='table-column flex-fill'>
-            <DiffString oldValue={diff.oldValue} newValue={diff.newValue} />
+            <DiffString
+              data-test={`version-variation-${i}-value`}
+              oldValue={diff.oldValue}
+              newValue={diff.newValue}
+            />
           </div>
           <div
             className='table-column text-center'
             style={{ width: widths[0] }}
           >
             <DiffString
+              data-test={`version-variation-${i}-weight`}
               compareMethod={DiffMethod.WORDS}
               oldValue={`${diff.oldWeight || 0}%`}
               newValue={`${diff.newWeight || 0}%`}

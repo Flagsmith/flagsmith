@@ -5,12 +5,12 @@ export function getFeatureStateDiff(
   oldFeatureState: FeatureState | undefined,
   newFeatureState: FeatureState | undefined,
 ) {
-  const oldValue = `${Utils.getTypedValue(
+  const oldValue = Utils.getTypedValue(
     Utils.featureStateToValue(oldFeatureState?.feature_state_value),
-  )}`
-  const newValue = `${Utils.getTypedValue(
+  )
+  const newValue = Utils.getTypedValue(
     Utils.featureStateToValue(newFeatureState?.feature_state_value),
-  )}`
+  )
   const oldEnabled = !!oldFeatureState?.enabled
   const newEnabled = !!newFeatureState?.enabled
   const enabledChanged = oldEnabled !== newEnabled

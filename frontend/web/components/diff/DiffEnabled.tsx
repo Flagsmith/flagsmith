@@ -8,8 +8,13 @@ type DiffType = {
 }
 
 const DiffEnabled: FC<DiffType> = ({ newValue, oldValue }) => {
-  if (oldValue === newValue) {
-    return <Switch checked={newValue} />
+  if (E2E) {
+    return (
+      <>
+        <div data-test={'old-enabled'}>{`${oldValue}`}</div>
+        <div data-test={'new-enabled'}>{`${newValue}`}</div>
+      </>
+    )
   }
   return (
     <>

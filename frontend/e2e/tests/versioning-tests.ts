@@ -1,19 +1,22 @@
 import {
-    assertTextContent,
+    assertNumberOfVersions,
     byId,
     click,
-    createFeature, createOrganisationAndProject,
-    createRemoteConfig, editRemoteConfig,
-    gotoFeatures, goToUser,
+    compareVersion,
+    createFeature,
+    createOrganisationAndProject,
+    createRemoteConfig,
+    editRemoteConfig,
     log,
     login,
-    setText, waitAndRefresh,
+    waitAndRefresh,
     waitForElementVisible,
 } from '../helpers.cafe';
 import { E2E_USER, PASSWORD } from '../config';
-import fetch from 'node-fetch'
+import fetch from 'node-fetch';
 import flagsmith from 'flagsmith/isomorphic';
 import Project from '../../common/project';
+
 export default async () => {
     await flagsmith.init({fetch,environmentID:Project.flagsmith,api:Project.flagsmithClientAPI})
     const hasFeature = flagsmith.hasFeature("feature_versioning")
@@ -32,12 +35,12 @@ export default async () => {
     await waitAndRefresh()
 
     log('Create feature 1')
-    await createRemoteConfig(0, 'header_size', 'small')
+    await createRemoteConfig(0, 'a', 'small')
     log('Edit feature 1')
     await editRemoteConfig(0,'medium')
 
     log('Create feature 2')
-    await createRemoteConfig(1, 'mv_flag', 'small', null, null, [
+    await createRemoteConfig(1, 'b', 'small', null, null, [
         { value: 'medium', weight: 100 },
         { value: 'big', weight: 0 },
     ])
@@ -48,8 +51,15 @@ export default async () => {
     ])
 
     log('Create feature 3')
-    await createFeature(2, 'header_enabled', false)
+    await createFeature(2, 'c', false)
     log('Edit feature 3')
     await editRemoteConfig(2,'',true)
 
+    log('Edit feature 3')
+    await assertNumberOfVersions(0, 2)
+    await assertNumberOfVersions(1, 2)
+    await assertNumberOfVersions(2, 2)
+    await compareVersion(0,0,null,true,true, 'small','medium')
+    await compareVersion(1,0,null,true,true, 'small','small')
+    await compareVersion(2,0,null,false,true, null,null)
 }
