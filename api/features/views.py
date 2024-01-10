@@ -1,6 +1,5 @@
 import logging
 import typing
-from datetime import timedelta
 from functools import reduce
 
 from app_analytics.analytics_db_service import get_feature_evaluation_data
@@ -9,8 +8,7 @@ from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
-from django.db.models import Max, Q, QuerySet
-from django.utils import timezone
+from django.db.models import Q, QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg import openapi
@@ -119,21 +117,15 @@ class FeatureViewSet(viewsets.ModelViewSet):
         accessible_projects = self.request.user.get_permitted_projects(VIEW_PROJECT)
 
         project = get_object_or_404(accessible_projects, pk=self.kwargs["project_pk"])
-        queryset = (
-            project.features.all()
-            .annotate(
-                last_modified_in_any_environment=Max(
-                    "feature_states__environment_feature_version__created_at"
-                )
-            )
-            .prefetch_related("multivariate_options", "owners", "tags", "group_owners")
+        queryset = project.features.all().prefetch_related(
+            "multivariate_options", "owners", "tags", "group_owners"
         )
 
         query_serializer = FeatureQuerySerializer(data=self.request.query_params)
         query_serializer.is_valid(raise_exception=True)
         query_data = query_serializer.validated_data
 
-        queryset = self._filter_queryset(queryset, project=project)
+        queryset = self._filter_queryset(queryset)
 
         sort = "%s%s" % (
             "-" if query_data["sort_direction"] == "DESC" else "",
@@ -287,7 +279,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 feature_state, WebhookEventType.FLAG_DELETED
             )
 
-    def _filter_queryset(self, queryset: QuerySet, project: Project) -> QuerySet:
+    def _filter_queryset(self, queryset: QuerySet) -> QuerySet:
         query_serializer = FeatureQuerySerializer(data=self.request.query_params)
         query_serializer.is_valid(raise_exception=True)
         query_data = query_serializer.validated_data
@@ -310,18 +302,6 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         if "is_archived" in query_serializer.initial_data:
             queryset = queryset.filter(is_archived=query_data["is_archived"])
-
-        if "is_stale" in query_serializer.initial_data:
-            if query_serializer.validated_data["is_stale"] is True:
-                queryset = queryset.exclude(tags__is_permanent=True).filter(
-                    last_modified_in_any_environment__lt=timezone.now()
-                    - timedelta(days=project.stale_flags_limit_days)
-                )
-            else:
-                queryset = queryset.filter(
-                    last_modified_in_any_environment__gt=timezone.now()
-                    - timedelta(days=project.stale_flags_limit_days)
-                )
 
         return queryset
 

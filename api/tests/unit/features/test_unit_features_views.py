@@ -1,7 +1,6 @@
 import json
 import uuid
 from datetime import date, datetime, timedelta
-from typing import Callable
 from unittest import TestCase, mock
 
 import pytest
@@ -11,7 +10,6 @@ from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.forms import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
-from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
@@ -2556,40 +2554,3 @@ def test_simple_feature_state_returns_only_latest_versions(
 
     response_json = response.json()
     assert response_json["count"] == 2
-
-
-def test_list_stale_features(
-    staff_client: APIClient,
-    with_project_permissions: Callable,
-    environment_v2_versioning: Environment,
-    feature: Feature,
-    project: Project,
-    django_assert_max_num_queries: DjangoAssertNumQueries,
-) -> None:
-    # Given
-    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    url = f"{base_url}?is_stale=True"
-    with_project_permissions([VIEW_PROJECT])
-
-    now = timezone.now()
-    with freeze_time(now - timedelta(days=project.stale_flags_limit_days + 1)):
-        # a stale flag
-        stale_flag = Feature.objects.create(name="stale_flag", project=project)
-
-        # and a flag that is marked as permanent so excluded from stale flags
-        permanent_flag = Feature.objects.create(name="permanent_flag", project=project)
-        permanent_tag = Tag.objects.create(
-            label="permanent", project=project, is_permanent=True
-        )
-        permanent_flag.tags.add(permanent_tag)
-
-    # When
-    with django_assert_max_num_queries(12):
-        response = staff_client.get(url)
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-
-    response_json = response.json()
-    assert response_json["count"] == 1
-    assert response_json["results"][0]["id"] == stale_flag.id

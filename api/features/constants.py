@@ -10,5 +10,3 @@ DRAFT = "DRAFT"
 # Tag filtering strategy
 UNION = "UNION"
 INTERSECTION = "INTERSECTION"
-
-STALE_FLAGS_TAG_LABEL = "Stale"
