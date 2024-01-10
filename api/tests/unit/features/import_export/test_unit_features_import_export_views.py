@@ -378,7 +378,7 @@ def test_list_feature_import_with_filtered_environments(
     )
 
     url = reverse(
-        "api-v1:projects:feature-import-list",
+        "api-v1:projects:feature-imports",
         args=[project.id],
     )
 
@@ -409,84 +409,8 @@ def test_list_feature_import_unauthorized(
         data="{}",
     )
     url = reverse(
-        "api-v1:projects:feature-import-list",
+        "api-v1:projects:feature-imports",
         args=[project.id],
-    )
-
-    # When
-    response = staff_client.get(url)
-
-    # Then
-    assert response.status_code == 403
-
-
-def test_retrieve_feature_import(
-    staff_client: APIClient,
-    staff_user: FFAdminUser,
-    project: Project,
-    with_project_permissions: Callable[[list[str], int], None],
-) -> None:
-    # Given
-    with_project_permissions([VIEW_PROJECT])
-    environment = Environment.objects.create(
-        name="Allowed admin for this environment",
-        project=project,
-    )
-    UserEnvironmentPermission.objects.create(
-        user=staff_user,
-        environment=environment,
-        admin=True,
-    )
-
-    feature_import = FeatureImport.objects.create(
-        environment=environment,
-        strategy=OVERWRITE_DESTRUCTIVE,
-        status=PROCESSING,
-        data="{}",
-    )
-
-    # Second feature import for testing permission queryset.
-    FeatureImport.objects.create(
-        environment=environment,
-        strategy=OVERWRITE_DESTRUCTIVE,
-        status=PROCESSING,
-        data="{}",
-    )
-
-    url = reverse(
-        "api-v1:features:feature-import-retrieve-detail",
-        args=[feature_import.id],
-    )
-
-    # When
-    response = staff_client.get(url)
-
-    # Then
-    assert response.status_code == 200
-    assert response.data["environment_id"] == environment.id
-    assert response.data["id"] == feature_import.id
-    assert response.data["status"] == PROCESSING
-    assert response.data["strategy"] == OVERWRITE_DESTRUCTIVE
-
-
-def test_retrieve_feature_import_unauthorized(
-    staff_client: APIClient,
-    staff_user: FFAdminUser,
-    environment: Environment,
-    project: Project,
-    with_project_permissions: Callable[[list[str], int], None],
-) -> None:
-    # Given
-    feature_import = FeatureImport.objects.create(
-        environment=environment,
-        strategy=OVERWRITE_DESTRUCTIVE,
-        status=PROCESSING,
-        data="{}",
-    )
-
-    url = reverse(
-        "api-v1:features:feature-import-retrieve-detail",
-        args=[feature_import.id],
     )
 
     # When
