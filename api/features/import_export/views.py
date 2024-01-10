@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db.models import QuerySet
 from django.http import Http404
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import mixins, permissions, viewsets
+from rest_framework import permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import ListAPIView, get_object_or_404
 from rest_framework.request import Request
@@ -23,7 +23,6 @@ from .permissions import (
     FeatureExportListPermissions,
     FeatureImportListPermissions,
     FeatureImportPermissions,
-    FeatureImportRetrievePermissions,
 )
 from .serializers import (
     CreateFeatureExportSerializer,
@@ -121,7 +120,7 @@ class FeatureExportListView(ListAPIView):
         user = self.request.user
 
         for environment in Environment.objects.filter(
-            project_id=self.kwargs["project_id"],
+            project_id=self.kwargs["project_pk"],
         ):
             if user.is_environment_admin(environment):
                 environment_ids.append(environment.id)
@@ -131,7 +130,7 @@ class FeatureExportListView(ListAPIView):
         )
 
 
-class FeatureImportViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+class FeatureImportListView(ListAPIView):
     serializer_class = FeatureImportSerializer
     permission_classes = [FeatureImportListPermissions]
 
@@ -148,9 +147,3 @@ class FeatureImportViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         return FeatureImport.objects.filter(environment__in=environment_ids).order_by(
             "-created_at"
         )
-
-
-class FeatureImportRetrieve(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
-    serializer_class = FeatureImportSerializer
-    permission_classes = [FeatureImportRetrievePermissions]
-    queryset = FeatureImport.objects.all()
