@@ -414,6 +414,6 @@ export type Res = {
   featureExport: { id: string }
   featureExports: PagedResponse<FeatureExport>
   flagsmithProjectImport: { id: string }
-  featureImports: FeatureImport[]
+  featureImports: PagedResponse<FeatureImport>
   // END OF TYPES
 }

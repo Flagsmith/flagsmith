@@ -248,7 +248,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   }, [projectFlags, search, tags, tagStrategy, showArchived])
 
   const processingImport = useMemo(() => {
-    return featureImports?.find(
+    return featureImports?.results?.find(
       (featureImport) => featureImport.status === 'PROCESSING',
     )
   }, [featureImports])

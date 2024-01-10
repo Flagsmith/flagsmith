@@ -12,7 +12,7 @@ export const featureImportService = service
       >({
         providesTags: [{ id: 'LIST', type: 'FeatureImport' }],
         query: (query) => ({
-          url: `projects/${query.projectId}/feature-imports`,
+          url: `projects/${query.projectId}/feature-imports/`,
         }),
       }),
       // END OF ENDPOINTS
@@ -26,9 +26,6 @@ export async function getFeatureImports(
     typeof featureImportService.endpoints.getFeatureImports.initiate
   >[1],
 ) {
-  store.dispatch(
-    featureImportService.endpoints.getFeatureImports.initiate(data, options),
-  )
   return Promise.all(
     store.dispatch(featureImportService.util.getRunningQueriesThunk()),
   )

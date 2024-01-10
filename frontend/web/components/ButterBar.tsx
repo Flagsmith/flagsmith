@@ -1,11 +1,11 @@
-import React, { useMemo, useRef } from 'react'
+import React, { useCallback, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import ProjectStore from 'common/stores/project-store'
 import ReactMarkdown from 'react-markdown'
 import Icon from './Icon'
 import Utils from 'common/utils/utils'
-import { Environment } from 'common/types/responses'
+import { Environment, FeatureImport, Res } from 'common/types/responses'
 import { useGetFeatureImportsQuery } from 'common/services/useFeatureImport'
 import AppActions from 'common/dispatcher/app-actions'
 
@@ -17,25 +17,43 @@ interface ButterBarProps {
 const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
   const matches = document.location.href.match(/\/environment\/([^/]*)/)
   const environment = matches && matches[1]
+  const timerRef = useRef<NodeJS.Timer>()
   const { data: featureImports, refetch } = useGetFeatureImportsQuery({
     projectId,
   })
   const processingRef = useRef(false)
+  const checkProcessing = useCallback(
+    (processing: FeatureImport | undefined) => {
+      if (processing) {
+        if (timerRef.current) {
+          clearTimeout(timerRef.current)
+        }
+        timerRef.current = setTimeout(() => {
+          refetch().then((res) => {
+            const data = res?.data as Res['featureImports']
+            checkProcessing(
+              data?.results?.find(
+                (featureImport) => featureImport.status === 'PROCESSING',
+              ),
+            )
+          })
+        }, 2000)
+      }
+
+      if (!processing && processingRef.current && environment) {
+        AppActions.refreshFeatures(projectId, environment)
+      }
+    },
+    [environment, refetch, projectId],
+  )
   const processingImport = useMemo(() => {
-    const processing = featureImports?.find(
+    const processing = featureImports?.results?.find(
       (featureImport) => featureImport.status === 'PROCESSING',
     )
-    if (processing) {
-      setTimeout(() => {
-        refetch()
-      }, 1000)
-    }
-
-    if (!processing && processingRef.current && environment) {
-      AppActions.refreshFeatures(projectId, environment)
-    }
+    checkProcessing(processing)
     return processing
-  }, [featureImports, refetch])
+  }, [checkProcessing, featureImports])
+
   if (processingImport) {
     return (
       <div className='butter-bar font-weight-medium'>
