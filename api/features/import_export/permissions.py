@@ -1,7 +1,6 @@
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
-from rest_framework.viewsets import GenericViewSet
 
 from environments.models import Environment
 from features.import_export.models import FeatureExport
@@ -60,7 +59,7 @@ class FeatureExportListPermissions(IsAuthenticated):
 
 
 class FeatureImportListPermissions(IsAuthenticated):
-    def has_permission(self, request: Request, view: GenericViewSet) -> bool:
+    def has_permission(self, request: Request, view: ListAPIView) -> bool:
         if not super().has_permission(request, view):
             return False
 
