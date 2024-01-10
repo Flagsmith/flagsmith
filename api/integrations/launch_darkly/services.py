@@ -8,6 +8,7 @@ from django.utils import timezone
 from flag_engine.segments import constants
 from requests.exceptions import RequestException
 
+from environments.identities.models import Identity
 from environments.models import Environment
 from features.feature_types import MULTIVARIATE, STANDARD, FeatureType
 from features.models import (
@@ -55,7 +56,7 @@ def _log_error(
     import_request: LaunchDarklyImportRequest,
     error_message: str,
 ) -> None:
-    import_request.status["error_message"] = error_message
+    import_request.status["error_messages"] += [error_message]
 
 
 @contextmanager
@@ -68,7 +69,7 @@ def _complete_import_request(
     If no exception raised, assume successful import.
 
     In case wrapped code needs to expose an error to the user, it should populate
-    `import_request.status["error_message"]` before raising an exception.
+    `import_request.status["error_messages"]` before raising an exception.
     """
     try:
         yield
@@ -184,6 +185,7 @@ def _get_segment_name(name: str, env: str) -> str:
 
 
 def _create_feature_segments_for_segment_match_clauses(
+    import_request: LaunchDarklyImportRequest,
     clauses: list[Clause],
     project: Project,
     feature: Feature,
@@ -206,14 +208,18 @@ def _create_feature_segments_for_segment_match_clauses(
     """
 
     if any(clause["op"] != "segmentMatch" for clause in clauses):
-        logger.warning(
-            f"Nested segment match is not supported, skipping for {feature.name} in {environment.name}"
+        _log_error(
+            import_request=import_request,
+            error_message=f"Nested segment match is not supported, skipping"
+            f" for {feature.name} in {environment.name}",
         )
         return []
 
     if any(clause["negate"] is True for clause in clauses):
-        logger.warning(
-            f"Negated segment match is not supported, skipping for {feature.name} in {environment.name}"
+        _log_error(
+            import_request=import_request,
+            error_message=f"Negated segment match is not supported, skipping"
+            f" for {feature.name} in {environment.name}",
         )
         return []
 
@@ -248,6 +254,7 @@ def _create_feature_segments_for_segment_match_clauses(
 
 
 def _create_segment_rule_for_segment(
+    import_request: LaunchDarklyImportRequest,
     segment: Segment,
     clauses: list[Clause],
 ) -> SegmentRule:
@@ -303,16 +310,18 @@ def _create_segment_rule_for_segment(
                     operator=operator,
                     created_with_segment=True,
                 )
-
         else:
-            logger.warning(
-                "Can't map launch darkly operator: " + clause["op"] + ", skipping..."
+            _log_error(
+                import_request=import_request,
+                error_message=f"Can't map launch darkly operator: {clause['op']}"
+                f" skipping for segment: {segment.name}",
             )
 
     return parent_rule
 
 
 def _create_feature_segment_from_clauses(
+    import_request: LaunchDarklyImportRequest,
     clauses: list[Clause],
     project: Project,
     feature: Feature,
@@ -340,6 +349,7 @@ def _create_feature_segment_from_clauses(
     # specific segment.
     if "segmentMatch" in [clause["op"] for clause in clauses]:
         return _create_feature_segments_for_segment_match_clauses(
+            import_request=import_request,
             clauses=clauses,
             project=project,
             feature=feature,
@@ -354,6 +364,7 @@ def _create_feature_segment_from_clauses(
 
     # Create a targeting rule for the new feature-specific segment.
     _create_segment_rule_for_segment(
+        import_request=import_request,
         segment=segment,
         clauses=clauses,
     )
@@ -377,26 +388,76 @@ def _create_feature_segment_from_clauses(
 
 
 def _import_targets(
+    import_request: LaunchDarklyImportRequest,
     ld_flag_config: ld_types.FeatureFlagConfig,
     feature: Feature,
     environment: Environment,
+    mv_feature_options_by_variation: dict[str, MultivariateFeatureOption],
 ) -> None:
     """
     Import the individual targeting rules for the given Launch Darkly's feature flag.
 
     :param ld_flag_config: the feature flag config from Launch Darkly.
     :param feature: the feature to target for identities.
-    :return:
+    :param environment: the environment to target for identities.
+    :param mv_feature_options_by_variation: a mapping from variation index to MultivariateFeatureOption if the
+    flag is multivariate.
     """
-    # TODO: Update flag states for individual targets.
     if "targets" in ld_flag_config:
-        logger.warning("Targets: " + str(ld_flag_config["targets"]))
+        for target in ld_flag_config["targets"]:
+            for identifier in target["values"]:
+                identity, _ = Identity.objects.get_or_create(
+                    identifier=identifier,
+                    environment=environment,
+                )
+                identity.update_traits(
+                    [
+                        {
+                            "trait_key": "key",
+                            "trait_value": identifier,
+                        }
+                    ]
+                )
+
+                # If not multivariate, we can just set the feature state directly.
+                if len(mv_feature_options_by_variation) == 0:
+                    FeatureState.objects.update_or_create(
+                        feature=feature,
+                        feature_segment=None,
+                        environment=environment,
+                        identity=identity,
+                        defaults={"enabled": target["variation"] == 0},
+                    )
+                else:
+                    feature_state, _ = FeatureState.objects.update_or_create(
+                        feature=feature,
+                        feature_segment=None,
+                        environment=environment,
+                        identity=identity,
+                        defaults={"enabled": True},
+                    )
+
+                    mv_feature_option = mv_feature_options_by_variation[
+                        str(target["variation"])
+                    ]
+                    MultivariateFeatureStateValue.objects.update_or_create(
+                        feature_state=feature_state,
+                        multivariate_feature_option=mv_feature_option,
+                        defaults={
+                            "percentage_allocation": 100,
+                        },
+                    )
 
     if "contextTargets" in ld_flag_config:
-        logger.warning("Context targets: " + str(ld_flag_config["contextTargets"]))
+        _log_error(
+            import_request=import_request,
+            error_message=f"Context targets are not supported, skipping context targets for feature"
+            f" {feature.name} in environment {environment.name}",
+        )
 
 
 def _import_rules(
+    import_request: LaunchDarklyImportRequest,
     ld_flag_config: ld_types.FeatureFlagConfig,
     feature: Feature,
     environment: Environment,
@@ -432,12 +493,13 @@ def _import_rules(
             # Create the feature segment for the given rule and get the feature state objects from those
             # newly created feature-specific segments.
             feature_states = _create_feature_segment_from_clauses(
-                rule["clauses"],
-                feature.project,
-                feature,
-                environment,
-                segments_by_ld_key,
-                rule_name,
+                import_request=import_request,
+                clauses=rule["clauses"],
+                project=feature.project,
+                feature=feature,
+                environment=environment,
+                segments_by_ld_key=segments_by_ld_key,
+                rule_name=rule_name,
             )
 
             # For Multivariate flags, we need to set targeting rules for each variation.
@@ -461,11 +523,35 @@ def _import_rules(
                                 },
                             )
                     elif rollout is not None:
-                        logger.warning("Rollout is: " + str(rollout))
-                        # TODO: Complete rollout logic
+                        cumulative_rollout = rollout_baseline = 0
+                        for weighted_variation in rollout["variations"]:
+                            # Find the corresponding variation value.
+                            weight = weighted_variation["weight"]
+                            cumulative_rollout += weight / 1000
+                            cumulative_rollout_rounded = round(cumulative_rollout)
+
+                            # LD has weights between 0-100,000. Flagsmith has weights between 0-100.
+                            # While scaling down, we need to keep track of the cumulative rollout so the
+                            # values will add up to 100%.
+                            percentage_allocation = (
+                                cumulative_rollout_rounded - rollout_baseline
+                            )
+                            rollout_baseline = cumulative_rollout_rounded
+
+                            mv_feature_option = mv_feature_options_by_variation[
+                                str(weighted_variation["variation"])
+                            ]
+                            MultivariateFeatureStateValue.objects.update_or_create(
+                                feature_state=feature_state,
+                                multivariate_feature_option=mv_feature_option,
+                                defaults={
+                                    "percentage_allocation": percentage_allocation
+                                },
+                            )
 
 
 def _create_boolean_feature_states(
+    import_request: LaunchDarklyImportRequest,
     ld_flag: ld_types.FeatureFlag,
     feature: Feature,
     environments_by_ld_environment_key: dict[str, Environment],
@@ -488,18 +574,26 @@ def _create_boolean_feature_states(
             feature_state=feature_state,
         )
 
-        _import_targets(ld_flag_config, feature, environment)
+        _import_targets(
+            import_request=import_request,
+            ld_flag_config=ld_flag_config,
+            feature=feature,
+            environment=environment,
+            mv_feature_options_by_variation={},
+        )
         _import_rules(
-            ld_flag_config,
-            feature,
-            environment,
-            variations_by_idx,
-            segments_by_ld_key,
+            import_request=import_request,
+            ld_flag_config=ld_flag_config,
+            feature=feature,
+            environment=environment,
+            variations_by_idx=variations_by_idx,
+            segments_by_ld_key=segments_by_ld_key,
             mv_feature_options_by_variation={},
         )
 
 
 def _create_string_feature_states(
+    import_request: LaunchDarklyImportRequest,
     ld_flag: ld_types.FeatureFlag,
     feature: Feature,
     environments_by_ld_environment_key: dict[str, Environment],
@@ -539,18 +633,26 @@ def _create_string_feature_states(
             defaults={"type": STRING, "string_value": string_value},
         )
 
-        _import_targets(ld_flag_config, feature, environment)
+        _import_targets(
+            import_request=import_request,
+            ld_flag_config=ld_flag_config,
+            feature=feature,
+            environment=environment,
+            mv_feature_options_by_variation={},
+        )
         _import_rules(
-            ld_flag_config,
-            feature,
-            environment,
-            variations_by_idx,
-            segments_by_ld_key,
+            import_request=import_request,
+            ld_flag_config=ld_flag_config,
+            feature=feature,
+            environment=environment,
+            variations_by_idx=variations_by_idx,
+            segments_by_ld_key=segments_by_ld_key,
             mv_feature_options_by_variation={},
         )
 
 
 def _create_mv_feature_states(
+    import_request: LaunchDarklyImportRequest,
     ld_flag: ld_types.FeatureFlag,
     feature: Feature,
     environments_by_ld_environment_key: dict[str, Environment],
@@ -629,13 +731,20 @@ def _create_mv_feature_states(
                     defaults={"percentage_allocation": percentage_allocation},
                 )
 
-        _import_targets(ld_flag_config, feature, environment)
+        _import_targets(
+            import_request=import_request,
+            ld_flag_config=ld_flag_config,
+            feature=feature,
+            environment=environment,
+            mv_feature_options_by_variation=mv_feature_options_by_variation,
+        )
         _import_rules(
-            ld_flag_config,
-            feature,
-            environment,
-            variations_by_idx,
-            segments_by_ld_key,
+            import_request=import_request,
+            ld_flag_config=ld_flag_config,
+            feature=feature,
+            environment=environment,
+            variations_by_idx=variations_by_idx,
+            segments_by_ld_key=segments_by_ld_key,
             mv_feature_options_by_variation=mv_feature_options_by_variation,
         )
 
@@ -644,7 +753,16 @@ def _get_feature_type_and_feature_state_factory(
     ld_flag: ld_types.FeatureFlag,
 ) -> Tuple[
     FeatureType,
-    Callable[[ld_types.FeatureFlag, Feature, dict[str, Environment]], None],
+    Callable[
+        [
+            LaunchDarklyImportRequest,
+            ld_types.FeatureFlag,
+            Feature,
+            dict[str, Environment],
+            dict[str, Segment],
+        ],
+        None,
+    ],
 ]:
     match ld_flag["kind"]:
         case "multivariate" if len(ld_flag["variations"]) > 2:
@@ -661,6 +779,7 @@ def _get_feature_type_and_feature_state_factory(
 
 
 def _create_feature_from_ld(
+    import_request: LaunchDarklyImportRequest,
     ld_flag: ld_types.FeatureFlag,
     environments_by_ld_environment_key: dict[str, Environment],
     tags_by_ld_tag: dict[str, Tag],
@@ -692,6 +811,7 @@ def _create_feature_from_ld(
     feature.tags.set(tags)
 
     feature_state_factory(
+        import_request=import_request,
         ld_flag=ld_flag,
         feature=feature,
         environments_by_ld_environment_key=environments_by_ld_environment_key,
@@ -702,6 +822,7 @@ def _create_feature_from_ld(
 
 
 def _create_features_from_ld(
+    import_request: LaunchDarklyImportRequest,
     ld_flags: list[ld_types.FeatureFlag],
     environments_by_ld_environment_key: dict[str, Environment],
     tags_by_ld_tag: dict[str, Tag],
@@ -710,6 +831,7 @@ def _create_features_from_ld(
 ) -> list[Feature]:
     return [
         _create_feature_from_ld(
+            import_request=import_request,
             ld_flag=ld_flag,
             environments_by_ld_environment_key=environments_by_ld_environment_key,
             tags_by_ld_tag=tags_by_ld_tag,
@@ -720,7 +842,36 @@ def _create_features_from_ld(
     ]
 
 
+def _include_users_to_segment(
+    segment: Segment,
+    users: list[str],
+    negate: bool,
+) -> None:
+    if len(users) == 0:
+        return
+
+    # Find the parent rule of the segment.
+    parent_rule, _ = SegmentRule.objects.get_or_create(
+        segment=segment, type=SegmentRule.ALL_RULE
+    )
+
+    # Create a condition to match against those identities via "key" trait.
+    identities_string = ",".join(users)
+    included_rule = SegmentRule.objects.create(
+        rule=parent_rule,
+        type=SegmentRule.NONE_RULE if negate else SegmentRule.ANY_RULE,
+    )
+    Condition.objects.update_or_create(
+        rule=included_rule,
+        property="key",
+        value=identities_string,
+        operator=constants.IN,
+        created_with_segment=True,
+    )
+
+
 def _create_segments_from_ld(
+    import_request: LaunchDarklyImportRequest,
     ld_segments: list[tuple[ld_types.UserSegment, str]],
     environments_by_ld_environment_key: dict[str, Environment],
     tags_by_ld_tag: dict[str, Tag],
@@ -751,23 +902,41 @@ def _create_segments_from_ld(
         rules = ld_segment["rules"]
         for rule in rules:
             _create_segment_rule_for_segment(
-                segment,
-                rule["clauses"],
+                import_request=import_request,
+                segment=segment,
+                clauses=rule["clauses"],
+            )
+
+        # Create or update identities that are mentioned in the segment.
+        for identifier in ld_segment["included"] + ld_segment["excluded"]:
+            identity, _ = Identity.objects.get_or_create(
+                identifier=identifier,
+                environment=environments_by_ld_environment_key[env],
+            )
+            identity.update_traits(
+                [
+                    {
+                        "trait_key": "key",
+                        "trait_value": identifier,
+                    }
+                ]
+            )
+
+        _include_users_to_segment(segment, ld_segment["included"], False)
+        _include_users_to_segment(segment, ld_segment["excluded"], True)
+
+        if (
+            len(ld_segment["includedContexts"]) > 0
+            or len(ld_segment["excludedContexts"]) > 0
+        ):
+            _log_error(
+                import_request=import_request,
+                error_message=f"Contexts are not supported, skipping contexts for segment: {segment.name}",
             )
 
         # Create an empty rule if there are no rules. This is required to create an "SegmentRule" object.
         # Otherwise, UI fails to display the segment.
-        if len(rules) == 0:
-            _create_segment_rule_for_segment(
-                segment,
-                [],
-            )
-
-        # TODO: Import users
-        logger.warning("Included segment users: " + str(ld_segment["included"]))
-        logger.warning("Excluded segment users: " + str(ld_segment["excluded"]))
-        logger.warning("Included context users: " + str(ld_segment["includedContexts"]))
-        logger.warning("Excluded context users: " + str(ld_segment["excludedContexts"]))
+        SegmentRule.objects.get_or_create(segment=segment, type=SegmentRule.ALL_RULE)
 
     return segments_by_ld_key
 
@@ -786,6 +955,7 @@ def create_import_request(
     status: LaunchDarklyImportStatus = {
         "requested_environment_count": ld_project["environments"]["totalCount"],
         "requested_flag_count": requested_flag_count,
+        "error_messages": [],
     }
 
     return LaunchDarklyImportRequest.objects.create(
@@ -835,27 +1005,32 @@ def process_import_request(
             )
             raise
 
+        # Create environments
         environments_by_ld_environment_key = _create_environments_from_ld(
             ld_environments=ld_environments,
             project_id=import_request.project_id,
         )
 
+        # Create segments
         segment_tags_by_ld_tag = _create_tags_from_ld(
             ld_tags=ld_segment_tags,
             project_id=import_request.project_id,
         )
         segments_by_ld_key = _create_segments_from_ld(
+            import_request=import_request,
             ld_segments=ld_segments,
             environments_by_ld_environment_key=environments_by_ld_environment_key,
             tags_by_ld_tag=segment_tags_by_ld_tag,
             project_id=import_request.project_id,
         )
 
+        # Create flags
         flag_tags_by_ld_tag = _create_tags_from_ld(
             ld_tags=ld_flag_tags,
             project_id=import_request.project_id,
         )
         _create_features_from_ld(
+            import_request=import_request,
             ld_flags=ld_flags,
             environments_by_ld_environment_key=environments_by_ld_environment_key,
             tags_by_ld_tag=flag_tags_by_ld_tag,

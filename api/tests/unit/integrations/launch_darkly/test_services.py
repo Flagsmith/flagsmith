@@ -5,6 +5,8 @@ from django.core import signing
 from flag_engine.segments import constants as segment_constants
 from requests.exceptions import HTTPError, RequestException, Timeout
 
+from environments.identities.models import Identity
+from environments.identities.traits.models import Trait
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from integrations.launch_darkly.models import LaunchDarklyImportRequest
@@ -46,6 +48,7 @@ def test_create_import_request__return_expected(
     assert result.status == {
         "requested_environment_count": 2,
         "requested_flag_count": 9,
+        "error_messages": [],
     }
     assert signing.loads(result.ld_token, salt=expected_salt) == ld_token
     assert result.ld_project_key == ld_project_key
@@ -86,7 +89,7 @@ def test_process_import_request__api_error__expected_status(
     assert import_request.completed_at
     assert import_request.ld_token == ""
     assert import_request.status["result"] == "failure"
-    assert import_request.status["error_message"] == expected_error_message
+    assert import_request.status["error_messages"] == [expected_error_message]
 
 
 def test_process_import_request__success__expected_status(
@@ -300,7 +303,7 @@ def test_process_import_request__segments_imported(
     dynamic_list_2_production_segment_subrules = SegmentRule.objects.filter(
         rule=dynamic_list_2_production_segment_rule
     )
-    assert dynamic_list_2_production_segment_subrules.count() == 3
+    assert dynamic_list_2_production_segment_subrules.count() == 5
     # UI needs to have subrules as `ANY_RULE` to display properly.
     assert (
         list(dynamic_list_2_production_segment_subrules)[0].type == SegmentRule.ANY_RULE
@@ -345,6 +348,98 @@ def test_process_import_request__segments_imported(
     ) == {
         ("p3", segment_constants.REGEX, "foo[0-9]{0,1}"),
     }
+
+    # Include individual users
+    assert (
+        list(dynamic_list_2_production_segment_subrules)[3].type == SegmentRule.ANY_RULE
+    )
+    dynamic_list_2_production_segment_subrule_3_conditions = Condition.objects.filter(
+        rule=dynamic_list_2_production_segment_subrules[3]
+    )
+    assert set(
+        dynamic_list_2_production_segment_subrule_3_conditions.values_list(
+            "property", "operator", "value"
+        )
+    ) == {
+        ("key", segment_constants.IN, "foo"),
+    }
+
+    # Exclude individual users
+    assert (
+        list(dynamic_list_2_production_segment_subrules)[4].type
+        == SegmentRule.NONE_RULE
+    )
+    dynamic_list_2_production_segment_subrule_4_conditions = Condition.objects.filter(
+        rule=dynamic_list_2_production_segment_subrules[4]
+    )
+    assert set(
+        dynamic_list_2_production_segment_subrule_4_conditions.values_list(
+            "property", "operator", "value"
+        )
+    ) == {
+        ("key", segment_constants.IN, "bar"),
+    }
+
+    # User list segments
+    user_list_test_segment = Segment.objects.get(name="User List (Override for test)")
+    user_list_test_segment_rule = SegmentRule.objects.get(
+        segment=user_list_test_segment
+    )
+    # Parents are always "ALL" rules.
+    assert user_list_test_segment_rule.type == SegmentRule.ALL_RULE
+
+    user_list_test_segment_subrules = SegmentRule.objects.filter(
+        rule=user_list_test_segment_rule
+    )
+    assert user_list_test_segment_subrules.count() == 2
+    assert list(user_list_test_segment_subrules)[0].type == SegmentRule.ANY_RULE
+    user_list_test_segment_subrule_0_conditions = Condition.objects.filter(
+        rule=user_list_test_segment_subrules[0]
+    )
+    assert set(
+        user_list_test_segment_subrule_0_conditions.values_list(
+            "property", "operator", "value"
+        )
+    ) == {
+        ("key", segment_constants.IN, "user-102,user-101"),
+    }
+
+    assert list(user_list_test_segment_subrules)[1].type == SegmentRule.NONE_RULE
+    user_list_test_segment_subrule_1_conditions = Condition.objects.filter(
+        rule=user_list_test_segment_subrules[1]
+    )
+    assert set(
+        user_list_test_segment_subrule_1_conditions.values_list(
+            "property", "operator", "value"
+        )
+    ) == {
+        ("key", segment_constants.IN, "user-103"),
+    }
+
+    identifies_created = set(
+        Identity.objects.filter(environment__project=project).values_list(
+            "identifier", flat=True
+        )
+    )
+
+    assert identifies_created == {
+        "bar",
+        "user-10006",
+        "user-102",
+        "user2",
+        "user-103",
+        "user-101",
+        "foo",
+        "user1",
+        "user-1005",
+    }
+
+    # Each identity should have a trait called "key"
+    for identity in list(Identity.objects.filter(environment__project=project).all()):
+        trait_value = Trait.objects.get(
+            identity=identity, trait_key="key"
+        ).get_trait_value()
+        assert trait_value == identity.identifier
 
 
 def test_process_import_request__rules_imported(
