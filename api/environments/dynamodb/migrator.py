@@ -8,12 +8,12 @@ from features.multivariate.models import MultivariateFeatureStateValue
 from projects.models import Project
 from util.queryset import iterator_with_prefetch
 
-from .dynamodb_wrapper import (
+from .types import DynamoProjectMetadata, ProjectIdentityMigrationStatus
+from .wrappers import (
     DynamoEnvironmentAPIKeyWrapper,
     DynamoEnvironmentWrapper,
     DynamoIdentityWrapper,
 )
-from .types import DynamoProjectMetadata, ProjectIdentityMigrationStatus
 
 
 class IdentityMigrator:

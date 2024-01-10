@@ -29,7 +29,7 @@ use_parentheses = true
 multi_line_output = 3
 include_trailing_comma = true
 line_length = 79
-known_first_party=['analytics','app','custom_auth','environments','integrations','organisations','projects','segments','users','webhooks','api','audit','e2etests','features','permissions','util']
+known_first_party=['analytics','app','custom_auth','environments','integrations','organisations','projects','segments','tests','users','webhooks','api','audit','e2etests','features','permissions','util']
 known_third_party=['_pytest','apiclient','app_analytics','axes','chargebee','core','coreapi','corsheaders','dj_database_url','django','django_lifecycle','djoser','drf_writable_nested','drf_yasg','environs','google','influxdb_client','ordered_model','pyotp','pytest','pytz','requests','responses','rest_framework','rest_framework_nested','rest_framework_recursive','sentry_sdk','shortuuid','simple_history','six','telemetry','tests','trench','whitenoise']
 skip = ['migrations','.venv','.direnv']
 
@@ -120,7 +120,7 @@ pysaml2 = "^7.0.0"
 optional = true
 
 [tool.poetry.group.ldap.dependencies]
-flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v0.0.3" }
+flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v0.1.0" }
 
 [tool.poetry.group.dev.dependencies]
 django-test-migrations = "~1.2.0"
@@ -145,6 +145,7 @@ requests-mock = "^1.11.0"
 django-extensions = "^3.2.3"
 pdbpp = "^0.10.3"
 django-capture-on-commit-callbacks = "^1.11.0"
+pytest-testmon = "^2.0.13"
 mypy-boto3-dynamodb = "^1.33.0"
 
 [build-system]

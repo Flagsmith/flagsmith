@@ -188,5 +188,15 @@ export type Req = {
   enableFeatureVersioning: {
     environmentId: string
   }
+  getChangeRequests: PagedRequest<{
+    search?: string
+    environmentId: string
+    feature_id?: number
+    live_from_after?: string
+    committed?: boolean
+  }>
+  getGroupSummaries: {
+    orgId: string
+  }
   // END OF TYPES
 }
