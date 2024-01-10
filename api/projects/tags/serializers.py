@@ -12,7 +12,8 @@ class TagSerializer(serializers.ModelSerializer):
             "color",
             "description",
             "project",
+            "uuid",
             "is_permanent",
             "is_system_tag",
         )
-        read_only_fields = ("project", "is_system_tag")
+        read_only_fields = ("project", "uuid", "is_system_tag")
