@@ -104,6 +104,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
                       <div className='table-column flex flex-1'>
                         <div>
                           <DiffString
+                            data-test={'version-value'}
                             oldValue={diff.oldValue}
                             newValue={diff.newValue}
                           />
@@ -113,6 +114,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
 
                     <div className='table-column text-center'>
                       <DiffEnabled
+                        data-test={'version-enabled'}
                         oldValue={diff.oldEnabled}
                         newValue={diff.newEnabled}
                       />
