@@ -12,7 +12,9 @@ const Tabs = class extends React.Component {
     }
   }
   render() {
-    const children = this.props.children.filter((c) => !!c)
+    const children = (
+      this.props.children?.length ? this.props.children : [this.props.children]
+    ).filter((c) => !!c)
     const value = this.props.uncontrolled ? this.state.value : this.props.value
     return (
       <div className={`tabs ${this.props.className || ''}`}>
@@ -20,33 +22,34 @@ const Tabs = class extends React.Component {
           className={`tabs-nav ${this.props.theme}`}
           style={isMobile ? { flexWrap: 'wrap' } : {}}
         >
-          {children.map((child, i) => {
-            const isSelected = value == i
-            if (!child) {
-              return null
-            }
-            return (
-              <Button
-                type='button'
-                theme={this.props.buttonTheme}
-                data-test={child.props['data-test']}
-                id={child.props.id}
-                key={`button${i}`}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  e.preventDefault()
-                  if (this.props.uncontrolled) {
-                    this.setState({ value: i })
-                  } else {
-                    this.props.onChange(i)
-                  }
-                }}
-                className={`btn-tab ${isSelected ? ' tab-active' : ''}`}
-              >
-                {child.props.tabLabel}
-              </Button>
-            )
-          })}
+          {!(children.length === 1 && this.props.hideNavOnSingleTab) &&
+            children.map((child, i) => {
+              const isSelected = value == i
+              if (!child) {
+                return null
+              }
+              return (
+                <Button
+                  type='button'
+                  theme={this.props.buttonTheme}
+                  data-test={child.props['data-test']}
+                  id={child.props.id}
+                  key={`button${i}`}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    if (this.props.uncontrolled) {
+                      this.setState({ value: i })
+                    } else {
+                      this.props.onChange(i)
+                    }
+                  }}
+                  className={`btn-tab ${isSelected ? ' tab-active' : ''}`}
+                >
+                  {child.props.tabLabel}
+                </Button>
+              )
+            })}
         </div>
         {this.props.theme === 'tab' && <ModalHR className='tab-nav-hr' />}
         <div className='tabs-content'>

@@ -23,14 +23,29 @@ class TheComponent extends Component {
 
   state = {}
 
-  confirmToggle = (projectFlag, environmentFlag, cb) => {
+  confirmToggle = () => {
+    const {
+      environmentFlags,
+      environmentId,
+      projectFlag,
+      projectId,
+      toggleFlag,
+    } = this.props
+    const { id } = projectFlag
     openModal(
       'Toggle Feature',
       <ConfirmToggleFeature
         environmentId={this.props.environmentId}
         projectFlag={projectFlag}
-        environmentFlag={environmentFlag}
-        cb={cb}
+        environmentFlag={environmentFlags[id]}
+        cb={() => {
+          toggleFlag(
+            projectId,
+            environmentId,
+            projectFlag,
+            environmentFlags[id],
+          )
+        }}
       />,
       'p-0',
     )
@@ -73,7 +88,6 @@ class TheComponent extends Component {
         projectFlag.name
       }`,
       <CreateFlagModal
-        isEdit
         environmentId={this.props.environmentId}
         projectId={this.props.projectId}
         projectFlag={projectFlag}
@@ -96,10 +110,8 @@ class TheComponent extends Component {
       environmentId,
       permission,
       projectFlag,
-      projectFlags,
       projectId,
       removeFlag,
-      toggleFlag,
     } = this.props
     const { created_date, description, id, name } = this.props.projectFlag
     const readOnly =
@@ -144,19 +156,7 @@ class TheComponent extends Component {
                   this.editFeature(projectFlag, environmentFlags[id])
                   return
                 }
-                this.confirmToggle(
-                  projectFlag,
-                  environmentFlags[id],
-                  (environments) => {
-                    toggleFlag(
-                      _.findIndex(projectFlags, { id }),
-                      environments,
-                      null,
-                      this.props.environmentFlags,
-                      this.props.projectFlags,
-                    )
-                  },
-                )
+                this.confirmToggle()
               }}
             />
           </div>
@@ -356,13 +356,7 @@ class TheComponent extends Component {
                 this.editFeature(projectFlag, environmentFlags[id])
                 return
               }
-              this.confirmToggle(
-                projectFlag,
-                environmentFlags[id],
-                (environments) => {
-                  toggleFlag(_.findIndex(projectFlags, { id }), environments)
-                },
-              )
+              this.confirmToggle()
             }}
           />
         </div>
@@ -373,28 +367,55 @@ class TheComponent extends Component {
             e.stopPropagation()
           }}
         >
-          {AccountStore.getOrganisationRole() === 'ADMIN' &&
-            !this.props.hideAudit && (
-              <Tooltip
-                html
-                title={
-                  <div
-                    onClick={() => {
-                      if (disableControls) return
-                      this.context.router.history.push(
-                        `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
-                      )
-                    }}
-                    className='text-center'
-                    data-test={`feature-history-${this.props.index}`}
-                  >
-                    <Icon name='clock' width={24} fill='#9DA4AE' />
-                  </div>
-                }
-              >
-                Feature history
-              </Tooltip>
-            )}
+          {!this.props.hideAudit && (
+            <>
+              {environment?.use_v2_feature_versioning ? (
+                <Tooltip
+                  html
+                  title={
+                    <div
+                      onClick={() => {
+                        if (disableControls) return
+                        this.context.router.history.push(
+                          `/project/${projectId}/environment/${environmentId}/history?feature=${projectFlag.id}`,
+                        )
+                      }}
+                      className='text-center'
+                      data-test={`feature-history-${this.props.index}`}
+                    >
+                      <Icon name='clock' width={24} fill='#9DA4AE' />
+                    </div>
+                  }
+                >
+                  Feature history
+                </Tooltip>
+              ) : (
+                AccountStore.getOrganisationRole() === 'ADMIN' && (
+                  <>
+                    <Tooltip
+                      html
+                      title={
+                        <div
+                          onClick={() => {
+                            if (disableControls) return
+                            this.context.router.history.push(
+                              `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
+                            )
+                          }}
+                          className='text-center'
+                          data-test={`feature-history-${this.props.index}`}
+                        >
+                          <Icon name='clock' width={24} fill='#9DA4AE' />
+                        </div>
+                      }
+                    >
+                      Feature history
+                    </Tooltip>
+                  </>
+                )
+              )}
+            </>
+          )}
         </div>
         <div
           className='table-column text-right'

@@ -15,7 +15,7 @@ export default async function () {
   await setText(byId('email'), E2E_SIGN_UP_USER) // visit the url
   await setText(byId('password'), PASSWORD) // visit the url
   await click(byId('signup-btn'))
-  await setText('[name="orgName"]', 'Bullet Train Ltd 0')
+  await setText('[name="orgName"]', 'Flagsmith Ltd 0')
   await click('#create-org-btn')
   await waitForElementVisible(byId('project-select-page'))
 
