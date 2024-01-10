@@ -14,7 +14,7 @@ defaults:
     working-directory: api
 
 env:
-  FLAGSMITH_RBAC_REVISION: v0.5.0
+  FLAGSMITH_RBAC_REVISION: v0.7.0
 
 jobs:
   test:

@@ -10,6 +10,7 @@ from django.db import models
 from django.db.models import Count
 from django.utils import timezone
 from django_lifecycle import (
+    AFTER_DELETE,
     AFTER_SAVE,
     AFTER_UPDATE,
     BEFORE_CREATE,
@@ -17,6 +18,7 @@ from django_lifecycle import (
     hook,
 )
 
+from environments.dynamodb import DynamoProjectMetadata
 from organisations.models import Organisation
 from permissions.models import (
     PROJECT_PERMISSION_TYPE,
@@ -151,6 +153,10 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     @hook(AFTER_UPDATE)
     def write_to_dynamo(self):
         write_environments_to_dynamodb.delay(kwargs={"project_id": self.id})
+
+    @hook(AFTER_DELETE)
+    def clean_up_dynamo(self):
+        DynamoProjectMetadata(self.id).delete()
 
     @property
     def is_edge_project_by_default(self) -> bool:

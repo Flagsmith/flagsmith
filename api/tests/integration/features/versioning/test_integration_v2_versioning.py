@@ -5,6 +5,7 @@ import typing
 import pytest
 from django.urls import reverse
 from rest_framework import status
+
 from tests.test_helpers import generate_segment_data
 
 from .types import (
