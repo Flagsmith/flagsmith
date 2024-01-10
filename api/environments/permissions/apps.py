@@ -1,6 +1,7 @@
-from django.apps import AppConfig
+from core.apps import BaseAppConfig
 
 
-class EnvironmentPermissionsConfig(AppConfig):
+class EnvironmentPermissionsConfig(BaseAppConfig):
+    default = True
     name = "environments.permissions"
     label = "environment_permissions"

@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
-from django.apps import AppConfig
+from core.apps import BaseAppConfig
 
 
-class ProjectsConfig(AppConfig):
+class ProjectsConfig(BaseAppConfig):
+    default = True
     name = "projects"

@@ -1,5 +1,6 @@
-from django.apps import AppConfig
+from core.apps import BaseAppConfig
 
 
-class TagsConfig(AppConfig):
+class TagsConfig(BaseAppConfig):
+    default = True
     name = "projects.tags"

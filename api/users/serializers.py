@@ -20,9 +20,9 @@ class UserIdSerializer(serializers.Serializer):
 
         if user and organisation in user.organisations.all():
             user.remove_organisation(organisation)
-        user.permission_groups.remove(
-            *UserPermissionGroup.objects.filter(organisation=organisation)
-        )
+        # cannot use User.permission_groups reverse accessor
+        for group in organisation.permission_groups.filter(users=user):
+            group.users.remove(user)
 
         return user
 

@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+import typing
 
 from django.db import models
 
@@ -23,6 +23,14 @@ class UserOrganisationPermission(AbstractBasePermissionModel):
             )
         ]
 
+    grant_type = "User Organisation"
+
+    def get_audit_log_identity(self) -> str:
+        return f"{self.user.email} / {self.organisation.name}"
+
+    def get_organisations(self, delta=None) -> typing.Iterable[Organisation] | None:
+        return [self.organisation]
+
 
 class UserPermissionGroupOrganisationPermission(AbstractBasePermissionModel):
     organisation = models.ForeignKey(
@@ -39,6 +47,14 @@ class UserPermissionGroupOrganisationPermission(AbstractBasePermissionModel):
                 name="unique_group_organisation_permission",
             )
         ]
+
+    grant_type = "Group Organisation"
+
+    def get_audit_log_identity(self) -> str:
+        return f"{self.group.name} / {self.organisation.name}"
+
+    def get_organisations(self, delta=None) -> typing.Iterable[Organisation] | None:
+        return [self.organisation]
 
 
 class OrganisationPermissionModel(PermissionModel):

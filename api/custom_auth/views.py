@@ -13,7 +13,11 @@ from trench.views.authtoken import (
     AuthTokenLoginWithMFACode,
 )
 
-from custom_auth.serializers import CustomUserDelete
+from custom_auth.serializers import (
+    CustomCodeLoginSerializer,
+    CustomLoginSerializer,
+    CustomUserDelete,
+)
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 
 from .models import UserPasswordResetRequest
@@ -21,18 +25,20 @@ from .models import UserPasswordResetRequest
 
 class CustomAuthTokenLoginOrRequestMFACode(AuthTokenLoginOrRequestMFACode):
     """
-    Class to handle throttling for login requests
+    Override password-login/code-request view to add throttling and custom serializer
     """
 
+    serializer_class = CustomLoginSerializer
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "login"
 
 
 class CustomAuthTokenLoginWithMFACode(AuthTokenLoginWithMFACode):
     """
-    Override class to add throttling
+    Override code-login view to add throttling and custom serializer
     """
 
+    serializer_class = CustomCodeLoginSerializer
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "mfa_code"
 

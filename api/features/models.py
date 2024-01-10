@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import annotations
 
 import datetime
 import logging
@@ -87,7 +87,7 @@ if typing.TYPE_CHECKING:
 class Feature(
     SoftDeleteExportableModel,
     CustomLifecycleModelMixin,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(RelatedObjectType.FEATURE, ["uuid"]),
 ):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
@@ -118,9 +118,6 @@ class Feature(
     )
 
     is_server_key_only = models.BooleanField(default=False)
-
-    history_record_class_path = "features.models.HistoricalFeature"
-    related_object_type = RelatedObjectType.FEATURE
 
     objects = FeatureManager()
 
@@ -158,16 +155,16 @@ class Feature(
     def __str__(self):
         return "Project %s - Feature %s" % (self.project.name, self.name)
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         return FEATURE_CREATED_MESSAGE % self.name
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> str | None:
         return FEATURE_DELETED_MESSAGE % self.name
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         return FEATURE_UPDATED_MESSAGE % self.name
 
-    def _get_project(self) -> typing.Optional["Project"]:
+    def get_project(self, delta=None) -> Project | None:
         return self.project
 
 
@@ -184,11 +181,8 @@ def get_next_segment_priority(feature):
 class FeatureSegment(
     AbstractBaseExportableModel,
     OrderedModelBase,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(RelatedObjectType.FEATURE, ["uuid"]),
 ):
-    history_record_class_path = "features.models.HistoricalFeatureSegment"
-    related_object_type = RelatedObjectType.FEATURE
-
     feature = models.ForeignKey(
         Feature, on_delete=models.CASCADE, related_name="feature_segments"
     )
@@ -358,24 +352,21 @@ class FeatureSegment(
     def get_audit_log_related_object_id(self, history_instance) -> int:
         return self.feature_id
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> str | None:
         return SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
             self.feature.name,
             self.segment.name,
         )
 
-    def _get_environment(self) -> "Environment":
+    def get_environment(self, delta=None) -> Environment | None:
         return self.environment
 
 
 class FeatureState(
     SoftDeleteExportableModel,
     LifecycleModelMixin,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(RelatedObjectType.FEATURE_STATE, ["uuid"]),
 ):
-    history_record_class_path = "features.models.HistoricalFeatureState"
-    related_object_type = RelatedObjectType.FEATURE_STATE
-
     feature = models.ForeignKey(
         Feature, related_name="feature_states", on_delete=models.CASCADE
     )
@@ -843,7 +834,7 @@ class FeatureState(
 
         return False
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         if self.identity_id:
             return audit_helpers.get_identity_override_created_audit_message(self)
         elif self.feature_segment_id:
@@ -856,7 +847,7 @@ class FeatureState(
 
         return audit_helpers.get_environment_feature_state_created_audit_message(self)
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         if self.identity:
             return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
                 self.feature.name,
@@ -869,7 +860,7 @@ class FeatureState(
             )
         return FEATURE_STATE_UPDATED_MESSAGE % self.feature.name
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> str | None:
         try:
             if self.identity_id:
                 return IDENTITY_FEATURE_STATE_DELETED_MESSAGE % (
@@ -898,10 +889,10 @@ class FeatureState(
 
         return kwargs
 
-    def _get_environment(self) -> typing.Optional["Environment"]:
+    def get_environment(self, delta=None) -> Environment | None:
         return self.environment
 
-    def _get_project(self) -> typing.Optional["Project"]:
+    def get_project(self, delta=None) -> Project | None:
         return self.feature.project
 
     def _is_more_recent_version(self, other: "FeatureState") -> bool:
@@ -915,11 +906,8 @@ class FeatureState(
 class FeatureStateValue(
     AbstractBaseFeatureValueModel,
     SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(RelatedObjectType.FEATURE_STATE, ["uuid"]),
 ):
-    related_object_type = RelatedObjectType.FEATURE_STATE
-    history_record_class_path = "features.models.HistoricalFeatureStateValue"
-
     # After a FeatureState is created, a FeatureStateValue is
     # automatically created in a post create hook.
     feature_state = models.OneToOneField(
@@ -936,10 +924,10 @@ class FeatureStateValue(
         clone.save()
         return clone
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         fs = self.feature_state
 
-        changes = history_instance.diff_against(history_instance.prev_record).changes
+        changes = delta.changes
         if (
             len(changes) == 1
             and changes[0].field == "string_value"
@@ -971,5 +959,5 @@ class FeatureStateValue(
 
         return FEATURE_STATE_VALUE_UPDATED_MESSAGE % feature.name
 
-    def _get_environment(self) -> typing.Optional["Environment"]:
+    def get_environment(self, delta=None) -> Environment | None:
         return self.feature_state.environment

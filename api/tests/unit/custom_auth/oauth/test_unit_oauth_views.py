@@ -5,6 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from audit.models import AuditLog, RelatedObjectType
 from organisations.invites.models import Invite
 from organisations.models import Organisation
 
@@ -104,7 +105,9 @@ def test_can_login_with_google_if_registration_disabled(
 
     email = "test@example.com"
     mock_get_user_info.return_value = {"email": email}
-    django_user_model.objects.create(email=email)
+    user = django_user_model.objects.create(email=email)
+    organisation = Organisation.objects.create(name="Test Org")
+    user.organisations.add(organisation)
 
     # When
     response = client.post(url, data={"access_token": "some-token"})
@@ -112,6 +115,19 @@ def test_can_login_with_google_if_registration_disabled(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert "key" in response.json()
+
+    # and
+    assert (
+        AuditLog.objects.filter(related_object_type=RelatedObjectType.USER.name).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == user.pk
+    assert audit_log.related_object_type == RelatedObjectType.USER.name
+    assert audit_log.related_object_id == user.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert audit_log.log == f"User logged in: {email}"
 
 
 @mock.patch("custom_auth.oauth.serializers.GithubUser")
@@ -127,7 +143,9 @@ def test_can_login_with_github_if_registration_disabled(
     mock_github_user = mock.MagicMock()
     MockGithubUser.return_value = mock_github_user
     mock_github_user.get_user_info.return_value = {"email": email}
-    django_user_model.objects.create(email=email)
+    user = django_user_model.objects.create(email=email)
+    organisation = Organisation.objects.create(name="Test Org")
+    user.organisations.add(organisation)
 
     # When
     response = client.post(url, data={"access_token": "some-token"})
@@ -135,3 +153,16 @@ def test_can_login_with_github_if_registration_disabled(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert "key" in response.json()
+
+    # and
+    assert (
+        AuditLog.objects.filter(related_object_type=RelatedObjectType.USER.name).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == user.pk
+    assert audit_log.related_object_type == RelatedObjectType.USER.name
+    assert audit_log.related_object_id == user.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert audit_log.log == f"User logged in: {email}"

@@ -10,6 +10,8 @@ from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 
+# TODO #2797 update tests for organisation-only audit logs
+
 
 def test_audit_log_can_be_filtered_by_environments(
     admin_client: APIClient, project: Project, environment: Environment
