@@ -175,48 +175,46 @@ const SegmentOverrideInner = class Override extends React.Component {
                 />
               )}
               <Row className='gap-2'>
-                {!!v.id && (
-                  <Permission
-                    id={projectId}
-                    permission={'MANAGE_SEGMENTS'}
-                    level={'project'}
-                  >
-                    {({ permission }) =>
-                      Utils.renderWithPermission(
-                        permission,
-                        Constants.projectPermissions('Manage Segments'),
-                        <>
-                          {v.is_feature_specific ? (
-                            <Button
-                              disabled={!permission}
-                              onClick={() => {
-                                setShowCreateSegment(true)
-                                setSegmentEditId(v.segment)
-                              }}
-                              className='btn btn-with-icon'
-                            >
-                              <span className='no-pointer'>
-                                <Icon name='edit' fill={'#656D7B'} width={20} />
-                              </span>
-                            </Button>
-                          ) : (
-                            <Button
-                              theme='text'
-                              disabled={!permission}
-                              target='_blank'
-                              href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
-                              className='btn btn-with-icon'
-                            >
-                              <span className='no-pointer'>
-                                <Icon name='edit' fill={'#656D7B'} width={20} />
-                              </span>
-                            </Button>
-                          )}
-                        </>,
-                      )
-                    }
-                  </Permission>
-                )}
+                <Permission
+                  id={projectId}
+                  permission={'MANAGE_SEGMENTS'}
+                  level={'project'}
+                >
+                  {({ permission }) =>
+                    Utils.renderWithPermission(
+                      permission,
+                      Constants.projectPermissions('Manage Segments'),
+                      <>
+                        {!v.id || v.is_feature_specific ? (
+                          <Button
+                            disabled={!permission}
+                            onClick={() => {
+                              setShowCreateSegment(true)
+                              setSegmentEditId(v.segment)
+                            }}
+                            className='btn btn-with-icon'
+                          >
+                            <span className='no-pointer'>
+                              <Icon name='edit' fill={'#656D7B'} width={20} />
+                            </span>
+                          </Button>
+                        ) : (
+                          <Button
+                            theme='text'
+                            disabled={!permission}
+                            target='_blank'
+                            href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
+                            className='btn btn-with-icon'
+                          >
+                            <span className='no-pointer'>
+                              <Icon name='edit' fill={'#656D7B'} width={20} />
+                            </span>
+                          </Button>
+                        )}
+                      </>,
+                    )
+                  }
+                </Permission>
                 {!readOnly && (
                   <Button
                     disabled={disabled}
@@ -589,7 +587,7 @@ class TheComponent extends Component {
                   !this.props.disableCreate && (
                     <div className='text-right'>
                       <Button
-                        className='mt-2'
+                        className='mt-4'
                         onClick={() => {
                           this.setState({ selectedSegment: null })
                           this.props.setShowCreateSegment(true)
@@ -630,6 +628,7 @@ class TheComponent extends Component {
                 )}
                 {this.props.showCreateSegment && this.state.segmentEditId && (
                   <CreateSegmentModal
+                    className='my-2'
                     segment={this.state.segmentEditId}
                     isEdit
                     condensed

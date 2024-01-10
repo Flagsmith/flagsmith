@@ -332,22 +332,21 @@ const ChangeRequestsPage = class extends Component {
                   }
                   title={changeRequest.title}
                 >
-                  Created at{' '}
+                  Created{' '}
                   {moment(changeRequest.created_at).format(
                     'Do MMM YYYY HH:mma',
                   )}{' '}
-                  by {changeRequest.user && user.first_name}{' '}
-                  {user && user.last_name}
+                  by{' '}
+                  {user
+                    ? `${user.first_name} ${user.last_name}`
+                    : 'Unknown user'}
                 </PageTitle>
                 <p className='mt-2'>{changeRequest.description}</p>
                 <div className='row'>
                   <div className='col-md-12'>
                     {isScheduled && (
                       <div className='col-md-6 mb-4'>
-                        <InfoMessage
-                          icon='ion-md-calendar'
-                          title='Scheduled Change'
-                        >
+                        <InfoMessage icon='calendar' title='Scheduled Change'>
                           This feature change{' '}
                           {changeRequest?.committedAt
                             ? 'is scheduled to'
