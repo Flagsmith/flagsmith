@@ -66,7 +66,8 @@ environment_api_key_wrapper = DynamoEnvironmentAPIKeyWrapper()
 class Environment(
     LifecycleModel,
     abstract_base_auditable_model_factory(
-        RelatedObjectType.ENVIRONMENT, change_details_excluded_fields=["updated_at"]
+        related_object_type=RelatedObjectType.ENVIRONMENT,
+        change_details_excluded_fields=["updated_at"],
     ),
     SoftDeleteObject,
 ):
