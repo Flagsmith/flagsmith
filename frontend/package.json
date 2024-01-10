@@ -23,8 +23,8 @@
     "bundledjango": "npx webpack --config ./webpack/webpack.config.django.prod.js"
   },
   "engines": {
-    "node": "20.x",
-    "npm": "8.x"
+    "node": "18.x",
+    "npm": "9.x"
   },
   "dependencies": {
     "@babel/core": "7.20.7",
