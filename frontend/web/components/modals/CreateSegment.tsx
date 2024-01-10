@@ -303,7 +303,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </div>
           )}
           {!readOnly && Utils.getFlagsmithHasFeature('not_operator') && (
-            <div onClick={() => addRule('NOT')} className='text-center'>
+            <div onClick={() => addRule('NONE')} className='text-center'>
               {Utils.getFlagsmithValue('not_operator') ? (
                 <Tooltip
                   title={
