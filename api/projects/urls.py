@@ -5,7 +5,7 @@ from rest_framework_nested import routers
 from audit.views import ProjectAuditLogViewSet
 from features.import_export.views import (
     FeatureExportListView,
-    FeatureImportViewSet,
+    FeatureImportListView,
 )
 from features.multivariate.views import MultivariateFeatureOptionViewSet
 from features.views import FeatureViewSet
@@ -59,9 +59,6 @@ projects_router.register(
     ProjectAuditLogViewSet,
     basename="project-audit",
 )
-projects_router.register(
-    r"feature-imports", FeatureImportViewSet, basename="feature-import"
-)
 nested_features_router = routers.NestedSimpleRouter(
     projects_router, r"features", lookup="feature"
 )
@@ -81,8 +78,13 @@ urlpatterns = [
         name="all-user-permissions",
     ),
     path(
-        "<int:project_id>/feature-exports/",
+        "<int:project_pk>/feature-exports/",
         FeatureExportListView.as_view(),
         name="feature-exports",
+    ),
+    path(
+        "<int:project_pk>/feature-imports/",
+        FeatureImportListView.as_view(),
+        name="feature-imports",
     ),
 ]
