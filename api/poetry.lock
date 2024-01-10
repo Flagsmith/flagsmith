@@ -1489,7 +1489,7 @@ semver = "2.13.0"
 
 [[package]]
 name = "flagsmith-ldap"
-version = "0.0.3"
+version = "0.1.0"
 description = "LDAP plugin for Flagsmith application."
 optional = false
 python-versions = "^3.10"
@@ -1503,8 +1503,8 @@ django-python3-ldap = "^0.15.4"
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-ldap"
-reference = "v0.0.3"
-resolved_reference = "86ac550165bc3cbd59782a1cb8026d64f79f5523"
+reference = "v0.1.0"
+resolved_reference = "e9edc5668711523eabdb833203d677bf64f98531"
 
 [[package]]
 name = "flake8"
@@ -3283,6 +3283,21 @@ pytest = ">=5.0"
 dev = ["pre-commit", "pytest-asyncio", "tox"]
 
 [[package]]
+name = "pytest-testmon"
+version = "2.0.13"
+description = "selects tests affected by changed files and methods"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pytest-testmon-2.0.13.tar.gz", hash = "sha256:9cf56021ccaa6c8c6bcaef07589fb6c872db1797f0f7ff1f104e93c96078d642"},
+    {file = "pytest_testmon-2.0.13-py3-none-any.whl", hash = "sha256:170872f2407e1eab431a266108229dbcde73513771a71ab77ed1e84ec94c816c"},
+]
+
+[package.dependencies]
+coverage = ">=6,<8"
+pytest = ">=5,<8"
+
+[[package]]
 name = "pytest-xdist"
 version = "3.2.1"
 description = "pytest xdist plugin for distributed testing, most importantly across multiple CPUs"
@@ -4397,4 +4412,4 @@ requests = ">=2.7,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "728b7fd7a148eb3ff0b2e2152762e241c34e996612032587d01b15812f1d14ff"
+content-hash = "ea33439321d98a14a8489c1f9cf6350b4e44ed96630aa8b4298f25ab321ec7ab"

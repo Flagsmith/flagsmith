@@ -4,12 +4,13 @@ import uuid
 import pytest
 from django.test import Client as DjangoClient
 from django.urls import reverse
+from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 from rest_framework.test import APIClient
-from tests.integration.helpers import create_mv_option_with_api
 
 from app.utils import create_hash
 from organisations.models import Organisation
+from tests.integration.helpers import create_mv_option_with_api
 
 
 @pytest.fixture()
@@ -72,10 +73,21 @@ def environment_api_key():
 
 
 @pytest.fixture()
-def environment(admin_client, project, environment_api_key, settings) -> int:
+def environment_name() -> str:
+    return "Test Environment"
+
+
+@pytest.fixture()
+def environment(
+    admin_client: APIClient,
+    project: int,
+    environment_api_key: str,
+    environment_name: str,
+    settings: SettingsWrapper,
+) -> int:
     settings.EDGE_RELEASE_DATETIME = None
     environment_data = {
-        "name": "Test Environment",
+        "name": environment_name,
         "api_key": environment_api_key,
         "project": project,
         "allow_client_traits": True,

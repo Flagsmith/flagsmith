@@ -1,7 +1,9 @@
 import logging
 from typing import Generator, Iterable
 
-from environments.dynamodb.dynamodb_wrapper import (
+from flag_engine.identities.models import IdentityModel
+
+from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
     DynamoIdentityWrapper,
 )
@@ -53,9 +55,10 @@ def _iter_paginated_overrides(
 ) -> Generator[IdentityOverrideV2, None, None]:
     for environment in environments:
         environment_api_key = environment.api_key
-        for identity in identity_wrapper.iter_all_items_paginated(
+        for item in identity_wrapper.iter_all_items_paginated(
             environment_api_key=environment_api_key,
         ):
+            identity = IdentityModel.parse_obj(item)
             for feature_state in identity.identity_features:
                 yield map_engine_feature_state_to_identity_override(
                     feature_state=feature_state,
