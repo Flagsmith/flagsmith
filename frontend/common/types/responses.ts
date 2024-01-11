@@ -417,6 +417,8 @@ export type Res = {
   environment: Environment
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
+  userWithRoles: PagedResponse<Roles>
+  groupWithRole: PagedResponse<Roles>
   changeRequests: PagedResponse<ChangeRequestSummary>
   groupSummaries: UserGroupSummary[]
   segmentPriorities: {}

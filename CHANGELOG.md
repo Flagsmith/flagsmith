@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.93.0](https://github.com/Flagsmith/flagsmith/compare/v2.92.0...v2.93.0) (2024-01-11)
+
+
+### Features
+
+* **audit:** add change details to AuditLog ([#3218](https://github.com/Flagsmith/flagsmith/issues/3218)) ([c665063](https://github.com/Flagsmith/flagsmith/commit/c665063fd22b7cf740eb5b27981c8633a577c470))
+* Call webhooks async and add backoff to webhooks ([#2932](https://github.com/Flagsmith/flagsmith/issues/2932)) ([445c698](https://github.com/Flagsmith/flagsmith/commit/445c69837b43e341d6ad48a1a9fd7d12af47a115))
+* **dynamo_documents:** propagate delete to dynamo  ([#3220](https://github.com/Flagsmith/flagsmith/issues/3220)) ([b7ecd75](https://github.com/Flagsmith/flagsmith/commit/b7ecd75810d0d98221b775a7f87ba1e73b98647a))
+* implement feature actions dropdown ([#3253](https://github.com/Flagsmith/flagsmith/issues/3253)) ([972f1a3](https://github.com/Flagsmith/flagsmith/commit/972f1a364e4774f7a4ce722fe88b4bbee6bb9a11))
+* **tags/view:** Add api to get tag by uuid ([#3229](https://github.com/Flagsmith/flagsmith/issues/3229)) ([6500451](https://github.com/Flagsmith/flagsmith/commit/6500451a93c317df6fe57740abc5f5b70853bfa5))
+
+
+### Bug Fixes
+
+* Adjust segment not rule ([#3267](https://github.com/Flagsmith/flagsmith/issues/3267)) ([6edc932](https://github.com/Flagsmith/flagsmith/commit/6edc9324ffc02aedcf768aeaf5268cbca458d7ee))
+* **infra/staging:** Add INFLUXDB_BUCKET to task def ([#3199](https://github.com/Flagsmith/flagsmith/issues/3199)) ([445dc2b](https://github.com/Flagsmith/flagsmith/commit/445dc2b852617953fefd7dd6b40c5f1eee480450))
+* OR button hiding and empty condtions ([#3269](https://github.com/Flagsmith/flagsmith/issues/3269)) ([0e28b6c](https://github.com/Flagsmith/flagsmith/commit/0e28b6cc98f5a4c03c95d662058cef896e1f8132))
+* **versioning:** endpoints should return latest versions ([#3209](https://github.com/Flagsmith/flagsmith/issues/3209)) ([5e16e56](https://github.com/Flagsmith/flagsmith/commit/5e16e56c34e66787dc8d25512e58d1dbe869a4c4))
+* **webhooks:** default task processor to use processor and prevent webhook retries in non-processor environments ([#3273](https://github.com/Flagsmith/flagsmith/issues/3273)) ([4d002fc](https://github.com/Flagsmith/flagsmith/commit/4d002fc84f563b559fceb67c2d03ace822d18499))
+
 ## [2.92.0](https://github.com/Flagsmith/flagsmith/compare/v2.91.0...v2.92.0) (2024-01-02)
 
 

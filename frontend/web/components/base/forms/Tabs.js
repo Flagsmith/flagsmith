@@ -58,7 +58,9 @@ const Tabs = class extends React.Component {
             return (
               <div
                 key={`content${i}`}
-                className={`tab-item ${isSelected ? ' tab-active' : ''}`}
+                className={`tab-item ${isSelected ? ' tab-active' : ''} ${
+                  this.props.isRoles && 'p-0'
+                }`}
               >
                 {child}
               </div>
