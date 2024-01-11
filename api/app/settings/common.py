@@ -156,6 +156,8 @@ INSTALLED_APPS = [
     "app_analytics",
 ]
 
+SILENCED_SYSTEM_CHECKS = ["axes.W002"]
+
 SITE_ID = 1
 
 db_conn_max_age = env.int("DJANGO_DB_CONN_MAX_AGE", 60)
