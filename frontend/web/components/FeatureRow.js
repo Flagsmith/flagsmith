@@ -385,9 +385,16 @@ class TheComponent extends Component {
             hideRemove={this.props.hideRemove}
             onShowHistory={() => {
               if (disableControls) return
-              this.context.router.history.push(
-                `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
-              )
+
+              if (environment?.use_v2_feature_versioning) {
+                this.context.router.history.push(
+                  `/project/${projectId}/environment/${environmentId}/history?feature=${projectFlag.id}`,
+                )
+              } else {
+                this.context.router.history.push(
+                  `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
+                )
+              }
             }}
             onRemove={() => {
               if (disableControls) return
