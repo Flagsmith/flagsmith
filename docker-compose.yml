@@ -58,7 +58,7 @@ services:
     healthcheck:
       test: ['CMD-SHELL', 'python /app/scripts/healthcheck.py']
       interval: 2s
-      timeout: 5s
+      timeout: 2s
       retries: 20
       start_period: 20s
     depends_on:
