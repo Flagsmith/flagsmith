@@ -16,6 +16,7 @@ type TooltipProps = {
   children: string
   plainText: boolean
   place?: string | undefined
+  titleClassName?: string
   title: JSX.Element // This is actually the Tooltip parent component
   noIcon?: boolean
 }
@@ -52,13 +53,14 @@ const Tooltip = ({
   place,
   plainText,
   title,
+  titleClassName,
 }: TooltipProps): JSX.Element => {
   const id = Utils.GUID()
 
   return (
     <span className='question-tooltip'>
       {title ? (
-        <span data-for={id} data-tip>
+        <span className={titleClassName} data-for={id} data-tip>
           {title}
         </span>
       ) : (

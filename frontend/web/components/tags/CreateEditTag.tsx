@@ -14,7 +14,7 @@ import Button from 'components/base/forms/Button'
 import Tag from './Tag'
 import InlineModal from 'components/InlineModal'
 import ErrorMessage from 'components/ErrorMessage'
-import Switch from 'components/Switch';
+import Switch from 'components/Switch'
 
 type CreateEditTagType = {
   projectId: string
@@ -173,8 +173,8 @@ const CreateEditTag: FC<CreateEditTagType> = ({
           }
           place='top'
         >
-          Flags marked with permanent tags are not monitored for staleness and have
-          deletion protection.
+          Flags marked with permanent tags are not monitored for staleness and
+          have deletion protection.
         </Tooltip>
 
         <InputGroup

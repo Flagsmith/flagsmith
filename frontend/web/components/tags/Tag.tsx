@@ -5,9 +5,7 @@ import cx from 'classnames'
 import { Tag as TTag } from 'common/types/responses'
 import ToggleChip from 'components/ToggleChip'
 import Utils from 'common/utils/utils'
-import Format from 'common/utils/format'
-import Icon from 'components/Icon'
-import TagContent from 'components/tags/TagContent';
+import TagContent from './TagContent'
 
 type TagType = {
   className?: string
@@ -56,7 +54,7 @@ const Tag: FC<TagType> = ({
         active={selected}
         onClick={onClick ? () => onClick(tag as TTag) : null}
       >
-        <TagContent tag={tag} />
+        {!!tag.label && <TagContent tag={tag} />}
       </ToggleChip>
     )
   }
