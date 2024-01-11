@@ -29,7 +29,13 @@ export default class Rule extends PureComponent<{
         rule: { conditions: rules },
       },
     } = this
-    const isLastRule = i === rules.length - 1
+    const lastIndex = rules.reduce((acc, v, i) => {
+      if (!v.delete) {
+        return i
+      }
+      return acc
+    }, 0)
+    const isLastRule = i === lastIndex
     const hasOr = i > 0
     const operatorObj = Utils.findOperator(rule.operator, rule.value, operators)
     const operator = operatorObj && operatorObj.value
@@ -204,6 +210,11 @@ export default class Rule extends PureComponent<{
     if (prop === 'operator' && value === 'PERCENTAGE_SPLIT') {
       rules[i].property = ''
       rules[i].value = ''
+    }
+
+    if (prop === 'delete') {
+      rules[i].property = 'deleted'
+      rules[i].value = 'deleted'
     }
 
     if (!rule.conditions.filter((condition) => !condition.delete).length) {
