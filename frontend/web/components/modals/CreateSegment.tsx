@@ -263,39 +263,38 @@ const CreateSegment: FC<CreateSegmentType> = ({
     <div className='overflow-visible'>
       <div>
         <div className='mb-4'>
-          {rules[0].rules.map((rule, i) => {
-            if (rule.delete) {
-              return null
-            }
-            return (
-              <div key={i}>
-                <Row
-                  className={classNames('and-divider my-1', {
-                    'text-danger': rule.type !== 'ANY',
-                  })}
-                >
-                  <Flex className='and-divider__line' />
-                  {Format.camelCase(
-                    `${i > 0 ? 'And ' : ''}${
-                      rule.type === 'ANY'
-                        ? 'Any of the following'
-                        : 'None of the following'
-                    }`,
-                  )}
-                  <Flex className='and-divider__line' />
-                </Row>
-                <Rule
-                  showDescription={showDescriptions}
-                  readOnly={readOnly}
-                  data-test={`rule-${i}`}
-                  rule={rule}
-                  operators={operators}
-                  onRemove={() => removeRule(0, i)}
-                  onChange={(v: SegmentRule) => updateRule(0, i, v)}
-                />
-              </div>
-            )
-          })}
+          {rules[0].rules
+            ?.filter((v) => !v?.delete)
+            .map((rule, i) => {
+              return (
+                <div key={i}>
+                  <Row
+                    className={classNames('and-divider my-1', {
+                      'text-danger': rule.type !== 'ANY',
+                    })}
+                  >
+                    <Flex className='and-divider__line' />
+                    {Format.camelCase(
+                      `${i > 0 ? 'And ' : ''}${
+                        rule.type === 'ANY'
+                          ? 'Any of the following'
+                          : 'None of the following'
+                      }`,
+                    )}
+                    <Flex className='and-divider__line' />
+                  </Row>
+                  <Rule
+                    showDescription={showDescriptions}
+                    readOnly={readOnly}
+                    data-test={`rule-${i}`}
+                    rule={rule}
+                    operators={operators}
+                    onRemove={() => removeRule(0, i)}
+                    onChange={(v: SegmentRule) => updateRule(0, i, v)}
+                  />
+                </div>
+              )
+            })}
         </div>
         <Row className='justify-content-end'>
           {!readOnly && (
