@@ -879,8 +879,6 @@ EDGE_ENABLED = (
     and EDGE_RELEASE_DATETIME < datetime.now(tz=pytz.UTC)
 )
 
-DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
-
 DISABLE_FLAGSMITH_UI = env.bool("DISABLE_FLAGSMITH_UI", default=False)
 SERVE_FE_ASSETS = not DISABLE_FLAGSMITH_UI and os.path.exists(
     BASE_DIR + "/app/templates/webpack/index.html"
@@ -918,6 +916,10 @@ TASK_DELETE_RUN_EVERY = env.timedelta("TASK_DELETE_RUN_EVERY", default=86400)
 RECURRING_TASK_RUN_RETENTION_DAYS = env.int(
     "RECURRING_TASK_RUN_RETENTION_DAYS", default=30
 )
+
+# Webhook settings
+DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
+RETRY_WEBHOOKS = TASK_RUN_METHOD == TaskRunMethod.TASK_PROCESSOR
 
 # Real time(server sent events) settings
 SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)
