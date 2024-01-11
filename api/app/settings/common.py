@@ -897,7 +897,11 @@ MAX_SELF_MIGRATABLE_IDENTITIES = env.int("MAX_SELF_MIGRATABLE_IDENTITIES", 10000
 # Setting to allow asynchronous tasks to be run synchronously for testing purposes
 # or in a separate thread for self-hosted users
 TASK_RUN_METHOD = env.enum(
-    "TASK_RUN_METHOD", type=TaskRunMethod, default=TaskRunMethod.SEPARATE_THREAD.value
+    "TASK_RUN_METHOD",
+    type=TaskRunMethod,
+    default=TaskRunMethod.TASK_PROCESSOR.value
+    if env.bool("RUN_BY_PROCESSOR", False)
+    else TaskRunMethod.SEPARATE_THREAD.value,
 )
 ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
