@@ -3,14 +3,17 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
 export const rolePermissionGroupService = service
-  .enhanceEndpoints({ addTagTypes: ['RolePermissionGroup'] })
+  .enhanceEndpoints({ addTagTypes: ['RolePermissionGroup', 'GroupWithRole'] })
   .injectEndpoints({
     endpoints: (builder) => ({
       createRolePermissionGroup: builder.mutation<
         Res['rolePermissionGroup'],
         Req['createRolePermissionGroup']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'RolePermissionGroup' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'RolePermissionGroup' },
+          { type: 'GroupWithRole' },
+        ],
         query: (query: Req['createRolePermissionGroup']) => ({
           body: query.data,
           method: 'POST',
@@ -21,7 +24,10 @@ export const rolePermissionGroupService = service
         Res['rolePermissionGroup'],
         Req['deleteRolePermissionGroup']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'RolePermissionGroup' }],
+        invalidatesTags: [
+          { type: 'RolePermissionGroup' },
+          { type: 'GroupWithRole' },
+        ],
         query: (query: Req['deleteRolePermissionGroup']) => ({
           body: query,
           method: 'DELETE',

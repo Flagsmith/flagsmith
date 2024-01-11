@@ -133,6 +133,10 @@ export type Req = {
   createLaunchDarklyProjectImport: { project_id: string }
   getLaunchDarklyProjectImport: { project_id: string }
   getLaunchDarklyProjectsImport: { project_id: string; import_id: string }
+  getUserWithRoles: { org_id: string; user_id: string }
+  deleteUserWihRole: { org_id: string; user_id: string; role_id: string }
+  getGroupWithRole: { org_id: string; group_id: string }
+  deleteGroupWithRole: { org_id: string; group_id: string; role_id: string }
   getChangeRequests: PagedRequest<{
     search?: string
     environmentId: string
