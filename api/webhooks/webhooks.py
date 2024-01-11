@@ -206,7 +206,7 @@ def call_webhook_with_failure_mail_after_retries(
         )
         res.raise_for_status()
     except requests.exceptions.RequestException as exc:
-        if try_count == max_retries:
+        if try_count == max_retries or not settings.RETRY_WEBHOOKS:
             if send_failure_mail:
                 send_failure_email(
                     webhook,

@@ -400,6 +400,8 @@ export type Res = {
     prefix: string
     roles: RolePermissionUser[]
   }
+  userWithRoles: PagedResponse<Roles>
+  groupWithRole: PagedResponse<Roles>
   changeRequests: PagedResponse<ChangeRequestSummary>
   groupSummaries: UserGroupSummary[]
   // END OF TYPES

@@ -306,6 +306,8 @@ export const createFeature = async (
 }
 
 export const deleteFeature = async (index: number, name: string) => {
+  await click(byId(`feature-action-${index}`))
+  await waitForElementVisible(byId(`remove-feature-btn-${index}`))
   await click(byId(`remove-feature-btn-${index}`))
   await setText('[name="confirm-feature-name"]', name)
   await click('#confirm-remove-feature-btn')
@@ -340,6 +342,7 @@ export const createSegment = async (
   rules?: Rule[],
 ) => {
   await click(byId('show-create-segment-btn'))
+  await click(byId('add-rule'))
   await setText(byId('segmentID'), id)
   for (let x = 0; x < rules.length; x++) {
     const rule = rules[x]
