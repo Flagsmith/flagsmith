@@ -8,6 +8,7 @@ import { IonIcon } from '@ionic/react'
 import GroupSelect from './GroupSelect'
 import { getProjectFlag } from 'common/services/useProjectFlag'
 import { getStore } from 'common/store'
+import ConnectedGroupSelect from './ConnectedGroupSelect'
 
 class TheComponent extends Component {
   state = {}
@@ -56,10 +57,6 @@ class TheComponent extends Component {
     return (
       <OrganisationProvider>
         {({ groups }) => {
-          const ownerUsers = this.getGroupOwners(
-            groups,
-            this.state.groupOwners || [],
-          )
           const res = (
             <div>
               <Row
@@ -73,25 +70,9 @@ class TheComponent extends Component {
                   <Icon name='setting' width={20} fill={'#656D7B'} />
                 </label>
               </Row>
-              <Row style={{ rowGap: '12px' }}>
-                {hasPermission &&
-                  ownerUsers.map((u) => (
-                    <Row
-                      key={u.id}
-                      onClick={() => this.removeOwner(u.id)}
-                      className='chip mr-2'
-                    >
-                      <span className='font-weight-bold'>{u.name}</span>
-                      <span className='chip-icon ion'>
-                        <IonIcon icon={close} />
-                      </span>
-                    </Row>
-                  ))}
-                {!ownerUsers.length && (
-                  <div>This flag has no assigned groups</div>
-                )}
-              </Row>
-              <GroupSelect
+              <ConnectedGroupSelect
+                orgId={AccountStore.getOrganisation()?.id}
+                showValues={hasPermission}
                 groups={groups}
                 value={this.state.groupOwners}
                 isOpen={this.state.showUsers}

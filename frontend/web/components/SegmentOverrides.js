@@ -147,6 +147,13 @@ const SegmentOverrideInner = class Override extends React.Component {
           </div>
           <div>
             <Row className='gap-3'>
+              <Tooltip
+                title={
+                  <label className='cols-sm-2 control-label mb-0 ml-3'><Icon name='info-outlined' /></label>
+                }
+              >
+                Set the Feature state to On or Off for Identities in this Segment
+              </Tooltip>
               <Switch
                 data-test={`segment-override-toggle-${index}`}
                 disabled={disabled}
@@ -462,11 +469,14 @@ class TheComponent extends Component {
         ),
         feature: this.props.feature,
         feature_segment: null,
-        feature_state_value: Utils.valueToFeatureState(''),
+        feature_state_value: Utils.valueToFeatureState(
+          `${this.props.controlValue || ''}`,
+        ),
       },
       priority: value.length,
       segment: this.state.selectedSegment.value,
       segment_name: this.state.selectedSegment.label,
+      value: `${this.props.controlValue || ''}`,
     }
     this.props.onChange([newValue].concat(value))
     this.setState({ selectedSegment: null })

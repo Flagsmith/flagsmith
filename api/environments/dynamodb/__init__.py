@@ -1,4 +1,5 @@
-from .dynamodb_wrapper import (
+from .types import DynamoProjectMetadata
+from .wrappers import (
     DynamoEnvironmentAPIKeyWrapper,
     DynamoEnvironmentV2Wrapper,
     DynamoEnvironmentWrapper,
@@ -10,4 +11,5 @@ __all__ = (
     "DynamoEnvironmentV2Wrapper",
     "DynamoEnvironmentWrapper",
     "DynamoIdentityWrapper",
+    "DynamoProjectMetadata",
 )

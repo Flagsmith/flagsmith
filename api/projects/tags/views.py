@@ -1,6 +1,9 @@
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 from projects.permissions import VIEW_PROJECT
 
@@ -26,9 +29,20 @@ class TagViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        project_id = self.kwargs["project_pk"]
+        project_id = int(self.kwargs["project_pk"])
         serializer.save(project_id=project_id)
 
     def perform_update(self, serializer):
-        project_id = self.kwargs["project_pk"]
+        project_id = int(self.kwargs["project_pk"])
         serializer.save(project_id=project_id)
+
+    @action(
+        detail=False,
+        url_path=r"get-by-uuid/(?P<uuid>[0-9a-f-]+)",
+        methods=["get"],
+    )
+    def get_by_uuid(self, request: Request, project_pk: int, uuid: str):
+        qs = self.get_queryset()
+        tag = get_object_or_404(qs, uuid=uuid)
+        serializer = self.get_serializer(tag)
+        return Response(serializer.data)
