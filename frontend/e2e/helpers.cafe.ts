@@ -306,6 +306,8 @@ export const createFeature = async (
 }
 
 export const deleteFeature = async (index: number, name: string) => {
+  await click(byId(`feature-action-${index}`))
+  await waitForElementVisible(byId(`remove-feature-btn-${index}`))
   await click(byId(`remove-feature-btn-${index}`))
   await setText('[name="confirm-feature-name"]', name)
   await click('#confirm-remove-feature-btn')
