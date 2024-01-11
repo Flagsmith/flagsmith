@@ -10,7 +10,13 @@ import CreateOrganisationModal from 'components/modals/CreateOrganisation'
 import Icon from './Icon'
 import OrganisationSelect from './OrganisationSelect'
 
-const OrganisationManageWidget: FC = () => {
+interface OrganisationManageWidgetType {
+  readonly?: boolean
+}
+
+const OrganisationManageWidget: FC<OrganisationManageWidgetType> = ({
+  readonly,
+}) => {
   const handleCreateOrganisationClick = useCallback(() => {
     openModal('Create Organisation', <CreateOrganisationModal />, 'side-modal')
   }, [])
@@ -29,7 +35,8 @@ const OrganisationManageWidget: FC = () => {
           )
         }
       </AccountProvider>
-      {!Utils.getFlagsmithHasFeature('disable_create_org') &&
+      {!readonly &&
+        !Utils.getFlagsmithHasFeature('disable_create_org') &&
         (!Project.superUserCreateOnly ||
           (Project.superUserCreateOnly && AccountStore.isSuper())) && (
           <div>

@@ -22,7 +22,6 @@ import ErrorMessage from 'components/ErrorMessage'
 import Format from 'common/utils/format'
 import CreateRole from 'components/modals/CreateRole'
 import Icon from 'components/Icon'
-import PageTitle from 'components/PageTitle'
 import OrganisationManageWidget from 'components/OrganisationManageWidget'
 import ProjectManageWidget from 'components/ProjectManageWidget'
 import { getStore } from 'common/store'
@@ -359,7 +358,10 @@ const OrganisationSettingsPage = class extends Component {
     if (this.state.permissionsError) {
       return (
         <div className='app-container container'>
-          <PageTitle title='Manage' />
+          <div className='py-4'>
+            <OrganisationManageWidget readonly />
+          </div>
+
           <InfoMessage>
             You do not have permissions to manage this organisation. Please
             contact an organisation admin.
