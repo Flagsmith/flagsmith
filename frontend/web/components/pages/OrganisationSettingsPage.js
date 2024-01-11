@@ -359,7 +359,7 @@ const OrganisationSettingsPage = class extends Component {
       return (
         <div className='app-container container'>
           <div className='py-4'>
-            <OrganisationManageWidget readonly />
+            <OrganisationManageWidget disableCreate />
           </div>
 
           <InfoMessage>
