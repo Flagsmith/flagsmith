@@ -95,6 +95,7 @@ jobs:
           key: testmon-data-python${{ matrix.python-version }}-${{github.sha}}
 
       - name: Upload Coverage
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: codecov/codecov-action@v3
         env:
           PYTHON: ${{ matrix.python-version }}
