@@ -160,6 +160,13 @@ export type AuditLogItem = {
   is_system_event: boolean
 }
 
+export type AuditLogDetail = AuditLogItem & {
+  change_details: {
+    field: string
+    old: FlagsmithValue
+    new: FlagsmithValue
+  }[]
+}
 export type Subscription = {
   id: number
   uuid: string
@@ -424,5 +431,6 @@ export type Res = {
   featureVersions: PagedResponse<FeatureVersion>
   users: User[]
   enableFeatureVersioning: { id: string }
+  auditLogItem: AuditLogDetail
   // END OF TYPES
 }

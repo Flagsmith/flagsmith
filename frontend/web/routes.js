@@ -29,6 +29,7 @@ import AuditLogPage from './components/pages/AuditLogPage'
 import ComparePage from './components/pages/ComparePage'
 import WidgetPage from './components/pages/WidgetPage'
 import BrokenPage from './components/pages/BrokenPage'
+import AuditLogItemPage from './components/pages/AuditLogItemPage'
 import FeatureHistoryPage from './components/pages/FeatureHistoryPage'
 
 export default (
@@ -160,9 +161,9 @@ export default (
         component={AuditLogPage}
       />
       <Route
-        path='/project/:projectId/audit-log'
+        path='/project/:projectId/environment/:environmentId/audit-log/:id'
         exact
-        component={AuditLogPage}
+        component={AuditLogItemPage}
       />
       <Route path='/create' exact component={CreateOrganisationPage} />
       <Route path='*' component={NotFoundPage} />
