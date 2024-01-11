@@ -100,7 +100,7 @@ export default class Paging extends PureComponent {
                   {index + 1}
                 </div>
               ))}
-            {!noPages && !range.includes(lastPage - 2) && (
+            {!noPages && !range.includes(lastPage - 1) && (
               <>
                 <div
                   className={cn({
