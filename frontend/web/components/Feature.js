@@ -103,7 +103,7 @@ export default class Feature extends PureComponent {
               <VariationOptions
                 disabled
                 select
-                controlValue={environmentFlag.feature_state_value}
+                controlValue={environmentFlag?.feature_state_value}
                 controlPercentage={controlPercentage}
                 variationOverrides={this.props.identityVariations}
                 setVariations={this.props.onChangeIdentityVariations}
