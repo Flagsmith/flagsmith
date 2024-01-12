@@ -174,3 +174,32 @@ def test_set_sdk_analytics_flags_with_identifier(
     assert feature_evaluation_raw.feature_name == feature.name
     assert feature_evaluation_raw.environment_id == environment.id
     assert feature_evaluation_raw.evaluation_count == feature_request_count
+
+
+def test_set_sdk_analytics_flags_with_enabled_when_evaluated(
+    api_client: APIClient,
+    environment: Environment,
+    settings: SettingsWrapper,
+    feature: Feature,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = True
+    url = reverse("api-v1:analytics-flags")
+    url += "?enabled_when_evaluated=true"
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    feature_request_count = 2
+    data = {feature.name: feature_request_count}
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    FeatureEvaluationRaw.objects.count == 1
+    feature_evaluation_raw = FeatureEvaluationRaw.objects.first()
+    assert feature_evaluation_raw.feature_name == feature.name
+    assert feature_evaluation_raw.environment_id == environment.id
+    assert feature_evaluation_raw.enabled_when_evaluated is True
