@@ -1,10 +1,11 @@
 from app_analytics.split_testing.views import (
+    ConversionEventTypeView,
     ConversionEventViewSet,
     SplitTestViewSet,
 )
 from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
 from django.conf.urls import url
-from django.urls import include
+from django.urls import include, path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import authentication, permissions, routers
@@ -80,5 +81,10 @@ urlpatterns = [
         r"^docs/$",
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
+    ),
+    path(
+        "conversion_event_types/",
+        ConversionEventTypeView.as_view(),
+        name="conversion-event-types",
     ),
 ]
