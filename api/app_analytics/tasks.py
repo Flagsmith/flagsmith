@@ -66,6 +66,7 @@ def track_feature_evaluation(
     environment_id: int,
     feature_evaluations: dict[str, int],
     identity_identifier: str | None = None,
+    enabled_when_evaluated: bool | None = None,
 ) -> None:
     feature_evaluation_objects = []
     for feature_name, evaluation_count in feature_evaluations.items():
@@ -75,6 +76,7 @@ def track_feature_evaluation(
                 environment_id=environment_id,
                 evaluation_count=evaluation_count,
                 identity_identifier=identity_identifier,
+                enabled_when_evaluated=enabled_when_evaluated,
             )
         )
     FeatureEvaluationRaw.objects.bulk_create(feature_evaluation_objects)
