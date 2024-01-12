@@ -31,8 +31,8 @@ def analyse_split_test(
         lambda_="log-likelihood",
     )
 
-    # Typically a pvalue of around 1% is ideal, though as large
-    # as 5% is acceptable for some tests.
+    # Typically a pvalue of around 1% or lower is ideal, though
+    # as large as 5% is acceptable for some tests.
     return results.pvalue
 
 
