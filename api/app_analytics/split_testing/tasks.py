@@ -3,7 +3,11 @@ from datetime import timedelta
 
 from app_analytics.models import FeatureEvaluationRaw
 from app_analytics.split_testing.helpers import gather_split_test_metrics
-from app_analytics.split_testing.models import ConversionEvent, SplitTest
+from app_analytics.split_testing.models import (
+    ConversionEvent,
+    ConversionEventType,
+    SplitTest,
+)
 from django.conf import settings
 from django.utils import timezone
 
@@ -50,9 +54,10 @@ def update_features_split_tests(feature_id: int) -> None:
         feature_name=feature.name,
         environment_id__in=environment_ids,
         identity_identifier__isnull=False,
+        enabled_when_evaluated=True,  # Only evaluated features.
     ).values_list("environment_id", "identity_identifier")
 
-    # Eliminate duplicate identifiers
+    # Eliminate duplicate identifiers.
     qs_values_list = qs_values_list.distinct()
 
     environment_identifiers = defaultdict(list)
@@ -63,15 +68,20 @@ def update_features_split_tests(feature_id: int) -> None:
         environment_id,
         evaluated_identity_identifiers,
     ) in environment_identifiers.items():
-        _save_environment_split_test(
-            feature=feature,
-            environment_id=environment_id,
-            evaluated_identity_identifiers=evaluated_identity_identifiers,
-        )
+        for cet in ConversionEventType.objects.filter(environment_id=environment_id):
+            _save_environment_split_test(
+                feature=feature,
+                environment_id=environment_id,
+                evaluated_identity_identifiers=evaluated_identity_identifiers,
+                conversion_event_type=cet,
+            )
 
 
 def _save_environment_split_test(
-    feature: Feature, environment_id: int, evaluated_identity_identifiers: list[str]
+    feature: Feature,
+    environment_id: int,
+    evaluated_identity_identifiers: list[str],
+    conversion_event_type: ConversionEventType,
 ) -> None:
     environment = Environment.objects.get(id=environment_id)
 
@@ -100,6 +110,7 @@ def _save_environment_split_test(
     conversion_events = ConversionEvent.objects.filter(
         environment=environment,
         identity__in=evaluated_identities,
+        type=conversion_event_type,
     )
 
     conversion_identities = {ce.identity for ce in conversion_events}
@@ -128,6 +139,7 @@ def _save_environment_split_test(
     )
 
     qs_existing_split_tests = SplitTest.objects.filter(
+        conversion_event_type=conversion_event_type,
         feature=feature,
         environment=environment,
     )
@@ -157,6 +169,7 @@ def _save_environment_split_test(
 
         new_split_tests.append(
             SplitTest(
+                conversion_event_type=conversion_event_type,
                 environment=environment,
                 feature=feature,
                 multivariate_feature_option_id=mv_feature_option_id,
