@@ -11,7 +11,7 @@ from integrations.segment.models import SegmentConfiguration
 def test_should_create_segment_config_when_post(
     environment: Environment,
     admin_client: APIClient,
-):
+) -> None:
     # Given
     data = {"api_key": "abc-123"}
     url = reverse(
@@ -36,7 +36,7 @@ def test_should_create_segment_config_when_post(
 def test_should_return_400_when_duplicate_segment_config_is_posted(
     environment: Environment,
     admin_client: APIClient,
-):
+) -> None:
     # Given
     config = SegmentConfiguration.objects.create(
         api_key="api_123", environment=environment
@@ -91,7 +91,7 @@ def test_should_update_configuration_when_put(
 def test_should_return_segment_config_list_when_requested(
     admin_client: APIClient,
     environment: Environment,
-):
+) -> None:
     # Given
     url = reverse(
         "api-v1:environments:integrations-segment-list",
