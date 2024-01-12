@@ -1,7 +1,6 @@
 import json
 import uuid
 from datetime import date, datetime, timedelta
-from typing import Callable
 from unittest import TestCase, mock
 
 import pytest
@@ -27,6 +26,7 @@ from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.constants import (
     MANAGE_SEGMENT_OVERRIDES,
     UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
 )
 from environments.permissions.models import UserEnvironmentPermission
 from features.feature_types import MULTIVARIATE
@@ -37,12 +37,17 @@ from features.models import (
     FeatureStateValue,
 )
 from features.multivariate.models import MultivariateFeatureOption
+from features.versioning.models import EnvironmentFeatureVersion
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
 from projects.permissions import CREATE_FEATURE, VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Segment
+from tests.types import (
+    WithEnvironmentPermissionsCallable,
+    WithProjectPermissionsCallable,
+)
 from users.models import FFAdminUser, UserPermissionGroup
 from util.tests import Helper
 from webhooks.webhooks import WebhookEventType
@@ -1689,7 +1694,7 @@ def test_list_features_group_owners(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
-    with_project_permissions: Callable[[list[str], int | None], UserProjectPermission],
+    with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])
@@ -2325,9 +2330,7 @@ def test_create_feature_with_required_metadata_returns_201(
 
 def test_create_segment_override__using_simple_feature_state_viewset__allows_manage_segment_overrides(
     staff_client: APIClient,
-    with_environment_permissions: Callable[
-        [list[str], int | None], UserEnvironmentPermission
-    ],
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
     environment: Environment,
     feature: Feature,
     segment: Segment,
@@ -2364,9 +2367,7 @@ def test_create_segment_override__using_simple_feature_state_viewset__allows_man
 
 def test_create_segment_override__using_simple_feature_state_viewset__denies_update_feature_state(
     staff_client: APIClient,
-    with_environment_permissions: Callable[
-        [list[str], int | None], UserEnvironmentPermission
-    ],
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
     environment: Environment,
     feature: Feature,
     segment: Segment,
@@ -2399,9 +2400,7 @@ def test_create_segment_override__using_simple_feature_state_viewset__denies_upd
 
 def test_update_segment_override__using_simple_feature_state_viewset__allows_manage_segment_overrides(
     staff_client: APIClient,
-    with_environment_permissions: Callable[
-        [list[str], int | None], UserEnvironmentPermission
-    ],
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
     environment: Environment,
     feature: Feature,
     segment: Segment,
@@ -2445,9 +2444,7 @@ def test_update_segment_override__using_simple_feature_state_viewset__allows_man
 
 def test_update_segment_override__using_simple_feature_state_viewset__denies_update_feature_state(
     staff_client: APIClient,
-    with_environment_permissions: Callable[
-        [list[str], int | None], UserEnvironmentPermission
-    ],
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
     environment: Environment,
     feature: Feature,
     segment: Segment,
@@ -2485,7 +2482,7 @@ def test_list_features_n_plus_1(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
-    with_project_permissions: Callable,
+    with_project_permissions: WithProjectPermissionsCallable,
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
 ) -> None:
@@ -2514,7 +2511,7 @@ def test_list_features_with_union_tag(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
-    with_project_permissions: Callable,
+    with_project_permissions: WithProjectPermissionsCallable,
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
 ) -> None:
@@ -2566,7 +2563,7 @@ def test_list_features_with_intersection_tag(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
-    with_project_permissions: Callable,
+    with_project_permissions: WithProjectPermissionsCallable,
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
 ) -> None:
@@ -2610,3 +2607,54 @@ def test_list_features_with_intersection_tag(
 
     assert response.data["results"][0]["id"] == feature2.id
     assert response.data["results"][0]["tags"] == [tag1.id, tag2.id]
+
+
+def test_simple_feature_state_returns_only_latest_versions(
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given
+    url = "%s?environment=%d" % (
+        reverse("api-v1:features:featurestates-list"),
+        environment_v2_versioning.id,
+    )
+
+    with_environment_permissions(
+        [VIEW_ENVIRONMENT], environment_id=environment_v2_versioning.id
+    )
+
+    # Let's create some new versions, with some segment overrides
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    feature_segment_v2 = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment_v2_versioning,
+        environment_feature_version=version_2,
+    )
+    FeatureState.objects.create(
+        feature_segment=feature_segment_v2,
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=version_2,
+    )
+    version_2.publish(staff_user)
+
+    version_3 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    version_3.publish(staff_user)
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 2

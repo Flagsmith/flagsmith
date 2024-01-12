@@ -31,13 +31,14 @@ import { setInterceptClose } from './base/ModalDefault'
 import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
 import FeatureValue from 'components/FeatureValue'
-import MyMetadataSelect from 'components/MyMetadataSelect'
+import OrganisationMetadataSelect from 'components/OrganisationMetadataSelect'
 import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import { getListMetadata } from 'common/services/useMetadata'
 import { getMetadataModelFieldList } from 'common/services/useMetadataModelField'
 import { getStore } from 'common/store'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
+import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -625,7 +626,7 @@ const CreateFlag = class extends Component {
                 </div>
               }
             />
-            <MyMetadataSelect
+            <OrganisationMetadataSelect
               contentType={Constants.contentTypes.flag}
               isOpen={this.state.showMetadataList}
               value={metadataAdded && metadataAdded.map((v) => v.id)}
@@ -770,6 +771,13 @@ const CreateFlag = class extends Component {
 
     const Value = (error, projectAdmin, createFeature, hideValue) => (
       <>
+        {!!isEdit && (
+          <ExistingChangeRequestAlert
+            className='mb-4'
+            featureId={projectFlag.id}
+            environmentId={this.props.environmentId}
+          />
+        )}
         {!isEdit && (
           <FormGroup className='mb-4 mt-2'>
             <InputGroup

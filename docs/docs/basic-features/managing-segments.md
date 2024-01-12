@@ -18,8 +18,7 @@ is no context to use.
 :::tip
 
 Segments are _not_ sent back to client SDKs. They are used to override flag values within the dashboard, but they are
-never sent back to our SDKs from the API.
-[Learn more about our architecture](/guides-and-examples/integration-approaches#flags-are-evaluated-server-side).
+never sent back to our SDKs from the API. [Learn more about our architecture](/clients/overview#local-evaluation).
 
 :::
 
@@ -85,7 +84,7 @@ Some of the operators in local evaluation mode are only supported in later SDK v
 The full set of Flagsmith rule operators are as follows:
 
 | Name                   | Condition                                                                                                                                         |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Exactly Matches (==)` | Trait value is equal to segment value.                                                                                                            |
 | `Does Not Match (!=)`  | Trait value is not equal to segment value.                                                                                                        |
 | `% Split`              | Identity is in the percentage bucket. See [Percentage Split Operator](#percentage-split-operator).                                                |
@@ -93,7 +92,7 @@ The full set of Flagsmith rule operators are as follows:
 | `>=`                   | Trait value is greater than or equal to segment value.                                                                                            |
 | `<`                    | Trait value is less than segment value.                                                                                                           |
 | `<=`                   | Trait value is less than or equal to segment value.                                                                                               |
-| `In`                   | Trait value is equal to one or more elements in a comma delimited list. See [The `In` operator](#the-in-operator).                                |     |
+| `In`                   | Trait value is equal to one or more elements in a comma delimited list. See [The `In` operator](#the-in-operator).                                |
 | `Contains`             | Segment value is a substring of trait value.                                                                                                      |
 | `Does Not Contain`     | Segment value is not a substring of the trait value.                                                                                              |
 | `Matches Regex`        | Segment value, set to a valid Regex expression, is applied to trait value and matches it.                                                         |

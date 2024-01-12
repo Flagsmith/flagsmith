@@ -5,6 +5,7 @@ from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
+
 from tests.integration.helpers import (
     get_env_feature_states_list_with_api,
     get_feature_segement_list_with_api,

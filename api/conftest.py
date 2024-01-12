@@ -8,15 +8,10 @@ from django.core.cache import cache
 from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
-from pytest_django.fixtures import SettingsWrapper
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from api_keys.models import MasterAPIKey
-from environments.dynamodb.dynamodb_wrapper import (
-    DynamoEnvironmentV2Wrapper,
-    DynamoIdentityWrapper,
-)
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
@@ -58,6 +53,10 @@ from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
+from tests.types import (
+    WithEnvironmentPermissionsCallable,
+    WithProjectPermissionsCallable,
+)
 from users.models import FFAdminUser, UserPermissionGroup
 
 trait_key = "key1"
@@ -193,7 +192,7 @@ def environment(project):
 @pytest.fixture()
 def with_environment_permissions(
     environment: Environment, staff_user: FFAdminUser
-) -> typing.Callable[[list[str], int | None], UserEnvironmentPermission]:
+) -> WithEnvironmentPermissionsCallable:
     """
     Add environment permissions to the staff_user fixture.
     Defaults to associating to the environment fixture.
@@ -216,7 +215,7 @@ def with_environment_permissions(
 @pytest.fixture()
 def with_project_permissions(
     project: Project, staff_user: FFAdminUser
-) -> typing.Callable:
+) -> WithProjectPermissionsCallable:
     """
     Add project permissions to the staff_user fixture.
     Defaults to associating to the project fixture.
@@ -688,21 +687,3 @@ def flagsmith_environments_v2_table(dynamodb: DynamoDBServiceResource) -> Table:
         ],
         BillingMode="PAY_PER_REQUEST",
     )
-
-
-@pytest.fixture
-def dynamodb_identity_wrapper(
-    settings: SettingsWrapper,
-    flagsmith_identities_table: Table,
-) -> DynamoIdentityWrapper:
-    settings.IDENTITIES_TABLE_NAME_DYNAMO = flagsmith_identities_table.name
-    return DynamoIdentityWrapper()
-
-
-@pytest.fixture
-def dynamodb_wrapper_v2(
-    settings: SettingsWrapper,
-    flagsmith_environments_v2_table: Table,
-) -> DynamoEnvironmentV2Wrapper:
-    settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = flagsmith_environments_v2_table.name
-    return DynamoEnvironmentV2Wrapper()

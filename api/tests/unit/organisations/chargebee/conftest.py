@@ -2,12 +2,12 @@ import typing
 
 import pytest
 from pytest_mock import MockerFixture
+
+from organisations.chargebee.metadata import ChargebeeObjMetadata
 from tests.unit.organisations.chargebee.test_unit_chargebee_chargebee import (
     MockChargeBeeAddOn,
     MockChargeBeeSubscriptionResponse,
 )
-
-from organisations.chargebee.metadata import ChargebeeObjMetadata
 
 ChargebeeCacheMocker = typing.Callable[
     [

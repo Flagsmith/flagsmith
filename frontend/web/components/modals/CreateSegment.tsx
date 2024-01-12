@@ -39,6 +39,7 @@ import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
 import OrganisationMetadataSelect from 'components/OrganisationMetadataSelect'
 import Permission from 'common/providers/Permission'
+import classNames from 'classnames'
 
 type PageType = {
   number: number
@@ -100,13 +101,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     rules: [
       {
         conditions: [],
-        rules: [
-          {
-            conditions: [{ ...Constants.defaultRule }],
-            rules: [],
-            type: 'ANY',
-          },
-        ],
+        rules: [],
         type: 'ALL',
       },
     ],
@@ -271,31 +266,38 @@ const CreateSegment: FC<CreateSegmentType> = ({
     <div className='overflow-visible'>
       <div>
         <div className='mb-4'>
-          {rules[0].rules.map((rule, i) => {
-            if (rule.delete) {
-              return null
-            }
-            return (
-              <div key={i}>
-                {i > 0 && (
-                  <Row className='and-divider my-1'>
+          {rules[0].rules
+            ?.filter((v) => !v?.delete)
+            .map((rule, i) => {
+              return (
+                <div key={i}>
+                  <Row
+                    className={classNames('and-divider my-1', {
+                      'text-danger': rule.type !== 'ANY',
+                    })}
+                  >
                     <Flex className='and-divider__line' />
-                    {rule.type === 'ANY' ? 'AND' : 'AND NOT'}
+                    {Format.camelCase(
+                      `${i > 0 ? 'And ' : ''}${
+                        rule.type === 'ANY'
+                          ? 'Any of the following'
+                          : 'None of the following'
+                      }`,
+                    )}
                     <Flex className='and-divider__line' />
                   </Row>
-                )}
-                <Rule
-                  showDescription={showDescriptions}
-                  readOnly={readOnly}
-                  data-test={`rule-${i}`}
-                  rule={rule}
-                  operators={operators}
-                  onRemove={() => removeRule(0, i)}
-                  onChange={(v: SegmentRule) => updateRule(0, i, v)}
-                />
-              </div>
-            )
-          })}
+                  <Rule
+                    showDescription={showDescriptions}
+                    readOnly={readOnly}
+                    data-test={`rule-${i}`}
+                    rule={rule}
+                    operators={operators}
+                    onRemove={() => removeRule(0, i)}
+                    onChange={(v: SegmentRule) => updateRule(0, i, v)}
+                  />
+                </div>
+              )
+            })}
         </div>
         <Row className='justify-content-end'>
           {!readOnly && (
@@ -306,34 +308,15 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </div>
           )}
           {!readOnly && Utils.getFlagsmithHasFeature('not_operator') && (
-            <div onClick={() => addRule('NOT')} className='text-center'>
-              {Utils.getFlagsmithValue('not_operator') ? (
-                <Tooltip
-                  title={
-                    <Button
-                      theme='outline'
-                      className='ml-2 btn--outline-danger'
-                      data-test='add-rule'
-                      type='button'
-                    >
-                      Add AND NOT Condition
-                    </Button>
-                  }
-                >
-                  {`Note: If using clientside evaluations on your SDK, this feature is only supported by the following SDKs: ${JSON.parse(
-                    Utils.getFlagsmithValue('not_operator'),
-                  )}`}
-                </Tooltip>
-              ) : (
-                <Button
-                  theme='outline'
-                  className='ml-2 btn--outline-danger'
-                  data-test='add-rule'
-                  type='button'
-                >
-                  Add AND NOT Condition
-                </Button>
-              )}
+            <div onClick={() => addRule('NONE')} className='text-center'>
+              <Button
+                theme='outline'
+                className='ml-2 btn--outline-danger'
+                data-test='add-rule'
+                type='button'
+              >
+                Add AND NOT Condition
+              </Button>
             </div>
           )}
         </Row>
@@ -447,7 +430,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
         )}
         <Flex className='mb-3'>
           <label className='cols-sm-2 control-label mb-1'>
-            Include users when the following rules apply:
+            Include users when all of the following rules apply:
           </label>
           <span className='fs-caption text-faint'>
             Note: Trait names are case sensitive
