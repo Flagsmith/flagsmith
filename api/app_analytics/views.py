@@ -82,10 +82,18 @@ class SDKAnalyticsFlags(GenericAPIView):
         query_serializer = SDKAnalyticsFlagsQuerySerializer(data=request.query_params)
         query_serializer.is_valid(raise_exception=True)
         identity_identifier = query_serializer.validated_data["identity_identifier"]
+        enabled_when_evaluated = query_serializer.validated_data[
+            "enabled_when_evaluated"
+        ]
 
         if settings.USE_POSTGRES_FOR_ANALYTICS:
             track_feature_evaluation.delay(
-                args=(request.environment.id, request.data, identity_identifier)
+                args=(
+                    request.environment.id,
+                    request.data,
+                    identity_identifier,
+                    enabled_when_evaluated,
+                )
             )
         elif settings.INFLUXDB_TOKEN:
             track_feature_evaluation_influxdb(request.environment.id, request.data)
