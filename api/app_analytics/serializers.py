@@ -19,4 +19,9 @@ class UsageTotalCountSerializer(serializers.Serializer):
 
 
 class SDKAnalyticsFlagsQuerySerializer(serializers.Serializer):
-    identity_identifier = serializers.CharField(required=False, default=None)
+    identity_identifier = serializers.CharField(
+        required=False, default=None, allow_null=True
+    )
+    enabled_when_evaluated = serializers.BooleanField(
+        required=False, default=None, allow_null=True
+    )
