@@ -1,5 +1,9 @@
 from app_analytics.models import FeatureEvaluationRaw
-from app_analytics.split_testing.models import ConversionEvent, SplitTest
+from app_analytics.split_testing.models import (
+    ConversionEvent,
+    ConversionEventType,
+    SplitTest,
+)
 from app_analytics.split_testing.tasks import _update_split_tests
 from pytest_django.fixtures import SettingsWrapper
 
@@ -77,20 +81,30 @@ def test_update_split_tests_with_new_split_tests(
         environment_id=environment.id,
         evaluation_count=2,
         identity_identifier=identity1.identifier,
+        enabled_when_evaluated=True,
     )
     FeatureEvaluationRaw.objects.create(
         feature_name=feature2.name,
         environment_id=environment.id,
         evaluation_count=1,
         identity_identifier=identity1.identifier,
+        enabled_when_evaluated=True,
     )
 
-    # Create evaluation for only feature2 for identity2
+    # Create evaluation for only feature2 for identity2 since
+    # feature1 was not set to enabled when evaluated.
+    FeatureEvaluationRaw.objects.create(
+        feature_name=feature1.name,
+        environment_id=environment.id,
+        evaluation_count=1,
+        identity_identifier=identity2.identifier,
+    )
     FeatureEvaluationRaw.objects.create(
         feature_name=feature2.name,
         environment_id=environment.id,
         evaluation_count=1,
         identity_identifier=identity2.identifier,
+        enabled_when_evaluated=True,
     )
 
     # Create evaluation for only feature2 for identity3
@@ -99,6 +113,7 @@ def test_update_split_tests_with_new_split_tests(
         environment_id=environment.id,
         evaluation_count=1,
         identity_identifier=identity3.identifier,
+        enabled_when_evaluated=True,
     )
 
     # Create duplicate evaluations for only feature1 for identity4
@@ -107,21 +122,34 @@ def test_update_split_tests_with_new_split_tests(
         environment_id=environment.id,
         evaluation_count=1,
         identity_identifier=identity4.identifier,
+        enabled_when_evaluated=True,
     )
     FeatureEvaluationRaw.objects.create(
         feature_name=feature1.name,
         environment_id=environment.id,
         evaluation_count=1,
         identity_identifier=identity4.identifier,
+        enabled_when_evaluated=True,
     )
 
+    cet1 = ConversionEventType.objects.create(
+        environment=environment,
+        name="paid_plan",
+    )
+    # Create a second CET with no ConversionEvents.
+    ConversionEventType.objects.create(
+        environment=environment,
+        name="free_plan",
+    )
     # Create conversion events for identity3 and identity 4
     ConversionEvent.objects.create(
+        type=cet1,
         environment=environment,
         identity=identity3,
     )
 
     ConversionEvent.objects.create(
+        type=cet1,
         environment=environment,
         identity=identity4,
     )
@@ -132,7 +160,13 @@ def test_update_split_tests_with_new_split_tests(
     # Then
     split_tests = SplitTest.objects.all()
 
-    assert len(split_tests) == 6
+    # Total 2 different features, each with 3 tests, times 2
+    # separate conversion event types.
+    assert len(split_tests) == 12
+
+    # Now look at only the tests with tracked conversion events.
+    split_tests = split_tests.filter(conversion_event_type=cet1)
+
     assert sum([st.evaluation_count for st in split_tests]) == 5
     assert sum([st.conversion_count for st in split_tests]) == 2
     for st in split_tests:
@@ -180,6 +214,7 @@ def test_update_split_tests_with_existing_split_tests(
         environment_id=environment.id,
         evaluation_count=2,
         identity_identifier=identity1.identifier,
+        enabled_when_evaluated=True,
     )
 
     FeatureEvaluationRaw.objects.create(
@@ -187,15 +222,22 @@ def test_update_split_tests_with_existing_split_tests(
         environment_id=environment.id,
         evaluation_count=1,
         identity_identifier=identity2.identifier,
+        enabled_when_evaluated=True,
     )
 
+    cet = ConversionEventType.objects.create(
+        environment=environment,
+        name="free_plan",
+    )
     ConversionEvent.objects.create(
+        type=cet,
         environment=environment,
         identity=identity1,
     )
 
     # Create some split test objects to replace.
     split_test1 = SplitTest.objects.create(
+        conversion_event_type=cet,
         environment=environment,
         feature=feature1,
         multivariate_feature_option_id=None,
@@ -204,6 +246,7 @@ def test_update_split_tests_with_existing_split_tests(
         pvalue=1.0,
     )
     split_test2 = SplitTest.objects.create(
+        conversion_event_type=cet,
         environment=environment,
         feature=feature1,
         multivariate_feature_option_id=mvfo1.id,
@@ -212,6 +255,7 @@ def test_update_split_tests_with_existing_split_tests(
         pvalue=1.0,
     )
     split_test3 = SplitTest.objects.create(
+        conversion_event_type=cet,
         environment=environment,
         feature=feature1,
         multivariate_feature_option_id=mvfo2.id,
