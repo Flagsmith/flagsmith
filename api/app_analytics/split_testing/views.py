@@ -2,14 +2,18 @@ from django.db.models import F, QuerySet
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, viewsets
+from rest_framework.generics import ListAPIView
 
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions.permissions import EnvironmentKeyPermissions
+from features.models import FeatureState
 
-from .models import SplitTest
-from .permissions import SplitTestPermissions
+from .models import ConversionEventType, SplitTest
+from .permissions import ConversionEventTypePermissions, SplitTestPermissions
 from .serializers import (
     ConversionEventSerializer,
+    ConversionEventTypeQuerySerializer,
+    ConversionEventTypeSerializer,
     SplitTestQuerySerializer,
     SplitTestSerializer,
 )
@@ -19,6 +23,21 @@ class ConversionEventViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
     serializer_class = ConversionEventSerializer
+
+
+class ConversionEventTypeView(ListAPIView):
+    permission_classes = (ConversionEventTypePermissions,)
+    serializer_class = ConversionEventTypeSerializer
+
+    def get_queryset(self) -> QuerySet[ConversionEventType]:
+        query_serializer = ConversionEventTypeQuerySerializer(
+            data=self.request.query_params
+        )
+        query_serializer.is_valid(raise_exception=True)
+
+        return ConversionEventType.objects.filter(
+            environment_id=query_serializer.validated_data["environment_id"]
+        ).order_by("name")
 
 
 @method_decorator(
@@ -33,7 +52,9 @@ class SplitTestViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         query_serializer = SplitTestQuerySerializer(data=self.request.query_params)
         query_serializer.is_valid(raise_exception=True)
         qs = SplitTest.objects.filter(
-            environment_id=query_serializer.validated_data["environment_id"]
+            conversion_event_type_id=query_serializer.validated_data[
+                "conversion_event_type_id"
+            ]
         ).select_related("feature", "multivariate_feature_option")
 
         # In order to keep split test results in the same order
@@ -44,3 +65,32 @@ class SplitTestViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             "feature__name",
             F("multivariate_feature_option").asc(nulls_first=True),
         )
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+
+        feature_ids = set()
+        environment_id = None
+        for split_test in self.paginate_queryset(self.get_queryset()):
+            feature_ids.add(split_test.feature_id)
+            if environment_id:
+                assert split_test.environment_id == environment_id
+            else:
+                environment_id = split_test.environment_id
+
+        # The feature state value objects are needed for the
+        # control group instead of a multivariate record.
+        queryset = FeatureState.objects.select_related("feature_state_value").filter(
+            environment_id=environment_id,
+            identity__isnull=True,
+            feature_segment__isnull=True,
+            feature_id__in=feature_ids,
+        )
+
+        context["feature_states_by_env_feature_pair"] = {}
+        for feature_state in queryset:
+            context["feature_states_by_env_feature_pair"][
+                (environment_id, feature_state.feature_id)
+            ] = feature_state
+
+        return context
