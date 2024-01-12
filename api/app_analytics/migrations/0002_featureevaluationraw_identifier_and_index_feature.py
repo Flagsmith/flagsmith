@@ -18,6 +18,11 @@ class Migration(migrations.Migration):
             name='identity_identifier',
             field=models.CharField(default=None, max_length=2000, null=True),
         ),
+        migrations.AddField(
+            model_name='featureevaluationraw',
+            name='enabled_when_evaluated',
+            field=models.BooleanField(null=True, default=None),
+        ),
         migrations.SeparateDatabaseAndState(
             state_operations=[
                 migrations.AlterField(
