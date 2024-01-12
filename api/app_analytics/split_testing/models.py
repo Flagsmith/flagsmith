@@ -6,7 +6,28 @@ from features.models import Feature
 from features.multivariate.models import MultivariateFeatureOption
 
 
+class ConversionEventType(models.Model):
+    name = models.CharField(max_length=100)
+    environment = models.ForeignKey(
+        Environment, related_name="conversion_event_types", on_delete=models.CASCADE
+    )
+
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["environment", "name"],
+                name="unique_environment_name",
+            )
+        ]
+
+
 class ConversionEvent(models.Model):
+    type = models.ForeignKey(
+        ConversionEventType, related_name="conversion_events", on_delete=models.CASCADE
+    )
     environment = models.ForeignKey(
         Environment, related_name="conversion_events", on_delete=models.CASCADE
     )
@@ -21,6 +42,9 @@ class ConversionEvent(models.Model):
 
 
 class SplitTest(models.Model):
+    conversion_event_type = models.ForeignKey(
+        ConversionEventType, related_name="split_tests", on_delete=models.CASCADE
+    )
     environment = models.ForeignKey(
         Environment, related_name="split_tests", on_delete=models.CASCADE
     )
@@ -50,7 +74,11 @@ class SplitTest(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["environment", "feature", "multivariate_feature_option"],
-                name="unique_environment_feature_mvfo",
+                fields=[
+                    "conversion_event_type",
+                    "feature",
+                    "multivariate_feature_option",
+                ],
+                name="unique_cet_feature_mvfo",
             )
         ]
