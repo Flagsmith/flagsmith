@@ -100,22 +100,24 @@ export default class Paging extends PureComponent {
                   {index + 1}
                 </div>
               ))}
-            {!noPages && !range.includes(lastPage - 2) && (
-              <>
-                <div
-                  className={cn({
-                    page: true,
-                  })}
-                  onClick={
-                    paging.currentPage === lastPage + 1
-                      ? undefined
-                      : () => goToPage(1)
-                  }
-                >
-                  ...
-                </div>
-              </>
-            )}
+            {!noPages &&
+              !range.includes(lastPage - 1) &&
+              !range.includes(lastPage - 2) && (
+                <>
+                  <div
+                    className={cn({
+                      page: true,
+                    })}
+                    onClick={
+                      paging.currentPage === lastPage + 1
+                        ? undefined
+                        : () => goToPage(1)
+                    }
+                  >
+                    ...
+                  </div>
+                </>
+              )}
             {!noPages && !range.includes(lastPage - 1) && (
               <>
                 <div
