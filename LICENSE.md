@@ -1,7 +1,4 @@
-Copyright (c) 2021 Bullet Train Ltd (https://www.flagsmith.com/) and individual contributors. All rights reserved.
-
-- All content that resides under the "api/permissions" directory of this repository, if that directory exists, is
-  licensed under the license defined in "api/permissions/LICENSE.md".
+Copyright (c) 2024 Bullet Train Ltd (https://www.flagsmith.com/) and individual contributors. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 following conditions are met:
