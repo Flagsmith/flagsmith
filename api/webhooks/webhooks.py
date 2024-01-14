@@ -143,6 +143,7 @@ def trigger_sample_webhook(
     wait_gen=backoff.expo,
     exception=requests.exceptions.RequestException,
     max_tries=settings.WEBHOOK_BACKOFF_RETRIES,
+    raise_on_giveup=False,
 )
 def _call_webhook(
     webhook: AbstractBaseWebhookModel,
