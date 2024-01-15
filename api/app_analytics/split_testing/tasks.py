@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from app_analytics.models import FeatureEvaluationRaw
 from app_analytics.split_testing.helpers import gather_split_test_metrics
@@ -50,19 +50,27 @@ def update_features_split_tests(feature_id: int) -> None:
         "environment_id", flat=True
     )
 
-    qs_values_list = FeatureEvaluationRaw.objects.filter(
-        feature_name=feature.name,
-        environment_id__in=environment_ids,
-        identity_identifier__isnull=False,
-        enabled_when_evaluated=True,  # Only evaluated features.
-    ).values_list("environment_id", "identity_identifier")
+    qs_values_list = (
+        FeatureEvaluationRaw.objects.filter(
+            feature_name=feature.name,
+            environment_id__in=environment_ids,
+            identity_identifier__isnull=False,
+            enabled_when_evaluated=True,  # Only evaluated features.
+        )
+        .values_list(
+            "environment_id",
+            "identity_identifier",
+            "created_at",
+        )
+        .order_by("created_at")
+    )
 
-    # Eliminate duplicate identifiers.
-    qs_values_list = qs_values_list.distinct()
+    environment_identifiers = defaultdict(dict)
+    for environment_id, identity_identifier, created_at in qs_values_list:
+        if identity_identifier in environment_identifiers[environment_id]:
+            continue
 
-    environment_identifiers = defaultdict(list)
-    for environment_id, identity_identifier in qs_values_list:
-        environment_identifiers[environment_id].append(identity_identifier)
+        environment_identifiers[environment_id][identity_identifier] = created_at
 
     for (
         environment_id,
@@ -80,7 +88,7 @@ def update_features_split_tests(feature_id: int) -> None:
 def _save_environment_split_test(
     feature: Feature,
     environment_id: int,
-    evaluated_identity_identifiers: list[str],
+    evaluated_identity_identifiers: dict[str, datetime],
     conversion_event_type: ConversionEventType,
 ) -> None:
     environment = Environment.objects.get(id=environment_id)
@@ -113,7 +121,7 @@ def _save_environment_split_test(
         type=conversion_event_type,
     )
 
-    conversion_identities = {ce.identity for ce in conversion_events}
+    conversion_identities = {ce.identity: ce for ce in conversion_events}
 
     for evaluated_identity in evaluated_identities:
         identity_hash_key = evaluated_identity.get_hash_key(
@@ -131,7 +139,12 @@ def _save_environment_split_test(
 
         evaluation_counts[_id] += 1
         if evaluated_identity in conversion_identities:
-            conversion_counts[_id] += 1
+            # Only include results if the feature was evaluated
+            # before the conversion event.
+            conversion_event = conversion_identities[evaluated_identity]
+            evaluated_at = evaluated_identity_identifiers[evaluated_identity.identifier]
+            if evaluated_at < conversion_event.created_at:
+                conversion_counts[_id] += 1
 
     pvalue = gather_split_test_metrics(
         evaluation_counts,
