@@ -1,7 +1,7 @@
 import logging
 import typing
 
-import rudder_analytics
+from rudderstack import analytics as rudder_analytics
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
