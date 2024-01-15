@@ -1,168 +1,154 @@
-from unittest import TestCase, mock
+from unittest import mock
 
 import pytest
 from django.db.utils import IntegrityError
 
-from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import ORGANISATION_PERMISSIONS
-from projects.models import (
-    Project,
-    ProjectPermissionModel,
-    UserProjectPermission,
-)
+from projects.models import Project
 from projects.permissions import VIEW_PROJECT
+from tests.types import WithProjectPermissionsCallable
 from users.models import FFAdminUser
 
 
-@pytest.mark.django_db
-class FFAdminUserTestCase(TestCase):
-    def setUp(self) -> None:
-        self.user = FFAdminUser.objects.create(email="test@example.com")
-        self.organisation = Organisation.objects.create(name="Test Organisation")
+def test_user_belongs_to_success(
+    admin_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    # Given
+    assert organisation in admin_user.organisations.all()
+    # Then
+    assert admin_user.belongs_to(organisation.id)
 
-        self.project_1 = Project.objects.create(
-            name="Test project 1", organisation=self.organisation
+
+def test_user_belongs_to_fail(admin_user: FFAdminUser) -> None:
+    unaffiliated_organisation = Organisation.objects.create(name="Unaffiliated")
+    assert not admin_user.belongs_to(unaffiliated_organisation.id)
+
+
+def test_get_permitted_projects_for_org_admin_returns_all_projects(
+    admin_user: FFAdminUser,
+    organisation: Organisation,
+    project: Project,
+) -> None:
+    # Given
+    Project.objects.create(name="Test project 2", organisation=organisation)
+    # When
+    projects = admin_user.get_permitted_projects(VIEW_PROJECT)
+
+    # Then
+    assert projects.count() == 2
+
+
+def test_get_permitted_projects_for_user_returns_only_projects_matching_permission(
+    staff_user: FFAdminUser,
+    with_project_permissions: WithProjectPermissionsCallable,
+    project: Project,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+
+    # When
+    projects = staff_user.get_permitted_projects(permission_key=VIEW_PROJECT)
+
+    # Then
+    assert projects.count() == 1
+    assert projects.first() == project
+
+
+def test_get_admin_organisations(
+    admin_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    # When
+    admin_orgs = admin_user.get_admin_organisations()
+
+    # Then
+    assert organisation in admin_orgs
+
+
+def test_get_permitted_environments_for_org_admin_returns_all_environments_for_project(
+    admin_user: FFAdminUser,
+    organisation: Organisation,
+    project: Project,
+) -> None:
+    # When
+    environments = admin_user.get_permitted_environments(
+        "VIEW_ENVIRONMENT", project=project
+    )
+
+    # Then
+    assert environments.count() == project.environments.count()
+
+
+def test_get_permitted_environments_for_user_returns_only_environments_matching_permission(
+    staff_user: FFAdminUser,
+    project: Project,
+) -> None:
+    # When
+    environments = staff_user.get_permitted_environments(
+        "VIEW_ENVIRONMENT", project=project
+    )
+
+    # Then
+    assert len(list(environments)) == 0
+
+
+def test_unique_user_organisation(
+    admin_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    with pytest.raises(IntegrityError):
+        admin_user.add_organisation(organisation, OrganisationRole.USER)
+
+
+def test_has_organisation_permission_is_true_for_organisation_admin(
+    admin_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    assert ORGANISATION_PERMISSIONS
+    assert all(
+        admin_user.has_organisation_permission(
+            organisation=organisation, permission_key=permission_key
         )
-        self.project_2 = Project.objects.create(
-            name="Test project 2", organisation=self.organisation
-        )
+        for permission_key, _ in ORGANISATION_PERMISSIONS
+    )
 
-        self.environment_1 = Environment.objects.create(
-            name="Test Environment 1", project=self.project_1
-        )
-        self.environment_2 = Environment.objects.create(
-            name="Test Environment 2", project=self.project_2
-        )
 
-    def test_user_belongs_to_success(self):
-        self.user.add_organisation(self.organisation, OrganisationRole.USER)
-        assert self.user.belongs_to(self.organisation.id)
-
-    def test_user_belongs_to_fail(self):
-        assert not self.user.belongs_to(self.organisation.id)
-
-    def test_get_permitted_projects_for_org_admin_returns_all_projects(self):
-        # Given
-        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
-
-        # When
-        projects = self.user.get_permitted_projects(VIEW_PROJECT)
-
-        # Then
-        assert projects.count() == 2
-
-    def test_get_permitted_projects_for_user_returns_only_projects_matching_permission(
-        self,
-    ):
-        # Given
-        self.user.add_organisation(self.organisation, OrganisationRole.USER)
-        user_project_permission = UserProjectPermission.objects.create(
-            user=self.user, project=self.project_1
-        )
-        read_permission = ProjectPermissionModel.objects.get(key=VIEW_PROJECT)
-        user_project_permission.permissions.set([read_permission])
-
-        # When
-        projects = self.user.get_permitted_projects(permission_key=VIEW_PROJECT)
-
-        # Then
-        assert projects.count() == 1
-
-    def test_get_admin_organisations(self):
-        # Given
-        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
-
-        # When
-        admin_orgs = self.user.get_admin_organisations()
-
-        # Then
-        assert self.organisation in admin_orgs
-
-    def test_get_permitted_environments_for_org_admin_returns_all_environments_for_project(
-        self,
-    ):
-        # Given
-        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
-
-        # When
-        environments = self.user.get_permitted_environments(
-            "VIEW_ENVIRONMENT", project=self.project_1
-        )
-
-        # Then
-        assert environments.count() == self.project_1.environments.count()
-
-    def test_get_permitted_environments_for_user_returns_only_environments_matching_permission(
-        self,
-    ):
-        # Given
-        self.user.add_organisation(self.organisation, OrganisationRole.USER)
-
-        # When
-        environments = self.user.get_permitted_environments(
-            "VIEW_ENVIRONMENT", project=self.project_1
-        )
-
-        # Then
-        assert len(list(environments)) == 0
-
-    def test_unique_user_organisation(self):
-        # Given organisation and user
-
-        # When
-        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
-
-        # Then
-        with pytest.raises(IntegrityError):
-            self.user.add_organisation(self.organisation, OrganisationRole.USER)
-
-    def test_has_organisation_permission_is_true_for_organisation_admin(self):
-        # Given
-        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
-
-        # Then
-        assert all(
-            self.user.has_organisation_permission(
-                organisation=self.organisation, permission_key=permission_key
-            )
-            for permission_key, _ in ORGANISATION_PERMISSIONS
-        )
-
-    def test_has_organisation_permission_is_true_when_user_has_permission(self):
-        # Given
-        self.user.add_organisation(self.organisation)
-        user_organisation_permission = UserOrganisationPermission.objects.create(
-            user=self.user, organisation=self.organisation
-        )
-        for permission_key, _ in ORGANISATION_PERMISSIONS:
-            user_organisation_permission.permissions.through.objects.create(
-                permissionmodel_id=permission_key,
-                userorganisationpermission=user_organisation_permission,
-            )
-
-        # Then
-        assert all(
-            self.user.has_organisation_permission(
-                organisation=self.organisation, permission_key=permission_key
-            )
-            for permission_key, _ in ORGANISATION_PERMISSIONS
+def test_has_organisation_permission_is_true_when_user_has_permission(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    # Given
+    user_organisation_permission = UserOrganisationPermission.objects.create(
+        user=staff_user, organisation=organisation
+    )
+    for permission_key, _ in ORGANISATION_PERMISSIONS:
+        user_organisation_permission.permissions.through.objects.create(
+            permissionmodel_id=permission_key,
+            userorganisationpermission=user_organisation_permission,
         )
 
-    def test_has_organisation_permission_is_false_when_user_does_not_have_permission(
-        self,
-    ):
-        # Given
-        self.user.add_organisation(self.organisation)
-
-        # Then
-        assert not any(
-            self.user.has_organisation_permission(
-                organisation=self.organisation, permission_key=permission_key
-            )
-            for permission_key, _ in ORGANISATION_PERMISSIONS
+    # Then
+    assert all(
+        staff_user.has_organisation_permission(
+            organisation=organisation, permission_key=permission_key
         )
+        for permission_key, _ in ORGANISATION_PERMISSIONS
+    )
+
+
+def test_has_organisation_permission_is_false_when_user_does_not_have_permission(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    assert not any(
+        staff_user.has_organisation_permission(
+            organisation=organisation, permission_key=permission_key
+        )
+        for permission_key, _ in ORGANISATION_PERMISSIONS
+    )
 
 
 @pytest.mark.django_db
