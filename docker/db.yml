@@ -1,4 +1,8 @@
 version: '3'
+
+volumes:
+  pg_11_data:
+
 services:
   db:
     image: postgres:11.12-alpine
@@ -11,5 +15,3 @@ services:
     environment:
       POSTGRES_DB: flagsmith
       POSTGRES_PASSWORD: password
-volumes:
-  pg_11_data:

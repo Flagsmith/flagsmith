@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import _data from 'common/data/base/_data'
 import {
   useCreateLaunchDarklyProjectImportMutation,
@@ -6,6 +6,10 @@ import {
 } from 'common/services/useLaunchDarklyProjectImport'
 import AppLoader from 'components/AppLoader'
 import InfoMessage from 'components/InfoMessage'
+import Input from 'components/base/forms/Input'
+import Utils from 'common/utils/utils'
+import Button from 'components/base/forms/Button'
+import PanelSearch from 'components/PanelSearch'
 
 type ImportPageType = {
   projectId: string
@@ -14,10 +18,10 @@ type ImportPageType = {
 
 const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
   const [LDKey, setLDKey] = useState<string>('')
-  const [importId, setImportId] = useState<string>('')
+  const [importId, setImportId] = useState<number>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [isAppLoading, setAppIsLoading] = useState<boolean>(false)
-  const [projects, setProjects] = useState<string>([])
+  const [projects, setProjects] = useState<{ key: string; name: string }[]>([])
   const [createLaunchDarklyProjectImport, { data, isSuccess }] =
     useCreateLaunchDarklyProjectImportMutation()
 
@@ -25,10 +29,13 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
     data: status,
     isSuccess: statusLoaded,
     refetch,
-  } = useGetLaunchDarklyProjectImportQuery({
-    import_id: importId,
-    project_id: projectId,
-  })
+  } = useGetLaunchDarklyProjectImportQuery(
+    {
+      import_id: `${importId}`,
+      project_id: projectId,
+    },
+    { skip: !importId },
+  )
 
   useEffect(() => {
     const checkImportStatus = async () => {
@@ -50,7 +57,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
   }, [statusLoaded, status, refetch])
 
   useEffect(() => {
-    if (isSuccess) {
+    if (isSuccess && data?.id) {
       setImportId(data.id)
       refetch()
     }
@@ -62,7 +69,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
       .get(`https://app.launchdarkly.com/api/v2/projects`, '', {
         'Authorization': LDKey,
       })
-      .then((res) => {
+      .then((res: { items: { key: string; name: string }[] }) => {
         setIsLoading(false)
         setProjects(res.items)
       })
@@ -100,7 +107,9 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
               <Input
                 value={LDKey}
                 name='ldkey'
-                onChange={(e) => setLDKey(Utils.safeParseEventValue(e))}
+                onChange={(e: InputEvent) =>
+                  setLDKey(Utils.safeParseEventValue(e))
+                }
                 type='text'
                 placeholder='My LaunchDarkly key'
               />
@@ -129,7 +138,10 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
                   listClassName='row mt-n2 gy-4'
                   title='LaunchDarkly Projects'
                   items={projects}
-                  renderRow={({ key, name }, i) => {
+                  renderRow={(
+                    { key, name }: { key: string; name: string },
+                    i: number,
+                  ) => {
                     return (
                       <>
                         <Button

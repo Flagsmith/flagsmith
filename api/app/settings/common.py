@@ -157,6 +157,8 @@ INSTALLED_APPS = [
     "app_analytics.split_testing",
 ]
 
+SILENCED_SYSTEM_CHECKS = ["axes.W002"]
+
 SITE_ID = 1
 
 db_conn_max_age = env.int("DJANGO_DB_CONN_MAX_AGE", 60)
@@ -880,8 +882,6 @@ EDGE_ENABLED = (
     and EDGE_RELEASE_DATETIME < datetime.now(tz=pytz.UTC)
 )
 
-DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
-
 DISABLE_FLAGSMITH_UI = env.bool("DISABLE_FLAGSMITH_UI", default=False)
 SERVE_FE_ASSETS = not DISABLE_FLAGSMITH_UI and os.path.exists(
     BASE_DIR + "/app/templates/webpack/index.html"
@@ -898,7 +898,11 @@ MAX_SELF_MIGRATABLE_IDENTITIES = env.int("MAX_SELF_MIGRATABLE_IDENTITIES", 10000
 # Setting to allow asynchronous tasks to be run synchronously for testing purposes
 # or in a separate thread for self-hosted users
 TASK_RUN_METHOD = env.enum(
-    "TASK_RUN_METHOD", type=TaskRunMethod, default=TaskRunMethod.SEPARATE_THREAD.value
+    "TASK_RUN_METHOD",
+    type=TaskRunMethod,
+    default=TaskRunMethod.TASK_PROCESSOR.value
+    if env.bool("RUN_BY_PROCESSOR", False)
+    else TaskRunMethod.SEPARATE_THREAD.value,
 )
 ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
@@ -915,6 +919,10 @@ TASK_DELETE_RUN_EVERY = env.timedelta("TASK_DELETE_RUN_EVERY", default=86400)
 RECURRING_TASK_RUN_RETENTION_DAYS = env.int(
     "RECURRING_TASK_RUN_RETENTION_DAYS", default=30
 )
+
+# Webhook settings
+DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
+RETRY_WEBHOOKS = TASK_RUN_METHOD == TaskRunMethod.TASK_PROCESSOR
 
 # Real time(server sent events) settings
 SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)
