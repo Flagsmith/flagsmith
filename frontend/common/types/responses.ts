@@ -397,5 +397,6 @@ export type Res = {
   groupWithRole: PagedResponse<Roles>
   changeRequests: PagedResponse<ChangeRequestSummary>
   groupSummaries: UserGroupSummary[]
+  externalResource: { id: string }
   // END OF TYPES
 }

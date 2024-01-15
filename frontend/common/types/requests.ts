@@ -147,5 +147,9 @@ export type Req = {
   getGroupSummaries: {
     orgId: string
   }
+  getExternalResource: { id: string }
+  updateExternalResource: { id: string }
+  deleteExternalResource: { id: string }
+  createExternalResource: {}
   // END OF TYPES
 }

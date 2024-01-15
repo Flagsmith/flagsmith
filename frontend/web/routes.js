@@ -29,6 +29,7 @@ import AuditLogPage from './components/pages/AuditLogPage'
 import ComparePage from './components/pages/ComparePage'
 import WidgetPage from './components/pages/WidgetPage'
 import BrokenPage from './components/pages/BrokenPage'
+import GitHubSetupPage from './components/pages/GitHubSetupPage'
 
 export default (
   <App>
@@ -37,9 +38,9 @@ export default (
       <Route path='/login' exact component={HomePage} />
       <Route path='/404' exact component={NotFoundErrorPage} />
       <Route path='/signup' exact component={HomePage} />
-      <Route path='/signup' exact component={HomePage} />
       <Route path='/home' exact component={HomePage} />
       <Route path='/projects' exact component={ProjectSelectPage} />
+      <Route path='/github-setup' exact component={GitHubSetupPage} />
       <Route path='/maintenance' exact component={Maintenance} />
       <Route
         path='/password-reset/confirm/:uid/:token/'
