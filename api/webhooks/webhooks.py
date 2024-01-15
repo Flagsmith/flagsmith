@@ -144,6 +144,7 @@ def trigger_sample_webhook(
     exception=requests.exceptions.RequestException,
     max_tries=settings.WEBHOOK_BACKOFF_RETRIES,
     raise_on_giveup=False,
+    giveup_log_level=logging.WARNING,
 )
 def _call_webhook(
     webhook: AbstractBaseWebhookModel,
