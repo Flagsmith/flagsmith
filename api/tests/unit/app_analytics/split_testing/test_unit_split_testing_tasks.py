@@ -75,6 +75,25 @@ def test_update_split_tests_with_new_split_tests(
         identifier="test-identity-4", environment=environment
     )
 
+    cet1 = ConversionEventType.objects.create(
+        environment=environment,
+        name="paid_plan",
+    )
+
+    # Create a second CET with no ConversionEvents.
+    ConversionEventType.objects.create(
+        environment=environment,
+        name="free_plan",
+    )
+
+    # Create a conversion event that preceded the feature evaluations.
+    # This means the results should not be included in the split test.
+    ConversionEvent.objects.create(
+        type=cet1,
+        environment=environment,
+        identity=identity2,
+    )
+
     # Create evaluation for both features for identity1
     FeatureEvaluationRaw.objects.create(
         feature_name=feature1.name,
@@ -132,15 +151,6 @@ def test_update_split_tests_with_new_split_tests(
         enabled_when_evaluated=True,
     )
 
-    cet1 = ConversionEventType.objects.create(
-        environment=environment,
-        name="paid_plan",
-    )
-    # Create a second CET with no ConversionEvents.
-    ConversionEventType.objects.create(
-        environment=environment,
-        name="free_plan",
-    )
     # Create conversion events for identity3 and identity 4
     ConversionEvent.objects.create(
         type=cet1,
