@@ -61,11 +61,16 @@ def test_get_admin_organisations(
     admin_user: FFAdminUser,
     organisation: Organisation,
 ) -> None:
+    # Given
+    non_admin_organisation = Organisation.objects.create(name="non-admin")
+    admin_user.add_organisation(non_admin_organisation, OrganisationRole.USER)
+
     # When
     admin_orgs = admin_user.get_admin_organisations()
 
     # Then
     assert organisation in admin_orgs
+    assert non_admin_organisation not in admin_orgs
 
 
 def test_get_permitted_environments_for_org_admin_returns_all_environments_for_project(
