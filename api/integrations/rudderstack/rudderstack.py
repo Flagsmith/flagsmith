@@ -1,7 +1,7 @@
 import logging
 import typing
 
-import rudder_analytics
+from rudderstack import analytics as rudder_analytics
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class RudderstackWrapper(AbstractBaseIdentityIntegrationWrapper):
     def __init__(self, config: RudderstackConfiguration):
         rudder_analytics.write_key = config.api_key
-        rudder_analytics.data_plane_url = config.base_url
+        rudder_analytics.dataPlaneUrl = config.base_url
 
     def _identify_user(self, user_data: dict) -> None:
         rudder_analytics.identify(**user_data)
