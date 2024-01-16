@@ -108,7 +108,10 @@ const InputGroup = class extends Component {
               id={props.inputProps.name ? `${props.inputProps.name}-error` : ''}
               className='text-danger'
             >
-              {inputProps.error}
+              {typeof inputProps.error === 'string'
+                ? inputProps.error
+                : !!inputProps.error?.length &&
+                  inputProps.error.map((err, i) => <div key={i}>{err}</div>)}
             </span>
           </span>
         )}
