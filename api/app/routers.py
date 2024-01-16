@@ -6,6 +6,7 @@ from django.core.cache import cache
 from django.db import connections
 
 logger = logging.getLogger(__name__)
+CONNECTION_CHECK_CACHE_TTL = 2
 
 
 def connection_check(database: str) -> bool:
@@ -25,9 +26,13 @@ def connection_check(database: str) -> bool:
         )
 
     if usable:
-        cache.set(f"db_connection_active.{database}", "active", 10)
+        cache.set(
+            f"db_connection_active.{database}", "active", CONNECTION_CHECK_CACHE_TTL
+        )
     else:
-        cache.set(f"db_connection_active.{database}", "offline", 10)
+        cache.set(
+            f"db_connection_active.{database}", "offline", CONNECTION_CHECK_CACHE_TTL
+        )
 
     return usable
 
