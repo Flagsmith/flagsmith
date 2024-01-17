@@ -455,6 +455,8 @@ The following table lists the configurable parameters of the chart and their def
 | `api.statsd.hostFromNodeIp`                        | Set as true to use the node IP as the statsd host instead        | `false`                        |
 | `api.statsd.port`                                  | Host port to receive statsd metrics                              | `8125`                         |
 | `api.statsd.prefix`                                | Prefix to add to metric ids                                      | `flagsmith.api`                |
+| `commonLanesls`                                    | Labels to add to all resources                                   | `{}`                           |
+| `commonAnnotations`                                | Annotations to add to all resources                              | `{}`                           |
 
 ---
 
