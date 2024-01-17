@@ -6,7 +6,7 @@ export const masterAPIKeyWithMasterAPIKeyRoleService = service
   .enhanceEndpoints({ addTagTypes: ['MasterAPIKeyWithMasterAPIKeyRole'] })
   .injectEndpoints({
     endpoints: (builder) => ({
-      deleteMasterAPIKeyWithMasterAPIKeyRoles: builder.query<
+      deleteMasterAPIKeyWithMasterAPIKeyRoles: builder.mutation<
         Res['masterAPIKeyWithMasterAPIKeyRoles'],
         Req['deleteMasterAPIKeyWithMasterAPIKeyRoles']
       >({
