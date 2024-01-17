@@ -27,7 +27,7 @@ def connection_check(database: str) -> bool:
 
     if usable:
         cache.set(
-            f"db_connection_active.{database}", "active", CONNECTION_CHECK_CACHE_TTL
+            f"db_connection_active.{database}", "online", CONNECTION_CHECK_CACHE_TTL
         )
     else:
         cache.set(
@@ -98,7 +98,7 @@ class PrimaryReplicaRouter:
 
             replicas.remove(database)
             db_cache = cache.get(f"db_connection_active.{database}")
-            if db_cache == "active":
+            if db_cache == "online":
                 return database
             if db_cache == "offline":
                 continue
