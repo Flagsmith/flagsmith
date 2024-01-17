@@ -1,5 +1,3 @@
-from typing import Callable
-
 import pytest
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
@@ -9,6 +7,7 @@ from rest_framework.test import APIClient
 from projects.models import Project
 from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
+from tests.types import WithProjectPermissionsCallable
 
 
 @pytest.mark.parametrize(
@@ -31,7 +30,7 @@ def test_get_tag_by_uuid__returns_403_for_user_without_permission(
     organisation_one_project_two: Project,
     project: Project,
     tag: Tag,
-    with_project_permissions: Callable[[list[str], int], None],
+    with_project_permissions: WithProjectPermissionsCallable,
 ):
     # Given
     # user with view permission for a different project
@@ -53,7 +52,7 @@ def test_get_tag_by__uuid_returns_200_for_user_with_view_project_permission(
     staff_client: APIClient,
     project: Project,
     tag: Tag,
-    with_project_permissions: Callable[[list[str], int], None],
+    with_project_permissions: WithProjectPermissionsCallable,
 ):
     # Given
     with_project_permissions([VIEW_PROJECT])
