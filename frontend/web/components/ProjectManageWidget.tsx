@@ -2,7 +2,6 @@ import { FC, useCallback, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { RouterChildContext } from 'react-router'
 
-import API from 'project/api'
 import AppActions from 'common/dispatcher/app-actions'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
@@ -54,7 +53,6 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ router }) => {
   }, [])
 
   useEffect(() => {
-    API.trackPage(Constants.pages.PROJECT_SELECT)
     const { state } = router.route.location as { state: { create?: boolean } }
     if (state && state.create) {
       handleCreateProjectClick()
@@ -62,7 +60,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ router }) => {
   }, [handleCreateProjectClick, router.route.location])
 
   return (
-    <div data-test='projec-manage-widget' id='projec-manage-widget'>
+    <div data-test='project-manage-widget' id='project-manage-widget'>
       <OrganisationProvider>
         {({ isLoading, projects }: OrganisationContext) => (
           <div>

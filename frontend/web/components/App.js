@@ -17,13 +17,13 @@ import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Permission from 'common/providers/Permission'
 import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
 import Button from './base/forms/Button'
 import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 import InfoMessage from './InfoMessage'
 import OrganisationLimit from './OrganisationLimit'
+import OrganisationLink from './OrganisationLink'
 
 const App = class extends Component {
   static propTypes = {
@@ -347,52 +347,7 @@ const App = class extends Component {
                             <React.Fragment>
                               <nav className='my-3 my-md-0 hidden-xs-down flex-row navbar-right space'>
                                 <Row>
-                                  {AccountStore.getOrganisationRole() ===
-                                  'ADMIN' ? (
-                                    <NavLink
-                                      id='org-settings-link'
-                                      activeClassName='active'
-                                      className='nav-link'
-                                      to='/organisation-settings'
-                                    >
-                                      <span className='mr-1'>
-                                        <Icon
-                                          name='layout'
-                                          width={20}
-                                          fill='#9DA4AE'
-                                        />
-                                      </span>
-                                      {'Organisation'}
-                                    </NavLink>
-                                  ) : (
-                                    !!AccountStore.getOrganisation() && (
-                                      <Permission
-                                        level='organisation'
-                                        permission='MANAGE_USER_GROUPS'
-                                        id={AccountStore.getOrganisation().id}
-                                      >
-                                        {({ permission }) => (
-                                          <>
-                                            {!!permission && (
-                                              <NavLink
-                                                id='org-settings-link'
-                                                activeClassName='active'
-                                                className='nav-link'
-                                                to='/organisation-groups'
-                                              >
-                                                <span
-                                                  style={{ marginRight: 4 }}
-                                                >
-                                                  <Icon name='layout' />
-                                                </span>
-                                                {'Organisation'}
-                                              </NavLink>
-                                            )}
-                                          </>
-                                        )}
-                                      </Permission>
-                                    )
-                                  )}
+                                  <OrganisationLink />
                                 </Row>
                                 <Row>
                                   <NavLink

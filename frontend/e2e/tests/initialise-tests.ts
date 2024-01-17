@@ -17,7 +17,7 @@ export default async function () {
   await click(byId('signup-btn'))
   await setText('[name="orgName"]', 'Bullet Train Ltd 0')
   await click('#create-org-btn')
-  await waitForElementVisible(byId('projec-manage-widget'))
+  await waitForElementVisible(byId('project-manage-widget'))
 
   log('Create Project')
   await click(byId('create-first-project-btn'))
