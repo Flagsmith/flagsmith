@@ -4,15 +4,19 @@ import random
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from flag_engine.segments.constants import EQUAL
+from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature
+from projects.models import Project
+from projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT
 from segments.models import Condition, Segment, SegmentRule
+from tests.types import WithProjectPermissionsCallable
 from util.mappers import map_identity_to_identity_document
 
 User = get_user_model()
@@ -338,6 +342,106 @@ def test_list_segments(django_assert_num_queries, project, client, num_queries):
 
     response_json = response.json()
     assert response_json["count"] == num_segments
+
+
+def test_list_segments_shows_rule_groups_in_the_correct_order(
+    project: Project,
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    for i in range(5):
+        segment = Segment.objects.create(name=f"segment {i}", project=project)
+        parent_rule = SegmentRule.objects.create(
+            segment=segment, type=SegmentRule.ALL_RULE
+        )
+
+        child_rule_one = SegmentRule.objects.create(
+            rule=parent_rule, type=SegmentRule.ANY_RULE
+        )
+        Condition.objects.create(
+            rule=child_rule_one, operator=EQUAL, property="foo", value="bar"
+        )
+
+        child_rule_two = SegmentRule.objects.create(
+            rule=parent_rule, type=SegmentRule.ANY_RULE
+        )
+        Condition.objects.create(
+            rule=child_rule_two, operator=PERCENTAGE_SPLIT, value="50"
+        )
+
+    with_project_permissions([VIEW_PROJECT])
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    for segment_data in response_json["results"]:
+        child_rules = segment_data["rules"][0]["rules"]
+        assert child_rules[0]["id"] < child_rules[1]["id"]
+
+
+def test_create_segment_returns_rules_in_correct_order(
+    project: Project,
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    data = (
+        """{
+        "description": "",
+        "name": "testing_ordering",
+        "project": %d,
+        "rules": [
+            {
+                "conditions": [],
+                "rules": [
+                    {
+                        "conditions": [
+                            {
+                                "operator": "EQUAL",
+                                "property": "foo",
+                                "value": "bar"
+                            }
+                        ],
+                        "rules": [],
+                        "type": "ANY"
+                    },
+                    {
+                        "conditions": [
+                            {
+                                "operator": "PERCENTAGE_SPLIT",
+                                "property": "",
+                                "value": "50"
+                            }
+                        ],
+                        "rules": [],
+                        "type": "ANY"
+                    }
+                ],
+                "type": "ALL"
+            }
+        ]
+    }"""
+        % project.id
+    )
+
+    with_project_permissions([MANAGE_SEGMENTS])
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+
+    # When
+    response = staff_client.post(url, data=data, content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    response_json = response.json()
+    rules_data = response_json["rules"][0]["rules"]
+    assert rules_data[0]["id"] < rules_data[1]["id"]
 
 
 @pytest.mark.parametrize(

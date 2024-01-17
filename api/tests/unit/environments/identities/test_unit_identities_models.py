@@ -6,7 +6,6 @@ from flag_engine.segments.constants import (
     GREATER_THAN,
     GREATER_THAN_INCLUSIVE,
     LESS_THAN_INCLUSIVE,
-    NOT_EQUAL,
 )
 from rest_framework.test import APITestCase
 
@@ -731,8 +730,14 @@ class IdentityTestCase(APITestCase):
         # a segment with multiple rules and conditions
         segment = Segment.objects.create(name="Test Segment", project=self.project)
 
+        # create a parent rule to simulate a segment in the same way that the
+        # UI creates them
+        parent_rule = SegmentRule.objects.create(
+            segment=segment, type=SegmentRule.ALL_RULE
+        )
+
         rule_one = SegmentRule.objects.create(
-            segment=segment, type=SegmentRule.ANY_RULE
+            rule=parent_rule, type=SegmentRule.ANY_RULE
         )
         Condition.objects.create(
             rule=rule_one, operator=EQUAL, property="foo", value="bar"
@@ -742,7 +747,7 @@ class IdentityTestCase(APITestCase):
         )
 
         rule_two = SegmentRule.objects.create(
-            segment=segment, type=SegmentRule.ALL_RULE
+            rule=parent_rule, type=SegmentRule.ALL_RULE
         )
         Condition.objects.create(
             rule=rule_two, operator=GREATER_THAN_INCLUSIVE, property="bar", value=10
@@ -750,19 +755,6 @@ class IdentityTestCase(APITestCase):
         Condition.objects.create(
             rule=rule_two, operator=LESS_THAN_INCLUSIVE, property="bar", value=20
         )
-
-        # And nested rules to test the number of queries
-        for i in range(50):
-            property_name = "foo"
-            nested_rule = SegmentRule.objects.create(
-                rule=rule_two, type=SegmentRule.ALL_RULE
-            )
-            Condition.objects.create(
-                rule=nested_rule,
-                operator=NOT_EQUAL,
-                property=property_name,
-                value="some_other_value",
-            )
 
         # and an identity with traits that match the segment
         identity = Identity.objects.create(
