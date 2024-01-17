@@ -138,6 +138,12 @@ export type Req = {
   deleteRoleMasterApiKey: { org_id: number; role_id: number; id: string }
   createRoleMasterApiKey: { org_id: number; role_id: number }
   getMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
+  deleteMasterAPIKeyWithMasterAPIKeyRoles: {
+    org_id: number
+    prefix: string
+    role_id: number
+  }
+  getRolesMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
   getUserWithRoles: { org_id: string; user_id: string }
   deleteUserWihRole: { org_id: string; user_id: string; role_id: string }
   getGroupWithRole: { org_id: string; group_id: string }

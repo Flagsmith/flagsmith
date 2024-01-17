@@ -11,12 +11,13 @@ import Icon from './Icon'
 import Switch from './Switch'
 import MyRoleSelect from './MyRoleSelect'
 import { getStore } from 'common/store'
-import {
-  createRoleMasterApiKey,
-  deleteRoleMasterApiKey,
-} from 'common/services/useRoleMasterApiKey'
+import { createRoleMasterApiKey } from 'common/services/useRoleMasterApiKey'
 
-import { getMasterAPIKeyWithMasterAPIKeyRoles } from 'common/services/useMasterAPIKeyWithMasterAPIKeyRole'
+import {
+  deleteMasterAPIKeyWithMasterAPIKeyRoles,
+  getMasterAPIKeyWithMasterAPIKeyRoles,
+  getRolesMasterAPIKeyWithMasterAPIKeyRoles,
+} from 'common/services/useMasterAPIKeyWithMasterAPIKeyRole'
 
 export class CreateAPIKey extends PureComponent {
   state = {
@@ -92,28 +93,33 @@ export class CreateAPIKey extends PureComponent {
       org_id: AccountStore.getOrganisation().id,
       prefix: prefix,
     }).then((res) => {
-      this.setState({
-        expiry_date: res.data.expiry_date,
-        is_admin: res.data.is_admin,
-        name: res.data.name,
-        roles: res.data.roles,
+      getRolesMasterAPIKeyWithMasterAPIKeyRoles(getStore(), {
+        org_id: AccountStore.getOrganisation().id,
+        prefix: prefix,
+      }).then((rolesData) => {
+        this.setState({
+          expiry_date: res.data.expiry_date,
+          is_admin: res.data.is_admin,
+          name: res.data.name,
+          roles: rolesData.data.results,
+        })
       })
     })
   }
 
   removeRoleApiKey = (roleId, isEdit) => {
-    const roleSelected = this.state.roles.find((item) => item.role === roleId)
+    const roleSelected = this.state.roles.find((item) => item.id === roleId)
     if (isEdit) {
-      deleteRoleMasterApiKey(getStore(), {
-        id: roleSelected.id,
+      deleteMasterAPIKeyWithMasterAPIKeyRoles(getStore(), {
         org_id: AccountStore.getOrganisation().id,
-        role_id: roleSelected.role,
+        prefix: this.props.prefix,
+        role_id: roleSelected.id,
       }).then(() => {
         toast('Role API Key was removed')
       })
     }
     this.setState({
-      roles: (this.state.roles || []).filter((v) => v.role !== roleId),
+      roles: (this.state.roles || []).filter((v) => v.id !== roleId),
     })
   }
 
@@ -129,10 +135,8 @@ export class CreateAPIKey extends PureComponent {
           roles: [
             ...(this.state.roles || []),
             {
-              id: res.data.id,
-              master_api_key: res.data.master_api_key,
-              role: role.id,
-              role_name: role.name,
+              id: role.id,
+              name: role.name,
             },
           ],
         })
@@ -142,8 +146,8 @@ export class CreateAPIKey extends PureComponent {
         roles: [
           ...(this.state.roles || []),
           {
-            role: role.id,
-            role_name: role.name,
+            id: role.id,
+            name: role.name,
           },
         ],
       })
@@ -198,13 +202,11 @@ export class CreateAPIKey extends PureComponent {
                           <Row
                             key={r.id}
                             onClick={() =>
-                              this.removeRoleApiKey(r.role, this.props.isEdit)
+                              this.removeRoleApiKey(r.id, this.props.isEdit)
                             }
                             className='chip'
                           >
-                            <span className='font-weight-bold'>
-                              {r.role_name}
-                            </span>
+                            <span className='font-weight-bold'>{r.name}</span>
                             <span className='chip-icon ion'>
                               <IonIcon
                                 icon={closeIcon}
