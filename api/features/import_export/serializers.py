@@ -86,6 +86,7 @@ class FeatureImportSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "environment_id",
+            "strategy",
             "status",
             "created_at",
         )

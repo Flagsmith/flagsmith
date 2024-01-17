@@ -132,6 +132,9 @@ def test_export_and_import_features_for_environment_with_skip(
     import_features_for_environment(feature_import.id)
 
     # Then
+    feature_import.refresh_from_db()
+    assert feature_import.status == SUCCESS
+
     assert project2.features.count() == 4
     overlapping_feature.refresh_from_db()
     assert overlapping_feature.deleted_at is None

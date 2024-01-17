@@ -105,6 +105,16 @@ def export_features_for_environment(
 @register_task_handler()
 def import_features_for_environment(feature_import_id: int) -> None:
     feature_import = FeatureImport.objects.get(id=feature_import_id)
+    try:
+        _import_features_for_environment(feature_import)
+        assert feature_import.status == SUCCESS
+    except Exception:
+        feature_import.status = FAILED
+        feature_import.save()
+        raise
+
+
+def _import_features_for_environment(feature_import: FeatureImport) -> None:
     environment = feature_import.environment
     input_data = json.loads(feature_import.data)
     project = environment.project
@@ -125,6 +135,9 @@ def import_features_for_environment(feature_import_id: int) -> None:
                 existing_feature.delete()
 
         _create_new_feature(feature_data, project, environment)
+
+    feature_import.status = SUCCESS
+    feature_import.save()
 
 
 def _save_feature_state_value_with_type(

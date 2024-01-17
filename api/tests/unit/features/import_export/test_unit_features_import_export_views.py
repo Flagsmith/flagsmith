@@ -339,3 +339,82 @@ def test_download_flagsmith_on_flagsmith_when_success(
     # Then
     assert response.status_code == 200
     assert response.data == [{"feature": "data"}]
+
+
+def test_list_feature_import_with_filtered_environments(
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    project: Project,
+    environment: Environment,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+    environment2 = Environment.objects.create(
+        name="Allowed admin for this environment",
+        project=project,
+    )
+
+    # Staff user is only set as an admin on the second environment
+    UserEnvironmentPermission.objects.create(
+        user=staff_user,
+        environment=environment2,
+        admin=True,
+    )
+
+    # Create a FeatureImport that will be filtered out.
+    FeatureImport.objects.create(
+        environment=environment,
+        strategy=OVERWRITE_DESTRUCTIVE,
+        status=PROCESSING,
+        data="{}",
+    )
+    # Create a FeatureImport that will be included
+    feature_import2 = FeatureImport.objects.create(
+        environment=environment2,
+        strategy=OVERWRITE_DESTRUCTIVE,
+        status=PROCESSING,
+        data="{}",
+    )
+
+    url = reverse(
+        "api-v1:projects:feature-imports",
+        args=[project.id],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == 200
+    assert response.data["count"] == 1
+
+    # Only the second environment is included in the results.
+    assert response.data["results"][0]["environment_id"] == environment2.id
+    assert response.data["results"][0]["id"] == feature_import2.id
+    assert response.data["results"][0]["status"] == PROCESSING
+    assert response.data["results"][0]["strategy"] == OVERWRITE_DESTRUCTIVE
+
+
+def test_list_feature_import_unauthorized(
+    staff_client: APIClient,
+    project: Project,
+    environment: Environment,
+) -> None:
+    # Given
+    FeatureImport.objects.create(
+        environment=environment,
+        strategy=OVERWRITE_DESTRUCTIVE,
+        status=PROCESSING,
+        data="{}",
+    )
+    url = reverse(
+        "api-v1:projects:feature-imports",
+        args=[project.id],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == 403
