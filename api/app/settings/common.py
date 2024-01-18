@@ -24,6 +24,7 @@ from corsheaders.defaults import default_headers
 from django.core.management.utils import get_random_secret_key
 from environs import Env
 
+from app.routers import ReplicaReadStrategy
 from task_processor.task_run_method import TaskRunMethod
 
 env = Env()
@@ -193,7 +194,11 @@ if "DATABASE_URL" in os.environ:
 
     # DISTRIBUTED spreads the load out across replicas while
     # SEQUENTIAL only falls back once the first replica connection is faulty
-    REPLICA_READ_STRATEGY = env("REPLICA_READ_STRATEGY", "DISTRIBUTED")
+    REPLICA_READ_STRATEGY = env.enum(
+        "REPLICA_READ_STRATEGY",
+        type=ReplicaReadStrategy,
+        default=ReplicaReadStrategy.DISTRIBUTED.value,
+    )
 
     for i, db_url in enumerate(REPLICA_DATABASE_URLS, start=1):
         DATABASES[f"replica_{i}"] = dj_database_url.parse(
