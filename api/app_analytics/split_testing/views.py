@@ -1,6 +1,8 @@
+from typing import Any
+
 from django.db.models import F, QuerySet
 from django.utils.decorators import method_decorator
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import no_body, swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.response import Response
@@ -25,11 +27,12 @@ class CreateConversionEventView(CreateAPIView):
     authentication_classes = (EnvironmentKeyAuthentication,)
     serializer_class = ConversionEventSerializer
 
-    def post(self, *args, **kwargs) -> Response:
+    @swagger_auto_schema(request_body=no_body, responses={202: ""})
+    def post(self, *args: list[Any], **kwargs: dict[str, Any]) -> Response:
         response = super().post(*args, **kwargs)
 
-        # Return an empty client to keep options open to process
-        # this in a task one day.
+        # Return an empty response to the client to keep options
+        # open to process this in a task one day.
         if response.status_code == 201:
             return Response(status=status.HTTP_202_ACCEPTED)
 
