@@ -17,7 +17,7 @@ def analyse_split_test(
     # Reform input data to scipy's format.
     observed_matrix = np.array([conversion_counts, evaluation_counts])
 
-    # Replace zero values in order for the chi-squared results can
+    # Replace zero values in order for the chi-squared results to
     # be fully calculated. Don't worry about false results since
     # the pvalue will be much too low to matter to the user.
     replacement_value = 1
@@ -41,7 +41,7 @@ def gather_split_test_metrics(
 ) -> float:
     """
     Take in evalaution counts (aka, views of the individual features) and
-    matches them up against the conversion counts in order to run the
+    match them up against the conversion counts in order to run the
     split test analysis function above.
     """
     _evaluation_counts = []
