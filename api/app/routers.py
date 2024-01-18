@@ -1,5 +1,6 @@
 import logging
 import random
+from enum import Enum
 
 from django.conf import settings
 from django.core.cache import cache
@@ -7,6 +8,15 @@ from django.db import connections
 
 logger = logging.getLogger(__name__)
 CONNECTION_CHECK_CACHE_TTL = 2
+
+
+class ReplicaReadStrategy(Enum):
+    DISTRIBUTED = "DISTRIBUTED"
+    SEQUENTIAL = "SEQUENTIAL"
+
+
+class ImproperlyConfiguredError(RuntimeError):
+    pass
 
 
 def connection_check(database: str) -> bool:
@@ -87,14 +97,14 @@ class PrimaryReplicaRouter:
 
     def _get_replica(self, replicas: list[str]) -> None | str:
         while replicas:
-            if settings.REPLICA_READ_STRATEGY == "DISTRIBUTED":
+            if settings.REPLICA_READ_STRATEGY == ReplicaReadStrategy.DISTRIBUTED.value:
                 database = random.choice(replicas)
-            elif settings.REPLICA_READ_STRATEGY == "SEQUENTIAL":
+            elif settings.REPLICA_READ_STRATEGY == ReplicaReadStrategy.SEQUENTIAL.value:
                 database = replicas[0]
             else:
-                assert (
-                    False
-                ), f"Unknown REPLICA_READ_STRATEGY {settings.REPLICA_READ_STRATEGY}"
+                raise ImproperlyConfiguredError(
+                    f"Unknown REPLICA_READ_STRATEGY {settings.REPLICA_READ_STRATEGY}"
+                )
 
             replicas.remove(database)
             db_cache = cache.get(f"db_connection_active.{database}")
