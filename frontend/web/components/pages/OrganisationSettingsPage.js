@@ -90,6 +90,10 @@ const OrganisationSettingsPage = class extends Component {
     })
   }
 
+  onChange = () => {
+    this.props.getWebhooks()
+  }
+
   confirmRemove = (organisation, cb) => {
     openModal(
       'Delete Organisation',
@@ -405,7 +409,11 @@ const OrganisationSettingsPage = class extends Component {
 
     return (
       <div className='app-container container'>
-        <AccountProvider onSave={this.onSave} onRemove={this.onRemove}>
+        <AccountProvider
+          onSave={this.onSave}
+          onRemove={this.onRemove}
+          onChange={this.onChange}
+        >
           {({ isSaving, organisation }, { deleteOrganisation }) =>
             !!organisation && (
               <OrganisationProvider>
@@ -742,7 +750,7 @@ const OrganisationSettingsPage = class extends Component {
 
                         {displayedTabs.includes(SettingsTab.Keys) && (
                           <TabItem tabLabel='Keys'>
-                            <AdminAPIKeys />
+                            <AdminAPIKeys organisationId={organisation.id} />
                           </TabItem>
                         )}
 
