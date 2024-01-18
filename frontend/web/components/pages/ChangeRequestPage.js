@@ -351,7 +351,9 @@ const ChangeRequestsPage = class extends Component {
                 </nav>
                 <PageTitle
                   cta={
-                    !changeRequest?.committed_at && (
+                    (!changeRequest?.committed_at ||
+                      moment(changeRequest?.feature_states[0].live_from) >
+                        moment()) && (
                       <Row>
                         <Button
                           theme='secondary'
