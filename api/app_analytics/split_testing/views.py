@@ -1,8 +1,9 @@
 from django.db.models import F, QuerySet
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import mixins, viewsets
-from rest_framework.generics import ListAPIView
+from rest_framework import mixins, status, viewsets
+from rest_framework.generics import CreateAPIView, ListAPIView
+from rest_framework.response import Response
 
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions.permissions import EnvironmentKeyPermissions
@@ -19,10 +20,20 @@ from .serializers import (
 )
 
 
-class ConversionEventViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
+class CreateConversionEventView(CreateAPIView):
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
     serializer_class = ConversionEventSerializer
+
+    def post(self, *args, **kwargs) -> Response:
+        response = super().post(*args, **kwargs)
+
+        # Return an empty client to keep options open to process
+        # this in a task one day.
+        if response.status_code == 201:
+            return Response(status=status.HTTP_202_ACCEPTED)
+
+        return response
 
 
 class ConversionEventTypeView(ListAPIView):

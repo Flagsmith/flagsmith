@@ -1,6 +1,6 @@
 from app_analytics.split_testing.views import (
     ConversionEventTypeView,
-    ConversionEventViewSet,
+    CreateConversionEventView,
     SplitTestViewSet,
 )
 from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
@@ -33,9 +33,6 @@ traits_router = routers.DefaultRouter()
 traits_router.register(r"", SDKTraits, basename="sdk-traits")
 
 split_testing_router = routers.DefaultRouter()
-split_testing_router.register(
-    r"conversion-events", ConversionEventViewSet, basename="conversion-events"
-)
 split_testing_router.register(r"", SplitTestViewSet, basename="split-tests")
 
 app_name = "v1"
@@ -59,6 +56,11 @@ urlpatterns = [
     url(r"^identities/$", SDKIdentities.as_view(), name="sdk-identities"),
     url(r"^traits/", include(traits_router.urls), name="traits"),
     url(r"^split-testing/", include(split_testing_router.urls), name="split-testing"),
+    url(
+        r"^split-testing/conversion-events/",
+        CreateConversionEventView.as_view(),
+        name="conversion-events",
+    ),
     url(r"^analytics/flags/$", SDKAnalyticsFlags.as_view(), name="analytics-flags"),
     url(
         r"^analytics/telemetry/$",
