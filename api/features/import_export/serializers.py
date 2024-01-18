@@ -66,6 +66,14 @@ class FeatureImportUploadSerializer(serializers.Serializer):
     strategy = serializers.ChoiceField(choices=[SKIP, OVERWRITE_DESTRUCTIVE])
 
     def save(self, environment_id: int) -> FeatureImport:
+        if FeatureImport.objects.filter(
+            environment_id=environment_id,
+            status=PROCESSING,
+        ).exists():
+            raise ValidationError(
+                "Can't import features, since already processing a feature import."
+            )
+
         uploaded_file = self.validated_data["file"]
         strategy = self.validated_data["strategy"]
         file_content = uploaded_file.read().decode("utf-8")
@@ -86,6 +94,7 @@ class FeatureImportSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "environment_id",
+            "strategy",
             "status",
             "created_at",
         )
