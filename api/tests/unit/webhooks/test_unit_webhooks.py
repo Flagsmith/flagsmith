@@ -5,6 +5,7 @@ from typing import Type
 from unittest import TestCase, mock
 
 import pytest
+import responses
 from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -21,6 +22,7 @@ from webhooks.webhooks import (
     WebhookEventType,
     WebhookType,
     call_environment_webhooks,
+    call_integration_webhook,
     call_organisation_webhooks,
     call_webhook_with_failure_mail_after_retries,
     trigger_sample_webhook,
@@ -316,3 +318,27 @@ def test_call_webhook_with_failure_mail_after_retries_does_not_retry_if_not_usin
     # Then
     assert requests_post_mock.call_count == 1
     send_failure_email_mock.assert_called_once()
+
+
+@responses.activate()
+def test_call_integration_webhook_does_not_raise_error_on_backoff_give_up(
+    mocker: MockerFixture,
+) -> None:
+    """
+    This test is essentially verifying that the `raise_on_giveup` argument
+    passed to the backoff decorator on _call_webhook is working as we
+    expect it to.
+    """
+    # Given
+    url = "https://test.com/webhook"
+    config = mocker.MagicMock(secret=None, url=url)
+
+    responses.add(url=url, method="POST", body=json.dumps({}), status=400)
+
+    # When
+    result = call_integration_webhook(config, data={})
+
+    # Then
+    # we don't get a result from the function (as expected), and no exception is
+    # raised
+    assert result is None
