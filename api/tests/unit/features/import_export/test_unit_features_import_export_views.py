@@ -191,6 +191,40 @@ def test_feature_import(
     assert feature_import.strategy == OVERWRITE_DESTRUCTIVE
 
 
+def test_feature_import_already_processing(
+    admin_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    assert FeatureImport.objects.count() == 0
+
+    # Create a FeatureImport that's processing already.
+    FeatureImport.objects.create(
+        environment=environment,
+        strategy=OVERWRITE_DESTRUCTIVE,
+        status=PROCESSING,
+        data="{}",
+    )
+
+    url = reverse(
+        "api-v1:features:feature-import",
+        args=[environment.id],
+    )
+
+    file_data = b"[]"
+    uploaded_file = SimpleUploadedFile("test.23.json", file_data)
+    data = {"file": uploaded_file, "strategy": OVERWRITE_DESTRUCTIVE}
+
+    # When
+    response = admin_client.post(url, data=data, format="multipart")
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == [
+        "Can't import features, since already processing a feature import."
+    ]
+
+
 def test_feature_import_unauthorized(
     staff_client: APIClient,
     environment: Environment,
