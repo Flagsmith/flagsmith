@@ -19,13 +19,13 @@ from features.value_types import STRING
 from projects.models import Project
 
 
-def test_conversion_event(
+def test_create_conversion_event(
     api_client: APIClient,
     environment: Environment,
     identity: Identity,
 ) -> None:
     # Given
-    url = reverse("api-v1:conversion-events-list")
+    url = reverse("api-v1:conversion-events")
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     _type = "paid_plan"
     data = {"identity_identifier": identity.identifier, "type": _type}
@@ -36,8 +36,8 @@ def test_conversion_event(
     )
 
     # Then
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.data == data
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    assert response.data is None
 
     assert ConversionEvent.objects.count() == 1
     assert ConversionEventType.objects.count() == 1
@@ -50,13 +50,13 @@ def test_conversion_event(
     assert conversion_event.type.environment == environment
 
 
-def test_conversion_event_unauthorized(
+def test_create_conversion_event_unauthorized(
     api_client: APIClient,
     environment: Environment,
     identity: Identity,
 ) -> None:
     # Given
-    url = reverse("api-v1:conversion-events-list")
+    url = reverse("api-v1:conversion-events")
     data = {"identity_identifier": identity.identifier}
 
     # When
