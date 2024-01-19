@@ -1,4 +1,5 @@
 import csv
+import logging
 from functools import wraps
 from io import StringIO
 from typing import Generator
@@ -9,6 +10,8 @@ from django.conf import settings
 
 from sse import tasks
 from sse.dataclasses import SSEAccessLogs
+
+logger = logging.getLogger(__name__)
 
 GNUPG_HOME = "/app/.gnupg"
 
@@ -64,6 +67,11 @@ def stream_access_logs() -> Generator[SSEAccessLogs, None, None]:
         reader = csv.reader(StringIO(decrypted_body.data.decode()))
 
         for row in reader:
-            yield SSEAccessLogs(*row)
+            try:
+                log = SSEAccessLogs(*row)
+            except TypeError:
+                logger.warning("Invalid row in SSE access log file: %s", row)
+                continue
+            yield log
 
         log_file.delete()
