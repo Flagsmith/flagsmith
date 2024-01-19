@@ -125,27 +125,6 @@ files = [
 frozenlist = ">=1.1.0"
 
 [[package]]
-name = "analytics-python"
-version = "1.4.post1"
-description = "The hassle-free way to integrate analytics into any python application."
-optional = false
-python-versions = "*"
-files = [
-    {file = "analytics-python-1.4.post1.tar.gz", hash = "sha256:b083e69c149c39e7ad17067f0e5c1742fbd15fdc469ade36c4d1ad5edf31ee5e"},
-    {file = "analytics_python-1.4.post1-py2.py3-none-any.whl", hash = "sha256:33ab660150d0f37bb2fefc93fd19c9e7bd85e5b17db44df5e7e1139f63c14246"},
-]
-
-[package.dependencies]
-backoff = "1.10.0"
-monotonic = ">=1.5"
-python-dateutil = ">2.1"
-requests = ">=2.7,<3.0"
-six = ">=1.5"
-
-[package.extras]
-test = ["flake8 (==3.7.9)", "mock (==2.0.0)", "pylint (==1.9.3)"]
-
-[[package]]
 name = "appdirs"
 version = "1.4.4"
 description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
@@ -286,13 +265,13 @@ six = ">=1.12.0"
 
 [[package]]
 name = "backoff"
-version = "1.10.0"
+version = "2.2.1"
 description = "Function decoration for backoff and retry"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+python-versions = ">=3.7,<4.0"
 files = [
-    {file = "backoff-1.10.0-py2.py3-none-any.whl", hash = "sha256:5e73e2cbe780e1915a204799dba0a01896f45f4385e636bcca7a0614d879d0cd"},
-    {file = "backoff-1.10.0.tar.gz", hash = "sha256:b8fba021fac74055ac05eb7c7bfce4723aedde6cd0a504e5326bcb0bdd6d19a4"},
+    {file = "backoff-2.2.1-py3-none-any.whl", hash = "sha256:63579f9a0628e06278f7e47b7d7d5b6ce20dc65c5e96a6f3ca99a6adca0396e8"},
+    {file = "backoff-2.2.1.tar.gz", hash = "sha256:03f829f5bb1923180821643f8753b0502c3b682293992485b0eef2807afa5cba"},
 ]
 
 [[package]]
@@ -832,6 +811,20 @@ files = [
     {file = "defusedxml-0.7.1-py2.py3-none-any.whl", hash = "sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61"},
     {file = "defusedxml-0.7.1.tar.gz", hash = "sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69"},
 ]
+
+[[package]]
+name = "deprecation"
+version = "2.0.7"
+description = "A library to handle automated deprecations"
+optional = false
+python-versions = "*"
+files = [
+    {file = "deprecation-2.0.7-py2.py3-none-any.whl", hash = "sha256:dc9b4f252b7aca8165ce2764a71da92a653b5ffbf7a389461d7a640f6536ecb2"},
+    {file = "deprecation-2.0.7.tar.gz", hash = "sha256:c0392f676a6146f0238db5744d73e786a43510d54033f80994ef2f4c9df192ed"},
+]
+
+[package.dependencies]
+packaging = "*"
 
 [[package]]
 name = "dill"
@@ -1946,13 +1939,13 @@ files = [
 
 [[package]]
 name = "jinja2"
-version = "3.1.2"
+version = "3.1.3"
 description = "A very fast and expressive template engine."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "Jinja2-3.1.2-py3-none-any.whl", hash = "sha256:6088930bfe239f0e6710546ab9c19c9ef35e29792895fed6e6e31a023a182a61"},
-    {file = "Jinja2-3.1.2.tar.gz", hash = "sha256:31351a702a408a9e7595a8fc6150fc3f43bb6bf7e319770cbc0db9df9437e852"},
+    {file = "Jinja2-3.1.3-py3-none-any.whl", hash = "sha256:7d6d50dd97d52cbc355597bd845fabfbac3f551e1f99619e39a35ce8c370b5fa"},
+    {file = "Jinja2-3.1.3.tar.gz", hash = "sha256:ac8bd6544d4bb2c9792bf3a159e80bba8fda7f07e81bc3aed565432d5925ba90"},
 ]
 
 [package.dependencies]
@@ -3333,13 +3326,13 @@ six = ">=1.5"
 
 [[package]]
 name = "python-dotenv"
-version = "1.0.0"
+version = "0.21.1"
 description = "Read key-value pairs from a .env file and set them as environment variables"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.7"
 files = [
-    {file = "python-dotenv-1.0.0.tar.gz", hash = "sha256:a8df96034aae6d2d50a4ebe8216326c61c3eb64836776504fcca410e5937a3ba"},
-    {file = "python_dotenv-1.0.0-py3-none-any.whl", hash = "sha256:f5971a9226b701070a4bf2c38c89e5a3f0d64de8debda981d1db98583009122a"},
+    {file = "python-dotenv-0.21.1.tar.gz", hash = "sha256:1c93de8f636cde3ce377292818d0e440b6e45a82f215c3744979151fa8151c49"},
+    {file = "python_dotenv-0.21.1-py3-none-any.whl", hash = "sha256:41e12e0318bebc859fcc4d97d4db8d20ad21721a6aa5047dd59f090391cb549a"},
 ]
 
 [package.extras]
@@ -3657,24 +3650,25 @@ files = [
 
 [[package]]
 name = "rudder-sdk-python"
-version = "1.0.5"
+version = "2.0.2"
 description = "RudderStack is an open-source Segment alternative written in Go, built for the enterprise."
 optional = false
-python-versions = "*"
+python-versions = ">=3.6.0"
 files = [
-    {file = "rudder-sdk-python-1.0.5.tar.gz", hash = "sha256:fc222fdca9607ddcdb1c1921897acfe3a26385284b03b487528e0d81618d12da"},
-    {file = "rudder_sdk_python-1.0.5-py2.py3-none-any.whl", hash = "sha256:5bc7167e37c260748a930027e7446bcb364e23bb3395046a0f996b347c473850"},
+    {file = "rudder-sdk-python-2.0.2.tar.gz", hash = "sha256:4569bbe0183ea91bca7f23671f412bda03664b55b722d31454639d6409a421ea"},
+    {file = "rudder_sdk_python-2.0.2-py2.py3-none-any.whl", hash = "sha256:05d36d674ef043704e2b89623b8cfbef160c2a44f4c801b7c268c11dbc29c219"},
 ]
 
 [package.dependencies]
-backoff = ">=1.10,<2.0"
-monotonic = ">=1.5"
-python-dateutil = ">2.1"
+backoff = ">=2.1,<3.0"
+deprecation = ">=2.0.6,<2.1.0"
+monotonic = ">=1.5,<2.0"
+python-dateutil = ">=2.2,<3.0"
+python-dotenv = ">=0.21.0,<0.22.0"
 requests = ">=2.7,<3.0"
-six = ">=1.4"
 
 [package.extras]
-test = ["coverage (==4.5.4)", "flake8 (==3.7.9)", "mock (==2.0.0)", "pylint (==1.9.3)"]
+test = ["flake8 (==3.7.9)", "mock (==2.0.0)", "pylint (==2.8.0)"]
 
 [[package]]
 name = "rx"
@@ -3703,6 +3697,26 @@ botocore = ">=1.12.36,<2.0a.0"
 
 [package.extras]
 crt = ["botocore[crt] (>=1.20.29,<2.0a.0)"]
+
+[[package]]
+name = "segment-analytics-python"
+version = "2.2.3"
+description = "The hassle-free way to integrate analytics into any python application."
+optional = false
+python-versions = ">=3.6.0"
+files = [
+    {file = "segment-analytics-python-2.2.3.tar.gz", hash = "sha256:0df5908e3df74b4482f33392fdd450df4c8351bf54974376fbe6bf33b0700865"},
+    {file = "segment_analytics_python-2.2.3-py2.py3-none-any.whl", hash = "sha256:06cc3d8e79103f02c3878ec66cb66152415473d0d2a142b98a0ee18da972e109"},
+]
+
+[package.dependencies]
+backoff = ">=2.1,<3.0"
+monotonic = ">=1.5,<2.0"
+python-dateutil = ">=2.2,<3.0"
+requests = ">=2.7,<3.0"
+
+[package.extras]
+test = ["flake8 (==3.7.9)", "mock (==2.0.0)", "pylint (==2.8.0)"]
 
 [[package]]
 name = "semver"
@@ -4412,4 +4426,4 @@ requests = ">=2.7,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "ea33439321d98a14a8489c1f9cf6350b4e44ed96630aa8b4298f25ab321ec7ab"
+content-hash = "b143e6970298307f2ac4917f4fcf42179ae613fc5c38df947ebc3e3fc129a05f"

@@ -50,6 +50,16 @@ import {
   useDeleteRolePermissionGroupMutation,
 } from 'common/services/useRolePermissionGroup'
 
+import {
+  useGetUserWithRolesQuery,
+  useDeleteUserWithRolesMutation,
+} from 'common/services/useUserWithRole'
+
+import {
+  useGetGroupWithRoleQuery,
+  useDeleteGroupWithRoleMutation,
+} from 'common/services/useGroupWithRole'
+
 import MyRoleSelect from './MyRoleSelect'
 const OrganisationProvider = require('common/providers/OrganisationProvider')
 const Project = require('common/project')
@@ -70,6 +80,8 @@ type EditPermissionModalType = {
   role?: Role
   permissionChanged: () => void
   editPermissionsFromSettings?: boolean
+  isEditUserPermission?: boolean
+  isEditGroupPermission?: boolean
 }
 
 type EditPermissionsType = Omit<EditPermissionModalType, 'onSave'> & {
@@ -93,12 +105,16 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     const [parentError, setParentError] = useState(false)
     const [saving, setSaving] = useState(false)
     const [showRoles, setShowRoles] = useState<boolean>(false)
+    const [permissionWasCreated, setPermissionWasCreated] =
+      useState<boolean>(false)
     const [rolesSelected, setRolesSelected] = useState<Array>([])
     const {
       editPermissionsFromSettings,
       envId,
       group,
       id,
+      isEditGroupPermission,
+      isEditUserPermission,
       isGroup,
       level,
       name,
@@ -137,6 +153,46 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       [],
     )
     const { data: permissions } = useGetAvailablePermissionsQuery({ level })
+    const { data: userWithRolesData, isSuccess: userWithRolesDataSuccesfull } =
+      useGetUserWithRolesQuery(
+        {
+          org_id: id,
+          user_id: user?.id,
+        },
+        { skip: level !== 'organisation' || !user?.id },
+      )
+
+    const {
+      data: groupWithRolesData,
+      isSuccess: groupWithRolesDataSuccesfull,
+    } = useGetGroupWithRoleQuery(
+      {
+        group_id: group?.id,
+        org_id: id,
+      },
+      { skip: level !== 'organisation' || !group?.id },
+    )
+
+    useEffect(() => {
+      if (user && userWithRolesDataSuccesfull) {
+        const resultArray = userWithRolesData?.results?.map((userRole) => ({
+          role: userRole.id,
+          user_role_id: user?.id,
+        }))
+        setRolesSelected(resultArray)
+      }
+    }, [userWithRolesDataSuccesfull])
+
+    useEffect(() => {
+      if (group && groupWithRolesDataSuccesfull) {
+        const resultArray = groupWithRolesData?.results?.map((groupRole) => ({
+          group_role_id: group?.id,
+          role: groupRole.id,
+        }))
+        setRolesSelected(resultArray)
+      }
+    }, [groupWithRolesDataSuccesfull])
+
     const processResults = (results: (UserPermission & GroupPermission)[]) => {
       let entityPermissions:
         | (Omit<EntityPermissions, 'user' | 'group' | 'role'> & {
@@ -167,7 +223,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     ] = useCreateRolesPermissionUsersMutation()
 
     const [deleteRolePermissionUser] = useDeleteRolesPermissionUsersMutation()
-
+    const [deleteUserWithRoles] = useDeleteUserWithRolesMutation()
+    const [deleteGroupWithRoles] = useDeleteGroupWithRoleMutation()
     const [
       createRolePermissionGroup,
       { data: groupsData, isSuccess: groupAdded },
@@ -199,6 +256,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         setSaving(true)
       }
       if (isRolePermCreated || isRolePermUpdated) {
+        setPermissionWasCreated(true)
         toast(
           `${level.charAt(0).toUpperCase() + level.slice(1)} permissions Saved`,
         )
@@ -227,7 +285,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           organisation_id: role?.organisation,
           role_id: role?.id,
         },
-        { skip: !role },
+        { skip: !role || level !== 'organisation' },
       )
 
     const { data: projectPermissions, isLoading: projectIsLoading } =
@@ -241,7 +299,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           skip:
             !id ||
             envId ||
-            !Utils.getFlagsmithHasFeature('show_role_management'),
+            // TODO: https://github.com/Flagsmith/flagsmith/issues/3020
+            !role?.organisation ||
+            !Utils.getFlagsmithHasFeature('show_role_management') ||
+            level !== 'project',
         },
       )
 
@@ -256,9 +317,11 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           skip:
             !role ||
             !id ||
-            !Utils.getFlagsmithHasFeature('show_role_management'),
+            !Utils.getFlagsmithHasFeature('show_role_management') ||
+            level !== 'environment',
         },
       )
+
     useEffect(() => {
       if (
         !organisationIsLoading &&
@@ -302,7 +365,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                 (v) => v === `VIEW_${parentLevel.toUpperCase()}`,
               )
             ) {
-              // e.g. trying to set an environment permission but don't have view_projec
+              // e.g. trying to set an environment permission but don't have view_project
               setParentError(true)
             } else {
               setParentError(false)
@@ -373,7 +436,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           body.admin = entityPermissions.admin
           body.environment = envId || id
         }
-        if (entityId) {
+        if (entityId || permissionWasCreated) {
           updateRolePermissions({
             body,
             id: entityId,
@@ -456,22 +519,37 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       const roleSelected = rolesAdded.find((item) => item.id === roleId)
       if (level === 'organisation') {
         if (user) {
-          deleteRolePermissionUser({
-            organisation_id: id,
-            role_id: roleId,
-            user_id: roleSelected.user_role_id,
-          })
+          if (isEditUserPermission) {
+            deleteUserWithRoles({
+              org_id: id,
+              role_id: roleId,
+              user_id: user?.id,
+            })
+          } else {
+            deleteRolePermissionUser({
+              organisation_id: id,
+              role_id: roleId,
+              user_id: roleSelected.user_role_id,
+            })
+          }
         }
         if (group) {
-          deleteRolePermissionGroup({
-            group_id: roleSelected.group_role_id,
-            organisation_id: id,
-            role_id: roleId,
-          })
+          if (isEditGroupPermission) {
+            deleteGroupWithRoles({
+              group_id: group?.id,
+              org_id: id,
+              role_id: roleId,
+            })
+          } else {
+            deleteRolePermissionGroup({
+              group_id: roleSelected.group_role_id,
+              organisation_id: id,
+              role_id: roleId,
+            })
+          }
         }
       }
       setRolesSelected((rolesSelected || []).filter((v) => v.role !== roleId))
-      toast('User role was removed')
     }
 
     useEffect(() => {
@@ -679,19 +757,21 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               />
             </FormGroup>
           )}
-        {Utils.getFlagsmithHasFeature('show_role_management') && (
-          <div className='px-4'>
-            <MyRoleSelect
-              orgId={id}
-              level={level}
-              value={rolesSelected.map((v) => v.role)}
-              onAdd={addRole}
-              onRemove={removeOwner}
-              isOpen={showRoles}
-              onToggle={() => setShowRoles(!showRoles)}
-            />
-          </div>
-        )}
+        {Utils.getFlagsmithHasFeature('show_role_management') &&
+          level !== 'environment' &&
+          level !== 'project' && (
+            <div className='px-4'>
+              <MyRoleSelect
+                orgId={id}
+                level={level}
+                value={rolesSelected?.map((v) => v.role)}
+                onAdd={addRole}
+                onRemove={removeOwner}
+                isOpen={showRoles}
+                onToggle={() => setShowRoles(!showRoles)}
+              />
+            </div>
+          )}
         <div className='modal-footer'>
           {!role && (
             <Button className='mr-2' onClick={closeModal} theme='secondary'>

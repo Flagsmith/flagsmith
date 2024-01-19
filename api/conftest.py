@@ -53,6 +53,10 @@ from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
+from tests.types import (
+    WithEnvironmentPermissionsCallable,
+    WithProjectPermissionsCallable,
+)
 from users.models import FFAdminUser, UserPermissionGroup
 
 trait_key = "key1"
@@ -188,7 +192,7 @@ def environment(project):
 @pytest.fixture()
 def with_environment_permissions(
     environment: Environment, staff_user: FFAdminUser
-) -> typing.Callable[[list[str], int | None], UserEnvironmentPermission]:
+) -> WithEnvironmentPermissionsCallable:
     """
     Add environment permissions to the staff_user fixture.
     Defaults to associating to the environment fixture.
@@ -211,7 +215,7 @@ def with_environment_permissions(
 @pytest.fixture()
 def with_project_permissions(
     project: Project, staff_user: FFAdminUser
-) -> typing.Callable:
+) -> WithProjectPermissionsCallable:
     """
     Add project permissions to the staff_user fixture.
     Defaults to associating to the project fixture.
