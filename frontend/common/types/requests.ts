@@ -97,7 +97,9 @@ export type Req = {
     environmentId: string
     featureId: string
     enabled: boolean
-    feature_segment: featureSegment
+    feature_segment: {
+      segment: number
+    }
     feature_state_value: FeatureStateValue
   }
   getRoles: { organisation_id: string }
@@ -151,9 +153,15 @@ export type Req = {
     description: string
     organisation: number
   }
-  createLaunchDarklyProjectImport: { project_id: string }
-  getLaunchDarklyProjectImport: { project_id: string }
-  getLaunchDarklyProjectsImport: { project_id: string; import_id: string }
+  createLaunchDarklyProjectImport: {
+    project_id: string
+    body: {
+      project_key: string
+      token: string
+    }
+  }
+  getLaunchDarklyProjectImport: { project_id: string; import_id: string }
+  getLaunchDarklyProjectsImport: { project_id: string }
   getUserWithRoles: { org_id: string; user_id: string }
   deleteUserWihRole: { org_id: string; user_id: string; role_id: string }
   getGroupWithRole: { org_id: string; group_id: string }
