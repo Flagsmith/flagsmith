@@ -273,26 +273,27 @@ const ProjectSettingsPage = class extends Component {
           onSave={this.onSave}
         >
           {({ deleteProject, editProject, isLoading, isSaving, project }) => {
-            console.log('DEBUG: project', project)
-            const featureContentType = Utils.getContentType(
-              project.supportedContentTypes,
-              'model',
-              'feature',
-            )
-            const segmentContentType = Utils.getContentType(
-              project.supportedContentTypes,
-              'model',
-              'feature',
-            )
-            const environmentContentType = Utils.getContentType(
-              project.supportedContentTypes,
-              'model',
-              'feature',
-            )
-            console.log(
-              'DEBUG: project.supportedContentTypes:',
-              project.supportedContentTypes,
-            )
+            const featureContentType =
+              project.supportedContentTypes &&
+              Utils.getContentType(
+                project.supportedContentTypes,
+                'model',
+                'feature',
+              )
+            const segmentContentType =
+              project.supportedContentTypes &&
+              Utils.getContentType(
+                project.supportedContentTypes,
+                'model',
+                'feature',
+              )
+            const environmentContentType =
+              project.supportedContentTypes &&
+              Utils.getContentType(
+                project.supportedContentTypes,
+                'model',
+                'feature',
+              )
             if (
               !this.state.populatedProjectState &&
               project?.feature_name_regex

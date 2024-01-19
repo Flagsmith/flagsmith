@@ -557,7 +557,7 @@ const CreateFlag = class extends Component {
     } catch (e) {
       regexValid = false
     }
-    const Settings = (projectAdmin, createFeature) => (
+    const Settings = (projectAdmin, createFeature, featureContentType) => (
       <>
         {!identity && this.state.tags && (
           <FormGroup className='mb-5 setting'>
@@ -627,7 +627,7 @@ const CreateFlag = class extends Component {
               }
             />
             <OrganisationMetadataSelect
-              contentType={Constants.contentTypes.flag}
+              contentType={featureContentType}
               isOpen={this.state.showMetadataList}
               value={metadataAdded && metadataAdded.map((v) => v.id)}
               onAdd={this.addMetadata}
@@ -904,6 +904,11 @@ const CreateFlag = class extends Component {
                 editFeatureValue,
               },
             ) => {
+              const featureContentType = Utils.getContentType(
+                project.supportedContentTypes,
+                'model',
+                'feature',
+              )
               const saveFeatureValue = (schedule) => {
                 this.setState({ valueChanged: false })
                 if ((is4Eyes || schedule) && !identity) {
@@ -1638,7 +1643,11 @@ const CreateFlag = class extends Component {
                                       </Row>
                                     }
                                   >
-                                    {Settings(projectAdmin, createFeature)}
+                                    {Settings(
+                                      projectAdmin,
+                                      createFeature,
+                                      featureContentType,
+                                    )}
                                     <JSONReference
                                       className='mb-3'
                                       showNamesButton

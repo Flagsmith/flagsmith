@@ -66,26 +66,15 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   const [updateMetadataField] = useUpdateMetadataModelFieldMutation()
 
   const [deleteMetadataModelField] = useDeleteMetadataModelFieldMutation()
-  const featureContentType = Utils.getContentType(
-    supportedContentTypes,
-    'model',
-    'feature',
-  )
-  const segmentContentType = Utils.getContentType(
-    supportedContentTypes,
-    'model',
-    'segment',
-  )
-  const environmentContentType = Utils.getContentType(
-    supportedContentTypes,
-    'model',
-    'environment',
-  )
-  const projectContentType = Utils.getContentType(
-    supportedContentTypes,
-    'model',
-    'project',
-  )
+  const featureContentType =
+    isEdit && Utils.getContentType(supportedContentTypes, 'model', 'feature')
+  const segmentContentType =
+    isEdit && Utils.getContentType(supportedContentTypes, 'model', 'segment')
+  const environmentContentType =
+    isEdit &&
+    Utils.getContentType(supportedContentTypes, 'model', 'environment')
+  const projectContentType =
+    isEdit && Utils.getContentType(supportedContentTypes, 'model', 'project')
   useEffect(() => {
     if (data && !isLoading) {
       setName(data.name)
