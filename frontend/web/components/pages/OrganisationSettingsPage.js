@@ -463,7 +463,9 @@ const OrganisationSettingsPage = class extends Component {
                               environments.
                             </p>
 
-                            <ProjectManageWidget />
+                            <ProjectManageWidget
+                              organisationId={organisation.id}
+                            />
                           </TabItem>
                         )}
 
