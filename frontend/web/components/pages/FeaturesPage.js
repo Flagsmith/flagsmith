@@ -183,7 +183,7 @@ const FeaturesPage = class extends Component {
               totalFeatures,
               maxFeaturesAllowed,
             )
-            if (projectFlags && !this.state.loadedOnce) {
+            if (projectFlags?.length && !this.state.loadedOnce) {
               this.state.loadedOnce = true
             }
             return (
@@ -210,7 +210,7 @@ const FeaturesPage = class extends Component {
                           title={'Features'}
                           cta={
                             <>
-                              {(projectFlags && projectFlags.length) ||
+                              {this.state.loadedOnce ||
                               this.state.showArchived ||
                               this.state.tags?.length
                                 ? this.createFeaturePermission((perm) => (
