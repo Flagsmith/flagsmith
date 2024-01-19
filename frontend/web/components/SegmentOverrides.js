@@ -149,10 +149,13 @@ const SegmentOverrideInner = class Override extends React.Component {
             <Row className='gap-3'>
               <Tooltip
                 title={
-                  <label className='cols-sm-2 control-label mb-0 ml-3'><Icon name='info-outlined' /></label>
+                  <label className='cols-sm-2 control-label mb-0 ml-3'>
+                    <Icon name='info-outlined' />
+                  </label>
                 }
               >
-                Set the Feature state to On or Off for Identities in this Segment
+                Set the Feature state to On or Off for Identities in this
+                Segment
               </Tooltip>
               <Switch
                 data-test={`segment-override-toggle-${index}`}
@@ -312,6 +315,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                   readOnlyValue
                   disabled={readOnly}
                   controlValue={controlValue}
+                  controlPercentage={controlPercent}
                   variationOverrides={mvOptions}
                   multivariateOptions={multivariateOptions.map((mv) => {
                     const foundMv =
