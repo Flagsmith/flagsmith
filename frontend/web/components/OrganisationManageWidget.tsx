@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect } from 'react'
+import { FC, useCallback } from 'react'
 
 import AccountProvider from 'common/providers/AccountProvider'
 import AccountStore from 'common/stores/account-store'
@@ -17,10 +17,6 @@ type OrganisationManageWidgetType = {
 const OrganisationManageWidget: FC<OrganisationManageWidgetType> = ({
   onChange,
 }) => {
-  useEffect(() => {
-    AppActions.getOrganisation(AccountStore.getOrganisation().id)
-  }, [])
-
   const handleCreateOrganisationClick = useCallback(() => {
     openModal('Create Organisation', <CreateOrganisationModal />, 'side-modal')
   }, [])
