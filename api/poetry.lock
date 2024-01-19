@@ -1500,6 +1500,32 @@ reference = "v0.1.0"
 resolved_reference = "e9edc5668711523eabdb833203d677bf64f98531"
 
 [[package]]
+name = "flagsmith-task-processor"
+version = "1.0.0"
+description = "Task Processor plugin for Flagsmith application."
+optional = false
+python-versions = "^3.10"
+files = []
+develop = false
+
+[package.dependencies]
+backoff = "~2.2.1"
+dj-database-url = "~0.5.0"
+django = "~3.2.23"
+django-health-check = "~3.14.3"
+djangorestframework = "~3.12.1"
+drf-yasg = "~1.21.6"
+environs = "~9.2.0"
+psycopg2-binary = "~2.9.5"
+simplejson = "~3.19.1"
+
+[package.source]
+type = "git"
+url = "https://github.com/Flagsmith/flagsmith-task-processor.git"
+reference = "init"
+resolved_reference = "8932e74f020e26761f19ab04f4b5e30f360cad99"
+
+[[package]]
 name = "flake8"
 version = "6.0.0"
 description = "the modular source code checker: pep8 pyflakes and co"
@@ -4426,4 +4452,4 @@ requests = ">=2.7,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "b143e6970298307f2ac4917f4fcf42179ae613fc5c38df947ebc3e3fc129a05f"
+content-hash = "95f8be627bbef5f1872ca58a390bf1e627bad216d2a3b800ad43d8f546aa85ff"
