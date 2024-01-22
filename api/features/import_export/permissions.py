@@ -52,7 +52,18 @@ class FeatureExportListPermissions(IsAuthenticated):
         if not super().has_permission(request, view):
             return False
 
-        project = Project.objects.get(id=view.kwargs["project_id"])
+        project = Project.objects.get(id=view.kwargs["project_pk"])
         # The user will only see environment feature exports
+        # that the user is an environment admin.
+        return request.user.has_project_permission(VIEW_PROJECT, project)
+
+
+class FeatureImportListPermissions(IsAuthenticated):
+    def has_permission(self, request: Request, view: ListAPIView) -> bool:
+        if not super().has_permission(request, view):
+            return False
+
+        project = Project.objects.get(id=view.kwargs["project_pk"])
+        # The user will only see environment feature imports
         # that the user is an environment admin.
         return request.user.has_project_permission(VIEW_PROJECT, project)

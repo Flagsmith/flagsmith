@@ -233,6 +233,7 @@ const OrganisationSettingsPage = class extends Component {
         onSave={() => {
           AppActions.getOrganisation(AccountStore.getOrganisation().id)
         }}
+        isEditUserPermission
         level='organisation'
         roles={roles}
         user={user}
@@ -251,6 +252,7 @@ const OrganisationSettingsPage = class extends Component {
         onSave={() => {
           AppActions.getOrganisation(AccountStore.getOrganisation().id)
         }}
+        isEditGroupPermission
         level='organisation'
         group={group}
         roles={roles}
