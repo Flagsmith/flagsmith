@@ -51,7 +51,7 @@ def test_cluster_connection_factory__get_connection_with_non_conflicting_params(
 
     # Then
     mockRedisCluster.assert_called_once_with(
-        decode_responses=True, host="localhost", port=6379
+        decode_responses=False, host="localhost", port=6379
     )
 
 
