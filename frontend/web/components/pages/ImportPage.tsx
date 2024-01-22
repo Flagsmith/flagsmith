@@ -101,7 +101,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
                 value={LDKey}
                 name='ldkey'
                 onChange={(e) => setLDKey(Utils.safeParseEventValue(e))}
-                type='text'
+                type='password'
                 placeholder='My LaunchDarkly key'
               />
             </Flex>

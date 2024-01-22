@@ -228,6 +228,13 @@ def _create_feature_segments_for_segment_match_clauses(
     all_targeted_segments: list[str] = sum([clause["values"] for clause in clauses], [])
     feature_states: list[FeatureState] = []
     for index, targeted_segment_key in enumerate(all_targeted_segments):
+        if targeted_segment_key not in segments_by_ld_key:
+            _log_error(
+                import_request=import_request,
+                error_message=f"Segment {targeted_segment_key} not found, skipping"
+                f" for {feature.name} in {environment.name}",
+            )
+            continue
         targeted_segment_name = segments_by_ld_key[targeted_segment_key].name
 
         # We assume segment is already created.

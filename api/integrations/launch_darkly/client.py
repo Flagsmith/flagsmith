@@ -36,9 +36,10 @@ class LaunchDarklyClient:
     def _iter_paginated_items(
         self,
         collection_endpoint: str,
-        additional_params: Optional[dict[str, str]] = None,
+        additional_params: Optional[dict[str, Any]] = None,
     ) -> Iterator[T]:
         params = {"limit": LAUNCH_DARKLY_API_ITEM_COUNT_LIMIT_PER_PAGE}
+        offset = 0
         if additional_params:
             params.update(additional_params)
 
@@ -47,7 +48,8 @@ class LaunchDarklyClient:
             params=params,
         )
         while True:
-            yield from response_json.get("items") or []
+            items = response_json.get("items") or []
+            yield from items
             links: Optional[dict[str, ld_types.Link]] = response_json.get("_links")
             if (
                 links
@@ -58,6 +60,14 @@ class LaunchDarklyClient:
                 # original limit and calculates offsets accordingly.
                 response_json = self._get_json_response(
                     endpoint=next_endpoint,
+                )
+            elif len(items) == params["limit"]:
+                # Offset based pagination
+                offset += params["limit"]
+                params["offset"] = offset
+                response_json = self._get_json_response(
+                    endpoint=collection_endpoint,
+                    params=params,
                 )
             else:
                 return
@@ -128,7 +138,7 @@ class LaunchDarklyClient:
         return list(
             self._iter_paginated_items(
                 collection_endpoint=endpoint,
-                additional_params={"limit": "50"},
+                additional_params={"limit": 50},
             )
         )
 
