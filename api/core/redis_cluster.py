@@ -6,7 +6,7 @@ is resolved.
 
 Usage:
 ------
-Include the following configuration in your Django project's settings.py file:
+Include the following configuration in Django project's settings.py file:
 
 ```python
 # settings.py

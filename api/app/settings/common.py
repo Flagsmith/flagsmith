@@ -636,9 +636,12 @@ USER_THROTTLE_CACHE_BACKEND = env.str(
 USER_THROTTLE_CACHE_LOCATION = env.str("USER_THROTTLE_CACHE_LOCATION", "admin-throttle")
 
 # Using Redis for cache
-# In order to use redis for cache set the cache backend to `django_redis.cache.RedisCache`
+# To use Redis for caching, set the cache backend to `django_redis.cache.RedisCache`.
 # and set the cache location to the redis url
 # ref: https://github.com/jazzband/django-redis/tree/5.4.0#configure-as-cache-backend
+
+# Set this to `core.redis_cluster.ClusterConnectionFactory` when using Redis Cluster.
+DJANGO_REDIS_CONNECTION_FACTORY = env.str("DJANGO_REDIS_CONNECTION_FACTORY", "")
 
 # Avoid raising exceptions if redis is down
 # ref: https://github.com/jazzband/django-redis/tree/5.4.0#memcached-exceptions-behavior
