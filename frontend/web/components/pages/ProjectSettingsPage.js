@@ -17,6 +17,7 @@ import { getRoles } from 'common/services/useRole'
 import { getRolesProjectPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import ImportPage from './ImportPage'
+import ProjectUsage from 'components/ProjectUsage'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -477,6 +478,11 @@ const ProjectSettingsPage = class extends Component {
                           </FormGroup>
                         </form>
                       </div>
+                    </TabItem>
+                    <TabItem tabLabel='Usage'>
+                      <ProjectUsage
+                        projectId={this.props.match.params.projectId}
+                      />
                     </TabItem>
                     <TabItem tabLabel='Permissions'>
                       <EditPermissions
