@@ -7,6 +7,7 @@ from app_analytics.models import FeatureEvaluationRaw
 from app_analytics.views import SDKAnalyticsFlags
 from django.conf import settings
 from django.urls import reverse
+from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -156,8 +157,10 @@ def test_set_sdk_analytics_flags_with_identifier(
     environment: Environment,
     feature: Feature,
     identity: Identity,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = True
     url = reverse("api-v1:analytics-flags")
     url += f"?identity_identifier={identity.identifier}"
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
@@ -189,8 +192,10 @@ def test_set_sdk_analytics_flags_with_enabled_when_evaluated(
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = True
     url = reverse("api-v1:analytics-flags")
     url += "?enabled_when_evaluated=true"
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
