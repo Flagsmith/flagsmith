@@ -1,11 +1,12 @@
 import json
 from datetime import date, timedelta
 
+import pytest
 from app_analytics.dataclasses import UsageData
 from app_analytics.models import FeatureEvaluationRaw
 from app_analytics.views import SDKAnalyticsFlags
+from django.conf import settings
 from django.urls import reverse
-from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -145,15 +146,18 @@ def test_get_total_usage_count_for_non_admin_user_returns_403(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
+@pytest.mark.skipif(
+    "analytics" not in settings.DATABASES,
+    "Skip test if analytics DB is not configured",
+)
+@pytest.mark.django_db(databases=["analytics"])
 def test_set_sdk_analytics_flags_with_identifier(
     api_client: APIClient,
     environment: Environment,
-    settings: SettingsWrapper,
     feature: Feature,
     identity: Identity,
 ) -> None:
     # Given
-    settings.USE_POSTGRES_FOR_ANALYTICS = True
     url = reverse("api-v1:analytics-flags")
     url += f"?identity_identifier={identity.identifier}"
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
@@ -176,14 +180,17 @@ def test_set_sdk_analytics_flags_with_identifier(
     assert feature_evaluation_raw.evaluation_count == feature_request_count
 
 
+@pytest.mark.skipif(
+    "analytics" not in settings.DATABASES,
+    "Skip test if analytics DB is not configured",
+)
+@pytest.mark.django_db(databases=["analytics"])
 def test_set_sdk_analytics_flags_with_enabled_when_evaluated(
     api_client: APIClient,
     environment: Environment,
-    settings: SettingsWrapper,
     feature: Feature,
 ) -> None:
     # Given
-    settings.USE_POSTGRES_FOR_ANALYTICS = True
     url = reverse("api-v1:analytics-flags")
     url += "?enabled_when_evaluated=true"
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
