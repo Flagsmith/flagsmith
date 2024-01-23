@@ -154,7 +154,6 @@ INSTALLED_APPS = [
     "softdelete",
     "metadata",
     "app_analytics",
-    "app_analytics.split_testing",
 ]
 
 SILENCED_SYSTEM_CHECKS = ["axes.W002"]
