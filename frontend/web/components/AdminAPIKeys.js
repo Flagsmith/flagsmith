@@ -12,7 +12,6 @@ import Switch from './Switch'
 import MyRoleSelect from './MyRoleSelect'
 import { getStore } from 'common/store'
 import { createRoleMasterApiKey } from 'common/services/useRoleMasterApiKey'
-
 import {
   deleteMasterAPIKeyWithMasterAPIKeyRoles,
   getMasterAPIKeyWithMasterAPIKeyRoles,
@@ -232,7 +231,7 @@ export class CreateAPIKey extends PureComponent {
                             <MyRoleSelect
                               isRoleApiKey
                               orgId={AccountStore.getOrganisation().id}
-                              value={roles?.map((v) => v.role)}
+                              value={roles?.map((v) => v.id)}
                               onAdd={(role) =>
                                 this.addRole(role, this.props.isEdit)
                               }

@@ -13,7 +13,7 @@ export const masterAPIKeyWithMasterAPIKeyRoleService = service
         invalidatesTags: ['MasterAPIKeyWithMasterAPIKeyRole'],
         query: (query: Req['deleteMasterAPIKeyWithMasterAPIKeyRoles']) => ({
           method: 'DELETE',
-          url: `organisations/${query.org_id}/master-api-keys/${query.prefix}/roles/${query.role_id}`,
+          url: `organisations/${query.org_id}/master-api-keys/${query.prefix}/roles/${query.role_id}/detach_roles_from_master_api_key/`,
         }),
       }),
       getMasterAPIKeyWithMasterAPIKeyRoles: builder.query<
