@@ -295,12 +295,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       projectId,
     })
   },
-  getSupportedContentTypes(orgId) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_SUPPORTED_CONTENT_TYPES,
-      orgId,
-    })
-  },
   invalidateInviteLink(link) {
     Dispatcher.handleViewAction({
       actionType: Actions.INVALIDATE_INVITE_LINK,

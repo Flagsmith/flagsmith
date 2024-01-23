@@ -160,13 +160,6 @@ const controller = {
         })
     }
   },
-  getSupportedContentTypes: (orgId) => {
-    store.loading()
-    getSupportedContentType(getStore(), { org_id: orgId }).then((response) => {
-      store.model.supportedContentTypes = response.data
-      store.loaded()
-    })
-  },
   migrateProject: (id) => {
     store.loading()
     data.post(`${Project.api}projects/${id}/migrate-to-edge/`).then(() => {
@@ -239,9 +232,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.EDIT_PROJECT:
       controller.editProject(action.id, action.project)
-      break
-    case Actions.GET_SUPPORTED_CONTENT_TYPES:
-      controller.getSupportedContentTypes(action.orgId)
       break
     default:
   }

@@ -36,7 +36,6 @@ const Aside = class extends Component {
     ES6Component(this)
     if (!this.props.disabled) {
       AppActions.getProject(this.props.projectId)
-      AppActions.getSupportedContentTypes(AccountStore.getOrganisation().id)
       if (this.props.environmentId && this.props.environmentId !== 'create') {
         AppActions.getChangeRequests(this.props.environmentId, {})
       }

@@ -12,9 +12,6 @@ import {
   useUpdateMetadataModelFieldMutation,
   useDeleteMetadataModelFieldMutation,
 } from 'common/services/useMetadataModelField'
-// import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
-
-import Constants from 'common/constants'
 
 type CreateMetadataType = {
   id?: string
@@ -48,14 +45,6 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   ]
   const orgId = AccountStore.getOrganisation().id
   const { data, isLoading } = useGetMetadataQuery({ id }, { skip: !id })
-  // const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
-  //   org_id: orgId,
-  // })
-  // if (supportedContentTypes) {
-  //   const contentTypeExample = Utils.getContentType(supportedContentTypes, 'model', 'project')
-
-  //   console.log('DEBUG: contentTypeExample:', contentTypeExample)
-  // }
 
   const [createMetadata, { isLoading: creating, isSuccess: created }] =
     useCreateMetadataMutation()
