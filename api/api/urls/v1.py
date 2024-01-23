@@ -1,11 +1,6 @@
-from app_analytics.split_testing.views import (
-    ConversionEventTypeView,
-    CreateConversionEventView,
-    SplitTestViewSet,
-)
 from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
 from django.conf.urls import url
-from django.urls import include, path
+from django.urls import include
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import authentication, permissions, routers
@@ -32,9 +27,6 @@ schema_view = get_schema_view(
 traits_router = routers.DefaultRouter()
 traits_router.register(r"", SDKTraits, basename="sdk-traits")
 
-split_testing_router = routers.DefaultRouter()
-split_testing_router.register(r"", SplitTestViewSet, basename="split-tests")
-
 app_name = "v1"
 
 urlpatterns = [
@@ -55,12 +47,6 @@ urlpatterns = [
     url(r"^flags/$", SDKFeatureStates.as_view(), name="flags"),
     url(r"^identities/$", SDKIdentities.as_view(), name="sdk-identities"),
     url(r"^traits/", include(traits_router.urls), name="traits"),
-    url(r"^split-testing/", include(split_testing_router.urls), name="split-testing"),
-    url(
-        r"^split-testing/conversion-events/",
-        CreateConversionEventView.as_view(),
-        name="conversion-events",
-    ),
     url(r"^analytics/flags/$", SDKAnalyticsFlags.as_view(), name="analytics-flags"),
     url(
         r"^analytics/telemetry/$",
@@ -83,10 +69,5 @@ urlpatterns = [
         r"^docs/$",
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
-    ),
-    path(
-        "conversion_event_types/",
-        ConversionEventTypeView.as_view(),
-        name="conversion-event-types",
     ),
 ]
