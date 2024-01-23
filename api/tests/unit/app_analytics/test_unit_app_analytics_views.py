@@ -172,7 +172,7 @@ def test_set_sdk_analytics_flags_with_identifier(
     # Then
     assert response.status_code == status.HTTP_200_OK
 
-    FeatureEvaluationRaw.objects.count == 1
+    assert FeatureEvaluationRaw.objects.count() == 1
     feature_evaluation_raw = FeatureEvaluationRaw.objects.first()
     assert feature_evaluation_raw.identity_identifier == identity.identifier
     assert feature_evaluation_raw.feature_name == feature.name
@@ -205,7 +205,7 @@ def test_set_sdk_analytics_flags_with_enabled_when_evaluated(
     # Then
     assert response.status_code == status.HTTP_200_OK
 
-    FeatureEvaluationRaw.objects.count == 1
+    assert FeatureEvaluationRaw.objects.count() == 1
     feature_evaluation_raw = FeatureEvaluationRaw.objects.first()
     assert feature_evaluation_raw.feature_name == feature.name
     assert feature_evaluation_raw.environment_id == environment.id
