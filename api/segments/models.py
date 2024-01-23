@@ -7,6 +7,7 @@ from core.models import (
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.db import models
 from flag_engine.segments import constants
@@ -14,6 +15,7 @@ from flag_engine.segments import constants
 from audit.constants import SEGMENT_CREATED_MESSAGE, SEGMENT_UPDATED_MESSAGE
 from audit.related_object_type import RelatedObjectType
 from features.models import Feature
+from metadata.models import Metadata
 from projects.models import Project
 
 logger = logging.getLogger(__name__)
@@ -34,6 +36,8 @@ class Segment(
     feature = models.ForeignKey(
         Feature, on_delete=models.CASCADE, related_name="segments", null=True
     )
+
+    metadata = GenericRelation(Metadata)
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
