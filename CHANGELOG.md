@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.95.0](https://github.com/Flagsmith/flagsmith/compare/v2.94.0...v2.95.0) (2024-01-23)
+
+
+### Features
+
+* Add endpoints for feature imports ([#3255](https://github.com/Flagsmith/flagsmith/issues/3255)) ([a2eeaf4](https://github.com/Flagsmith/flagsmith/commit/a2eeaf402b50609d5986c0897f819b275d58c926))
+
+
+### Bug Fixes
+
+* allow editing scheduled changes ([#3227](https://github.com/Flagsmith/flagsmith/issues/3227)) ([90ee8c7](https://github.com/Flagsmith/flagsmith/commit/90ee8c76ebfd9aa554334dbf9a9b588191f4d0e0))
+* Handle feature import processing during import ([#3305](https://github.com/Flagsmith/flagsmith/issues/3305)) ([28459c5](https://github.com/Flagsmith/flagsmith/commit/28459c502405de2a208f86f66f573a4a4d60d45e))
+* Incorrect tag filtering when results have no features ([#3309](https://github.com/Flagsmith/flagsmith/issues/3309)) ([cca86c3](https://github.com/Flagsmith/flagsmith/commit/cca86c391cfd167f3a968128ef6b4b568628dfdb))
+* **sse/stream_access_logs:** handle invalid log ([#3307](https://github.com/Flagsmith/flagsmith/issues/3307)) ([0ef4764](https://github.com/Flagsmith/flagsmith/commit/0ef476466fd8688053b68c3cb03f39b945056e87))
+* variation percentage calculation ([#3268](https://github.com/Flagsmith/flagsmith/issues/3268)) ([ec272ba](https://github.com/Flagsmith/flagsmith/commit/ec272ba29f08f58c5a30bdc6e6da7a03233b8513))
+
 ## [2.94.0](https://github.com/Flagsmith/flagsmith/compare/v2.93.0...v2.94.0) (2024-01-16)
 
 
