@@ -148,7 +148,7 @@ def test_get_total_usage_count_for_non_admin_user_returns_403(
 
 @pytest.mark.skipif(
     "analytics" not in settings.DATABASES,
-    "Skip test if analytics DB is not configured",
+    reason="Skip test if analytics DB is not configured",
 )
 @pytest.mark.django_db(databases=["analytics"])
 def test_set_sdk_analytics_flags_with_identifier(
@@ -182,7 +182,7 @@ def test_set_sdk_analytics_flags_with_identifier(
 
 @pytest.mark.skipif(
     "analytics" not in settings.DATABASES,
-    "Skip test if analytics DB is not configured",
+    reason="Skip test if analytics DB is not configured",
 )
 @pytest.mark.django_db(databases=["analytics"])
 def test_set_sdk_analytics_flags_with_enabled_when_evaluated(
