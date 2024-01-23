@@ -1,5 +1,6 @@
 import { FC, useEffect, useState } from 'react'
 import Project from 'common/project'
+import InfoMessage from './InfoMessage'
 // import * as _data from 'common/data/base/_data'
 const _data = require('common/data/base/_data')
 
@@ -95,6 +96,18 @@ const ProjectUsage: FC<ProjectUsageType> = ({ projectId }) => {
   return (
     <div className='mt-4'>
       <Flex>
+        <Row>
+          <InfoMessage>
+            In order to ensure consistent performance, Flagsmith has some{' '}
+            <a
+              target='_blank'
+              href='https://docs.flagsmith.com/system-administration/system-limits'
+              rel='noreferrer'
+            >
+              <strong>System Limits</strong>
+            </a>
+          </InfoMessage>
+        </Row>
         <Row className='mb-2'>
           <h5 className='mb-0' onClick={() => console.log(usage)}>
             Project Usage
