@@ -50,7 +50,7 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
               Providing flag defaults is recommended for{' '}
               <a
                 target='_blank'
-                href='https://docs.flagsmith.com/clients/overview'
+                href='https://docs.flagsmith.com/guides-and-examples/defensive-coding'
                 rel='noreferrer'
               >
                 defensive coding
