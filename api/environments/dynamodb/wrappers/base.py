@@ -1,7 +1,6 @@
 import typing
 
-import boto3
-from botocore.config import Config
+from environments.dynamodb.resource import get_dynamo_table
 
 if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.service_resource import Table
@@ -24,9 +23,7 @@ class BaseDynamoWrapper:
 
     def get_table(self) -> typing.Optional["Table"]:
         if table_name := self.get_table_name():
-            return boto3.resource("dynamodb", config=Config(tcp_keepalive=True)).Table(
-                table_name
-            )
+            return get_dynamo_table(table_name)
 
     @property
     def is_enabled(self) -> bool:

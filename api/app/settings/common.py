@@ -791,6 +791,9 @@ ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO = env.str(
 # DynamoDB table name for storing project metadata(currently only used for identity migration)
 PROJECT_METADATA_TABLE_NAME_DYNAMO = env.str("PROJECT_METADATA_TABLE_NAME_DYNAMO", None)
 
+# Set this to enable dax
+DAX_ENDPOINT = env.str("DAX_ENDPOINT", None)
+
 # Front end environment variables
 API_URL = env("API_URL", default="/api/v1/")
 ASSET_URL = env("ASSET_URL", default="/")
