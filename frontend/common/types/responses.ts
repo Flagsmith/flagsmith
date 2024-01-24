@@ -188,6 +188,15 @@ export type AvailablePermission = {
   description: string
 }
 
+export type APIKey = {
+  active: boolean
+  created_at: string
+  expires_at: string | null
+  id: number
+  key: string
+  name: string
+}
+
 export type Tag = {
   id: number
   color: string
@@ -393,9 +402,10 @@ export type Res = {
   environment: Environment
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
-  userWithRoles: PagedResponse<Roles>
-  groupWithRole: PagedResponse<Roles>
+  userWithRoles: PagedResponse<Role>
+  groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
   groupSummaries: UserGroupSummary[]
+  serversideEnvironmentKeys: APIKey[]
   // END OF TYPES
 }

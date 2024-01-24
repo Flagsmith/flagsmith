@@ -1,4 +1,11 @@
-import { Account, Segment, Tag, FeatureStateValue, Role } from './responses'
+import {
+  Account,
+  Segment,
+  Tag,
+  FeatureStateValue,
+  Role,
+  APIKey,
+} from './responses'
 
 export type PagedRequest<T> = T & {
   page?: number
@@ -154,6 +161,12 @@ export type Req = {
   }>
   getGroupSummaries: {
     orgId: string
+  }
+  getServersideEnvironmentKeys: { environmentId: string }
+  deleteServersideEnvironmentKeys: { environmentId: string; id: string }
+  createServersideEnvironmentKeys: {
+    environmentId: string
+    data: { name: string }
   }
   // END OF TYPES
 }

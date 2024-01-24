@@ -136,6 +136,22 @@ export default {
       'iOS': require('./code-help/install/install-ios')(keywords),
     },
 
+    'OFFLINE_LOCAL': (envId: string) => ({
+      'cli': require('./code-help/offline_local/offline-local-cli')(envId),
+      'curl': require('./code-help/offline_local/offline-local-curl')(envId),
+    }),
+
+    'OFFLINE_REMOTE': (envId: string) => ({
+      'cli': require('common/code-help/offline_remote/offline-remote-cli')(
+        envId,
+        keywords,
+      ),
+      'curl': require('common/code-help/offline_remote/offline-remote-curl')(
+        envId,
+        keywords,
+      ),
+    }),
+
     'USER_TRAITS': (envId: string, userId?: string) => ({
       '.NET': require('./code-help/traits/traits-dotnet')(
         envId,
