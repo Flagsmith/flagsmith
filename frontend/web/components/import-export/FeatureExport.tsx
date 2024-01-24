@@ -110,7 +110,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           }
         >
           {
-            'When tags are selected the export will contain any feature has any of the specified tags.'
+            'When tags are selected the export will contain all features that have at least one of the specified tags.'
           }
         </Tooltip>
       </div>
