@@ -3,7 +3,6 @@ from unittest import mock
 
 import pytest
 from django.conf import settings
-from django.test import TestCase
 from pytest_mock import MockerFixture
 from rest_framework.test import override_settings
 
@@ -11,7 +10,6 @@ from environments.models import Environment
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
     Organisation,
-    OrganisationRole,
     OrganisationSubscriptionInformationCache,
     Subscription,
 )
@@ -29,72 +27,63 @@ from organisations.subscriptions.exceptions import (
 )
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
-from users.models import FFAdminUser
 
 
-@pytest.mark.django_db
-class OrganisationTestCase(TestCase):
-    def test_can_create_organisation_with_and_without_webhook_notification_email(self):
-        organisation_1 = Organisation.objects.create(name="Test org")
-        organisation_2 = Organisation.objects.create(
-            name="Test org with webhook email",
-            webhook_notification_email="test@org.com",
-        )
+def test_has_paid_subscription_true(db: None) -> None:
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    Subscription.objects.filter(organisation=organisation).update(
+        subscription_id="subscription_id"
+    )
 
-        self.assertTrue(organisation_1.name)
-        self.assertTrue(organisation_2.name)
+    # refresh organisation to load subscription
+    organisation.refresh_from_db()
 
-    def test_has_paid_subscription_true(self):
-        # Given
-        organisation = Organisation.objects.create(name="Test org")
-        Subscription.objects.filter(organisation=organisation).update(
-            subscription_id="subscription_id"
-        )
+    # Then
+    assert organisation.has_paid_subscription()
 
-        # refresh organisation to load subscription
-        organisation.refresh_from_db()
 
-        # Then
-        assert organisation.has_paid_subscription()
+def test_has_paid_subscription_missing_subscription_id(db: None) -> None:
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    assert (
+        Subscription.objects.filter(organisation=organisation).first().subscription_id
+        is None
+    )
 
-    def test_has_paid_subscription_missing_subscription_id(self):
-        # Given
-        organisation = Organisation.objects.create(name="Test org")
+    # Then
+    assert not organisation.has_paid_subscription()
 
-        # Then
-        assert not organisation.has_paid_subscription()
 
-    @mock.patch("organisations.models.cancel_chargebee_subscription")
-    def test_cancel_subscription_cancels_chargebee_subscription(
-        self, mocked_cancel_chargebee_subscription
-    ):
-        # Given
-        organisation = Organisation.objects.create(name="Test org")
-        user = FFAdminUser.objects.create(email="test@example.com")
-        user.add_organisation(organisation, role=OrganisationRole.ADMIN)
-        Subscription.objects.filter(organisation=organisation).update(
-            subscription_id="subscription_id", payment_method=CHARGEBEE
-        )
-        subscription = Subscription.objects.get(organisation=organisation)
+@mock.patch("organisations.models.cancel_chargebee_subscription")
+def test_cancel_subscription_cancels_chargebee_subscription(
+    mocked_cancel_chargebee_subscription,
+    organisation: Organisation,
+):
+    # Given
+    Subscription.objects.filter(organisation=organisation).update(
+        subscription_id="subscription_id", payment_method=CHARGEBEE
+    )
+    subscription = Subscription.objects.get(organisation=organisation)
 
-        # refresh organisation to load subscription
-        organisation.refresh_from_db()
+    # refresh organisation to load subscription
+    organisation.refresh_from_db()
 
-        # When
-        organisation.cancel_subscription()
+    # When
+    organisation.cancel_subscription()
 
-        # Then
-        mocked_cancel_chargebee_subscription.assert_called_once_with(
-            subscription.subscription_id
-        )
-        # refresh subscription object
-        subscription.refresh_from_db()
-        # Subscription has been immediately transformed to free.
-        assert subscription.cancellation_date is None
-        assert subscription.subscription_id is None
-        assert subscription.billing_status is None
-        assert subscription.payment_method is None
-        assert subscription.plan == FREE_PLAN_ID
+    # Then
+    mocked_cancel_chargebee_subscription.assert_called_once_with(
+        subscription.subscription_id
+    )
+    # refresh subscription object
+    subscription.refresh_from_db()
+    # Subscription has been immediately transformed to free.
+    assert subscription.cancellation_date is None
+    assert subscription.subscription_id is None
+    assert subscription.billing_status is None
+    assert subscription.payment_method is None
+    assert subscription.plan == FREE_PLAN_ID
 
 
 def test_organisation_rebuild_environment_document_on_stop_serving_flags_changed(
@@ -193,19 +182,14 @@ def test_organisation_is_auto_seat_upgrade_available(organisation, settings):
     assert organisation.is_auto_seat_upgrade_available() is True
 
 
-class SubscriptionTestCase(TestCase):
-    def setUp(self) -> None:
-        self.organisation = Organisation.objects.create(name="Test org")
+def test_max_seats_set_as_one_if_subscription_has_no_subscription_id(
+    organisation: Organisation,
+) -> None:
+    # Given
+    subscription = Subscription.objects.get(organisation=organisation)
 
-    def tearDown(self) -> None:
-        Subscription.objects.all().delete()
-
-    def test_max_seats_set_as_one_if_subscription_has_no_subscription_id(self):
-        # Given
-        subscription = Subscription.objects.get(organisation=self.organisation)
-
-        # Then
-        assert subscription.max_seats == 1
+    # Then
+    assert subscription.max_seats == 1
 
 
 @override_settings(MAILERLITE_API_KEY="some-test-key")
