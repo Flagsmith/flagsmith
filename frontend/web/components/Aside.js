@@ -154,10 +154,6 @@ const Aside = class extends Component {
                             disabled ? 'disabled' : ''
                           }`}
                         >
-                          <a href={'/projects'} className='nav-logo'>
-                            <Icon name='nav-logo' />
-                          </a>
-                          <hr className='my-0 py-0' />
                           <Collapsible
                             data-test={
                               project?.name
@@ -258,6 +254,7 @@ const Aside = class extends Component {
                               }}
                             />
                           </Collapsible>
+                          <hr className='my-0 py-0' />
                           <Permission
                             level='project'
                             permission='ADMIN'

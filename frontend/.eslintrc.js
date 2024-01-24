@@ -52,7 +52,6 @@ module.exports = {
     'OptionalObject': true,
     'OptionalString': true,
     'OrganisationProvider': true,
-    'OrganisationSelect': true,
     'Paging': true,
     'Panel': true,
     'PanelSearch': true,
