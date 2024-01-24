@@ -117,8 +117,8 @@ const AuditLog: FC<AuditLogType> = (props) => {
   }
   const { env: envFilter } = Utils.fromParam()
 
-  const hasRbacPermission = Utils.getPlansPermission('AUDIT')
-  if (!hasRbacPermission) {
+  const hasAuditLogPermission = Utils.getPlansPermission('AUDIT')
+  if (!hasAuditLogPermission) {
     return (
       <div>
         <div className='text-center'>

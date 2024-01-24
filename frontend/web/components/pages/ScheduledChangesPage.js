@@ -7,6 +7,7 @@ import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import { Link } from 'react-router-dom'
+import Format from 'common/utils/format'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -72,9 +73,7 @@ const ChangeRequestsPage = class extends Component {
                 <div className='mt-2'>
                   <InfoMessage>
                     Schedule feature state changes with a Change Request flow
-                    with our{' '}
-                    <Link to='/organisation-settings'>Start-up plan</Link>. Find
-                    out more{' '}
+                    with our {Format.minimumPlan('start-up')}. Find out more{' '}
                     <Button
                       theme='text'
                       href='https://docs.flagsmith.com/advanced-use/scheduled-flags#creating-a-stand-alone-scheduled-flag-change'

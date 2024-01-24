@@ -464,8 +464,8 @@ const OrganisationSettingsPage = class extends Component {
                                           />
                                         }
                                       >
-                                        To access this feature please upgrade
-                                        your account to scaleup or higher."
+                                        This feature is available with our{' '}
+                                        {Format.minimumPlan('scale-up')}.
                                       </Tooltip>
                                     ) : (
                                       <Switch

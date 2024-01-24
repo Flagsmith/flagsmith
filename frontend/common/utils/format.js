@@ -107,6 +107,13 @@ const Format = {
     return value
   },
 
+  minimumPlan(plan) {
+    if (global.flagsmithVersion?.backend?.is_saas) {
+      return `${plan} plan`
+    }
+    return 'self-hosted enterprise license'
+  },
+
   moment(value, format) {
     // DATE, hh:mm > 23:00
     if (value) {

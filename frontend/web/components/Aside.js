@@ -16,6 +16,7 @@ import AsideProjectButton from './AsideProjectButton'
 import Constants from 'common/constants'
 import { star, warning, pricetag } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
+import Format from 'common/utils/format'
 
 const Aside = class extends Component {
   static displayName = 'Aside'
@@ -100,7 +101,7 @@ const Aside = class extends Component {
         ProjectStore.model.environments[0] &&
         ProjectStore.model.environments[0].api_key)
     const environment = ProjectStore.getEnvironment(this.props.environmentId)
-    const hasRbacPermission = Utils.getPlansPermission('AUDIT')
+    const hasAuditLogPermission = Utils.getPlansPermission('AUDIT')
     const changeRequest =
       environment &&
       Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)
@@ -310,7 +311,7 @@ const Aside = class extends Component {
                           >
                             {({ permission }) =>
                               permission &&
-                              hasRbacPermission && (
+                              hasAuditLogPermission && (
                                 <NavLink
                                   id='audit-log-link'
                                   activeClassName='active'
@@ -326,7 +327,7 @@ const Aside = class extends Component {
                             }
                           </Permission>
 
-                          {!hasRbacPermission && (
+                          {!hasAuditLogPermission && (
                             <Tooltip
                               title={
                                 <a
@@ -340,7 +341,8 @@ const Aside = class extends Component {
                                 </a>
                               }
                             >
-                              This feature is available with our scaleup plan
+                              This feature is available with our{' '}
+                              {Format.minimumPlan('scaleup')}
                             </Tooltip>
                           )}
                           {!!integrations.length && (

@@ -9,6 +9,7 @@ import GroupSelect from './GroupSelect'
 import { getProjectFlag } from 'common/services/useProjectFlag'
 import { getStore } from 'common/store'
 import ConnectedGroupSelect from './ConnectedGroupSelect'
+import Format from 'common/utils/format'
 
 class TheComponent extends Component {
   state = {}
@@ -91,7 +92,7 @@ class TheComponent extends Component {
             <div>
               {res}
               The add flag assignees feature is available with our{' '}
-              <strong>Scale-up</strong> plan.
+              {Format.minimumPlan('scale-up')}.
             </div>
           )
         }}

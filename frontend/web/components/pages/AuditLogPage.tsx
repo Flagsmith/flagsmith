@@ -8,6 +8,7 @@ import AuditLog from 'components/AuditLog'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import PageTitle from 'components/PageTitle'
 import Tag from 'components/tags/Tag'
+import Format from 'common/utils/format'
 
 type AuditLogType = {
   router: RouterChildContext['router']
@@ -24,13 +25,12 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
 
   const [environment, setEnvironment] = useState(Utils.fromParam().env)
 
-  const hasRbacPermission = Utils.getPlansPermission('AUDIT')
-  if (!hasRbacPermission) {
+  const auditLogPermission = Utils.getPlansPermission('AUDIT')
+  if (!auditLogPermission) {
     return (
       <div>
         <div className='text-center'>
-          To access this feature please upgrade your account to scaleup or
-          higher.
+          This feature is available with our {Format.minimumPlan('scaleup')}. To
         </div>
       </div>
     )

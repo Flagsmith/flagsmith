@@ -21,6 +21,7 @@ import { getRoles } from 'common/services/useRole'
 import { getRolesEnvironmentPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import { Link } from 'react-router-dom'
+import Format from 'common/utils/format'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -436,13 +437,7 @@ const EnvironmentSettingsPage = class extends Component {
                             <p className='fs-small lh-sm'>
                               View and manage your feature changes with a Change
                               Request flow with our{' '}
-                              <Link
-                                to='/organisation-settings'
-                                className='btn-link'
-                              >
-                                Scale-up plan
-                              </Link>
-                              . Find out more{' '}
+                              {Format.minimumPlan('scale-up')}. Find out more{' '}
                               <Button
                                 theme='text'
                                 href='https://docs.flagsmith.com/advanced-use/change-requests'
