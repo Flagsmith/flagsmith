@@ -52,7 +52,7 @@ const DiffSegments: FC<DiffSegmentsType> = ({ diffs }) => {
       } else if (diff.deleted) {
         deleted.push(diff)
       } else if (diff.totalChanges) {
-        deleted.push(diff)
+        modified.push(diff)
       } else {
         unChanged.push(diff)
       }
