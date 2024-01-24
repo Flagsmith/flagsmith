@@ -86,9 +86,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
             </>
           }
         >
-          {
-            'Selecting an environment will determine the feature defaults used when importing to a project'
-          }
+          {'Select the environment to use for the export.'}
         </Tooltip>
       </div>
       <div className='row'>
