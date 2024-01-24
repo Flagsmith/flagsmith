@@ -269,8 +269,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
       ) : (
         <InfoMessage>
           The selected environment will inherit the imported environment's
-          values where as all other environments will inherit the default
-          values.
+          values. All other environments will inherit the default values.
         </InfoMessage>
       )}
 
