@@ -1,6 +1,7 @@
 from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
+from django.conf import settings
 from django.conf.urls import url
-from django.urls import include
+from django.urls import include, path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import authentication, permissions, routers
@@ -71,3 +72,29 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
 ]
+
+if settings.SPLIT_TESTING_INSTALLED:
+    from split_testing.views import (
+        ConversionEventTypeView,
+        CreateConversionEventView,
+        SplitTestViewSet,
+    )
+
+    split_testing_router = routers.DefaultRouter()
+    split_testing_router.register(r"", SplitTestViewSet, basename="split-tests")
+
+    urlpatterns += [
+        url(
+            r"^split-testing/", include(split_testing_router.urls), name="split-testing"
+        ),
+        url(
+            r"^split-testing/conversion-events/",
+            CreateConversionEventView.as_view(),
+            name="conversion-events",
+        ),
+        path(
+            "conversion_event_types/",
+            ConversionEventTypeView.as_view(),
+            name="conversion-event-types",
+        ),
+    ]
