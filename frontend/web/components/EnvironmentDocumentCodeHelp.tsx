@@ -47,6 +47,16 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
         <div className='mt-2'>
           <InfoMessage>
             <div>
+              Providing flag defaults is recommended for{' '}
+              <a
+                target='_blank'
+                href='https://docs.flagsmith.com/clients/overview'
+                rel='noreferrer'
+              >
+                defensive coding
+              </a>{' '}
+              and allowing offline capabilities.
+              <br />
               By default SDKs run in remote evaluation mode, server-side SDKs
               can also run in local evaluation mode.{' '}
               <a
