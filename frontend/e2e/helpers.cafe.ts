@@ -261,6 +261,7 @@ export const logout = async (t) => {
 
 export const goToFeatureVersions = async (featureIndex:number) =>{
   await gotoFeatures()
+  await click(byId(`feature-action-${featureIndex}`))
   await click(byId(`feature-history-${featureIndex}`))
 }
 
