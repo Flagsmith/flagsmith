@@ -96,6 +96,12 @@ Traits can be used within your application, but they can also be used to power
 
 ## Trait Value Data Types
 
+:::tip
+
+You can remove a trait by sending `null` as the trait value.
+
+:::
+
 Trait values can be stored as one of four different data types:
 
 - Boolean
