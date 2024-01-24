@@ -132,6 +132,27 @@ export type Req = {
   getGetSubscriptionMetadata: { id: string }
   getEnvironment: { id: string }
   getSubscriptionMetadata: { id: string }
+  getMetadataModelField: { organisation_id: string; id: string }
+  updateMetadataModelField: { organisation_id: string; id: string }
+  deleteMetadataModelField: { organisation_id: string; id: string }
+  createMetadataModelField: { organisation_id: string }
+  getMetadata: { id: string }
+  updateMetadata: {
+    id: string
+    body: {
+      name: string
+      type: string
+      description: string
+      organisation: number
+    }
+  }
+  deleteMetadata: { id: string }
+  createMetadata: {
+    name: string
+    type: string
+    description: string
+    organisation: number
+  }
   createLaunchDarklyProjectImport: {
     project_id: string
     body: {
@@ -155,5 +176,6 @@ export type Req = {
   getGroupSummaries: {
     orgId: string
   }
+  getSupportedContentType: { org_id: string }
   // END OF TYPES
 }

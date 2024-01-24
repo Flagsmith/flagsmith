@@ -10,6 +10,7 @@ from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
+from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
 from users.serializers import (
     UserIdsSerializer,
@@ -245,11 +246,33 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             return None
 
 
-class UpdateFeatureSerializer(ListCreateFeatureSerializer):
-    """prevent users from changing certain values after creation"""
+class FeatureSerializerWithMetadata(
+    SerializerWithMetadata, ListCreateFeatureSerializer
+):
+    metadata = MetadataSerializer(required=False, many=True)
 
     class Meta(ListCreateFeatureSerializer.Meta):
-        read_only_fields = ListCreateFeatureSerializer.Meta.read_only_fields + (
+        fields = ListCreateFeatureSerializer.Meta.fields + ("metadata",)
+
+    def get_project(self, validated_data: dict = None) -> Project:
+        view = self.context.get("view")
+
+        if view and (project_pk := view.kwargs.get("project_pk")):
+            try:
+                return Project.objects.get(pk=project_pk)
+            except Project.DoesNotExist:
+                raise serializers.ValidationError("Project not found.")
+
+        raise serializers.ValidationError(
+            "Unable to retrieve project for metadata validation."
+        )
+
+
+class UpdateFeatureSerializer(FeatureSerializerWithMetadata):
+    """prevent users from changing certain values after creation"""
+
+    class Meta(FeatureSerializerWithMetadata.Meta):
+        read_only_fields = FeatureSerializerWithMetadata.Meta.read_only_fields + (
             "default_enabled",
             "initial_value",
             "name",

@@ -16,6 +16,7 @@ import Constants from 'common/constants'
 import Switch from 'components/Switch'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
+import OrganisationMetadataSelect from 'components/OrganisationMetadataSelect'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 import { getRolesEnvironmentPermissions } from 'common/services/useRolePermission'
@@ -37,7 +38,7 @@ const EnvironmentSettingsPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = { env: {}, roles: [] }
+    this.state = { env: {}, roles: [], showMetadataList: false }
     AppActions.getProject(this.props.match.params.projectId)
   }
 
@@ -219,6 +220,7 @@ const EnvironmentSettingsPage = class extends Component {
       },
     } = this
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
+    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
 
     return (
       <div className='app-container container'>
@@ -825,6 +827,43 @@ const EnvironmentSettingsPage = class extends Component {
                         )}
                       </FormGroup>
                     </TabItem>
+                    {metadataEnable && (
+                      <TabItem tabLabel='Metadata'>
+                        <FormGroup className='mt-5 setting'>
+                          <InputGroup
+                            title={'Metadata'}
+                            tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} environments`}
+                            tooltipPlace='left'
+                            component={
+                              <Button
+                                size='xSmall'
+                                type='button'
+                                theme='outline'
+                                className='mt-3'
+                                onClick={() =>
+                                  this.setState({
+                                    showMetadataList:
+                                      !this.state.showMetadataList,
+                                  })
+                                }
+                              >
+                                Add Metadata
+                              </Button>
+                            }
+                          />
+                        </FormGroup>
+                        <OrganisationMetadataSelect
+                          contentType={30}
+                          isOpen={this.state.showMetadataList}
+                          onToggle={() =>
+                            this.setState({
+                              showMetadataList: !this.state.showMetadataList,
+                            })
+                          }
+                          orgId={AccountStore.getOrganisation().id}
+                        />
+                      </TabItem>
+                    )}
                   </Tabs>
                 )}
               </>

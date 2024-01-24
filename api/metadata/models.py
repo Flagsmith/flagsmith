@@ -12,7 +12,7 @@ from .fields import GenericObjectID
 
 FIELD_VALUE_MAX_LENGTH = 2000
 
-METADATA_SUPPORTED_MODELS = ["environment"]
+METADATA_SUPPORTED_MODELS = ["environment", "feature", "project", "segment"]
 
 # A map of model name to a function that takes the object id and returns the organisation_id
 SUPPORTED_REQUIREMENTS_MAPPING = {
@@ -21,7 +21,19 @@ SUPPORTED_REQUIREMENTS_MAPPING = {
         "project": lambda project_id: Project.objects.get(
             id=project_id
         ).organisation_id,
-    }
+    },
+    "feature": {
+        "organisation": lambda org_id: org_id,
+        "project": lambda project_id: Project.objects.get(
+            id=project_id
+        ).organisation_id,
+    },
+    "segment": {
+        "organisation": lambda org_id: org_id,
+        "project": lambda project_id: Project.objects.get(
+            id=project_id
+        ).organisation_id,
+    },
 }
 
 

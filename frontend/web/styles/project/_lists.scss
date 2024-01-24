@@ -60,6 +60,29 @@
   }
 }
 
+
+.entities-table {
+  display: table;
+  width: 100%;
+  border: 1px solid rgba(101, 109, 123, 0.16);
+  border-radius: 10px;
+}
+
+.entities-row {
+  display: table-row;
+}
+
+.entities-cell {
+  display: table-cell;
+  padding: 10px;
+  border: none;
+  text-align: center;
+}
+
+.entities-header {
+  font-weight: bold;
+}
+
 .collapsible-nested-list {
   .list-container{
     border-radius: $border-radius-default;

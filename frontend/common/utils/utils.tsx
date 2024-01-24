@@ -2,6 +2,7 @@ import AccountStore from 'common/stores/account-store'
 import ProjectStore from 'common/stores/project-store'
 import Project from 'common/project'
 import {
+  ContentType,
   FeatureState,
   FeatureStateValue,
   FlagsmithValue,
@@ -131,6 +132,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getApproveChangeRequestPermission() {
     return 'APPROVE_CHANGE_REQUEST'
+  },
+  getContentType(contentTypes: ContentType, prop: number, type: string) {
+    return contentTypes.find((c) => c[prop] === type) || null
   },
   getCreateProjectPermission(organisation: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {
@@ -327,6 +331,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return valid
   },
+
   getPlansPermission: (permission: string) => {
     const isOrgPermission = permission !== '2FA'
     const plans = isOrgPermission
@@ -344,10 +349,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     )
     return !!found
   },
-
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
+
   getSDKEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
 
