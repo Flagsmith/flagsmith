@@ -1,5 +1,88 @@
 # Changelog
 
+## [2.95.0](https://github.com/Flagsmith/flagsmith/compare/v2.94.0...v2.95.0) (2024-01-23)
+
+
+### Features
+
+* Add endpoints for feature imports ([#3255](https://github.com/Flagsmith/flagsmith/issues/3255)) ([a2eeaf4](https://github.com/Flagsmith/flagsmith/commit/a2eeaf402b50609d5986c0897f819b275d58c926))
+
+
+### Bug Fixes
+
+* allow editing scheduled changes ([#3227](https://github.com/Flagsmith/flagsmith/issues/3227)) ([90ee8c7](https://github.com/Flagsmith/flagsmith/commit/90ee8c76ebfd9aa554334dbf9a9b588191f4d0e0))
+* Handle feature import processing during import ([#3305](https://github.com/Flagsmith/flagsmith/issues/3305)) ([28459c5](https://github.com/Flagsmith/flagsmith/commit/28459c502405de2a208f86f66f573a4a4d60d45e))
+* Incorrect tag filtering when results have no features ([#3309](https://github.com/Flagsmith/flagsmith/issues/3309)) ([cca86c3](https://github.com/Flagsmith/flagsmith/commit/cca86c391cfd167f3a968128ef6b4b568628dfdb))
+* **sse/stream_access_logs:** handle invalid log ([#3307](https://github.com/Flagsmith/flagsmith/issues/3307)) ([0ef4764](https://github.com/Flagsmith/flagsmith/commit/0ef476466fd8688053b68c3cb03f39b945056e87))
+* variation percentage calculation ([#3268](https://github.com/Flagsmith/flagsmith/issues/3268)) ([ec272ba](https://github.com/Flagsmith/flagsmith/commit/ec272ba29f08f58c5a30bdc6e6da7a03233b8513))
+
+## [2.94.0](https://github.com/Flagsmith/flagsmith/compare/v2.93.0...v2.94.0) (2024-01-16)
+
+
+### Features
+
+* pure BSD3 license ([#3294](https://github.com/Flagsmith/flagsmith/issues/3294)) ([1a1f265](https://github.com/Flagsmith/flagsmith/commit/1a1f2654a5fcfab4c35386c8f74f8ca4caa5a2e8))
+
+
+### Bug Fixes
+
+* Paging spacer logic ([#3275](https://github.com/Flagsmith/flagsmith/issues/3275)) ([00ac34e](https://github.com/Flagsmith/flagsmith/commit/00ac34ee76b91fe789f60590f92531c9c9c1a7f6))
+* Reading role permissions generates 500 errors ([#3009](https://github.com/Flagsmith/flagsmith/issues/3009)) ([de5cf9d](https://github.com/Flagsmith/flagsmith/commit/de5cf9db8a97414241e84b5b51853bb77f9e878c))
+* Reset password error handling ([#3271](https://github.com/Flagsmith/flagsmith/issues/3271)) ([a54352f](https://github.com/Flagsmith/flagsmith/commit/a54352fe8efb0488fab1c41019df7a5ce305454c))
+* Tidy up ld import ([#3276](https://github.com/Flagsmith/flagsmith/issues/3276)) ([3ee8e6a](https://github.com/Flagsmith/flagsmith/commit/3ee8e6a8be8f2260660997c857d369b55800b476))
+* **webhooks:** prevent raise on give up ([#3295](https://github.com/Flagsmith/flagsmith/issues/3295)) ([581a8c9](https://github.com/Flagsmith/flagsmith/commit/581a8c9c31666aadfd64d6b656f6836d71631e3f))
+
+## [2.93.0](https://github.com/Flagsmith/flagsmith/compare/v2.92.0...v2.93.0) (2024-01-11)
+
+
+### Features
+
+* **audit:** add change details to AuditLog ([#3218](https://github.com/Flagsmith/flagsmith/issues/3218)) ([c665063](https://github.com/Flagsmith/flagsmith/commit/c665063fd22b7cf740eb5b27981c8633a577c470))
+* Call webhooks async and add backoff to webhooks ([#2932](https://github.com/Flagsmith/flagsmith/issues/2932)) ([445c698](https://github.com/Flagsmith/flagsmith/commit/445c69837b43e341d6ad48a1a9fd7d12af47a115))
+* **dynamo_documents:** propagate delete to dynamo  ([#3220](https://github.com/Flagsmith/flagsmith/issues/3220)) ([b7ecd75](https://github.com/Flagsmith/flagsmith/commit/b7ecd75810d0d98221b775a7f87ba1e73b98647a))
+* implement feature actions dropdown ([#3253](https://github.com/Flagsmith/flagsmith/issues/3253)) ([972f1a3](https://github.com/Flagsmith/flagsmith/commit/972f1a364e4774f7a4ce722fe88b4bbee6bb9a11))
+* **tags/view:** Add api to get tag by uuid ([#3229](https://github.com/Flagsmith/flagsmith/issues/3229)) ([6500451](https://github.com/Flagsmith/flagsmith/commit/6500451a93c317df6fe57740abc5f5b70853bfa5))
+
+
+### Bug Fixes
+
+* Adjust segment not rule ([#3267](https://github.com/Flagsmith/flagsmith/issues/3267)) ([6edc932](https://github.com/Flagsmith/flagsmith/commit/6edc9324ffc02aedcf768aeaf5268cbca458d7ee))
+* **infra/staging:** Add INFLUXDB_BUCKET to task def ([#3199](https://github.com/Flagsmith/flagsmith/issues/3199)) ([445dc2b](https://github.com/Flagsmith/flagsmith/commit/445dc2b852617953fefd7dd6b40c5f1eee480450))
+* OR button hiding and empty condtions ([#3269](https://github.com/Flagsmith/flagsmith/issues/3269)) ([0e28b6c](https://github.com/Flagsmith/flagsmith/commit/0e28b6cc98f5a4c03c95d662058cef896e1f8132))
+* **versioning:** endpoints should return latest versions ([#3209](https://github.com/Flagsmith/flagsmith/issues/3209)) ([5e16e56](https://github.com/Flagsmith/flagsmith/commit/5e16e56c34e66787dc8d25512e58d1dbe869a4c4))
+* **webhooks:** default task processor to use processor and prevent webhook retries in non-processor environments ([#3273](https://github.com/Flagsmith/flagsmith/issues/3273)) ([4d002fc](https://github.com/Flagsmith/flagsmith/commit/4d002fc84f563b559fceb67c2d03ace822d18499))
+
+## [2.92.0](https://github.com/Flagsmith/flagsmith/compare/v2.91.0...v2.92.0) (2024-01-02)
+
+
+### Features
+
+* Add new url for role master api keys ([#3215](https://github.com/Flagsmith/flagsmith/issues/3215)) ([924149c](https://github.com/Flagsmith/flagsmith/commit/924149cdb711c510d2eb94c3d03f492977fac335))
+* prepopulate control value on segment overrides ([#3208](https://github.com/Flagsmith/flagsmith/issues/3208)) ([68a1c6c](https://github.com/Flagsmith/flagsmith/commit/68a1c6c27eac83b90a9161864b47a9c19d6115f8))
+* **tasks-processor:** Add recurring task to clean up old recurring task runs ([#3151](https://github.com/Flagsmith/flagsmith/issues/3151)) ([9f83f27](https://github.com/Flagsmith/flagsmith/commit/9f83f27481d31147173f772728c3e31116ba4548))
+
+
+### Bug Fixes
+
+* `env` variable instructions on locally-api.md ([#3223](https://github.com/Flagsmith/flagsmith/issues/3223)) ([4f2fa90](https://github.com/Flagsmith/flagsmith/commit/4f2fa90da424f326d2b8e3758c41439554cc829f))
+* erroneous booleans in feature tooltip ([#3219](https://github.com/Flagsmith/flagsmith/issues/3219)) ([3758d33](https://github.com/Flagsmith/flagsmith/commit/3758d335a4c959e7da4f2caa0545711f90535969))
+
+## [2.91.0](https://github.com/Flagsmith/flagsmith/compare/v2.90.0...v2.91.0) (2023-12-21)
+
+
+### Features
+
+* Add new url for roles master api keys ([#3154](https://github.com/Flagsmith/flagsmith/issues/3154)) ([d770399](https://github.com/Flagsmith/flagsmith/commit/d7703994f700f078f1a569be1f0fb64923b19193))
+* add new url from role groups ([#3178](https://github.com/Flagsmith/flagsmith/issues/3178)) ([eebc541](https://github.com/Flagsmith/flagsmith/commit/eebc541e89daedfba4c98716d88c3ff5d4943032))
+* Revert Add new url for roles master api keys ([#3154](https://github.com/Flagsmith/flagsmith/issues/3154)) ([#3214](https://github.com/Flagsmith/flagsmith/issues/3214)) ([22b8d9c](https://github.com/Flagsmith/flagsmith/commit/22b8d9cc2b8e51f622ea18520987351b2dda27a1))
+
+
+### Bug Fixes
+
+* **admin/task-processor:** handle no task run ([#3196](https://github.com/Flagsmith/flagsmith/issues/3196)) ([eab1f6d](https://github.com/Flagsmith/flagsmith/commit/eab1f6db74a9b0ba728e081bcc6ce83001553b15))
+* **subscriptions:** ensure that manually added subscriptions work correctly in all deployments ([#3182](https://github.com/Flagsmith/flagsmith/issues/3182)) ([ae94267](https://github.com/Flagsmith/flagsmith/commit/ae94267bd11b346baa1466bf3d3c2ce38b2935dc))
+* **task-processor:** implement grace period for deleting old recurring task ([#3169](https://github.com/Flagsmith/flagsmith/issues/3169)) ([00f0552](https://github.com/Flagsmith/flagsmith/commit/00f055297b55f3dfdceb8bd35ec22e1d50bfadfd))
+
 ## [2.90.0](https://github.com/Flagsmith/flagsmith/compare/v2.89.0...v2.90.0) (2023-12-20)
 
 

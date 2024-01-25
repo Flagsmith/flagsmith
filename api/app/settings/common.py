@@ -21,6 +21,7 @@ import dj_database_url
 import pytz
 import requests
 from corsheaders.defaults import default_headers
+from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
 from environs import Env
 
@@ -55,20 +56,10 @@ HOSTED_SEATS_LIMIT = env.int("HOSTED_SEATS_LIMIT", default=0)
 
 MAX_PROJECTS_IN_FREE_PLAN = 1
 
-# Google Analytics Configuration
-GOOGLE_ANALYTICS_KEY = env("GOOGLE_ANALYTICS_KEY", default="")
-GOOGLE_SERVICE_ACCOUNT = env("GOOGLE_SERVICE_ACCOUNT", default=None)
-GA_TABLE_ID = env("GA_TABLE_ID", default=None)
-
-INFLUXDB_TOKEN = env.str("INFLUXDB_TOKEN", default="")
-INFLUXDB_BUCKET = env.str("INFLUXDB_BUCKET", default="")
-INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
-INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST", default=False)
 
-USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
 
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
@@ -165,6 +156,8 @@ INSTALLED_APPS = [
     "metadata",
     "app_analytics",
 ]
+
+SILENCED_SYSTEM_CHECKS = ["axes.W002"]
 
 SITE_ID = 1
 
@@ -288,17 +281,29 @@ if ENABLE_GZIP_COMPRESSION:
     # ref: https://docs.djangoproject.com/en/2.2/ref/middleware/#middleware-ordering
     MIDDLEWARE.insert(1, "django.middleware.gzip.GZipMiddleware")
 
+# Google Analytics Configuration
+GOOGLE_ANALYTICS_KEY = env("GOOGLE_ANALYTICS_KEY", default="")
+GOOGLE_SERVICE_ACCOUNT = env("GOOGLE_SERVICE_ACCOUNT", default=None)
+GA_TABLE_ID = env("GA_TABLE_ID", default=None)
+
 if GOOGLE_ANALYTICS_KEY:
     MIDDLEWARE.append("app_analytics.middleware.GoogleAnalyticsMiddleware")
 
-if INFLUXDB_TOKEN:
+# Influx configuration
+INFLUXDB_TOKEN = env.str("INFLUXDB_TOKEN", default="")
+INFLUXDB_BUCKET = env.str("INFLUXDB_BUCKET", default="")
+INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
+INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
+
+USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
+
+# NOTE: Because we use Postgres for analytics data in staging and Influx for tracking SSE data,
+# we need to support setting the influx configuration alongside using postgres for analytics.
+if USE_POSTGRES_FOR_ANALYTICS:
+    MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
+elif INFLUXDB_TOKEN:
     MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
 
-if USE_POSTGRES_FOR_ANALYTICS:
-    if INFLUXDB_BUCKET:
-        raise RuntimeError("Cannot use both InfluxDB and Postgres for analytics")
-
-    MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list("ALLOWED_ADMIN_IP_ADDRESSES", default=list())
 if len(ALLOWED_ADMIN_IP_ADDRESSES) > 0:
@@ -877,8 +882,6 @@ EDGE_ENABLED = (
     and EDGE_RELEASE_DATETIME < datetime.now(tz=pytz.UTC)
 )
 
-DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
-
 DISABLE_FLAGSMITH_UI = env.bool("DISABLE_FLAGSMITH_UI", default=False)
 SERVE_FE_ASSETS = not DISABLE_FLAGSMITH_UI and os.path.exists(
     BASE_DIR + "/app/templates/webpack/index.html"
@@ -895,7 +898,11 @@ MAX_SELF_MIGRATABLE_IDENTITIES = env.int("MAX_SELF_MIGRATABLE_IDENTITIES", 10000
 # Setting to allow asynchronous tasks to be run synchronously for testing purposes
 # or in a separate thread for self-hosted users
 TASK_RUN_METHOD = env.enum(
-    "TASK_RUN_METHOD", type=TaskRunMethod, default=TaskRunMethod.SEPARATE_THREAD.value
+    "TASK_RUN_METHOD",
+    type=TaskRunMethod,
+    default=TaskRunMethod.TASK_PROCESSOR.value
+    if env.bool("RUN_BY_PROCESSOR", False)
+    else TaskRunMethod.SEPARATE_THREAD.value,
 )
 ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
@@ -909,6 +916,13 @@ TASK_DELETE_INCLUDE_FAILED_TASKS = env.bool(
 )
 TASK_DELETE_RUN_TIME = env.time("TASK_DELETE_RUN_TIME", default="01:00")
 TASK_DELETE_RUN_EVERY = env.timedelta("TASK_DELETE_RUN_EVERY", default=86400)
+RECURRING_TASK_RUN_RETENTION_DAYS = env.int(
+    "RECURRING_TASK_RUN_RETENTION_DAYS", default=30
+)
+
+# Webhook settings
+DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
+RETRY_WEBHOOKS = TASK_RUN_METHOD == TaskRunMethod.TASK_PROCESSOR
 
 # Real time(server sent events) settings
 SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)
@@ -1068,3 +1082,12 @@ if LDAP_INSTALLED and LDAP_AUTH_URL:
     # The LDAP user username and password used by `sync_ldap_users_and_groups` command
     LDAP_SYNC_USER_USERNAME = env.str("LDAP_SYNC_USER_USERNAME", None)
     LDAP_SYNC_USER_PASSWORD = env.str("LDAP_SYNC_USER_PASSWORD", None)
+
+SEGMENT_CONDITION_VALUE_LIMIT = env.int("SEGMENT_CONDITION_VALUE_LIMIT", default=1000)
+if not 0 <= SEGMENT_CONDITION_VALUE_LIMIT < 2000000:
+    raise ImproperlyConfigured(
+        "SEGMENT_CONDITION_VALUE_LIMIT must be between 0 and 2,000,000 (2MB)."
+    )
+
+WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)
+WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)

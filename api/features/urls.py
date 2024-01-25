@@ -19,6 +19,7 @@ from features.views import (
 router = routers.DefaultRouter()
 router.register(r"featurestates", SimpleFeatureStateViewSet, basename="featurestates")
 router.register(r"feature-segments", FeatureSegmentViewSet, basename="feature-segment")
+
 app_name = "features"
 
 urlpatterns = [

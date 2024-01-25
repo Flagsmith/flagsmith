@@ -1,6 +1,8 @@
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from audit.serializers import AuditLogListSerializer
 from integrations.datadog.models import DataDogConfiguration
+from webhooks.webhooks import WebhookEventType
 
 
 def test_organisation_webhooks_are_called_when_audit_log_saved(project, mocker):
@@ -13,7 +15,13 @@ def test_organisation_webhooks_are_called_when_audit_log_saved(project, mocker):
     audit_log.save()
 
     # Then
-    mock_call_webhooks.assert_called()
+    mock_call_webhooks.delay.assert_called_once_with(
+        args=(
+            project.organisation.id,
+            AuditLogListSerializer(instance=audit_log).data,
+            WebhookEventType.AUDIT_LOG_CREATED.value,
+        )
+    )
 
 
 def test_data_dog_track_event_not_called_on_audit_log_saved_when_not_configured(
@@ -137,15 +145,15 @@ def test_audit_log_history_record(mocker):
     mocked_model_class = mocker.MagicMock()
     mocked_module = mocker.MagicMock(**{model_class_name: mocked_model_class})
     mocker.patch("audit.models.import_module", return_value=mocked_module)
-    mocked_model_class.objects.get.return_value = mocked_model
+    mocked_model_class.objects.filter.return_value.first.return_value = mocked_model
 
     # When
     record = audit_log.history_record
 
     # Then
     assert record == mocked_model
-    mocked_model_class.objects.get.assert_called_once_with(
-        id=audit_log.history_record_id
+    mocked_model_class.objects.filter.assert_called_once_with(
+        history_id=audit_log.history_record_id
     )
 
 

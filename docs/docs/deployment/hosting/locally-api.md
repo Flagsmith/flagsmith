@@ -44,7 +44,7 @@ The app is configured to use PostgreSQL for all environments.
 When running locally, you'll need a local instance of postgres running. The easiest way to do this is to use docker
 which is achievable with the following command:
 
-`docker-compose -f docker/db.yaml up -d`
+`docker-compose -f docker/db.yml up -d`
 
 You'll also need to ensure that you have a value for POSTGRES_PASSWORD set as an environment variable on your
 development machine.
@@ -178,7 +178,8 @@ the below variables will be ignored.
 
 #### Application Environment Variables
 
-- `ENV`: string representing the current running environment, e.g. 'local', 'dev', 'prod'. Defaults to 'local'
+- `ENVIRONMENT`: string representing the current running environment, such as "local", "dev", "staging" or "production".
+  Defaults to 'local'
 - `DJANGO_SECRET_KEY`: secret key required by Django, if one isn't provided one will be created using
   `django.core.management.utils.get_random_secret_key`. WARNING: If running multiple API instances, its vital that you
   define a shared DJANGO_SECRET_KEY.
@@ -237,7 +238,7 @@ the below variables will be ignored.
   String. Connection string to set up Flagsmith to send telemetry to Azure Application Insights.
 - [`OPENCENSUS_SAMPLING_RATE`](https://opencensus.io/tracing/sampling/probabilistic/): Float. The tracer sample rate.
 - `RESTRICT_ORG_CREATE_TO_SUPERUSERS`: Restricts all users from creating organisations unless they are
-  [marked as a superuser](/deployment/configuration/django-admin#Authentication).
+  [marked as a superuser](/deployment/configuration/django-admin#authentication).
 - `FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS`: Comma separated list of extra headers to allow when operating across domains.
   e.g. `'my-custom-header-1,my-custom-header-2'`. Defaults to `'sentry-trace,'`.
 - `FLAGSMITH_DOMAIN`: A custom domain for URLs pointing to your Flagsmith instance in email notifications. Note: if set,
@@ -245,6 +246,11 @@ the below variables will be ignored.
   ignored.
 - `DISABLE_FLAGSMITH_UI`: Disable the Flagsmith UI which can be rendered by the API containers in a single container
   environment. Use `True` to disable, defaults to `False`.
+- `SEGMENT_CONDITION_VALUE_LIMIT`: Configure the size of the segment condition value in bytes. Default is 1000.
+  Minimum 0. Maximum 2000000 (2MB). Note that this environment variable changes the length of the column in the database
+  and hence should not be modified for already running instances of flagsmith. It should only be used for new
+  installations, and should not be modified. WARNING: setting this to a higher limit may prevent imports to our SaaS
+  platform if required in the future.
 
 #### Security Environment Variables
 
@@ -345,7 +351,7 @@ metrics from external services.
 version: '3'
 services:
  postgres:
-  image: postgres:11.12-alpine
+  image: postgres:15.5-alpine
   environment:
    POSTGRES_PASSWORD: password
    POSTGRES_DB: flagsmith

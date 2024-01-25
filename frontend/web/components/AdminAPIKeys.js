@@ -18,13 +18,11 @@ export class CreateAPIKey extends PureComponent {
     this.setState({ isSaving: true })
     data
       .post(
-        `${Project.api}organisations/${
-          AccountStore.getOrganisation().id
-        }/master-api-keys/`,
+        `${Project.api}organisations/${this.props.organisationId}/master-api-keys/`,
         {
           expiry_date: this.state.expiry_date,
           name: this.state.name,
-          organisation: AccountStore.getOrganisation().id,
+          organisation: this.props.organisationId,
         },
       )
       .then((res) => {
@@ -126,7 +124,8 @@ export default class AdminAPIKeys extends PureComponent {
   static displayName = 'TheComponent'
 
   state = {
-    isLoading: true,
+    isLoading: false,
+    organisationId: null,
   }
 
   static propTypes = {}
@@ -135,12 +134,19 @@ export default class AdminAPIKeys extends PureComponent {
     this.fetch()
   }
 
+  componentDidUpdate() {
+    if (this.props.organisationId === this.state.organisationId) return
+
+    this.fetch()
+    this.setState({ organisationId: this.props.organisationId })
+  }
+
   createAPIKey = () => {
     openModal(
       'New Admin API Key',
       <CreateAPIKey
+        organisationId={this.props.organisationId}
         onSuccess={() => {
-          this.setState({ isLoading: true })
           this.fetch()
         }}
       />,
@@ -149,11 +155,10 @@ export default class AdminAPIKeys extends PureComponent {
   }
 
   fetch = () => {
+    this.setState({ isLoading: true })
     data
       .get(
-        `${Project.api}organisations/${
-          AccountStore.getOrganisation().id
-        }/master-api-keys/`,
+        `${Project.api}organisations/${this.props.organisationId}/master-api-keys/`,
       )
       .then((res) => {
         this.setState({
@@ -173,9 +178,7 @@ export default class AdminAPIKeys extends PureComponent {
       () => {
         data
           .delete(
-            `${Project.api}organisations/${
-              AccountStore.getOrganisation().id
-            }/master-api-keys/${v.prefix}/`,
+            `${Project.api}organisations/${this.props.organisationId}/master-api-keys/${v.prefix}/`,
           )
           .then(() => {
             this.fetch()
