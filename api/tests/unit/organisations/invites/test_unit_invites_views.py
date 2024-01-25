@@ -4,125 +4,136 @@ from datetime import timedelta
 
 import pytest
 from chargebee import APIError as ChargebeeAPIError
-from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_lazyfixture import lazy_fixture
 from pytest_mock.plugin import MockerFixture
 from rest_framework import status
-from rest_framework.test import APIClient, APITestCase
+from rest_framework.test import APIClient
 
 from organisations.invites.models import Invite, InviteLink
 from organisations.models import Organisation, OrganisationRole, Subscription
 from users.models import FFAdminUser
 
 
-class InviteLinkViewSetTestCase(APITestCase):
-    def setUp(self) -> None:
-        self.organisation = Organisation.objects.create(name="Test organisation")
-        self.organisation_admin = FFAdminUser.objects.create(email="test@example.com")
-        self.organisation_admin.add_organisation(
-            self.organisation, role=OrganisationRole.ADMIN
-        )
-        self.client.force_authenticate(user=self.organisation_admin)
+def test_create_invite_link(
+    organisation: Organisation,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-invite-links-list",
+        args=[organisation.pk],
+    )
+    tomorrow = timezone.now() + timedelta(days=1)
+    expires_at = tomorrow.strftime("%Y-%m-%dT%H:%M:%SZ")
+    data = {"expires_at": expires_at}
 
-    def set_subscription_max_seats(self, max_seats):
-        self.organisation.subscription.max_seats = max_seats
-        self.organisation.subscription.save()
+    # When
+    response = admin_client.post(url, data=data)
 
-    def test_create_invite_link(self):
-        # Given
-        url = reverse(
-            "api-v1:organisations:organisation-invite-links-list",
-            args=[self.organisation.pk],
-        )
-        tomorrow = timezone.now() + timedelta(days=1)
-        data = {"expires_at": tomorrow.strftime("%Y-%m-%d %H:%M:%S")}
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
 
-        # When
-        response = self.client.post(url, data=data)
+    assert response.data["hash"]
+    assert response.data["id"]
+    assert response.data["expires_at"] == expires_at
+    assert response.data["role"] == "USER"
 
-        # Then
-        assert response.status_code == status.HTTP_201_CREATED
 
-        response_json = response.json()
-        expected_attributes = ("hash", "id", "expires_at", "role")
-        assert all(attr in response_json for attr in expected_attributes)
+def test_get_invite_links_for_organisation(
+    organisation: Organisation,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-invite-links-list",
+        args=[organisation.pk],
+    )
+    for role in OrganisationRole:
+        InviteLink.objects.create(organisation=organisation, role=role.name)
 
-    def test_get_invite_links_for_organisation(self):
-        # Given
-        url = reverse(
-            "api-v1:organisations:organisation-invite-links-list",
-            args=[self.organisation.pk],
-        )
-        for role in OrganisationRole:
-            InviteLink.objects.create(organisation=self.organisation, role=role.name)
+    # update subscription to add another seat
+    organisation.subscription.max_seats = 3
+    organisation.subscription.save()
 
-        # update subscription to add another seat
-        self.set_subscription_max_seats(2)
+    # When
+    response = admin_client.get(url)
 
-        # When
-        response = self.client.get(url)
+    # Then
+    assert response.status_code == status.HTTP_200_OK
 
-        # Then
-        assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 2
+    expected_attributes = ("hash", "id", "expires_at")
+    for invite_link in response.data:
+        assert all(attr in invite_link for attr in expected_attributes)
 
-        response_json = response.json()
-        assert len(response_json) == 2
-        expected_attributes = ("hash", "id", "expires_at")
-        for invite_link in response_json:
-            assert all(attr in invite_link for attr in expected_attributes)
 
-    def test_get_invite_links_for_organisation_returns_400_if_seats_are_over(self):
-        # Given
-        settings.ENABLE_CHARGEBEE = True
-        url = reverse(
-            "api-v1:organisations:organisation-invite-links-list",
-            args=[self.organisation.pk],
-        )
+def test_get_invite_links_for_organisation_returns_400_if_seats_are_over(
+    settings: SettingsWrapper,
+    organisation: Organisation,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    settings.ENABLE_CHARGEBEE = True
+    url = reverse(
+        "api-v1:organisations:organisation-invite-links-list",
+        args=[organisation.pk],
+    )
 
-        for role in OrganisationRole:
-            InviteLink.objects.create(organisation=self.organisation, role=role.name)
+    for role in OrganisationRole:
+        InviteLink.objects.create(organisation=organisation, role=role.name)
 
-        # When
-        response = self.client.get(url)
+    # When
+    response = admin_client.get(url)
 
-        # Then
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_delete_invite_link_for_organisation(self):
-        # Given
-        settings.ENABLE_CHARGEBEE = True
-        invite = InviteLink.objects.create(organisation=self.organisation)
-        url = reverse(
-            "api-v1:organisations:organisation-invite-links-detail",
-            args=[self.organisation.pk, invite.pk],
-        )
 
-        # update subscription to add another seat
-        self.set_subscription_max_seats(2)
+def test_delete_invite_link_for_organisation(
+    settings: SettingsWrapper,
+    organisation: Organisation,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    settings.ENABLE_CHARGEBEE = True
+    invite = InviteLink.objects.create(organisation=organisation)
+    url = reverse(
+        "api-v1:organisations:organisation-invite-links-detail",
+        args=[organisation.pk, invite.pk],
+    )
 
-        # When
-        response = self.client.delete(url)
+    # update subscription to add another seat
+    organisation.subscription.max_seats = 3
+    organisation.subscription.save()
 
-        # Then
-        assert response.status_code == status.HTTP_204_NO_CONTENT
+    # When
+    response = admin_client.delete(url)
 
-    def test_delete_invite_link_for_organisation_return_400_if_seats_are_over(self):
-        # Given
-        settings.ENABLE_CHARGEBEE = True
-        invite = InviteLink.objects.create(organisation=self.organisation)
-        url = reverse(
-            "api-v1:organisations:organisation-invite-links-detail",
-            args=[self.organisation.pk, invite.pk],
-        )
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
 
-        # When
-        response = self.client.delete(url)
 
-        # Then
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+def test_delete_invite_link_for_organisation_return_400_if_seats_are_over(
+    organisation: Organisation,
+    admin_client: APIClient,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ENABLE_CHARGEBEE = True
+    invite = InviteLink.objects.create(organisation=organisation)
+    url = reverse(
+        "api-v1:organisations:organisation-invite-links-detail",
+        args=[organisation.pk, invite.pk],
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 def test_update_invite_link_returns_405(invite_link, admin_client, organisation):
