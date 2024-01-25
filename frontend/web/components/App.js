@@ -17,13 +17,13 @@ import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Permission from 'common/providers/Permission'
 import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
 import Button from './base/forms/Button'
 import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 import InfoMessage from './InfoMessage'
 import OrganisationLimit from './OrganisationLimit'
+import OrganisationLink from './OrganisationLink'
 
 const App = class extends Component {
   static propTypes = {
@@ -347,29 +347,14 @@ const App = class extends Component {
                             <React.Fragment>
                               <nav className='my-3 my-md-0 hidden-xs-down flex-row navbar-right space'>
                                 <Row>
-                                  {!!AccountStore.getOrganisation() && (
-                                    <NavLink
-                                      id='projects-link'
-                                      data-test='projects-link'
-                                      activeClassName='active'
-                                      className='nav-link'
-                                      to={'/projects'}
-                                    >
-                                      <span className='mr-1'>
-                                        <Icon
-                                          name='layout'
-                                          width={20}
-                                          fill='#9DA4AE'
-                                        />
-                                      </span>
-                                      Projects
-                                    </NavLink>
-                                  )}
+                                  <OrganisationLink />
+                                </Row>
+                                <Row>
                                   <NavLink
                                     id='account-settings-link'
                                     data-test='account-settings-link'
                                     activeClassName='active'
-                                    className='nav-link'
+                                    className='nav-link mr-4'
                                     to={
                                       projectId
                                         ? `/project/${projectId}/environment/${environmentId}/account`
@@ -385,54 +370,6 @@ const App = class extends Component {
                                     </span>
                                     Account
                                   </NavLink>
-                                  {AccountStore.getOrganisationRole() ===
-                                  'ADMIN' ? (
-                                    <NavLink
-                                      id='org-settings-link'
-                                      activeClassName='active'
-                                      className='nav-link'
-                                      to='/organisation-settings'
-                                    >
-                                      <span className='mr-1'>
-                                        <Icon
-                                          name='setting'
-                                          width={20}
-                                          fill='#9DA4AE'
-                                        />
-                                      </span>
-                                      {'Manage'}
-                                    </NavLink>
-                                  ) : (
-                                    !!AccountStore.getOrganisation() && (
-                                      <Permission
-                                        level='organisation'
-                                        permission='MANAGE_USER_GROUPS'
-                                        id={AccountStore.getOrganisation().id}
-                                      >
-                                        {({ permission }) => (
-                                          <>
-                                            {!!permission && (
-                                              <NavLink
-                                                id='org-settings-link'
-                                                activeClassName='active'
-                                                className='nav-link'
-                                                to='/organisation-groups'
-                                              >
-                                                <span
-                                                  style={{ marginRight: 4 }}
-                                                >
-                                                  <Icon name='setting' />
-                                                </span>
-                                                {'Manage'}
-                                              </NavLink>
-                                            )}
-                                          </>
-                                        )}
-                                      </Permission>
-                                    )
-                                  )}
-                                </Row>
-                                <Row>
                                   <Button
                                     href='https://docs.flagsmith.com'
                                     target='_blank'

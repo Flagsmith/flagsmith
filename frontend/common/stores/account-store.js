@@ -467,6 +467,9 @@ const store = Object.assign({}, BaseStore, {
     const id = store.organisation && store.organisation.id
     return id && store.getOrganisationRole(id) === 'ADMIN'
   },
+  isSuper() {
+    return store.model && store.model.is_superuser
+  },
   setToken(token) {
     data.token = token
   },

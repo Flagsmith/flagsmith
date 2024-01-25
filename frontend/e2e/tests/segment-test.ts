@@ -24,7 +24,8 @@ import {
   setText,
   viewFeature,
   waitAndRefresh,
-  waitForElementVisible, createOrganisationAndProject,
+  waitForElementVisible,
+  createOrganisationAndProject,
 } from '../helpers.cafe';
 import { E2E_USER, PASSWORD } from '../config'
 
@@ -140,7 +141,7 @@ export const testSegment2 = async () => {
   await click(byId('create-organisation-btn'))
   await setText('[name="orgName"]', 'Flagsmith Ltd 3')
   await click('#create-org-btn')
-  await waitForElementVisible(byId('project-select-page'))
+  await waitForElementVisible(byId('project-manage-widget'))
 
   log('Create Project')
 
@@ -148,7 +149,6 @@ export const testSegment2 = async () => {
   await setText(byId('projectName'), 'My Segment Test Project 2')
   await click(byId('create-project-btn'))
   await waitForElementVisible(byId('features-page'))
-
 
   log('Create segments')
   await gotoSegments()
@@ -238,7 +238,7 @@ export const testSegment3 = async () => {
   await click(byId('create-organisation-btn'))
   await setText('[name="orgName"]', 'Flagsmith Ltd 4')
   await click('#create-org-btn')
-  await waitForElementVisible(byId('project-select-page'))
+  await waitForElementVisible(byId('project-manage-widget'))
 
   log('Create Project')
 

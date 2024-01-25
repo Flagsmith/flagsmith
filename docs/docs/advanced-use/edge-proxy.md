@@ -34,8 +34,10 @@ The Proxy also acts as a local cache, allowing you to make requests to the Proxy
 
 ## Performance
 
-The Edge Proxy can currently serve ~2,000 requests per second at a mean latency of ~7ms on a single, 4-core VM. It is
-stateless and hence close to perfectly scalable being deployed behind a load balancer.
+The Edge Proxy can currently serve ~2,000 requests per second (RPS) at a mean latency of ~7ms on an M1 MacBook Pro with
+a simple set of flags. Working with more complex Environments with many Segment rules will bring this RPS number down.
+
+It is stateless and hence close to perfectly scalable being deployed behind a load balancer.
 
 ## Configuration
 

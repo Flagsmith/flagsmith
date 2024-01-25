@@ -4,7 +4,6 @@ import { Route, Switch } from 'react-router-dom'
 import App from './components/App' // App Wrapper
 import HomePage from './components/pages/HomePage'
 import Maintenance from './components/Maintenance'
-import ProjectSelectPage from './components/pages/ProjectSelectPage'
 import CreateOrganisationPage from './components/pages/CreateOrganisationPage'
 import CreateEnvironmentPage from './components/pages/CreateEnvironmentPage'
 import UsersPage from './components/pages/UsersPage'
@@ -29,6 +28,7 @@ import AuditLogPage from './components/pages/AuditLogPage'
 import ComparePage from './components/pages/ComparePage'
 import WidgetPage from './components/pages/WidgetPage'
 import BrokenPage from './components/pages/BrokenPage'
+import ProjectsPage from './components/pages/ProjectsPage'
 import AuditLogItemPage from './components/pages/AuditLogItemPage'
 import FeatureHistoryPage from './components/pages/FeatureHistoryPage'
 
@@ -41,7 +41,7 @@ export default (
       <Route path='/signup' exact component={HomePage} />
       <Route path='/signup' exact component={HomePage} />
       <Route path='/home' exact component={HomePage} />
-      <Route path='/projects' exact component={ProjectSelectPage} />
+      <Route path='/projects' exact component={ProjectsPage} />
       <Route path='/maintenance' exact component={Maintenance} />
       <Route
         path='/password-reset/confirm/:uid/:token/'
