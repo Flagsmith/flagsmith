@@ -12,7 +12,6 @@ import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
 import PanelSearch from 'components/PanelSearch'
 import TabItem from 'components/base/forms/TabItem'
-import FeatureExport from './FeatureExport'
 import { createFeatureExport } from 'common/services/useFeatureExport'
 import { getStore } from 'common/store'
 import FeatureImport from './FeatureImport'
@@ -21,16 +20,21 @@ import Constants from 'common/constants'
 
 type ImportPageType = {
   projectId: string
+  environmentId: string
   projectName: string
 }
 
-const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
+const ImportPage: FC<ImportPageType> = ({
+  environmentId,
+  projectId,
+  projectName,
+}) => {
   const [tab, setTab] = useState(0)
   const [LDKey, setLDKey] = useState<string>('')
-  const [importId, setImportId] = useState<string>('')
+  const [importId, setImportId] = useState<number>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [isAppLoading, setAppIsLoading] = useState<boolean>(false)
-  const [projects, setProjects] = useState<string>([])
+  const [projects, setProjects] = useState<{ key: string; name: string }[]>([])
   const [createLaunchDarklyProjectImport, { data, isSuccess }] =
     useCreateLaunchDarklyProjectImportMutation()
 
@@ -44,7 +48,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
     refetch,
   } = useGetLaunchDarklyProjectImportQuery(
     {
-      import_id: importId,
+      import_id: `${importId}`,
       project_id: projectId,
     },
     { skip: !importId },
@@ -70,7 +74,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
   }, [statusLoaded, status, refetch])
 
   useEffect(() => {
-    if (isSuccess) {
+    if (isSuccess && data?.id) {
       setImportId(data.id)
       refetch()
     }
@@ -82,7 +86,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
       .get(`https://app.launchdarkly.com/api/v2/projects`, '', {
         'Authorization': LDKey,
       })
-      .then((res) => {
+      .then((res: { items: { key: string; name: string }[] }) => {
         setIsLoading(false)
         setProjects(res.items)
       })
@@ -93,7 +97,10 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
     key: string,
     projectId: string,
   ) => {
-    createFeatureExport(getStore(), {})
+    createFeatureExport(getStore(), {
+      environment_id: environmentId,
+      tag_ids: [],
+    })
     createLaunchDarklyProjectImport({
       body: { project_key: key, token: LDKey },
       project_id: projectId,

@@ -495,6 +495,7 @@ const ProjectSettingsPage = class extends Component {
                     </TabItem>
                     <TabItem data-test='js-import-page' tabLabel='Import'>
                       <ImportPage
+                        environmentId={this.props.match.params.environmentId}
                         projectId={this.props.match.params.projectId}
                         projectName={project.name}
                       />
