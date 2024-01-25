@@ -21,6 +21,7 @@ import dj_database_url
 import pytz
 import requests
 from corsheaders.defaults import default_headers
+from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
 from environs import Env
 
@@ -1081,6 +1082,12 @@ if LDAP_INSTALLED and LDAP_AUTH_URL:
     # The LDAP user username and password used by `sync_ldap_users_and_groups` command
     LDAP_SYNC_USER_USERNAME = env.str("LDAP_SYNC_USER_USERNAME", None)
     LDAP_SYNC_USER_PASSWORD = env.str("LDAP_SYNC_USER_PASSWORD", None)
+
+SEGMENT_CONDITION_VALUE_LIMIT = env.int("SEGMENT_CONDITION_VALUE_LIMIT", default=1000)
+if not 0 <= SEGMENT_CONDITION_VALUE_LIMIT < 2000000:
+    raise ImproperlyConfigured(
+        "SEGMENT_CONDITION_VALUE_LIMIT must be between 0 and 2,000,000 (2MB)."
+    )
 
 WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)
 WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
