@@ -423,8 +423,8 @@ export type Res = {
   environment: Environment
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
-  userWithRoles: PagedResponse<Roles>
-  groupWithRole: PagedResponse<Roles>
+  userWithRoles: PagedResponse<Role>
+  groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
   groupSummaries: UserGroupSummary[]
   featureExport: { id: string }
