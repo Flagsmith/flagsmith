@@ -331,7 +331,7 @@ export const createOrganisationAndProject = async (organisationName:string,proje
   await click(byId('create-organisation-btn'))
   await setText('[name="orgName"]', organisationName)
   await click('#create-org-btn')
-  await waitForElementVisible(byId('project-select-page'))
+  await waitForElementVisible(byId('project-manage-widget'))
 
   log('Create Project')
   await click('.btn-project-create')
