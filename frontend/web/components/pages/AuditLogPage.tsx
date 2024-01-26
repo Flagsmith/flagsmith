@@ -9,6 +9,7 @@ import ProjectProvider from 'common/providers/ProjectProvider'
 import PageTitle from 'components/PageTitle'
 import Tag from 'components/tags/Tag'
 import Format from 'common/utils/format'
+import Paywall from 'components/Paywall'
 
 type AuditLogType = {
   router: RouterChildContext['router']
@@ -25,76 +26,68 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
 
   const [environment, setEnvironment] = useState(Utils.fromParam().env)
 
-  const auditLogPermission = Utils.getPlansPermission('AUDIT')
-  if (!auditLogPermission) {
-    return (
-      <div>
-        <div className='text-center'>
-          This feature is available with our {Format.minimumPlan('scaleup')}. To
-        </div>
-      </div>
-    )
-  }
   return (
-    <div className='app-container container'>
-      <PageTitle title={'Audit Log'}>
-        View all activity that occured generically across the project and
-        specific to this environment.
-      </PageTitle>
-      <div>
+    <Paywall feature={'AUDIT'}>
+      <div className='app-container container'>
+        <PageTitle title={'Audit Log'}>
+          View all activity that occured generically across the project and
+          specific to this environment.
+        </PageTitle>
         <div>
-          <FormGroup>
-            <div>
-              <div className='audit'>
-                <FormGroup>
-                  <AuditLog
-                    onSearchChange={(search: string) => {
-                      props.router.history.replace(
-                        `${document.location.pathname}?${Utils.toParam({
-                          env: environment,
-                          search,
-                        })}`,
-                      )
-                    }}
-                    pageSize={10}
-                    environmentId={environment}
-                    projectId={projectId}
-                    searchPanel={
-                      <ProjectProvider>
-                        {({ project }: { project: Project }) => (
-                          <Row className='mb-2'>
-                            {project &&
-                              project.environments &&
-                              project.environments.map((env, i) => (
-                                <Tag
-                                  tag={{
-                                    color: Utils.getTagColour(i),
-                                    label: env.name,
-                                  }}
-                                  key={env.id}
-                                  selected={`${environment}` === `${env.id}`}
-                                  onClick={() => {
-                                    setEnvironment(
-                                      `${environment}` === `${env.id}`
-                                        ? undefined
-                                        : env.id,
-                                    )
-                                  }}
-                                  className='mr-2 mb-2'
-                                />
-                              ))}
-                          </Row>
-                        )}
-                      </ProjectProvider>
-                    }
-                  />
-                </FormGroup>
+          <div>
+            <FormGroup>
+              <div>
+                <div className='audit'>
+                  <FormGroup>
+                    <AuditLog
+                      onSearchChange={(search: string) => {
+                        props.router.history.replace(
+                          `${document.location.pathname}?${Utils.toParam({
+                            env: environment,
+                            search,
+                          })}`,
+                        )
+                      }}
+                      pageSize={10}
+                      environmentId={environment}
+                      projectId={projectId}
+                      searchPanel={
+                        <ProjectProvider>
+                          {({ project }: { project: Project }) => (
+                            <Row className='mb-2'>
+                              {project &&
+                                project.environments &&
+                                project.environments.map((env, i) => (
+                                  <Tag
+                                    tag={{
+                                      color: Utils.getTagColour(i),
+                                      label: env.name,
+                                    }}
+                                    key={env.id}
+                                    selected={`${environment}` === `${env.id}`}
+                                    onClick={() => {
+                                      setEnvironment(
+                                        `${environment}` === `${env.id}`
+                                          ? undefined
+                                          : env.id,
+                                      )
+                                    }}
+                                    className='mr-2 mb-2'
+                                  />
+                                ))}
+                            </Row>
+                          )}
+                        </ProjectProvider>
+                      }
+                    />
+                  </FormGroup>
+                </div>
               </div>
-            </div>
-          </FormGroup>
+            </FormGroup>
+          </div>
         </div>
       </div>
-    </div>
+    </Paywall>
   )
 }
 

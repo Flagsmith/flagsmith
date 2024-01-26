@@ -25,6 +25,8 @@ import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
+import { MinimumPlan } from 'components/Paywall'
+import Paywall from 'components/Paywall'
 
 const widths = [450, 255, 250, 235, 150, 100]
 const rolesWidths = [250, 600, 100]
@@ -455,24 +457,17 @@ const OrganisationSettingsPage = class extends Component {
                               {Utils.getFlagsmithHasFeature('force_2fa') && (
                                 <div className='col-md-6'>
                                   <Row className='mt-4 mb-2'>
-                                    {!force2faPermission ? (
-                                      <Tooltip
-                                        title={
-                                          <Switch
-                                            checked={organisation.force_2fa}
-                                            onChange={this.save2FA}
-                                          />
-                                        }
-                                      >
-                                        This feature is available with our{' '}
-                                        {Format.minimumPlan('scale-up')}.
-                                      </Tooltip>
-                                    ) : (
+                                    <Paywall
+                                      feature={Utils.getMinimumPlan(
+                                        'FORCE_2FA',
+                                      )}
+                                    >
                                       <Switch
                                         checked={organisation.force_2fa}
                                         onChange={this.save2FA}
                                       />
-                                    )}
+                                    </Paywall>
+
                                     <h5 className='mb-0 ml-3'>Enforce 2FA</h5>
                                   </Row>
                                   <p className='fs-small lh-sm'>

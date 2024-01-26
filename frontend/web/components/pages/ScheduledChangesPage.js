@@ -8,6 +8,7 @@ import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import { Link } from 'react-router-dom'
 import Format from 'common/utils/format'
+import Paywall from 'components/Paywall'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -55,8 +56,6 @@ const ChangeRequestsPage = class extends Component {
       ChangeRequestStore.scheduled[environmentId] &&
       ChangeRequestStore.scheduled[environmentId]
 
-    const hasSchedulePlan = Utils.getPlansPermission('SCHEDULE_FLAGS')
-
     return (
       <div
         data-test='change-requests-page'
@@ -64,103 +63,85 @@ const ChangeRequestsPage = class extends Component {
         className='app-container container'
       >
         <PageTitle title={'Scheduling'}>
-          Manage feature state changes that have been scheduled to go live.
+          Manage feature state changes that have been scheduled to go live.{' '}
+          <Button
+            theme='text'
+            href='https://docs.flagsmith.com/advanced-use/scheduled-flags#creating-a-stand-alone-scheduled-flag-change'
+            target='_blank'
+          >
+            Check the Docs for more details
+          </Button>
+          .
         </PageTitle>
         <Flex>
-          {
-            <div>
-              {!hasSchedulePlan ? (
-                <div className='mt-2'>
-                  <InfoMessage>
-                    Schedule feature state changes with a Change Request flow
-                    with our {Format.minimumPlan('start-up')}. Find out more{' '}
-                    <Button
-                      theme='text'
-                      href='https://docs.flagsmith.com/advanced-use/scheduled-flags#creating-a-stand-alone-scheduled-flag-change'
-                      target='_blank'
-                    >
-                      here
-                    </Button>
-                    .
-                  </InfoMessage>
-                </div>
-              ) : (
-                <>
-                  <PanelSearch
-                    renderSearchWithNoResults
-                    id='users-list'
-                    title='Scheduled Changes'
-                    className='no-pad'
-                    isLoading={
-                      ChangeRequestStore.isLoading ||
-                      !dataScheduled ||
-                      !OrganisationStore.model
-                    }
-                    items={dataScheduled}
-                    renderFooter={() => (
-                      <JSONReference
-                        className='mt-4 ml-3'
-                        title={'Change Requests'}
-                        json={dataScheduled}
-                      />
-                    )}
-                    paging={dataScheduledPaging}
-                    nextPage={() =>
-                      AppActions.getChangeRequests(
-                        this.props.match.params.environmentId,
-                        { live_from_after: this.state.live_after },
-                        dataPaging.next,
-                      )
-                    }
-                    prevPage={() =>
-                      AppActions.getChangeRequests(
-                        this.props.match.params.environmentId,
-                        { live_from_after: this.state.live_after },
-                        dataPaging.previous,
-                      )
-                    }
-                    goToPage={(page) =>
-                      AppActions.getChangeRequests(
-                        this.props.match.params.environmentId,
-                        { live_from_after: this.state.live_after },
-                        `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`,
-                      )
-                    }
-                    renderRow={({ created_at, id, title, user: _user }) => {
-                      const user =
-                        OrganisationStore.model &&
-                        OrganisationStore.model.users.find(
-                          (v) => v.id === _user,
-                        )
-                      return (
-                        <Link
-                          to={`/project/${projectId}/environment/${environmentId}/scheduled-changes/${id}`}
-                          className='flex-row list-item clickable'
-                        >
-                          <Flex className='table-column px-3'>
-                            <div className='font-weight-medium'>{title}</div>
-                            <div className='list-item-subtitle mt-1'>
-                              Created{' '}
-                              {moment(created_at).format('Do MMM YYYY HH:mma')}{' '}
-                              by {user && user.first_name}{' '}
-                              {user && user.last_name}
-                            </div>
-                          </Flex>
-                          <div className='table-column'>
-                            <Icon
-                              name='chevron-right'
-                              fill='#9DA4AE'
-                              width={20}
-                            />
-                          </div>
-                        </Link>
-                      )
-                    }}
+          <Paywall feature={'SCHEDULE_FLAGS'}>
+            <>
+              <PanelSearch
+                renderSearchWithNoResults
+                id='users-list'
+                title='Scheduled Changes'
+                className='no-pad'
+                isLoading={
+                  ChangeRequestStore.isLoading ||
+                  !dataScheduled ||
+                  !OrganisationStore.model
+                }
+                items={dataScheduled}
+                renderFooter={() => (
+                  <JSONReference
+                    className='mt-4 ml-3'
+                    title={'Change Requests'}
+                    json={dataScheduled}
                   />
-                </>
-              )}
-            </div>
-          }
+                )}
+                paging={dataScheduledPaging}
+                nextPage={() =>
+                  AppActions.getChangeRequests(
+                    this.props.match.params.environmentId,
+                    { live_from_after: this.state.live_after },
+                    dataPaging.next,
+                  )
+                }
+                prevPage={() =>
+                  AppActions.getChangeRequests(
+                    this.props.match.params.environmentId,
+                    { live_from_after: this.state.live_after },
+                    dataPaging.previous,
+                  )
+                }
+                goToPage={(page) =>
+                  AppActions.getChangeRequests(
+                    this.props.match.params.environmentId,
+                    { live_from_after: this.state.live_after },
+                    `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`,
+                  )
+                }
+                renderRow={({ created_at, id, title, user: _user }) => {
+                  const user =
+                    OrganisationStore.model &&
+                    OrganisationStore.model.users.find((v) => v.id === _user)
+                  return (
+                    <Link
+                      to={`/project/${projectId}/environment/${environmentId}/scheduled-changes/${id}`}
+                      className='flex-row list-item clickable'
+                    >
+                      <Flex className='table-column px-3'>
+                        <div className='font-weight-medium'>{title}</div>
+                        <div className='list-item-subtitle mt-1'>
+                          Created{' '}
+                          {moment(created_at).format('Do MMM YYYY HH:mma')} by{' '}
+                          {user && user.first_name} {user && user.last_name}
+                        </div>
+                      </Flex>
+                      <div className='table-column'>
+                        <Icon name='chevron-right' fill='#9DA4AE' width={20} />
+                      </div>
+                    </Link>
+                  )
+                }}
+              />
+            </>
+          </Paywall>
         </Flex>
       </div>
     )

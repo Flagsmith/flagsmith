@@ -17,6 +17,7 @@ import Constants from 'common/constants'
 import { star, warning, pricetag } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import Format from 'common/utils/format'
+import { MinimumPlan } from './Paywall'
 
 const Aside = class extends Component {
   static displayName = 'Aside'
@@ -341,8 +342,9 @@ const Aside = class extends Component {
                                 </a>
                               }
                             >
-                              This feature is available with our{' '}
-                              {Format.minimumPlan('scaleup')}
+                              <MinimumPlan
+                                plan={Utils.getMinimumPlan('AUDIT')}
+                              />
                             </Tooltip>
                           )}
                           {!!integrations.length && (

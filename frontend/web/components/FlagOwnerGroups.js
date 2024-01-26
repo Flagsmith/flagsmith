@@ -1,15 +1,12 @@
 import React, { Component } from 'react'
 import data from 'common/data/base/_data'
-import UserSelect from './UserSelect'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from './Icon'
-import { close } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
-import GroupSelect from './GroupSelect'
 import { getProjectFlag } from 'common/services/useProjectFlag'
 import { getStore } from 'common/store'
 import ConnectedGroupSelect from './ConnectedGroupSelect'
-import Format from 'common/utils/format'
+import Paywall from './Paywall'
+import OrganisationProvider from 'common/providers/OrganisationProvider'
 
 class TheComponent extends Component {
   state = {}
@@ -53,17 +50,15 @@ class TheComponent extends Component {
     users ? users.filter((v) => groupOwners.includes(v.id)) : []
 
   render() {
-    const hasPermission = Utils.getPlansPermission('FLAG_OWNERS')
-
     return (
-      <OrganisationProvider>
-        {({ groups }) => {
-          const res = (
+      <Paywall feature={'FLAG_OWNERS'}>
+        <OrganisationProvider>
+          {({ groups }) => (
             <div>
               <Row
                 className='clickable'
                 onClick={() => {
-                  if (hasPermission) this.setState({ showUsers: true })
+                  this.setState({ showUsers: true })
                 }}
               >
                 <label className='cols-sm-2 control-label'>
@@ -73,7 +68,7 @@ class TheComponent extends Component {
               </Row>
               <ConnectedGroupSelect
                 orgId={AccountStore.getOrganisation()?.id}
-                showValues={hasPermission}
+                showValues
                 groups={groups}
                 value={this.state.groupOwners}
                 isOpen={this.state.showUsers}
@@ -85,18 +80,9 @@ class TheComponent extends Component {
                 }
               />
             </div>
-          )
-          return hasPermission ? (
-            res
-          ) : (
-            <div>
-              {res}
-              The add flag assignees feature is available with our{' '}
-              {Format.minimumPlan('scale-up')}.
-            </div>
-          )
-        }}
-      </OrganisationProvider>
+          )}
+        </OrganisationProvider>
+      </Paywall>
     )
   }
 }

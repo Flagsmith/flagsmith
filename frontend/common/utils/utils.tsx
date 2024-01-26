@@ -18,6 +18,7 @@ import _ from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
+import permission from 'common/providers/Permission'
 
 const semver = require('semver')
 
@@ -28,6 +29,20 @@ const planNames = {
   sideProject: 'Side Project',
   startup: 'Startup',
 }
+
+export type PlanName = null | 'scale-up' | 'start-up' | 'enterprise'
+
+export type FeaturePermission =
+  | 'FLAG_OWNERS'
+  | 'CREATE_ADDITIONAL_PROJECT'
+  | '2FA'
+  | 'RBAC'
+  | 'AUDIT'
+  | 'AUTO_SEATS'
+  | 'FORCE_2FA'
+  | 'SCHEDULE_FLAGS'
+  | '4_EYES'
+
 const Utils = Object.assign({}, require('./base/_utils'), {
   appendImage: (src: string) => {
     const img = document.createElement('img')
@@ -251,6 +266,26 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getManageUserPermissionDescription() {
     return 'Manage Identities'
   },
+  getMinimumPlan: (permission: FeaturePermission): PlanName => {
+    switch (permission) {
+      case 'RBAC':
+      case '2FA':
+      case 'AUDIT':
+      case 'AUTO_SEATS':
+      case '4_EYES':
+      case 'FORCE_2FA':
+      case 'FLAG_OWNERS': {
+        return 'scale-up'
+      }
+      case 'SCHEDULE_FLAGS':
+      case 'CREATE_ADDITIONAL_PROJECT': {
+        return 'start-up'
+      }
+      default: {
+        return null
+      }
+    }
+  },
   getPlanName: (plan: string) => {
     if (plan && plan.includes('scale-up')) {
       return planNames.scaleUp
@@ -272,60 +307,34 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return planNames.free
   },
-  getPlanPermission: (plan: string, permission: string) => {
-    let valid = true
+  getPlanPermission: (plan: string, permission: FeaturePermission) => {
     const planName = Utils.getPlanName(plan)
+    const isFree = !plan || planName === planNames.free
+    const isStartupOrGreater = !isFree
+    const isScaleupOrGreater =
+      isStartupOrGreater &&
+      planName !== planNames.startup &&
+      planName !== planNames.sideProject
+    const isEnterprise = planName === planNames.enterprise
+    const minimumPlan = Utils.getMinimumPlan(permission)
 
-    if (!plan || planName === planNames.free) {
+    if (permission === 'AUTO_SEATS' && isEnterprise) {
       return false
     }
-    const isSideProjectOrGreater = planName !== planNames.sideProject
-    const isScaleupOrGreater =
-      isSideProjectOrGreater && planName !== planNames.startup
-    const isEnterprise = planName === planNames.enterprise
 
-    switch (permission) {
-      case 'FLAG_OWNERS': {
-        valid = isScaleupOrGreater
-        break
+    switch (minimumPlan) {
+      case 'start-up': {
+        return isStartupOrGreater
       }
-      case 'CREATE_ADDITIONAL_PROJECT': {
-        valid = isSideProjectOrGreater
-        break
+      case 'scale-up': {
+        return isScaleupOrGreater
       }
-      case '2FA': {
-        valid = isSideProjectOrGreater
-        break
-      }
-      case 'RBAC': {
-        valid = isSideProjectOrGreater
-        break
-      }
-      case 'AUDIT': {
-        valid = isScaleupOrGreater
-        break
-      }
-      case 'AUTO_SEATS': {
-        valid = isScaleupOrGreater && !isEnterprise
-        break
-      }
-      case 'FORCE_2FA': {
-        valid = isScaleupOrGreater
-        break
-      }
-      case 'SCHEDULE_FLAGS': {
-        valid = isSideProjectOrGreater
-        break
-      }
-      case '4_EYES': {
-        valid = isScaleupOrGreater
-        break
+      case 'enterprise': {
+        return isEnterprise
       }
       default:
-        valid = true
-        break
+        return true
     }
-    return valid
   },
   getPlansPermission: (permission: string) => {
     const isOrgPermission = permission !== '2FA'
