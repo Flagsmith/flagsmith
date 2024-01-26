@@ -165,6 +165,11 @@ const App = class extends Component {
             const lastOrg = _.find(AccountStore.getUser().organisations, {
               id: lastEnv.orgId,
             })
+            if (this.props.location.search.includes('github-redirect')) {
+              this.context.router.history.replace('/github-setup')
+              // this.setState({ asideIsVisible: false })
+              return
+            }
             if (!lastOrg) {
               this.context.router.history.replace('/projects')
               return

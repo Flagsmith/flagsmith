@@ -1,18 +1,21 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useState, useEffect } from 'react'
 import OrganisationSelect from 'components/OrganisationSelect'
 import ProjectFilter from 'components/ProjectFilter'
 import Button from 'components/base/forms/Button'
-
-// TOKEN="1e53bb7272aabf4ceea2b2f7f585f28f1a6926e0"
-// PROYECT_ID=13042
-// ORG_ID=11499
-// ENV_KEY=f8eEr3XpYwHGdjTxfTNdLt
-// onClick={closeModal}
+import { useCreateExternalResourceMutation } from 'common/services/useExternalResource'
 
 type GitHubSetupPageType = {}
 const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
   const [organisation, setOrganisation] = useState<number>()
   const [project, setProject] = useState<number>()
+  const [externalResourceURL, setExternalResourceURL] = useState<string>('')
+
+  const [createExternalResourceMutation, { isSuccess }] =
+    useCreateExternalResourceMutation()
+
+  useEffect(() => {
+    toast('Saved')
+  }, [isSuccess])
 
   return (
     <div
@@ -27,6 +30,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
           onChange={(organisationId) => {
             setOrganisation(organisationId)
           }}
+          showSettings={false}
         />
       </div>
       {organisation && (
@@ -40,7 +44,30 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
           />
         </div>
       )}
-      <Button className='mr-2 text-right' theme='primary'>
+      <InputGroup
+        value={externalResourceURL}
+        data-test='ExternalResourceURL'
+        inputProps={{
+          className: 'full-width',
+          name: 'featureExternalResourceURL',
+        }}
+        onChange={(e) => setExternalResourceURL(Utils.safeParseEventValue(e))}
+        ds
+        type='text'
+        title={'GitHub Issue/Pull Request URL'}
+        placeholder="e.g. 'https://github.com/user/repo-example/issues/12' "
+      />
+      <Button
+        className='mr-2 text-right'
+        theme='primary'
+        onClick={() => {
+          createExternalResourceMutation({
+            project: project,
+            type: 'Github',
+            url: externalResourceURL,
+          })
+        }}
+      >
         Save
       </Button>
     </div>

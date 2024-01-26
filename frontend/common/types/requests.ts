@@ -1,4 +1,11 @@
-import { Account, Segment, Tag, FeatureStateValue, Role } from './responses'
+import {
+  Account,
+  Segment,
+  Tag,
+  FeatureStateValue,
+  Role,
+  ExternalResource,
+} from './responses'
 
 export type PagedRequest<T> = T & {
   page?: number
@@ -147,9 +154,16 @@ export type Req = {
   getGroupSummaries: {
     orgId: string
   }
-  getExternalResource: { id: string }
+  getExternalResource: { project_id: string }
   updateExternalResource: { id: string }
   deleteExternalResource: { id: string }
-  createExternalResource: {}
+  createExternalResource: { body: externalResource }
+  getFeatureExternalResource: { external_resource_pk: number }
+  updateFeatureExternalResource: { external_resource_pk: number }
+  deleteFeatureExternalResource: { external_resource_pk: number }
+  createFeatureExternalResource: {
+    external_resource_pk: string
+    body: { feature: number }
+  }
   // END OF TYPES
 }

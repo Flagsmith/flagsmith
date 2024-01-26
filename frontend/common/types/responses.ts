@@ -84,6 +84,13 @@ export type Project = {
   environments: Environment[]
 }
 
+export type ExternalResource = {
+  id?: number
+  url: string
+  type: string
+  project: number
+}
+
 export type LaunchDarklyProjectImport = {
   id: number
   created_by: string
@@ -397,6 +404,7 @@ export type Res = {
   groupWithRole: PagedResponse<Roles>
   changeRequests: PagedResponse<ChangeRequestSummary>
   groupSummaries: UserGroupSummary[]
-  externalResource: { id: string }
+  externalResource: PagedResponse<ExternalResource>
+  featureExternalResource: { id: string }
   // END OF TYPES
 }

@@ -33,6 +33,13 @@ import ModalHR from './ModalHR'
 import FeatureValue from 'components/FeatureValue'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
+import { getExternalResource } from 'common/services/useExternalResource'
+import {
+  createFeatureExternalResource,
+  getFeatureExternalResource,
+  deleteFeatureExternalResource,
+} from 'common/services/useFeatureExternalResource'
+import { getStore } from 'common/store'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -68,6 +75,8 @@ const CreateFlag = class extends Component {
       description,
       enabledIndentity: false,
       enabledSegment: false,
+      externalResource: {},
+      externalResources: [],
       hide_from_client,
       identityVariations:
         this.props.identityFlag &&
@@ -166,6 +175,11 @@ const CreateFlag = class extends Component {
     ) {
       this.getFeatureUsage()
     }
+    getExternalResource(getStore(), {
+      project_id: this.props.projectId,
+    }).then((res) => {
+      this.setState({ externalResources: res.data })
+    })
   }
 
   componentWillUnmount() {
@@ -478,6 +492,8 @@ const CreateFlag = class extends Component {
       description,
       enabledIndentity,
       enabledSegment,
+      externalResources,
+      featureExternalResource,
       hide_from_client,
       initial_value,
       multivariate_options,
@@ -577,6 +593,25 @@ const CreateFlag = class extends Component {
             title={identity ? 'Description' : 'Description (optional)'}
             placeholder="e.g. 'This determines what size the header is' "
           />
+          <label className='cols-sm-2 control-label'> Link GitHub </label>
+          <Select
+            // value={
+            //   externalResources
+            //     ? externalResources.find((v) => v.url === this.state.externalResource)
+            //     : null
+            // }
+            // isDisabled={this.props.disabled}
+            // onInputChange={this.search}
+            placeholder={'Select External Resource'}
+            onChange={(v) => this.setState({ featureExternalResource: v })}
+            options={externalResources.map((e) => {
+              console.log('DEBUG: externalResources:', externalResources)
+              return { label: e.url, value: e.id }
+            })}
+          />
+          <Button onClick={() => console.log('DEBUG: delete')}>
+            Delete External Resource
+          </Button>
         </FormGroup>
 
         {!identity && (
@@ -882,6 +917,17 @@ const CreateFlag = class extends Component {
 
               const saveSettings = () => {
                 this.setState({ settingsChanged: false })
+                createFeatureExternalResource(getStore(), {
+                  body: {
+                    external_resource: {
+                      project: this.props.projectId,
+                      type: 'Github',
+                      url: featureExternalResource.label,
+                    },
+                    feature: projectFlag.id,
+                  },
+                  external_resource_pk: featureExternalResource.value,
+                })
                 this.save(editFeatureSettings, isSaving)
               }
 

@@ -14,7 +14,7 @@ export const externalResourceService = service
         query: (query: Req['createExternalResource']) => ({
           body: query,
           method: 'POST',
-          url: `externalResource`,
+          url: `external-resource/`,
         }),
       }),
       deleteExternalResource: builder.mutation<
@@ -25,7 +25,7 @@ export const externalResourceService = service
         query: (query: Req['deleteExternalResource']) => ({
           body: query,
           method: 'DELETE',
-          url: `externalResource/${query.id}`,
+          url: `external-resource/${query.id}/`,
         }),
       }),
       getExternalResource: builder.query<
@@ -34,7 +34,7 @@ export const externalResourceService = service
       >({
         providesTags: (res) => [{ id: res?.id, type: 'ExternalResource' }],
         query: (query: Req['getExternalResource']) => ({
-          url: `externalResource/${query.id}`,
+          url: `external-resource/external-resource-list/${query.project_id}/`,
         }),
       }),
       updateExternalResource: builder.mutation<
@@ -48,7 +48,7 @@ export const externalResourceService = service
         query: (query: Req['updateExternalResource']) => ({
           body: query,
           method: 'PUT',
-          url: `externalResource/${query.id}`,
+          url: `external-resource/${query.id}/`,
         }),
       }),
       // END OF ENDPOINTS
@@ -62,14 +62,11 @@ export async function createExternalResource(
     typeof externalResourceService.endpoints.createExternalResource.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     externalResourceService.endpoints.createExternalResource.initiate(
       data,
       options,
     ),
-  )
-  return Promise.all(
-    store.dispatch(externalResourceService.util.getRunningQueriesThunk()),
   )
 }
 export async function deleteExternalResource(
@@ -79,14 +76,11 @@ export async function deleteExternalResource(
     typeof externalResourceService.endpoints.deleteExternalResource.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     externalResourceService.endpoints.deleteExternalResource.initiate(
       data,
       options,
     ),
-  )
-  return Promise.all(
-    store.dispatch(externalResourceService.util.getRunningQueriesThunk()),
   )
 }
 export async function getExternalResource(
@@ -96,14 +90,11 @@ export async function getExternalResource(
     typeof externalResourceService.endpoints.getExternalResource.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     externalResourceService.endpoints.getExternalResource.initiate(
       data,
       options,
     ),
-  )
-  return Promise.all(
-    store.dispatch(externalResourceService.util.getRunningQueriesThunk()),
   )
 }
 export async function updateExternalResource(
@@ -113,14 +104,11 @@ export async function updateExternalResource(
     typeof externalResourceService.endpoints.updateExternalResource.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     externalResourceService.endpoints.updateExternalResource.initiate(
       data,
       options,
     ),
-  )
-  return Promise.all(
-    store.dispatch(externalResourceService.util.getRunningQueriesThunk()),
   )
 }
 // END OF FUNCTION_EXPORTS
