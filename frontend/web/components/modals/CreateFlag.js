@@ -593,6 +593,8 @@ const CreateFlag = class extends Component {
             title={identity ? 'Description' : 'Description (optional)'}
             placeholder="e.g. 'This determines what size the header is' "
           />
+        </FormGroup>
+        <FormGroup className='mb-5 setting'>
           <label className='cols-sm-2 control-label'> Link GitHub </label>
           <Select
             // value={
@@ -609,9 +611,14 @@ const CreateFlag = class extends Component {
               return { label: e.url, value: e.id }
             })}
           />
-          <Button onClick={() => console.log('DEBUG: delete')}>
-            Delete External Resource
-          </Button>
+          <div className='text-right'>
+            <Button
+              className='mt-1'
+              onClick={() => console.log('DEBUG: delete')}
+            >
+              Delete External Resource
+            </Button>
+          </div>
         </FormGroup>
 
         {!identity && (
@@ -919,11 +926,6 @@ const CreateFlag = class extends Component {
                 this.setState({ settingsChanged: false })
                 createFeatureExternalResource(getStore(), {
                   body: {
-                    external_resource: {
-                      project: this.props.projectId,
-                      type: 'Github',
-                      url: featureExternalResource.label,
-                    },
                     feature: projectFlag.id,
                   },
                   external_resource_pk: featureExternalResource.value,
