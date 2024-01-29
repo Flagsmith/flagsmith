@@ -18,10 +18,12 @@ class UsageTotalCountSerializer(serializers.Serializer):
     count = serializers.IntegerField()
 
 
-class SDKAnalyticsFlagsQuerySerializer(serializers.Serializer):
-    identity_identifier = serializers.CharField(
-        required=False, default=None, allow_null=True
-    )
-    enabled_when_evaluated = serializers.BooleanField(
-        required=False, default=None, allow_null=True
-    )
+class SDKAnalyticsFlagsSerializerDetail(serializers.Serializer):
+    feature_name = serializers.CharField()
+    identity_identifier = serializers.CharField()
+    enabled_when_evaluated = serializers.BooleanField()
+    count = serializers.IntegerField()
+
+
+class SDKAnalyticsFlagsSerializer(serializers.Serializer):
+    evaluations = SDKAnalyticsFlagsSerializerDetail(many=True)
