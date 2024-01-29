@@ -217,7 +217,7 @@ const CreateEditIntegration = class extends Component {
                   <Input
                     id={field.label.replace(/ /g, '')}
                     ref={(e) => (this.input = e)}
-                    value={this.state.data[field.key]}
+                    value={this.state.data[field.key] || field.default}
                     onChange={(e) => {
                       this.update(field.key, e)
                     }}
