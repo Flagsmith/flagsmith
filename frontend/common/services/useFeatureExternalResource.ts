@@ -14,7 +14,7 @@ export const featureExternalResourceService = service
         query: (query: Req['createFeatureExternalResource']) => ({
           body: query.body,
           method: 'POST',
-          url: `external-resource/${query.external_resource_pk}/features/`,
+          url: `external-resources/${query.external_resource_pk}/features-external-resources/`,
         }),
       }),
       deleteFeatureExternalResource: builder.mutation<
@@ -24,7 +24,7 @@ export const featureExternalResourceService = service
         invalidatesTags: [{ id: 'LIST', type: 'FeatureExternalResource' }],
         query: (query: Req['deleteFeatureExternalResource']) => ({
           method: 'DELETE',
-          url: `external-resource/${query.external_resource_pk}/features/${query.feature_external_resource_id}/`,
+          url: `external-resources/${query.external_resource_pk}/features-external-resources/${query.feature_external_resource_id}/`,
         }),
       }),
       getFeatureExternalResource: builder.query<
@@ -35,7 +35,7 @@ export const featureExternalResourceService = service
           { id: res?.id, type: 'FeatureExternalResource' },
         ],
         query: (query: Req['getFeatureExternalResource']) => ({
-          url: `external-resource/${query.external_resource_pk}/features/`,
+          url: `external-resources/${query.external_resource_pk}/features-external-resources/`,
         }),
       }),
       updateFeatureExternalResource: builder.mutation<
@@ -49,7 +49,7 @@ export const featureExternalResourceService = service
         query: (query: Req['updateFeatureExternalResource']) => ({
           body: query,
           method: 'PUT',
-          url: `external-resource/${query.external_resource_pk}/features/${query.feature_external_resource_id}/`,
+          url: `external-resources/${query.external_resource_pk}/features-external-resources/${query.feature_external_resource_id}/`,
         }),
       }),
       // END OF ENDPOINTS

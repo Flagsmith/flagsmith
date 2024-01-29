@@ -14,7 +14,7 @@ export const externalResourceService = service
         query: (query: Req['createExternalResource']) => ({
           body: query,
           method: 'POST',
-          url: `external-resource/`,
+          url: `external-resources/`,
         }),
       }),
       deleteExternalResource: builder.mutation<
@@ -25,7 +25,7 @@ export const externalResourceService = service
         query: (query: Req['deleteExternalResource']) => ({
           body: query,
           method: 'DELETE',
-          url: `external-resource/${query.id}/`,
+          url: `external-resources/${query.id}/`,
         }),
       }),
       getExternalResource: builder.query<
@@ -34,7 +34,7 @@ export const externalResourceService = service
       >({
         providesTags: (res) => [{ id: res?.id, type: 'ExternalResource' }],
         query: (query: Req['getExternalResource']) => ({
-          url: `external-resource/external-resource-list/${query.project_id}/`,
+          url: `external-resources/external-resource-by-project/${query.project_id}/`,
         }),
       }),
       updateExternalResource: builder.mutation<
@@ -48,7 +48,7 @@ export const externalResourceService = service
         query: (query: Req['updateExternalResource']) => ({
           body: query,
           method: 'PUT',
-          url: `external-resource/${query.id}/`,
+          url: `external-resources/${query.id}/`,
         }),
       }),
       // END OF ENDPOINTS
