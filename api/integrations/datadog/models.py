@@ -14,4 +14,4 @@ class DataDogConfiguration(IntegrationsModel):
     )
     base_url = models.URLField(blank=False, null=False)
 
-    use_custom_source = models.BooleanField(default=False)
+    use_custom_source = models.BooleanField(default=True)
