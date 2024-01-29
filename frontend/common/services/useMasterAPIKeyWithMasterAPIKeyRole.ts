@@ -3,7 +3,9 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
 export const masterAPIKeyWithMasterAPIKeyRoleService = service
-  .enhanceEndpoints({ addTagTypes: ['MasterAPIKeyWithMasterAPIKeyRole'] })
+  .enhanceEndpoints({
+    addTagTypes: ['MasterAPIKeyWithMasterAPIKeyRole', 'RoleMasterApiKey'],
+  })
   .injectEndpoints({
     endpoints: (builder) => ({
       deleteMasterAPIKeyWithMasterAPIKeyRoles: builder.mutation<
@@ -36,6 +38,17 @@ export const masterAPIKeyWithMasterAPIKeyRoleService = service
         ],
         query: (query: Req['getMasterAPIKeyWithMasterAPIKeyRoles']) => ({
           url: `organisations/${query.org_id}/master-api-keys/${query.prefix}/roles/`,
+        }),
+      }),
+      updateMasterAPIKeyWithMasterAPIKeyRoles: builder.mutation<
+        Res['masterAPIKeyWithMasterAPIKeyRoles'],
+        Req['updateMasterAPIKeyWithMasterAPIKeyRoles']
+      >({
+        invalidatesTags: ['MasterAPIKeyWithMasterAPIKeyRole'],
+        query: (query: Req['updateMasterAPIKeyWithMasterAPIKeyRoles']) => ({
+          body: query.body,
+          method: 'PUT',
+          url: `organisations/${query.org_id}/master-api-keys/${query.prefix}/`,
         }),
       }),
       // END OF ENDPOINTS
@@ -86,12 +99,27 @@ export async function deleteMasterAPIKeyWithMasterAPIKeyRoles(
     ),
   )
 }
+export async function updateMasterAPIKeyWithMasterAPIKeyRoles(
+  store: any,
+  data: Req['updateMasterAPIKeyWithMasterAPIKeyRoles'],
+  options?: Parameters<
+    typeof masterAPIKeyWithMasterAPIKeyRoleService.endpoints.updateMasterAPIKeyWithMasterAPIKeyRoles.initiate
+  >[1],
+) {
+  return store.dispatch(
+    masterAPIKeyWithMasterAPIKeyRoleService.endpoints.updateMasterAPIKeyWithMasterAPIKeyRoles.initiate(
+      data,
+      options,
+    ),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
-  useDeletexMasterAPIKeyWithMasterAPIKeyRolesMutation,
+  useDeleteMasterAPIKeyWithMasterAPIKeyRolesMutation,
   useGetMasterAPIKeyWithMasterAPIKeyRolesQuery,
   useGetRolesMasterAPIKeyWithMasterAPIKeyRolesQuery,
+  useUpdateMasterAPIKeyWithMasterAPIKeyRolesMutation,
   // END OF EXPORTS
 } = masterAPIKeyWithMasterAPIKeyRoleService
 

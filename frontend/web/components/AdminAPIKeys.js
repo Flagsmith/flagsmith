@@ -16,6 +16,7 @@ import {
   deleteMasterAPIKeyWithMasterAPIKeyRoles,
   getMasterAPIKeyWithMasterAPIKeyRoles,
   getRolesMasterAPIKeyWithMasterAPIKeyRoles,
+  updateMasterAPIKeyWithMasterAPIKeyRoles,
 } from 'common/services/useMasterAPIKeyWithMasterAPIKeyRole'
 
 export class CreateAPIKey extends PureComponent {
@@ -30,6 +31,7 @@ export class CreateAPIKey extends PureComponent {
 
   componentDidMount() {
     Utils.getFlagsmithHasFeature('show_role_management') &&
+      this.props.isEdit &&
       this.getApiKeyByPrefix(this.props.prefix)
   }
 
@@ -54,11 +56,11 @@ export class CreateAPIKey extends PureComponent {
         })
         Utils.getFlagsmithHasFeature('show_role_management') &&
           Promise.all(
-            this.state.roles.map(({ role }) =>
+            this.state.roles.map((role) =>
               createRoleMasterApiKey(getStore(), {
                 body: { master_api_key: res.id },
                 org_id: AccountStore.getOrganisation().id,
-                role_id: role,
+                role_id: role.id,
               }).then(() => {
                 toast('Role API Key was Created')
               }),
@@ -70,21 +72,18 @@ export class CreateAPIKey extends PureComponent {
   }
 
   updateApiKey = (prefix) => {
-    data
-      .put(
-        `${Project.api}organisations/${
-          AccountStore.getOrganisation().id
-        }/master-api-keys/${prefix}/`,
-        {
-          expiry_date: this.state.expiry_date,
-          is_admin: this.state.is_admin,
-          name: this.state.name,
-          revoked: false,
-        },
-      )
-      .then(() => {
-        this.props.onSuccess()
-      })
+    updateMasterAPIKeyWithMasterAPIKeyRoles(getStore(), {
+      body: {
+        expiry_date: this.state.expiry_date,
+        is_admin: this.state.is_admin,
+        name: this.state.name,
+        revoked: false,
+      },
+      org_id: AccountStore.getOrganisation().id,
+      prefix: prefix,
+    }).then(() => {
+      this.props.onSuccess()
+    })
   }
 
   getApiKeyByPrefix = (prefix) => {
@@ -354,7 +353,7 @@ export default class AdminAPIKeys extends PureComponent {
           this.setState({ isLoading: true })
           this.fetch()
           closeModal()
-          toast('Api key Updated')
+          toast('API key Updated')
         }}
       />,
       'p-0 side-modal',

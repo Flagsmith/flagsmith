@@ -4,7 +4,7 @@ import { service } from 'common/service'
 
 export const roleMasterApiKeyService = service
   .enhanceEndpoints({
-    addTagTypes: ['RoleMasterApiKey'],
+    addTagTypes: ['RoleMasterApiKey', 'MasterAPIKeyWithMasterAPIKeyRole'],
   })
   .injectEndpoints({
     endpoints: (builder) => ({
@@ -41,7 +41,7 @@ export const roleMasterApiKeyService = service
       >({
         providesTags: (res) => [{ id: res?.id, type: 'RoleMasterApiKey' }],
         query: (query: Req['getRoleMasterApiKey']) => ({
-          url: `organisations/${query.org_id}/roles/${query.role_id}/master-api-keys/${id}`,
+          url: `organisations/${query.org_id}/roles/${query.role_id}/master-api-keys/${query.prefix}`,
         }),
       }),
       updateRoleMasterApiKey: builder.mutation<
