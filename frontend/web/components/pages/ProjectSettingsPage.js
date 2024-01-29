@@ -17,6 +17,7 @@ import { getRoles } from 'common/services/useRole'
 import { getRolesProjectPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import ImportPage from './ImportPage'
+import UsageLimits from 'components/UsageLimits'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -373,6 +374,22 @@ const ProjectSettingsPage = class extends Component {
                             }
                           />
                         )}
+                      </FormGroup>
+                      <FormGroup className='mt-4 col-md-6'>
+                        <UsageLimits
+                          usageData={[
+                            {
+                              label: 'Segment',
+                              maxValue: project.max_segments_allowed,
+                              value: project.total_segments,
+                            },
+                            {
+                              label: 'Features',
+                              maxValue: project.max_features_allowed,
+                              value: project.total_features,
+                            },
+                          ]}
+                        />
                       </FormGroup>
                       {!Utils.getIsEdge() && (
                         <FormGroup className='mt-4 col-md-6'>

@@ -21,6 +21,8 @@ import { getRoles } from 'common/services/useRole'
 import { getRolesEnvironmentPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import { Link } from 'react-router-dom'
+import { getEnvironment } from 'common/services/useEnvironment'
+import UsageLimits from 'components/UsageLimits'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -37,7 +39,7 @@ const EnvironmentSettingsPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = { env: {}, roles: [] }
+    this.state = { env: {}, roles: [], totalSegmentOverrides: 0 }
     AppActions.getProject(this.props.match.params.projectId)
   }
 
@@ -69,6 +71,15 @@ const EnvironmentSettingsPage = class extends Component {
         })
       })
     }
+    getEnvironment(
+      getStore(),
+      {
+        id: this.props.match.params.environmentId,
+      },
+      { forceRefetch: true },
+    ).then((res) => {
+      this.setState({ totalSegmentOverrides: res.data.total_segment_overrides })
+    })
 
     this.props.getWebhooks()
   }
@@ -515,6 +526,17 @@ const EnvironmentSettingsPage = class extends Component {
                                 </Row>
                               </div>
                             )}
+                        </FormGroup>
+                        <FormGroup className='mt-4 col-md-6'>
+                          <UsageLimits
+                            usageData={[
+                              {
+                                label: 'Segment Overrides',
+                                maxValue: project.max_segment_overrides_allowed,
+                                value: this.state.totalSegmentOverrides,
+                              },
+                            ]}
+                          />
                         </FormGroup>
                         <hr className='py-0 my-4' />
                         <FormGroup className='mt-4 col-md-6'>
