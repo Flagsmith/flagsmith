@@ -62,11 +62,27 @@ def clean_up_old_analytics_data():
 
 
 @register_task_handler()
+def track_feature_evaluation_v2(
+    environment_id: int, feature_evaluations: list[dict[str, int | str | bool]]
+) -> None:
+    feature_evaluation_objects = []
+    for feature_evaluation in feature_evaluations:
+        feature_evaluation_objects.append(
+            FeatureEvaluationRaw(
+                environment_id=environment_id,
+                feature_name=feature_evaluation["feature_name"],
+                evaluation_count=feature_evaluation["count"],
+                identity_identifier=feature_evaluation["identity_identifier"],
+                enabled_when_evaluated=feature_evaluation["enabled_when_evaluated"],
+            )
+        )
+    FeatureEvaluationRaw.objects.bulk_create(feature_evaluation_objects)
+
+
+@register_task_handler()
 def track_feature_evaluation(
     environment_id: int,
     feature_evaluations: dict[str, int],
-    identity_identifier: str | None = None,
-    enabled_when_evaluated: bool | None = None,
 ) -> None:
     feature_evaluation_objects = []
     for feature_name, evaluation_count in feature_evaluations.items():
@@ -75,8 +91,6 @@ def track_feature_evaluation(
                 feature_name=feature_name,
                 environment_id=environment_id,
                 evaluation_count=evaluation_count,
-                identity_identifier=identity_identifier,
-                enabled_when_evaluated=enabled_when_evaluated,
             )
         )
     FeatureEvaluationRaw.objects.bulk_create(feature_evaluation_objects)
