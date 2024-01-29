@@ -245,7 +245,7 @@ export const login = async (email: string, password: string) => {
   await setText('[name="email"]', `${email}`)
   await setText('[name="password"]', `${password}`)
   await click('#login-btn')
-  await waitForElementVisible('#project-select-page')
+  await waitForElementVisible('#project-manage-widget')
 }
 export const logout = async (t) => {
   await click('#account-settings-link')

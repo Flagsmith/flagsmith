@@ -246,6 +246,11 @@ the below variables will be ignored.
   ignored.
 - `DISABLE_FLAGSMITH_UI`: Disable the Flagsmith UI which can be rendered by the API containers in a single container
   environment. Use `True` to disable, defaults to `False`.
+- `SEGMENT_CONDITION_VALUE_LIMIT`: Configure the size of the segment condition value in bytes. Default is 1000.
+  Minimum 0. Maximum 2000000 (2MB). Note that this environment variable changes the length of the column in the database
+  and hence should not be modified for already running instances of flagsmith. It should only be used for new
+  installations, and should not be modified. WARNING: setting this to a higher limit may prevent imports to our SaaS
+  platform if required in the future.
 
 #### Security Environment Variables
 
@@ -346,7 +351,7 @@ metrics from external services.
 version: '3'
 services:
  postgres:
-  image: postgres:11.12-alpine
+  image: postgres:15.5-alpine
   environment:
    POSTGRES_PASSWORD: password
    POSTGRES_DB: flagsmith

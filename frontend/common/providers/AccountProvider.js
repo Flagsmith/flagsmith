@@ -26,6 +26,7 @@ const AccountProvider = class extends Component {
         organisations: AccountStore.getOrganisations(),
         user: AccountStore.getUser(),
       })
+      this.props.onChange && this.props.onChange()
     })
 
     this.listenTo(AccountStore, 'loaded', () => {
@@ -115,6 +116,7 @@ const AccountProvider = class extends Component {
 
 AccountProvider.propTypes = {
   children: OptionalFunc,
+  onChange: OptionalFunc,
   onLogin: OptionalFunc,
   onLogout: OptionalFunc,
   onNoUser: OptionalFunc,
