@@ -491,6 +491,7 @@ const FeaturesPage = class extends Component {
                           />
                           <EnvironmentDocumentCodeHelp
                             title='3: Providing feature defaults and support offline'
+                            projectId={this.props.match.params.projectId}
                             environmentId={
                               this.props.match.params.environmentId
                             }

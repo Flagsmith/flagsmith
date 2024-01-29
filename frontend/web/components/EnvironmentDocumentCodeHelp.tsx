@@ -6,17 +6,26 @@ import Tabs from './base/forms/Tabs'
 import TabItem from './base/forms/TabItem'
 import InfoMessage from './InfoMessage'
 import { useGetServersideEnvironmentKeysQuery } from 'common/services/useServersideEnvironmentKey'
+import { useHasPermission } from 'common/providers/Permission'
+import { Link } from 'react-router-dom'
 type EnvironmentDocumentCodeHelpType = {
   environmentId: string
+  projectId: string
   title: string
 }
 
 const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
   environmentId,
+  projectId,
   title,
 }) => {
   const [visible, setVisible] = useState(false)
   const { data } = useGetServersideEnvironmentKeysQuery({ environmentId })
+  const envAdmin = useHasPermission({
+    id: environmentId,
+    level: 'project',
+    permission: 'ADMIN',
+  })
   return (
     <div>
       <div
@@ -70,15 +79,30 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
             </div>
           </InfoMessage>
           <Tabs uncontrolled theme='pill'>
-            <TabItem tabLabel={'Remote Evaluation'}>
+            <TabItem tabLabel={'Client-side'}>
               <div className='mt-3'>
+                <InfoMessage className='mb-2'>
+                  <div>
+                    This will not return any features marked as{' '}
+                    <a
+                      href={
+                        'https://docs.flagsmith.com/advanced-use/flag-management#server-side-only-flags'
+                      }
+                      target={'_blank'}
+                      rel='noreferrer'
+                    >
+                      server-side only
+                    </a>
+                    .
+                  </div>
+                </InfoMessage>
                 <CodeHelp
                   hideHeader
                   snippets={Constants.codeHelp.OFFLINE_REMOTE(environmentId)}
                 />
               </div>
             </TabItem>
-            <TabItem tabLabel={'Local Evaluation'}>
+            <TabItem tabLabel={'Server-side'}>
               <div className='mt-3'>
                 {data?.length ? (
                   <CodeHelp
@@ -88,7 +112,17 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
                 ) : (
                   <InfoMessage>
                     In order to setup local evaluation mode you need at least 1
-                    API key, this can be created in Environment Settings.
+                    API key, this can be created in{' '}
+                    {envAdmin ? (
+                      <Link
+                        to={`/project/${projectId}/environment/${environmentId}/settings`}
+                      >
+                        Environment Settings
+                      </Link>
+                    ) : (
+                      'Environment Settings'
+                    )}
+                    .
                   </InfoMessage>
                 )}
               </div>
