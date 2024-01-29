@@ -173,9 +173,15 @@ const Format = {
     return shortValue + suffixes[suffixIndex]
   },
 
+  spaceDelimiter: '␣',
+
   time(value) {
     // DATE > 10:00pm
     return Format.moment(value, 'hh:mm a')
+  },
+
+  trimAndHighlightSpaces(string) {
+    return string?.replace?.(/(^\s+|\s+$)/gm, Format.spaceDelimiter)
   },
 
   truncateText(text, numberOfChars) {
