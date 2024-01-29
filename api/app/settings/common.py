@@ -131,6 +131,7 @@ INSTALLED_APPS = [
     "permissions",
     "projects.tags",
     "api_keys",
+    "external_resources",
     # 2FA
     "trench",
     # health check plugins
