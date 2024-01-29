@@ -224,11 +224,10 @@ export default class AdminAPIKeys extends PureComponent {
         {!!apiKeys && !!apiKeys.length && (
           <PanelSearch
             className='no-pad'
-            title='API Keys'
             items={apiKeys}
             header={
               <Row className='table-header'>
-                <Flex className='table-column px-3'>API Keys</Flex>
+                <Flex className='table-column px-3'>Terraform API Keys</Flex>
                 <Flex className='table-column'>Created</Flex>
                 <div
                   className='table-column text-center'
