@@ -220,7 +220,13 @@ const CreateEditIntegration = class extends Component {
                     value={this.state.data[field.key]}
                     onChange={(e) => this.update(field.key, e)}
                     isValid={!!this.state.data[field.key]}
-                    type={field.hidden ? 'password' : 'text'}
+                    type={
+                      field.hidden
+                        ? 'password'
+                        : field.inputType
+                        ? field.inputType
+                        : 'text'
+                    }
                     className='full-width mb-2'
                   />
                 )}
