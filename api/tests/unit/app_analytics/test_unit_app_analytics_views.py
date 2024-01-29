@@ -8,6 +8,7 @@ from app_analytics.views import SDKAnalyticsFlags
 from django.conf import settings
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -161,11 +162,19 @@ def test_set_sdk_analytics_flags_with_identifier(
 ) -> None:
     # Given
     settings.USE_POSTGRES_FOR_ANALYTICS = True
-    url = reverse("api-v1:analytics-flags")
-    url += f"?identity_identifier={identity.identifier}"
+    url = reverse("api-v2:analytics-flags")
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     feature_request_count = 2
-    data = {feature.name: feature_request_count}
+    data = {
+        "evaluations": [
+            {
+                "feature_name": feature.name,
+                "identity_identifier": identity.identifier,
+                "count": feature_request_count,
+                "enabled_when_evaluated": True,
+            }
+        ]
+    }
 
     # When
     response = api_client.post(
@@ -173,34 +182,42 @@ def test_set_sdk_analytics_flags_with_identifier(
     )
 
     # Then
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_204_NO_CONTENT
 
     assert FeatureEvaluationRaw.objects.count() == 1
     feature_evaluation_raw = FeatureEvaluationRaw.objects.first()
     assert feature_evaluation_raw.identity_identifier == identity.identifier
     assert feature_evaluation_raw.feature_name == feature.name
     assert feature_evaluation_raw.environment_id == environment.id
-    assert feature_evaluation_raw.evaluation_count == feature_request_count
+    assert feature_evaluation_raw.evaluation_count is feature_request_count
 
 
-@pytest.mark.skipif(
-    "analytics" not in settings.DATABASES,
-    reason="Skip test if analytics DB is not configured",
-)
-@pytest.mark.django_db(databases=["default", "analytics"])
-def test_set_sdk_analytics_flags_with_enabled_when_evaluated(
+def test_set_sdk_analytics_flags_v2_to_influxdb(
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
+    identity: Identity,
     settings: SettingsWrapper,
+    mocker: MockerFixture,
 ) -> None:
     # Given
-    settings.USE_POSTGRES_FOR_ANALYTICS = True
-    url = reverse("api-v1:analytics-flags")
-    url += "?enabled_when_evaluated=true"
+    settings.INFLUXDB_TOKEN = "some-token"
+
+    url = reverse("api-v2:analytics-flags")
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     feature_request_count = 2
-    data = {feature.name: feature_request_count}
+    data = {
+        "evaluations": [
+            {
+                "feature_name": feature.name,
+                "identity_identifier": identity.identifier,
+                "count": feature_request_count,
+                "enabled_when_evaluated": True,
+            }
+        ]
+    }
+    mock = mocker.patch("app_analytics.track.InfluxDBWrapper")
+    add_data_point_mock = mock.return_value.add_data_point
 
     # When
     response = api_client.post(
@@ -208,10 +225,9 @@ def test_set_sdk_analytics_flags_with_enabled_when_evaluated(
     )
 
     # Then
-    assert response.status_code == status.HTTP_200_OK
-
-    assert FeatureEvaluationRaw.objects.count() == 1
-    feature_evaluation_raw = FeatureEvaluationRaw.objects.first()
-    assert feature_evaluation_raw.feature_name == feature.name
-    assert feature_evaluation_raw.environment_id == environment.id
-    assert feature_evaluation_raw.enabled_when_evaluated is True
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    add_data_point_mock.assert_called_with(
+        "request_count",
+        feature_request_count,
+        tags={"feature_id": feature.name, "environment_id": environment.id},
+    )
