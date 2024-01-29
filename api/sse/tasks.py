@@ -57,30 +57,30 @@ if settings.AWS_SSE_LOGS_BUCKET_NAME:
         ) as write_api:
             environments = Environment.objects.filter(
                 api_key__in=agg_request_count.keys()
-            ).values("api_key", "id", "project_id", "project__organisation_id")
+            ).values(
+                "api_key",
+                "id",
+                "project_id",
+                "project__name",
+                "project__organisation_id",
+                "project__organisation__name",
+            )
 
             for environment in environments:
-                record = _get_influx_point(
-                    environment["id"],
-                    environment["project_id"],
-                    environment["project__organisation_id"],
-                    agg_request_count[environment["api_key"]],
-                    agg_last_event_generated_at[environment["api_key"]],
+                time = agg_last_event_generated_at[environment["api_key"]]
+                count = agg_request_count[environment["api_key"]]
+                record = (
+                    Point("sse_call")
+                    .field("request_count", count)
+                    .tag("environment_id", environment["id"])
+                    .tag("project_id", environment["project_id"])
+                    .tag("project", environment["project__name"])
+                    .tag("organisation_id", environment["project__organisation_id"])
+                    .tag("organisation", environment["project__organisation__name"])
+                    .time(time)
                 )
+
                 write_api.write(bucket=settings.INFLUXDB_BUCKET, record=record)
-
-
-def _get_influx_point(
-    environment_id: int, project_id: int, organisation_id: int, count: int, time: str
-) -> Point:
-    return (
-        Point("sse_call")
-        .field("request_count", count)
-        .tag("organisation_id", organisation_id)
-        .tag("project_id", project_id)
-        .tag("environment_id", environment_id)
-        .time(time)
-    )
 
 
 def get_auth_header():
