@@ -54,30 +54,18 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
       </div>
       {!!visible && (
         <div className='mt-2'>
-          <InfoMessage>
-            <div>
-              Providing flag defaults is recommended for{' '}
-              <a
-                target='_blank'
-                href='https://docs.flagsmith.com/guides-and-examples/defensive-coding'
-                rel='noreferrer'
-              >
-                defensive coding
-              </a>{' '}
-              and allowing offline capabilities.
-              <br />
-              By default SDKs run in remote evaluation mode, server-side SDKs
-              can also run in local evaluation mode.{' '}
-              <a
-                target='_blank'
-                href='https://docs.flagsmith.com/clients/overview'
-                rel='noreferrer'
-              >
-                Check the Docs for more details
-              </a>
-              .
-            </div>
-          </InfoMessage>
+          <div className='mb-2'>
+            Providing flag defaults is recommended for{' '}
+            <a
+              className='text-primary'
+              target='_blank'
+              href='https://docs.flagsmith.com/guides-and-examples/defensive-coding'
+              rel='noreferrer'
+            >
+              defensive coding
+            </a>{' '}
+            and allowing offline capabilities.
+          </div>
           <Tabs uncontrolled theme='pill'>
             <TabItem tabLabel={'Client-side'}>
               <div className='mt-3'>
@@ -120,7 +108,7 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
                         Environment Settings
                       </Link>
                     ) : (
-                      'Environment Settings'
+                      'Environment Settings. Please contact an environment administrator about this.'
                     )}
                     .
                   </InfoMessage>
