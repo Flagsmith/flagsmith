@@ -15,9 +15,4 @@ class Migration(migrations.Migration):
             name='use_custom_source',
             field=models.BooleanField(default=False),
         ),
-        migrations.AlterField(
-            model_name="datadogconfiguration",
-            name="use_custom_source",
-            field=models.BooleanField(default=True),
-        )
     ]
