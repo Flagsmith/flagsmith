@@ -1,10 +1,15 @@
 import json
 
 import pytest
+from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
 from environments.models import Environment
-from integrations.datadog.datadog import EVENTS_API_URI, DataDogWrapper
+from integrations.datadog.datadog import (
+    EVENTS_API_URI,
+    SOURCE_TYPE_NAME,
+    DataDogWrapper,
+)
 
 
 @pytest.mark.parametrize(
@@ -19,28 +24,46 @@ def test_datadog_initialized_correctly(base_url, expected_events_url):
     api_key = "123key"
 
     # When initialized
-    data_dog = DataDogWrapper(base_url=base_url, api_key=api_key)
+    data_dog = DataDogWrapper(
+        base_url=base_url, api_key=api_key, use_custom_source=True
+    )
 
     # Then
     assert data_dog.events_url == expected_events_url
+    assert data_dog.use_custom_source is True
 
 
-def test_datadog_track_event(mocker):
+@pytest.mark.parametrize(
+    "event_data, use_custom_source, expected_data",
+    (
+        ({"foo": "bar"}, False, {"foo": "bar"}),
+        ({"foo": "bar"}, True, {"foo": "bar", "source_type_name": SOURCE_TYPE_NAME}),
+    ),
+)
+def test_datadog_track_event(
+    mocker: MockerFixture,
+    event_data: dict,
+    use_custom_source: bool,
+    expected_data: dict,
+) -> None:
     # Given
     base_url = "https://test.com"
     api_key = "key"
     mock_session = mocker.MagicMock()
 
-    datadog = DataDogWrapper(base_url=base_url, api_key=api_key, session=mock_session)
-
-    event = {"foo": "bar"}
+    datadog = DataDogWrapper(
+        base_url=base_url,
+        api_key=api_key,
+        session=mock_session,
+        use_custom_source=use_custom_source,
+    )
 
     # When
-    datadog._track_event(event)
+    datadog._track_event(event_data)
 
     # Then
     mock_session.post.assert_called_once_with(
-        f"{datadog.events_url}?api_key={api_key}", data=json.dumps(event)
+        f"{datadog.events_url}?api_key={api_key}", data=json.dumps(expected_data)
     )
 
 
