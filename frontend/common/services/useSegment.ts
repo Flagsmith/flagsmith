@@ -2,6 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
+import transformCorePaging from 'common/transformCorePaging'
 
 export const segmentService = service
   .enhanceEndpoints({ addTagTypes: ['Segment'] })
@@ -40,6 +41,13 @@ export const segmentService = service
         query: ({ projectId, ...rest }) => ({
           url: `projects/${projectId}/segments/?${Utils.toParam(rest)}`,
         }),
+        transformResponse: (
+          baseQueryReturnValue: Res['segments'],
+          meta,
+          req,
+        ) => {
+          return transformCorePaging(req, baseQueryReturnValue)
+        },
       }),
       updateSegment: builder.mutation<Res['segment'], Req['updateSegment']>({
         invalidatesTags: (q, e, arg) => [
