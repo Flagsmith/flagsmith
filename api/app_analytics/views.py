@@ -4,8 +4,14 @@ from app_analytics.analytics_db_service import (
     get_total_events_count,
     get_usage_data,
 )
-from app_analytics.tasks import track_feature_evaluation
-from app_analytics.track import track_feature_evaluation_influxdb
+from app_analytics.tasks import (
+    track_feature_evaluation,
+    track_feature_evaluation_v2,
+)
+from app_analytics.track import (
+    track_feature_evaluation_influxdb,
+    track_feature_evaluation_influxdb_v2,
+)
 from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -13,6 +19,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.fields import IntegerField
 from rest_framework.generics import CreateAPIView, GenericAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 from telemetry.serializers import TelemetrySerializer
@@ -24,13 +31,66 @@ from organisations.models import Organisation
 
 from .permissions import UsageDataPermission
 from .serializers import (
-    SDKAnalyticsFlagsQuerySerializer,
+    SDKAnalyticsFlagsSerializer,
     UsageDataQuerySerializer,
     UsageDataSerializer,
     UsageTotalCountSerializer,
 )
 
 logger = logging.getLogger(__name__)
+
+
+class SDKAnalyticsFlagsV2(CreateAPIView):
+    permission_classes = (EnvironmentKeyPermissions,)
+    authentication_classes = (EnvironmentKeyAuthentication,)
+    serializer_class = SDKAnalyticsFlagsSerializer
+
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        self.evaluations = serializer.validated_data["evaluations"]
+        if not self._is_data_valid():
+            # Mirror v1 implementation and return 200 to avoid
+            # breaking client integrations.
+            return Response(
+                {"detail": "Invalid data. Not logged."},
+                content_type="application/json",
+                status=status.HTTP_200_OK,
+            )
+        if settings.USE_POSTGRES_FOR_ANALYTICS:
+            track_feature_evaluation_v2.delay(
+                args=(
+                    request.environment.id,
+                    self.evaluations,
+                )
+            )
+        elif settings.INFLUXDB_TOKEN:
+            track_feature_evaluation_influxdb_v2(
+                request.environment.id, self.evaluations
+            )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def _is_data_valid(self) -> bool:
+        environment_feature_names = set(
+            FeatureState.objects.filter(
+                environment=self.request.environment,
+                feature_segment=None,
+                identity=None,
+            ).values_list("feature__name", flat=True)
+        )
+
+        valid = True
+        for evaluation in self.evaluations:
+            if evaluation["feature_name"] in environment_feature_names:
+                continue
+            logger.warning(
+                f"Feature {evaluation['feature_name']} does not belong to project"
+            )
+            valid = False
+
+        return valid
 
 
 class SDKAnalyticsFlags(GenericAPIView):
@@ -65,6 +125,10 @@ class SDKAnalyticsFlags(GenericAPIView):
     def post(self, request, *args, **kwargs):
         """
         Send flag evaluation events from the SDK back to the API for reporting.
+
+
+        TODO: Eventually replace this with the v2 version of
+              this endpoint once SDKs have been updated.
         """
         is_valid = self._is_data_valid()
         if not is_valid:
@@ -75,24 +139,11 @@ class SDKAnalyticsFlags(GenericAPIView):
                 status=status.HTTP_200_OK,
             )
 
-        # TODO: Fix this in the v2 version of the API.
-        # Since the post body data has bare names of features with counts,
-        # if we put the identifier in the post body it could collide with
-        # a feature name. It's more straightforward to set it as a query parm.
-        query_serializer = SDKAnalyticsFlagsQuerySerializer(data=request.query_params)
-        query_serializer.is_valid(raise_exception=True)
-        identity_identifier = query_serializer.validated_data["identity_identifier"]
-        enabled_when_evaluated = query_serializer.validated_data[
-            "enabled_when_evaluated"
-        ]
-
         if settings.USE_POSTGRES_FOR_ANALYTICS:
             track_feature_evaluation.delay(
                 args=(
                     request.environment.id,
                     request.data,
-                    identity_identifier,
-                    enabled_when_evaluated,
                 )
             )
         elif settings.INFLUXDB_TOKEN:
