@@ -103,7 +103,12 @@ def test_should_return_datadog_config_list_when_requested(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.data == [
-        {"api_key": config.api_key, "base_url": config.base_url, "id": config.id}
+        {
+            "api_key": config.api_key,
+            "base_url": config.base_url,
+            "id": config.id,
+            "use_custom_source": False,
+        }
     ]
 
 
