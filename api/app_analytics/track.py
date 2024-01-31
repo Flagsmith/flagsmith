@@ -8,6 +8,7 @@ from django.core.cache import caches
 from six.moves.urllib.parse import quote  # python 2/3 compatible urllib import
 
 from environments.models import Environment
+from task_processor.decorators import register_task_handler
 from util.util import postpone
 
 logger = logging.getLogger(__name__)
@@ -125,7 +126,10 @@ def track_request_influxdb(request):
         influxdb.write()
 
 
-def track_feature_evaluation_influxdb(environment_id, feature_evaluations):
+@register_task_handler()
+def track_feature_evaluation_influxdb(
+    environment_id: int, feature_evaluations: dict[str, int]
+) -> None:
     """
     Sends Feature analytics event data to InfluxDB
 
@@ -141,6 +145,7 @@ def track_feature_evaluation_influxdb(environment_id, feature_evaluations):
     influxdb.write()
 
 
+@register_task_handler()
 def track_feature_evaluation_influxdb_v2(
     environment_id: int, feature_evaluations: list[dict[str, int | str | bool]]
 ) -> None:
