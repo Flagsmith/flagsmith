@@ -157,6 +157,17 @@ def test_audit_log_history_record(mocker):
     )
 
 
+def test_audit_log_history_record_for_audit_log_record_with_no_history_record(mocker):
+    # Given
+    audit_log = AuditLog()
+
+    # When
+    record = audit_log.history_record
+
+    # Then
+    assert record is None
+
+
 def test_audit_log_save_project_is_added_if_not_set(environment):
     # Given
     audit_log = AuditLog(environment=environment)
