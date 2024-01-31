@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -55,20 +55,12 @@ class FeatureExternalResourcesViewSet(viewsets.ModelViewSet):
         serializer.save(external_resource=external_resource)
 
 
-# class RolesByUserViewSet(
-#     mixins.ListModelMixin, mixins.DestroyModelMixin, GenericViewSet
-# ):
-#     serializer_class = ExternalResourcesSerializer
-#     permission_classes = [IsAuthenticated]
+class ExternalResourcesByFeatureViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = ExternalResourcesSerializer
+    permission_classes = [IsAuthenticated]
 
-#     def get_queryset(self):
-#         feature_pk = self.kwargs["feature_pk"]
-#         return ExternalResources.objects.filter(feature_external_resource__pk=feature_pk)
-
-#     def destroy(self, request, *args, **kwargs):
-#         instance = self.get_object()
-#         user_pk = self.kwargs["user_pk"]
-#         user_role_instances = FeatureExternalResources.objects.filter(external_resources=instance, user=user_pk)
-#         user_role_instances.delete()
-
-#         return Response(status=status.HTTP_204_NO_CONTENT)
+    def get_queryset(self):
+        features_pk = self.kwargs["features_pk"]
+        return ExternalResources.objects.filter(
+            featureexternalresources__feature=features_pk
+        )

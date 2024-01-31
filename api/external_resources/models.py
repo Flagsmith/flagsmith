@@ -6,6 +6,7 @@ from projects.models import Project
 class ExternalResources(models.Model):
     url = models.URLField()
     type = models.TextField()
+    resources_id = models.TextField(null=False)
     project = models.ForeignKey(
         Project,
         on_delete=models.CASCADE,

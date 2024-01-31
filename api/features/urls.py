@@ -3,6 +3,7 @@ from django.conf.urls import include
 from django.urls import path
 from rest_framework_nested import routers
 
+from external_resources.views import ExternalResourcesByFeatureViewSet
 from features.feature_segments.views import FeatureSegmentViewSet
 from features.views import (
     SimpleFeatureStateViewSet,
@@ -19,6 +20,11 @@ app_name = "features"
 
 urlpatterns = [
     path("", include(router.urls)),
+    path(
+        "<int:features_pk>/external-resources/",
+        ExternalResourcesByFeatureViewSet.as_view({"get": "list"}),
+        name="get-external-resource-by-feature",
+    ),
     path("get-by-uuid/<uuid:uuid>/", get_feature_by_uuid, name="get-feature-by-uuid"),
     path(
         "featurestates/get-by-uuid/<uuid:uuid>/",
