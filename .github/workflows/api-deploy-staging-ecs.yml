@@ -3,7 +3,7 @@ name: API Deploy to Staging ECS
 on:
   push:
     branches:
-      - throttling-fix-env-var
+      - main
     paths:
       - api/**
       - .github/**
