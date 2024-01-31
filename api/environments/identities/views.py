@@ -105,6 +105,7 @@ class SDKIdentitiesDeprecated(SDKAPIView):
     # if Identity does not exist it will create one, otherwise will fetch existing
 
     serializer_class = IdentifyWithTraitsSerializer
+    throttle_classes = []
 
     schema = None
 

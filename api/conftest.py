@@ -4,7 +4,7 @@ import typing
 import boto3
 import pytest
 from django.contrib.contenttypes.models import ContentType
-from django.core.cache import cache
+from django.core.cache import caches
 from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
@@ -350,9 +350,15 @@ def reset_cache():
     # https://groups.google.com/g/django-developers/c/zlaPsP13dUY
     # TL;DR: Use this if your test interacts with cache since django
     # does not clear cache after every test
-    cache.clear()
+    # Clear all caches before the test
+    for cache in caches.all():
+        cache.clear()
+
     yield
-    cache.clear()
+
+    # Clear all caches after the test
+    for cache in caches.all():
+        cache.clear()
 
 
 @pytest.fixture()
