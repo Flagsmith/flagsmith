@@ -20,7 +20,7 @@ class UsageTotalCountSerializer(serializers.Serializer):
 
 class SDKAnalyticsFlagsSerializerDetail(serializers.Serializer):
     feature_name = serializers.CharField()
-    identity_identifier = serializers.CharField()
+    identity_identifier = serializers.CharField(required=False, default=None)
     enabled_when_evaluated = serializers.BooleanField()
     count = serializers.IntegerField()
 
