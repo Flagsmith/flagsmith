@@ -335,7 +335,7 @@ def test_process_import_request__segments_imported(
             "property", "operator", "value"
         )
     ) == {
-        ("p2", segment_constants.GREATER_THAN, "1.0.0"),
+        ("p2", segment_constants.GREATER_THAN, "1.0.0:semver"),
     }
 
     dynamic_list_2_production_segment_subrule_2_conditions = Condition.objects.filter(

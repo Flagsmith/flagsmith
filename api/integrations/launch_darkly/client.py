@@ -95,6 +95,8 @@ class LaunchDarklyClient:
         return list(
             self._iter_paginated_items(
                 collection_endpoint=endpoint,
+                # Summary should be set to 0 in order to get the full flag data including rules.
+                # https://apidocs.launchdarkly.com/tag/Feature-flags#operation/getFeatureFlags!in=query&path=summary&t=request
                 additional_params={"summary": "0"},
             )
         )

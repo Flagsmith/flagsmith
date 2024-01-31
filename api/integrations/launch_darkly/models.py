@@ -46,7 +46,9 @@ class LaunchDarklyImportRequest(
             return "LaunchDarkly import completed successfully"
         if error_messages := self.status.get("error_messages"):
             if len(error_messages) > 0:
-                return f"LaunchDarkly import failed with errors: {str(error_messages)}"
+                return "LaunchDarkly import failed with errors:\n" + "\n".join(
+                    "- " + error_message for error_message in error_messages
+                )
         return "LaunchDarkly import failed"
 
     def get_audit_log_author(self) -> "FFAdminUser":

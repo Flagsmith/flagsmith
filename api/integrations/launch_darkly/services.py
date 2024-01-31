@@ -168,6 +168,8 @@ def _convert_ld_values(values: list[str], ld_operator: str) -> list[str]:
             return [".*" + re.escape(value) for value in values]
         case "startsWith":
             return [re.escape(value) + ".*" for value in values]
+        case "semVerEqual" | "semVerLessThan" | "semVerGreaterThan":
+            return [value + ":semver" for value in values]
         case _:
             return [value for value in values]
 
@@ -208,11 +210,12 @@ def _create_feature_segments_for_segment_match_clauses(
     """
 
     if any(clause["op"] != "segmentMatch" for clause in clauses):
-        _log_error(
-            import_request=import_request,
-            error_message=f"Nested segment match is not supported, skipping"
-            f" for {feature.name} in {environment.name}",
-        )
+        for clause in clauses:
+            _log_error(
+                import_request=import_request,
+                error_message=f"Could not import segment clause {clause['attribute']} {clause['op']} for"
+                f" {feature.name} in {environment.name}: nested segment match is not supported.",
+            )
         return []
 
     if any(clause["negate"] is True for clause in clauses):
@@ -416,6 +419,7 @@ def _import_targets(
         for target in ld_flag_config["targets"]:
             # Create a segment override for those identities. This is a work-around to support individual
             # targeting in local evaluation mode.
+            # TODO: Remove this when https://github.com/Flagsmith/flagsmith/issues/3132 is resolved.
             feature_states = _create_feature_segment_from_clauses(
                 import_request=import_request,
                 clauses=[
@@ -1041,7 +1045,7 @@ def process_import_request(
             ld_environments = ld_client.get_environments(project_key=ld_project_key)
             ld_flags = ld_client.get_flags(project_key=ld_project_key)
             ld_flag_tags = ld_client.get_flag_tags()
-            ld_segment_tags = ld_client.get_segment_tags()
+            # ld_segment_tags = ld_client.get_segment_tags()
             # Keyed by (segment, environment)
             ld_segments: list[tuple[ld_types.UserSegment, str]] = []
             for env in ld_environments:
@@ -1069,11 +1073,9 @@ def process_import_request(
             project_id=import_request.project_id,
         )
 
-        # Create segments
-        segment_tags_by_ld_tag = _create_tags_from_ld(
-            ld_tags=ld_segment_tags,
-            project_id=import_request.project_id,
-        )
+        # Create segments using `ld_segment_tags`
+        # TODO populate with LD tags when https://github.com/Flagsmith/flagsmith/issues/3241 is done
+        segment_tags_by_ld_tag = {}
         segments_by_ld_key = _create_segments_from_ld(
             import_request=import_request,
             ld_segments=ld_segments,
