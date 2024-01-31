@@ -51,12 +51,10 @@ class SDKAnalyticsFlagsV2(CreateAPIView):
 
         self.evaluations = serializer.validated_data["evaluations"]
         if not self._is_data_valid():
-            # Mirror v1 implementation and return 200 to avoid
-            # breaking client integrations.
             return Response(
-                {"detail": "Invalid data. Not logged."},
+                {"detail": "Invalid feature names associated with the project."},
                 content_type="application/json",
-                status=status.HTTP_200_OK,
+                status=status.HTTP_400_BAD_REQUEST,
             )
         if settings.USE_POSTGRES_FOR_ANALYTICS:
             track_feature_evaluation_v2.delay(
@@ -66,8 +64,11 @@ class SDKAnalyticsFlagsV2(CreateAPIView):
                 )
             )
         elif settings.INFLUXDB_TOKEN:
-            track_feature_evaluation_influxdb_v2(
-                request.environment.id, self.evaluations
+            track_feature_evaluation_influxdb_v2.delay(
+                args=(
+                    request.environment.id,
+                    self.evaluations,
+                )
             )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -147,7 +148,12 @@ class SDKAnalyticsFlags(GenericAPIView):
                 )
             )
         elif settings.INFLUXDB_TOKEN:
-            track_feature_evaluation_influxdb(request.environment.id, request.data)
+            track_feature_evaluation_influxdb.delay(
+                args=(
+                    request.environment.id,
+                    request.data,
+                )
+            )
 
         return Response(status=status.HTTP_200_OK)
 
