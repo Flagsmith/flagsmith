@@ -44,6 +44,7 @@ class SDKAnalyticsFlagsV2(CreateAPIView):
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
     serializer_class = SDKAnalyticsFlagsSerializer
+    throttle_classes = []
 
     def create(self, request: Request, *args, **kwargs) -> Response:
         serializer = self.get_serializer(data=request.data)
