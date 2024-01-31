@@ -6,8 +6,10 @@ import { useCreateExternalResourceMutation } from 'common/services/useExternalRe
 
 type GitHubSetupPageType = {}
 const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
-  const [organisation, setOrganisation] = useState<number>()
-  const [project, setProject] = useState<number>()
+  const installationId =
+    new URLSearchParams(props.location.search).get('installation_id') || ''
+  const [organisation, setOrganisation] = useState<number>(0)
+  const [project, setProject] = useState<number>(0)
   const [externalResourceURL, setExternalResourceURL] = useState<string>('')
 
   const [createExternalResourceMutation, { isSuccess }] =
@@ -48,21 +50,23 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
         value={externalResourceURL}
         data-test='ExternalResourceURL'
         inputProps={{
-          className: 'full-width',
           name: 'featureExternalResourceURL',
         }}
         onChange={(e) => setExternalResourceURL(Utils.safeParseEventValue(e))}
         ds
         type='text'
+        className={{ width: '500px' }}
         title={'GitHub Issue/Pull Request URL'}
         placeholder="e.g. 'https://github.com/user/repo-example/issues/12' "
       />
       <Button
         className='mr-2 text-right'
         theme='primary'
+        disabled={project && externalResourceURL}
         onClick={() => {
           createExternalResourceMutation({
             project: project,
+            resource_id: installationId,
             type: 'Github',
             url: externalResourceURL,
           })

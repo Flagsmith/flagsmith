@@ -166,7 +166,9 @@ const App = class extends Component {
               id: lastEnv.orgId,
             })
             if (this.props.location.search.includes('github-redirect')) {
-              this.context.router.history.replace('/github-setup')
+              this.context.router.history.replace(
+                `/github-setup${this.props.location.search}`,
+              )
               // this.setState({ asideIsVisible: false })
               return
             }
