@@ -86,7 +86,14 @@ class Environment(
             " Environment. New default Feature States will be created for the new"
             " selected projects Features for this Environment."
         ),
-        on_delete=models.CASCADE,
+        # Deleting large environments take significant amount of queries due to
+        # audit log signals and lifecycle events for related objects.
+        # For now, decouple environment deletion from project deletion
+        # to be able to perform it asynchronously.
+        #
+        # We choose `DO_NOTHING` here as we're only taking project soft deletes
+        # into account
+        on_delete=models.DO_NOTHING,
     )
 
     api_key = models.CharField(
