@@ -29,7 +29,7 @@ from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 
 
-def test_has_paid_subscription_true(db: None) -> None:
+def test_organisation_has_paid_subscription_true(db: None) -> None:
     # Given
     organisation = Organisation.objects.create(name="Test org")
     Subscription.objects.filter(organisation=organisation).update(
@@ -43,7 +43,7 @@ def test_has_paid_subscription_true(db: None) -> None:
     assert organisation.has_paid_subscription()
 
 
-def test_has_paid_subscription_missing_subscription_id(db: None) -> None:
+def test_organisation_has_paid_subscription_missing_subscription_id(db: None) -> None:
     # Given
     organisation = Organisation.objects.create(name="Test org")
     assert (
@@ -56,7 +56,7 @@ def test_has_paid_subscription_missing_subscription_id(db: None) -> None:
 
 
 @mock.patch("organisations.models.cancel_chargebee_subscription")
-def test_cancel_subscription_cancels_chargebee_subscription(
+def test_organisation_cancel_subscription_cancels_chargebee_subscription(
     mocked_cancel_chargebee_subscription,
     organisation: Organisation,
 ):
@@ -182,7 +182,7 @@ def test_organisation_is_auto_seat_upgrade_available(organisation, settings):
     assert organisation.is_auto_seat_upgrade_available() is True
 
 
-def test_max_seats_set_as_one_if_subscription_has_no_subscription_id(
+def test_organisation_max_seats_set_as_one_if_subscription_has_no_subscription_id(
     organisation: Organisation,
 ) -> None:
     # Given
@@ -275,7 +275,7 @@ def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(
     assert organisation.is_paid is False
 
 
-def test_subscription_get_subscription_metadata_returns_cb_metadata_for_cb_subscription(
+def test_organisation_subscription_get_subscription_metadata_returns_cb_metadata_for_cb_subscription(
     organisation: Organisation,
     mocker: MockerFixture,
 ):
@@ -307,7 +307,7 @@ def test_subscription_get_subscription_metadata_returns_cb_metadata_for_cb_subsc
     assert subscription_metadata == expected_metadata
 
 
-def test_subscription_get_subscription_metadata_returns_xero_metadata_for_xero_sub(
+def test_organisation_subscription_get_subscription_metadata_returns_xero_metadata_for_xero_sub(
     mocker: MockerFixture,
 ):
     # Given
@@ -326,7 +326,7 @@ def test_subscription_get_subscription_metadata_returns_xero_metadata_for_xero_s
     assert subscription_metadata == expected_metadata
 
 
-def test_subscription_get_subscription_metadata_returns_free_plan_metadata_for_no_plan():
+def test_organisation_subscription_get_subscription_metadata_returns_free_plan_metadata_for_no_plan():
     # Given
     subscription = Subscription()
 
@@ -351,7 +351,7 @@ def test_subscription_get_subscription_metadata_returns_free_plan_metadata_for_n
         (TRIAL_SUBSCRIPTION_ID, "enterprise", 20, 20, None),
     ),
 )
-def test_get_subscription_metadata_for_enterprise_self_hosted_licenses(
+def test_organisation_get_subscription_metadata_for_enterprise_self_hosted_licenses(
     organisation: Organisation,
     subscription_id: str | None,
     plan: str,
@@ -398,7 +398,7 @@ def test_get_subscription_metadata_for_enterprise_self_hosted_licenses(
         (TRIAL_SUBSCRIPTION_ID, "enterprise", 20, 5000000, 20, 5000000, None),
     ),
 )
-def test_get_subscription_metadata_for_manually_added_enterprise_saas_licenses(
+def test_organisation_get_subscription_metadata_for_manually_added_enterprise_saas_licenses(
     organisation: Organisation,
     subscription_id: str | None,
     plan: str,
@@ -433,7 +433,7 @@ def test_get_subscription_metadata_for_manually_added_enterprise_saas_licenses(
     assert subscription_metadata.api_calls == expected_api_calls
 
 
-def test_get_subscription_metadata_for_self_hosted_open_source(
+def test_organisation_get_subscription_metadata_for_self_hosted_open_source(
     organisation: Organisation, mocker: MockerFixture
 ) -> None:
     """
@@ -458,7 +458,7 @@ def test_get_subscription_metadata_for_self_hosted_open_source(
     assert subscription_metadata == FREE_PLAN_SUBSCRIPTION_METADATA
 
 
-def test_subscription_add_single_seat_calls_correct_chargebee_method_for_upgradable_plan(
+def test_organisation_subscription_add_single_seat_calls_correct_chargebee_method_for_upgradable_plan(
     mocker, settings
 ):
     # Given
@@ -477,7 +477,7 @@ def test_subscription_add_single_seat_calls_correct_chargebee_method_for_upgrada
     mocked_add_single_seat.assert_called_once_with(subscription_id)
 
 
-def test_subscription_add_single_seat_raises_error_for_non_upgradable_plan(
+def test_organisation_subscription_add_single_seat_raises_error_for_non_upgradable_plan(
     mocker, settings
 ):
     # Given
@@ -518,7 +518,7 @@ def test_organisation_update_clears_environment_caches(
     "allowed_calls_30d, actual_calls_30d, expected_overage",
     ((1000000, 500000, 0), (1000000, 1100000, 100000), (0, 100000, 100000)),
 )
-def test_subscription_get_api_call_overage(
+def test_organisation_subscription_get_api_call_overage(
     organisation, subscription, allowed_calls_30d, actual_calls_30d, expected_overage
 ):
     # Given
