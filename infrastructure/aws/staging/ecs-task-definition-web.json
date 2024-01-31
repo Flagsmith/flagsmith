@@ -173,7 +173,7 @@
                 },
                 {
                     "name": "DJANGO_REDIS_CONNECTION_FACTORY",
-                    "value": "core.throttling.UserRateThrottle"
+                    "value": "core.redis_cluster.ClusterConnectionFactory"
                 },
                 {
                     "name": "USER_THROTTLE_CACHE_BACKEND",
