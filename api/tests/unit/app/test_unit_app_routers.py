@@ -174,7 +174,6 @@ def test_replica_router_db_no_replicas(
     conn_patch = mocker.MagicMock()
 
     # All replicas should be ignored.
-    conn_patch.is_usable.return_value = True
     create_connection_patch = mocker.patch(
         "app.routers.connections.create_connection", return_value=conn_patch
     )
