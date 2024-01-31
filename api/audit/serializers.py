@@ -1,6 +1,5 @@
 import typing
 
-from django.forms import model_to_dict
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 
@@ -42,8 +41,6 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):
     project = ProjectListSerializer()
     change_details = serializers.SerializerMethodField()
     change_type = serializers.SerializerMethodField()
-    new_instance = serializers.SerializerMethodField()
-    previous_instance = serializers.SerializerMethodField()
 
     class Meta:
         model = AuditLog
@@ -59,8 +56,6 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):
             "is_system_event",
             "change_details",
             "change_type",
-            "new_instance",
-            "previous_instance",
         )
 
     @swagger_serializer_method(
@@ -85,18 +80,6 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):
             "-": "DELETE",
             "~": "UPDATE",
         }.get(history_record.history_type)
-
-    def get_new_instance(self, instance: AuditLog) -> dict[str, typing.Any] | None:
-        if history_record := instance.history_record:
-            return model_to_dict(history_record.instance)
-        return None
-
-    def get_previous_instance(self, instance: AuditLog) -> dict[str, typing.Any] | None:
-        if (history_record := instance.history_record) and (
-            prev_record := history_record.prev_record
-        ):
-            return model_to_dict(prev_record)
-        return None
 
 
 class AuditLogsQueryParamSerializer(serializers.Serializer):

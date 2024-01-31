@@ -234,8 +234,9 @@ def test_retrieve_audit_log_includes_changes_when_segment_override_created_and_d
 
     # now let's check that we have some information about the change
     assert create_override_audit_log_details["change_type"] == "CREATE"
-    assert create_override_audit_log_details["new_instance"]["enabled"] is True
-    assert create_override_audit_log_details["previous_instance"] is None
+    assert create_override_audit_log_details["change_details"] == [
+        {"field": "enabled", "old": None, "new": True},
+    ]
 
     # now let's delete the segment override
     delete_segment_override_url = reverse(
@@ -263,13 +264,12 @@ def test_retrieve_audit_log_includes_changes_when_segment_override_created_and_d
         get_delete_override_audit_log_detail_response.status_code == status.HTTP_200_OK
     )
     delete_override_audit_log_details = (
-        get_create_override_audit_log_detail_response.json()
+        get_delete_override_audit_log_detail_response.json()
     )
 
     # now let's check that we have some information about the change
     assert delete_override_audit_log_details["change_type"] == "DELETE"
-    assert delete_override_audit_log_details["new_instance"] is None
-    assert delete_override_audit_log_details["previous_instance"]["enabled"] is True
+    assert delete_override_audit_log_details["change_details"] == []
 
 
 def test_retrieve_audit_log_includes_changes_when_segment_override_created_for_feature_value(
@@ -320,6 +320,10 @@ def test_retrieve_audit_log_includes_changes_when_segment_override_created_for_f
     audit_log_details = get_audit_log_detail_response.json()
 
     # now let's check that we have some information about the change
-    assert audit_log_details["change_type"] == "CREATE"
-    assert audit_log_details["new_instance"]["string_value"] == "foo"
-    assert audit_log_details["previous_instance"] is None
+    # This is treated as an update since the FeatureStateValue is created
+    # automatically when the FeatureState is created, and then updated
+    # with the value in the request.
+    assert audit_log_details["change_type"] == "UPDATE"
+    assert audit_log_details["change_details"] == [
+        {"field": "string_value", "old": "default_value", "new": "foo"},
+    ]

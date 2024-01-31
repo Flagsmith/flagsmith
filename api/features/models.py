@@ -373,12 +373,8 @@ class FeatureState(
     LifecycleModelMixin,
     abstract_base_auditable_model_factory(
         historical_records_excluded_fields=["uuid"],
-        change_details_excluded_fields=[
-            "id",
-            "feature_segment",
-            "identity",
-            "live_from",
-        ],
+        change_details_excluded_fields=["live_from", "version"],
+        show_change_details_for_create=True,
     ),
 ):
     history_record_class_path = "features.models.HistoricalFeatureState"
