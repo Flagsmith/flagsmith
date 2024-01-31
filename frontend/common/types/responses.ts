@@ -328,6 +328,7 @@ export type Res = {
   auditLogs: PagedResponse<AuditLogItem>
   organisations: PagedResponse<Organisation>
   projects: ProjectSummary[]
+  project: Project
   environments: PagedResponse<Environment>
   organisationUsage: {
     totals: {

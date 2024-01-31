@@ -155,5 +155,6 @@ export type Req = {
   getGroupSummaries: {
     orgId: string
   }
+  getProject: { id: string }
   // END OF TYPES
 }
