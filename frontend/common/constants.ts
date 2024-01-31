@@ -137,16 +137,20 @@ export default {
     },
 
     'OFFLINE_LOCAL': (envId: string) => ({
-      'cli': require('./code-help/offline_local/offline-local-cli')(envId),
-      'curl': require('./code-help/offline_local/offline-local-curl')(envId),
+      'cli': require('common/code-help/offline_server/offline-server-cli')(
+        envId,
+      ),
+      'curl': require('common/code-help/offline_server/offline-server-curl')(
+        envId,
+      ),
     }),
 
     'OFFLINE_REMOTE': (envId: string) => ({
-      'cli': require('common/code-help/offline_remote/offline-remote-cli')(
+      'cli': require('common/code-help/offline_client/offline-client-cli')(
         envId,
         keywords,
       ),
-      'curl': require('common/code-help/offline_remote/offline-remote-curl')(
+      'curl': require('common/code-help/offline_client/offline-client-curl')(
         envId,
         keywords,
       ),
