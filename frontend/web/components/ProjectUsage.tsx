@@ -3,35 +3,11 @@ import Project from 'common/project'
 import InfoMessage from './InfoMessage'
 import { useGetProjectQuery } from 'common/services/useProject'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-// import * as _data from 'common/data/base/_data'
+import { Environment } from 'common/types/responses'
 const _data = require('common/data/base/_data')
 
 type ProjectUsageType = {
   projectId: string
-}
-
-type usageType = {
-  max_features_allowed: number
-  max_segment_overrides_allowed: number
-  max_segments_allowed: number
-  total_features: number
-  total_segments: number
-  total_segment_overrides: {
-    [key: string]: number
-  }
-}
-
-type getEnvironmentsResType = {
-  results: {
-    api_key: string
-    [key: string]: any
-  }[]
-}
-
-type getEnvironmentResType = {
-  [key: string]: any
-  total_segment_overrides: number
-  id: number
 }
 
 const ProjectUsage: FC<ProjectUsageType> = ({ projectId }) => {
@@ -44,8 +20,10 @@ const ProjectUsage: FC<ProjectUsageType> = ({ projectId }) => {
     apiKeys.forEach((apiKey) => {
       _data
         .get(`${Project.api}environments/${apiKey}`)
-        .then((res: getEnvironmentResType) => {
-          setSegmentOverridesUsage((prev) => prev + res.total_segment_overrides)
+        .then((res: Environment) => {
+          setSegmentOverridesUsage(
+            (prev) => prev + (res.total_segment_overrides || 0),
+          )
         })
     })
   }
