@@ -38,15 +38,14 @@ def get_environment_flags_list(
     feature states. The logic to grab the latest version is then handled in python
     by building a dictionary. Returns a list of FeatureState objects.
     """
-    qs_filter = _build_environment_flags_qs_filter(
-        environment, feature_name, additional_filters
-    )
-
     additional_select_related_args = additional_select_related_args or tuple()
     additional_prefetch_related_args = additional_prefetch_related_args or tuple()
 
     feature_states = (
-        FeatureState.objects.select_related(
+        FeatureState.objects.get_live_feature_states(
+            environment=environment, additional_filters=additional_filters
+        )
+        .select_related(
             "environment",
             "feature",
             "feature_state_value",
@@ -55,8 +54,10 @@ def get_environment_flags_list(
             *additional_select_related_args,
         )
         .prefetch_related(*additional_prefetch_related_args)
-        .filter(qs_filter)
     )
+
+    if feature_name:
+        feature_states.filter(feature__name__iexact=feature_name)
 
     # Build up a dictionary in the form
     # {(feature_id, feature_segment_id, identity_id): feature_state}
@@ -88,30 +89,3 @@ def get_current_live_environment_feature_version(
         .order_by("-live_from")
         .first()
     )
-
-
-def _build_environment_flags_qs_filter(
-    environment: "Environment", feature_name: str = None, additional_filters: Q = None
-) -> Q:
-    now = timezone.now()
-
-    qs_filter = Q(environment=environment, deleted_at__isnull=True)
-    if environment.use_v2_feature_versioning:
-        qs_filter &= Q(
-            environment_feature_version__isnull=False,
-            environment_feature_version__published_at__isnull=False,
-            environment_feature_version__live_from__lte=now,
-        )
-    else:
-        qs_filter &= Q(
-            live_from__isnull=False,
-            live_from__lte=now,
-            version__isnull=False,
-        )
-
-    if feature_name:
-        qs_filter &= Q(feature__name__iexact=feature_name)
-    if additional_filters:
-        qs_filter &= additional_filters
-
-    return qs_filter

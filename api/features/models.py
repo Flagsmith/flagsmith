@@ -371,7 +371,15 @@ class FeatureSegment(
 class FeatureState(
     SoftDeleteExportableModel,
     LifecycleModelMixin,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(
+        historical_records_excluded_fields=["uuid"],
+        change_details_excluded_fields=[
+            "id",
+            "feature_segment",
+            "identity",
+            "live_from",
+        ],
+    ),
 ):
     history_record_class_path = "features.models.HistoricalFeatureState"
     related_object_type = RelatedObjectType.FEATURE_STATE
@@ -844,6 +852,17 @@ class FeatureState(
         return False
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        if (
+            history_instance.history_type == "+"
+            and (self.identity_id or self.feature_segment_id)
+            and self.enabled == self.get_environment_default().enabled
+        ):
+            # Don't create an Audit Log for overrides that are created which don't differ
+            # from the environment default. This likely means that an override was created
+            # for a remote config value, and hence there will be an AuditLog message
+            # created for the FeatureStateValue model change.
+            return
+
         if self.identity_id:
             return audit_helpers.get_identity_override_created_audit_message(self)
         elif self.feature_segment_id:
@@ -897,6 +916,21 @@ class FeatureState(
             kwargs["skip_signals_and_hooks"] = "send_environments_to_dynamodb"
 
         return kwargs
+
+    def get_environment_default(self) -> typing.Optional["FeatureState"]:
+        if self.feature_segment_id or self.identity_id:
+            return (
+                self.__class__.objects.get_live_feature_states(
+                    environment=self.environment,
+                    feature_id=self.feature_id,
+                    feature_segment_id__isnull=True,
+                    identity_id__isnull=True,
+                )
+                .order_by("-version", "-environment_feature_version__live_from")
+                .first()
+            )
+
+        return None
 
     def _get_environment(self) -> typing.Optional["Environment"]:
         return self.environment
@@ -970,6 +1004,12 @@ class FeatureStateValue(
             )
 
         return FEATURE_STATE_VALUE_UPDATED_MESSAGE % feature.name
+
+    def get_environment_default(self) -> typing.Optional["FeatureStateValue"]:
+        if environment_default := self.feature_state.get_environment_default():
+            return environment_default.feature_state_value
+
+        return None
 
     def _get_environment(self) -> typing.Optional["Environment"]:
         return self.feature_state.environment

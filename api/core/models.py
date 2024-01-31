@@ -63,13 +63,20 @@ class _BaseHistoricalModel(models.Model):
         abstract = True
 
     def get_change_details(self) -> typing.Optional[typing.List[ModelChange]]:
-        if not self.history_type == "~":
-            # we only return the change details for updates
+        if self.history_type == "~":
+            prev_record = self.prev_record
+        elif self.history_type == "+" and hasattr(
+            self.instance, "get_environment_default"
+        ):
+            prev_record = self.instance.get_environment_default().history.first()
+        else:
+            # we only return the change details for updates and
+            # certain additions
             return
 
         return [
             change
-            for change in self.diff_against(self.prev_record).changes
+            for change in self.diff_against(prev_record).changes
             if change.field not in self._change_details_excluded_fields
         ]
 

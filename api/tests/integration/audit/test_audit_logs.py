@@ -178,3 +178,97 @@ def test_retrieve_audit_log_does_not_include_change_details_for_non_update(
 
     # Then
     assert retrieve_response.json()["change_details"] == []
+
+
+def test_retrieve_audit_log_includes_changes_when_segment_override_created_for_enabled_state(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    environment_api_key: str,
+    environment: int,
+    segment: int,
+) -> None:
+    # First, let's create a segment override
+    data = {
+        "feature_segment": {"segment": segment},
+        "enabled": True,
+        "feature_state_value": {},
+    }
+    create_segment_override_url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment_api_key, feature],
+    )
+    create_segment_override_response = admin_client.post(
+        create_segment_override_url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    assert create_segment_override_response.status_code == status.HTTP_201_CREATED
+
+    # Now, that should have created an audit log, let's check
+    get_audit_logs_url = "%s?environment=%s" % (
+        reverse("api-v1:audit-list"),
+        environment,
+    )
+    get_audit_logs_response = admin_client.get(get_audit_logs_url)
+    assert get_audit_logs_response.status_code == status.HTTP_200_OK
+    results = get_audit_logs_response.json()["results"]
+
+    # the first audit log in the list (i.e. most recent) should be the one that we want
+    audit_log_id = results[0]["id"]
+    get_audit_log_detail_url = reverse("api-v1:audit-detail", args=[audit_log_id])
+    get_audit_log_detail_response = admin_client.get(get_audit_log_detail_url)
+    assert get_audit_log_detail_response.status_code == status.HTTP_200_OK
+    audit_log_details = get_audit_log_detail_response.json()
+
+    # now let's check that we have some information in the change_details
+    assert audit_log_details["change_details"] == [
+        {"field": "enabled", "new": True, "old": False}
+    ]
+
+
+def test_retrieve_audit_log_includes_changes_when_segment_override_created_for_feature_value(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    default_feature_value: str,
+    environment_api_key: str,
+    environment: int,
+    segment: int,
+) -> None:
+    # First, let's create a segment override
+    data = {
+        "feature_segment": {"segment": segment},
+        "feature_state_value": {"value_type": "unicode", "string_value": "foo"},
+    }
+    create_segment_override_url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment_api_key, feature],
+    )
+    create_segment_override_response = admin_client.post(
+        create_segment_override_url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    assert create_segment_override_response.status_code == status.HTTP_201_CREATED
+
+    # Now, that should have created an audit log, let's check
+    get_audit_logs_url = "%s?environment=%s" % (
+        reverse("api-v1:audit-list"),
+        environment,
+    )
+    get_audit_logs_response = admin_client.get(get_audit_logs_url)
+    assert get_audit_logs_response.status_code == status.HTTP_200_OK
+    results = get_audit_logs_response.json()["results"]
+
+    # the first audit log in the list (i.e. most recent) should be the one that we want
+    audit_log_id = results[0]["id"]
+    get_audit_log_detail_url = reverse("api-v1:audit-detail", args=[audit_log_id])
+    get_audit_log_detail_response = admin_client.get(get_audit_log_detail_url)
+    assert get_audit_log_detail_response.status_code == status.HTTP_200_OK
+    audit_log_details = get_audit_log_detail_response.json()
+
+    # now let's check that we have some information in the change_details
+    assert audit_log_details["change_details"] == [
+        {"field": "string_value", "new": "foo", "old": default_feature_value}
+    ]
