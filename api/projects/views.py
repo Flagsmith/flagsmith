@@ -13,7 +13,6 @@ from rest_framework.response import Response
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from environments.serializers import EnvironmentSerializerLight
-from environments.tasks import delete_environment
 from permissions.permissions_calculator import get_project_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
@@ -175,12 +174,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         identity_migrator.trigger_migration()
         return Response(status=status.HTTP_202_ACCEPTED)
-
-    def perform_destroy(self, instance: Project) -> None:
-        instance.delete()
-
-        for environment_id in instance.environments.values_list("id", flat=True):
-            delete_environment.delay(kwargs={"environment_id": environment_id})
 
 
 class BaseProjectPermissionsViewSet(viewsets.ModelViewSet):

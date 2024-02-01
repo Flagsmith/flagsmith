@@ -100,7 +100,7 @@ class Feature(
             "Feature States will be created for the new selected projects Environments for this "
             "Feature. Also this will remove any Tags associated with a feature as Tags are Project defined"
         ),
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
     )
     initial_value = models.CharField(
         max_length=20000, null=True, default=None, blank=True
