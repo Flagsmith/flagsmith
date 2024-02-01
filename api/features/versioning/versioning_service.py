@@ -57,7 +57,7 @@ def get_environment_flags_list(
     )
 
     if feature_name:
-        feature_states.filter(feature__name__iexact=feature_name)
+        feature_states = feature_states.filter(feature__name__iexact=feature_name)
 
     # Build up a dictionary in the form
     # {(feature_id, feature_segment_id, identity_id): feature_state}
