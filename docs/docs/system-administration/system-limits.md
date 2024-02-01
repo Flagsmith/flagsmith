@@ -36,4 +36,4 @@ In order to ensure consistent performance, Flagsmith has the following limitatio
 
 Requests made to admin endpoints (i.e., non-SDK endpoints) are subject to a default rate limit of 500 per minute. If you
 are self-hosting, you have the flexibility to modify this limit by adjusting the value of the environment variable
-USER_THROTTLE_RATE.
+`USER_THROTTLE_RATE`.
