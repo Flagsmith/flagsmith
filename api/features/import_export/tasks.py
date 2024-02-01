@@ -34,6 +34,31 @@ def clear_stale_feature_imports_and_exports() -> None:
     FeatureImport.objects.filter(created_at__lt=two_weeks_ago).delete()
 
 
+@register_recurring_task(
+    run_every=timedelta(minutes=10),
+)
+def retire_stalled_feature_imports_and_exports() -> None:
+    ten_minutes_ago = timezone.now() - timedelta(minutes=10)
+
+    feature_exports = []
+    for feature_export in FeatureExport.objects.filter(
+        created_at__lt=ten_minutes_ago,
+        status=PROCESSING,
+    ):
+        feature_export.status = FAILED
+        feature_exports.append(feature_export)
+    FeatureExport.objects.bulk_update(feature_exports, ["status"])
+
+    feature_imports = []
+    for feature_import in FeatureImport.objects.filter(
+        created_at__lt=ten_minutes_ago,
+        status=PROCESSING,
+    ):
+        feature_import.status = FAILED
+        feature_imports.append(feature_import)
+    FeatureImport.objects.bulk_update(feature_imports, ["status"])
+
+
 def _export_features_for_environment(
     feature_export: FeatureExport, tag_ids: Optional[list[int]]
 ) -> None:
@@ -105,6 +130,16 @@ def export_features_for_environment(
 @register_task_handler()
 def import_features_for_environment(feature_import_id: int) -> None:
     feature_import = FeatureImport.objects.get(id=feature_import_id)
+    try:
+        _import_features_for_environment(feature_import)
+        assert feature_import.status == SUCCESS
+    except Exception:
+        feature_import.status = FAILED
+        feature_import.save()
+        raise
+
+
+def _import_features_for_environment(feature_import: FeatureImport) -> None:
     environment = feature_import.environment
     input_data = json.loads(feature_import.data)
     project = environment.project
@@ -125,6 +160,9 @@ def import_features_for_environment(feature_import_id: int) -> None:
                 existing_feature.delete()
 
         _create_new_feature(feature_data, project, environment)
+
+    feature_import.status = SUCCESS
+    feature_import.save()
 
 
 def _save_feature_state_value_with_type(
