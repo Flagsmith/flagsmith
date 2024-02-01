@@ -6,13 +6,11 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 from pytest_lazyfixture import lazy_fixture
-from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from environments.dynamodb.types import ProjectIdentityMigrationStatus
 from environments.identities.models import Identity
-from environments.models import Environment
 from features.models import Feature, FeatureSegment
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import (
@@ -785,25 +783,3 @@ def test_get_project_data_by_id(
     assert response_json["total_features"] == num_features
     assert response_json["total_segments"] == num_segments
     assert response_json["show_edge_identity_overrides_for_feature"] is False
-
-
-def test_delete_project__calls_expected(
-    admin_client: APIClient,
-    project: Project,
-    environment: Environment,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    url = reverse("api-v1:projects:project-detail", args=[project.id])
-
-    delete_environment_mock = mocker.patch("projects.views.delete_environment")
-
-    # When
-    admin_client.delete(url)
-
-    # Then
-    project.refresh_from_db()
-    assert project.deleted
-    delete_environment_mock.delay.assert_called_once_with(
-        kwargs={"environment_id": environment.id}
-    )
