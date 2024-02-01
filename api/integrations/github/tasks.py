@@ -4,11 +4,13 @@ from typing import Any
 from features.models import Feature
 from integrations.github.github import GithubWrapper
 from organisations.models import Organisation
+from task_processor.decorators import register_task_handler
 from webhooks.webhooks import WebhookEventType
 
 logger = logging.getLogger(__name__)
 
 
+@register_task_handler()
 def call_github_app_webhook_for_feature_state(
     organisation: Organisation, event_data: dict[str, Any], event_type: WebhookEventType
 ):

@@ -1,5 +1,3 @@
-from threading import Thread
-
 from environments.models import Webhook
 from features.models import FeatureState
 from integrations.github.tasks import call_github_app_webhook_for_feature_state
@@ -57,14 +55,13 @@ def trigger_feature_state_change_webhooks(
         )
     )
 
-    Thread(
-        target=call_github_app_webhook_for_feature_state,
+    call_github_app_webhook_for_feature_state.delay(
         args=(
             instance.environment.project.organisation,
             data,
             event_type,
         ),
-    ).start()
+    )
 
 
 def _get_previous_state(
