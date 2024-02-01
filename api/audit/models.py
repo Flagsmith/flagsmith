@@ -3,6 +3,7 @@ from importlib import import_module
 
 from django.db import models
 from django.db.models import Model, Q
+from django.utils import timezone
 from django_lifecycle import (
     AFTER_CREATE,
     BEFORE_CREATE,
@@ -19,7 +20,7 @@ RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 
 
 class AuditLog(LifecycleModel):
-    created_date = models.DateTimeField("DateCreated", auto_now_add=True)
+    created_date = models.DateTimeField("DateCreated")
 
     project = models.ForeignKey(
         Project, related_name="audit_logs", null=True, on_delete=models.DO_NOTHING
@@ -78,9 +79,15 @@ class AuditLog(LifecycleModel):
         return "send_environments_to_dynamodb" not in skip_signals_and_hooks
 
     @property
-    def history_record(self):
+    def history_record(self) -> typing.Optional[Model]:
+        if not (self.history_record_class_path and self.history_record_id):
+            # There are still AuditLog records that will not have this detail
+            # for example, audit log records which are created when segment
+            # override priorities are changed.
+            return
+
         klass = self.get_history_record_model_class(self.history_record_class_path)
-        return klass.objects.get(id=self.history_record_id)
+        return klass.objects.filter(history_id=self.history_record_id).first()
 
     @property
     def environment_name(self) -> str:
@@ -103,6 +110,11 @@ class AuditLog(LifecycleModel):
         if self.environment and self.project is None:
             self.project = self.environment.project
 
+    @hook(BEFORE_CREATE)
+    def add_created_date(self) -> None:
+        if not self.created_date:
+            self.created_date = timezone.now()
+
     @hook(
         AFTER_CREATE,
         priority=priority.HIGHEST_PRIORITY,
@@ -110,16 +122,21 @@ class AuditLog(LifecycleModel):
         is_now=True,
     )
     def process_environment_update(self):
+        from environments.models import Environment
         from environments.tasks import process_environment_update
 
         environments_filter = Q()
         if self.environment_id:
             environments_filter = Q(id=self.environment_id)
 
-        # Use a queryset to perform update to prevent signals being called at this point.
-        # Since we're re-saving the environment, we don't want to duplicate signals.
-        self.project.environments.filter(environments_filter).update(
-            updated_at=self.created_date
-        )
+        environment_ids = self.project.environments.filter(
+            environments_filter
+        ).values_list("id", flat=True)
+
+        # Update environment individually to avoid deadlock
+        for environment_id in environment_ids:
+            Environment.objects.filter(id=environment_id).update(
+                updated_at=self.created_date
+            )
 
         process_environment_update.delay(args=(self.id,))

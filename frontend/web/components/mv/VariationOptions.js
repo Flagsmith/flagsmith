@@ -5,6 +5,7 @@ import InfoMessage from 'components/InfoMessage'
 import ErrorMessage from 'components/ErrorMessage'
 
 export default function VariationOptions({
+  controlPercentage,
   controlValue,
   disabled,
   multivariateOptions,
@@ -18,7 +19,7 @@ export default function VariationOptions({
   variationOverrides,
   weightTitle,
 }) {
-  const invalid = multivariateOptions.length && controlValue < 0
+  const invalid = multivariateOptions.length && controlPercentage < 0
   if (!multivariateOptions || !multivariateOptions.length) {
     return null
   }
@@ -28,14 +29,19 @@ export default function VariationOptions({
   return (
     <>
       {invalid && (
-        <ErrorMessage error='Your variation percentage splits total to over 100%' />
+        <ErrorMessage
+          className='mt-2'
+          error='Your variation percentage splits total to over 100%'
+        />
       )}
       {!preventRemove && (
         <p className='mb-4'>
           <InfoMessage>
-            Variation values are shared amongst environments, their weights are
-            specific to this Environment. These values will only apply when you
-            identify via the SDK.{' '}
+            Changing a Variation Value will affect{' '}
+            <strong>all environments</strong>, their weights are specific to
+            this environment. Existing users will see the new variation value if
+            it is changed. These values will only apply when you identify via
+            the SDK.
             <a
               target='_blank'
               href='https://docs.flagsmith.com/basic-features/managing-features#multi-variate-flags'

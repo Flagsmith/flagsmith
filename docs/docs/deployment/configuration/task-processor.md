@@ -13,7 +13,7 @@ A basic docker-compose setup might look like:
 
 ```yaml
     postgres:
-        image: postgres:11.12-alpine
+        image: postgres:15.5-alpine
         environment:
             POSTGRES_PASSWORD: password
             POSTGRES_DB: flagsmith
@@ -55,7 +55,7 @@ options are via command line arguments when starting the processor.
 | ------------------- | ------------------------------------------------------------------------- | ------- |
 | `--sleepintervalms` | The amount of ms each worker should sleep between checking for a new task | 2000    |
 | `--numthreads`      | The number of worker threads to run per task processor instance           | 5       |
-| `--graceperiodms`   | The amount of ms before a worker thread is considered 'stuck'.            | 3000    |
+| `--graceperiodms`   | The amount of ms before a worker thread is considered 'stuck'.            | 20000   |
 
 ## Monitoring
 

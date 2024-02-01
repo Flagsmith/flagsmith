@@ -5,7 +5,9 @@ from typing import Type
 from unittest import TestCase, mock
 
 import pytest
+import responses
 from core.constants import FLAGSMITH_SIGNATURE_HEADER
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from requests.exceptions import ConnectionError, Timeout
 
@@ -20,6 +22,9 @@ from webhooks.webhooks import (
     WebhookEventType,
     WebhookType,
     call_environment_webhooks,
+    call_integration_webhook,
+    call_organisation_webhooks,
+    call_webhook_with_failure_mail_after_retries,
     trigger_sample_webhook,
 )
 
@@ -45,9 +50,9 @@ class WebhooksTestCase(TestCase):
 
         # When
         call_environment_webhooks(
-            environment=self.environment,
+            environment_id=self.environment.id,
             data={},
-            event_type=WebhookEventType.FLAG_UPDATED,
+            event_type=WebhookEventType.FLAG_UPDATED.value,
         )
 
         # Then
@@ -70,9 +75,9 @@ class WebhooksTestCase(TestCase):
 
         # When
         call_environment_webhooks(
-            environment=self.environment,
+            environment_id=self.environment.id,
             data={},
-            event_type=WebhookEventType.FLAG_UPDATED,
+            event_type=WebhookEventType.FLAG_UPDATED.value,
         )
 
         # Then
@@ -124,9 +129,9 @@ class WebhooksTestCase(TestCase):
         ).hexdigest()
 
         call_environment_webhooks(
-            environment=self.environment,
+            environment_id=self.environment.id,
             data={},
-            event_type=WebhookEventType.FLAG_UPDATED,
+            event_type=WebhookEventType.FLAG_UPDATED.value,
         )
         # When
         _, kwargs = mock_requests.post.call_args_list[0]
@@ -144,9 +149,9 @@ class WebhooksTestCase(TestCase):
         )
         # When
         call_environment_webhooks(
-            environment=self.environment,
+            environment_id=self.environment.id,
             data={},
-            event_type=WebhookEventType.FLAG_UPDATED,
+            event_type=WebhookEventType.FLAG_UPDATED.value,
         )
 
         # Then
@@ -155,6 +160,7 @@ class WebhooksTestCase(TestCase):
 
 
 @pytest.mark.parametrize("expected_error", [ConnectionError, Timeout])
+@pytest.mark.django_db
 def test_call_environment_webhooks__multiple_webhooks__failure__calls_expected(
     mocker: MockerFixture,
     expected_error: Type[Exception],
@@ -179,36 +185,160 @@ def test_call_environment_webhooks__multiple_webhooks__failure__calls_expected(
     )
 
     expected_data = {}
-    expected_event_type = WebhookEventType.FLAG_UPDATED
+    expected_event_type = WebhookEventType.FLAG_UPDATED.value
     expected_send_failure_email_data = {
-        "event_type": expected_event_type.value,
+        "event_type": expected_event_type,
         "data": expected_data,
     }
     expected_send_failure_status_code = f"N/A ({expected_error.__name__})"
 
+    retries = 4
     # When
     call_environment_webhooks(
-        environment=environment,
+        environment_id=environment.id,
         data=expected_data,
         event_type=expected_event_type,
+        retries=retries,
     )
 
     # Then
+    assert requests_post_mock.call_count == 2 * retries
     assert send_failure_email_mock.call_count == 2
     send_failure_email_mock.assert_has_calls(
         [
             mocker.call(
                 webhook_2,
                 expected_send_failure_email_data,
-                WebhookType.ENVIRONMENT,
+                WebhookType.ENVIRONMENT.value,
                 expected_send_failure_status_code,
             ),
             mocker.call(
                 webhook_1,
                 expected_send_failure_email_data,
-                WebhookType.ENVIRONMENT,
+                WebhookType.ENVIRONMENT.value,
                 expected_send_failure_status_code,
             ),
         ],
         any_order=True,
     )
+
+
+@pytest.mark.parametrize("expected_error", [ConnectionError, Timeout])
+@pytest.mark.django_db
+def test_call_organisation_webhooks__multiple_webhooks__failure__calls_expected(
+    mocker: MockerFixture,
+    expected_error: Type[Exception],
+    organisation: Organisation,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    requests_post_mock = mocker.patch("webhooks.webhooks.requests.post")
+    requests_post_mock.side_effect = expected_error()
+    send_failure_email_mock: mock.Mock = mocker.patch(
+        "webhooks.webhooks.send_failure_email"
+    )
+
+    webhook_1 = OrganisationWebhook.objects.create(
+        url="http://url.1.com", enabled=True, organisation=organisation
+    )
+    webhook_2 = OrganisationWebhook.objects.create(
+        url="http://url.2.com", enabled=True, organisation=organisation
+    )
+
+    expected_data = {}
+    expected_event_type = WebhookEventType.FLAG_UPDATED.value
+    expected_send_failure_email_data = {
+        "event_type": expected_event_type,
+        "data": expected_data,
+    }
+    expected_send_failure_status_code = f"N/A ({expected_error.__name__})"
+
+    retries = 5
+
+    # When
+    call_organisation_webhooks(
+        organisation_id=organisation.id,
+        data=expected_data,
+        event_type=expected_event_type,
+        retries=retries,
+    )
+
+    # Then
+    assert requests_post_mock.call_count == 2 * retries
+    assert send_failure_email_mock.call_count == 2
+    send_failure_email_mock.assert_has_calls(
+        [
+            mocker.call(
+                webhook_2,
+                expected_send_failure_email_data,
+                WebhookType.ORGANISATION.value,
+                expected_send_failure_status_code,
+            ),
+            mocker.call(
+                webhook_1,
+                expected_send_failure_email_data,
+                WebhookType.ORGANISATION.value,
+                expected_send_failure_status_code,
+            ),
+        ],
+        any_order=True,
+    )
+
+
+def test_call_webhook_with_failure_mail_after_retries_raises_error_on_invalid_args():
+    try_count = 10
+    with pytest.raises(ValueError):
+        call_webhook_with_failure_mail_after_retries(0, {}, "", try_count=try_count)
+
+
+def test_call_webhook_with_failure_mail_after_retries_does_not_retry_if_not_using_processor(
+    mocker: MockerFixture, organisation: Organisation, settings: SettingsWrapper
+):
+    # Given
+    requests_post_mock = mocker.patch("webhooks.webhooks.requests.post")
+    requests_post_mock.side_effect = ConnectionError
+    send_failure_email_mock: mock.Mock = mocker.patch(
+        "webhooks.webhooks.send_failure_email"
+    )
+
+    settings.RETRY_WEBHOOKS = False
+
+    webhook = OrganisationWebhook.objects.create(
+        url="http://url.1.com", enabled=True, organisation=organisation
+    )
+
+    # When
+    call_webhook_with_failure_mail_after_retries(
+        webhook.id,
+        data={},
+        webhook_type=WebhookType.ORGANISATION.value,
+        send_failure_mail=True,
+    )
+
+    # Then
+    assert requests_post_mock.call_count == 1
+    send_failure_email_mock.assert_called_once()
+
+
+@responses.activate()
+def test_call_integration_webhook_does_not_raise_error_on_backoff_give_up(
+    mocker: MockerFixture,
+) -> None:
+    """
+    This test is essentially verifying that the `raise_on_giveup` argument
+    passed to the backoff decorator on _call_webhook is working as we
+    expect it to.
+    """
+    # Given
+    url = "https://test.com/webhook"
+    config = mocker.MagicMock(secret=None, url=url)
+
+    responses.add(url=url, method="POST", body=json.dumps({}), status=400)
+
+    # When
+    result = call_integration_webhook(config, data={})
+
+    # Then
+    # we don't get a result from the function (as expected), and no exception is
+    # raised
+    assert result is None

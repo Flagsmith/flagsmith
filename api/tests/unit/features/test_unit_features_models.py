@@ -1,6 +1,7 @@
 from datetime import timedelta
 from unittest import mock
 
+import freezegun
 import pytest
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
@@ -25,180 +26,198 @@ yesterday = now - timedelta(days=1)
 tomorrow = now + timedelta(days=1)
 
 
-@pytest.mark.django_db
-class FeatureTestCase(TestCase):
-    def setUp(self):
-        self.organisation = Organisation.objects.create(name="Test Org")
-        self.project = Project.objects.create(
-            name="Test Project", organisation=self.organisation
+def test_feature_should_create_feature_states_for_environments(
+    db: None,
+    environment: Environment,
+    project: Project,
+) -> None:
+    # Given
+    Environment.objects.create(name="Test Environment 2", project=project)
+
+    # When
+    feature = Feature.objects.create(name="Test Feature", project=project)
+
+    # Then
+    feature_states = FeatureState.objects.filter(feature=feature)
+    assert feature_states.count() == 2
+
+
+def test_save_existing_feature_should_not_change_feature_state_enabled(
+    db: None,
+    project: Project,
+) -> None:
+    # Given
+    default_enabled = True
+    feature = Feature.objects.create(
+        name="Test Feature", project=project, default_enabled=default_enabled
+    )
+
+    # When
+    # we update the default_enabled state of the feature and save it again
+    feature.default_enabled = not default_enabled
+    feature.save()
+
+    # Then
+    # we expect that the feature state enabled values have not changed
+    assert all(fs.enabled == default_enabled for fs in feature.feature_states.all())
+
+
+def test_creating_feature_with_initial_value_should_set_value_for_all_feature_states(
+    project: Project,
+    environment: Environment,
+) -> None:
+    # Given
+    Environment.objects.create(name="Test Environment 2", project=project)
+
+    # When
+    value = "This is a value"
+    feature = Feature.objects.create(
+        name="Test Feature", project=project, initial_value=value
+    )
+
+    # Then
+    feature_states = FeatureState.objects.filter(feature=feature)
+
+    assert feature_states.count() == 2
+    for feature_state in feature_states:
+        feature_state.get_feature_state_value() == value
+
+
+def test_creating_feature_with_integer_initial_value_should_set_integer_value_for_all_feature_states(
+    project: Project,
+    environment: Environment,
+) -> None:
+    # Given
+    Environment.objects.create(name="Test Environment 2", project=project)
+
+    initial_value = 1
+    feature = Feature.objects.create(
+        name="Test feature",
+        project=project,
+        initial_value=initial_value,
+    )
+
+    # When
+    feature_states = FeatureState.objects.filter(feature=feature)
+
+    # Then
+    assert feature_states.count() == 2
+    for feature_state in feature_states:
+        assert feature_state.get_feature_state_value() == initial_value
+
+
+def test_creating_feature_with_boolean_initial_value_should_set_boolean_value_for_all_feature_states(
+    project: Project,
+    environment: Environment,
+) -> None:
+    # Given
+    Environment.objects.create(name="Test Environment 2", project=project)
+
+    initial_value = False
+    feature = Feature.objects.create(
+        name="Test feature",
+        project=project,
+        initial_value=initial_value,
+    )
+
+    # When
+    feature_states = FeatureState.objects.filter(feature=feature)
+
+    # Then
+    assert feature_states.count() == 2
+    for feature_state in feature_states:
+        assert feature_state.get_feature_state_value() == initial_value
+
+
+def test_cannot_create_feature_with_same_case_insensitive_name(
+    project: Project,
+) -> None:
+    # Given
+    feature_name = "Test Feature"
+
+    feature_one = Feature(project=project, name=feature_name)
+    feature_two = Feature(project=project, name=feature_name.lower())
+
+    # When
+    feature_one.save()
+
+    # Then
+    with pytest.raises(IntegrityError):
+        feature_two.save()
+
+
+def test_updating_feature_name_should_update_feature_states(
+    project: Project,
+) -> None:
+    # Given
+    old_feature_name = "old_feature"
+    new_feature_name = "new_feature"
+
+    feature = Feature.objects.create(project=project, name=old_feature_name)
+
+    # When
+    feature.name = new_feature_name
+    feature.save()
+
+    # Then
+    FeatureState.objects.filter(feature__name=new_feature_name).exists()
+
+
+def test_full_clean_fails_when_duplicate_case_insensitive_name(
+    project: Project,
+) -> None:
+    # unit test to validate validate_unique() method
+
+    # Given
+    feature_name = "Test Feature"
+    Feature.objects.create(name=feature_name, initial_value="test", project=project)
+
+    # When
+    with pytest.raises(ValidationError):
+        feature_two = Feature(
+            name=feature_name.lower(),
+            initial_value="test",
+            project=project,
         )
-        self.environment_one = Environment.objects.create(
-            name="Test Environment 1", project=self.project
-        )
-        self.environment_two = Environment.objects.create(
-            name="Test Environment 2", project=self.project
-        )
+        feature_two.full_clean()
 
-    def test_feature_should_create_feature_states_for_environments(self):
-        feature = Feature.objects.create(name="Test Feature", project=self.project)
 
-        feature_states = FeatureState.objects.filter(feature=feature)
+def test_updating_feature_should_allow_case_insensitive_name(project: Project) -> None:
+    # Given
+    feature_name = "Test Feature"
+    feature = Feature.objects.create(
+        project=project, name=feature_name, initial_value="test"
+    )
 
-        self.assertEquals(feature_states.count(), 2)
+    # When
+    feature.name = feature_name.lower()
+    # Should not raise error as the same Object.
+    feature.full_clean()
 
-    def test_save_existing_feature_should_not_change_feature_state_enabled(self):
-        # Given
-        default_enabled = True
-        feature = Feature.objects.create(
-            name="Test Feature", project=self.project, default_enabled=default_enabled
-        )
 
-        # When
-        # we update the default_enabled state of the feature and save it again
-        feature.default_enabled = not default_enabled
-        feature.save()
+def test_when_create_feature_with_tags_then_success(project: Project) -> None:
+    # Given
+    tag1 = Tag.objects.create(
+        label="Test Tag",
+        color="#fffff",
+        description="Test Tag description",
+        project=project,
+    )
+    tag2 = Tag.objects.create(
+        label="Test Tag",
+        color="#fffff",
+        description="Test Tag description",
+        project=project,
+    )
+    feature = Feature.objects.create(project=project, name="test feature")
 
-        # Then
-        # we expect that the feature state enabled values have not changed
-        assert all(fs.enabled == default_enabled for fs in feature.feature_states.all())
+    # When
+    tags_for_feature = Tag.objects.all()
+    feature.tags.set(tags_for_feature)
+    feature.save()
 
-    def test_creating_feature_with_initial_value_should_set_value_for_all_feature_states(
-        self,
-    ):
-        feature = Feature.objects.create(
-            name="Test Feature",
-            project=self.project,
-            initial_value="This is a value",
-        )
-
-        feature_states = FeatureState.objects.filter(feature=feature)
-
-        for feature_state in feature_states:
-            self.assertEquals(
-                feature_state.get_feature_state_value(), "This is a value"
-            )
-
-    def test_creating_feature_with_integer_initial_value_should_set_integer_value_for_all_feature_states(
-        self,
-    ):
-        # Given
-        initial_value = 1
-        feature = Feature.objects.create(
-            name="Test feature",
-            project=self.project,
-            initial_value=initial_value,
-        )
-
-        # When
-        feature_states = FeatureState.objects.filter(feature=feature)
-
-        # Then
-        for feature_state in feature_states:
-            assert feature_state.get_feature_state_value() == initial_value
-
-    def test_creating_feature_with_boolean_initial_value_should_set_boolean_value_for_all_feature_states(
-        self,
-    ):
-        # Given
-        initial_value = False
-        feature = Feature.objects.create(
-            name="Test feature",
-            project=self.project,
-            initial_value=initial_value,
-        )
-
-        # When
-        feature_states = FeatureState.objects.filter(feature=feature)
-
-        # Then
-        for feature_state in feature_states:
-            assert feature_state.get_feature_state_value() == initial_value
-
-    def test_updating_feature_state_should_trigger_webhook(self):
-        Feature.objects.create(name="Test Feature", project=self.project)
-        # TODO: implement webhook test method
-
-    def test_cannot_create_feature_with_same_case_insensitive_name(self):
-        # Given
-        feature_name = "Test Feature"
-
-        feature_one = Feature(project=self.project, name=feature_name)
-        feature_two = Feature(project=self.project, name=feature_name.lower())
-
-        # When
-        feature_one.save()
-
-        # Then
-        with pytest.raises(IntegrityError):
-            feature_two.save()
-
-    def test_updating_feature_name_should_update_feature_states(self):
-        # Given
-        old_feature_name = "old_feature"
-        new_feature_name = "new_feature"
-
-        feature = Feature.objects.create(project=self.project, name=old_feature_name)
-
-        # When
-        feature.name = new_feature_name
-        feature.save()
-
-        # Then
-        FeatureState.objects.filter(feature__name=new_feature_name).exists()
-
-    def test_full_clean_fails_when_duplicate_case_insensitive_name(self):
-        # unit test to validate validate_unique() method
-
-        # Given
-        feature_name = "Test Feature"
-        Feature.objects.create(
-            name=feature_name, initial_value="test", project=self.project
-        )
-
-        # When
-        with self.assertRaises(ValidationError):
-            feature_two = Feature(
-                name=feature_name.lower(),
-                initial_value="test",
-                project=self.project,
-            )
-            feature_two.full_clean()
-
-    def test_updating_feature_should_allow_case_insensitive_name(self):
-        # Given
-        feature_name = "Test Feature"
-
-        feature = Feature.objects.create(
-            project=self.project, name=feature_name, initial_value="test"
-        )
-
-        # When
-        feature.name = feature_name.lower()
-        feature.full_clean()  # should not raise error as the same Object
-
-    def test_when_create_feature_with_tags_then_success(self):
-        # Given
-        tag1 = Tag.objects.create(
-            label="Test Tag",
-            color="#fffff",
-            description="Test Tag description",
-            project=self.project,
-        )
-        tag2 = Tag.objects.create(
-            label="Test Tag",
-            color="#fffff",
-            description="Test Tag description",
-            project=self.project,
-        )
-        feature = Feature.objects.create(project=self.project, name="test feature")
-
-        # When
-        tags_for_feature = Tag.objects.all()
-        feature.tags.set(tags_for_feature)
-        feature.save()
-
-        self.assertEqual(feature.tags.count(), 2)
-        self.assertEqual(list(feature.tags.all()), [tag1, tag2])
+    assert feature.tags.count() == 2
+    assert list(feature.tags.all()) == [tag1, tag2]
 
 
 @pytest.mark.django_db
@@ -848,9 +867,10 @@ def test_feature_segment_update_priorities_when_changes(
     new_id_priority_pairs = [(feature_segment.id, 1), (another_feature_segment.id, 0)]
 
     # When
-    returned_feature_segments = FeatureSegment.update_priorities(
-        new_feature_segment_id_priorities=new_id_priority_pairs
-    )
+    with freezegun.freeze_time(now):
+        returned_feature_segments = FeatureSegment.update_priorities(
+            new_feature_segment_id_priorities=new_id_priority_pairs
+        )
 
     # Then
     assert sorted(
@@ -864,6 +884,7 @@ def test_feature_segment_update_priorities_when_changes(
             "feature_segment_ids": [feature_segment.id, another_feature_segment.id],
             "user_id": mocked_request.user.id,
             "master_api_key_id": mocked_request.master_api_key.id,
+            "changed_at": now.isoformat(),
         }
     )
 

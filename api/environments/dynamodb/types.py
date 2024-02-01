@@ -4,6 +4,8 @@ from datetime import datetime
 
 import boto3
 from django.conf import settings
+from flag_engine.features.models import FeatureStateModel
+from pydantic import BaseModel
 
 project_metadata_table = None
 
@@ -69,3 +71,22 @@ class DynamoProjectMetadata:
 
     def _save(self):
         return project_metadata_table.put_item(Item=asdict(self))
+
+    def delete(self):
+        if project_metadata_table:
+            project_metadata_table.delete_item(Key={"id": self.id})
+
+
+class IdentityOverrideV2(BaseModel):
+    environment_id: str
+    document_key: str
+    environment_api_key: str
+    identifier: str
+    identity_uuid: str
+    feature_state: FeatureStateModel
+
+
+@dataclass
+class IdentityOverridesV2Changeset:
+    to_delete: list[IdentityOverrideV2]
+    to_put: list[IdentityOverrideV2]

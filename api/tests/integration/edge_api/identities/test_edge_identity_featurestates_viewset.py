@@ -8,6 +8,7 @@ from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.test import APIClient
+
 from tests.integration.helpers import create_mv_option_with_api
 
 
@@ -224,6 +225,7 @@ def test_edge_identities_featurestate_detail_calls_sync_identity_if_deleted_feat
 
 
 def test_edge_identities_featurestate_delete(
+    dynamodb_wrapper_v2,
     admin_client,
     environment,
     environment_api_key,
@@ -325,6 +327,7 @@ def test_edge_identities_create_featurestate_returns_400_if_feature_state_alread
 
 
 def test_edge_identities_create_featurestate(
+    dynamodb_wrapper_v2,
     admin_client,
     environment,
     environment_api_key,
@@ -388,6 +391,7 @@ def test_edge_identities_create_featurestate(
 
 
 def test_edge_identities_create_mv_featurestate(
+    dynamodb_wrapper_v2,
     admin_client,
     environment,
     environment_api_key,
@@ -467,6 +471,7 @@ def test_edge_identities_create_mv_featurestate(
 
 
 def test_edge_identities_update_featurestate(
+    dynamodb_wrapper_v2,
     admin_client,
     environment,
     environment_api_key,
@@ -555,6 +560,7 @@ def test_edge_identities_patch_returns_405(
 
 
 def test_edge_identities_update_mv_featurestate(
+    dynamodb_wrapper_v2,
     admin_client,
     environment,
     environment_api_key,
@@ -701,6 +707,7 @@ def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
     "lazy_feature", [(lazy_fixture("feature")), (lazy_fixture("feature_name"))]
 )
 def test_edge_identities_with_identifier_create_featurestate(
+    dynamodb_wrapper_v2,
     admin_client,
     environment,
     environment_api_key,
@@ -766,6 +773,7 @@ def test_edge_identities_with_identifier_create_featurestate(
     "lazy_feature", [(lazy_fixture("feature")), (lazy_fixture("feature_name"))]
 )
 def test_edge_identities_with_identifier_delete_featurestate(
+    dynamodb_wrapper_v2,
     admin_client,
     environment,
     environment_api_key,
@@ -807,6 +815,7 @@ def test_edge_identities_with_identifier_delete_featurestate(
 
 
 def test_edge_identities_with_identifier_update_featurestate(
+    dynamodb_wrapper_v2,
     admin_client,
     environment,
     environment_api_key,

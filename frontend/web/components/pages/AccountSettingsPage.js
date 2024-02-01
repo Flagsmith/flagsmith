@@ -16,6 +16,7 @@ import ConfirmDeleteAccount from 'components/modals/ConfirmDeleteAccount'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import { Link } from 'react-router-dom'
+import InfoMessage from 'components/InfoMessage'
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -198,30 +199,28 @@ class TheComponent extends Component {
                             type='text'
                             name='Email Address'
                           />
-                          {Utils.getFlagsmithHasFeature('change_email') && (
-                            <div className='text-right mt-5'>
-                              <Button
-                                onClick={() =>
-                                  openModal(
-                                    'Change Email Address',
-                                    <ChangeEmailAddress
-                                      onComplete={() => {
-                                        closeModal()
-                                        AppActions.logout()
-                                      }}
-                                    />,
-                                    'p-0',
-                                  )
-                                }
-                                id='change-email-button'
-                                data-test='change-email-button'
-                                type='button'
-                                class='input-group-addon'
-                              >
-                                Change Email Address
-                              </Button>
-                            </div>
-                          )}
+                          <div className='text-right mt-5'>
+                            <Button
+                              onClick={() =>
+                                openModal(
+                                  'Change Email Address',
+                                  <ChangeEmailAddress
+                                    onComplete={() => {
+                                      closeModal()
+                                      AppActions.logout()
+                                    }}
+                                  />,
+                                  'p-0',
+                                )
+                              }
+                              id='change-email-button'
+                              data-test='change-email-button'
+                              type='button'
+                              class='input-group-addon'
+                            >
+                              Change Email Address
+                            </Button>
+                          </div>
                         </div>
                         <InputGroup
                           className='mt-2 mb-4'
@@ -313,21 +312,29 @@ class TheComponent extends Component {
                   </div>
                 </TabItem>
                 <TabItem tabLabel='Keys'>
-                  <div className='mt-4'>
+                  <div className='mt-6'>
                     <div className='col-md-6'>
                       <h5>API Token</h5>
-                      <p className='fs-small lh-sm'>
-                        You can use this token to integrate with our RESTful
-                        API, the documentation can be found{' '}
+                      <InfoMessage>
+                        <p>
+                      You can use this token to securely integrate with the private endpoints of our {' '}
                         <Button
                           theme='text'
-                          href='https://api.flagsmith.com/api/v1/docs/'
+                          href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'
                           target='_blank'
                           className='fw-normal'
                         >
-                          here
+                          RESTful API
                         </Button>
                         .
+                        </p>
+                        <p>
+                        This key should <strong>not</strong> be used directly with our SDKs.
+                        To configure the Flagsmith SDK, go to the Environment settings page and
+                        copy the Environment key from there.
+                        </p>
+                      </InfoMessage>
+                      <p className='fs-small lh-sm'>
                       </p>
                     </div>
                     <div className='col-md-6'>

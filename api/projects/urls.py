@@ -3,6 +3,10 @@ from django.urls import path
 from rest_framework_nested import routers
 
 from audit.views import ProjectAuditLogViewSet
+from features.import_export.views import (
+    FeatureExportListView,
+    FeatureImportListView,
+)
 from features.multivariate.views import MultivariateFeatureOptionViewSet
 from features.views import FeatureViewSet
 from integrations.datadog.views import DataDogConfigurationViewSet
@@ -55,7 +59,6 @@ projects_router.register(
     ProjectAuditLogViewSet,
     basename="project-audit",
 )
-
 nested_features_router = routers.NestedSimpleRouter(
     projects_router, r"features", lookup="feature"
 )
@@ -73,5 +76,15 @@ urlpatterns = [
         "<int:project_pk>/all-user-permissions/<int:user_pk>/",
         get_user_project_permissions,
         name="all-user-permissions",
+    ),
+    path(
+        "<int:project_pk>/feature-exports/",
+        FeatureExportListView.as_view(),
+        name="feature-exports",
+    ),
+    path(
+        "<int:project_pk>/feature-imports/",
+        FeatureImportListView.as_view(),
+        name="feature-imports",
     ),
 ]

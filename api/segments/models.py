@@ -7,6 +7,7 @@ from core.models import (
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from flag_engine.segments import constants
@@ -151,7 +152,9 @@ class Condition(
 
     operator = models.CharField(choices=CONDITION_TYPES, max_length=500)
     property = models.CharField(blank=True, null=True, max_length=1000)
-    value = models.CharField(max_length=1000, blank=True, null=True)
+    value = models.CharField(
+        max_length=settings.SEGMENT_CONDITION_VALUE_LIMIT, blank=True, null=True
+    )
     description = models.TextField(blank=True, null=True)
 
     created_with_segment = models.BooleanField(

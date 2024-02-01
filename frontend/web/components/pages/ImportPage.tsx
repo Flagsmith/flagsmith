@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import _data from 'common/data/base/_data'
 import {
   useCreateLaunchDarklyProjectImportMutation,
@@ -6,6 +6,10 @@ import {
 } from 'common/services/useLaunchDarklyProjectImport'
 import AppLoader from 'components/AppLoader'
 import InfoMessage from 'components/InfoMessage'
+import Input from 'components/base/forms/Input'
+import Utils from 'common/utils/utils'
+import Button from 'components/base/forms/Button'
+import PanelSearch from 'components/PanelSearch'
 
 type ImportPageType = {
   projectId: string
@@ -14,10 +18,10 @@ type ImportPageType = {
 
 const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
   const [LDKey, setLDKey] = useState<string>('')
-  const [importId, setImportId] = useState<string>('')
+  const [importId, setImportId] = useState<number>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [isAppLoading, setAppIsLoading] = useState<boolean>(false)
-  const [projects, setProjects] = useState<string>([])
+  const [projects, setProjects] = useState<{ key: string; name: string }[]>([])
   const [createLaunchDarklyProjectImport, { data, isSuccess }] =
     useCreateLaunchDarklyProjectImportMutation()
 
@@ -25,10 +29,13 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
     data: status,
     isSuccess: statusLoaded,
     refetch,
-  } = useGetLaunchDarklyProjectImportQuery({
-    import_id: importId,
-    project_id: projectId,
-  })
+  } = useGetLaunchDarklyProjectImportQuery(
+    {
+      import_id: `${importId}`,
+      project_id: projectId,
+    },
+    { skip: !importId },
+  )
 
   useEffect(() => {
     const checkImportStatus = async () => {
@@ -50,7 +57,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
   }, [statusLoaded, status, refetch])
 
   useEffect(() => {
-    if (isSuccess) {
+    if (isSuccess && data?.id) {
       setImportId(data.id)
       refetch()
     }
@@ -62,13 +69,17 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
       .get(`https://app.launchdarkly.com/api/v2/projects`, '', {
         'Authorization': LDKey,
       })
-      .then((res) => {
+      .then((res: { items: { key: string; name: string }[] }) => {
         setIsLoading(false)
         setProjects(res.items)
       })
   }
 
-  const createImportLDProjects = (LDKey: string, key: string, projectId: string) => {
+  const createImportLDProjects = (
+    LDKey: string,
+    key: string,
+    projectId: string,
+  ) => {
     createLaunchDarklyProjectImport({
       body: { project_key: key, token: LDKey },
       project_id: projectId,
@@ -85,7 +96,8 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
       )}
       <div className='mt-4'>
         <InfoMessage>
-          Import operations will overwrite existing environments and flags in your project.
+          Import operations will overwrite existing environments and flags in
+          your project.
         </InfoMessage>
         <h5>Import LaunchDarkly Projects</h5>
         <label>Set LaunchDarkly key</label>
@@ -95,7 +107,9 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
               <Input
                 value={LDKey}
                 name='ldkey'
-                onChange={(e) => setLDKey(Utils.safeParseEventValue(e))}
+                onChange={(e: InputEvent) =>
+                  setLDKey(Utils.safeParseEventValue(e))
+                }
                 type='text'
                 placeholder='My LaunchDarkly key'
               />
@@ -124,7 +138,10 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
                   listClassName='row mt-n2 gy-4'
                   title='LaunchDarkly Projects'
                   items={projects}
-                  renderRow={({ name, key }, i) => {
+                  renderRow={(
+                    { key, name }: { key: string; name: string },
+                    i: number,
+                  ) => {
                     return (
                       <>
                         <Button
@@ -133,9 +150,9 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
                             openConfirm(
                               'Import LaunchDarkly project',
                               <span>
-                                Flagsmith will import{' '}
-                                {<strong>{name}</strong>} to {<strong>{projectName}</strong>}.
-                                Are you sure?
+                                Flagsmith will import {<strong>{name}</strong>}{' '}
+                                to {<strong>{projectName}</strong>}. Are you
+                                sure?
                               </span>,
                               () => {
                                 createImportLDProjects(LDKey, key, projectId)

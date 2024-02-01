@@ -17,6 +17,9 @@ def test_get_version_info(mocker: MockerFixture) -> None:
         if file_path == "./ENTERPRISE_VERSION":
             mocked_path_object.exists.return_value = True
 
+        if file_path == "./SAAS_DEPLOYMENT":
+            mocked_path_object.exists.return_value = False
+
         return mocked_path_object
 
     mocked_pathlib.Path.side_effect = path_side_effect
@@ -35,6 +38,7 @@ def test_get_version_info(mocker: MockerFixture) -> None:
         "ci_commit_sha": "some_sha",
         "image_tag": "2.66.2",
         "is_enterprise": True,
+        "is_saas": False,
         "package_versions": {".": "2.66.2"},
     }
 
@@ -49,6 +53,9 @@ def test_get_version_info_with_missing_files(mocker: MockerFixture) -> None:
         if file_path == "./ENTERPRISE_VERSION":
             mocked_path_object.exists.return_value = True
 
+        if file_path == "./SAAS_DEPLOYMENT":
+            mocked_path_object.exists.return_value = False
+
         return mocked_path_object
 
     mocked_pathlib.Path.side_effect = path_side_effect
@@ -62,4 +69,5 @@ def test_get_version_info_with_missing_files(mocker: MockerFixture) -> None:
         "ci_commit_sha": "unknown",
         "image_tag": "unknown",
         "is_enterprise": True,
+        "is_saas": False,
     }

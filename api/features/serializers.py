@@ -20,6 +20,7 @@ from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
 
+from .constants import INTERSECTION, UNION
 from .feature_segments.serializers import (
     CreateSegmentOverrideFeatureSegmentSerializer,
 )
@@ -81,8 +82,16 @@ class FeatureQuerySerializer(serializers.Serializer):
     sort_direction = serializers.ChoiceField(choices=("ASC", "DESC"), default="ASC")
 
     tags = serializers.CharField(
-        required=False, help_text="Comma separated list of tag ids to filter on (AND)"
+        required=False,
+        help_text=(
+            "Comma separated list of tag ids to filter on (AND with "
+            "INTERSECTION, and OR with UNION via tag_strategy)"
+        ),
     )
+    tag_strategy = serializers.ChoiceField(
+        choices=(UNION, INTERSECTION), default=INTERSECTION
+    )
+
     is_archived = serializers.BooleanField(required=False)
     environment = serializers.IntegerField(
         required=False,
@@ -101,7 +110,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         many=True, required=False
     )
     owners = UserListSerializer(many=True, read_only=True)
-
+    group_owners = UserPermissionGroupSummarySerializer(many=True, read_only=True)
     num_segment_overrides = serializers.SerializerMethodField(
         help_text="Number of segment overrides that exist for the given feature "
         "in the environment provided by the `environment` query parameter."
@@ -126,6 +135,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             "multivariate_options",
             "is_archived",
             "owners",
+            "group_owners",
             "uuid",
             "project",
             "num_segment_overrides",

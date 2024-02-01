@@ -1,16 +1,13 @@
 import logging
-import os
 import signal
 import time
 import typing
 from argparse import ArgumentParser
 from datetime import timedelta
-from importlib import reload
 
 from django.core.management import BaseCommand
 from django.utils import timezone
 
-from task_processor import tasks
 from task_processor.task_registry import registered_tasks
 from task_processor.thread_monitoring import (
     clear_unhealthy_threads,
@@ -24,19 +21,6 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # The `register_recurring_task` decorator is executed in the global scope,
-        # meaning it will run whenever the code is executed, including when running
-        # `manage.py` commands such as `migrate` or `showmigrations`. However, this
-        # decorator saves the task to the database, which is not desired unless it is
-        # being run by processor, and to indicate the we set this `RUN_BY_PROCESSOR`
-        # environment variable.
-        os.environ["RUN_BY_PROCESSOR"] = "True"
-
-        # Since the tasks module is loaded by the ready method in TaskProcessorConfig
-        # which is run before the command is initialised, we need to reload the internal
-        # tasks module here to make sure recurring tasks are registered correctly.
-        reload(tasks)
 
         signal.signal(signal.SIGINT, self._exit_gracefully)
         signal.signal(signal.SIGTERM, self._exit_gracefully)
@@ -61,7 +45,7 @@ class Command(BaseCommand):
             "--graceperiodms",
             type=int,
             help="Number of millis before running task is considered 'stuck'.",
-            default=3000,
+            default=20000,
         )
         parser.add_argument(
             "--queuepopsize",

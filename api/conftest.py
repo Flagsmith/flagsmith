@@ -1,9 +1,13 @@
+import os
 import typing
 
+import boto3
 import pytest
 from django.contrib.contenttypes.models import ContentType
-from django.core.cache import cache
+from django.core.cache import caches
 from flag_engine.segments.constants import EQUAL
+from moto import mock_dynamodb
+from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -49,6 +53,10 @@ from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
+from tests.types import (
+    WithEnvironmentPermissionsCallable,
+    WithProjectPermissionsCallable,
+)
 from users.models import FFAdminUser, UserPermissionGroup
 
 trait_key = "key1"
@@ -144,10 +152,11 @@ def xero_subscription(organisation):
 
 
 @pytest.fixture()
-def chargebee_subscription(organisation):
+def chargebee_subscription(organisation: Organisation) -> Subscription:
     subscription = Subscription.objects.get(organisation=organisation)
     subscription.payment_method = CHARGEBEE
     subscription.subscription_id = "subscription-id"
+    subscription.plan = "scale-up-v2"
     subscription.save()
 
     # refresh organisation to load subscription
@@ -183,7 +192,7 @@ def environment(project):
 @pytest.fixture()
 def with_environment_permissions(
     environment: Environment, staff_user: FFAdminUser
-) -> typing.Callable[[list[str], int | None], UserEnvironmentPermission]:
+) -> WithEnvironmentPermissionsCallable:
     """
     Add environment permissions to the staff_user fixture.
     Defaults to associating to the environment fixture.
@@ -206,7 +215,7 @@ def with_environment_permissions(
 @pytest.fixture()
 def with_project_permissions(
     project: Project, staff_user: FFAdminUser
-) -> typing.Callable:
+) -> WithProjectPermissionsCallable:
     """
     Add project permissions to the staff_user fixture.
     Defaults to associating to the project fixture.
@@ -341,9 +350,15 @@ def reset_cache():
     # https://groups.google.com/g/django-developers/c/zlaPsP13dUY
     # TL;DR: Use this if your test interacts with cache since django
     # does not clear cache after every test
-    cache.clear()
+    # Clear all caches before the test
+    for cache in caches.all():
+        cache.clear()
+
     yield
-    cache.clear()
+
+    # Clear all caches after the test
+    for cache in caches.all():
+        cache.clear()
 
 
 @pytest.fixture()
@@ -540,3 +555,71 @@ def project_content_type():
 @pytest.fixture
 def manage_user_group_permission(db):
     return OrganisationPermissionModel.objects.get(key=MANAGE_USER_GROUPS)
+
+
+@pytest.fixture()
+def aws_credentials():
+    """Mocked AWS Credentials for moto."""
+    os.environ["AWS_ACCESS_KEY_ID"] = "testing"
+    os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
+    os.environ["AWS_SECURITY_TOKEN"] = "testing"
+    os.environ["AWS_SESSION_TOKEN"] = "testing"
+    os.environ["AWS_DEFAULT_REGION"] = "eu-west-2"
+
+
+@pytest.fixture()
+def dynamodb(aws_credentials):
+    # TODO: move all wrapper tests to using moto
+    with mock_dynamodb():
+        yield boto3.resource("dynamodb")
+
+
+@pytest.fixture()
+def flagsmith_identities_table(dynamodb: DynamoDBServiceResource) -> Table:
+    return dynamodb.create_table(
+        TableName="flagsmith_identities",
+        KeySchema=[
+            {
+                "AttributeName": "composite_key",
+                "KeyType": "HASH",
+            },
+        ],
+        AttributeDefinitions=[
+            {"AttributeName": "composite_key", "AttributeType": "S"},
+            {"AttributeName": "environment_api_key", "AttributeType": "S"},
+            {"AttributeName": "identifier", "AttributeType": "S"},
+        ],
+        GlobalSecondaryIndexes=[
+            {
+                "IndexName": "environment_api_key-identifier-index",
+                "KeySchema": [
+                    {"AttributeName": "environment_api_key", "KeyType": "HASH"},
+                    {"AttributeName": "identifier", "KeyType": "RANGE"},
+                ],
+                "Projection": {"ProjectionType": "ALL"},
+            }
+        ],
+        BillingMode="PAY_PER_REQUEST",
+    )
+
+
+@pytest.fixture()
+def flagsmith_environments_v2_table(dynamodb: DynamoDBServiceResource) -> Table:
+    return dynamodb.create_table(
+        TableName="flagsmith_environments_v2",
+        KeySchema=[
+            {
+                "AttributeName": "environment_id",
+                "KeyType": "HASH",
+            },
+            {
+                "AttributeName": "document_key",
+                "KeyType": "RANGE",
+            },
+        ],
+        AttributeDefinitions=[
+            {"AttributeName": "environment_id", "AttributeType": "S"},
+            {"AttributeName": "document_key", "AttributeType": "S"},
+        ],
+        BillingMode="PAY_PER_REQUEST",
+    )

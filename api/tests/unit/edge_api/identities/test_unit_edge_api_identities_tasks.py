@@ -2,6 +2,7 @@ from copy import deepcopy
 
 import pytest
 from django.utils import timezone
+from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
@@ -9,8 +10,13 @@ from edge_api.identities.tasks import (
     call_environment_webhook_for_feature_state_change,
     generate_audit_log_records,
     sync_identity_document_features,
+    update_flagsmith_environments_v2_identity_overrides,
 )
-from environments.models import Webhook
+from environments.dynamodb.types import (
+    IdentityOverridesV2Changeset,
+    IdentityOverrideV2,
+)
+from environments.models import Environment, Webhook
 from webhooks.webhooks import WebhookEventType
 
 
@@ -52,8 +58,8 @@ def test_call_environment_webhook_for_feature_state_change_with_new_state_only(
     mock_call_environment_webhooks.assert_called_once()
     call_args = mock_call_environment_webhooks.call_args
 
-    assert call_args[0][0] == environment
-    assert call_args[1]["event_type"] == WebhookEventType.FLAG_UPDATED
+    assert call_args[0][0] == environment.id
+    assert call_args[1]["event_type"] == WebhookEventType.FLAG_UPDATED.value
 
     mock_generate_webhook_feature_state_data.assert_called_once_with(
         feature=feature,
@@ -105,8 +111,8 @@ def test_call_environment_webhook_for_feature_state_change_with_previous_state_o
     mock_call_environment_webhooks.assert_called_once()
     call_args = mock_call_environment_webhooks.call_args
 
-    assert call_args[0][0] == environment
-    assert call_args[1]["event_type"] == WebhookEventType.FLAG_DELETED
+    assert call_args[0][0] == environment.id
+    assert call_args[1]["event_type"] == WebhookEventType.FLAG_DELETED.value
 
     mock_generate_webhook_feature_state_data.assert_called_once_with(
         feature=feature,
@@ -176,8 +182,8 @@ def test_call_environment_webhook_for_feature_state_change_with_both_states(
     mock_call_environment_webhooks.assert_called_once()
     call_args = mock_call_environment_webhooks.call_args
 
-    assert call_args[0][0] == environment
-    assert call_args[1]["event_type"] == WebhookEventType.FLAG_UPDATED
+    assert call_args[0][0] == environment.id
+    assert call_args[1]["event_type"] == WebhookEventType.FLAG_UPDATED.value
 
     assert mock_generate_webhook_feature_state_data.call_count == 2
     mock_generate_data_calls = mock_generate_webhook_feature_state_data.call_args_list
@@ -283,8 +289,8 @@ def test_sync_identity_document_features_removes_deleted_features(
                 "feature_overrides": {
                     "test_feature": {
                         "change_type": "~",
-                        "old": {"enabled": False, "value": None},
-                        "new": {"enabled": True, "value": None},
+                        "old": {"enabled": False, "feature_state_value": None},
+                        "new": {"enabled": True, "feature_state_value": None},
                     }
                 }
             },
@@ -296,7 +302,7 @@ def test_sync_identity_document_features_removes_deleted_features(
                 "feature_overrides": {
                     "test_feature": {
                         "change_type": "+",
-                        "new": {"enabled": True, "value": None},
+                        "new": {"enabled": True, "feature_state_value": None},
                     }
                 }
             },
@@ -308,7 +314,7 @@ def test_sync_identity_document_features_removes_deleted_features(
                 "feature_overrides": {
                     "test_feature": {
                         "change_type": "-",
-                        "old": {"enabled": True, "value": None},
+                        "old": {"enabled": True, "feature_state_value": None},
                     }
                 }
             },
@@ -339,3 +345,154 @@ def test_generate_audit_log_records(
         related_object_uuid=identity_uuid,
         environment=environment,
     ).exists()
+
+
+def test_update_flagsmith_environments_v2_identity_overrides__call_expected(
+    mocker: MockerFixture,
+    environment: Environment,
+) -> None:
+    # Given
+    dynamodb_wrapper_v2_cls_mock = mocker.patch(
+        "edge_api.identities.tasks.DynamoEnvironmentV2Wrapper"
+    )
+    dynamodb_wrapper_v2_mock = dynamodb_wrapper_v2_cls_mock.return_value
+    identity_uuid = "a35a02f2-fefd-4932-8f5c-e84a0bf542c7"
+    identifier = "identity1"
+    changes = {
+        "feature_overrides": {
+            "test_feature": {
+                "change_type": "~",
+                "old": {
+                    "enabled": False,
+                    "feature_state_value": None,
+                    "featurestate_uuid": "0729f130-8caa-4106-aa5c-95a6d15e820f",
+                    "feature": {"id": 1, "name": "test_feature", "type": "STANDARD"},
+                },
+                "new": {
+                    "enabled": True,
+                    "feature_state_value": "updated",
+                    "featurestate_uuid": "0729f130-8caa-4106-aa5c-95a6d15e820f",
+                    "feature": {"id": 1, "name": "test_feature", "type": "STANDARD"},
+                },
+            },
+            "test_feature2": {
+                "change_type": "+",
+                "new": {
+                    "enabled": True,
+                    "feature_state_value": "new",
+                    "featurestate_uuid": "726c833a-5c9b-4c2c-954c-ddc46dd50bbb",
+                    "feature": {"id": 2, "name": "test_feature2", "type": "STANDARD"},
+                },
+            },
+            "test_feature3": {
+                "change_type": "-",
+                "old": {
+                    "enabled": True,
+                    "feature_state_value": "deleted",
+                    "featurestate_uuid": "80f6dbdd-97c0-47de-9333-cd1e1c100713",
+                    "feature": {"id": 3, "name": "test_feature3", "type": "STANDARD"},
+                },
+            },
+        }
+    }
+    expected_identity_overrides_changeset = IdentityOverridesV2Changeset(
+        to_delete=[
+            IdentityOverrideV2.parse_obj(
+                {
+                    "document_key": f"identity_override:3:{identity_uuid}",
+                    "environment_id": str(environment.id),
+                    "environment_api_key": environment.api_key,
+                    "identifier": identifier,
+                    "identity_uuid": identity_uuid,
+                    "feature_state": {
+                        "enabled": True,
+                        "feature_state_value": "deleted",
+                        "featurestate_uuid": "80f6dbdd-97c0-47de-9333-cd1e1c100713",
+                        "feature": {
+                            "id": 3,
+                            "name": "test_feature3",
+                            "type": "STANDARD",
+                        },
+                    },
+                }
+            )
+        ],
+        to_put=[
+            IdentityOverrideV2.parse_obj(
+                {
+                    "document_key": f"identity_override:1:{identity_uuid}",
+                    "environment_id": str(environment.id),
+                    "environment_api_key": environment.api_key,
+                    "identifier": identifier,
+                    "identity_uuid": identity_uuid,
+                    "feature_state": {
+                        "enabled": True,
+                        "feature_state_value": "updated",
+                        "featurestate_uuid": "0729f130-8caa-4106-aa5c-95a6d15e820f",
+                        "feature": {
+                            "id": 1,
+                            "name": "test_feature",
+                            "type": "STANDARD",
+                        },
+                    },
+                }
+            ),
+            IdentityOverrideV2.parse_obj(
+                {
+                    "document_key": f"identity_override:2:{identity_uuid}",
+                    "environment_id": str(environment.id),
+                    "environment_api_key": environment.api_key,
+                    "identifier": identifier,
+                    "identity_uuid": identity_uuid,
+                    "feature_state": {
+                        "enabled": True,
+                        "feature_state_value": "new",
+                        "featurestate_uuid": "726c833a-5c9b-4c2c-954c-ddc46dd50bbb",
+                        "feature": {
+                            "id": 2,
+                            "name": "test_feature2",
+                            "type": "STANDARD",
+                        },
+                    },
+                }
+            ),
+        ],
+    )
+
+    # When
+    update_flagsmith_environments_v2_identity_overrides(
+        environment_api_key=environment.api_key,
+        identity_uuid=identity_uuid,
+        changes=changes,
+        identifier=identifier,
+    )
+
+    # Then
+    dynamodb_wrapper_v2_mock.update_identity_overrides.assert_called_once_with(
+        expected_identity_overrides_changeset,
+    )
+
+
+def test_update_flagsmith_environments_v2_identity_overrides__no_overrides__call_expected(
+    mocker: MockerFixture,
+    environment: Environment,
+) -> None:
+    # Given
+    dynamodb_wrapper_v2_cls_mock = mocker.patch(
+        "edge_api.identities.tasks.DynamoEnvironmentV2Wrapper"
+    )
+    dynamodb_wrapper_v2_mock = dynamodb_wrapper_v2_cls_mock.return_value
+    identity_uuid = "a35a02f2-fefd-4932-8f5c-e84a0bf542c7"
+    identifier = "identity1"
+    changes = {"feature_overrides": []}
+
+    # When
+    update_flagsmith_environments_v2_identity_overrides(
+        environment_api_key=environment.api_key,
+        identity_uuid=identity_uuid,
+        changes=changes,
+        identifier=identifier,
+    )
+
+    # Then
+    dynamodb_wrapper_v2_mock.update_identity_overrides.assert_not_called()

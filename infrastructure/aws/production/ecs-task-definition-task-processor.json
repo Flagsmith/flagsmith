@@ -13,12 +13,14 @@
                 "--sleepintervalms",
                 "1000",
                 "--numthreads",
-                "12",
-                "--graceperiodms",
-                "20000"
+                "12"
             ],
             "essential": true,
             "environment": [
+                {
+                    "name": "RUN_BY_PROCESSOR",
+                    "value": "True"
+                },
                 {
                     "name": "AWS_REGION",
                     "value": "eu-west-2"
@@ -52,6 +54,10 @@
                     "value": "flagsmith_environments"
                 },
                 {
+                    "name": "ENVIRONMENTS_V2_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_environments_v2"
+                },
+                {
                     "name": "GITHUB_CLIENT_ID",
                     "value": "b706a0da3e9d3115ea9d"
                 },
@@ -72,6 +78,10 @@
                     "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
                 },
                 {
+                    "name": "AWS_SSE_LOGS_BUCKET_NAME",
+                    "value": "flagsmith-fastly-logs-production"
+                },
+                {
                     "name": "OAUTH_CLIENT_ID",
                     "value": "232959427810-br6ltnrgouktp0ngsbs04o14ueb9rch0.apps.googleusercontent.com"
                 },
@@ -88,8 +98,8 @@
                     "value": "937916178726.1924685747446"
                 },
                 {
-                    "name":"EDGE_API_URL",
-                    "value":"https://edge.api.flagsmith.com/api/v1/"
+                    "name": "EDGE_API_URL",
+                    "value": "https://edge.api.flagsmith.com/api/v1/"
                 },
                 {
                     "name": "IDENTITY_MIGRATION_EVENT_BUS_NAME",

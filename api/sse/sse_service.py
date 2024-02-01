@@ -1,8 +1,19 @@
+import csv
+import logging
 from functools import wraps
+from io import StringIO
+from typing import Generator
 
+import boto3
+import gnupg
 from django.conf import settings
 
-from . import tasks
+from sse import tasks
+from sse.dataclasses import SSEAccessLogs
+
+logger = logging.getLogger(__name__)
+
+GNUPG_HOME = "/app/.gnupg"
 
 
 def _sse_enabled(get_project_from_first_arg=lambda obj: obj.project):
@@ -43,3 +54,24 @@ def send_environment_update_message_for_environment(environment):
     tasks.send_environment_update_message.delay(
         args=(environment.api_key, environment.updated_at.isoformat())
     )
+
+
+def stream_access_logs() -> Generator[SSEAccessLogs, None, None]:
+    gpg = gnupg.GPG(gnupghome=GNUPG_HOME)
+    bucket = boto3.resource("s3").Bucket(settings.AWS_SSE_LOGS_BUCKET_NAME)
+
+    for log_file in bucket.objects.all():
+        encrypted_body = log_file.get()["Body"].read()
+        decrypted_body = gpg.decrypt(encrypted_body)
+
+        reader = csv.reader(StringIO(decrypted_body.data.decode()))
+
+        for row in reader:
+            try:
+                log = SSEAccessLogs(*row)
+            except TypeError:
+                logger.warning("Invalid row in SSE access log file: %s", row)
+                continue
+            yield log
+
+        log_file.delete()

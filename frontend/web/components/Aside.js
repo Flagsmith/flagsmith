@@ -91,8 +91,9 @@ const Aside = class extends Component {
 
   render() {
     const { asideIsVisible, disabled, toggleAside } = this.props
-    let integrations = Utils.getFlagsmithValue('integrations') || '[]'
-    integrations = JSON.parse(integrations)
+    const integrations = Object.keys(
+      JSON.parse(Utils.getFlagsmithValue('integration_data') || '{}'),
+    )
     const environmentId =
       (this.props.environmentId !== 'create' && this.props.environmentId) ||
       (ProjectStore.model &&
@@ -153,10 +154,6 @@ const Aside = class extends Component {
                             disabled ? 'disabled' : ''
                           }`}
                         >
-                          <a href={'/projects'} className='nav-logo'>
-                            <Icon name='nav-logo' />
-                          </a>
-                          <hr className='my-0 py-0' />
                           <Collapsible
                             data-test={
                               project?.name
@@ -169,41 +166,36 @@ const Aside = class extends Component {
                               project && project.name ? (
                                 <Column className='mx-0'>
                                   <div>{project.name}</div>
-                                  {Utils.getFlagsmithHasFeature(
-                                    'edge_identities',
-                                  ) && (
-                                    <div className='mt-2'>
-                                      <span
-                                        style={{
-                                          border: 'none',
-                                        }}
-                                        className='chip chip--active bg-secondary'
+                                  <div className='mt-2'>
+                                    <span
+                                      style={{
+                                        border: 'none',
+                                      }}
+                                      className='chip chip--active bg-secondary'
+                                    >
+                                      <a
+                                        data-test={
+                                          Utils.getIsEdge()
+                                            ? 'edge-project'
+                                            : 'core-project'
+                                        }
+                                        href='https://docs.flagsmith.com/advanced-use/edge-api#enabling-the-edge-api'
+                                        className='text-white font-weight-bold'
                                       >
-                                        <a
-                                          data-test={
-                                            Utils.getIsEdge()
-                                              ? 'edge-project'
-                                              : 'core-project'
-                                          }
-                                          href='https://docs.flagsmith.com/advanced-use/edge-api#enabling-the-edge-api'
-                                          className='text-white font-weight-bold'
-                                        >
-                                          {Utils.getIsEdge() ? (
-                                            'Edge'
-                                          ) : Utils.isMigrating() ? (
-                                            <Tooltip title='Migrating to Edge'>
-                                              Depending on the amount of project
-                                              data, migrating can take a while.
-                                              Refresh the page to track
-                                              progress.
-                                            </Tooltip>
-                                          ) : (
-                                            'Core'
-                                          )}
-                                        </a>
-                                      </span>
-                                    </div>
-                                  )}
+                                        {Utils.getIsEdge() ? (
+                                          'Edge'
+                                        ) : Utils.isMigrating() ? (
+                                          <Tooltip title='Migrating to Edge'>
+                                            Depending on the amount of project
+                                            data, migrating can take a while.
+                                            Refresh the page to track progress.
+                                          </Tooltip>
+                                        ) : (
+                                          'Core'
+                                        )}
+                                      </a>
+                                    </span>
+                                  </div>
                                 </Column>
                               ) : (
                                 'No Project'
@@ -262,6 +254,7 @@ const Aside = class extends Component {
                               }}
                             />
                           </Collapsible>
+                          <hr className='my-0 py-0' />
                           <Permission
                             level='project'
                             permission='ADMIN'
@@ -572,9 +565,7 @@ const Aside = class extends Component {
                                 href='https://docs.flagsmith.com'
                               >
                                 <i className='icon mr-2 aside__nav-item--icon'>
-                                  <IonIcon
-                                    icon={star}
-                                  />
+                                  <IonIcon icon={star} />
                                 </i>
                                 Super cool demo feature!
                               </a>

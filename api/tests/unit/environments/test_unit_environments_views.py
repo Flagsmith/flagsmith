@@ -28,6 +28,7 @@ from projects.models import (
 )
 from projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
 from segments.models import Condition, SegmentRule
+from tests.types import WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser
 from util.tests import Helper
 
@@ -605,7 +606,7 @@ def test_create_environment_without_required_metadata_returns_400(
 def test_view_environment_with_staff__query_count_is_expected(
     staff_client: APIClient,
     environment: Environment,
-    with_environment_permissions: Callable[[list[str], int], None],
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
     project: Project,
     django_assert_num_queries: Callable[[int], None],
     environment_metadata_a: Metadata,
@@ -639,12 +640,52 @@ def test_view_environment_with_staff__query_count_is_expected(
 
     with_environment_permissions([VIEW_ENVIRONMENT], environment_id=environment_2.id)
 
-    # One additional query for an unrelated, unfixable N+1 issue.
+    # One additional query for an unrelated, unfixable N+1 issue that deals with
+    # the defer logic around filtered environments.
     expected_query_count += 1
 
     # Then
     with django_assert_num_queries(expected_query_count):
         response = staff_client.get(url, data=data, content_type="application/json")
+
+    assert response.status_code == status.HTTP_200_OK
+
+
+def test_view_environment_with_admin__query_count_is_expected(
+    admin_client: APIClient,
+    environment: Environment,
+    project: Project,
+    django_assert_num_queries: Callable[[int], None],
+    environment_metadata_a: Metadata,
+    environment_metadata_b: Metadata,
+    required_a_environment_metadata_field: MetadataModelField,
+    environment_content_type: ContentType,
+) -> None:
+    # Given
+    url = reverse("api-v1:environments:environment-list")
+    data = {"project": project.id}
+
+    expected_query_count = 5
+    # When
+    with django_assert_num_queries(expected_query_count):
+        response = admin_client.get(url, data=data, content_type="application/json")
+
+    assert response.status_code == status.HTTP_200_OK
+
+    # Add an environment to make sure the query count is the same.
+    environment_2 = Environment.objects.create(
+        name="Second Environment", project=project
+    )
+    Metadata.objects.create(
+        object_id=environment_2.id,
+        content_type=environment_content_type,
+        model_field=required_a_environment_metadata_field,
+        field_value="10",
+    )
+
+    # Then
+    with django_assert_num_queries(expected_query_count):
+        response = admin_client.get(url, data=data, content_type="application/json")
 
     assert response.status_code == status.HTTP_200_OK
 
@@ -682,7 +723,7 @@ def test_create_environment_with_required_metadata_returns_201(
     assert response.status_code == status.HTTP_201_CREATED
     assert (
         response.json()["metadata"][0]["model_field"]
-        == required_a_environment_metadata_field.field.id
+        == required_a_environment_metadata_field.id
     )
     assert response.json()["metadata"][0]["field_value"] == str(field_value)
 

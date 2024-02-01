@@ -16,6 +16,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import (
     AFTER_CREATE,
+    AFTER_DELETE,
     AFTER_SAVE,
     AFTER_UPDATE,
     BEFORE_UPDATE,
@@ -37,6 +38,7 @@ from environments.api_keys import (
 )
 from environments.dynamodb import (
     DynamoEnvironmentAPIKeyWrapper,
+    DynamoEnvironmentV2Wrapper,
     DynamoEnvironmentWrapper,
 )
 from environments.exceptions import EnvironmentHeaderNotPresentError
@@ -44,6 +46,7 @@ from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.exceptions import FeatureVersioningError
 from metadata.models import Metadata
+from projects.models import IdentityOverridesV2MigrationStatus, Project
 from segments.models import Segment
 from util.mappers import map_environment_to_environment_document
 from webhooks.models import AbstractBaseExportableWebhookModel
@@ -57,11 +60,16 @@ bad_environments_cache = caches[settings.BAD_ENVIRONMENTS_CACHE_LOCATION]
 
 # Intialize the dynamo environment wrapper(s) globaly
 environment_wrapper = DynamoEnvironmentWrapper()
+environment_v2_wrapper = DynamoEnvironmentV2Wrapper()
 environment_api_key_wrapper = DynamoEnvironmentAPIKeyWrapper()
 
 
 class Environment(
-    LifecycleModel, abstract_base_auditable_model_factory(), SoftDeleteObject
+    LifecycleModel,
+    abstract_base_auditable_model_factory(
+        change_details_excluded_fields=["updated_at"]
+    ),
+    SoftDeleteObject,
 ):
     history_record_class_path = "environments.models.HistoricalEnvironment"
     related_object_type = RelatedObjectType.ENVIRONMENT
@@ -143,6 +151,13 @@ class Environment(
     @hook(BEFORE_UPDATE, when="use_v2_feature_versioning", was=True, is_now=False)
     def validate_use_v2_feature_versioning(self):
         raise FeatureVersioningError("Cannot revert from v2 feature versioning.")
+
+    @hook(AFTER_DELETE)
+    def delete_from_dynamo(self):
+        if self.project.enable_dynamo_db and environment_wrapper.is_enabled:
+            from environments.tasks import delete_environment_from_dynamo
+
+            delete_environment_from_dynamo.delay(args=(self.api_key, self.id))
 
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
@@ -234,7 +249,7 @@ class Environment(
         # grab the first project and verify that each environment is for the same
         # project (which should always be the case). Since we're working with fairly
         # small querysets here, this shouldn't have a noticeable impact on performance.
-        project = getattr(environments[0], "project", None)
+        project: Project | None = getattr(environments[0], "project", None)
         for environment in environments[1:]:
             if not environment.project == project:
                 raise RuntimeError("Environments must all belong to the same project.")
@@ -243,6 +258,13 @@ class Environment(
             return
 
         environment_wrapper.write_environments(environments)
+
+        if (
+            project.identity_overrides_v2_migration_status
+            == IdentityOverridesV2MigrationStatus.COMPLETE
+            and environment_v2_wrapper.is_enabled
+        ):
+            environment_v2_wrapper.write_environments(environments)
 
     def get_feature_state(
         self, feature_id: int, filter_kwargs: dict = None
@@ -439,10 +461,17 @@ class EnvironmentAPIKey(LifecycleModel):
     def is_valid(self) -> bool:
         return self.active and (not self.expires_at or self.expires_at > timezone.now())
 
-    @hook(AFTER_SAVE)
+    @hook(AFTER_SAVE, when="_should_update_dynamo", is_now=True)
     def send_to_dynamo(self):
-        if (
+        environment_api_key_wrapper.write_api_key(self)
+
+    @hook(AFTER_DELETE, when="_should_update_dynamo", is_now=True)
+    def delete_from_dynamo(self):
+        environment_api_key_wrapper.delete_api_key(self.key)
+
+    @property
+    def _should_update_dynamo(self) -> bool:
+        return (
             self.environment.project.enable_dynamo_db
             and environment_api_key_wrapper.is_enabled
-        ):
-            environment_api_key_wrapper.write_api_key(self)
+        )

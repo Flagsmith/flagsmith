@@ -216,7 +216,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                 <FormGroup>
                   <PanelSearch
                     filterElement={
-                      <div className='text-right'>
+                      <div className='text-right me-2'>
                         <label className='me-2'>Include Feature-Specific</label>
                         <Switch onChange={setShowFeatureSpecific} />
                       </div>
@@ -360,7 +360,10 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                       onClick={newSegment}
                     >
                       <span className='icon icon-inner'>
-                        <IonIcon icon={globeOutline} style={{height: '25px', contain: 'none'}}/>
+                        <IonIcon
+                          icon={globeOutline}
+                          style={{ contain: 'none', height: '25px' }}
+                        />
                       </span>
                       Create your first Segment
                     </Button>,

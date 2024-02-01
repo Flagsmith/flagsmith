@@ -13,7 +13,7 @@ import InfoMessage from './InfoMessage'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
 import Icon from './Icon'
-import SegmentOverrideLimit from 'components/SegmentOverrideLimit'
+import SegmentOverrideLimit from './SegmentOverrideLimit'
 import { getStore } from 'common/store'
 import { getEnvironment } from 'common/services/useEnvironment'
 
@@ -147,6 +147,16 @@ const SegmentOverrideInner = class Override extends React.Component {
           </div>
           <div>
             <Row className='gap-3'>
+              <Tooltip
+                title={
+                  <label className='cols-sm-2 control-label mb-0 ml-3'>
+                    <Icon name='info-outlined' />
+                  </label>
+                }
+              >
+                Set the Feature state to On or Off for Identities in this
+                Segment
+              </Tooltip>
               <Switch
                 data-test={`segment-override-toggle-${index}`}
                 disabled={disabled}
@@ -175,48 +185,46 @@ const SegmentOverrideInner = class Override extends React.Component {
                 />
               )}
               <Row className='gap-2'>
-                {!!v.id && (
-                  <Permission
-                    id={projectId}
-                    permission={'MANAGE_SEGMENTS'}
-                    level={'project'}
-                  >
-                    {({ permission }) =>
-                      Utils.renderWithPermission(
-                        permission,
-                        Constants.projectPermissions('Manage Segments'),
-                        <>
-                          {v.is_feature_specific ? (
-                            <Button
-                              disabled={!permission}
-                              onClick={() => {
-                                setShowCreateSegment(true)
-                                setSegmentEditId(v.segment)
-                              }}
-                              className='btn btn-with-icon'
-                            >
-                              <span className='no-pointer'>
-                                <Icon name='edit' fill={'#656D7B'} width={20} />
-                              </span>
-                            </Button>
-                          ) : (
-                            <Button
-                              theme='text'
-                              disabled={!permission}
-                              target='_blank'
-                              href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
-                              className='btn btn-with-icon'
-                            >
-                              <span className='no-pointer'>
-                                <Icon name='edit' fill={'#656D7B'} width={20} />
-                              </span>
-                            </Button>
-                          )}
-                        </>,
-                      )
-                    }
-                  </Permission>
-                )}
+                <Permission
+                  id={projectId}
+                  permission={'MANAGE_SEGMENTS'}
+                  level={'project'}
+                >
+                  {({ permission }) =>
+                    Utils.renderWithPermission(
+                      permission,
+                      Constants.projectPermissions('Manage Segments'),
+                      <>
+                        {!v.id || v.is_feature_specific ? (
+                          <Button
+                            disabled={!permission}
+                            onClick={() => {
+                              setShowCreateSegment(true)
+                              setSegmentEditId(v.segment)
+                            }}
+                            className='btn btn-with-icon'
+                          >
+                            <span className='no-pointer'>
+                              <Icon name='edit' fill={'#656D7B'} width={20} />
+                            </span>
+                          </Button>
+                        ) : (
+                          <Button
+                            theme='text'
+                            disabled={!permission}
+                            target='_blank'
+                            href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
+                            className='btn btn-with-icon'
+                          >
+                            <span className='no-pointer'>
+                              <Icon name='edit' fill={'#656D7B'} width={20} />
+                            </span>
+                          </Button>
+                        )}
+                      </>,
+                    )
+                  }
+                </Permission>
                 {!readOnly && (
                   <Button
                     disabled={disabled}
@@ -307,6 +315,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                   readOnlyValue
                   disabled={readOnly}
                   controlValue={controlValue}
+                  controlPercentage={controlPercent}
                   variationOverrides={mvOptions}
                   multivariateOptions={multivariateOptions.map((mv) => {
                     const foundMv =
@@ -464,11 +473,14 @@ class TheComponent extends Component {
         ),
         feature: this.props.feature,
         feature_segment: null,
-        feature_state_value: Utils.valueToFeatureState(''),
+        feature_state_value: Utils.valueToFeatureState(
+          `${this.props.controlValue || ''}`,
+        ),
       },
       priority: value.length,
       segment: this.state.selectedSegment.value,
       segment_name: this.state.selectedSegment.label,
+      value: `${this.props.controlValue || ''}`,
     }
     this.props.onChange([newValue].concat(value))
     this.setState({ selectedSegment: null })
@@ -497,6 +509,7 @@ class TheComponent extends Component {
       </div>,
       () => {
         this.props.value[i].toRemove = true
+        this.setState({ isLoading: false })
       },
       () => {
         this.setState({ isLoading: false })
@@ -559,9 +572,6 @@ class TheComponent extends Component {
     const isLimitReached =
       segmentOverrideLimitAlert.percentage &&
       segmentOverrideLimitAlert.percentage >= 100
-    const manageSegmentOverridesEnabled = Utils.getFlagsmithHasFeature(
-      'manage_segment_overrides_env_role',
-    )
     return (
       <div>
         <Permission
@@ -595,16 +605,13 @@ class TheComponent extends Component {
                   !this.props.disableCreate && (
                     <div className='text-right'>
                       <Button
-                        className='mt-2'
+                        className='mt-4'
                         onClick={() => {
                           this.setState({ selectedSegment: null })
                           this.props.setShowCreateSegment(true)
                         }}
                         theme='outline'
-                        disabled={
-                          !!isLimitReached ||
-                          (manageSegmentOverridesEnabled && !manageSegments)
-                        }
+                        disabled={!!isLimitReached || !manageSegments}
                       >
                         Create Feature-Specific Segment
                       </Button>
@@ -639,6 +646,7 @@ class TheComponent extends Component {
                 )}
                 {this.props.showCreateSegment && this.state.segmentEditId && (
                   <CreateSegmentModal
+                    className='my-2'
                     segment={this.state.segmentEditId}
                     isEdit
                     condensed

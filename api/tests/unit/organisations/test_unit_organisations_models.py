@@ -2,6 +2,7 @@ from datetime import datetime
 from unittest import mock
 
 import pytest
+from django.conf import settings
 from django.test import TestCase
 from pytest_mock import MockerFixture
 from rest_framework.test import override_settings
@@ -9,7 +10,6 @@ from rest_framework.test import override_settings
 from environments.models import Environment
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
-    TRIAL_SUBSCRIPTION_ID,
     Organisation,
     OrganisationRole,
     OrganisationSubscriptionInformationCache,
@@ -17,7 +17,11 @@ from organisations.models import (
 )
 from organisations.subscriptions.constants import (
     CHARGEBEE,
+    FREE_PLAN_ID,
     FREE_PLAN_SUBSCRIPTION_METADATA,
+    MAX_API_CALLS_IN_FREE_PLAN,
+    MAX_SEATS_IN_FREE_PLAN,
+    TRIAL_SUBSCRIPTION_ID,
     XERO,
 )
 from organisations.subscriptions.exceptions import (
@@ -85,7 +89,12 @@ class OrganisationTestCase(TestCase):
         )
         # refresh subscription object
         subscription.refresh_from_db()
-        assert subscription.cancellation_date
+        # Subscription has been immediately transformed to free.
+        assert subscription.cancellation_date is None
+        assert subscription.subscription_id is None
+        assert subscription.billing_status is None
+        assert subscription.payment_method is None
+        assert subscription.plan == FREE_PLAN_ID
 
 
 def test_organisation_rebuild_environment_document_on_stop_serving_flags_changed(
@@ -283,42 +292,48 @@ def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(
 
 
 def test_subscription_get_subscription_metadata_returns_cb_metadata_for_cb_subscription(
-    organisation,
-    mocker,
+    organisation: Organisation,
+    mocker: MockerFixture,
 ):
     # Given
     seats = 10
     api_calls = 50000000
+    projects = 10
     OrganisationSubscriptionInformationCache.objects.create(
-        organisation=organisation, allowed_seats=seats, allowed_30d_api_calls=api_calls
+        organisation=organisation,
+        allowed_seats=seats,
+        allowed_30d_api_calls=api_calls,
+        allowed_projects=projects,
     )
-
     expected_metadata = ChargebeeObjMetadata(
-        seats=seats, api_calls=api_calls, projects=10
+        seats=seats, api_calls=api_calls, projects=projects
     )
-    mock_cb_get_subscription_metadata = mocker.patch(
-        "organisations.models.Subscription.get_subscription_metadata"
+    mocker.patch("organisations.models.is_saas", return_value=True)
+    Subscription.objects.filter(organisation=organisation).update(
+        plan="scale-up-v2",
+        subscription_id="subscription-id",
+        payment_method=CHARGEBEE,
     )
-    mock_cb_get_subscription_metadata.return_value = expected_metadata
+    organisation.subscription.refresh_from_db()
 
     # When
     subscription_metadata = organisation.subscription.get_subscription_metadata()
 
     # Then
-    mock_cb_get_subscription_metadata.assert_called_once_with()
-
     assert subscription_metadata == expected_metadata
 
 
-def test_subscription_get_subscription_metadata_returns_xero_metadata_for_xero_sub():
+def test_subscription_get_subscription_metadata_returns_xero_metadata_for_xero_sub(
+    mocker: MockerFixture,
+):
     # Given
     subscription = Subscription(
-        payment_method=XERO, subscription_id="xero-subscription"
+        payment_method=XERO, subscription_id="xero-subscription", plan="enterprise"
     )
-
     expected_metadata = XeroSubscriptionMetadata(
         seats=subscription.max_seats, api_calls=subscription.max_api_calls
     )
+    mocker.patch("organisations.models.is_saas", return_value=True)
 
     # When
     subscription_metadata = subscription.get_subscription_metadata()
@@ -338,24 +353,125 @@ def test_subscription_get_subscription_metadata_returns_free_plan_metadata_for_n
     assert subscription_metadata == FREE_PLAN_SUBSCRIPTION_METADATA
 
 
-def test_subscription_get_subscription_metadata_for_trial():
+@pytest.mark.parametrize(
+    "subscription_id, plan, max_seats, expected_seats, expected_projects",
+    (
+        (
+            None,
+            "free",
+            10,
+            MAX_SEATS_IN_FREE_PLAN,
+            settings.MAX_PROJECTS_IN_FREE_PLAN,
+        ),
+        ("anything", "enterprise", 20, 20, None),
+        (TRIAL_SUBSCRIPTION_ID, "enterprise", 20, 20, None),
+    ),
+)
+def test_get_subscription_metadata_for_enterprise_self_hosted_licenses(
+    organisation: Organisation,
+    subscription_id: str | None,
+    plan: str,
+    max_seats: int,
+    expected_seats: int,
+    expected_projects: int | None,
+    mocker: MockerFixture,
+) -> None:
+    """
+    Specific test to make sure that we can manually add subscriptions to
+    enterprise self-hosted deployments and the values stored in the django
+    database will be correctly used.
+    """
     # Given
-    max_seats = 10
-    max_api_calls = 1000000
-    subscription = Subscription(
-        subscription_id=TRIAL_SUBSCRIPTION_ID,
-        max_seats=max_seats,
-        max_api_calls=max_api_calls,
-        payment_method=None,
+    Subscription.objects.filter(organisation=organisation).update(
+        subscription_id=subscription_id, plan=plan, max_seats=max_seats
     )
+    organisation.subscription.refresh_from_db()
+    mocker.patch("organisations.models.is_saas", return_value=False)
+    mocker.patch("organisations.models.is_enterprise", return_value=True)
 
     # When
-    subscription_metadata = subscription.get_subscription_metadata()
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
 
     # Then
-    assert subscription_metadata.seats == max_seats
-    assert subscription_metadata.api_calls == max_api_calls
-    assert subscription_metadata.projects is None
+    assert subscription_metadata.projects == expected_projects
+    assert subscription_metadata.seats == expected_seats
+
+
+@pytest.mark.parametrize(
+    "subscription_id, plan, max_seats, max_api_calls, expected_seats, "
+    "expected_api_calls, expected_projects",
+    (
+        (
+            None,
+            "free",
+            10,
+            5000000,
+            MAX_SEATS_IN_FREE_PLAN,
+            MAX_API_CALLS_IN_FREE_PLAN,
+            settings.MAX_PROJECTS_IN_FREE_PLAN,
+        ),
+        ("anything", "enterprise", 20, 5000000, 20, 5000000, None),
+        (TRIAL_SUBSCRIPTION_ID, "enterprise", 20, 5000000, 20, 5000000, None),
+    ),
+)
+def test_get_subscription_metadata_for_manually_added_enterprise_saas_licenses(
+    organisation: Organisation,
+    subscription_id: str | None,
+    plan: str,
+    max_seats: int,
+    max_api_calls: int,
+    expected_seats: int,
+    expected_api_calls: int,
+    expected_projects: int | None,
+    mocker: MockerFixture,
+) -> None:
+    """
+    Specific test to make sure that we can manually add subscriptions to
+    the SaaS platform and the values stored in the Django database will
+    be correctly used.
+    """
+    # Given
+    Subscription.objects.filter(organisation=organisation).update(
+        subscription_id=subscription_id,
+        plan=plan,
+        max_seats=max_seats,
+        max_api_calls=max_api_calls,
+    )
+    organisation.subscription.refresh_from_db()
+    mocker.patch("organisations.models.is_saas", return_value=True)
+
+    # When
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
+
+    # Then
+    assert subscription_metadata.projects == expected_projects
+    assert subscription_metadata.seats == expected_seats
+    assert subscription_metadata.api_calls == expected_api_calls
+
+
+def test_get_subscription_metadata_for_self_hosted_open_source(
+    organisation: Organisation, mocker: MockerFixture
+) -> None:
+    """
+    Open source should ignore the details provided in the
+    subscription and always return the free plan metadata.
+    """
+    # Given
+    Subscription.objects.filter(organisation=organisation).update(
+        max_seats=100,
+        max_api_calls=10000000000,
+        plan="enterprise",
+        subscription_id="subscription-id",
+    )
+    organisation.subscription.refresh_from_db()
+    mocker.patch("organisations.models.is_enterprise", return_value=False)
+    mocker.patch("organisations.models.is_saas", return_value=False)
+
+    # When
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
+
+    # Then
+    assert subscription_metadata == FREE_PLAN_SUBSCRIPTION_METADATA
 
 
 def test_subscription_add_single_seat_calls_correct_chargebee_method_for_upgradable_plan(
