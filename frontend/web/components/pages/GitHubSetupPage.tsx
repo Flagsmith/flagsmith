@@ -2,7 +2,8 @@ import React, { FC, useState, useEffect } from 'react'
 import OrganisationSelect from 'components/OrganisationSelect'
 import ProjectFilter from 'components/ProjectFilter'
 import Button from 'components/base/forms/Button'
-import { useCreateExternalResourceMutation } from 'common/services/useExternalResource'
+import { useCreateGithubIntegrationMutation } from 'common/services/useGithubIntegration'
+import { useCreateGithubRepositoryMutation } from 'common/services/useGithubRepository'
 
 type GitHubSetupPageType = {}
 const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
@@ -10,14 +11,36 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
     new URLSearchParams(props.location.search).get('installation_id') || ''
   const [organisation, setOrganisation] = useState<number>(0)
   const [project, setProject] = useState<number>(0)
-  const [externalResourceURL, setExternalResourceURL] = useState<string>('')
+  const [repositoryName, setrepositoryName] = useState<string>('')
+  const [repositoryOwner, setrepositoryOwner] = useState<string>('')
 
-  const [createExternalResourceMutation, { isSuccess }] =
-    useCreateExternalResourceMutation()
+  const [
+    createGithubIntegration,
+    { data, isSuccess: isSuccessCreateGithubIntegration },
+  ] = useCreateGithubIntegrationMutation()
+
+  const [
+    createGithubRepository,
+    { isSuccess: isSuccessCreateGithubRepository },
+  ] = useCreateGithubRepositoryMutation()
 
   useEffect(() => {
     toast('Saved')
-  }, [isSuccess])
+  }, [isSuccessCreateGithubIntegration])
+
+  useEffect(() => {
+    if (data && isSuccessCreateGithubIntegration) {
+      createGithubRepository({
+        body: {
+          project: project,
+          repository_name: repositoryName,
+          repository_owner: repositoryOwner,
+        },
+        github_pk: data.id,
+        organisation_pk: organisation,
+      })
+    }
+  }, [data, isSuccessCreateGithubIntegration])
 
   return (
     <div
@@ -26,6 +49,17 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
       className='ml-4 bg-light200'
     >
       <h3>Configure your integration with GitHub</h3>
+      <InputGroup
+        value={installationId}
+        data-test='InstallationId'
+        inputProps={{
+          name: 'InstallationId',
+        }}
+        disabled
+        type='text'
+        className={{ width: '500px' }}
+        title={'GitHub App Installation Id'}
+      />
       <div className='mr-4 mb-4'>
         <p>Select your Organisation</p>
         <OrganisationSelect
@@ -35,9 +69,8 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
           showSettings={false}
         />
       </div>
-      {organisation && (
-        <div className='mr-4 mb-4' style={{ width: '500px' }}>
-          <p>Select your Project</p>
+      <Row className='mr-4 mb-4'>
+        <div style={{ minWidth: '300px' }}>
           <ProjectFilter
             showAll
             organisationId={organisation}
@@ -45,30 +78,43 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
             value={project}
           />
         </div>
-      )}
-      <InputGroup
-        value={externalResourceURL}
-        data-test='ExternalResourceURL'
-        inputProps={{
-          name: 'featureExternalResourceURL',
-        }}
-        onChange={(e) => setExternalResourceURL(Utils.safeParseEventValue(e))}
-        ds
-        type='text'
-        className={{ width: '500px' }}
-        title={'GitHub Issue/Pull Request URL'}
-        placeholder="e.g. 'https://github.com/user/repo-example/issues/12' "
-      />
+        <Input
+          value={repositoryOwner}
+          data-test='repositoryOwner'
+          inputProps={{
+            name: 'repositoryOwner',
+          }}
+          onChange={(e) => setrepositoryOwner(Utils.safeParseEventValue(e))}
+          ds
+          type='text'
+          title={'Repository Owner'}
+          inputClassName='input--wide'
+          placeholder='repositoryOwner'
+        />
+        <Input
+          value={repositoryName}
+          data-test='repositoryName'
+          inputProps={{
+            name: 'repositoryName',
+          }}
+          onChange={(e) => setrepositoryName(Utils.safeParseEventValue(e))}
+          ds
+          type='text'
+          title={'Repository Name'}
+          inputClassName='input--wide'
+          placeholder='repositoryName'
+        />
+      </Row>
       <Button
         className='mr-2 text-right'
         theme='primary'
-        disabled={project && externalResourceURL}
+        disabled={!project || !installationId || !repositoryName}
         onClick={() => {
-          createExternalResourceMutation({
-            project: project,
-            resource_id: installationId,
-            type: 'Github',
-            url: externalResourceURL,
+          createGithubIntegration({
+            body: {
+              installation_id: installationId,
+            },
+            organisation_pk: organisation,
           })
         }}
       >

@@ -406,5 +406,7 @@ export type Res = {
   groupSummaries: UserGroupSummary[]
   externalResource: PagedResponse<ExternalResource>
   featureExternalResource: { id: string }
+  githubIntegration: { id: string }
+  githubRepository: { id: string }
   // END OF TYPES
 }

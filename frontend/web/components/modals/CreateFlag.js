@@ -33,7 +33,10 @@ import ModalHR from './ModalHR'
 import FeatureValue from 'components/FeatureValue'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
-import { getExternalResource } from 'common/services/useExternalResource'
+import {
+  getExternalResource,
+  createExternalResource,
+} from 'common/services/useExternalResource'
 import {
   createFeatureExternalResource,
   getFeatureExternalResource,
@@ -175,11 +178,11 @@ const CreateFlag = class extends Component {
     ) {
       this.getFeatureUsage()
     }
-    getExternalResource(getStore(), {
-      project_id: this.props.projectId,
-    }).then((res) => {
-      this.setState({ externalResources: res.data })
-    })
+    // getExternalResource(getStore(), {
+    //   project_id: this.props.projectId,
+    // }).then((res) => {
+    //   this.setState({ externalResources: res.data })
+    // })
   }
 
   componentWillUnmount() {
@@ -492,6 +495,7 @@ const CreateFlag = class extends Component {
       description,
       enabledIndentity,
       enabledSegment,
+      externalResourceType,
       externalResources,
       featureExternalResource,
       hide_from_client,
@@ -595,30 +599,43 @@ const CreateFlag = class extends Component {
           />
         </FormGroup>
         <FormGroup className='mb-5 setting'>
-          <label className='cols-sm-2 control-label'> Link GitHub </label>
-          <Select
-            // value={
-            //   externalResources
-            //     ? externalResources.find((v) => v.url === this.state.externalResource)
-            //     : null
-            // }
-            // isDisabled={this.props.disabled}
-            // onInputChange={this.search}
-            placeholder={'Select External Resource'}
-            onChange={(v) => this.setState({ featureExternalResource: v })}
-            options={externalResources.map((e) => {
-              console.log('DEBUG: externalResources:', externalResources)
-              return { label: e.url, value: e.id }
-            })}
-          />
-          <div className='text-right'>
-            <Button
-              className='mt-1'
-              onClick={() => console.log('DEBUG: delete')}
-            >
-              Delete External Resource
-            </Button>
-          </div>
+          <label className='cols-sm-2 control-label'>
+            {' '}
+            Link GitHub Issue/Pull-Request
+          </label>
+          <Row className='cols-md-2'>
+            <div style={{ width: '200px' }}>
+              <Select
+                size='select-md'
+                placeholder={'Select Type'}
+                onChange={(v) =>
+                  this.setState({ externalResourceType: v.label })
+                }
+                options={[
+                  { id: 1, type: 'Github issue' },
+                  { id: 2, type: 'Github PR' },
+                ].map((e) => {
+                  return { label: e.type, value: e.id }
+                })}
+              />
+            </div>
+            <Input
+              value={featureExternalResource}
+              data-test='featureExternalResource'
+              inputProps={{
+                name: 'featureExternalResource',
+              }}
+              onChange={(e) =>
+                this.setState({
+                  featureExternalResource: Utils.safeParseEventValue(e),
+                })
+              }
+              ds
+              type='text'
+              inputClassName='input--wide'
+              placeholder='https://github.com/repoOwner/repoName/issues/isssueId'
+            />
+          </Row>
         </FormGroup>
 
         {!identity && (
@@ -924,11 +941,18 @@ const CreateFlag = class extends Component {
 
               const saveSettings = () => {
                 this.setState({ settingsChanged: false })
-                createFeatureExternalResource(getStore(), {
+                createExternalResource(getStore(), {
                   body: {
-                    feature: projectFlag.id,
+                    type: externalResourceType,
+                    url: featureExternalResource,
                   },
-                  external_resource_pk: featureExternalResource.value,
+                }).then((res) => {
+                  createFeatureExternalResource(getStore(), {
+                    body: {
+                      feature: projectFlag.id,
+                    },
+                    external_resource_pk: res.data.id,
+                  })
                 })
                 this.save(editFeatureSettings, isSaving)
               }

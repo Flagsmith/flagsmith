@@ -12,7 +12,7 @@ export const externalResourceService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'ExternalResource' }],
         query: (query: Req['createExternalResource']) => ({
-          body: query,
+          body: query.body,
           method: 'POST',
           url: `external-resources/`,
         }),

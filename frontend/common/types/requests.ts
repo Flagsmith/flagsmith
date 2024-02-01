@@ -157,7 +157,7 @@ export type Req = {
   getExternalResource: { project_id: string }
   updateExternalResource: { id: string }
   deleteExternalResource: { id: string }
-  createExternalResource: { body: externalResource }
+  createExternalResource: { body: ExternalResource }
   getFeatureExternalResource: { external_resource_pk: number }
   updateFeatureExternalResource: { external_resource_pk: number }
   deleteFeatureExternalResource: { external_resource_pk: number }
@@ -165,5 +165,15 @@ export type Req = {
     external_resource_pk: string
     body: { feature: number }
   }
+  getGithubIntegration: {
+      organisation_pk: any id: string 
+}
+  updateGithubIntegration: { id: string }
+  deleteGithubIntegration: { id: string }
+  createGithubIntegration: {}
+  getGithubRepository: { id: string }
+  updateGithubRepository: { id: string }
+  deleteGithubRepository: { id: string }
+  createGithubRepository: {}
   // END OF TYPES
 }
