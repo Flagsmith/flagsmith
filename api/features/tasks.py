@@ -2,6 +2,7 @@ from threading import Thread
 
 from environments.models import Webhook
 from features.models import FeatureState
+from integrations.github.tasks import call_github_app_webhook_for_feature_state
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 from webhooks.webhooks import (
     WebhookEventType,
@@ -36,6 +37,20 @@ def trigger_feature_state_change_webhooks(
     )
     data = {"new_state": new_state, "changed_by": changed_by, "timestamp": timestamp}
     previous_state = _get_previous_state(history_instance, event_type)
+    print(
+        "DEBUG: trigger_feature_state_change_webhooks:",
+        history_instance.environment.api_key,
+    )
+
+    Thread(
+        target=call_github_app_webhook_for_feature_state,
+        args=(
+            instance.environment.project.organisation,
+            data,
+            event_type,
+        ),
+    ).start()
+
     if previous_state:
         data.update(previous_state=previous_state)
     Thread(

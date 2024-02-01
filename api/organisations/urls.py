@@ -9,6 +9,10 @@ from rest_framework_nested import routers
 
 from api_keys.views import MasterAPIKeyViewSet
 from audit.views import OrganisationAuditLogViewSet
+from integrations.github.views import (
+    GithubConfigurationViewSet,
+    GithubRepositoryViewSet,
+)
 from metadata.views import MetaDataModelFieldViewSet
 from organisations.views import OrganisationWebhookViewSet
 from users.views import (
@@ -67,12 +71,29 @@ organisations_router.register(
     "audit", OrganisationAuditLogViewSet, basename="audit-log"
 )
 
+organisations_router.register(
+    r"integrations/github",
+    GithubConfigurationViewSet,
+    basename="integrations-github",
+)
+
+nested_github_router = routers.NestedSimpleRouter(
+    organisations_router, r"integrations/github", lookup="github"
+)
+
+nested_github_router.register(
+    "repositories",
+    GithubRepositoryViewSet,
+    basename="repositories",
+)
+
 app_name = "organisations"
 
 
 urlpatterns = [
     url(r"^", include(router.urls)),
     url(r"^", include(organisations_router.urls)),
+    url(r"^", include(nested_github_router.urls)),
     path(
         "<int:organisation_pk>/usage-data/",
         get_usage_data_view,
@@ -108,7 +129,7 @@ if settings.IS_RBAC_INSTALLED:
 
     organisations_router.register("roles", RoleViewSet, basename="organisation-roles")
     nested_roles_router = routers.NestedSimpleRouter(
-        organisations_router, r"roles", lookup="role"
+        organisations_router, parent_prefix=r"roles", lookup="role"
     )
     nested_roles_router.register(
         "environments-permissions",

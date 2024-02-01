@@ -33,6 +33,8 @@ from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 from .models import EdgeIdentity
 from .tasks import call_environment_webhook_for_feature_state_change
 
+# from integrations.github.tasks import call_github_app_webhook_for_feature_state
+
 
 class EdgeIdentitySerializer(serializers.Serializer):
     identity_uuid = serializers.CharField(read_only=True)
@@ -196,6 +198,14 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
                 "timestamp": timezone.now().strftime(WEBHOOK_DATETIME_FORMAT),
             },
         )
+        # call_github_app_webhook_for_feature_state(
+        #     feature_id=self.instance.feature.id,
+        #     environment_api_key=identity.environment_api_key,
+        #     changed_by_user_id=request.user.id,
+        #     new_enabled_state=self.instance.enabled,
+        #     new_value=new_value,
+        #     timestamp=timezone.now().strftime(WEBHOOK_DATETIME_FORMAT),
+        # )
 
         return self.instance
 

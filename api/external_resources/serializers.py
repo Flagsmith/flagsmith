@@ -10,8 +10,6 @@ class ExternalResourcesSerializer(serializers.ModelSerializer):
             "id",
             "url",
             "type",
-            "resources_id",
-            "project",
         )
 
 

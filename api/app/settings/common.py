@@ -154,6 +154,7 @@ INSTALLED_APPS = [
     "integrations.dynatrace",
     "integrations.flagsmith",
     "integrations.launch_darkly",
+    "integrations.github",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",

@@ -15,7 +15,6 @@ class ExternalResourcesViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        print("DEBUG: self:", self.kwargs)
         return ExternalResources.objects.filter(id=self.kwargs["pk"])
 
     def perform_update(self, serializer):
