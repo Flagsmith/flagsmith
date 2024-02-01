@@ -30,7 +30,11 @@ class Segment(
     name = models.CharField(max_length=2000)
     description = models.TextField(null=True, blank=True)
     project = models.ForeignKey(
-        Project, on_delete=models.DO_NOTHING, related_name="segments"
+        Project,
+        # Cascade deletes are decouple from the Django ORM. See this PR for details.
+        # https://github.com/Flagsmith/flagsmith/pull/3360/
+        on_delete=models.DO_NOTHING,
+        related_name="segments",
     )
     feature = models.ForeignKey(
         Feature, on_delete=models.CASCADE, related_name="segments", null=True

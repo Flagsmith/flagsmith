@@ -100,6 +100,8 @@ class Feature(
             "Feature States will be created for the new selected projects Environments for this "
             "Feature. Also this will remove any Tags associated with a feature as Tags are Project defined"
         ),
+        # Cascade deletes are decouple from the Django ORM. See this PR for details.
+        # https://github.com/Flagsmith/flagsmith/pull/3360/
         on_delete=models.DO_NOTHING,
     )
     initial_value = models.CharField(
