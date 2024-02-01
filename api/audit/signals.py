@@ -1,6 +1,5 @@
 import logging
 
-from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -17,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=AuditLog)
 def call_webhooks(sender, instance, **kwargs):
+    data = AuditLogListSerializer(instance=instance).data
+
     if not (instance.project or instance.environment):
         logger.warning("Audit log without project or environment. Not sending webhook.")
         return
@@ -26,15 +27,9 @@ def call_webhooks(sender, instance, **kwargs):
         if instance.project
         else instance.environment.project.organisation
     )
-
-    if (
-        not settings.DISABLE_WEBHOOKS
-        and organisation.webhooks.filter(enabled=True).exists()
-    ):
-        data = AuditLogListSerializer(instance=instance).data
-        call_organisation_webhooks.delay(
-            args=(organisation.id, data, WebhookEventType.AUDIT_LOG_CREATED.value)
-        )
+    call_organisation_webhooks.delay(
+        args=(organisation.id, data, WebhookEventType.AUDIT_LOG_CREATED.value)
+    )
 
 
 def _get_integration_config(instance, integration_name):
