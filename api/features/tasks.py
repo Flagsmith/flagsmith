@@ -42,17 +42,9 @@ def trigger_feature_state_change_webhooks(
         history_instance.environment.api_key,
     )
 
-    Thread(
-        target=call_github_app_webhook_for_feature_state,
-        args=(
-            instance.environment.project.organisation,
-            data,
-            event_type,
-        ),
-    ).start()
-
     if previous_state:
         data.update(previous_state=previous_state)
+
     Thread(
         target=call_environment_webhooks,
         args=(instance.environment, data, event_type),
@@ -60,6 +52,15 @@ def trigger_feature_state_change_webhooks(
 
     Thread(
         target=call_organisation_webhooks,
+        args=(
+            instance.environment.project.organisation,
+            data,
+            event_type,
+        ),
+    ).start()
+
+    Thread(
+        target=call_github_app_webhook_for_feature_state,
         args=(
             instance.environment.project.organisation,
             data,
