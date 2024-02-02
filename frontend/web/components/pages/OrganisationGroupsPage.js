@@ -8,6 +8,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
 import PageTitle from 'components/PageTitle'
+import OrganisationManageWidget from 'components/OrganisationManageWidget'
 
 const OrganisationGroupsPage = class extends Component {
   static contextTypes = {
@@ -54,6 +55,10 @@ const OrganisationGroupsPage = class extends Component {
   render() {
     return (
       <div className='app-container container'>
+        <div className='py-4'>
+          <OrganisationManageWidget />
+        </div>
+
         <AccountProvider onSave={this.onSave} onRemove={this.onRemove}>
           {({ organisation }, {}) =>
             !!organisation && (
