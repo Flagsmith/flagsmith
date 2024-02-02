@@ -604,11 +604,14 @@ class ChargeBeeWebhookTestCase(TestCase):
             projects=None,
             chargebee_email=self.cb_user.email,
         )
+
         data = {
             "content": {
                 "subscription": {
                     "status": "active",
                     "id": self.subscription_id,
+                    "current_term_start": 1699630389,
+                    "current_term_end": 1702222389,
                 },
                 "customer": {"email": self.cb_user.email},
             }
@@ -628,6 +631,13 @@ class ChargeBeeWebhookTestCase(TestCase):
         )
         assert subscription_cache.allowed_projects is None
         assert subscription_cache.allowed_30d_api_calls == api_calls
+
+        assert subscription_cache.current_billing_term_ends_at == datetime(
+            2023, 12, 10, 15, 33, 9, tzinfo=timezone.utc
+        )
+        assert subscription_cache.current_billing_term_starts_at == datetime(
+            2023, 11, 10, 15, 33, 9, tzinfo=timezone.utc
+        )
         assert subscription_cache.allowed_seats == seats
 
     @mock.patch("organisations.models.cancel_chargebee_subscription")
