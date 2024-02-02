@@ -1024,7 +1024,7 @@ def test_list_feature_states_nested_environment_view_set(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_environment_feature_states_filter_using_feataure_name(
+def test_environment_feature_states_filter_using_feature_name(
     environment, project, feature, client
 ):
     # Given
