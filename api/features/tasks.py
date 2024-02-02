@@ -1,5 +1,6 @@
 from environments.models import Webhook
-from features.models import FeatureState
+from features.models import Feature, FeatureState
+from task_processor.decorators import register_task_handler
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 from webhooks.webhooks import (
     WebhookEventType,
@@ -79,3 +80,8 @@ def _get_feature_state_webhook_data(feature_state, previous=False):
         identity_identifier=getattr(feature_state.identity, "identifier", None),
         feature_segment=feature_state.feature_segment,
     )
+
+
+@register_task_handler()
+def delete_feature(feature_id: int) -> None:
+    Feature.objects.get(pk=feature_id).delete()

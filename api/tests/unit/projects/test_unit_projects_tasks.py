@@ -1,9 +1,17 @@
 import pytest
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from environments.dynamodb.types import IdentityOverridesV2Changeset
+from environments.models import Environment
+from features.models import Feature
 from projects.models import IdentityOverridesV2MigrationStatus, Project
-from projects.tasks import migrate_project_environments_to_v2
+from projects.tasks import (
+    handle_cascade_delete,
+    migrate_project_environments_to_v2,
+)
+from segments.models import Segment
+from task_processor.task_run_method import TaskRunMethod
 
 
 @pytest.fixture
@@ -88,3 +96,22 @@ def test_migrate_project_environments_to_v2__expected_status_on_error(
     assert project_v2_migration_in_progress.identity_overrides_v2_migration_status == (
         IdentityOverridesV2MigrationStatus.IN_PROGRESS
     )
+
+
+def test_handle_cascade_delete(
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    segment: Segment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
+
+    # When
+    handle_cascade_delete(project_id=project.id)
+
+    # Then
+    assert not Environment.objects.filter(id=environment.id).exists()
+    assert not Feature.objects.filter(id=feature.id).exists()
+    assert not Segment.objects.filter(id=segment.id).exists()
