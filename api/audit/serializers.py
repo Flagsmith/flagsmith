@@ -40,6 +40,7 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):
     environment = EnvironmentSerializerLight()
     project = ProjectListSerializer()
     change_details = serializers.SerializerMethodField()
+    change_type = serializers.SerializerMethodField()
 
     class Meta:
         model = AuditLog
@@ -54,6 +55,7 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):
             "related_object_type",
             "is_system_event",
             "change_details",
+            "change_type",
         )
 
     @swagger_serializer_method(
@@ -68,6 +70,16 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):
             ).data
 
         return []
+
+    def get_change_type(self, instance: AuditLog) -> str:
+        if not (history_record := instance.history_record):
+            return "UNKNOWN"
+
+        return {
+            "+": "CREATE",
+            "-": "DELETE",
+            "~": "UPDATE",
+        }.get(history_record.history_type)
 
 
 class AuditLogsQueryParamSerializer(serializers.Serializer):
