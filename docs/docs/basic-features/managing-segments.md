@@ -255,7 +255,8 @@ your environment.
 
 :::
 
-These minimum SDK versions support segments with the `In` operator in [local evaluation mode](#2---local-evaluation):
+These minimum SDK versions support segments with the `In` operator in
+[local evaluation mode](/clients/overview#local-evaluation):
 
 - Python SDK: `3.3.0+`
 - Java SDK: `7.1.0+`
