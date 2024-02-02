@@ -30,7 +30,7 @@ def test_should_create_datadog_config_when_post(
     assert response.status_code == status.HTTP_201_CREATED
     assert DataDogConfiguration.objects.filter(project=project).count() == 1
 
-    created_config = DataDogConfiguration.objects.first()
+    created_config = DataDogConfiguration.objects.filter(project=project).first()
     assert created_config.base_url == data["base_url"]
     assert created_config.api_key == data["api_key"]
     assert created_config.use_custom_source == data["use_custom_source"]

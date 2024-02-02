@@ -7,7 +7,7 @@ from audit.models import AuditLog
 from environments.models import Environment
 from integrations.datadog.datadog import (
     EVENTS_API_URI,
-    SOURCE_TYPE_NAME,
+    FLAGSMITH_SOURCE_TYPE_NAME,
     DataDogWrapper,
 )
 
@@ -37,7 +37,11 @@ def test_datadog_initialized_correctly(base_url, expected_events_url):
     "event_data, use_custom_source, expected_data",
     (
         ({"foo": "bar"}, False, {"foo": "bar"}),
-        ({"foo": "bar"}, True, {"foo": "bar", "source_type_name": SOURCE_TYPE_NAME}),
+        (
+            {"foo": "bar"},
+            True,
+            {"foo": "bar", "source_type_name": FLAGSMITH_SOURCE_TYPE_NAME},
+        ),
     ),
 )
 def test_datadog_track_event(

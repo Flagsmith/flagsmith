@@ -9,7 +9,7 @@ from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 logger = logging.getLogger(__name__)
 
 EVENTS_API_URI = "api/v1/events"
-SOURCE_TYPE_NAME = "flagsmith"
+FLAGSMITH_SOURCE_TYPE_NAME = "flagsmith"
 
 
 class DataDogWrapper(AbstractBaseEventIntegrationWrapper):
@@ -19,7 +19,7 @@ class DataDogWrapper(AbstractBaseEventIntegrationWrapper):
         api_key: str,
         session: requests.Session = None,
         use_custom_source: bool = False,
-    ):
+    ) -> None:
         self.base_url = base_url
         if self.base_url[-1] != "/":
             self.base_url += "/"
@@ -43,7 +43,7 @@ class DataDogWrapper(AbstractBaseEventIntegrationWrapper):
 
     def _track_event(self, event: dict) -> None:
         if self.use_custom_source:
-            event["source_type_name"] = SOURCE_TYPE_NAME
+            event["source_type_name"] = FLAGSMITH_SOURCE_TYPE_NAME
 
         response = self.session.post(
             f"{self.events_url}?api_key={self.api_key}", data=json.dumps(event)
