@@ -100,8 +100,10 @@ def get_edge_overrides_data(
         if feature_state.feature_segment_id:
             env_feature_overrides_data.num_segment_overrides += 1
     for identity_override in get_overrides_data_future.result():
-        all_overrides_data[
-            identity_override.feature_state.feature.id
-        ].add_identity_override()
+        # Only override features that exists in core
+        if identity_override.feature_state.feature.id in all_overrides_data:
+            all_overrides_data[
+                identity_override.feature_state.feature.id
+            ].add_identity_override()
 
     return all_overrides_data
