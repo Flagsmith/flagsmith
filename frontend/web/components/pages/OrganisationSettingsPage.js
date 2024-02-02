@@ -753,7 +753,7 @@ const OrganisationSettingsPage = class extends Component {
                         )}
 
                         {displayedTabs.includes(SettingsTab.Keys) && (
-                          <TabItem tabLabel='Keys'>
+                          <TabItem tabLabel='API Keys'>
                             <AdminAPIKeys organisationId={organisation.id} />
                           </TabItem>
                         )}
