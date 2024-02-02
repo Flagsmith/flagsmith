@@ -182,7 +182,7 @@ def test_organisation_is_auto_seat_upgrade_available(organisation, settings):
     assert organisation.is_auto_seat_upgrade_available() is True
 
 
-def test_organisation_max_seats_set_as_one_if_subscription_has_no_subscription_id(
+def test_organisation_default_subscription_have_one_max_seat(
     organisation: Organisation,
 ) -> None:
     # Given
