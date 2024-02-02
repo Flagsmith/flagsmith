@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='feature',
             name='project',
-            field=models.ForeignKey(help_text='Changing the project selected will remove previous Feature States for the previouslyassociated projects Environments that are related to this Feature. New default Feature States will be created for the new selected projects Environments for this Feature. Also this will remove any Tags associated with a feature as Tags are Project defined', on_delete=django.db.models.deletion.DO_NOTHING, related_name='features', to='projects.project'),
+            field=models.ForeignKey(help_text='Changing the project selected will remove previous Feature States for the previously associated projects Environments that are related to this Feature. New default Feature States will be created for the new selected projects Environments for this Feature. Also this will remove any Tags associated with a feature as Tags are Project defined', on_delete=django.db.models.deletion.DO_NOTHING, related_name='features', to='projects.project'),
         ),
     ]
