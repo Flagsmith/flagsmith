@@ -3,7 +3,7 @@ name: API Deploy to Staging ECS
 on:
   push:
     branches:
-      - main
+      - fix-v2-overrides
     paths:
       - api/**
       - .github/**
