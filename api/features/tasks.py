@@ -55,23 +55,24 @@ def trigger_feature_state_change_webhooks(
         )
     )
 
-    github_configuration = instance.environment.project.organisation.github_config
-    if not github_configuration:
+    if hasattr(instance.environment.project.organisation, "github_config"):
+        github_configuration = instance.environment.project.organisation.github_config
+
+        data["installation_id"] = github_configuration.installation_id
+        data["organisation_id"] = github_configuration.organisation.id
+
+        call_github_app_webhook_for_feature_state.delay(
+            args=(
+                data,
+                event_type.value,
+            ),
+        )
+    else:
         print(
             "No GitHub integration exists for organisation %d. Not calling webhooks.",
             instance.environment.project.organisation.id,
         )
         return
-
-    data["installation_id"] = github_configuration.installation_id
-    data["organisation_id"] = github_configuration.organisation.id
-
-    call_github_app_webhook_for_feature_state.delay(
-        args=(
-            data,
-            event_type.value,
-        ),
-    )
 
 
 def _get_previous_state(
