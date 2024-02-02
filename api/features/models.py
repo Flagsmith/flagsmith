@@ -95,7 +95,7 @@ class Feature(
         Project,
         related_name="features",
         help_text=_(
-            "Changing the project selected will remove previous Feature States for the previously"
+            "Changing the project selected will remove previous Feature States for the previously "
             "associated projects Environments that are related to this Feature. New default "
             "Feature States will be created for the new selected projects Environments for this "
             "Feature. Also this will remove any Tags associated with a feature as Tags are Project defined"
