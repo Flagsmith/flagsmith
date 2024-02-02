@@ -10,6 +10,7 @@ from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
 from integrations.slack.slack import SlackWrapper
+from organisations.models import OrganisationWebhook
 from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
 
 logger = logging.getLogger(__name__)
@@ -17,23 +18,25 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=AuditLog)
 def call_webhooks(sender, instance, **kwargs):
-    if not (instance.project or instance.environment):
+    if settings.DISABLE_WEBHOOKS:
+        return
+
+    if not (instance.project_id or instance.environment_id):
         logger.warning("Audit log without project or environment. Not sending webhook.")
         return
 
-    organisation = (
-        instance.project.organisation
+    organisation_id = (
+        instance.project.organisation_id
         if instance.project
-        else instance.environment.project.organisation
+        else instance.environment.project.organisation_id
     )
 
-    if (
-        not settings.DISABLE_WEBHOOKS
-        and organisation.webhooks.filter(enabled=True).exists()
-    ):
+    if OrganisationWebhook.objects.filter(
+        organisation_id=organisation_id, enabled=True
+    ).exists():
         data = AuditLogListSerializer(instance=instance).data
         call_organisation_webhooks.delay(
-            args=(organisation.id, data, WebhookEventType.AUDIT_LOG_CREATED.value)
+            args=(organisation_id, data, WebhookEventType.AUDIT_LOG_CREATED.value)
         )
 
 
