@@ -508,7 +508,7 @@ if LOGGING_CONFIGURATION_FILE:
     with open(LOGGING_CONFIGURATION_FILE, "r") as f:
         LOGGING = json.loads(f.read())
 else:
-    LOGGING_FORMATTER = env.str("LOG_FORMAT", default="generic")
+    LOG_FORMAT = env.str("LOG_FORMAT", default="generic")
     LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
     LOGGING = {
         "version": 1,
@@ -524,7 +524,7 @@ else:
             "console": {
                 "level": LOG_LEVEL,
                 "class": "logging.StreamHandler",
-                "formatter": LOGGING_FORMATTER,
+                "formatter": LOG_FORMAT,
             }
         },
         "loggers": {
