@@ -13,7 +13,7 @@ import {
   toggleFeature,
   waitForElementVisible,
 } from '../helpers.cafe'
-import { t } from 'testcafe'
+import { Selector, t } from 'testcafe'
 import { E2E_USER, PASSWORD } from '../config'
 
 export default async function () {
