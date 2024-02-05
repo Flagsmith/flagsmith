@@ -1,9 +1,20 @@
+import logging
 from datetime import timedelta
 
+from app_analytics.influxdb_wrapper import get_current_api_usage
+from dateutil.relativedelta import relativedelta
+from django.conf import settings
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from django.utils import timezone
 
 from organisations import subscription_info_cache
-from organisations.models import Organisation, Subscription
+from organisations.models import (
+    OranisationAPIUsageNotification,
+    Organisation,
+    OrganisationRole,
+    Subscription,
+)
 from organisations.subscriptions.subscription_service import (
     get_subscription_metadata,
 )
@@ -13,12 +24,14 @@ from task_processor.decorators import (
 )
 from users.models import FFAdminUser
 
+from .constants import (
+    ALERT_EMAIL_MESSAGE,
+    ALERT_EMAIL_SUBJECT,
+    API_USAGE_ALERT_THRESHOLDS,
+)
 from .subscriptions.constants import SubscriptionCacheEntity
 
-ALERT_EMAIL_MESSAGE = (
-    "Organisation %s has used %d seats which is over their plan limit of %d (plan: %s)"
-)
-ALERT_EMAIL_SUBJECT = "Organisation over number of seats"
+logger = logging.getLogger(__name__)
 
 
 @register_task_handler()
@@ -73,3 +86,85 @@ def finish_subscription_cancellation():
     ):
         subscription.organisation.cancel_users()
         subscription.save_as_free_subscription()
+
+
+def send_admin_api_usage_notification(
+    organisation: Organisation, matched_threshold: int
+) -> None:
+    """
+    Send notification to admins that the API has breached a threshold.
+    """
+    recipient_list = list(
+        FFAdminUser.objects.filter(
+            userorganisation__organisation=organisation,
+            userorganisation__role=OrganisationRole.ADMIN,
+        ).values_list("email", flat=True)
+    )
+
+    context = {
+        "organisation": organisation,
+        "matched_threshold": matched_threshold,
+    }
+    send_mail(
+        subject=f"Flagsmith API use has reached {matched_threshold}%",
+        message=render_to_string("organisations/api_usage_notification.txt", context),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=recipient_list,
+        fail_silently=True,
+    )
+
+    OranisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=matched_threshold,
+        notified_at=timezone.now(),
+    )
+
+
+def _handle_api_usage_notifications(organisation: Organisation):
+    subscription_cache = organisation.subscription_information_cache
+    billing_starts_at = subscription_cache.current_billing_term_starts_at
+    now = timezone.now()
+
+    # Truncate to the closest active month to get start of current period..
+    month_delta = relativedelta(now, billing_starts_at).months
+    period_starts_at = relativedelta(months=month_delta) + billing_starts_at
+
+    days = relativedelta(now, period_starts_at).days
+    api_usage = get_current_api_usage(organisation.id, f"{days}d")
+
+    api_usage_percent = int(100 * api_usage / subscription_cache.allowed_30d_api_calls)
+
+    matched_threshold = None
+    for threshold in API_USAGE_ALERT_THRESHOLDS:
+        if threshold > api_usage_percent:
+            break
+
+        matched_threshold = threshold
+
+    if OranisationAPIUsageNotification.objects.filter(
+        notified_at__gt=period_starts_at,
+        percent_usage=matched_threshold,
+    ).exists():
+        # Already sent the max notification level so don't resend.
+        return
+
+    send_admin_api_usage_notification(organisation, matched_threshold)
+
+
+@register_recurring_task(
+    run_every=timedelta(hours=12),
+)
+def handle_api_usage_notifications():
+    for organisation in Organisation.objects.filter(
+        subscription_information_cache__current_billing_term_starts_at__isnull=False,
+        subscription_information_cache__current_billing_term_ends_at__isnull=False,
+    ).select_related(
+        "subscription_information_cache",
+    ):
+        try:
+            _handle_api_usage_notifications(organisation)
+        except RuntimeError:
+            logger.error(
+                f"Error processing api usage for organisation {organisation.id}",
+                exc_info=True,
+            )
