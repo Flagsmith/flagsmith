@@ -267,6 +267,9 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         if not getattr(self.organisation, "subscription_information_cache", None):
             return
 
+        if not self.organisation.subscription_information_cache.id:
+            return
+
         self.organisation.subscription_information_cache.delete()
 
     def prepare_for_cancel(
