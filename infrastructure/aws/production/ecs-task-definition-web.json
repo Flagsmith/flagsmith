@@ -178,22 +178,6 @@
                 {
                     "name": "PIPEDRIVE_IGNORE_DOMAINS",
                     "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io,flagsmithe2etestdomain.io"
-                },
-                {
-                    "name": "DEFAULT_THROTTLE_CLASSES",
-                    "value": "core.throttling.UserRateThrottle"
-                },
-                {
-                    "name": "DJANGO_REDIS_CONNECTION_FACTORY",
-                    "value": "core.redis_cluster.ClusterConnectionFactory"
-                },
-                {
-                    "name": "USER_THROTTLE_CACHE_BACKEND",
-                    "value": "django_redis.cache.RedisCache"
-                },
-                {
-                    "name": "USER_THROTTLE_CACHE_LOCATION",
-                    "value": "rediss://serverless-redis-cache-c4q8sw.serverless.euw2.cache.amazonaws.com:6379"
                 }
             ],
             "secrets": [
