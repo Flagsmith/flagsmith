@@ -193,6 +193,19 @@ after being divided by 2.
 
 `userId % 2 == 0`
 
+These minimum SDK versions support segments with the `Modulo` operator in
+[local evaluation mode](/clients/overview#local-evaluation):
+
+- Python SDK: `2.3.0+`
+- Java SDK: `5.1.0+`
+- .NET SDK: `4.2.0+`
+- NodeJS SDK: `2.4.0+`
+- Ruby SDK: `3.1.0+`
+- PHP SDK: `3.1.0+`
+- Go SDK: `2.2.0+`
+- Rust SDK: `0.2.0+`
+- Elixir SDK: `1.1.0+`
+
 </TabItem>
 </Tabs>
 
