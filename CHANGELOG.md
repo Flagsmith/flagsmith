@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.99.0](https://github.com/Flagsmith/flagsmith/compare/v2.98.0...v2.99.0) (2024-02-05)
+
+
+### Features
+
+* Add audit log detail page ([#3356](https://github.com/Flagsmith/flagsmith/issues/3356)) ([e8bc7d3](https://github.com/Flagsmith/flagsmith/commit/e8bc7d3116e9b2ba153044e5539ee5872af13028))
+
+
+### Bug Fixes
+
+* **revert:** "feat(rate-limit): enable rate limit in production ([#3362](https://github.com/Flagsmith/flagsmith/issues/3362))" ([#3381](https://github.com/Flagsmith/flagsmith/issues/3381)) ([ea3bc3c](https://github.com/Flagsmith/flagsmith/commit/ea3bc3cfd9e451f7ddba0ae493e8531e86b039f6))
+
 ## [2.98.0](https://github.com/Flagsmith/flagsmith/compare/v2.97.1...v2.98.0) (2024-02-05)
 
 
