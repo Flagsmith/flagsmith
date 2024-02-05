@@ -176,6 +176,16 @@ Different users will receive different values depending on your split percentage
 </TabItem>
 <TabItem value="modulo" label="Modulo">
 
+:::important
+
+Earlier SDK versions will not work in local evaluation mode if your environment has segments with the `Modulo` operator
+defined.
+
+To keep local evaluation from breaking, please ensure you have your SDK versions updated before you add such segments to
+your environment.
+
+:::
+
 This operator performs [modulo operation](https://en.wikipedia.org/wiki/Modulo_operation). This operator accepts rule
 value in `divisor|remainder` format and is applicable for Traits having `integer` or `float` values. For example:
 
