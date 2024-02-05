@@ -18,6 +18,7 @@ def test_connection_check_to_default_database(db: None, reset_cache: None) -> No
 
 
 def test_replica_router_db_for_read_with_one_offline_replica(
+    db: None,
     settings: SettingsWrapper,
     mocker: MockerFixture,
     reset_cache: None,
@@ -52,6 +53,7 @@ def test_replica_router_db_for_read_with_one_offline_replica(
 
 
 def test_replica_router_db_for_read_with_local_offline_replicas(
+    db: None,
     settings: SettingsWrapper,
     mocker: MockerFixture,
     reset_cache: None,
@@ -97,6 +99,7 @@ def test_replica_router_db_for_read_with_local_offline_replicas(
 
 
 def test_replica_router_db_for_read_with_all_offline_replicas(
+    db: None,
     settings: SettingsWrapper,
     mocker: MockerFixture,
     reset_cache: None,
@@ -130,6 +133,7 @@ def test_replica_router_db_for_read_with_all_offline_replicas(
 
 
 def test_replica_router_db_with_sequential_read(
+    db: None,
     settings: SettingsWrapper,
     mocker: MockerFixture,
     reset_cache: None,
@@ -163,6 +167,7 @@ def test_replica_router_db_with_sequential_read(
 
 
 def test_replica_router_db_no_replicas(
+    db: None,
     settings: SettingsWrapper,
     mocker: MockerFixture,
     reset_cache: None,
