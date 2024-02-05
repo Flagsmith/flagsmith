@@ -516,7 +516,7 @@ else:
         "formatters": {
             "generic": {"format": "%(name)-12s %(levelname)-8s %(message)s"},
             "json": {
-                "()": "app.settings.logger.JsonFormatter",
+                "()": "util.logging.JsonFormatter",
                 "datefmt": "%Y-%m-%d %H:%M:%S",
             },
         },
