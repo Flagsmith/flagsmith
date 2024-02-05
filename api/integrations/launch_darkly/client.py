@@ -37,8 +37,17 @@ class LaunchDarklyClient:
         self,
         collection_endpoint: str,
         additional_params: Optional[dict[str, Any]] = None,
-        use_offset_pagination: bool = False,
+        use_legacy_offset_pagination: bool = False,
     ) -> Iterator[T]:
+        """
+        Iterator over paginated items in the given collection endpoint.
+
+        :param collection_endpoint: endpoint to get the collection of items
+        :param additional_params: Additional parameters to include in the request
+        :param use_legacy_offset_pagination: Whether to use offset based pagination if `next` links do not
+        exist in the response. Some endpoints do not have `next` links and require offset based pagination.
+        :return: Iterator over the items in the collection
+        """
         params = {"limit": LAUNCH_DARKLY_API_ITEM_COUNT_LIMIT_PER_PAGE}
         offset = 0
         if additional_params:
@@ -62,7 +71,7 @@ class LaunchDarklyClient:
                 response_json = self._get_json_response(
                     endpoint=next_endpoint,
                 )
-            elif use_offset_pagination and len(items) == params["limit"]:
+            elif use_legacy_offset_pagination and len(items) == params["limit"]:
                 # Offset based pagination
                 offset += params["limit"]
                 params["offset"] = offset
@@ -142,7 +151,7 @@ class LaunchDarklyClient:
             self._iter_paginated_items(
                 collection_endpoint=endpoint,
                 additional_params={"limit": 50},
-                use_offset_pagination=True,
+                use_legacy_offset_pagination=True,
             )
         )
 

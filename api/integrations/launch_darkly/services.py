@@ -619,7 +619,7 @@ def _import_rules(
             )
 
 
-def _create_boolean_feature_states(
+def _create_boolean_feature_states_with_segments_identities(
     import_request: LaunchDarklyImportRequest,
     ld_flag: ld_types.FeatureFlag,
     feature: Feature,
@@ -639,6 +639,8 @@ def _create_boolean_feature_states(
             feature_state=feature_state,
         )
 
+        # TODO: Move target and rule creation to be invoked directly from `process_import_request`.
+        # https://github.com/Flagsmith/flagsmith/issues/3383
         _import_targets(
             import_request=import_request,
             ld_flag_config=ld_flag_config,
@@ -657,7 +659,7 @@ def _create_boolean_feature_states(
         )
 
 
-def _create_string_feature_states(
+def _create_string_feature_states_with_segments_identities(
     import_request: LaunchDarklyImportRequest,
     ld_flag: ld_types.FeatureFlag,
     feature: Feature,
@@ -698,6 +700,8 @@ def _create_string_feature_states(
             defaults={"type": STRING, "string_value": string_value},
         )
 
+        # TODO: Move target and rule creation to be invoked directly from `process_import_request`.
+        # https://github.com/Flagsmith/flagsmith/issues/3383
         _import_targets(
             import_request=import_request,
             ld_flag_config=ld_flag_config,
@@ -716,7 +720,7 @@ def _create_string_feature_states(
         )
 
 
-def _create_mv_feature_states(
+def _create_mv_feature_states_with_segments_identities(
     import_request: LaunchDarklyImportRequest,
     ld_flag: ld_types.FeatureFlag,
     feature: Feature,
@@ -793,6 +797,8 @@ def _create_mv_feature_states(
                     defaults={"percentage_allocation": percentage_allocation},
                 )
 
+        # TODO: Move target and rule creation to be invoked directly from `process_import_request`.
+        # https://github.com/Flagsmith/flagsmith/issues/3383
         _import_targets(
             import_request=import_request,
             ld_flag_config=ld_flag_config,
@@ -829,13 +835,17 @@ def _get_feature_type_and_feature_state_factory(
     match ld_flag["kind"]:
         case "multivariate" if len(ld_flag["variations"]) > 2:
             feature_type = MULTIVARIATE
-            feature_state_factory = _create_mv_feature_states
+            feature_state_factory = _create_mv_feature_states_with_segments_identities
         case "multivariate":
             feature_type = STANDARD
-            feature_state_factory = _create_string_feature_states
+            feature_state_factory = (
+                _create_string_feature_states_with_segments_identities
+            )
         case _:  # assume boolean
             feature_type = STANDARD
-            feature_state_factory = _create_boolean_feature_states
+            feature_state_factory = (
+                _create_boolean_feature_states_with_segments_identities
+            )
 
     return feature_type, feature_state_factory
 
