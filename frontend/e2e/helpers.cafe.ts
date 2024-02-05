@@ -306,10 +306,13 @@ export const createFeature = async (
 }
 
 export const deleteFeature = async (index: number, name: string) => {
+  console.log('DEBUG: deleteFeature: index: 1:', index, 'name:', name)
   await click(byId(`feature-action-${index}`))
   await waitForElementVisible(byId(`remove-feature-btn-${index}`))
+  console.log('DEBUG: deleteFeature: index: 2:', index, 'name:', name)
   await click(byId(`remove-feature-btn-${index}`))
   await setText('[name="confirm-feature-name"]', name)
+  console.log('DEBUG: deleteFeature: index: 2:', index, 'name:', name)
   await click('#confirm-remove-feature-btn')
   await waitForElementNotExist(`remove-feature-btn-${index}`)
 }
