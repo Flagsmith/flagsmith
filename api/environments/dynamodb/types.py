@@ -2,16 +2,15 @@ import enum
 from dataclasses import asdict, dataclass
 from datetime import datetime
 
+import boto3
 from django.conf import settings
 from flag_engine.features.models import FeatureStateModel
 from pydantic import BaseModel
 
-from environments.dynamodb.resource import get_dynamo_table
-
 project_metadata_table = None
 
 if settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
-    project_metadata_table = get_dynamo_table(
+    project_metadata_table = boto3.resource("dynamodb").Table(
         settings.PROJECT_METADATA_TABLE_NAME_DYNAMO
     )
 
