@@ -77,6 +77,7 @@ export const click = async (selector: string) => {
     .expect(Selector(selector).hasAttribute('disabled'))
     .notOk('ready for testing', { timeout: 5000 })
     .hover(selector)
+    .wait(5000)
     .click(selector)
 }
 
