@@ -10,6 +10,12 @@ const OrganisationSelect = class extends Component {
     this.state = {}
   }
 
+  componentDidMount() {
+    if (this.props.firstOrganisation) {
+      this.props.onChange(AccountStore.getOrganisation().id)
+    }
+  }
+
   render() {
     return (
       <AccountProvider>
@@ -23,6 +29,7 @@ const OrganisationSelect = class extends Component {
                 }}
                 onChange={({ value }) => {
                   API.setCookie('organisation', `${value}`)
+                  console.log('DEBUG: value:', value)
                   this.props.onChange && this.props.onChange(value)
                 }}
                 options={
