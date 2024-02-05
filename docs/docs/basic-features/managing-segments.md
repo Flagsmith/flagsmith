@@ -76,13 +76,6 @@ individual value weightings as part of a Segment override.
 
 ## Rules Operators
 
-:::important
-
-Some of the operators in local evaluation mode are only supported in later SDK versions, see
-[SDK Compatibility](#sdk-compatibility).
-
-:::
-
 The full set of Flagsmith rule operators are as follows:
 
 | Name                   | Condition                                                                                                                                                    |
