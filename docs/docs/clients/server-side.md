@@ -20,7 +20,7 @@ Once you've got that understood, lets get the SDKs integrated!
 
 ## SDK Overview
 
-<Tabs groupId="language">
+<Tabs groupId="language" queryString>
 <TabItem value="py" label="Python">
 
 - Version Compatibility: **Python 3.8+**

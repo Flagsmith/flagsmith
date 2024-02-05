@@ -40,9 +40,9 @@ SDKs have received a response from the API with the Environment related data, th
 event of the SDKs then not receiving an update, they will continue to function.
 
 In the event that the SDKs aren't able to contact the API at all, they will time out and resort to
-[Default flags](#rule-2-progressively-enhance-your-application-with-default-flags). When running in remote evaluation
-mode, you will need to decide what the best approach is based on your particular application. Again,
-[Default flags](#rule-2-progressively-enhance-your-application-with-default-flags) can help here.
+[Default flags](#progressively-enhance-your-application-with-default-flags). When running in remote evaluation mode, you
+will need to decide what the best approach is based on your particular application. Again,
+[Default flags](#progressively-enhance-your-application-with-default-flags) can help here.
 
 ### Progressively enhance your application with default flags
 

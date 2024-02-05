@@ -124,20 +124,20 @@ You can integrate Flagsmith with Slack. Send flag change events from Flagsmith i
 
 ### OAUTH
 
-You can authenticate Flagsmith with oAuth providers. [Learn more](/deployment/configuration/authentication/oauth).
+You can authenticate Flagsmith with oAuth providers. [Learn more](/deployment/configuration/authentication/OAuth).
 
 ### SAML
 
-You can authenticate Flagsmith with SAML providers. [Learn more](/deployment/configuration/authentication/saml).
+You can authenticate Flagsmith with SAML providers. [Learn more](/deployment/configuration/authentication/SAML).
 
 ### LDAP
 
-You can authenticate Flagsmith with LDAP providers. [Learn more](/deployment/configuration/authentication/ldap).
+You can authenticate Flagsmith with LDAP providers. [Learn more](/deployment/configuration/authentication/LDAP).
 
 ### Okta
 
-You can authenticate Flagsmith with Okta. [Learn more](/deployment/configuration/authentication/okta).
+You can authenticate Flagsmith with Okta. [Learn more](/deployment/configuration/authentication/Okta).
 
 ### ADFS
 
-You can authenticate Flagsmith with ADFS. [Learn more](/deployment/configuration/authentication/adfs).
+You can authenticate Flagsmith with ADFS. [Learn more](/deployment/configuration/authentication/ADFS).
