@@ -33,7 +33,16 @@ export default async function () {
 
   log('Create Short Life Feature')
   await createFeature(3, 'short_life_feature', false)
+
+  log('Scroll Feature Page')
+  await t.eval(() => {
+    window.scrollBy(0, 15000)
+  })
   await deleteFeature(3, 'short_life_feature')
+  log('Scroll Feature Page')
+  await t.eval(() => {
+    window.scrollBy(0, 30000)
+  })
 
   log('Toggle Feature')
   await toggleFeature(0, true)

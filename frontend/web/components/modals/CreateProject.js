@@ -38,6 +38,14 @@ const CreateProject = class extends Component {
           const canCreate = !!Utils.getPlansPermission(
             'CREATE_ADDITIONAL_PROJECT',
           )
+          console.log(
+            'DEBUG: !!projects:',
+            !!projects,
+            '!!projects.length:',
+            !!projects.length,
+            'projects:',
+            projects,
+          )
           const disableCreate = !canCreate && hasProject
 
           return (

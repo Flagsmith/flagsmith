@@ -77,7 +77,6 @@ export const click = async (selector: string) => {
     .expect(Selector(selector).hasAttribute('disabled'))
     .notOk('ready for testing', { timeout: 5000 })
     .hover(selector)
-    .wait(5000)
     .click(selector)
 }
 
@@ -268,10 +267,13 @@ export const createRemoteConfig = async (
   await setText(byId('featureID'), name)
   await setText(byId('featureValue'), `${value}`)
   await setText(byId('featureDesc'), description)
+  console.log('DEBUG: description')
   if (!defaultOff) {
+    console.log('DEBUG: defaultOff no')
     await click(byId('toggle-feature-button'))
   }
   await Promise.all(
+    // console.log('DEBUG: promise all')
     mvs.map(async (v, i) => {
       await click(byId('add-variation'))
 
@@ -280,8 +282,11 @@ export const createRemoteConfig = async (
     }),
   )
   await click(byId('create-feature-btn'))
+  console.log('DEBUG: create-feature-btn')
   await waitForElementVisible(byId(`feature-value-${index}`))
+  console.log('DEBUG: waitForElementVisible: feature-value-${index}')
   await assertTextContent(byId(`feature-value-${index}`), expectedValue)
+  console.log('DEBUG: assertTextContent: feature-value-${index}:', expectedValue)
 }
 export const closeModal = async () => {
   await t.click('body', {
