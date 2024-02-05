@@ -34,7 +34,7 @@ export const githubIntegrationService = service
       >({
         providesTags: (res) => [{ id: res?.id, type: 'GithubIntegration' }],
         query: (query: Req['getGithubIntegration']) => ({
-          url: `organisations/${query.organisation_pk}/integrations/github/${query.github_integration_id}/`,
+          url: `organisations/${query.organisation_pk}/integrations/github/`,
         }),
       }),
       updateGithubIntegration: builder.mutation<
