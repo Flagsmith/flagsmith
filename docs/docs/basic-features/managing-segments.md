@@ -118,6 +118,29 @@ contains the tenancy ID of that user.
 
 The `In` operator _is_ case sensitive when evaluating alphabetical characters.
 
+:::important
+
+Earlier SDK versions will not work in local evaluation mode if your environment has segments with the `In` operator
+defined.
+
+To keep local evaluation from breaking, please ensure you have your SDK versions updated before you add such segments to
+your environment.
+
+:::
+
+These minimum SDK versions support segments with the `In` operator in
+[local evaluation mode](/clients/overview#local-evaluation):
+
+- Python SDK: `3.3.0+`
+- Java SDK: `7.1.0+`
+- .NET SDK: `5.0.0+`
+- NodeJS SDK: `2.5.0+`
+- Ruby SDK: `3.2.0+`
+- PHP SDK: `4.1.0+`
+- Go SDK: `3.1.0+`
+- Rust SDK: `1.3.0+`
+- Elixir SDK: `2.0.0+`
+
 ### SemVer-aware operators
 
 The following [SemVer](https://semver.org/) operators are also available:
@@ -134,7 +157,37 @@ Flagsmith and then create a rule that looks like, for example:
 
 This Segment rule will include all users running version `4.2.52` or greater of your application.
 
-### Rule Typing
+### Percentage Split Operator
+
+:::important
+
+The percentage split operator **_only_** comes into effect if you are getting the Flags for a particular Identity. If
+you are just retrieving the flags for an Environment without passing in an Identity, your user will **_never_** be
+included in the percentage split segment.
+
+:::
+
+This is the only operator that does not require a Trait. You can use the percentage split operator to drive
+[A/B tests](/advanced-use/ab-testing) and
+[staged feature rollouts](/guides-and-examples/staged-feature-rollouts#creating-staged-rollouts).
+
+When you use a percentage split operator in a segment that is overriding a feature, each user will be placed into the
+same 'bucket' whenever that feature is evaluated for that user, and hence they will always receive the same value.
+Different users will receive different values depending on your split percentage.
+
+### Modulo Operator
+
+This operator performs [modulo operation](https://en.wikipedia.org/wiki/Modulo_operation). This operator accepts rule
+value in `divisor|remainder` format and is applicable for Traits having `integer` or `float` values. For example:
+
+`userId` `%` `2|0`
+
+This segment rule will include all identities having `int` or `float` `userId` trait and having a remainder equal to 0
+after being divided by 2.
+
+`userId % 2 == 0`
+
+## Rule Typing
 
 When you store Trait values against an Identity, they are stored in our API with an associated type:
 
@@ -168,36 +221,6 @@ For evaluating booleans, we evaluate the following 'truthy' String values as `tr
 - `True`
 - `true`
 - `1`
-
-### Percentage Split Operator
-
-:::important
-
-The percentage split operator **_only_** comes into effect if you are getting the Flags for a particular Identity. If
-you are just retrieving the flags for an Environment without passing in an Identity, your user will **_never_** be
-included in the percentage split segment.
-
-:::
-
-This is the only operator that does not require a Trait. You can use the percentage split operator to drive
-[A/B tests](/advanced-use/ab-testing) and
-[staged feature rollouts](/guides-and-examples/staged-feature-rollouts#creating-staged-rollouts).
-
-When you use a percentage split operator in a segment that is overriding a feature, each user will be placed into the
-same 'bucket' whenever that feature is evaluated for that user, and hence they will always receive the same value.
-Different users will receive different values depending on your split percentage.
-
-### Modulo Operator
-
-This operator performs [modulo operation](https://en.wikipedia.org/wiki/Modulo_operation). This operator accepts rule
-value in `divisor|remainder` format and is applicable for Traits having `integer` or `float` values. For example:
-
-`userId` `%` `2|0`
-
-This segment rule will include all identities having `int` or `float` `userId` trait and having a remainder equal to 0
-after being divided by 2.
-
-`userId % 2 == 0`
 
 ## Segment Rule Ordering
 
@@ -240,30 +263,3 @@ More simply, the order of precedence is:
 1. Identity
 2. Segment
 3. Flag
-
-## SDK Compatibility
-
-### `In` Segment operator
-
-:::important
-
-Earlier SDK versions will not work in local evaluation mode if your environment has segments with the `In` operator
-defined.
-
-To keep local evaluation from breaking, please ensure you have your SDK versions updated before you add such segments to
-your environment.
-
-:::
-
-These minimum SDK versions support segments with the `In` operator in
-[local evaluation mode](/clients/overview#local-evaluation):
-
-- Python SDK: `3.3.0+`
-- Java SDK: `7.1.0+`
-- .NET SDK: `5.0.0+`
-- NodeJS SDK: `2.5.0+`
-- Ruby SDK: `3.2.0+`
-- PHP SDK: `4.1.0+`
-- Go SDK: `3.1.0+`
-- Rust SDK: `1.3.0+`
-- Elixir SDK: `2.0.0+`
