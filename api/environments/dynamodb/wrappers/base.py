@@ -1,9 +1,22 @@
+import logging
 import typing
+from typing import Mapping
 
-from environments.dynamodb.resource import get_dynamo_table
+import boto3
+from amazondax import AmazonDaxClient
+from botocore.config import Config
+from django.conf import settings
 
 if typing.TYPE_CHECKING:
-    from mypy_boto3_dynamodb.service_resource import Table
+    from mypy_boto3_dynamodb.service_resource import (
+        DeleteItemOutputTableTypeDef,
+        GetItemOutputTableTypeDef,
+        Table,
+        TableAttributeValueTypeDef,
+    )
+
+
+logger = logging.getLogger()
 
 
 class BaseDynamoWrapper:
@@ -23,7 +36,19 @@ class BaseDynamoWrapper:
 
     def get_table(self) -> typing.Optional["Table"]:
         if table_name := self.get_table_name():
-            return get_dynamo_table(table_name)
+            return boto3.resource("dynamodb", config=Config(tcp_keepalive=True)).Table(
+                table_name
+            )
+
+    def get_item(
+        self, key: Mapping[str, "TableAttributeValueTypeDef"]
+    ) -> "GetItemOutputTableTypeDef":
+        return self.table.get_item(Key=key)
+
+    def delete_item(
+        self, key: Mapping[str, "TableAttributeValueTypeDef"]
+    ) -> "DeleteItemOutputTableTypeDef":
+        return self.table.delete_item(Key=key)
 
     @property
     def is_enabled(self) -> bool:
@@ -40,3 +65,50 @@ class BaseDynamoWrapper:
                 break
 
             kwargs["ExclusiveStartKey"] = last_evaluated_key
+
+    def batch_write(self, items: list) -> None:
+        with self.table.batch_writer() as batch:
+            for item in items:
+                batch.put_item(Item=item)
+
+
+class BaseDAXWrapper(BaseDynamoWrapper):
+    def __init__(self) -> None:
+        super().__init__()
+        self._dax_table: typing.Optional["Table"] = None
+
+    @property
+    def dax_table(self):
+        if not self._dax_table and settings.DAX_ENDPOINT:
+            self._dax_table = AmazonDaxClient.resource(
+                endpoint_url=settings.DAX_ENDPOINT, config=Config(tcp_keepalive=True)
+            ).Table(self.table_name)
+
+        return self._dax_table
+
+    def get_item(
+        self, key: Mapping[str, "TableAttributeValueTypeDef"]
+    ) -> "GetItemOutputTableTypeDef":
+        try:
+            return self.dax_table.get_item(Key=key)
+        except Exception as e:
+            logger.error("Error getting item from DAX: %s", e)
+            return super().get_item(key)
+
+    def delete_item(
+        self, key: Mapping[str, "TableAttributeValueTypeDef"]
+    ) -> "DeleteItemOutputTableTypeDef":
+        try:
+            return self.dax_table.delete_item(Key=key)
+        except Exception as e:
+            logger.error("Error deleting item from DAX: %s", e)
+            return super().delete_item(key)
+
+    def batch_write(self, items: list):
+        try:
+            with self._dax_table.batch_writer() as batch:
+                for item in items:
+                    batch.put_item(Item=item)
+        except Exception as e:
+            logger.error("Error batch writing item from DAX: %s", e)
+            super().batch_write(items)

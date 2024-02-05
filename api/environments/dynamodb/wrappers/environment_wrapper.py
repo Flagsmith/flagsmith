@@ -21,7 +21,7 @@ from util.mappers import (
 )
 from util.util import iter_paired_chunks
 
-from .base import BaseDynamoWrapper
+from .base import BaseDAXWrapper
 
 if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.type_defs import QueryInputRequestTypeDef
@@ -29,7 +29,7 @@ if typing.TYPE_CHECKING:
     from environments.models import Environment
 
 
-class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper):
+class BaseDynamoEnvironmentWrapper(BaseDAXWrapper):
     def write_environment(self, environment: "Environment") -> None:
         self.write_environments([environment])
 
@@ -41,20 +41,20 @@ class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
     table_name = settings.ENVIRONMENTS_TABLE_NAME_DYNAMO
 
     def write_environments(self, environments: Iterable["Environment"]):
-        with self.table.batch_writer() as writer:
-            for environment in environments:
-                writer.put_item(
-                    Item=map_environment_to_environment_document(environment),
-                )
+        environment_documents = [
+            map_environment_to_environment_document(environment)
+            for environment in environments
+        ]
+        super().batch_write(environment_documents)
 
     def get_item(self, api_key: str) -> dict:
         try:
-            return self.table.get_item(Key={"api_key": api_key})["Item"]
+            return super().get_item({"api_key": api_key})["Item"]
         except KeyError as e:
             raise ObjectDoesNotExist() from e
 
     def delete_environment(self, api_key: str) -> None:
-        self.table.delete_item(Key={"api_key": api_key})
+        return super().delete_item({"api_key": api_key})
 
 
 class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
