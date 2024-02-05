@@ -323,12 +323,6 @@ def get_current_api_usage(organisation_id: int, date_range: str) -> int:
     :return: number of current api calls
     """
 
-    assert False
-    # PR Next steps from convo with Matt
-    # Look into organisation.subscription.get_subscription_metadata()
-    # and update OrganisationSubscriptionInformationCache
-    # to include subscription billing date information
-
     bucket = read_bucket
     results = InfluxDBWrapper.influx_query_manager(
         date_range=date_range,
