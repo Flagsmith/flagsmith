@@ -7,6 +7,7 @@ from pytest_mock import MockerFixture
 
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
+    OranisationAPIUsageNotification,
     Organisation,
     OrganisationRole,
     OrganisationSubscriptionInformationCache,
@@ -22,6 +23,7 @@ from organisations.tasks import (
     ALERT_EMAIL_MESSAGE,
     ALERT_EMAIL_SUBJECT,
     finish_subscription_cancellation,
+    handle_api_usage_notifications,
     send_org_over_limit_alert,
     send_org_subscription_cancelled_alert,
 )
@@ -222,3 +224,71 @@ def test_send_org_subscription_cancelled_alert(db: None, mocker: MockerFixture) 
         recipient_list=[],
         fail_silently=True,
     )
+
+
+def test_handle_api_usage_notifications(
+    mocker: MockerFixture,
+    organisation: Organisation,
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+    )
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 91
+    mock_send_mail = mocker.patch(
+        "organisations.tasks.send_mail",
+    )
+    assert not OranisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+    ).exists()
+
+    # When
+    handle_api_usage_notifications()
+
+    # Then
+    mock_api_usage.assert_called_once_with(organisation.id, "14d")
+    mock_send_mail.assert_called_once_with(
+        subject="Flagsmith API use has reached 90%",
+        message=(
+            "Hi there,\n\nAPI usage for Test Org has reached "
+            "90 within the current subscription period. Please "
+            "consider upgrading your organisations account limits.\n\n"
+            "Thank you!\n\nThe Flagsmith Team\n"
+        ),
+        from_email="noreply@flagsmith.com",
+        recipient_list=["admin@example.com"],
+        fail_silently=True,
+    )
+
+    assert (
+        OranisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 1
+    )
+    api_usage_notification = OranisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+    ).first()
+
+    assert api_usage_notification.percent_usage == 90
+
+    # Now re-run the usage to make sure the notification isn't resent.
+    handle_api_usage_notifications()
+
+    assert (
+        OranisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 1
+    )
+    assert OranisationAPIUsageNotification.objects.first() == api_usage_notification
