@@ -13,7 +13,7 @@ import {
   toggleFeature,
   waitForElementVisible,
 } from '../helpers.cafe'
-import { Selector, t } from 'testcafe'
+import { t } from 'testcafe'
 import { E2E_USER, PASSWORD } from '../config'
 
 export default async function () {
@@ -33,13 +33,12 @@ export default async function () {
 
   log('Create Short Life Feature')
   await createFeature(3, 'short_life_feature', false)
-
-  log('Scroll Feature Page')
   await t.eval(() => {
     window.scrollBy(0, 15000)
   })
+
+  log('Delete Short Life Feature')
   await deleteFeature(3, 'short_life_feature')
-  log('Scroll Feature Page')
   await t.eval(() => {
     window.scrollBy(0, 30000)
   })

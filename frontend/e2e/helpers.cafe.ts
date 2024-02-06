@@ -1,6 +1,6 @@
 import { RequestLogger, Selector, t } from 'testcafe'
 
-export const LONG_TIMEOUT = 45000
+export const LONG_TIMEOUT = 40000
 
 export const byId = (id: string) => `[data-test="${id}"]`
 
