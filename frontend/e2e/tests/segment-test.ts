@@ -35,7 +35,6 @@ export const testSegment1 = async () => {
 
   log('Create Feature')
 
-  // flaky
   await createRemoteConfig(0, 'mv_flag', 'big', null, null, [
     { value: 'medium', weight: 100 },
     { value: 'small', weight: 0 },
