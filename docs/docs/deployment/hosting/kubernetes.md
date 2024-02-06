@@ -303,6 +303,7 @@ The following table lists the configurable parameters of the chart and their def
 | `api.livenessProbe.periodSeconds`                  |                                                                  | 10                             |
 | `api.livenessProbe.successThreshold`               |                                                                  | 1                              |
 | `api.livenessProbe.timeoutSeconds`                 |                                                                  | 2                              |
+| `api.logging.format`                               |                                                                  | '{}'                           |
 | `api.readinessProbe.failureThreshold`              |                                                                  | 10                             |
 | `api.readinessProbe.initialDelaySeconds`           |                                                                  | 10                             |
 | `api.readinessProbe.periodSeconds`                 |                                                                  | 10                             |
@@ -317,6 +318,7 @@ The following table lists the configurable parameters of the chart and their def
 | `frontend.image.tag`                               | docker image tag for flagsmith frontend                          | appVersion                     |
 | `frontend.image.imagePullPolicy`                   |                                                                  | `IfNotPresent`                 |
 | `frontend.image.imagePullSecrets`                  |                                                                  | `[]`                           |
+| `frontend.logging.format`                          |                                                                  | '{}'                           |
 | `frontend.replicacount`                            | number of replicas for the flagsmith frontend, `null` to unset   | 1                              |
 | `frontend.deploymentStrategy`                      | See "Deployment strategy" above                                  |                                |
 | `frontend.resources`                               | resources per pod for the flagsmith frontend                     | `{}`                           |
