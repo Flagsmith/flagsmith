@@ -173,35 +173,32 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           }
         })
 
-      const projectFlags = existingFlags.concat(
-        fileData
-          .filter((v) => {
-            return !existingFlags.find((flag) => flag.name === v.name)
-          })
-          .map(function (importItem, i) {
-            return {
-              created_date: createdDate,
-              default_enabled: importItem.enabled,
-              id: i,
-              initial_value: importItem.value,
-              isNew: true,
-              is_archived: false,
-              is_server_key_only: importItem.is_server_key_only,
-              multivariate_options: importItem.multivariate,
-              name: importItem.name,
-              num_identity_overrides: 0,
-              num_segment_overrides: 0,
-              owner_groups: [],
-              owners: [],
-              project: ProjectStore.model!.id,
-              tags: [],
-              type: importItem.multivariate?.length
-                ? 'MULTIVARIATE'
-                : 'STANDARD',
-              uuid: `${i}`,
-            }
-          }),
-      )
+      const fileFlags = fileData
+        .filter((v) => {
+          return !existingFlags.find((flag) => flag.name === v.name)
+        })
+        .map(function (importItem, i) {
+          return {
+            created_date: createdDate,
+            default_enabled: importItem.enabled,
+            id: i,
+            initial_value: importItem.value,
+            isNew: true,
+            is_archived: false,
+            is_server_key_only: importItem.is_server_key_only,
+            multivariate_options: importItem.multivariate,
+            name: importItem.name,
+            num_identity_overrides: 0,
+            num_segment_overrides: 0,
+            owner_groups: [],
+            owners: [],
+            project: ProjectStore.model!.id,
+            tags: [],
+            type: importItem.multivariate?.length ? 'MULTIVARIATE' : 'STANDARD',
+            uuid: `${i}`,
+          }
+        })
+      const projectFlags = existingFlags.concat(fileFlags)
 
       const featureStates: FeatureState[] = projectFlags.map(
         (projectFlag, i) => {
@@ -244,6 +241,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
       ) {
         return false
       }
+      return true
     })
   }, [projectFlags, search, tags, tagStrategy, showArchived])
 
