@@ -58,9 +58,6 @@ def trigger_feature_state_change_webhooks(
     if hasattr(instance.environment.project.organisation, "github_config"):
         github_configuration = instance.environment.project.organisation.github_config
 
-        feature_states = FeatureState.objects.filter(
-            feature_id=history_instance.feature.id
-        )
         feature_data = {
             "id": history_instance.feature.id,
             "name": history_instance.feature.name,
@@ -69,31 +66,24 @@ def trigger_feature_state_change_webhooks(
         feature_data["installation_id"] = github_configuration.installation_id
         feature_data["organisation_id"] = github_configuration.organisation.id
 
-        for feature_state in feature_states:
-            feature_env_data = {}
-            if feature_state.feature_state_value.string_value is not None:
-                feature_env_data[
-                    "string_value"
-                ] = feature_state.feature_state_value.string_value
-            if feature_state.feature_state_value.boolean_value is not None:
-                feature_env_data[
-                    "boolean_value"
-                ] = feature_state.feature_state_value.boolean_value
-            if feature_state.feature_state_value.integer_value is not None:
-                feature_env_data[
-                    "integer_value"
-                ] = feature_state.feature_state_value.integer_value
+        feature_state = {
+            "environment_name": new_state["environment"]["name"],
+            "feature_value": new_state["enabled"],
+        }
 
-            feature_env_data["environment_name"] = feature_state.environment.name
-            feature_env_data["feature_value"] = feature_state.enabled
-            if (
-                hasattr(feature_state, "feature_segment")
-                and feature_state.feature_segment is not None
-            ):
-                feature_env_data[
-                    "segment_name"
-                ] = feature_state.feature_segment.segment.name
-            feature_data["feature_states"].append(feature_env_data)
+        if instance.feature_state_value.string_value is not None:
+            feature_state["string_value"] = instance.feature_state_value.string_value
+        if instance.feature_state_value.boolean_value is not None:
+            feature_state["boolean_value"] = instance.feature_state_value.boolean_value
+        if instance.feature_state_value.integer_value is not None:
+            feature_state["integer_value"] = instance.feature_state_value.integer_value
+        if (
+            hasattr(feature_state, "feature_segment")
+            and instance.feature_segment is not None
+        ):
+            feature_state["segment_name"] = instance.feature_segment.segment.name
+
+        feature_data["feature_states"].append(feature_state)
 
         call_github_app_webhook_for_feature_state.delay(
             args=(

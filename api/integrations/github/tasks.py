@@ -11,7 +11,7 @@ from task_processor.decorators import register_task_handler
 logger = logging.getLogger(__name__)
 
 
-BASE_URL = "https://4150-131-0-197-145.ngrok-free.app/api/flagsmith-webhook"
+BASE_URL = "http://localhost:3000/api/flagsmith-webhook"
 
 
 class GithubResourceType(Enum):
