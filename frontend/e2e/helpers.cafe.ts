@@ -295,6 +295,10 @@ export const createFeature = async (
   description = 'description',
 ) => {
   await gotoFeatures()
+  await t.eval(() => {
+    window.scrollBy(0, 15000)
+  })
+
   await click('#show-create-feature-btn')
   await setText(byId('featureID'), name)
   await setText(byId('featureDesc'), description)
