@@ -63,6 +63,8 @@ environment_wrapper = DynamoEnvironmentWrapper()
 environment_v2_wrapper = DynamoEnvironmentV2Wrapper()
 environment_api_key_wrapper = DynamoEnvironmentAPIKeyWrapper()
 
+testing_ci_temp = True
+
 
 class Environment(
     LifecycleModel,

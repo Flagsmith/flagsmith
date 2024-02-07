@@ -35,6 +35,8 @@ from projects.tasks import (
 project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
+testing_ci_temp = True
+
 
 class IdentityOverridesV2MigrationStatus(models.TextChoices):
     NOT_STARTED = "NOT_STARTED", "Not Started"
