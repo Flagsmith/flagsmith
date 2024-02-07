@@ -2,6 +2,7 @@ import React, { FC } from 'react'
 import Format from 'common/utils/format'
 import { IonIcon } from '@ionic/react'
 import { informationCircle } from 'ionicons/icons'
+import { Form } from 'reactstrap'
 
 type IdentifierStringType = {
   value: string | undefined | null
@@ -9,7 +10,11 @@ type IdentifierStringType = {
 
 const IdentifierString: FC<IdentifierStringType> = ({ value }) => {
   const display = Format.trimAndHighlightSpaces(value)
-  if (display?.includes(Format.spaceDelimiter)) {
+  if (
+    display?.includes(Format.spaceDelimiter) ||
+    display?.includes(Format.newLineDelimiter) ||
+    display?.includes(Format.tabDelimiter)
+  ) {
     return (
       <Tooltip
         title={
@@ -19,9 +24,12 @@ const IdentifierString: FC<IdentifierStringType> = ({ value }) => {
           </>
         }
       >
-        {`This identifier includes whitespace that could easily be missed.
-          We have highlighted this with the character${' '}
-          <strong>${Format.spaceDelimiter}</strong>`}
+        {`This identifier includes characters that could easily be missed.
+          We have highlighted this with the following characters:
+          
+          Spaces: ${Format.spaceDelimiter}
+          Tabs: ${Format.tabDelimiter}
+          New lines: ${Format.newLineDelimiter}`}
       </Tooltip>
     )
   }
