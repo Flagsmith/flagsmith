@@ -159,6 +159,18 @@ def sdk_client(environment_api_key):
 
 
 @pytest.fixture()
+def server_side_sdk_client(
+    admin_client: APIClient, environment: int, environment_api_key: str
+) -> APIClient:
+    url = reverse("api-v1:environments:api-keys-list", args={environment_api_key})
+    response = admin_client.post(url, data={"name": "Some key"})
+
+    client = APIClient()
+    client.credentials(HTTP_X_ENVIRONMENT_KEY=response.json()["key"])
+    return client
+
+
+@pytest.fixture()
 def default_feature_value():
     return "default_value"
 

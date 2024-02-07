@@ -51,3 +51,8 @@ def delete_environment_from_dynamo(api_key: str, environment_id: str):
 
     # Delete environment_v2 documents
     environment_v2_wrapper.delete_environment(environment_id)
+
+
+@register_task_handler()
+def delete_environment(environment_id: int) -> None:
+    Environment.objects.get(id=environment_id).delete()

@@ -24,7 +24,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:11.12-alpine
+        image: postgres:15.5-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -68,7 +68,9 @@ jobs:
         run: make django-make-migrations
 
       - name: Restore cached testmon data
-        if: ${{ github.event_name == 'pull_request' }}
+        if:
+          ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name,
+          'skip-testmon')}}
         id: cache-testmon-restore
         uses: actions/cache/restore@v3
         with:

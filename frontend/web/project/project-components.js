@@ -23,7 +23,6 @@ window.AccountStore = AccountStore
 window.FeatureListProvider = require('../../common/providers/FeatureListProvider')
 window.OrganisationProvider = require('../../common/providers/OrganisationProvider')
 window.ProjectProvider = ProjectProvider
-window.OrganisationSelect = require('../components/OrganisationSelect')
 
 window.Paging = Paging
 

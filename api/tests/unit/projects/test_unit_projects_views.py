@@ -5,7 +5,9 @@ from unittest import TestCase
 import pytest
 from django.urls import reverse
 from django.utils import timezone
+from pytest_django.fixtures import SettingsWrapper
 from pytest_lazyfixture import lazy_fixture
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -30,6 +32,7 @@ from projects.permissions import (
     VIEW_PROJECT,
 )
 from segments.models import Segment
+from task_processor.task_run_method import TaskRunMethod
 from users.models import FFAdminUser, UserPermissionGroup
 
 now = timezone.now()
@@ -783,3 +786,25 @@ def test_get_project_data_by_id(
     assert response_json["total_features"] == num_features
     assert response_json["total_segments"] == num_segments
     assert response_json["show_edge_identity_overrides_for_feature"] is False
+
+
+def test_delete_project_delete_handles_cascade_delete(
+    admin_client: APIClient,
+    project: Project,
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
+
+    url = reverse("api-v1:projects:project-detail", args=[project.id])
+    mocked_handle_cascade_delete = mocker.patch("projects.models.handle_cascade_delete")
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    mocked_handle_cascade_delete.delay.assert_called_once_with(
+        kwargs={"project_id": project.id}
+    )

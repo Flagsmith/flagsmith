@@ -121,10 +121,30 @@ def test_track_sse_usage(
         [
             call("sse_call"),
             call().field("request_count", 2),
-            call().field().tag("organisation_id", environment.project.organisation_id),
-            call().field().tag().tag("project_id", environment.project_id),
-            call().field().tag().tag().tag("environment_id", environment.id),
-            call().field().tag().tag().tag().time(second_access_log.generated_at),
+            call().field().tag("environment_id", environment.id),
+            call().field().tag().tag("project_id", environment.project.id),
+            call().field().tag().tag().tag("project", environment.project.name),
+            call()
+            .field()
+            .tag()
+            .tag()
+            .tag()
+            .tag("organisation_id", environment.project.organisation.id),
+            call()
+            .field()
+            .tag()
+            .tag()
+            .tag()
+            .tag()
+            .tag("organisation", environment.project.organisation.name),
+            call()
+            .field()
+            .tag()
+            .tag()
+            .tag()
+            .tag()
+            .tag()
+            .time(second_access_log.generated_at),
         ]
     )
 
@@ -136,5 +156,5 @@ def test_track_sse_usage(
     assert write_method.call_count == 1
     write_method.assert_called_once_with(
         bucket=influxdb_bucket,
-        record=mocked_influx_point().field().tag().tag().tag().time(),
+        record=mocked_influx_point().field().tag().tag().tag().tag().tag().time(),
     )

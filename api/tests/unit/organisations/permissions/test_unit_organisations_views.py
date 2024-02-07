@@ -1,11 +1,8 @@
-from unittest import TestCase
-
-import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from organisations.models import Organisation, OrganisationRole
+from organisations.models import Organisation
 from organisations.permissions.models import (
     UserOrganisationPermission,
     UserPermissionGroupOrganisationPermission,
@@ -14,246 +11,306 @@ from organisations.permissions.permissions import CREATE_PROJECT
 from users.models import FFAdminUser, UserPermissionGroup
 
 
-class BaseOrganisationPermissionViewSetTestCase:
-    url_pattern_basename = None
+def test_regular_user_cannot_create_user_organisation_permissions(
+    staff_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    another_user = FFAdminUser.objects.create(email="another@testorg.com")
+    another_user.add_organisation(organisation)
 
-    def setUp(self) -> None:
-        self.organisation = Organisation.objects.create(name="Test org")
+    url = reverse(
+        "api-v1:organisations:organisation-user-permission-list",
+        args=[organisation.id],
+    )
+    # When
+    response = staff_client.post(
+        url,
+        data={
+            "user": another_user.id,
+            "permissions": [CREATE_PROJECT],
+        },
+    )
 
-        self.admin_user = FFAdminUser.objects.create(email="admin@testorg.com")
-        self.admin_user.add_organisation(self.organisation, OrganisationRole.ADMIN)
-        self.admin_user_client = APIClient()
-        self.admin_user_client.force_authenticate(self.admin_user)
-
-        self.regular_user = FFAdminUser.objects.create(email="user@testorg.com")
-        self.regular_user_client = APIClient()
-        self.regular_user_client.force_authenticate(self.regular_user)
-
-        if not self.url_pattern_basename:
-            raise NotImplementedError(
-                "Subclasses must include url_pattern_basename attribute"
-            )
-
-        self.list_url = reverse(
-            f"api-v1:organisations:{self.url_pattern_basename}-list",
-            args=[self.organisation.id],
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert (
+        another_user.has_organisation_permission(
+            organisation=organisation, permission_key=CREATE_PROJECT
         )
+        is False
+    )
 
-    def _get_detail_url(self, obj_id: int) -> str:
-        return reverse(
-            f"api-v1:organisations:{self.url_pattern_basename}-detail",
-            args=[self.organisation.id, obj_id],
+
+def test_create_user_organisation_permission(
+    admin_client: APIClient,
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-user-permission-list",
+        args=[organisation.id],
+    )
+
+    # When
+    response = admin_client.post(
+        url,
+        data={"user": staff_user.id, "permissions": [CREATE_PROJECT]},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert (
+        staff_user.has_organisation_permission(
+            organisation=organisation, permission_key=CREATE_PROJECT
         )
+        is True
+    )
 
 
-@pytest.mark.django_db
-class UserOrganisationPermissionViewSetTestCase(
-    BaseOrganisationPermissionViewSetTestCase, TestCase
-):
-    url_pattern_basename = "organisation-user-permission"
+def test_list_user_organisation_permissions(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    user_permission = UserOrganisationPermission.objects.create(
+        user=staff_user, organisation=organisation
+    )
+    user_permission.add_permission(CREATE_PROJECT)
+    url = reverse(
+        "api-v1:organisations:organisation-user-permission-list",
+        args=[organisation.id],
+    )
 
-    def test_regular_user_cannot_create_user_permissions(self):
-        # Given
-        another_user = FFAdminUser.objects.create(email="another@testorg.com")
-        another_user.add_organisation(self.organisation)
+    url += f"?user={staff_user.id}"
 
-        # When
-        response = self.regular_user_client.post(
-            self.list_url,
-            data={
-                "user": another_user.id,
-                "permissions": [CREATE_PROJECT],
-            },
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 1
+    assert response.data[0]["user"]["email"] == staff_user.email
+    assert response.data[0]["permissions"] == [CREATE_PROJECT]
+
+
+def test_destroy_user_organisation_permission(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    user_permission = UserOrganisationPermission.objects.create(
+        user=staff_user, organisation=organisation
+    )
+    user_permission.add_permission(CREATE_PROJECT)
+
+    url = reverse(
+        "api-v1:organisations:organisation-user-permission-detail",
+        args=[organisation.id, user_permission.id],
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert (
+        staff_user.has_organisation_permission(
+            organisation=organisation, permission_key=CREATE_PROJECT
         )
+        is False
+    )
 
-        # Then
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-        assert not another_user.has_organisation_permission(
-            organisation=self.organisation, permission_key=CREATE_PROJECT
+
+def test_update_user_organisation_permission(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    user_permission = UserOrganisationPermission.objects.create(
+        user=staff_user, organisation=organisation
+    )
+    user_permission.add_permission(CREATE_PROJECT)
+
+    url = reverse(
+        "api-v1:organisations:organisation-user-permission-detail",
+        args=[organisation.id, user_permission.id],
+    )
+
+    # When
+    response = admin_client.put(url, data={"user": staff_user.id, "permissions": []})
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert (
+        staff_user.has_organisation_permission(
+            organisation=organisation, permission_key=CREATE_PROJECT
         )
+        is False
+    )
 
-    def test_create_user_organisation_permission(self):
-        # When
-        response = self.admin_user_client.post(
-            self.list_url,
-            data={"user": self.regular_user.id, "permissions": [CREATE_PROJECT]},
+
+def test_regular_user_cannot_create_user_group_permissions(
+    staff_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    another_user = FFAdminUser.objects.create(email="another@testorg.com")
+    another_user.add_organisation(organisation)
+    permission_group = UserPermissionGroup.objects.create(
+        name="Test group", organisation=organisation
+    )
+    permission_group.users.add(another_user)
+
+    url = reverse(
+        "api-v1:organisations:organisation-user-group-permission-list",
+        args=[organisation.id],
+    )
+    # When
+    response = staff_client.post(
+        url,
+        data={
+            "group": permission_group.id,
+            "permissions": [CREATE_PROJECT],
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert (
+        another_user.has_organisation_permission(
+            organisation=organisation, permission_key=CREATE_PROJECT
         )
+        is False
+    )
 
-        # Then
-        assert response.status_code == status.HTTP_201_CREATED
-        assert self.regular_user.has_organisation_permission(
-            organisation=self.organisation, permission_key=CREATE_PROJECT
+
+def test_create_user_group_organisation_permission(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    permission_group = UserPermissionGroup.objects.create(
+        name="Test group", organisation=organisation
+    )
+    permission_group.users.add(staff_user)
+    url = reverse(
+        "api-v1:organisations:organisation-user-group-permission-list",
+        args=[organisation.id],
+    )
+
+    # When
+    response = admin_client.post(
+        url,
+        data={"group": permission_group.id, "permissions": [CREATE_PROJECT]},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert (
+        staff_user.has_organisation_permission(
+            organisation=organisation, permission_key=CREATE_PROJECT
         )
+        is True
+    )
 
-    def test_list_user_permissions(self):
-        # Given
-        user_permission = UserOrganisationPermission.objects.create(
-            user=self.regular_user, organisation=self.organisation
+
+def test_list_user_group_permissions(
+    admin_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    permission_group = UserPermissionGroup.objects.create(
+        name="Test group", organisation=organisation
+    )
+    user_group_permission = UserPermissionGroupOrganisationPermission.objects.create(
+        group=permission_group, organisation=organisation
+    )
+    user_group_permission.add_permission(CREATE_PROJECT)
+    url = reverse(
+        "api-v1:organisations:organisation-user-group-permission-list",
+        args=[organisation.id],
+    )
+
+    url += f"?group={permission_group.id}"
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 1
+    assert response.data[0]["group"]["name"] == permission_group.name
+    assert response.data[0]["permissions"] == [CREATE_PROJECT]
+
+
+def test_destroy_user_group_permission(
+    admin_client: APIClient,
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    # Given
+    permission_group = UserPermissionGroup.objects.create(
+        name="Test group", organisation=organisation
+    )
+    user_group_permission = UserPermissionGroupOrganisationPermission.objects.create(
+        group=permission_group, organisation=organisation
+    )
+    user_group_permission.add_permission(CREATE_PROJECT)
+    permission_group.users.add(staff_user)
+    url = reverse(
+        "api-v1:organisations:organisation-user-group-permission-detail",
+        args=[organisation.id, user_group_permission.id],
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert (
+        staff_user.has_organisation_permission(
+            organisation=organisation, permission_key=CREATE_PROJECT
         )
-        user_permission.add_permission(CREATE_PROJECT)
+        is False
+    )
 
-        url = f"{self.list_url}?user={self.regular_user.id}"
 
-        # When
-        response = self.admin_user_client.get(url)
+def test_update_user_group_permission(
+    admin_client: APIClient,
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    # Given
+    permission_group = UserPermissionGroup.objects.create(
+        name="Test group", organisation=organisation
+    )
+    user_group_permission = UserPermissionGroupOrganisationPermission.objects.create(
+        group=permission_group, organisation=organisation
+    )
+    user_group_permission.add_permission(CREATE_PROJECT)
+    permission_group.users.add(staff_user)
 
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-        response_json = response.json()
-        assert len(response_json) == 1
-        assert response_json[0]["user"]["email"] == self.regular_user.email
-        assert response_json[0]["permissions"] == [CREATE_PROJECT]
+    url = reverse(
+        "api-v1:organisations:organisation-user-group-permission-detail",
+        args=[organisation.id, user_group_permission.id],
+    )
 
-    def test_destroy_user_permission(self):
-        # Given
-        user_permission = UserOrganisationPermission.objects.create(
-            user=self.regular_user, organisation=self.organisation
+    # When
+    response = admin_client.put(
+        url, data={"group": permission_group.id, "permissions": []}
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert (
+        staff_user.has_organisation_permission(
+            organisation=organisation, permission_key=CREATE_PROJECT
         )
-        user_permission.add_permission(CREATE_PROJECT)
-
-        url = self._get_detail_url(user_permission.id)
-
-        # When
-        response = self.admin_user_client.delete(url)
-
-        # Then
-        assert response.status_code == status.HTTP_204_NO_CONTENT
-        assert not self.regular_user.has_organisation_permission(
-            organisation=self.organisation, permission_key=CREATE_PROJECT
-        )
-
-    def test_update_user_permission(self):
-        # Given
-        user_permission = UserOrganisationPermission.objects.create(
-            user=self.regular_user, organisation=self.organisation
-        )
-        user_permission.add_permission(CREATE_PROJECT)
-
-        url = self._get_detail_url(user_permission.id)
-
-        # When
-        response = self.admin_user_client.put(
-            url, data={"user": self.regular_user.id, "permissions": []}
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-        assert not self.regular_user.has_organisation_permission(
-            organisation=self.organisation, permission_key=CREATE_PROJECT
-        )
-
-
-@pytest.mark.django_db
-class UserPermissionGroupOrganisationPermissionViewSetTestCase(
-    BaseOrganisationPermissionViewSetTestCase, TestCase
-):
-    url_pattern_basename = "organisation-user-group-permission"
-
-    def setUp(self) -> None:
-        super(UserPermissionGroupOrganisationPermissionViewSetTestCase, self).setUp()
-
-        self.permission_group = UserPermissionGroup.objects.create(
-            name="Test group", organisation=self.organisation
-        )
-
-    def test_regular_user_cannot_create_user_group_permissions(self):
-        # Given
-        another_user = FFAdminUser.objects.create(email="another@testorg.com")
-        another_user.add_organisation(self.organisation)
-        self.permission_group.users.add(another_user)
-
-        # When
-        response = self.regular_user_client.post(
-            self.list_url,
-            data={
-                "group": self.permission_group.id,
-                "permissions": [CREATE_PROJECT],
-            },
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-        assert not another_user.has_organisation_permission(
-            organisation=self.organisation, permission_key=CREATE_PROJECT
-        )
-
-    def test_create_user_group_organisation_permission(self):
-        # Given
-        self.permission_group.users.add(self.regular_user)
-
-        # When
-        response = self.admin_user_client.post(
-            self.list_url,
-            data={"group": self.permission_group.id, "permissions": [CREATE_PROJECT]},
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_201_CREATED
-        assert self.regular_user.has_organisation_permission(
-            organisation=self.organisation, permission_key=CREATE_PROJECT
-        )
-
-    def test_list_user_group_permissions(self):
-        # Given
-        user_group_permission = (
-            UserPermissionGroupOrganisationPermission.objects.create(
-                group=self.permission_group, organisation=self.organisation
-            )
-        )
-        user_group_permission.add_permission(CREATE_PROJECT)
-
-        url = f"{self.list_url}?group={self.permission_group.id}"
-
-        # When
-        response = self.admin_user_client.get(url)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-        response_json = response.json()
-        assert len(response_json) == 1
-        assert response_json[0]["group"]["name"] == self.permission_group.name
-        assert response_json[0]["permissions"] == [CREATE_PROJECT]
-
-    def test_destroy_user_group_permission(self):
-        # Given
-        user_group_permission = (
-            UserPermissionGroupOrganisationPermission.objects.create(
-                group=self.permission_group, organisation=self.organisation
-            )
-        )
-        user_group_permission.add_permission(CREATE_PROJECT)
-        self.permission_group.users.add(self.regular_user)
-
-        url = self._get_detail_url(user_group_permission.id)
-
-        # When
-        response = self.admin_user_client.delete(url)
-
-        # Then
-        assert response.status_code == status.HTTP_204_NO_CONTENT
-        assert not self.regular_user.has_organisation_permission(
-            organisation=self.organisation, permission_key=CREATE_PROJECT
-        )
-
-    def test_update_user_permission(self):
-        # Given
-        user_group_permission = (
-            UserPermissionGroupOrganisationPermission.objects.create(
-                group=self.permission_group, organisation=self.organisation
-            )
-        )
-        user_group_permission.add_permission(CREATE_PROJECT)
-        self.permission_group.users.add(self.regular_user)
-
-        url = self._get_detail_url(user_group_permission.id)
-
-        # When
-        response = self.admin_user_client.put(
-            url, data={"group": self.permission_group.id, "permissions": []}
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-        assert not self.regular_user.has_organisation_permission(
-            organisation=self.organisation, permission_key=CREATE_PROJECT
-        )
+        is False
+    )
