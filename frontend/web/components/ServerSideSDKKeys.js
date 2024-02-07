@@ -153,7 +153,7 @@ class ServerSideSDKKeys extends Component {
             using our{' '}
             <Button
               theme='text'
-              href='https://docs.flagsmith.com/clients/overview'
+              href='https://docs.flagsmith.com/clients/overview#server-side-sdks'
               target='__blank'
             >
               Server-side Environment Keys

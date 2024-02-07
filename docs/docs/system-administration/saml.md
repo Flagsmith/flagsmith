@@ -34,7 +34,7 @@ The steps we need to go through are something like:
 1. You contact us to enable SAML for your organisation.
 2. We create an XML file and provide it to you along with your SAML organisation name.
 3. You supply the XML to your SAML IDP and receive some XML in return. You might need to apply some
-   [attribute mappings](#attribute-mapping-information).
+   [attribute mappings](/deployment/configuration/authentication/SAML#attribute-mapping-information).
 4. You send us this XML and we add it to Flagsmith.
 5. You log in by visiting https://app.flagsmith.com/login clicking on "Single Sign On" and entering your SAML
    organisation name from step 2.

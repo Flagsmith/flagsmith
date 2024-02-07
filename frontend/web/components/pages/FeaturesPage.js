@@ -31,6 +31,7 @@ const FeaturesPage = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {
+      loadedOnce: false,
       search: null,
       showArchived: false,
       sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
@@ -62,6 +63,7 @@ const FeaturesPage = class extends Component {
       params.environmentId !== oldParams.environmentId ||
       params.projectId !== oldParams.projectId
     ) {
+      this.state.loadedOnce = false
       AppActions.getFeatures(
         params.projectId,
         params.environmentId,
@@ -182,6 +184,9 @@ const FeaturesPage = class extends Component {
               totalFeatures,
               maxFeaturesAllowed,
             )
+            if (projectFlags?.length && !this.state.loadedOnce) {
+              this.state.loadedOnce = true
+            }
             return (
               <div className='features-page'>
                 {isLoading && (!projectFlags || !projectFlags.length) && (
@@ -189,9 +194,9 @@ const FeaturesPage = class extends Component {
                     <Loader />
                   </div>
                 )}
-                {(!isLoading || (projectFlags && !!projectFlags.length)) && (
+                {(!isLoading || this.state.loadedOnce) && (
                   <div>
-                    {(projectFlags && projectFlags.length) ||
+                    {this.state.loadedOnce ||
                     ((this.state.showArchived ||
                       typeof this.state.search === 'string' ||
                       !!this.state.tags.length) &&
@@ -206,7 +211,7 @@ const FeaturesPage = class extends Component {
                           title={'Features'}
                           cta={
                             <>
-                              {(projectFlags && projectFlags.length) ||
+                              {this.state.loadedOnce ||
                               this.state.showArchived ||
                               this.state.tags?.length
                                 ? this.createFeaturePermission((perm) => (
@@ -484,9 +489,7 @@ const FeaturesPage = class extends Component {
                             title='2: Initialising your project'
                             snippets={Constants.codeHelp.INIT(
                               this.props.match.params.environmentId,
-                              projectFlags &&
-                                projectFlags[0] &&
-                                projectFlags[0].name,
+                              projectFlags?.[0]?.name,
                             )}
                           />
                           <EnvironmentDocumentCodeHelp

@@ -168,5 +168,6 @@ export type Req = {
     environmentId: string
     data: { name: string }
   }
+  getAuditLogItem: { id: string }
   // END OF TYPES
 }
