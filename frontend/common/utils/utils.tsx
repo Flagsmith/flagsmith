@@ -510,6 +510,12 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       </Tooltip>
     )
   },
+  sanitiseDiffString: (value: FlagsmithValue) => {
+    if (value === undefined || value == null) {
+      return ''
+    }
+    return `${value}`
+  },
   validateRule(rule: SegmentCondition) {
     if (!rule) return false
 

@@ -86,16 +86,16 @@ export const getSegmentDiff = (
       : -1
     const newEnabled = !!newFeatureState?.enabled
 
-    const oldValue = `${Utils.getTypedValue(
+    const oldValue = Utils.getTypedValue(
       oldFeatureState
         ? Utils.featureStateToValue(oldFeatureState?.feature_state_value)
         : '',
-    )}`
-    const newValue = `${Utils.getTypedValue(
+    )
+    const newValue = Utils.getTypedValue(
       newFeatureState
         ? Utils.featureStateToValue(newFeatureState?.feature_state_value)
         : '',
-    )}`
+    )
 
     const enabledChanged = oldEnabled !== newEnabled
     const valueChanged = oldValue !== newValue

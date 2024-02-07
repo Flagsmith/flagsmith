@@ -16,13 +16,14 @@ const Tabs = class extends React.Component {
       this.props.children?.length ? this.props.children : [this.props.children]
     ).filter((c) => !!c)
     const value = this.props.uncontrolled ? this.state.value : this.props.value
+    const hideNav = children.length === 1 && this.props.hideNavOnSingleTab
     return (
       <div className={`tabs ${this.props.className || ''}`}>
         <div
           className={`tabs-nav ${this.props.theme}`}
           style={isMobile ? { flexWrap: 'wrap' } : {}}
         >
-          {!(children.length === 1 && this.props.hideNavOnSingleTab) &&
+          {!hideNav &&
             children.map((child, i) => {
               const isSelected = value == i
               if (!child) {
@@ -51,7 +52,9 @@ const Tabs = class extends React.Component {
               )
             })}
         </div>
-        {this.props.theme === 'tab' && <ModalHR className='tab-nav-hr' />}
+        {this.props.theme === 'tab' && !hideNav && (
+          <ModalHR className='tab-nav-hr' />
+        )}
         <div className='tabs-content'>
           {children.map((child, i) => {
             const isSelected = value === i
