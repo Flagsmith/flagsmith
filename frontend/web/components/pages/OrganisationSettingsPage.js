@@ -753,7 +753,7 @@ const OrganisationSettingsPage = class extends Component {
                         )}
 
                         {displayedTabs.includes(SettingsTab.Keys) && (
-                          <TabItem tabLabel='Keys'>
+                          <TabItem tabLabel='API Keys'>
                             <AdminAPIKeys organisationId={organisation.id} />
                           </TabItem>
                         )}
@@ -1794,7 +1794,8 @@ const OrganisationSettingsPage = class extends Component {
 
                         {displayedTabs.includes(SettingsTab.Usage) && (
                           <TabItem tabLabel='Usage'>
-                            {this.state.tab === 4 && (
+                            {this.state.tab ===
+                              displayedTabs.indexOf(SettingsTab.Usage) && (
                               <OrganisationUsage
                                 organisationId={
                                   AccountStore.getOrganisation().id
