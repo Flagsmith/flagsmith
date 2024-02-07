@@ -30,6 +30,7 @@ import WidgetPage from './components/pages/WidgetPage'
 import BrokenPage from './components/pages/BrokenPage'
 import ProjectsPage from './components/pages/ProjectsPage'
 import AuditLogItemPage from './components/pages/AuditLogItemPage'
+import SplitTestPage from './components/pages/SplitTestPage'
 
 export default (
   <App>
@@ -163,6 +164,11 @@ export default (
         path='/project/:projectId/environment/:environmentId/audit-log/:id'
         exact
         component={AuditLogItemPage}
+      />
+      <Route
+        path='/project/:projectId/environment/:environmentId/split-tests'
+        exact
+        component={SplitTestPage}
       />
       <Route path='/create' exact component={CreateOrganisationPage} />
       <Route path='*' component={NotFoundPage} />

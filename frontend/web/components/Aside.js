@@ -14,7 +14,7 @@ import Icon from './Icon'
 import ProjectSelect from './ProjectSelect'
 import AsideProjectButton from './AsideProjectButton'
 import Constants from 'common/constants'
-import { star, warning, pricetag } from 'ionicons/icons'
+import { star, warning, pricetag, flask } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 
 const Aside = class extends Component {
@@ -508,6 +508,22 @@ const Aside = class extends Component {
                                                   </NavLink>,
                                                 )}
 
+                                                {Utils.getFlagsmithHasFeature(
+                                                  'split_testing',
+                                                ) && (
+                                                  <NavLink
+                                                    id='env-settings-link'
+                                                    className='aside__environment-list-item mt-1'
+                                                    to={`/project/${project.id}/environment/${environment.api_key}/split-tests`}
+                                                  >
+                                                    <IonIcon
+                                                      size={24}
+                                                      icon={flask}
+                                                      className='me-2'
+                                                    />
+                                                    Split Tests
+                                                  </NavLink>
+                                                )}
                                                 {environmentAdmin && (
                                                   <NavLink
                                                     id='env-settings-link'

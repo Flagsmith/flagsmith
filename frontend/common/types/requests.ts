@@ -156,5 +156,9 @@ export type Req = {
     orgId: string
   }
   getAuditLogItem: { id: string }
+  getConversionEvents: PagedRequest<{ q?: string }>
+  getSplitTest: PagedRequest<{
+    conversion_event_type_id: string
+  }>
   // END OF TYPES
 }

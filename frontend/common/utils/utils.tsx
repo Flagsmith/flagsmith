@@ -8,6 +8,7 @@ import {
   MultivariateFeatureStateValue,
   MultivariateOption,
   Organisation,
+  PConfidence,
   Project as ProjectType,
   ProjectFlag,
   SegmentCondition,
@@ -76,6 +77,13 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
   changeRequestsEnabled(value: number | null | undefined) {
     return typeof value === 'number'
+  },
+
+  convertToPConfidence(value: number) {
+    if (value > 0.05) return 'LOW' as PConfidence
+    if (value >= 0.01) return 'REASONABLE' as PConfidence
+    if (value > 0.002) return 'HIGH' as PConfidence
+    return 'VERY_HIGH' as PConfidence
   },
 
   displayLimitAlert(type: string, percentage: number | undefined) {
@@ -327,6 +335,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return valid
   },
+
   getPlansPermission: (permission: string) => {
     const isOrgPermission = permission !== '2FA'
     const plans = isOrgPermission
@@ -344,10 +353,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     )
     return !!found
   },
-
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
+
   getSDKEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
 
