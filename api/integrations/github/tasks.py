@@ -11,7 +11,7 @@ from task_processor.decorators import register_task_handler
 logger = logging.getLogger(__name__)
 
 
-BASE_URL = "https://73b4-131-0-197-145.ngrok-free.app/api/flagsmith-webhook"
+BASE_URL = "https://4150-131-0-197-145.ngrok-free.app/api/flagsmith-webhook"
 
 
 class GithubResourceType(Enum):
@@ -23,7 +23,7 @@ class GithubResourceType(Enum):
 def call_github_app_webhook_for_feature_state(
     event_data: dict[str, Any], event_type: str
 ):
-    feature = Feature.objects.get(id=event_data["new_state"]["feature"]["id"])
+    feature = Feature.objects.get(id=event_data["id"])
     feature_external_resources = feature.featureexternalresources_set.all()
     external_resources = [
         {
