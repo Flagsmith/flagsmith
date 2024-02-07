@@ -12,7 +12,7 @@ export const auditLogItemService = service
       >({
         providesTags: (res) => [{ id: res?.id, type: 'AuditLogItem' }],
         query: (query: Req['getAuditLogItem']) => ({
-          url: `audit/${query.id}`,
+          url: `audit/${query.id}/`,
         }),
       }),
       // END OF ENDPOINTS

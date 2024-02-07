@@ -1,5 +1,55 @@
 # Changelog
 
+## [2.99.0](https://github.com/Flagsmith/flagsmith/compare/v2.98.0...v2.99.0) (2024-02-05)
+
+
+### Features
+
+* Add audit log detail page ([#3356](https://github.com/Flagsmith/flagsmith/issues/3356)) ([e8bc7d3](https://github.com/Flagsmith/flagsmith/commit/e8bc7d3116e9b2ba153044e5539ee5872af13028))
+
+
+### Bug Fixes
+
+* **revert:** "feat(rate-limit): enable rate limit in production ([#3362](https://github.com/Flagsmith/flagsmith/issues/3362))" ([#3381](https://github.com/Flagsmith/flagsmith/issues/3381)) ([ea3bc3c](https://github.com/Flagsmith/flagsmith/commit/ea3bc3cfd9e451f7ddba0ae493e8531e86b039f6))
+
+## [2.98.0](https://github.com/Flagsmith/flagsmith/compare/v2.97.1...v2.98.0) (2024-02-05)
+
+
+### Features
+
+* **rate-limit:** enable rate limit in production ([#3362](https://github.com/Flagsmith/flagsmith/issues/3362)) ([f9545f7](https://github.com/Flagsmith/flagsmith/commit/f9545f702079587cde0a6cd24558fee3baf49433))
+* **task-processor:** add Task Processor inputs as env vars ([#3355](https://github.com/Flagsmith/flagsmith/issues/3355)) ([789898c](https://github.com/Flagsmith/flagsmith/commit/789898c47a3fa726bbd1c99d7d7700ae1eb4f3ef))
+
+
+### Bug Fixes
+
+* **audit:** add details for override creation ([#3359](https://github.com/Flagsmith/flagsmith/issues/3359)) ([a888f29](https://github.com/Flagsmith/flagsmith/commit/a888f291eafd3b113233cf30b19594a37f8fb13a))
+* Long `DELETE` project call ([#3360](https://github.com/Flagsmith/flagsmith/issues/3360)) ([aca0fc5](https://github.com/Flagsmith/flagsmith/commit/aca0fc54f5902d4c9ba5630aa8af35b66b7c0799))
+* **webhooks:** prevent unnecessary organisation webhook tasks ([#3365](https://github.com/Flagsmith/flagsmith/issues/3365)) ([ec32ce7](https://github.com/Flagsmith/flagsmith/commit/ec32ce7dfc86ccb350f2a9e1af8c3f85f6c154b7))
+
+## [2.97.1](https://github.com/Flagsmith/flagsmith/compare/v2.97.0...v2.97.1) (2024-02-02)
+
+
+### Bug Fixes
+
+* **audit:** handle case where AuditLog doesn't have a history record ([#3357](https://github.com/Flagsmith/flagsmith/issues/3357)) ([6501829](https://github.com/Flagsmith/flagsmith/commit/65018291c96730c7ef045ccc79defaa5e84e09db))
+* **feature-service/get_edge_override:** handle deleted features ([#3368](https://github.com/Flagsmith/flagsmith/issues/3368)) ([1eae11c](https://github.com/Flagsmith/flagsmith/commit/1eae11c93076cfb4d6a226de385166953fcea2b6))
+
+## [2.97.0](https://github.com/Flagsmith/flagsmith/compare/v2.96.0...v2.97.0) (2024-01-31)
+
+
+### Features
+
+* **rate-limit/redis:** Use redis to store throttling data for admin endpoints ([#2863](https://github.com/Flagsmith/flagsmith/issues/2863)) ([61537ce](https://github.com/Flagsmith/flagsmith/commit/61537ce790dc3b2119b7cc8ee15b9ddc5530c2c9))
+* send telemetry heartbeat post migrations are applied ([#3351](https://github.com/Flagsmith/flagsmith/issues/3351)) ([31af594](https://github.com/Flagsmith/flagsmith/commit/31af59418a6995fd7e6813f07e8eaea5747e13ab))
+
+
+### Bug Fixes
+
+* **2079/deadlock:** avoid deadlock by updating env individually ([#3339](https://github.com/Flagsmith/flagsmith/issues/3339)) ([85443a2](https://github.com/Flagsmith/flagsmith/commit/85443a23c4d81cd41045604f605c14d541ceae3d))
+* **staging/infra/redis:** use correct connection factory ([#3353](https://github.com/Flagsmith/flagsmith/issues/3353)) ([4a5f5e6](https://github.com/Flagsmith/flagsmith/commit/4a5f5e6af28ff755e1f82617d605be26a2e2ba42))
+* **webhook/logging:** log response code only if response is not none ([#3354](https://github.com/Flagsmith/flagsmith/issues/3354)) ([ea42a34](https://github.com/Flagsmith/flagsmith/commit/ea42a34bd320a077ebc225ac999f4cac875b8df0))
+
 ## [2.96.0](https://github.com/Flagsmith/flagsmith/compare/v2.95.0...v2.96.0) (2024-01-29)
 
 

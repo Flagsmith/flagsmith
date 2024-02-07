@@ -32,8 +32,7 @@ import { E2E_USER, PASSWORD } from '../config'
 export const testSegment1 = async () => {
   log('Login')
   await login(E2E_USER, PASSWORD)
-
-  await createOrganisationAndProject('Flagsmith Segment Org', 'Flagsmith Segment Project')
+  await click('#project-select-1')
 
   log('Create Feature')
 
@@ -136,19 +135,7 @@ export const testSegment1 = async () => {
 export const testSegment2 = async () => {
   log('Login')
   await login(E2E_USER, PASSWORD)
-
-  log('Create Organisation')
-  await click(byId('create-organisation-btn'))
-  await setText('[name="orgName"]', 'Flagsmith Ltd 3')
-  await click('#create-org-btn')
-  await waitForElementVisible(byId('project-manage-widget'))
-
-  log('Create Project')
-
-  await click('.btn-project-create')
-  await setText(byId('projectName'), 'My Segment Test Project 2')
-  await click(byId('create-project-btn'))
-  await waitForElementVisible(byId('features-page'))
+  await click('#project-select-2')
 
   log('Create segments')
   await gotoSegments()
@@ -233,19 +220,7 @@ export const testSegment2 = async () => {
 export const testSegment3 = async () => {
   log('Login')
   await login(E2E_USER, PASSWORD)
-
-  log('Create Organisation')
-  await click(byId('create-organisation-btn'))
-  await setText('[name="orgName"]', 'Flagsmith Ltd 4')
-  await click('#create-org-btn')
-  await waitForElementVisible(byId('project-manage-widget'))
-
-  log('Create Project')
-
-  await click('.btn-project-create')
-  await setText(byId('projectName'), 'My Segment Test Project 3')
-  await click(byId('create-project-btn'))
-  await waitForElementVisible(byId('features-page'))
+  await click('#project-select-3')
 
   log('Create features')
   await gotoFeatures()

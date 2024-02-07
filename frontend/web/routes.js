@@ -161,6 +161,11 @@ export default (
         component={AuditLogPage}
       />
       <Route
+        path='/project/:projectId/audit-log'
+        exact
+        component={AuditLogPage}
+      />
+      <Route
         path='/project/:projectId/environment/:environmentId/audit-log/:id'
         exact
         component={AuditLogItemPage}

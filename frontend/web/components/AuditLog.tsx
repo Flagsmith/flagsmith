@@ -1,7 +1,7 @@
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react' // we need this to make JSX compile
 import moment from 'moment'
 import Utils from 'common/utils/utils'
-import { AuditLogItem } from 'common/types/responses'
+import { AuditLogItem, Environment } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
 import useSearchThrottle from 'common/useSearchThrottle'
 import JSONReference from './JSONReference'
@@ -79,16 +79,13 @@ const AuditLog: FC<AuditLogType> = (props) => {
     id,
     log,
   }: AuditLogItem) => {
-    const index = ProjectStore.getEnvs()?.findIndex((v) => {
+    const environments = ProjectStore.getEnvs() as Environment[] | null
+    const index = environments?.findIndex((v) => {
       return v.id === environment?.id
     })
     const colour = index === -1 ? 0 : index
     const inner = (
-      <Row
-        onClick={() => {}}
-        className='list-item list-item-sm'
-        key={created_date}
-      >
+      <Row>
         <div
           className='table-column px-3 fs-small ln-sm'
           style={{ width: widths[0] }}
@@ -125,13 +122,15 @@ const AuditLog: FC<AuditLogType> = (props) => {
     )
     return Utils.getFlagsmithHasFeature('audit_log_detail') ? (
       <Link
-        className='fw-normal'
+        className='fw-normal d-flex align-items-center flex-row list-item list-item-sm link-unstyled clickable'
         to={`/project/${props.projectId}/environment/${props.match.params.environmentId}/audit-log/${id}`}
       >
         {inner}
       </Link>
     ) : (
-      <div>{inner}</div>
+      <Row className='list-item list-item-sm' key={created_date}>
+        {inner}
+      </Row>
     )
   }
   const { env: envFilter } = Utils.fromParam()

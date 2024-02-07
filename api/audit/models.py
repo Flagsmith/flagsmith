@@ -1,4 +1,5 @@
 import typing
+from functools import cached_property
 from importlib import import_module
 
 from django.db import models
@@ -78,8 +79,14 @@ class AuditLog(LifecycleModel):
         )
         return "send_environments_to_dynamodb" not in skip_signals_and_hooks
 
-    @property
+    @cached_property
     def history_record(self) -> typing.Optional[Model]:
+        if not (self.history_record_class_path and self.history_record_id):
+            # There are still AuditLog records that will not have this detail
+            # for example, audit log records which are created when segment
+            # override priorities are changed.
+            return
+
         klass = self.get_history_record_model_class(self.history_record_class_path)
         return klass.objects.filter(history_id=self.history_record_id).first()
 
