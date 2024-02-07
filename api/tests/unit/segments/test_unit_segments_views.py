@@ -5,13 +5,16 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from flag_engine.segments.constants import EQUAL
+from pytest_django.fixtures import SettingsWrapper
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature
+from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 from util.mappers import map_identity_to_identity_document
 
@@ -129,7 +132,7 @@ def test_create_segments_reaching_max_limit(project, client, settings):
         ],
     }
 
-    # Now, let's create the firs segment
+    # Now, let's create the first segment
     res = client.post(url, data=json.dumps(data), content_type="application/json")
     assert res.status_code == status.HTTP_201_CREATED
 
@@ -574,3 +577,134 @@ def test_update_segment_delete_existing_rule(project, client, segment, segment_r
     assert response.status_code == status.HTTP_200_OK
 
     assert segment_rule.conditions.count() == 0
+
+
+def test_update_segment_obeys_max_conditions(
+    project: Project,
+    admin_client: APIClient,
+    segment: Segment,
+    segment_rule: SegmentRule,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    nested_rule = SegmentRule.objects.create(
+        rule=segment_rule, type=SegmentRule.ANY_RULE
+    )
+    existing_condition = Condition.objects.create(
+        rule=nested_rule, property="foo", operator=EQUAL, value="bar"
+    )
+
+    # Reduce value for test debugging.
+    settings.SEGMENT_RULES_CONDITIONS_LIMIT = 10
+    new_condition_property = "prop_"
+    new_condition_value = "red"
+    new_conditions = []
+    for i in range(settings.SEGMENT_RULES_CONDITIONS_LIMIT):
+        new_conditions.append(
+            {
+                "property": f"{new_condition_property}{i}",
+                "operator": EQUAL,
+                "value": new_condition_value,
+            }
+        )
+
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "id": segment_rule.id,
+                "type": segment_rule.type,
+                "rules": [
+                    {
+                        "id": nested_rule.id,
+                        "type": nested_rule.type,
+                        "rules": [],
+                        "conditions": [
+                            {
+                                "id": existing_condition.id,
+                                "property": existing_condition.property,
+                                "operator": existing_condition.operator,
+                                "value": existing_condition.value,
+                            },
+                            *new_conditions,
+                        ],
+                    }
+                ],
+                "conditions": [],
+            }
+        ],
+    }
+
+    # When
+    response = admin_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "segment": "The segment has 11 of the maximum condition count limit of 10."
+    }
+
+    nested_rule.refresh_from_db()
+    assert nested_rule.conditions.count() == 1
+
+
+def test_create_segment_obeys_max_conditions(
+    project: Project,
+    admin_client: APIClient,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+
+    # Reduce value for test debugging.
+    settings.SEGMENT_RULES_CONDITIONS_LIMIT = 10
+    new_condition_property = "prop_"
+    new_condition_value = "red"
+    new_conditions = []
+    for i in range(settings.SEGMENT_RULES_CONDITIONS_LIMIT + 1):
+        new_conditions.append(
+            {
+                "property": f"{new_condition_property}{i}",
+                "operator": EQUAL,
+                "value": new_condition_value,
+            }
+        )
+
+    data = {
+        "name": "segment_name",
+        "project": project.id,
+        "rules": [
+            {
+                "conditions": [],
+                "type": "ALL",
+                "rules": [
+                    {
+                        "type": "ANY",
+                        "rules": [],
+                        "conditions": [
+                            *new_conditions,
+                        ],
+                    }
+                ],
+            }
+        ],
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "segment": "The segment has 11 of the maximum condition count limit of 10."
+    }
+
+    assert Segment.objects.count() == 0
