@@ -40,13 +40,14 @@ const ProjectUsage: FC<ProjectUsageType> = ({ projectId }) => {
       <Flex>
         <Row>
           <InfoMessage>
-            In order to ensure consistent performance, Flagsmith has some{' '}
+            In order to ensure consistent performance, Flagsmith has the
+            following usage limits.{' '}
             <a
               target='_blank'
               href='https://docs.flagsmith.com/system-administration/system-limits'
               rel='noreferrer'
             >
-              <strong>System Limits</strong>
+              <strong>Check the Docs for more details.</strong>
             </a>
           </InfoMessage>
         </Row>
