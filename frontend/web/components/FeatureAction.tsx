@@ -14,14 +14,16 @@ interface FeatureActionProps {
   readOnly: boolean
   isProtected: boolean
   hideAudit: boolean
+  hideHistory: boolean
   hideRemove: boolean
+  onShowHistory: () => void
   isCompact?: boolean
   onCopyName: () => void
-  onShowHistory: () => void
+  onShowAudit: () => void
   onRemove: () => void
 }
 
-type ActionType = 'copy' | 'history' | 'remove'
+type ActionType = 'copy' | 'audit' | 'history' | 'remove'
 
 function calculateListPosition(
   btnEl: HTMLElement,
@@ -39,11 +41,13 @@ function calculateListPosition(
 export const FeatureAction: FC<FeatureActionProps> = ({
   featureIndex,
   hideAudit,
+  hideHistory,
   hideRemove,
   isCompact,
   isProtected,
   onCopyName,
   onRemove,
+  onShowAudit,
   onShowHistory,
   projectId,
   readOnly,
@@ -66,6 +70,8 @@ export const FeatureAction: FC<FeatureActionProps> = ({
         onCopyName()
       } else if (action === 'history') {
         onShowHistory()
+      } else if (action === 'audit') {
+        onShowAudit()
       } else if (action === 'remove') {
         onRemove()
       }
@@ -115,8 +121,18 @@ export const FeatureAction: FC<FeatureActionProps> = ({
             <Icon name='copy' width={18} fill='#9DA4AE' />
             <span>Copy Feature Name</span>
           </div>
-
           {!hideAudit && (
+            <div
+              className='feature-action__item'
+              data-test={`feature-history-${featureIndex}`}
+              onClick={() => handleActionClick('audit')}
+            >
+              <Icon name='list' width={18} fill='#9DA4AE' />
+              <span>Show Audit Logs</span>
+            </div>
+          )}
+
+          {!hideHistory && (
             <div
               className='feature-action__item'
               data-test={`feature-history-${featureIndex}`}

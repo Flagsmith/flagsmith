@@ -418,6 +418,7 @@ const FeatureList = class extends Component<FeatureListType> {
                                     <FeatureRow
                                       hideRemove
                                       hideAudit
+                                      hideHistory
                                       widget
                                       readOnly
                                       environmentFlags={environmentFlags}

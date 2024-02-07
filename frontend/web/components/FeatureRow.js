@@ -383,18 +383,18 @@ class TheComponent extends Component {
               this.props.hideAudit
             }
             hideRemove={this.props.hideRemove}
+            hideHistory={!environment?.use_v2_feature_versioning}
             onShowHistory={() => {
               if (disableControls) return
-
-              if (environment?.use_v2_feature_versioning) {
-                this.context.router.history.push(
-                  `/project/${projectId}/environment/${environmentId}/history?feature=${projectFlag.id}`,
-                )
-              } else {
-                this.context.router.history.push(
-                  `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
-                )
-              }
+              this.context.router.history.push(
+                `/project/${projectId}/environment/${environmentId}/history?feature=${projectFlag.id}`,
+              )
+            }}
+            onShowAudit={() => {
+              if (disableControls) return
+              this.context.router.history.push(
+                `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
+              )
             }}
             onRemove={() => {
               if (disableControls) return
