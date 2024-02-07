@@ -95,9 +95,13 @@ def test_disconnect(mocker: MockerFixture):
 
 
 def test_safe_redis_cluster__safe_methods_raise_connection_interrupted(
-    mocker: MockerFixture,
+    mocker: MockerFixture, settings
 ):
     # Given
+    settings.DJANGO_REDIS_CONNECTION_FACTORY = (
+        "core.redis_cluster.ClusterConnectionFactory"
+    )
+
     # Internal client that will raise RedisClusterException on every call
     mocked_redis_cluster_client = mocker.MagicMock(side_effect=RedisClusterException)
 
