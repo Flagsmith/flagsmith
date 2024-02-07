@@ -68,7 +68,9 @@ jobs:
         run: make django-make-migrations
 
       - name: Restore cached testmon data
-        if: ${{ github.event_name == 'pull_request' }}
+        if:
+          ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name,
+          'skip-testmon')}}
         id: cache-testmon-restore
         uses: actions/cache/restore@v3
         with:

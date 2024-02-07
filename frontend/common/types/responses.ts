@@ -180,6 +180,13 @@ export type AuditLogItem = {
   is_system_event: boolean
 }
 
+export type AuditLogDetail = AuditLogItem & {
+  change_details: {
+    field: string
+    old: FlagsmithValue
+    new: FlagsmithValue
+  }[]
+}
 export type Subscription = {
   id: number
   uuid: string
@@ -427,6 +434,7 @@ export type Res = {
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
   groupSummaries: UserGroupSummary[]
+  auditLogItem: AuditLogDetail
   featureExport: { id: string }
   featureExports: PagedResponse<FeatureExport>
   flagsmithProjectImport: { id: string }
