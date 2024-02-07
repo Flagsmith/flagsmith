@@ -197,13 +197,13 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
         </p>
         <h5>Environment Document</h5>
         <p>
-          This is a single call made by Server-Side SDKs, when running in Local
-          Evaluation Mode, to get the entire Environment dataset so the SDK can
-          run flag evaluations locally.
+          This is a single call made by Server-Side SDKs (when running in Local
+          Evaluation Mode), and the Edge Proxy to get the entire Environment dataset so they
+          can run flag evaluations locally.
         </p>
         <p>
-          By default, server-side SDKs refresh this data every 60 seconds. Each
-          refresh will count as a single call.
+          By default, server-side SDKs refresh this data every 60 seconds, and the Edge Proxy every 10 seconds. Each
+          refresh will count as a single call. These time periods are configurable.
         </p>
         <p>
           <a
