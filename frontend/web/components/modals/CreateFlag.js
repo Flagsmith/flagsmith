@@ -648,7 +648,10 @@ const CreateFlag = class extends Component {
                     this.setState({ featureExternalResource: v.value })
                   }
                   options={issuesExternalResources?.map((i) => {
-                    return { label: `${i.title} #${i.number}`, value: i.url }
+                    return {
+                      label: `${i.title} #${i.number}`,
+                      value: i.html_url,
+                    }
                   })}
                 />
               </div>
@@ -661,7 +664,10 @@ const CreateFlag = class extends Component {
                     this.setState({ featureExternalResource: v.value })
                   }
                   options={prExternalResources?.map((i) => {
-                    return { label: `${i.title} #${i.number}`, value: i.url }
+                    return {
+                      label: `${i.title} #${i.number}`,
+                      value: i.html_url,
+                    }
                   })}
                 />
               </div>
