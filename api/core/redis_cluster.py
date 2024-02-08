@@ -11,8 +11,6 @@ Include the following configuration in Django project's settings.py file:
 ```python
 # settings.py
 
-DJANGO_REDIS_CONNECTION_FACTORY = "core.redis_cluster.ClusterConnectionFactory"
-
 "cache_name: {
         "BACKEND": ...,
         "LOCATION": ...,
@@ -69,6 +67,9 @@ class SafeRedisClusterClient(DefaultClient):
             setattr(
                 self, method_name, self._safe_operation(getattr(super(), method_name))
             )
+
+        # Let's use our own connection factory here
+        self.connection_factory = ClusterConnectionFactory(options=self._options)
 
 
 class ClusterConnectionFactory(ConnectionFactory):

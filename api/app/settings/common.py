@@ -642,8 +642,6 @@ USER_THROTTLE_CACHE_OPTIONS = env.dict("USER_THROTTLE_CACHE_OPTIONS", default={}
 # and set the cache location to the redis url
 # ref: https://github.com/jazzband/django-redis/tree/5.4.0#configure-as-cache-backend
 
-# Set this to `core.redis_cluster.ClusterConnectionFactory` when using Redis Cluster.
-DJANGO_REDIS_CONNECTION_FACTORY = env.str("DJANGO_REDIS_CONNECTION_FACTORY", "")
 
 # Avoid raising exceptions if redis is down
 # ref: https://github.com/jazzband/django-redis/tree/5.4.0#memcached-exceptions-behavior

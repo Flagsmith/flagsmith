@@ -172,10 +172,6 @@
                     "value": "core.throttling.UserRateThrottle"
                 },
                 {
-                    "name": "DJANGO_REDIS_CONNECTION_FACTORY",
-                    "value": "core.redis_cluster.ClusterConnectionFactory"
-                },
-                {
                     "name": "USER_THROTTLE_CACHE_BACKEND",
                     "value": "django_redis.cache.RedisCache"
                 },
