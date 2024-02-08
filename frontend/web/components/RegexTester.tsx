@@ -2,8 +2,7 @@ import React, { FC, useEffect, useState } from 'react' // we need this to make J
 import Utils from 'common/utils/utils'
 import Button from './base/forms/Button'
 
-const InputGroup = require('../components/base/forms/InputGroup')
-
+import InputGroup from './base/forms/InputGroup'
 type RegexTesterType = {
   regex: string
   onChange: (newRegex: string) => void
