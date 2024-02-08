@@ -50,7 +50,8 @@ class SafeRedisClusterClient(DefaultClient):
         "keys",
     ]
 
-    def _safe_operation(self, func):
+    @staticmethod
+    def _safe_operation(func):
         def wrapper(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
