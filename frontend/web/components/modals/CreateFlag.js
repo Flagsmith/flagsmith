@@ -695,7 +695,7 @@ const CreateFlag = class extends Component {
                       <InfoMessage>
                         {' '}
                         This must conform to the regular expression{' '}
-                        <code>{regex}</code>
+                        <pre>{regex}</pre>
                       </InfoMessage>
                     </div>
                   )}
