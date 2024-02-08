@@ -24,6 +24,7 @@ import TableFilterOptions from 'components/tables/TableFilterOptions'
 import TableSortFilter from 'components/tables/TableSortFilter'
 import { getViewMode, setViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
+import IdentifierString from 'components/IdentifierString'
 const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
@@ -308,15 +309,23 @@ const UserPage = class extends Component {
                               aria-current='page'
                               style={{ opacity: 0.6 }}
                             >
-                              {(identity && identity.identity.identifier) ||
-                                this.props.match.params.id}
+                              <IdentifierString
+                                value={
+                                  (identity && identity.identity.identifier) ||
+                                  this.props.match.params.id
+                                }
+                              />
                             </li>
                           </ol>
                         </nav>
                         <PageTitle
                           title={
-                            (identity && identity.identity.identifier) ||
-                            this.props.match.params.id
+                            <IdentifierString
+                              value={
+                                (identity && identity.identity.identifier) ||
+                                this.props.match.params.id
+                              }
+                            />
                           }
                         >
                           View and manage feature states and traits for this

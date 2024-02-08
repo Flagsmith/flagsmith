@@ -19,6 +19,8 @@ import JSONReference from 'components/JSONReference' // we need this to make JSX
 import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
+import Format from 'common/utils/format'
+import IdentifierString from 'components/IdentifierString'
 
 const CodeHelp = require('../CodeHelp')
 
@@ -203,7 +205,9 @@ const UsersPage: FC<UsersPageType> = (props) => {
                     }/users/${encodeURIComponent(identifier)}/${id}`}
                     className='flex-row flex flex-1 table-column'
                   >
-                    <div className='font-weight-medium'>{identifier}</div>
+                    <div className='font-weight-medium'>
+                      <IdentifierString value={identifier} />
+                    </div>
                     <Icon
                       name='chevron-right'
                       width={22}
