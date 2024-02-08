@@ -873,13 +873,13 @@ files = [
 
 [[package]]
 name = "django"
-version = "3.2.23"
+version = "3.2.24"
 description = "A high-level Python Web framework that encourages rapid development and clean, pragmatic design."
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "Django-3.2.23-py3-none-any.whl", hash = "sha256:d48608d5f62f2c1e260986835db089fa3b79d6f58510881d316b8d88345ae6e1"},
-    {file = "Django-3.2.23.tar.gz", hash = "sha256:82968f3640e29ef4a773af2c28448f5f7a08d001c6ac05b32d02aeee6509508b"},
+    {file = "Django-3.2.24-py3-none-any.whl", hash = "sha256:5dd5b787c3ba39637610fe700f54bf158e33560ea0dba600c19921e7ff926ec5"},
+    {file = "Django-3.2.24.tar.gz", hash = "sha256:aaee9fb0fb4ebd4311520887ad2e33313d368846607f82a9a0ed461cd4c35b18"},
 ]
 
 [package.dependencies]
@@ -4492,4 +4492,4 @@ requests = ">=2.7,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "726c2c9615317642f03c659b75524f68318d1d7a679a12ce700562a0ff122a33"
+content-hash = "993b9f99517a6a87dc91ee8e3f1eaf3aa83b5fe80cebede0b1dd46555c6c030c"
