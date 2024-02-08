@@ -74,6 +74,11 @@ jobs:
           key: testmon-data-python${{ matrix.python-version }}-${{ github.event.pull_request.base.sha }}
           restore-keys: testmon-data-python${{ matrix.python-version }}-
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: testmon-cache-contents
+          path: /home/runner/work/flagsmith/flagsmith/api/.testmondata*
+
       - name: Check for missing migrations
         env:
           DOTENV_OVERRIDE_FILE: .env-ci-testmon
