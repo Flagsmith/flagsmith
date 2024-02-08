@@ -77,12 +77,6 @@ const ProjectSettingsPage = class extends Component {
       AppActions.getProject(this.props.match.params.projectId)
     }
   }
-
-  onRemove = () => {
-    toast('Your project has been removed')
-    this.context.router.history.replace('/projects')
-  }
-
   confirmRemove = (project, cb) => {
     openModal(
       'Delete Project',
@@ -163,7 +157,6 @@ const ProjectSettingsPage = class extends Component {
       <div className='app-container container'>
         <ProjectProvider
           id={this.props.match.params.projectId}
-          onRemove={this.onRemove}
           onSave={this.onSave}
         >
           {({ deleteProject, editProject, isLoading, isSaving, project }) => {
@@ -430,6 +423,7 @@ const ProjectSettingsPage = class extends Component {
                           <Button
                             onClick={() =>
                               this.confirmRemove(project, () => {
+                                this.context.router.history.replace('/projects')
                                 deleteProject(this.props.match.params.projectId)
                               })
                             }
