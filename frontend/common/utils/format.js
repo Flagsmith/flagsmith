@@ -140,6 +140,8 @@ const Format = {
     return value >= 10 ? value : `0${value}`
   },
 
+  newLineDelimiter: '↵',
+
   ordinal(value) {
     const s = ['th', 'st', 'nd', 'rd']
 
@@ -172,10 +174,20 @@ const Format = {
 
     return shortValue + suffixes[suffixIndex]
   },
+  spaceDelimiter: '␣',
+  tabDelimiter: '[TAB]',
 
   time(value) {
     // DATE > 10:00pm
     return Format.moment(value, 'hh:mm a')
+  },
+
+  trimAndHighlightSpaces(string) {
+    return string
+      ?.replace?.(/(^\s+|\s+$)/gm, Format.spaceDelimiter)
+      ?.replace(/\t/g, Format.tabDelimiter)
+      ?.replace(/(\r)/g, Format.newLineDelimiter)
+      ?.replace(/(\n)/g, Format.newLineDelimiter)
   },
 
   truncateText(text, numberOfChars) {

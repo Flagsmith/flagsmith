@@ -67,7 +67,11 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
   }, [handleCreateProjectClick, router.route.location])
 
   return (
-    <OrganisationProvider>
+    <OrganisationProvider
+      onRemoveProject={() => {
+        toast('Your project has been removed')
+      }}
+    >
       {({
         isLoading,
         projects,

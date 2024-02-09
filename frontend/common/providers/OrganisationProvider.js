@@ -20,6 +20,10 @@ const OrganisationProvider = class extends Component {
       users: OrganisationStore.getUsers(),
     }
     ES6Component(this)
+    if (props.onRemoveProject) {
+      this.listenTo(OrganisationStore, 'removed', props.onRemoveProject)
+    }
+
     this.listenTo(OrganisationStore, 'change', () => {
       this.setState({
         groups: UserGroupStore.getGroups(),

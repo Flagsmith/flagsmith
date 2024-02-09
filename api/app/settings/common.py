@@ -325,12 +325,15 @@ INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
 
-# NOTE: Because we use Postgres for analytics data in staging and Influx for tracking SSE data,
-# we need to support setting the influx configuration alongside using postgres for analytics.
-if USE_POSTGRES_FOR_ANALYTICS:
-    MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
-elif INFLUXDB_TOKEN:
-    MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
+ENABLE_API_USAGE_TRACKING = env.bool("ENABLE_API_USAGE_TRACKING", default=True)
+
+if ENABLE_API_USAGE_TRACKING:
+    # NOTE: Because we use Postgres for analytics data in staging and Influx for tracking SSE data,
+    # we need to support setting the influx configuration alongside using postgres for analytics.
+    if USE_POSTGRES_FOR_ANALYTICS:
+        MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
+    elif INFLUXDB_TOKEN:
+        MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
 
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list("ALLOWED_ADMIN_IP_ADDRESSES", default=list())
@@ -663,14 +666,13 @@ USER_THROTTLE_CACHE_BACKEND = env.str(
     "USER_THROTTLE_CACHE_BACKEND", "django.core.cache.backends.locmem.LocMemCache"
 )
 USER_THROTTLE_CACHE_LOCATION = env.str("USER_THROTTLE_CACHE_LOCATION", "admin-throttle")
+USER_THROTTLE_CACHE_OPTIONS = env.dict("USER_THROTTLE_CACHE_OPTIONS", default={})
 
 # Using Redis for cache
 # To use Redis for caching, set the cache backend to `django_redis.cache.RedisCache`.
 # and set the cache location to the redis url
 # ref: https://github.com/jazzband/django-redis/tree/5.4.0#configure-as-cache-backend
 
-# Set this to `core.redis_cluster.ClusterConnectionFactory` when using Redis Cluster.
-DJANGO_REDIS_CONNECTION_FACTORY = env.str("DJANGO_REDIS_CONNECTION_FACTORY", "")
 
 # Avoid raising exceptions if redis is down
 # ref: https://github.com/jazzband/django-redis/tree/5.4.0#memcached-exceptions-behavior
@@ -733,6 +735,7 @@ CACHES = {
     USER_THROTTLE_CACHE_NAME: {
         "BACKEND": USER_THROTTLE_CACHE_BACKEND,
         "LOCATION": USER_THROTTLE_CACHE_LOCATION,
+        "OPTIONS": USER_THROTTLE_CACHE_OPTIONS,
     },
 }
 
