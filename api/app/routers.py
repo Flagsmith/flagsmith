@@ -6,17 +6,16 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db import connections
 
+from .exceptions import ImproperlyConfiguredError
+
 logger = logging.getLogger(__name__)
+
 CONNECTION_CHECK_CACHE_TTL = 2
 
 
 class ReplicaReadStrategy(Enum):
     DISTRIBUTED = "DISTRIBUTED"
     SEQUENTIAL = "SEQUENTIAL"
-
-
-class ImproperlyConfiguredError(RuntimeError):
-    pass
 
 
 def connection_check(database: str) -> bool:
