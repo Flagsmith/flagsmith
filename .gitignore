@@ -10,7 +10,6 @@ checkstyle.txt
 .env*
 !.env-local
 !.env-ci
-!.env-ci-testmon
 .direnv
 .envrc
 .tool-versions
