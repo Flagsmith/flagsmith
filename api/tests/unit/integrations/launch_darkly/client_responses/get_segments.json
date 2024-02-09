@@ -1,0 +1,159 @@
+[
+    {
+        "name": "User List",
+        "tags": [],
+        "creationDate": 1704302060324,
+        "lastModifiedDate": 1704302081521,
+        "key": "user-list",
+        "included": [
+            "user-102",
+            "user-101"
+        ],
+        "excluded": [
+            "user-103"
+        ],
+        "includedContexts": [],
+        "excludedContexts": [],
+        "_links": {
+            "parent": {
+                "href": "/api/v2/segments/default/test",
+                "type": "application/json"
+            },
+            "self": {
+                "href": "/api/v2/segments/default/test/user-list",
+                "type": "application/json"
+            },
+            "site": {
+                "href": "/default/test/segments/user-list",
+                "type": "text/html"
+            }
+        },
+        "rules": [],
+        "version": 2,
+        "deleted": false,
+        "generation": 1
+    },
+    {
+        "name": "Dynamic List",
+        "tags": [],
+        "creationDate": 1704302090567,
+        "lastModifiedDate": 1704302154463,
+        "key": "dynamic-list",
+        "included": [],
+        "excluded": [],
+        "includedContexts": [],
+        "excludedContexts": [],
+        "_links": {
+            "parent": {
+                "href": "/api/v2/segments/default/test",
+                "type": "application/json"
+            },
+            "self": {
+                "href": "/api/v2/segments/default/test/dynamic-list",
+                "type": "application/json"
+            },
+            "site": {
+                "href": "/default/test/segments/dynamic-list",
+                "type": "text/html"
+            }
+        },
+        "rules": [
+            {
+                "_id": "3405f9e2-7613-4092-b453-1b10db1bc184",
+                "clauses": [
+                    {
+                        "_id": "43aaaae8-fc33-4edb-a954-c01bb53597e8",
+                        "attribute": "email",
+                        "op": "endsWith",
+                        "values": [
+                            "@gmail.com"
+                        ],
+                        "contextKind": "user",
+                        "negate": false
+                    }
+                ],
+                "rolloutContextKind": "user"
+            }
+        ],
+        "version": 2,
+        "deleted": false,
+        "generation": 1
+    },
+    {
+        "name": "Dynamic List 2",
+        "tags": [],
+        "creationDate": 1704731242596,
+        "lastModifiedDate": 1704731387257,
+        "key": "dynamic-list-2",
+        "included": [
+            "foo"
+        ],
+        "excluded": [
+            "bar"
+        ],
+        "includedContexts": [],
+        "excludedContexts": [],
+        "_links": {
+            "parent": {
+                "href": "/api/v2/segments/default/test",
+                "type": "application/json"
+            },
+            "self": {
+                "href": "/api/v2/segments/default/test/dynamic-list-2",
+                "type": "application/json"
+            },
+            "site": {
+                "href": "/default/test/segments/dynamic-list-2",
+                "type": "text/html"
+            }
+        },
+        "rules": [
+            {
+                "_id": "9ea1bfc9-91c5-4188-a725-8af69730cd11",
+                "clauses": [
+                    {
+                        "_id": "294210ba-b6cd-4759-beb3-232b475930a9",
+                        "attribute": "p1",
+                        "op": "in",
+                        "values": [
+                            1,
+                            2
+                        ],
+                        "contextKind": "user",
+                        "negate": false
+                    },
+                    {
+                        "_id": "a156f6dd-1ecb-411c-b308-5b9d3428815a",
+                        "attribute": "p2",
+                        "op": "semVerGreaterThan",
+                        "values": [
+                            "1.0.0"
+                        ],
+                        "contextKind": "user",
+                        "negate": false
+                    }
+                ],
+                "rolloutContextKind": "user"
+            },
+            {
+                "_id": "7cdd28e2-feae-4a6e-8f87-ce00ccb1ce93",
+                "clauses": [
+                    {
+                        "_id": "a316fd6a-1e0b-4ed0-a5db-c71868ecb691",
+                        "attribute": "p3",
+                        "op": "matches",
+                        "values": [
+                            "foo[0-9]{0,1}"
+                        ],
+                        "contextKind": "user",
+                        "negate": false
+                    }
+                ],
+                "rolloutContextKind": "user"
+            }
+        ],
+        "version": 2,
+        "deleted": false,
+        "generation": 1
+    }
+]

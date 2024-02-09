@@ -60,9 +60,9 @@ def test_launch_darkly_import_request_view__create__return_expected(
         "id": created_import_request.id,
         "project": project.id,
         "status": {
-            "error_message": None,
+            "error_messages": [],
             "requested_environment_count": 2,
-            "requested_flag_count": 5,
+            "requested_flag_count": 9,
             "result": None,
         },
         "updated_at": mocker.ANY,
