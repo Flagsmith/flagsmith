@@ -55,23 +55,6 @@ variable called `DATABASE_URL`. This should be configured in the Heroku-ish appl
 When running the application using Docker, it reads the database configuration from the settings located in
 `app.settings.production`
 
-### Replication
-
-Flagsmith can be set up to handle as many read replicas as needed. To add replicas, you'll need to set the
-`REPLICA_DATABASE_URLS` environment variable with a comma separated list of database urls.
-
-Example:
-
-```
-REPLICA_DATABASE_URLS: postgres://user:password@replica1.database.host:5432/flagsmith,postgres://user:password@replica2.database.host:5432/flagsmith
-```
-
-:::tip
-
-Use the `REPLICA_DATABASE_URLS_DELIMITER` environment variable if you are using any `,` characters in your passwords.
-
-:::
-
 ## Initialising
 
 The application is built using django which comes with a handy set of admin pages available at `/admin/`. To access
