@@ -86,6 +86,10 @@ class PrimaryReplicaRouter:
         db_set = {
             "default",
             *[f"replica_{i}" for i in range(1, settings.NUM_DB_REPLICAS + 1)],
+            *[
+                f"cross_region_replica_{i}"
+                for i in range(1, settings.NUM_CROSS_REGION_DB_REPLICAS + 1)
+            ],
         }
         if obj1._state.db in db_set and obj2._state.db in db_set:
             return True
