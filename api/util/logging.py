@@ -23,5 +23,5 @@ class JsonFormatter(logging.Formatter):
                 "thread_name": record.threadName,
             }
             return json.dumps(log_record)
-        except json.JSONDecodeError as e:
+        except (ValueError, TypeError) as e:
             return f"Error formatting log record: {str(e)}"
