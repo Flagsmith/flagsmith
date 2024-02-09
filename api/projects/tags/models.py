@@ -26,7 +26,7 @@ class Tag(AbstractBaseExportableModel):
         help_text="When applied to a feature, it means this feature should be excluded from stale flags logic.",
     )
     type = models.CharField(
-        default=TagType.NONE,
+        default=TagType.NONE.value,
         choices=TagType.choices,
         help_text="Field used to provide a consistent identifier for the FE and API to use for business logic.",
         max_length=100,
