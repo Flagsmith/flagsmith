@@ -261,3 +261,39 @@ def test_feature_get_edge_overrides_data(
         overrides_data[distinct_segment_featurestate.feature.id].num_segment_overrides
         == 1
     )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_get_edge_overrides_data_skips_deleted_features(
+    feature: Feature,
+    environment: "Environment",
+    identity: Identity,
+    identity_featurestate: FeatureState,
+    distinct_identity_featurestate: FeatureState,
+    dynamodb_identity_wrapper: "DynamoIdentityWrapper",
+    dynamodb_wrapper_v2: "DynamoEnvironmentV2Wrapper",
+):
+    # Given
+    # replicate identity to Edge
+    edge_identity = EdgeIdentity(map_identity_to_engine(identity, with_overrides=False))
+    # Create identity override for two different features
+    edge_identity.add_feature_override(
+        map_feature_state_to_engine(identity_featurestate),
+    )
+    edge_identity.add_feature_override(
+        map_feature_state_to_engine(distinct_identity_featurestate),
+    )
+    edge_identity.save()
+
+    # Now, delete one of the feature
+    feature.delete()
+
+    # When
+    overrides_data = get_edge_overrides_data(environment)
+
+    # Then - we only have one identity override(for the feature that still exists)
+    assert len(overrides_data) == 1
+    assert (
+        overrides_data[distinct_identity_featurestate.feature.id].num_identity_overrides
+        == 1
+    )

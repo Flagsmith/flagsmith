@@ -1,7 +1,11 @@
 version: '3'
+
+volumes:
+  pg_11_data:
+
 services:
   db:
-    image: postgres:11.12-alpine
+    image: postgres:15.5-alpine
     pull_policy: always
     restart: unless-stopped
     volumes:
@@ -11,5 +15,3 @@ services:
     environment:
       POSTGRES_DB: flagsmith
       POSTGRES_PASSWORD: password
-volumes:
-  pg_11_data:

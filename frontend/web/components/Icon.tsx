@@ -26,6 +26,7 @@ export type IconName =
   | 'calendar'
   | 'edit'
   | 'clock'
+  | 'diff'
   | 'person'
   | 'edit-outlined'
   | 'refresh'
@@ -50,6 +51,7 @@ export type IconName =
   | 'timer'
   | 'request'
   | 'people'
+  | 'more-vertical'
 
 export type IconType = React.DetailedHTMLProps<
   React.HTMLAttributes<SVGSVGElement>,
@@ -65,6 +67,56 @@ export type IconType = React.DetailedHTMLProps<
 
 const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
   switch (name) {
+    case 'diff': {
+      return (
+        <svg
+          xmlns='http://www.w3.org/2000/svg'
+          fill='none'
+          style={{
+            width: 24,
+          }}
+          viewBox='0 0 24 24'
+        >
+          <path
+            fill={fill || '#1A2634'}
+            fillRule='evenodd'
+            d='M.573 28.114h-10.889c-.306 0-.555-.224-.555-.5v-15c0-.276.249-.5.555-.5l6.411-.004 5.248 5.81-.214 9.694c0 .276-.25.5-.556.5ZM-3.9 12.08l.029.034-.029-.034Zm6.769 4.362-5.444-6a.998.998 0 0 0-.741-.328h-7c-1.409 0-2.555 1.122-2.555 2.5v15c0 1.378 1.146 2.5 2.555 2.5H.573c1.409 0 2.556-1.122 2.556-2.5v-10.5a1 1 0 0 0-.26-.672Z'
+            clipRule='evenodd'
+            style={{
+              strokeWidth: 0,
+            }}
+            transform='translate(16.91 -8.252)'
+          />
+          <path
+            d='M8.439 16.581h6.69a.145.145 0 0 1 .145.145v.607a.145.145 0 0 1-.145.145h-6.69a.145.145 0 0 1-.145-.145v-.607a.145.145 0 0 1 .145-.145Zm-.145.145v.607a.145.145 0 0 0 .145.145h6.69a.145.145 0 0 0 .145-.145v-.607a.145.145 0 0 0-.145-.145h-6.69a.145.145 0 0 0-.145.145Z'
+            style={{
+              fill: fill || '#163251',
+              stroke: fill || '#1a2634',
+              strokeWidth: '1.05px',
+            }}
+          />
+          <path
+            d='M8.395 9.73h6.69a.145.145 0 0 1 .145.145v.607a.145.145 0 0 1-.145.145h-6.69a.145.145 0 0 1-.145-.145v-.607a.145.145 0 0 1 .145-.145Zm-.145.145v.607a.145.145 0 0 0 .145.145h6.69a.145.145 0 0 0 .145-.145v-.607a.145.145 0 0 0-.145-.145h-6.69a.145.145 0 0 0-.145.145Z'
+            style={{
+              fill: fill || '#163251',
+              stroke: fill || '#1a2634',
+              strokeWidth: '1.05px',
+            }}
+          />
+          <path
+            d='M8.257 11.485h6.69a.145.145 0 0 1 .145.145v.607a.145.145 0 0 1-.145.145h-6.69a.145.145 0 0 1-.145-.145v-.607a.145.145 0 0 1 .145-.145Zm-.145.145v.607a.145.145 0 0 0 .145.145h6.69a.145.145 0 0 0 .145-.145v-.607a.145.145 0 0 0-.145-.145h-6.69a.145.145 0 0 0-.145.145Z'
+            style={{
+              fill: fill || '#163251',
+              stroke: fill || '#1a2634',
+              strokeWidth: '1.05px',
+              transformBox: 'fill-box',
+              transformOrigin: '50% 50%',
+            }}
+            transform='rotate(90 .966 -.777)'
+          />
+        </svg>
+      )
+    }
     case 'plus': {
       return (
         <svg
@@ -1411,6 +1463,25 @@ const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
               fill={fill || '#1A2634'}
             />
           </g>
+        </svg>
+      )
+    }
+    case 'more-vertical': {
+      return (
+        <svg
+          width={width || '24'}
+          height={width || '24'}
+          viewBox='0 0 24 24'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <path
+            id='Filled/more-vertical'
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M12 7C13.104 7 14 6.104 14 5C14 3.896 13.104 3 12 3C10.896 3 10 3.896 10 5C10 6.104 10.896 7 12 7ZM12 10C10.896 10 10 10.896 10 12C10 13.104 10.896 14 12 14C13.104 14 14 13.104 14 12C14 10.896 13.104 10 12 10ZM10 19C10 17.896 10.896 17 12 17C13.104 17 14 17.896 14 19C14 20.104 13.104 21 12 21C10.896 21 10 20.104 10 19Z'
+            fill={fill || '#1A2634'}
+          />
         </svg>
       )
     }

@@ -1,6 +1,4 @@
 import React, { Component } from 'react'
-import NavLink from 'react-router-dom/NavLink'
-import Icon from './Icon'
 
 const OrganisationSelect = class extends Component {
   static displayName = 'OrganisationSelect'
@@ -35,16 +33,6 @@ const OrganisationSelect = class extends Component {
                 className='select-lg react-select'
               />
             </div>
-            {AccountStore.getOrganisationRole() === 'ADMIN' && (
-              <NavLink
-                id='organisation-settings-link'
-                activeClassName='active'
-                className='btn btn-with-icon ml-3 btn-lg px-3'
-                to='/organisation-settings'
-              >
-                <Icon name='setting' fill='#656D7B' />
-              </NavLink>
-            )}
 
             {user &&
               user.organisations &&
@@ -60,4 +48,4 @@ const OrganisationSelect = class extends Component {
 
 OrganisationSelect.propTypes = {}
 
-module.exports = OrganisationSelect
+export default OrganisationSelect

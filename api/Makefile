@@ -2,7 +2,7 @@
 
 DOCKER_TAG ?= flagsmith/flagsmith-api:local
 
-COMPOSE_FILE ?= ../docker/db.yaml
+COMPOSE_FILE ?= ../docker/db.yml
 COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
@@ -22,7 +22,7 @@ install-poetry:
 
 .PHONY: install-packages
 install-packages:
-	poetry install $(opts)
+	poetry install --no-root $(opts)
 
 .PHONY: install
 install: install-pip install-poetry install-packages

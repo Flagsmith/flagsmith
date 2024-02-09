@@ -11,7 +11,9 @@ class LaunchDarklyImportRequestStatusSerializer(serializers.Serializer):
         read_only=True,
         allow_null=True,
     )
-    error_message = serializers.CharField(read_only=True, allow_null=True)
+    error_messages = serializers.ListSerializer(
+        child=serializers.CharField(read_only=True)
+    )
 
 
 class CreateLaunchDarklyImportRequestSerializer(serializers.Serializer):
