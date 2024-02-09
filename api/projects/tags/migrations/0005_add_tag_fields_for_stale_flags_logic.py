@@ -65,11 +65,10 @@ class Migration(migrations.Migration):
             model_name="tag",
             name="type",
             field=models.CharField(
-                default=None,
-                null=True,
-                choices=(("STALE", "Stale"),),
+                choices=[("NONE", "None"), ("STALE", "Stale")],
+                default="NONE",
                 help_text="Field used to provide a consistent identifier for the FE and API to use for business logic.",
                 max_length=100,
-            )
+            ),
         ),
     ]
