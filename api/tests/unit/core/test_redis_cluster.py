@@ -42,8 +42,6 @@ def test_cluster_connection_factory__get_connection_with_non_conflicting_params(
 ):
     # Given
     mockRedisCluster = mocker.patch("core.redis_cluster.RedisCluster")
-    mockedRetry = mocker.patch("core.redis_cluster.Retry")
-    mockedBackoff = mocker.patch("core.redis_cluster.DecorrelatedJitterBackoff")
     connection_factory = ClusterConnectionFactory(
         options={"REDIS_CLIENT_KWARGS": {"decode_responses": False}}
     )
@@ -57,9 +55,9 @@ def test_cluster_connection_factory__get_connection_with_non_conflicting_params(
         decode_responses=False,
         host="localhost",
         port=6379,
-        retry=mockedRetry.return_value,
+        socket_keepalive=True,
+        socket_timeout=0.2,
     )
-    mockedRetry.assert_called_once_with(mockedBackoff(), 3)
 
 
 def test_cluster_connection_factory__get_connection_with_conflicting_params(
