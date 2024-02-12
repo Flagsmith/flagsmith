@@ -11,15 +11,66 @@ Include the following configuration in Django project's settings.py file:
 ```python
 # settings.py
 
-DJANGO_REDIS_CONNECTION_FACTORY = "core.redis_cluster.ClusterConnectionFactory"
+"cache_name: {
+        "BACKEND": ...,
+        "LOCATION": ...,
+        "OPTIONS": {
+            "CLIENT_CLASS": "core.redis_cluster.SafeRedisClusterClient",
+
+        },
+    },
 """
 
 import threading
 from copy import deepcopy
 
 from django.core.exceptions import ImproperlyConfigured
+from django_redis.client.default import DefaultClient
+from django_redis.exceptions import ConnectionInterrupted
 from django_redis.pool import ConnectionFactory
 from redis.cluster import RedisCluster
+from redis.exceptions import RedisClusterException
+
+SOCKET_TIMEOUT = 0.2
+
+
+class SafeRedisClusterClient(DefaultClient):
+    SAFE_METHODS = [
+        "set",
+        "get",
+        "incr_version",
+        "delete",
+        "delete_pattern",
+        "delete_many",
+        "clear",
+        "get_many",
+        "set_many",
+        "incr",
+        "has_key",
+        "keys",
+    ]
+
+    @staticmethod
+    def _safe_operation(func):
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except RedisClusterException as e:
+                raise ConnectionInterrupted(connection=None) from e
+
+        return wrapper
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Dynamically generate safe versions of methods
+        for method_name in self.SAFE_METHODS:
+            setattr(
+                self, method_name, self._safe_operation(getattr(super(), method_name))
+            )
+
+        # Let's use our own connection factory here
+        self.connection_factory = ClusterConnectionFactory(options=self._options)
 
 
 class ClusterConnectionFactory(ConnectionFactory):
@@ -57,17 +108,24 @@ class ClusterConnectionFactory(ConnectionFactory):
         If we find conflicting client and connection kwargs, we'll raise an
         error.
         """
-        client_cls_kwargs = deepcopy(self.redis_client_cls_kwargs)
-        # ... and smash 'em together (crashing if there's conflicts)...
-        for key, value in connection_params.items():
-            if key in client_cls_kwargs:
-                raise ImproperlyConfigured(
-                    f"Found '{key}' in both the connection and the client kwargs"
-                )
-            client_cls_kwargs[key] = value
+        try:
+            client_cls_kwargs = deepcopy(self.redis_client_cls_kwargs)
+            # ... and smash 'em together (crashing if there's conflicts)...
+            for key, value in connection_params.items():
+                if key in client_cls_kwargs:
+                    raise ImproperlyConfigured(
+                        f"Found '{key}' in both the connection and the client kwargs"
+                    )
+                client_cls_kwargs[key] = value
 
-        # ... and then build and return the client
-        return RedisCluster(**client_cls_kwargs)
+            # Add explicit socket timeout
+            client_cls_kwargs["socket_timeout"] = SOCKET_TIMEOUT
+            client_cls_kwargs["socket_keepalive"] = True
+            # ... and then build and return the client
+            return RedisCluster(**client_cls_kwargs)
+        except Exception as e:
+            # Let django redis handle the exception
+            raise ConnectionInterrupted(connection=None) from e
 
     def disconnect(self, connection: RedisCluster):
         connection.disconnect_connection_pools()
