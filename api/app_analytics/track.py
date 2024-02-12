@@ -8,6 +8,7 @@ from django.core.cache import caches
 from six.moves.urllib.parse import quote  # python 2/3 compatible urllib import
 
 from environments.models import Environment
+from task_processor.decorators import register_task_handler
 from util.util import postpone
 
 logger = logging.getLogger(__name__)
@@ -125,7 +126,10 @@ def track_request_influxdb(request):
         influxdb.write()
 
 
-def track_feature_evaluation_influxdb(environment_id, feature_evaluations):
+@register_task_handler()
+def track_feature_evaluation_influxdb(
+    environment_id: int, feature_evaluations: dict[str, int]
+) -> None:
     """
     Sends Feature analytics event data to InfluxDB
 
@@ -135,6 +139,30 @@ def track_feature_evaluation_influxdb(environment_id, feature_evaluations):
     influxdb = InfluxDBWrapper("feature_evaluation")
 
     for feature_name, evaluation_count in feature_evaluations.items():
+        tags = {"feature_id": feature_name, "environment_id": environment_id}
+        influxdb.add_data_point("request_count", evaluation_count, tags=tags)
+
+    influxdb.write()
+
+
+@register_task_handler()
+def track_feature_evaluation_influxdb_v2(
+    environment_id: int, feature_evaluations: list[dict[str, int | str | bool]]
+) -> None:
+    """
+    Sends Feature analytics event data to InfluxDB
+
+    :param environment_id: (int) the id of the environment the feature is being evaluated within
+    :param feature_evaluations: (list) A collection of feature evaluations including feature name / evaluation counts.
+    """
+    influxdb = InfluxDBWrapper("feature_evaluation")
+
+    for feature_evaluation in feature_evaluations:
+        feature_name = feature_evaluation["feature_name"]
+        evaluation_count = feature_evaluation["count"]
+
+        # Note that "feature_id" is a misnamed as it's actually to
+        # the name of the feature. This was to match existing behavior.
         tags = {"feature_id": feature_name, "environment_id": environment_id}
         influxdb.add_data_point("request_count", evaluation_count, tags=tags)
 

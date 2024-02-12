@@ -73,10 +73,14 @@ class APIUsageBucket(AbstractBucket):
 
 
 class FeatureEvaluationRaw(models.Model):
-    feature_name = models.CharField(max_length=2000)
+    feature_name = models.CharField(db_index=True, max_length=2000)
     environment_id = models.PositiveIntegerField()
     evaluation_count = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # Both stored for tracking multivariate split testing.
+    identity_identifier = models.CharField(max_length=2000, null=True, default=None)
+    enabled_when_evaluated = models.BooleanField(null=True, default=None)
 
 
 class FeatureEvaluationBucket(AbstractBucket):

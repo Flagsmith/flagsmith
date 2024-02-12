@@ -13,6 +13,7 @@ from . import views
 urlpatterns = [
     url(r"^api/v1/", include("api.urls.deprecated", namespace="api-deprecated")),
     url(r"^api/v1/", include("api.urls.v1", namespace="api-v1")),
+    url(r"^api/v2/", include("api.urls.v2", namespace="api-v2")),
     url(r"^admin/", admin.site.urls),
     url(r"^health", include("health_check.urls", namespace="health")),
     url(r"^version", views.version_info, name="version-info"),

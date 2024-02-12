@@ -10,7 +10,7 @@ from django.utils import timezone
 
 if "analytics" not in settings.DATABASES:
     pytest.skip(
-        "Skip test if analytics database is configured", allow_module_level=True
+        "Skip test if analytics database is not configured", allow_module_level=True
     )
 
 
