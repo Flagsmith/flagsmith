@@ -15,7 +15,7 @@ from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature
 from projects.models import Project
-from segments.models import Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
 from util.mappers import map_identity_to_identity_document
 
 User = get_user_model()
@@ -652,6 +652,80 @@ def test_update_segment_obeys_max_conditions(
 
     nested_rule.refresh_from_db()
     assert nested_rule.conditions.count() == 1
+
+
+def test_update_segment_evades_max_conditions_when_whitelisted(
+    project: Project,
+    admin_client: APIClient,
+    segment: Segment,
+    segment_rule: SegmentRule,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    nested_rule = SegmentRule.objects.create(
+        rule=segment_rule, type=SegmentRule.ANY_RULE
+    )
+    existing_condition = Condition.objects.create(
+        rule=nested_rule, property="foo", operator=EQUAL, value="bar"
+    )
+
+    # Create the whitelist to stop the validation.
+    WhitelistedSegment.objects.create(segment=segment)
+
+    # Reduce value for test debugging.
+    settings.SEGMENT_RULES_CONDITIONS_LIMIT = 10
+    new_condition_property = "prop_"
+    new_condition_value = "red"
+    new_conditions = []
+    for i in range(settings.SEGMENT_RULES_CONDITIONS_LIMIT):
+        new_conditions.append(
+            {
+                "property": f"{new_condition_property}{i}",
+                "operator": EQUAL,
+                "value": new_condition_value,
+            }
+        )
+
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "id": segment_rule.id,
+                "type": segment_rule.type,
+                "rules": [
+                    {
+                        "id": nested_rule.id,
+                        "type": nested_rule.type,
+                        "rules": [],
+                        "conditions": [
+                            {
+                                "id": existing_condition.id,
+                                "property": existing_condition.property,
+                                "operator": existing_condition.operator,
+                                "value": existing_condition.value,
+                            },
+                            *new_conditions,
+                        ],
+                    }
+                ],
+                "conditions": [],
+            }
+        ],
+    }
+
+    # When
+    response = admin_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    nested_rule.refresh_from_db()
+    assert nested_rule.conditions.count() == 11
 
 
 def test_create_segment_obeys_max_conditions(
