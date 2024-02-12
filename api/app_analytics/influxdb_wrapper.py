@@ -315,7 +315,7 @@ def get_top_organisations(date_range: str, limit: str = ""):
 
 def get_current_api_usage(organisation_id: int, date_range: str) -> int:
     """
-    Query influx db top used organisations
+    Query influx db for api usage
 
     :param organisation_id: filtered organisation
     :param date_range: data range for current api usage window
