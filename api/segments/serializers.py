@@ -89,6 +89,10 @@ class SegmentSerializer(serializers.ModelSerializer):
         self, rules_data: dict[str, object]
     ) -> None:
         count = self._calculate_condition_count(rules_data)
+
+        if self.instance and getattr(self.instance, "whitelisted_segment", None):
+            return
+
         if count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
             raise ValidationError(
                 {
