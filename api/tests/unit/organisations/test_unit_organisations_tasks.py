@@ -260,10 +260,23 @@ def test_handle_api_usage_notifications(
     mock_send_mail.assert_called_once_with(
         subject="Flagsmith API use has reached 90%",
         message=(
-            "Hi there,\n\nAPI usage for Test Org has reached "
-            "90 within the current subscription period. Please "
+            "Hi there,\n\nThe API usage for Test Org has reached "
+            "90% within the current subscription period. Please "
             "consider upgrading your organisations account limits.\n\n"
             "Thank you!\n\nThe Flagsmith Team\n"
+        ),
+        html_message=(
+            "<table>\n\n        <tr>\n\n               "
+            "<td>Hi there,</td>\n\n        </tr>\n\n        "
+            "<tr>\n\n               <td>\n                 "
+            "The API usage for Test Org has reached\n                 "
+            "90% within the current subscription period.\n                 "
+            "Please consider upgrading your organisations account limits.\n"
+            "               </td>\n\n\n        </tr>\n\n        "
+            "<tr>\n\n               <td>Thank you!</td>\n\n      "
+            "  </tr>\n\n        <tr>\n\n               "
+            "<td>The Flagsmith Team</td>\n\n        "
+            "</tr>\n\n</table>\n"
         ),
         from_email="noreply@flagsmith.com",
         recipient_list=["admin@example.com"],
