@@ -647,7 +647,7 @@ def test_update_segment_obeys_max_conditions(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {
-        "segment": "The segment has 11 of the maximum condition count limit of 10."
+        "segment": "The segment has 11 conditions, which exceeds the maximum condition count of 10."
     }
 
     nested_rule.refresh_from_db()
@@ -704,7 +704,7 @@ def test_create_segment_obeys_max_conditions(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {
-        "segment": "The segment has 11 of the maximum condition count limit of 10."
+        "segment": "The segment has 11 conditions, which exceeds the maximum condition count of 10."
     }
 
     assert Segment.objects.count() == 0
