@@ -1,6 +1,6 @@
 Hi there,
 
-API usage for {{ organisation.name }} has reached {{ matched_threshold }} within the current subscription period. Please consider upgrading your organisations account limits.
+The API usage for {{ organisation.name }} has reached {{ matched_threshold }}% within the current subscription period. Please consider upgrading your organisations account limits.
 
 Thank you!
 
