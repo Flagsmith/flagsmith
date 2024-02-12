@@ -92,8 +92,8 @@ class SegmentSerializer(serializers.ModelSerializer):
         if count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
             raise ValidationError(
                 {
-                    "segment": f"The segment has {count} of the maximum condition count "
-                    f"limit of {settings.SEGMENT_RULES_CONDITIONS_LIMIT}."
+                    "segment": f"The segment has {count} conditions, which exceeds the maximum "
+                    f"condition count of {settings.SEGMENT_RULES_CONDITIONS_LIMIT}."
                 }
             )
 
