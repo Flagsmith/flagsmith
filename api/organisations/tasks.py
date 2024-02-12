@@ -101,15 +101,23 @@ def send_admin_api_usage_notification(
         ).values_list("email", flat=True)
     )
 
+    if matched_threshold < 100:
+        message = "organisations/api_usage_notification.txt"
+        html_message = "organisations/api_usage_notification.html"
+    else:
+        message = "organisations/api_usage_notification_limit.txt"
+        html_message = "organisations/api_usage_notification_limit.html"
     context = {
         "organisation": organisation,
         "matched_threshold": matched_threshold,
     }
+
     send_mail(
         subject=f"Flagsmith API use has reached {matched_threshold}%",
-        message=render_to_string("organisations/api_usage_notification.txt", context),
+        message=render_to_string(message, context),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=recipient_list,
+        html_message=render_to_string(html_message, context),
         fail_silently=True,
     )
 
@@ -125,7 +133,7 @@ def _handle_api_usage_notifications(organisation: Organisation):
     billing_starts_at = subscription_cache.current_billing_term_starts_at
     now = timezone.now()
 
-    # Truncate to the closest active month to get start of current period..
+    # Truncate to the closest active month to get start of current period.
     month_delta = relativedelta(now, billing_starts_at).months
     period_starts_at = relativedelta(months=month_delta) + billing_starts_at
 
