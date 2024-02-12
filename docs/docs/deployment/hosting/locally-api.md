@@ -55,23 +55,6 @@ variable called `DATABASE_URL`. This should be configured in the Heroku-ish appl
 When running the application using Docker, it reads the database configuration from the settings located in
 `app.settings.production`
 
-### Replication
-
-Flagsmith can be set up to handle as many read replicas as needed. To add replicas, you'll need to set the
-`REPLICA_DATABASE_URLS` environment variable with a comma separated list of database urls.
-
-Example:
-
-```
-REPLICA_DATABASE_URLS: postgres://user:password@replica1.database.host:5432/flagsmith,postgres://user:password@replica2.database.host:5432/flagsmith
-```
-
-:::tip
-
-Use the `REPLICA_DATABASE_URLS_DELIMITER` environment variable if you are using any `,` characters in your passwords.
-
-:::
-
 ## Initialising
 
 The application is built using django which comes with a handy set of admin pages available at `/admin/`. To access
@@ -107,8 +90,9 @@ application.
 Further information on the admin pages can be found [here](/deployment/configuration/django-admin).
 
 [^1]:
-    Your Flagsmith's domain can also be configured via the `FLAGSMITH_DOMAIN` environment variable. See the
-    [full list](#application-environment-variables) of variables used for configuration.
+
+Your Flagsmith's domain can also be configured via the `FLAGSMITH_DOMAIN` environment variable. See the
+[full list](#application-environment-variables) of variables used for configuration.
 
 ## Deploying
 
@@ -251,6 +235,9 @@ the below variables will be ignored.
   and hence should not be modified for already running instances of flagsmith. It should only be used for new
   installations, and should not be modified. WARNING: setting this to a higher limit may prevent imports to our SaaS
   platform if required in the future.
+- `ENABLE_API_USAGE_TRACKING`: Enable tracking of all API requests in Postgres / Influx. Default is True. Setting to
+  False will mean that the Usage tab in the Organisation Settings will not show any data. Useful when using Postgres for
+  analytics in high traffic environments to limit the size of database.
 
 #### Security Environment Variables
 

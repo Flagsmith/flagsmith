@@ -268,6 +268,11 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         if not getattr(self.organisation, "subscription_information_cache", None):
             return
 
+        # There is a weird bug where the cache is present, but the id is unset.
+        # See here for more: https://flagsmith.sentry.io/issues/4945988284/
+        if not self.organisation.subscription_information_cache.id:
+            return
+
         self.organisation.subscription_information_cache.delete()
 
     def prepare_for_cancel(
