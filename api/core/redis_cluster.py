@@ -28,10 +28,10 @@ from django.core.exceptions import ImproperlyConfigured
 from django_redis.client.default import DefaultClient
 from django_redis.exceptions import ConnectionInterrupted
 from django_redis.pool import ConnectionFactory
-from redis.backoff import DecorrelatedJitterBackoff
 from redis.cluster import RedisCluster
 from redis.exceptions import RedisClusterException
-from redis.retry import Retry
+
+SOCKET_TIMEOUT = 0.2
 
 
 class SafeRedisClusterClient(DefaultClient):
@@ -118,8 +118,9 @@ class ClusterConnectionFactory(ConnectionFactory):
                     )
                 client_cls_kwargs[key] = value
 
-            # Add explicit retry
-            client_cls_kwargs["retry"] = Retry(DecorrelatedJitterBackoff(), 3)
+            # Add explicit socket timeout
+            client_cls_kwargs["socket_timeout"] = SOCKET_TIMEOUT
+            client_cls_kwargs["socket_keepalive"] = True
             # ... and then build and return the client
             return RedisCluster(**client_cls_kwargs)
         except Exception as e:
