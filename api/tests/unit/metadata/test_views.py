@@ -3,9 +3,16 @@ import json
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APIClient
 
-from metadata.models import MetadataModelField, MetadataModelFieldRequirement
+from metadata.models import (
+    MetadataField,
+    MetadataModelField,
+    MetadataModelFieldRequirement,
+)
 from metadata.views import METADATA_SUPPORTED_MODELS
+from organisations.models import Organisation
+from projects.models import Project
 
 
 def test_can_create_metadata_field(admin_client, organisation):
@@ -301,12 +308,12 @@ def test_create_model_metadata_field_for_environments(
 
 
 def test_create_model_metadata_field_for_features(
-    admin_client,
-    a_metadata_field,
-    organisation,
-    project_content_type,
-    feature_content_type,
-    project,
+    admin_client: APIClient,
+    a_metadata_field: MetadataField,
+    organisation: Organisation,
+    project_content_type: ContentType,
+    feature_content_type: ContentType,
+    project: Project,
 ):
     # Given
     url = reverse(
@@ -334,12 +341,12 @@ def test_create_model_metadata_field_for_features(
 
 
 def test_create_model_metadata_field_for_segments(
-    admin_client,
-    a_metadata_field,
-    organisation,
-    project_content_type,
-    segment_content_type,
-    project,
+    admin_client: APIClient,
+    a_metadata_field: MetadataField,
+    organisation: Organisation,
+    project_content_type: ContentType,
+    segment_content_type: ContentType,
+    project: Project,
 ):
     # Given
     url = reverse(

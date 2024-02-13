@@ -38,6 +38,7 @@ from features.models import (
 )
 from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.models import EnvironmentFeatureVersion
+from metadata.models import MetadataModelField
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
@@ -2229,8 +2230,8 @@ def test_cannot_update_feature_of_a_feature_state(
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_feature_with_required_metadata_returns_400(
-    project,
-    client,
+    project: Project,
+    client: APIClient,
     required_a_segment_metadata_field,
 ):
     # Given
@@ -2261,9 +2262,9 @@ def test_create_feature_with_required_metadata_returns_400(
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_feature_with_optional_metadata_returns_201(
-    project,
-    client,
-    optional_b_feature_metadata_field,
+    project: Project,
+    client: APIClient,
+    optional_b_feature_metadata_field: MetadataModelField,
 ):
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
@@ -2297,9 +2298,9 @@ def test_create_feature_with_optional_metadata_returns_201(
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_feature_with_required_metadata_returns_201(
-    project,
-    client,
-    required_a_feature_metadata_field,
+    project: Project,
+    client: APIClient,
+    required_a_feature_metadata_field: MetadataModelField,
 ):
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])

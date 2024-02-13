@@ -7,11 +7,14 @@ from django.urls import reverse
 from flag_engine.segments.constants import EQUAL
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature
+from metadata.models import MetadataModelField
+from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 from util.mappers import map_identity_to_identity_document
 
@@ -581,9 +584,9 @@ def test_update_segment_delete_existing_rule(project, client, segment, segment_r
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_segment_with_required_metadata_returns_201(
-    project,
-    client,
-    required_a_segment_metadata_field,
+    project: Project,
+    client: APIClient,
+    required_a_segment_metadata_field: MetadataModelField,
 ):
     # Given
     url = reverse("api-v1:projects:project-segments-list", args=[project.id])
@@ -653,9 +656,9 @@ def test_create_segment_with_required_metadata_returns_400(
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_segment_with_optional_metadata_returns_201(
-    project,
-    client,
-    optional_b_segment_metadata_field,
+    project: Project,
+    client: APIClient,
+    optional_b_segment_metadata_field: MetadataModelField,
 ):
     # Given
     url = reverse("api-v1:projects:project-segments-list", args=[project.id])
