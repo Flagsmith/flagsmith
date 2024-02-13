@@ -475,12 +475,12 @@ def task_processor_synchronously(settings):
 
 
 @pytest.fixture()
-def a_metadata_field(organisation: Organisation):
+def a_metadata_field(organisation: Organisation) -> MetadataField:
     return MetadataField.objects.create(name="a", type="int", organisation=organisation)
 
 
 @pytest.fixture()
-def b_metadata_field(organisation: Organisation):
+def b_metadata_field(organisation: Organisation) -> MetadataField:
     return MetadataField.objects.create(name="b", type="str", organisation=organisation)
 
 
@@ -491,7 +491,7 @@ def required_a_environment_metadata_field(
     environment: Environment,
     project: Project,
     project_content_type: ContentType,
-):
+) -> MetadataModelField:
     environment_type = ContentType.objects.get_for_model(environment)
     model_field = MetadataModelField.objects.create(
         field=a_metadata_field,
@@ -511,7 +511,7 @@ def required_a_feature_metadata_field(
     feature_content_type: ContentType,
     project: Project,
     project_content_type: ContentType,
-):
+) -> MetadataModelField:
     model_field = MetadataModelField.objects.create(
         field=a_metadata_field,
         content_type=feature_content_type,
@@ -531,7 +531,7 @@ def required_a_segment_metadata_field(
     segment_content_type: ContentType,
     project: Project,
     project_content_type: ContentType,
-):
+) -> MetadataModelField:
     model_field = MetadataModelField.objects.create(
         field=a_metadata_field,
         content_type=segment_content_type,
@@ -545,7 +545,9 @@ def required_a_segment_metadata_field(
 
 
 @pytest.fixture()
-def optional_b_feature_metadata_field(organisation: Organisation, b_metadata_field: MetadataField, feature: Feature):
+def optional_b_feature_metadata_field(
+    organisation: Organisation, b_metadata_field: MetadataField, feature: Feature
+) -> MetadataModelField:
     feature_type = ContentType.objects.get_for_model(feature)
 
     return MetadataModelField.objects.create(
@@ -555,7 +557,9 @@ def optional_b_feature_metadata_field(organisation: Organisation, b_metadata_fie
 
 
 @pytest.fixture()
-def optional_b_segment_metadata_field(organisation: Organisation, b_metadata_field: MetadataField, segment: Segment):
+def optional_b_segment_metadata_field(
+    organisation: Organisation, b_metadata_field: MetadataField, segment: Segment
+) -> MetadataModelField:
     segment_type = ContentType.objects.get_for_model(segment)
 
     return MetadataModelField.objects.create(
@@ -565,7 +569,11 @@ def optional_b_segment_metadata_field(organisation: Organisation, b_metadata_fie
 
 
 @pytest.fixture()
-def optional_b_environment_metadata_field(organisation: Organisation, b_metadata_field: MetadataField, environment: Environment):
+def optional_b_environment_metadata_field(
+    organisation: Organisation,
+    b_metadata_field: MetadataField,
+    environment: Environment,
+) -> MetadataModelField:
     environment_type = ContentType.objects.get_for_model(environment)
 
     return MetadataModelField.objects.create(
@@ -575,7 +583,10 @@ def optional_b_environment_metadata_field(organisation: Organisation, b_metadata
 
 
 @pytest.fixture()
-def environment_metadata_a(environment: Environment, required_a_environment_metadata_field: MetadataModelFieldRequirement) -> Metadata:
+def environment_metadata_a(
+    environment: Environment,
+    required_a_environment_metadata_field: MetadataModelFieldRequirement,
+) -> Metadata:
     environment_type = ContentType.objects.get_for_model(environment)
     return Metadata.objects.create(
         object_id=environment.id,
@@ -586,7 +597,10 @@ def environment_metadata_a(environment: Environment, required_a_environment_meta
 
 
 @pytest.fixture()
-def environment_metadata_b(environment: Environment, optional_b_environment_metadata_field: MetadataModelFieldRequirement)-> Metadata:
+def environment_metadata_b(
+    environment: Environment,
+    optional_b_environment_metadata_field: MetadataModelFieldRequirement,
+) -> Metadata:
     environment_type = ContentType.objects.get_for_model(environment)
     return Metadata.objects.create(
         object_id=environment.id,
