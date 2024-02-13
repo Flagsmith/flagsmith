@@ -10,8 +10,8 @@ from pytest_django.fixtures import SettingsWrapper
     reason="Skip migration tests to speed up tests where necessary",
 )
 def test_create_whitelisted_segments_migration(
-        migrator: Migrator,
-        settings: SettingsWrapper,
+    migrator: Migrator,
+    settings: SettingsWrapper,
 ) -> None:
     # Given - The migration state is at 0020 (before the migration we want to test).
     old_state = migrator.apply_initial_migration(
