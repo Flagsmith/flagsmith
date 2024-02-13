@@ -126,7 +126,9 @@ class SegmentSerializer(serializers.ModelSerializer):
                 child_rules, rule=child_rule, is_create=is_create
             )
 
-    def _update_or_create_metadata(self, metadata_data, segment=None):
+    def _update_or_create_metadata(
+        self, metadata_data: typing.Dict, segment: typing.Optional[Segment] = None
+    ) -> None:
         for metadata_item in metadata_data:
             metadata_id = metadata_item.pop("id", None)
             if metadata_item.get("delete"):
