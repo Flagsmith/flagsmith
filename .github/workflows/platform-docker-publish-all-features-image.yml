@@ -41,7 +41,7 @@ jobs:
         with:
           repository: flagsmith/flagsmith-workflows
           token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-          ref: ${{ env.flagsmith_saml_revision }}
+          ref: ${{ env.FLAGSMITH_WORKFLOWS_REVISION }}
           path: ./flagsmith-workflows
 
       - name: Integrate Workflows Logic module
