@@ -1,6 +1,6 @@
 import React, { FC, ReactNode } from 'react'
 import { filter } from 'lodash'
-import { Tag as TTag } from 'common/types/responses'
+import { Tag as TTag, TagStrategy } from 'common/types/responses'
 import { useGetTagsQuery } from 'common/services/useTag'
 import Tag from './Tag'
 import Button from 'components/base/forms/Button'
@@ -10,6 +10,8 @@ type TagFilterType = {
   onClearAll?: () => void
   showClearAll?: boolean
   showUntagged?: boolean
+  tagStrategy: TagStrategy
+  onChangeStrategy?: (value: TagStrategy) => void
   projectId: string
   onChange: (value: (number | string)[]) => void
   children?: ReactNode
@@ -18,10 +20,12 @@ type TagFilterType = {
 const TagFilter: FC<TagFilterType> = ({
   children,
   onChange,
+  onChangeStrategy,
   onClearAll,
   projectId,
   showClearAll,
   showUntagged,
+  tagStrategy,
   value: _value,
 }) => {
   const { data: projectTags } = useGetTagsQuery({
@@ -48,6 +52,39 @@ const TagFilter: FC<TagFilterType> = ({
         <Row>
           <Flex>
             <Row className='tag-filter-list'>
+              {!!onChangeStrategy && (
+                <div style={{ width: 140 }}>
+                  <Select
+                    size='select-xxsm'
+                    styles={{
+                      control: (base) => ({
+                        ...base,
+                        '&:hover': { borderColor: '$bt-brand-secondary' },
+                        border: '1px solid $bt-brand-secondary',
+                        height: 18,
+                      }),
+                    }}
+                    onChange={(v) => {
+                      onChangeStrategy(v!.value)
+                    }}
+                    value={{
+                      label:
+                        tagStrategy === 'INTERSECTION' ? 'Has all' : 'Has some',
+                      value: tagStrategy,
+                    }}
+                    options={[
+                      {
+                        label: 'Has all',
+                        value: 'INTERSECTION',
+                      },
+                      {
+                        label: 'Has some',
+                        value: 'UNION',
+                      },
+                    ]}
+                  />
+                </div>
+              )}
               {unTagged && (
                 <Tag
                   key={unTagged.id}

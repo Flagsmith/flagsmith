@@ -14,7 +14,14 @@ const TableFilterItem: FC<TableFilterItemType> = ({
   title,
 }) => {
   return (
-    <a href={'#'} onClick={onClick} className='popover-bt__list-item'>
+    <a
+      href={'#'}
+      onClick={(e) => {
+        e.preventDefault()
+        onClick()
+      }}
+      className='popover-bt__list-item'
+    >
       <Row space className='px-3 no-wrap overflow-hidden py-2'>
         {title}
         <div>

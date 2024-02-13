@@ -112,6 +112,28 @@
     }
   }
 }
+.select-xxsm .react-select {
+  &__control {
+    height: $input-height-xxsm;
+    min-height: $input-height-xxsm;
+  }
+  &__value-container {
+    padding: 0px 0px 0px 12px;
+  }
+  &__single-value {
+    line-height: $line-height-xsm;
+  }
+  &__input {
+    line-height: $line-height-xsm;
+  }
+  &__indicator {
+    padding-left: 6px;
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
 .select-lg .react-select {
   &__control {
     height: $input-height-lg;

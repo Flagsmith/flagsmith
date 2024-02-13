@@ -5,7 +5,6 @@ import className = ReactMarkdown.propTypes.className
 
 interface RadioProps {
   label: string
-  value: boolean
   onChange: (value: boolean) => void
   checked: boolean
 }

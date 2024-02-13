@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom'
 
 import AccountStore from 'common/stores/account-store'
 import { useHasPermission } from 'common/providers/Permission'
-import Icon from 'components/Icon'
+import Icon from './Icon'
 
 const OrganisationLink: FC = () => {
   const organisation = AccountStore.getOrganisation()
