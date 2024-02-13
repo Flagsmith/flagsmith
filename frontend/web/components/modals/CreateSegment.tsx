@@ -110,7 +110,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     createSegment,
     {
       data: createSegmentData,
-      isError: createError,
+      error: createError,
       isLoading: creating,
       isSuccess: createSuccess,
     },
@@ -119,7 +119,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     editSegment,
     {
       data: updateSegmentData,
-      isError: updateError,
+      error: updateError,
       isLoading: updating,
       isSuccess: updateSuccess,
     },
@@ -132,7 +132,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [rules, setRules] = useState<Segment['rules']>(segment.rules)
   const [tab, setTab] = useState(0)
 
-  const isError = createError || updateError
+  const error = createError || updateError
   const isLimitReached =
     ProjectStore.getTotalSegments() >= ProjectStore.getMaxSegmentsAllowed()
 
@@ -416,12 +416,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
         {rulesEl}
       </div>
 
-      {isError && (
-        <ErrorMessage
-          error='Error creating segment, please ensure you have entered a trait and
-          value for each rule.'
-        />
-      )}
+      <ErrorMessage error={error} />
       {isEdit && <JSONReference title={'Segment'} json={segment} />}
       {readOnly ? (
         <div className='text-right'>
