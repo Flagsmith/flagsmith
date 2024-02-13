@@ -514,4 +514,5 @@ export default {
     '#AAC200',
     '#DE3163',
   ],
+  untaggedTag: { color: '#dedede', label: 'Untagged' },
 }

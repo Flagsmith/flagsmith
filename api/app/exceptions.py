@@ -1,0 +1,2 @@
+class ImproperlyConfiguredError(RuntimeError):
+    pass
