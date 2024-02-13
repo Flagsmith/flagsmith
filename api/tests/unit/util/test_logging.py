@@ -35,7 +35,7 @@ def test_json_formatter_with_old_style_placeholders():
         level=logging.INFO,
         pathname="example.py",
         lineno=42,
-        msg="This is a test with placeholders: %s and %s",
+        msg="This is a test with old-style placeholders: %s and %s",
         args=("arg1", "arg2"),
         exc_info=None,
     )
@@ -62,4 +62,7 @@ def test_json_formatter_arguments_with_new_style_placeholders():
 
     formatted_message = json_formatter.format(log_record)
     parsed_json = json.loads(formatted_message)
-    assert parsed_json["message"] == "This is a test with placeholders: arg1 and arg2"
+    assert (
+        parsed_json["message"]
+        == "This is a test with new-style placeholders: arg1 and arg2"
+    )
