@@ -318,7 +318,6 @@ The following table lists the configurable parameters of the chart and their def
 | `frontend.image.tag`                               | docker image tag for flagsmith frontend                          | appVersion                     |
 | `frontend.image.imagePullPolicy`                   |                                                                  | `IfNotPresent`                 |
 | `frontend.image.imagePullSecrets`                  |                                                                  | `[]`                           |
-| `frontend.logging.format`                          | Outputted log format, either `json` or `generic`                 | `{}`                           |
 | `frontend.replicacount`                            | number of replicas for the flagsmith frontend, `null` to unset   | 1                              |
 | `frontend.deploymentStrategy`                      | See "Deployment strategy" above                                  |                                |
 | `frontend.resources`                               | resources per pod for the flagsmith frontend                     | `{}`                           |
