@@ -10,6 +10,7 @@ SDK_ENDPOINTS = {
     "/api/v1/traits/bulk",
     "/api/v1/environment-document",
     "/api/v1/analytics/flags",
+    "/api/v2/analytics/flags",
 }
 
 
