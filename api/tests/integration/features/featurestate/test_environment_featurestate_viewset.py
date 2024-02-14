@@ -34,4 +34,4 @@ def test_update_feature_state_value_updates_feature_state_value(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    response.json()["feature_state_value"] == new_value
+    assert response.json()["feature_state_value"] == new_value

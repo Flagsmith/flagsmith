@@ -1,7 +1,8 @@
 import pytest
-from core.redis_cluster import ClusterConnectionFactory
-from django.core.exceptions import ImproperlyConfigured
+from core.redis_cluster import ClusterConnectionFactory, SafeRedisClusterClient
+from django_redis.exceptions import ConnectionInterrupted
 from pytest_mock import MockerFixture
+from redis.exceptions import RedisClusterException
 
 
 def test_cluster_connection_factory__connect_cache(mocker: MockerFixture):
@@ -51,7 +52,11 @@ def test_cluster_connection_factory__get_connection_with_non_conflicting_params(
 
     # Then
     mockRedisCluster.assert_called_once_with(
-        decode_responses=False, host="localhost", port=6379
+        decode_responses=False,
+        host="localhost",
+        port=6379,
+        socket_keepalive=True,
+        socket_timeout=0.2,
     )
 
 
@@ -66,7 +71,7 @@ def test_cluster_connection_factory__get_connection_with_conflicting_params(
     connection_params = {"decode_responses": True}
 
     # When
-    with pytest.raises(ImproperlyConfigured):
+    with pytest.raises(ConnectionInterrupted):
         connection_factory.get_connection(connection_params)
 
     # Then - ImproperlyConfigured exception is raised
@@ -85,3 +90,56 @@ def test_disconnect(mocker: MockerFixture):
 
     # Then
     mock_disconnect_connection_pools.assert_called_once()
+
+
+def test_safe_redis_cluster__safe_methods_raise_connection_interrupted(
+    mocker: MockerFixture, settings
+):
+    # Given
+    # Internal client that will raise RedisClusterException on every call
+    mocked_redis_cluster_client = mocker.MagicMock(side_effect=RedisClusterException)
+
+    safe_redis_cluster_client = SafeRedisClusterClient("redis://test", {}, None)
+
+    # Replace the internal client with the mocked one
+    safe_redis_cluster_client.get_client = mocked_redis_cluster_client
+
+    # Mock the backend as well
+    safe_redis_cluster_client._backend = mocker.MagicMock()
+
+    # When / Then
+    with pytest.raises(ConnectionInterrupted):
+        safe_redis_cluster_client.get("key")
+
+    with pytest.raises(ConnectionInterrupted):
+        safe_redis_cluster_client.set("key", "value")
+
+    with pytest.raises(ConnectionInterrupted):
+        safe_redis_cluster_client.incr_version("key")
+
+    with pytest.raises(ConnectionInterrupted):
+        safe_redis_cluster_client.delete("key")
+
+    with pytest.raises(ConnectionInterrupted):
+        safe_redis_cluster_client.delete_pattern("key")
+
+    with pytest.raises(ConnectionInterrupted):
+        safe_redis_cluster_client.delete_many(["key"])
+
+    with pytest.raises(ConnectionInterrupted):
+        safe_redis_cluster_client.clear()
+
+    with pytest.raises(ConnectionInterrupted):
+        safe_redis_cluster_client.get_many(["key"])
+
+    with pytest.raises(ConnectionInterrupted):
+        safe_redis_cluster_client.set_many({"key": "value"})
+
+    with pytest.raises(ConnectionInterrupted):
+        safe_redis_cluster_client.incr("key")
+
+    with pytest.raises(ConnectionInterrupted):
+        safe_redis_cluster_client.has_key("key")
+
+    with pytest.raises(ConnectionInterrupted):
+        safe_redis_cluster_client.keys("key")
