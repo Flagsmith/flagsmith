@@ -219,7 +219,7 @@ const CreateEditIntegration = class extends Component {
                     id={field.label.replace(/ /g, '')}
                     ref={(e) => (this.input = e)}
                     value={
-                      typeof this.state.data[field.key] === 'undefined'
+                      typeof this.state.data[field.key] !== 'undefined'
                         ? this.state.data[field.key]
                         : field.default
                     }
