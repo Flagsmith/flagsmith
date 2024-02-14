@@ -10,10 +10,7 @@ export const groupWithRoleService = service
         Res['groupWithRole'],
         Req['deleteGroupWithRole']
       >({
-        invalidatesTags: [
-          { type: 'GroupWithRole' },
-          { type: 'RolePermissionGroup' },
-        ],
+        invalidatesTags: [{ type: 'GroupWithRole' }, { type: 'RolePermissionGroup' }],
         query: (query: Req['deleteGroupWithRole']) => ({
           body: query,
           method: 'DELETE',
