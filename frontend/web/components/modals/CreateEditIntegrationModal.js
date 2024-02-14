@@ -61,6 +61,7 @@ const CreateEditIntegration = class extends Component {
     const handleOauthSignature = (res, isProject) => {
       const signature = res && res.signature
       if (signature) {
+        q
         const postfix = `?redirect_url=${encodeURIComponent(
           `${document.location.href}?environment=${this.state.data.flagsmithEnvironment}&configure=${this.props.id}`,
         )}&signature=${signature}`
@@ -217,7 +218,11 @@ const CreateEditIntegration = class extends Component {
                   <Input
                     id={field.label.replace(/ /g, '')}
                     ref={(e) => (this.input = e)}
-                    value={this.state.data[field.key] || field.default}
+                    value={
+                      typeof this.state.data[field.key] === 'undefined'
+                        ? this.state.data[field.key]
+                        : field.default
+                    }
                     onChange={(e) => {
                       this.update(field.key, e)
                     }}
