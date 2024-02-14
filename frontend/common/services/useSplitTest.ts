@@ -1,4 +1,5 @@
 import {
+  PagedResponse,
   PConfidence,
   Res,
   ServersideSplitTestResult,
@@ -17,73 +18,14 @@ export const splitTestService = service
         providesTags: (res, _, q) => [
           { id: q?.conversion_event_type_id, type: 'SplitTest' },
         ],
-        // query: (query: Req['getSplitTest']) => ({
-        //   url: `split-testing/${Utils.toParam(query)}`,
-        // }),
-        queryFn: () => {
-          const response: ServersideSplitTestResult[] = [
-            {
-              'conversion_count': 12,
-              'evaluation_count': 123,
-              'feature': {
-                'created_date': '2024-01-31T19:59:33.052928Z',
-                'default_enabled': true,
-                'description': null,
-                'id': 4,
-                'initial_value': 'feature',
-                'name': 'single_feature_for_test',
-                'type': 'MULTIVARIATE',
-              },
-              'pvalue': 0.2,
-              'value_data': {
-                'boolean_value': null,
-                'integer_value': null,
-                'string_value': 'feature',
-                'type': 'unicode',
-              },
-            },
-            {
-              'conversion_count': 10,
-              'evaluation_count': 100,
-              'feature': {
-                'created_date': '2024-01-31T19:59:33.052928Z',
-                'default_enabled': true,
-                'description': null,
-                'id': 4,
-                'initial_value': 'feature',
-                'name': 'single_feature_for_test',
-                'type': 'MULTIVARIATE',
-              },
-              'pvalue': 0.2,
-              'value_data': {
-                'boolean_value': null,
-                'integer_value': null,
-                'string_value': 'mv_feature_option1',
-                'type': 'unicode',
-              },
-            },
-            {
-              'conversion_count': 18,
-              'evaluation_count': 111,
-              'feature': {
-                'created_date': '2024-01-31T19:59:33.052928Z',
-                'default_enabled': true,
-                'description': null,
-                'id': 4,
-                'initial_value': 'feature',
-                'name': 'single_feature_for_test',
-                'type': 'MULTIVARIATE',
-              },
-              'pvalue': 0.2,
-              'value_data': {
-                'boolean_value': null,
-                'integer_value': null,
-                'string_value': 'mv_feature_option2',
-                'type': 'unicode',
-              },
-            },
-          ]
-          const groupedFeatures = groupBy(response, (item) => item.feature.id)
+        query: (query: Req['getSplitTest']) => ({
+          url: `split-testing/${Utils.toParam(query)}`,
+        }),
+        transformResponse: (res: PagedResponse<ServersideSplitTestResult>) => {
+          const groupedFeatures = groupBy(
+            res.results,
+            (item) => item.feature.id,
+          )
 
           const results: SplitTestResult[] = Object.keys(groupedFeatures).map(
             (group) => {
@@ -138,12 +80,8 @@ export const splitTestService = service
             },
           )
           return {
-            data: {
-              count: 3,
-              next: null,
-              previous: null,
-              results,
-            },
+            ...res,
+            results,
           }
         },
       }),
