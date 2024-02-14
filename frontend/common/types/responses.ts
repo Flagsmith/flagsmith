@@ -369,7 +369,8 @@ export type SplitTestResult = {
     name: string
     type: string
   }
-  max_conversion: number
+  max_conversion_percentage: number
+  max_conversion_count: number
   conversion_variance: number
   max_conversion_pvalue: number
 }

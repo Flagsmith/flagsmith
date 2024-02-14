@@ -16,6 +16,11 @@ import PanelSearch from 'components/PanelSearch'
 import ErrorMessage from 'components/ErrorMessage'
 import useSearchThrottle from 'common/useSearchThrottle'
 import { useGetSplitTestQuery } from 'common/services/useSplitTest'
+import { IonIcon } from '@ionic/react'
+import { chevronDown, chevronForward } from 'ionicons/icons'
+import Format from 'common/utils/format'
+import Confidence from 'components/Confidence'
+import FeatureValue from 'components/FeatureValue'
 
 type AuditLogType = {
   router: RouterChildContext['router']
@@ -28,7 +33,8 @@ type AuditLogType = {
 }
 
 const pageSize = 10
-const widths = [200, 100]
+const widths = [200, 200, 150]
+const innerWidths = [200, 150, 150]
 const AuditLogPage: FC<AuditLogType> = (props) => {
   const projectId = props.match.params.projectId
   const { search, searchInput, setSearchInput } = useSearchThrottle()
@@ -36,22 +42,82 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
     number | null
   >(null)
 
+  const [expanded, setExpanded] = useState(-1)
+
   const [page, setPage] = useState(1)
   const { data, error, isLoading } = useGetSplitTestQuery(
     {
       conversion_event_type_id: `${conversion_event_type_id}`,
       page,
-      page_size: pageSize,
+      page_size: 1000,
     },
     { skip: !conversion_event_type_id },
   )
 
-  const renderRow = (item: SplitTestResult) => (
-    <tr>
-      <td>{item.feature.name}</td>
-      <td>{item.max_conversion}</td>
-      <td>{item.value_data}</td>
-    </tr>
+  const renderRow = (item: SplitTestResult, i: number) => (
+    <>
+      <div
+        onClick={() => {
+          setExpanded(expanded === i ? -1 : i)
+        }}
+        className='flex-row align-items-center space list-item clickable py-2'
+      >
+        <div className='px-2 user-select-none flex-row d-flex flex-fill'>
+          <span
+            className='d-flex align-items-end text-center'
+            style={{ lineHeight: '24px', width: 24 }}
+          >
+            <IonIcon icon={expanded === i ? chevronDown : chevronForward} />
+          </span>
+
+          {item.feature.name}
+        </div>
+        <div className='table-column' style={{ width: widths[0] }}>
+          {item.max_conversion_count}({item.max_conversion_percentage}%)
+        </div>
+        <div className='table-column' style={{ width: widths[1] }}>
+          {item.conversion_variance}%
+        </div>
+        <div className='table-column' style={{ width: widths[2] }}>
+          <Confidence pValue={item.max_conversion_pvalue} />
+        </div>
+      </div>
+      {expanded === i && (
+        <div className='px-2'>
+          <Row className='table-header'>
+            <div className='table-column flex-fill'>Value</div>
+            <div className='table-column' style={{ width: innerWidths[0] }}>
+              Conversion
+            </div>
+            <div className='table-column' style={{ width: innerWidths[1] }}>
+              Total Events
+            </div>
+            <div className='table-column' style={{ width: innerWidths[2] }}>
+              Conversion %
+            </div>
+          </Row>
+          {item.results?.map((v, i) => (
+            <div
+              key={i}
+              className='flex-row align-items-center space list-item clickable py-2'
+            >
+              <div className='table-column flex-fill'>
+                <FeatureValue value={Utils.featureStateToValue(v.value_data)} />
+              </div>
+              <div className='table-column' style={{ width: innerWidths[0] }}>
+                {v.conversion_count}
+              </div>
+              <div className='table-column' style={{ width: innerWidths[1] }}>
+                {v.evaluation_count}
+              </div>
+              <div className='table-column' style={{ width: innerWidths[2] }}>
+                {v.conversion_percentage}%
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
   )
   return (
     <div className='app-container container'>
@@ -80,25 +146,19 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
             onChange={(e: InputEvent) => {
               setSearchInput(Utils.safeParseEventValue(e))
             }}
-            paging={{
-              ...(data || {}),
-              page,
-              pageSize,
-            }}
-            nextPage={() => {
-              setPage(page + 1)
-            }}
-            prevPage={() => {
-              setPage(page - 1)
-            }}
             goToPage={(page: number) => {
               setPage(page)
             }}
-            filterRow={() => true}
+            filterRow={(value: SplitTestResult, search: string) => {
+              return value.feature.name.toLowerCase().includes(search)
+            }}
             renderRow={renderRow}
             header={
               <Row className='table-header'>
                 <div className='table-column flex-fill'>Feature</div>
+                <div className='table-column' style={{ width: widths[0] }}>
+                  Max Conversion
+                </div>
                 <div className='table-column' style={{ width: widths[1] }}>
                   Conversion Variance
                 </div>

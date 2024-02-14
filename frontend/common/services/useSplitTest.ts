@@ -63,7 +63,7 @@ export const splitTestService = service
               },
             },
             {
-              'conversion_count': 20,
+              'conversion_count': 18,
               'evaluation_count': 111,
               'feature': {
                 'created_date': '2024-01-31T19:59:33.052928Z',
@@ -90,7 +90,8 @@ export const splitTestService = service
               const features = groupedFeatures[group]
               let minP = Number.MAX_SAFE_INTEGER
               let maxP = Number.MIN_SAFE_INTEGER
-              let maxConversion = Number.MIN_SAFE_INTEGER
+              let maxConversionCount = Number.MIN_SAFE_INTEGER
+              let maxConversionPercentage = Number.MIN_SAFE_INTEGER
               let minConversion = Number.MAX_SAFE_INTEGER
               let maxConversionPValue = 0
               const results = sortBy(
@@ -106,12 +107,13 @@ export const splitTestService = service
                         (v.conversion_count / v.evaluation_count) * 100,
                       )
                     : 0
-                  if (conversion > maxConversion) {
-                    maxConversion = conversion
+                  if (conversion > maxConversionPercentage) {
+                    maxConversionCount = v.conversion_count
+                    maxConversionPercentage = conversion
                     maxConversionPValue = v.pvalue
                   }
                   if (conversion < minConversion) {
-                    minConversion = minConversion
+                    minConversion = conversion
                   }
 
                   return {
@@ -126,11 +128,12 @@ export const splitTestService = service
                 'conversion_count',
               )
               return {
-                conversion_variance: minConversion,
+                conversion_variance: maxConversionPercentage - minConversion,
                 feature: features[0].feature,
-                max_conversion: maxConversion,
+                max_conversion_count: maxConversionCount,
+                max_conversion_percentage: maxConversionPercentage,
                 max_conversion_pvalue: maxConversionPValue,
-                results,
+                results: sortBy(results, (v) => -v.conversion_count),
               }
             },
           )
