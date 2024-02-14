@@ -539,18 +539,23 @@ if LOGGING_CONFIGURATION_FILE:
     with open(LOGGING_CONFIGURATION_FILE, "r") as f:
         LOGGING = json.loads(f.read())
 else:
+    LOG_FORMAT = env.str("LOG_FORMAT", default="generic")
     LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
         "formatters": {
             "generic": {"format": "%(name)-12s %(levelname)-8s %(message)s"},
+            "json": {
+                "()": "util.logging.JsonFormatter",
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+            },
         },
         "handlers": {
             "console": {
                 "level": LOG_LEVEL,
                 "class": "logging.StreamHandler",
-                "formatter": "generic",
+                "formatter": LOG_FORMAT,
             }
         },
         "loggers": {
