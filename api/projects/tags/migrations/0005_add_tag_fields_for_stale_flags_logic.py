@@ -37,14 +37,6 @@ def mark_existing_tags_as_permanent(
     tag_class.objects.bulk_update(to_update, fields=["is_permanent"])
 
 
-def populate_default_tag_type(
-    apps: Apps, schema_editor: BaseDatabaseSchemaEditor
-) -> None:
-    apps.get_model("tags", "tag").objects.filter(type__isnull=True).update(
-        type=TagType.NONE.value
-    )
-
-
 class Migration(migrations.Migration):
     dependencies = [
         ("tags", "0004_add_uuid_field"),
@@ -75,22 +67,9 @@ class Migration(migrations.Migration):
             name="type",
             field=models.CharField(
                 choices=[("NONE", "None"), ("STALE", "Stale")],
-                null=True,
                 help_text="Field used to provide a consistent identifier for the FE and API to use for business logic.",
                 max_length=100,
-            ),
-        ),
-        migrations.RunPython(
-            populate_default_tag_type, reverse_code=migrations.RunPython.noop
-        ),
-        migrations.AlterField(
-            model_name="tag",
-            name="type",
-            field=models.CharField(
-                choices=[("NONE", "None"), ("STALE", "Stale")],
                 default="NONE",
-                help_text="Field used to provide a consistent identifier for the FE and API to use for business logic.",
-                max_length=100,
             ),
         ),
     ]
