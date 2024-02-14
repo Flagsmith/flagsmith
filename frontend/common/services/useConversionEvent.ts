@@ -12,29 +12,8 @@ export const conversionEventService = service
         Req['getConversionEvents']
       >({
         providesTags: [{ id: 'LIST', type: 'ConversionEvent' }],
-        // query: (q) => ({
-        //   url: `conversion_event_types`,
-        // }),
-        queryFn: () => ({
-          data: {
-            'count': 2,
-            'next': null,
-            'previous': null,
-            'results': [
-              {
-                'created_at': '2024-01-31T19:58:49.009696Z',
-                'id': 5,
-                'name': 'free_plan',
-                'updated_at': '2024-01-31T19:58:49.009723Z',
-              },
-              {
-                'created_at': '2024-01-31T19:58:49.010338Z',
-                'id': 6,
-                'name': 'paid_plan',
-                'updated_at': '2024-01-31T19:58:49.010352Z',
-              },
-            ],
-          },
+        query: ({ q }) => ({
+          url: `conversion_event_types?${Utils.toParam(q)}`,
         }),
       }),
       // END OF ENDPOINTS
