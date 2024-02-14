@@ -226,7 +226,7 @@ def test_send_org_subscription_cancelled_alert(db: None, mocker: MockerFixture) 
     )
 
 
-def test_handle_api_usage_notifications(
+def test_handle_api_usage_notifications_below_100(
     mocker: MockerFixture,
     organisation: Organisation,
 ) -> None:
@@ -294,6 +294,89 @@ def test_handle_api_usage_notifications(
     ).first()
 
     assert api_usage_notification.percent_usage == 90
+
+    # Now re-run the usage to make sure the notification isn't resent.
+    handle_api_usage_notifications()
+
+    assert (
+        OranisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 1
+    )
+    assert OranisationAPIUsageNotification.objects.first() == api_usage_notification
+
+
+def test_handle_api_usage_notifications_above_100(
+    mocker: MockerFixture,
+    organisation: Organisation,
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+    )
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 105
+    mock_send_mail = mocker.patch(
+        "organisations.tasks.send_mail",
+    )
+    assert not OranisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+    ).exists()
+
+    # When
+    handle_api_usage_notifications()
+
+    # Then
+    mock_api_usage.assert_called_once_with(organisation.id, "14d")
+    mock_send_mail.assert_called_once_with(
+        subject="Flagsmith API use has reached 100%",
+        message=(
+            "Hi there,\n\nThe API usage for Test Org has breached "
+            "100% within the current subscription period. Please "
+            "upgrade your organisations account to ensure "
+            "continued service.\n\nThank you!\n\n"
+            "The Flagsmith Team\n"
+        ),
+        html_message=(
+            "<table>\n\n        <tr>\n\n               <td>Hi "
+            "there,</td>\n\n        </tr>\n\n        <tr>\n\n    "
+            "           <td>\n                 The API usage for Test Org "
+            "has breached\n                 100% within the "
+            "current subscription period.\n                 "
+            "Please upgrade your organisations account to ensure "
+            "continued service.\n               </td>\n\n\n      "
+            "  </tr>\n\n        <tr>\n\n               <td>"
+            "Thank you!</td>\n\n        </tr>\n\n        <tr>\n\n"
+            "               <td>The Flagsmith Team</td>\n\n        "
+            "</tr>\n\n</table>\n"
+        ),
+        from_email="noreply@flagsmith.com",
+        # Extra staff included because threshold is over 100.
+        recipient_list=["admin@example.com", "staff@example.com"],
+        fail_silently=True,
+    )
+
+    assert (
+        OranisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 1
+    )
+    api_usage_notification = OranisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+    ).first()
+
+    assert api_usage_notification.percent_usage == 100
 
     # Now re-run the usage to make sure the notification isn't resent.
     handle_api_usage_notifications()
