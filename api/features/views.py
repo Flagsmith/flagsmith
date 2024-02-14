@@ -67,7 +67,7 @@ from .serializers import (
     ProjectFeatureSerializer,
     SDKFeatureStateSerializer,
     SDKFeatureStatesQuerySerializer,
-    UpdateFeatureSerializer,
+    UpdateFeatureSerializerWithMetadata,
     WritableNestedFeatureStateSerializer,
 )
 from .tasks import trigger_feature_state_change_webhooks
@@ -107,8 +107,8 @@ class FeatureViewSet(viewsets.ModelViewSet):
             "list": FeatureSerializerWithMetadata,
             "retrieve": FeatureSerializerWithMetadata,
             "create": FeatureSerializerWithMetadata,
-            "update": UpdateFeatureSerializer,
-            "partial_update": UpdateFeatureSerializer,
+            "update": UpdateFeatureSerializerWithMetadata,
+            "partial_update": UpdateFeatureSerializerWithMetadata,
         }.get(self.action, ProjectFeatureSerializer)
 
     def get_queryset(self):

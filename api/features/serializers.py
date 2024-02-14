@@ -268,7 +268,7 @@ class FeatureSerializerWithMetadata(
         )
 
 
-class UpdateFeatureSerializer(FeatureSerializerWithMetadata):
+class UpdateFeatureSerializerWithMetadata(FeatureSerializerWithMetadata):
     """prevent users from changing certain values after creation"""
 
     class Meta(FeatureSerializerWithMetadata.Meta):
