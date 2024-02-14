@@ -94,19 +94,29 @@ def send_admin_api_usage_notification(
     """
     Send notification to admins that the API has breached a threshold.
     """
-    recipient_list = list(
-        FFAdminUser.objects.filter(
-            userorganisation__organisation=organisation,
-            userorganisation__role=OrganisationRole.ADMIN,
-        ).values_list("email", flat=True)
-    )
 
     if matched_threshold < 100:
         message = "organisations/api_usage_notification.txt"
         html_message = "organisations/api_usage_notification.html"
+
+        # Since threshold < 100 only include admins.
+        recipient_list = list(
+            FFAdminUser.objects.filter(
+                userorganisation__organisation=organisation,
+                userorganisation__role=OrganisationRole.ADMIN,
+            ).values_list("email", flat=True)
+        )
     else:
         message = "organisations/api_usage_notification_limit.txt"
         html_message = "organisations/api_usage_notification_limit.html"
+
+        # Since threshold >= 100 include everyone in the organisation.
+        recipient_list = list(
+            FFAdminUser.objects.filter(
+                userorganisation__organisation=organisation,
+            ).values_list("email", flat=True)
+        )
+
     context = {
         "organisation": organisation,
         "matched_threshold": matched_threshold,
