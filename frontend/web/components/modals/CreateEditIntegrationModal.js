@@ -11,8 +11,16 @@ const CreateEditIntegration = class extends Component {
   constructor(props, context) {
     super(props, context)
     const fields = _.cloneDeep(this.props.integration.fields)
+    const defaultValues = {}
+    this.props.integration.fields?.forEach((v) => {
+      if (v.default) {
+        defaultValues[v.key] = v.default
+      }
+    })
     this.state = {
-      data: this.props.data ? { ...this.props.data } : { fields },
+      data: this.props.data
+        ? { ...this.props.data }
+        : { fields, ...defaultValues },
       fields,
     }
     if (this.props.id === 'slack' && this.state.data.flagsmithEnvironment) {
