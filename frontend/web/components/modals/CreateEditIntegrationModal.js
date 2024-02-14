@@ -61,7 +61,6 @@ const CreateEditIntegration = class extends Component {
     const handleOauthSignature = (res, isProject) => {
       const signature = res && res.signature
       if (signature) {
-        q
         const postfix = `?redirect_url=${encodeURIComponent(
           `${document.location.href}?environment=${this.state.data.flagsmithEnvironment}&configure=${this.props.id}`,
         )}&signature=${signature}`
