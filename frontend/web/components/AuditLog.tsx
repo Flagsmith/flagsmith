@@ -1,16 +1,14 @@
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react' // we need this to make JSX compile
 import moment from 'moment'
 import Utils from 'common/utils/utils'
-import { AuditLogItem, Environment, Project } from 'common/types/responses'
+import { AuditLogItem, Environment } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
 import useSearchThrottle from 'common/useSearchThrottle'
-import ProjectProvider from 'common/providers/ProjectProvider'
 import JSONReference from './JSONReference'
-import { Link } from 'react-router-dom'
+import { Link, withRouter } from 'react-router-dom'
 import PanelSearch from './PanelSearch'
 import ProjectStore from 'common/stores/project-store'
 import Tag from './tags/Tag'
-import Constants from 'common/constants'
 
 type AuditLogType = {
   environmentId: string
@@ -19,6 +17,12 @@ type AuditLogType = {
   onSearchChange?: (search: string) => void
   searchPanel?: ReactNode
   onErrorChange?: (err: boolean) => void
+  match: {
+    params: {
+      environmentId: string
+      projectId: string
+    }
+  }
 }
 
 const widths = [210, 210, 210]
@@ -72,14 +76,16 @@ const AuditLog: FC<AuditLogType> = (props) => {
     author,
     created_date,
     environment,
+    id,
     log,
   }: AuditLogItem) => {
-    const index = ProjectStore.getEnvs()?.findIndex((v) => {
+    const environments = ProjectStore.getEnvs() as Environment[] | null
+    const index = environments?.findIndex((v) => {
       return v.id === environment?.id
     })
     const colour = index === -1 ? 0 : index
-    return (
-      <Row className='list-item list-item-sm' key={created_date}>
+    const inner = (
+      <Row>
         <div
           className='table-column px-3 fs-small ln-sm'
           style={{ width: widths[0] }}
@@ -112,6 +118,18 @@ const AuditLog: FC<AuditLogType> = (props) => {
           <div className='table-column' style={{ width: widths[2] }} />
         )}
         <Flex className='table-column fs-small ln-sm'>{log}</Flex>
+      </Row>
+    )
+    return Utils.getFlagsmithHasFeature('audit_log_detail') ? (
+      <Link
+        className='fw-normal d-flex align-items-center flex-row list-item list-item-sm link-unstyled clickable'
+        to={`/project/${props.projectId}/environment/${props.match.params.environmentId}/audit-log/${id}`}
+      >
+        {inner}
+      </Link>
+    ) : (
+      <Row className='list-item list-item-sm' key={created_date}>
+        {inner}
       </Row>
     )
   }
@@ -188,4 +206,4 @@ const AuditLog: FC<AuditLogType> = (props) => {
   )
 }
 
-export default AuditLog
+export default withRouter(AuditLog)

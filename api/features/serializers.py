@@ -1,4 +1,5 @@
 import typing
+from datetime import datetime
 
 import django.core.exceptions
 from drf_writable_nested import WritableNestedModelSerializer
@@ -122,6 +123,18 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         "Note: will return null for Edge enabled projects."
     )
 
+    last_modified_in_any_environment = serializers.SerializerMethodField(
+        help_text="Datetime representing the last time that the feature was modified "
+        "in any environment in the given project. Note: requires feature "
+        "versioning v2 enabled on the environment."
+    )
+    last_modified_in_current_environment = serializers.SerializerMethodField(
+        help_text="Datetime representing the last time that the feature was modified "
+        "in any environment in the current environment. Note: requires that "
+        "the environment query parameter is passed and feature versioning v2 "
+        "enabled on the environment."
+    )
+
     class Meta:
         model = Feature
         fields = (
@@ -142,6 +155,8 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             "num_segment_overrides",
             "num_identity_overrides",
             "is_server_key_only",
+            "last_modified_in_any_environment",
+            "last_modified_in_current_environment",
         )
         read_only_fields = ("feature_segments", "created_date", "uuid", "project")
 
@@ -244,6 +259,16 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             return self.context["overrides_data"][instance.id].num_identity_overrides
         except (KeyError, AttributeError):
             return None
+
+    def get_last_modified_in_any_environment(
+        self, instance: Feature
+    ) -> datetime | None:
+        return getattr(instance, "last_modified_in_any_environment", None)
+
+    def get_last_modified_in_current_environment(
+        self, instance: Feature
+    ) -> datetime | None:
+        return getattr(instance, "last_modified_in_current_environment", None)
 
 
 class FeatureSerializerWithMetadata(

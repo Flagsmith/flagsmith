@@ -45,7 +45,7 @@ readme = "readme.md"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
-django = "~3.2.23"
+django = "~3.2.24"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
 backoff = "~2.2.1"
@@ -103,6 +103,7 @@ pydantic = "~1.10.9"
 pyngo = "~1.6.0"
 flagsmith = "^3.4.0"
 python-gnupg = "^0.5.1"
+django-redis = "^5.4.0"
 
 [tool.poetry.group.auth-controller]
 optional = true
@@ -145,7 +146,6 @@ requests-mock = "^1.11.0"
 django-extensions = "^3.2.3"
 pdbpp = "^0.10.3"
 django-capture-on-commit-callbacks = "^1.11.0"
-pytest-testmon = "^2.0.13"
 mypy-boto3-dynamodb = "^1.33.0"
 
 [build-system]

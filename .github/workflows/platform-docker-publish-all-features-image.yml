@@ -6,7 +6,7 @@ on:
       - '*'
 
 env:
-  FLAGSMITH_SAML_REVISION: v1.1.0
+  FLAGSMITH_SAML_REVISION: v1.2.1
   FLAGSMITH_RBAC_REVISION: v0.7.0
   FLAGSMITH_WORKFLOWS_REVISION: v1.2.5
   FLAGSMITH_AUTH_CONTROLLER_REVISION: v0.0.1
@@ -41,7 +41,7 @@ jobs:
         with:
           repository: flagsmith/flagsmith-workflows
           token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-          ref: ${{ env.flagsmith_saml_revision }}
+          ref: ${{ env.FLAGSMITH_WORKFLOWS_REVISION }}
           path: ./flagsmith-workflows
 
       - name: Integrate Workflows Logic module

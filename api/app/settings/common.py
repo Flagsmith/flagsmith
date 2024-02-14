@@ -21,9 +21,11 @@ import dj_database_url
 import pytz
 import requests
 from corsheaders.defaults import default_headers
+from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
 from environs import Env
 
+from app.routers import ReplicaReadStrategy
 from task_processor.task_run_method import TaskRunMethod
 
 env = Env()
@@ -165,6 +167,7 @@ DJANGO_DB_CONN_MAX_AGE = None if db_conn_max_age == -1 else db_conn_max_age
 
 DATABASE_ROUTERS = ["app.routers.PrimaryReplicaRouter"]
 NUM_DB_REPLICAS = 0
+NUM_CROSS_REGION_DB_REPLICAS = 0
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
 if "DATABASE_URL" in os.environ:
     DATABASES = {
@@ -177,8 +180,34 @@ if "DATABASE_URL" in os.environ:
         "REPLICA_DATABASE_URLS", default=[], delimiter=REPLICA_DATABASE_URLS_DELIMITER
     )
     NUM_DB_REPLICAS = len(REPLICA_DATABASE_URLS)
+
+    # Cross region replica databases are used as fallbacks if the
+    # primary replica set becomes unavailable.
+    CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER = env(
+        "CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER", ","
+    )
+    CROSS_REGION_REPLICA_DATABASE_URLS = env.list(
+        "CROSS_REGION_REPLICA_DATABASE_URLS",
+        default=[],
+        delimiter=CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER,
+    )
+    NUM_CROSS_REGION_DB_REPLICAS = len(CROSS_REGION_REPLICA_DATABASE_URLS)
+
+    # DISTRIBUTED spreads the load out across replicas while
+    # SEQUENTIAL only falls back once the first replica connection is faulty
+    REPLICA_READ_STRATEGY = env.enum(
+        "REPLICA_READ_STRATEGY",
+        type=ReplicaReadStrategy,
+        default=ReplicaReadStrategy.DISTRIBUTED.value,
+    )
+
     for i, db_url in enumerate(REPLICA_DATABASE_URLS, start=1):
         DATABASES[f"replica_{i}"] = dj_database_url.parse(
+            db_url, conn_max_age=DJANGO_DB_CONN_MAX_AGE
+        )
+
+    for i, db_url in enumerate(CROSS_REGION_REPLICA_DATABASE_URLS, start=1):
+        DATABASES[f"cross_region_replica_{i}"] = dj_database_url.parse(
             db_url, conn_max_age=DJANGO_DB_CONN_MAX_AGE
         )
 
@@ -296,12 +325,15 @@ INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
 
-# NOTE: Because we use Postgres for analytics data in staging and Influx for tracking SSE data,
-# we need to support setting the influx configuration alongside using postgres for analytics.
-if USE_POSTGRES_FOR_ANALYTICS:
-    MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
-elif INFLUXDB_TOKEN:
-    MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
+ENABLE_API_USAGE_TRACKING = env.bool("ENABLE_API_USAGE_TRACKING", default=True)
+
+if ENABLE_API_USAGE_TRACKING:
+    # NOTE: Because we use Postgres for analytics data in staging and Influx for tracking SSE data,
+    # we need to support setting the influx configuration alongside using postgres for analytics.
+    if USE_POSTGRES_FOR_ANALYTICS:
+        MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
+    elif INFLUXDB_TOKEN:
+        MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
 
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list("ALLOWED_ADMIN_IP_ADDRESSES", default=list())
@@ -507,18 +539,23 @@ if LOGGING_CONFIGURATION_FILE:
     with open(LOGGING_CONFIGURATION_FILE, "r") as f:
         LOGGING = json.loads(f.read())
 else:
+    LOG_FORMAT = env.str("LOG_FORMAT", default="generic")
     LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
         "formatters": {
             "generic": {"format": "%(name)-12s %(levelname)-8s %(message)s"},
+            "json": {
+                "()": "util.logging.JsonFormatter",
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+            },
         },
         "handlers": {
             "console": {
                 "level": LOG_LEVEL,
                 "class": "logging.StreamHandler",
-                "formatter": "generic",
+                "formatter": LOG_FORMAT,
             }
         },
         "loggers": {
@@ -629,6 +666,31 @@ ENVIRONMENT_SEGMENTS_CACHE_BACKEND = env(
 CACHE_ENVIRONMENT_DOCUMENT_SECONDS = env.int("CACHE_ENVIRONMENT_DOCUMENT_SECONDS", 0)
 ENVIRONMENT_DOCUMENT_CACHE_LOCATION = "environment-documents"
 
+USER_THROTTLE_CACHE_NAME = "user-throttle"
+USER_THROTTLE_CACHE_BACKEND = env.str(
+    "USER_THROTTLE_CACHE_BACKEND", "django.core.cache.backends.locmem.LocMemCache"
+)
+USER_THROTTLE_CACHE_LOCATION = env.str("USER_THROTTLE_CACHE_LOCATION", "admin-throttle")
+USER_THROTTLE_CACHE_OPTIONS = env.dict("USER_THROTTLE_CACHE_OPTIONS", default={})
+
+# Using Redis for cache
+# To use Redis for caching, set the cache backend to `django_redis.cache.RedisCache`.
+# and set the cache location to the redis url
+# ref: https://github.com/jazzband/django-redis/tree/5.4.0#configure-as-cache-backend
+
+
+# Avoid raising exceptions if redis is down
+# ref: https://github.com/jazzband/django-redis/tree/5.4.0#memcached-exceptions-behavior
+DJANGO_REDIS_IGNORE_EXCEPTIONS = env.bool(
+    "DJANGO_REDIS_IGNORE_EXCEPTIONS", default=True
+)
+
+# Log exceptions generated by django-redis
+# ref:https://github.com/jazzband/django-redis/tree/5.4.0#log-ignored-exceptions
+DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = env.bool(
+    "DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS", True
+)
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -674,6 +736,11 @@ CACHES = {
         "BACKEND": ENVIRONMENT_SEGMENTS_CACHE_BACKEND,
         "LOCATION": ENVIRONMENT_SEGMENTS_CACHE_LOCATION,
         "TIMEOUT": ENVIRONMENT_SEGMENTS_CACHE_SECONDS,
+    },
+    USER_THROTTLE_CACHE_NAME: {
+        "BACKEND": USER_THROTTLE_CACHE_BACKEND,
+        "LOCATION": USER_THROTTLE_CACHE_LOCATION,
+        "OPTIONS": USER_THROTTLE_CACHE_OPTIONS,
     },
 }
 
@@ -1082,5 +1149,18 @@ if LDAP_INSTALLED and LDAP_AUTH_URL:
     LDAP_SYNC_USER_USERNAME = env.str("LDAP_SYNC_USER_USERNAME", None)
     LDAP_SYNC_USER_PASSWORD = env.str("LDAP_SYNC_USER_PASSWORD", None)
 
+SEGMENT_CONDITION_VALUE_LIMIT = env.int("SEGMENT_CONDITION_VALUE_LIMIT", default=1000)
+if not 0 <= SEGMENT_CONDITION_VALUE_LIMIT < 2000000:
+    raise ImproperlyConfigured(
+        "SEGMENT_CONDITION_VALUE_LIMIT must be between 0 and 2,000,000 (2MB)."
+    )
+
+SEGMENT_RULES_CONDITIONS_LIMIT = env.int("SEGMENT_RULES_CONDITIONS_LIMIT", 100)
+
 WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)
 WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
+
+# Split Testing settings
+SPLIT_TESTING_INSTALLED = importlib.util.find_spec("split_testing")
+if SPLIT_TESTING_INSTALLED:
+    INSTALLED_APPS += ("split_testing",)
