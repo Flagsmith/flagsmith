@@ -10,6 +10,7 @@ from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.forms import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
+from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
@@ -54,6 +55,10 @@ from webhooks.webhooks import WebhookEventType
 
 # patch this function as it's triggering extra threads and causing errors
 mock.patch("features.signals.trigger_feature_state_change_webhooks").start()
+
+now = timezone.now()
+two_hours_ago = now - timedelta(hours=2)
+one_hour_ago = now - timedelta(hours=1)
 
 
 @pytest.mark.django_db
@@ -2554,3 +2559,66 @@ def test_simple_feature_state_returns_only_latest_versions(
 
     response_json = response.json()
     assert response_json["count"] == 2
+
+
+@pytest.mark.freeze_time(two_hours_ago)
+def test_feature_list_last_modified_values(
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    environment_v2_versioning: Environment,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:
+    # Given
+    # another v2 versioning environment
+    environment_v2_versioning_2 = Environment.objects.create(
+        name="environment 2", project=project, use_v2_feature_versioning=True
+    )
+
+    url = "{base_url}?environment={environment_id}".format(
+        base_url=reverse("api-v1:projects:project-features-list", args=[project.id]),
+        environment_id=environment_v2_versioning.id,
+    )
+
+    with_project_permissions([VIEW_PROJECT])
+
+    with freeze_time(one_hour_ago):
+        # create a new published version in another environment, simulated to be one hour ago
+        environment_v2_versioning_2_version_2 = (
+            EnvironmentFeatureVersion.objects.create(
+                environment=environment_v2_versioning_2, feature=feature
+            )
+        )
+        environment_v2_versioning_2_version_2.publish(staff_user)
+
+    with freeze_time(now):
+        # and create a new unpublished version in the current environment, simulated to be now
+        # this shouldn't affect the values returned
+        EnvironmentFeatureVersion.objects.create(
+            environment=environment_v2_versioning, feature=feature
+        )
+
+    # let's add a few more features to ensure we aren't adding N+1 issues
+    for i in range(2):
+        Feature.objects.create(name=f"feature_{i}", project=project)
+
+    # When
+    with django_assert_num_queries(14):  # TODO: reduce this number of queries!
+        response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 3
+
+    feature_data = next(
+        filter(lambda r: r["id"] == feature.id, response_json["results"])
+    )
+    assert feature_data["last_modified_in_any_environment"] == one_hour_ago.isoformat()
+    assert (
+        feature_data["last_modified_in_current_environment"]
+        == two_hours_ago.isoformat()
+    )
