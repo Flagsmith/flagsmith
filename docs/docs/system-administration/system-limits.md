@@ -22,6 +22,7 @@ In order to ensure consistent performance, Flagsmith has the following limitatio
 - **400** Features per Project
 - **100** Segments per Project
 - **100** Segment Overrides per Environment
+- **100** Segment Rules Conditions
 
 ### Entity Data Elements
 
