@@ -1,15 +1,28 @@
+from pytest_mock import MockerFixture
+
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from audit.serializers import AuditLogListSerializer
 from integrations.datadog.models import DataDogConfiguration
+from organisations.models import Organisation, OrganisationWebhook
+from projects.models import Project
 from webhooks.webhooks import WebhookEventType
 
 
-def test_organisation_webhooks_are_called_when_audit_log_saved(project, mocker):
+def test_organisation_webhooks_are_called_when_audit_log_saved(
+    project: Project, mocker: MockerFixture, organisation: Organisation
+) -> None:
     # Given
     mock_call_webhooks = mocker.patch("audit.signals.call_organisation_webhooks")
 
     audit_log = AuditLog(project=project, log="Some audit log")
+
+    OrganisationWebhook.objects.create(
+        organisation=organisation,
+        url="http://example.com/webhook",
+        enabled=True,
+        name="example webhook",
+    )
 
     # When
     audit_log.save()
@@ -155,6 +168,17 @@ def test_audit_log_history_record(mocker):
     mocked_model_class.objects.filter.assert_called_once_with(
         history_id=audit_log.history_record_id
     )
+
+
+def test_audit_log_history_record_for_audit_log_record_with_no_history_record(mocker):
+    # Given
+    audit_log = AuditLog()
+
+    # When
+    record = audit_log.history_record
+
+    # Then
+    assert record is None
 
 
 def test_audit_log_save_project_is_added_if_not_set(environment):

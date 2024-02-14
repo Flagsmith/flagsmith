@@ -10,6 +10,7 @@ from environments.identities.models import Identity
 from environments.models import Environment
 from features.feature_types import MULTIVARIATE, STANDARD
 from features.import_export.constants import (
+    FAILED,
     OVERWRITE_DESTRUCTIVE,
     PROCESSING,
     SKIP,
@@ -25,6 +26,7 @@ from features.import_export.tasks import (
     clear_stale_feature_imports_and_exports,
     export_features_for_environment,
     import_features_for_environment,
+    retire_stalled_feature_imports_and_exports,
 )
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
@@ -70,6 +72,50 @@ def test_clear_stale_feature_imports_and_exports(
 
     kept_feature_import.refresh_from_db()
     kept_feature_export.refresh_from_db()
+
+
+def test_retire_stalled_feature_imports_and_exports(
+    db: None, environment: Environment, freezer: FrozenDateTimeFactory
+):
+    # Given
+    now = timezone.now()
+    freezer.move_to(now - timedelta(minutes=12))
+    to_fail_feature_export = FeatureExport.objects.create(
+        data="{}",
+        environment=environment,
+        status=PROCESSING,
+    )
+    to_fail_feature_import = FeatureImport.objects.create(
+        data="{}",
+        environment=environment,
+        status=PROCESSING,
+    )
+
+    freezer.move_to(now)
+    keep_processing_feature_export = FeatureExport.objects.create(
+        data="{}",
+        environment=environment,
+        status=PROCESSING,
+    )
+    keep_processing_feature_import = FeatureImport.objects.create(
+        data="{}",
+        environment=environment,
+        status=PROCESSING,
+    )
+
+    # When
+    retire_stalled_feature_imports_and_exports()
+
+    # Then
+    to_fail_feature_import.refresh_from_db()
+    to_fail_feature_export.refresh_from_db()
+    keep_processing_feature_import.refresh_from_db()
+    keep_processing_feature_export.refresh_from_db()
+
+    assert to_fail_feature_import.status == FAILED
+    assert to_fail_feature_export.status == FAILED
+    assert keep_processing_feature_import.status == PROCESSING
+    assert keep_processing_feature_export.status == PROCESSING
 
 
 def test_export_and_import_features_for_environment_with_skip(

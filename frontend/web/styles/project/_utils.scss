@@ -181,6 +181,10 @@
     }
 }
 
+.mh-auto {
+    min-height: auto !important;
+}
+
 .text-overflow {
     flex: 1;
     white-space: nowrap;

@@ -19,6 +19,7 @@ import TableTagFilter from 'components/tables/TableTagFilter'
 import { setViewMode } from 'common/useViewMode'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
 import { getViewMode } from 'common/useViewMode'
+import { TagStrategy } from 'common/types/responses'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -30,9 +31,11 @@ const FeaturesPage = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {
+      loadedOnce: false,
       search: null,
       showArchived: false,
       sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
+      tag_strategy: 'INTERSECTION',
       tags: [],
     }
     ES6Component(this)
@@ -61,6 +64,7 @@ const FeaturesPage = class extends Component {
       params.environmentId !== oldParams.environmentId ||
       params.projectId !== oldParams.projectId
     ) {
+      this.state.loadedOnce = false
       AppActions.getFeatures(
         params.projectId,
         params.environmentId,
@@ -101,6 +105,7 @@ const FeaturesPage = class extends Component {
 
   getFilter = () => ({
     is_archived: this.state.showArchived,
+    tag_strategy: this.state.tag_strategy,
     tags:
       !this.state.tags || !this.state.tags.length
         ? undefined
@@ -181,6 +186,9 @@ const FeaturesPage = class extends Component {
               totalFeatures,
               maxFeaturesAllowed,
             )
+            if (projectFlags?.length && !this.state.loadedOnce) {
+              this.state.loadedOnce = true
+            }
             return (
               <div className='features-page'>
                 {isLoading && (!projectFlags || !projectFlags.length) && (
@@ -188,9 +196,9 @@ const FeaturesPage = class extends Component {
                     <Loader />
                   </div>
                 )}
-                {(!isLoading || (projectFlags && !!projectFlags.length)) && (
+                {(!isLoading || this.state.loadedOnce) && (
                   <div>
-                    {(projectFlags && projectFlags.length) ||
+                    {this.state.loadedOnce ||
                     ((this.state.showArchived ||
                       typeof this.state.search === 'string' ||
                       !!this.state.tags.length) &&
@@ -205,7 +213,7 @@ const FeaturesPage = class extends Component {
                           title={'Features'}
                           cta={
                             <>
-                              {(projectFlags && projectFlags.length) ||
+                              {this.state.loadedOnce ||
                               this.state.showArchived ||
                               this.state.tags?.length
                                 ? this.createFeaturePermission((perm) => (
@@ -305,6 +313,15 @@ const FeaturesPage = class extends Component {
                                           projectId={projectId}
                                           className='me-4'
                                           title='Tags'
+                                          tagStrategy={this.state.tag_strategy}
+                                          onChangeStrategy={(tag_strategy) => {
+                                            this.setState(
+                                              {
+                                                tag_strategy,
+                                              },
+                                              this.filter,
+                                            )
+                                          }}
                                           value={this.state.tags}
                                           onToggleArchived={(value) => {
                                             if (
@@ -483,9 +500,7 @@ const FeaturesPage = class extends Component {
                             title='2: Initialising your project'
                             snippets={Constants.codeHelp.INIT(
                               this.props.match.params.environmentId,
-                              projectFlags &&
-                                projectFlags[0] &&
-                                projectFlags[0].name,
+                              projectFlags?.[0]?.name,
                             )}
                           />
                         </FormGroup>
