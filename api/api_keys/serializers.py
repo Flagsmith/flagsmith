@@ -15,6 +15,7 @@ class MasterAPIKeySerializer(serializers.ModelSerializer):
     class Meta:
         model = MasterAPIKey
         fields = (
+            "id",
             "prefix",
             "created",
             "name",
