@@ -56,13 +56,13 @@ const ProjectUsage: FC<ProjectUsageType> = ({ projectId }) => {
         </Row>
         <Flex className='gap-2'>
           <p className='m-0 fs-small fw-normal'>
-            Segments:{' '}
+            Features:{' '}
             <span className='fw-bold'>
               {project?.total_features}/{project?.max_features_allowed}
             </span>
           </p>
           <p className='m-0 fs-small fw-normal'>
-            Features:{' '}
+            Segments:{' '}
             <span className='fw-bold'>
               {project?.total_segments}/{project?.max_segments_allowed}
             </span>
