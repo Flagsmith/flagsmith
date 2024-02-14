@@ -8,11 +8,11 @@ import data from 'common/data/base/_data'
 import GoogleButton from 'components/GoogleButton'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
-import Icon from 'components/Icon'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
 import { informationCircleOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
+import Checkbox from 'components/base/forms/Checkbox'
 
 let controller = new AbortController()
 
@@ -637,37 +637,21 @@ const HomePage = class extends React.Component {
                                       'mailing_list',
                                     ) && (
                                       <div>
-                                        <input
-                                          onChange={(e) => {
-                                            API.setCookie(
-                                              'marketing_consent_given',
-                                              `${e.target.checked}`,
-                                            )
+                                        <Checkbox
+                                          label={
+                                            'Yes, I would like to signup for the twice monthly newsletter (optional)'
+                                          }
+                                          onChange={() => {
                                             this.setState({
                                               marketing_consent_given:
-                                                e.target.checked,
+                                                !this.state
+                                                  .marketing_consent_given,
                                             })
                                           }}
-                                          id='mailinglist'
-                                          type='checkbox'
                                           checked={
                                             this.state.marketing_consent_given
                                           }
                                         />
-                                        <label
-                                          className='mb-0'
-                                          htmlFor='mailinglist'
-                                          style={{ display: 'inline' }}
-                                        >
-                                          <span className='checkbox mr-2'>
-                                            {this.state
-                                              .marketing_consent_given && (
-                                              <Icon name='checkmark-square' />
-                                            )}
-                                          </span>
-                                          Yes, I would like to signup for the
-                                          twice monthly newsletter (optional)
-                                        </label>
                                       </div>
                                     )}
                                     <div className='form-cta'>

@@ -11,8 +11,16 @@ const CreateEditIntegration = class extends Component {
   constructor(props, context) {
     super(props, context)
     const fields = _.cloneDeep(this.props.integration.fields)
+    const defaultValues = {}
+    this.props.integration.fields?.forEach((v) => {
+      if (v.default) {
+        defaultValues[v.key] = v.default
+      }
+    })
     this.state = {
-      data: this.props.data ? { ...this.props.data } : { fields },
+      data: this.props.data
+        ? { ...this.props.data }
+        : { fields, ...defaultValues },
       fields,
     }
     if (this.props.id === 'slack' && this.state.data.flagsmithEnvironment) {
@@ -217,10 +225,16 @@ const CreateEditIntegration = class extends Component {
                   <Input
                     id={field.label.replace(/ /g, '')}
                     ref={(e) => (this.input = e)}
-                    value={this.state.data[field.key]}
-                    onChange={(e) => this.update(field.key, e)}
+                    value={
+                      typeof this.state.data[field.key] !== 'undefined'
+                        ? this.state.data[field.key]
+                        : field.default
+                    }
+                    onChange={(e) => {
+                      this.update(field.key, e)
+                    }}
                     isValid={!!this.state.data[field.key]}
-                    type={field.hidden ? 'password' : 'text'}
+                    type={field.hidden ? 'password' : field.inputType || 'text'}
                     className='full-width mb-2'
                   />
                 )}

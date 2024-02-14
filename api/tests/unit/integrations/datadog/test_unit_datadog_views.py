@@ -13,7 +13,11 @@ def test_should_create_datadog_config_when_post(
     project: Project,
 ) -> None:
     # Given
-    data = {"base_url": "http://test.com", "api_key": "abc-123"}
+    data = {
+        "base_url": "http://test.com",
+        "api_key": "abc-123",
+        "use_custom_source": True,
+    }
     url = reverse("api-v1:projects:integrations-datadog-list", args=[project.id])
     # When
     response = admin_client.post(
@@ -25,6 +29,11 @@ def test_should_create_datadog_config_when_post(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert DataDogConfiguration.objects.filter(project=project).count() == 1
+
+    created_config = DataDogConfiguration.objects.filter(project=project).first()
+    assert created_config.base_url == data["base_url"]
+    assert created_config.api_key == data["api_key"]
+    assert created_config.use_custom_source == data["use_custom_source"]
 
 
 def test_should_return_400_when_duplicate_datadog_config_is_posted(
@@ -94,7 +103,12 @@ def test_should_return_datadog_config_list_when_requested(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.data == [
-        {"api_key": config.api_key, "base_url": config.base_url, "id": config.id}
+        {
+            "api_key": config.api_key,
+            "base_url": config.base_url,
+            "id": config.id,
+            "use_custom_source": False,
+        }
     ]
 
 
