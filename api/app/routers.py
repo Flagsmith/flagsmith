@@ -100,9 +100,9 @@ class PrimaryReplicaRouter:
 
     def _get_replica(self, replicas: list[str]) -> None | str:
         while replicas:
-            if settings.REPLICA_READ_STRATEGY == ReplicaReadStrategy.DISTRIBUTED.value:
+            if settings.REPLICA_READ_STRATEGY == ReplicaReadStrategy.DISTRIBUTED:
                 database = random.choice(replicas)
-            elif settings.REPLICA_READ_STRATEGY == ReplicaReadStrategy.SEQUENTIAL.value:
+            elif settings.REPLICA_READ_STRATEGY == ReplicaReadStrategy.SEQUENTIAL:
                 database = replicas[0]
             else:
                 raise ImproperlyConfiguredError(

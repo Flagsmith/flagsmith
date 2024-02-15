@@ -28,7 +28,7 @@ def test_replica_router_db_for_read_with_one_offline_replica(
 
     # Set unused cross regional db for testing non-inclusion.
     settings.NUM_CROSS_REGION_DB_REPLICAS = 2
-    settings.REPLICA_READ_STRATEGY = ReplicaReadStrategy.DISTRIBUTED.value
+    settings.REPLICA_READ_STRATEGY = ReplicaReadStrategy.DISTRIBUTED
 
     conn_patch = mocker.MagicMock()
     conn_patch.is_usable.side_effect = (False, True)
@@ -63,7 +63,7 @@ def test_replica_router_db_for_read_with_local_offline_replicas(
 
     # Use cross regional db for fallback after replicas.
     settings.NUM_CROSS_REGION_DB_REPLICAS = 2
-    settings.REPLICA_READ_STRATEGY = ReplicaReadStrategy.DISTRIBUTED.value
+    settings.REPLICA_READ_STRATEGY = ReplicaReadStrategy.DISTRIBUTED
 
     conn_patch = mocker.MagicMock()
 
@@ -107,7 +107,7 @@ def test_replica_router_db_for_read_with_all_offline_replicas(
     # Given
     settings.NUM_DB_REPLICAS = 4
     settings.NUM_CROSS_REGION_DB_REPLICAS = 2
-    settings.REPLICA_READ_STRATEGY = ReplicaReadStrategy.DISTRIBUTED.value
+    settings.REPLICA_READ_STRATEGY = ReplicaReadStrategy.DISTRIBUTED
 
     conn_patch = mocker.MagicMock()
 
@@ -141,7 +141,7 @@ def test_replica_router_db_with_sequential_read(
     # Given
     settings.NUM_DB_REPLICAS = 100
     settings.NUM_CROSS_REGION_DB_REPLICAS = 2
-    settings.REPLICA_READ_STRATEGY = ReplicaReadStrategy.SEQUENTIAL.value
+    settings.REPLICA_READ_STRATEGY = ReplicaReadStrategy.SEQUENTIAL
 
     conn_patch = mocker.MagicMock()
 
