@@ -20,13 +20,13 @@ import Project from '../../common/project';
 export default async () => {
     await flagsmith.init({fetch,environmentID:Project.flagsmith,api:Project.flagsmithClientAPI})
     const hasFeature = flagsmith.hasFeature("feature_versioning")
+    log('Login')
+    await login(E2E_USER, PASSWORD)
     if(!hasFeature) {
-        console.log("Skipping version test, feature not enabled.")
+        log("Skipping version test, feature not enabled.")
         return
     }
 
-    log('Login')
-    await login(E2E_USER, PASSWORD)
     await createOrganisationAndProject('Flagsmith Versioning Org', 'Flagsmith Versioning Project')
     await waitForElementVisible(byId('features-page'))
     await click('#env-settings-link')
