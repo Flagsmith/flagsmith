@@ -104,6 +104,54 @@ jobs:
           tests: segment-part-3 signup flag invite project
           concurrency: 2
 
+  run-e2e-tests-4:
+    runs-on: ubuntu-latest
+    name: E2E Local - Versioning
+
+    services:
+      postgres:
+        image: postgres:11.12-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: flagsmith
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Run E2E tests against local
+        uses: ./.github/actions/local-e2e-tests
+        with:
+          slack_token: ${{ secrets.SLACK_TOKEN }}
+          tests: versioning
+          concurrency: 1
+
+  run-e2e-versioning-tests-docker-unified:
+    runs-on: ubuntu-latest
+    name: E2E Unified - Versioning
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Build unified docker container
+        uses: ./.github/actions/unified-e2e-tests
+        with:
+          github_actor: ${{github.actor}}
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          e2e_test_token_staging: ${{ secrets.E2E_TEST_TOKEN }}
+
+      - name: Run tests on unified docker image
+        working-directory: frontend
+        env:
+          SLACK_TOKEN: ${{ inputs.slack_token }}
+          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=1 npm run test -- versioning
+
   run-e2e-segments-1-tests-docker-unified:
     runs-on: ubuntu-latest
     name: E2E Unified - Segments-1, Environment

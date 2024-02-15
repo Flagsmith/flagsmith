@@ -178,6 +178,10 @@ const store = Object.assign({}, BaseStore, {
     })
   },
   getEnvs: () => store.model && store.model.environments,
+  getIsVersioned: (api_key) => {
+    const env = _.find(store.model.environments, { api_key })
+    return env && env.use_v2_feature_versioning
+  },
   getMaxFeaturesAllowed: () => {
     return store.model && store.model.max_features_allowed
   },
