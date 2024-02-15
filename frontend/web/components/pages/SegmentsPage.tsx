@@ -359,12 +359,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                       data-test='show-create-segment-btn'
                       onClick={newSegment}
                     >
-                      <span className='icon icon-inner'>
-                        <IonIcon
-                          icon={globeOutline}
-                          style={{ contain: 'none', height: '25px' }}
-                        />
-                      </span>
                       Create your first Segment
                     </Button>,
                   )}
