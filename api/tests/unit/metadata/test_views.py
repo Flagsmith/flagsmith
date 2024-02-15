@@ -275,13 +275,13 @@ def test_can_not_update_model_metadata_field_from_other_organisation(
 
 
 def test_create_model_metadata_field_for_environments(
-    admin_client,
-    a_metadata_field,
-    organisation,
-    project_content_type,
-    environment_content_type,
-    project,
-):
+    admin_client: APIClient,
+    a_metadata_field: MetadataField,
+    organisation: Organisation,
+    project_content_type: ContentType,
+    environment_content_type: ContentType,
+    project: Project,
+) -> None:
     # Given
     url = reverse(
         "api-v1:organisations:metadata-model-fields-list", args=[organisation.id]
