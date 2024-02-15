@@ -88,6 +88,10 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         choices=IdentityOverridesV2MigrationStatus.choices,
         default=IdentityOverridesV2MigrationStatus.NOT_STARTED,
     )
+    stale_flags_limit_days = models.IntegerField(
+        default=30,
+        help_text="Number of days without modification in any environment before a flag is considered stale.",
+    )
 
     objects = ProjectManager()
 

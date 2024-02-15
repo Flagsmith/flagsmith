@@ -5,6 +5,8 @@ import {
   FeatureStateValue,
   FeatureState,
   Role,
+  ImportStrategy,
+  APIKey,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -152,6 +154,24 @@ export type Req = {
       token: string
     }
   }
+  createFeatureExport: {
+    environment_id: string
+    tag_ids?: (number | string)[]
+  }
+  getFeatureExport: {
+    id: string
+  }
+  getFeatureExports: {
+    projectId: string
+  }
+  createFlagsmithProjectImport: {
+    environment_id: number | string
+    strategy: ImportStrategy
+    file: File
+  }
+  getFeatureImports: {
+    projectId: string
+  }
   getLaunchDarklyProjectImport: { project_id: string; import_id: string }
   getLaunchDarklyProjectsImport: { project_id: string }
   getUserWithRoles: { org_id: string; user_id: string }
@@ -207,6 +227,12 @@ export type Req = {
   }>
   getGroupSummaries: {
     orgId: string
+  }
+  getServersideEnvironmentKeys: { environmentId: string }
+  deleteServersideEnvironmentKeys: { environmentId: string; id: string }
+  createServersideEnvironmentKeys: {
+    environmentId: string
+    data: { name: string }
   }
   getAuditLogItem: { id: string }
   // END OF TYPES

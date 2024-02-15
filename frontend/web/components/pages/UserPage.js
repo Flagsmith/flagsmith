@@ -24,6 +24,7 @@ import TableFilterOptions from 'components/tables/TableFilterOptions'
 import TableSortFilter from 'components/tables/TableSortFilter'
 import { getViewMode, setViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
+import IdentifierString from 'components/IdentifierString'
 const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
@@ -45,12 +46,14 @@ const UserPage = class extends Component {
     this.state = {
       preselect: Utils.fromParam().flag,
       showArchived: false,
+      tag_strategy: 'INTERSECTION',
       tags: [],
     }
   }
 
   getFilter = () => ({
     is_archived: this.state.showArchived,
+    tag_strategy: this.state.tag_strategy,
     tags:
       !this.state.tags || !this.state.tags.length
         ? undefined
@@ -307,15 +310,23 @@ const UserPage = class extends Component {
                               aria-current='page'
                               style={{ opacity: 0.6 }}
                             >
-                              {(identity && identity.identity.identifier) ||
-                                this.props.match.params.id}
+                              <IdentifierString
+                                value={
+                                  (identity && identity.identity.identifier) ||
+                                  this.props.match.params.id
+                                }
+                              />
                             </li>
                           </ol>
                         </nav>
                         <PageTitle
                           title={
-                            (identity && identity.identity.identifier) ||
-                            this.props.match.params.id
+                            <IdentifierString
+                              value={
+                                (identity && identity.identity.identifier) ||
+                                this.props.match.params.id
+                              }
+                            />
                           }
                         >
                           View and manage feature states and traits for this
@@ -385,6 +396,19 @@ const UserPage = class extends Component {
                                             className='me-4'
                                             title='Tags'
                                             value={this.state.tags}
+                                            tagStrategy={
+                                              this.state.tag_strategy
+                                            }
+                                            onChangeStrategy={(
+                                              tag_strategy,
+                                            ) => {
+                                              this.setState(
+                                                {
+                                                  tag_strategy,
+                                                },
+                                                this.filter,
+                                              )
+                                            }}
                                             isLoading={
                                               FeatureListStore.isLoading
                                             }

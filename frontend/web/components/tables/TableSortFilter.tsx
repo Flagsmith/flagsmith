@@ -6,7 +6,6 @@ import classNames from 'classnames'
 export type SortType = {
   value: string
   label: string
-  sortOrder: 'asc' | 'desc' | null
 }
 export type SortValue = {
   sortBy: string
@@ -41,7 +40,8 @@ const TableSortFilter: FC<TableFilterType> = ({
               key={i}
               className='popover-bt__list-item'
               href='#'
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault()
                 if (isLoading) return
                 onChange({
                   label: sortOption.label,

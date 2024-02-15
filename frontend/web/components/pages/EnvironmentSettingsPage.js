@@ -710,15 +710,15 @@ const EnvironmentSettingsPage = class extends Component {
                         <h5 className='mb-5'>Client-side Environment Key</h5>
                         <div className='col-md-6'>
                           <p className='fs-small lh-sm mb-0'>
-                          Use this key to initialise{' '}
-                          <Button
+                            Use this key to initialise{' '}
+                            <Button
                               theme='text'
                               href='https://docs.flagsmith.com/clients/overview#client-side-sdks'
                               target='__blank'
-                          >
+                            >
                               Client-side
-                          </Button>
-                          {' '}SDKs.
+                            </Button>{' '}
+                            SDKs.
                           </p>
                           <Row>
                             <Flex>
