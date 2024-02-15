@@ -23,7 +23,7 @@ export default async () => {
     log('Login')
     await login(E2E_USER, PASSWORD)
     if(!hasFeature) {
-        console.log("Skipping version test, feature not enabled.")
+        log("Skipping version test, feature not enabled.")
         return
     }
 
