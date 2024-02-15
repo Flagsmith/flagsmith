@@ -224,6 +224,15 @@ export type AvailablePermission = {
   description: string
 }
 
+export type APIKey = {
+  active: boolean
+  created_at: string
+  expires_at: string | null
+  id: number
+  key: string
+  name: string
+}
+
 export type Tag = {
   id: number
   color: string
@@ -439,5 +448,6 @@ export type Res = {
   featureExports: PagedResponse<FeatureExport>
   flagsmithProjectImport: { id: string }
   featureImports: PagedResponse<FeatureImport>
+  serversideEnvironmentKeys: APIKey[]
   // END OF TYPES
 }
