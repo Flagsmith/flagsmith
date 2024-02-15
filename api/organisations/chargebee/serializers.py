@@ -33,6 +33,7 @@ class ProcessSubscriptionSubscriptionSerializer(Serializer):
     id = CharField(allow_null=False)
     status = CharField(allow_null=False)
     plan_id = CharField(allow_null=True, required=False, default=None)
+    current_term_start = IntegerField(required=False, default=None)
     current_term_end = IntegerField(required=False, default=None)
     addons = ListField(
         child=ProcessSubscriptionAddonsSerializer(), required=False, default=list

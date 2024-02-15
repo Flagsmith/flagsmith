@@ -1,0 +1,7 @@
+Hi there,
+
+The API usage for {{ organisation.name }} has breached {{ matched_threshold }}% within the current subscription period. Please upgrade your organisations account to ensure continued service.
+
+Thank you!
+
+The Flagsmith Team

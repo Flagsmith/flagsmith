@@ -568,6 +568,8 @@ def test_chargebee_webhook(
             "subscription": {
                 "status": "active",
                 "id": subscription.subscription_id,
+                "current_term_start": 1699630389,
+                "current_term_end": 1702222389,
             },
             "customer": {"email": staff_user.email},
         }
@@ -585,6 +587,12 @@ def test_chargebee_webhook(
     subscription.refresh_from_db()
     subscription_cache = OrganisationSubscriptionInformationCache.objects.get(
         organisation=subscription.organisation
+    )
+    assert subscription_cache.current_billing_term_ends_at == datetime(
+        2023, 12, 10, 15, 33, 9, tzinfo=timezone.utc
+    )
+    assert subscription_cache.current_billing_term_starts_at == datetime(
+        2023, 11, 10, 15, 33, 9, tzinfo=timezone.utc
     )
     assert subscription_cache.allowed_projects is None
     assert subscription_cache.allowed_30d_api_calls == api_calls

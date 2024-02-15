@@ -103,7 +103,7 @@ def payment_succeeded(request: Request) -> Response:
     return Response(status=status.HTTP_200_OK)
 
 
-def process_subscription(request: Request) -> Response:
+def process_subscription(request: Request) -> Response:  # noqa: C901
     serializer = ProcessSubscriptionSerializer(data=request.data)
 
     # Since this function is a catchall, we're not surprised if
@@ -145,15 +145,35 @@ def process_subscription(request: Request) -> Response:
         chargebee_subscription=subscription,
         customer_email=customer["email"],
     )
+    osic_defaults = {
+        "chargebee_updated_at": timezone.now(),
+        "allowed_30d_api_calls": subscription_metadata.api_calls,
+        "allowed_seats": subscription_metadata.seats,
+        "organisation_id": existing_subscription.organisation_id,
+        "allowed_projects": subscription_metadata.projects,
+        "chargebee_email": subscription_metadata.chargebee_email,
+    }
+
+    if "current_term_end" in subscription:
+        current_term_end = subscription["current_term_end"]
+        if current_term_end is None:
+            osic_defaults["current_billing_term_ends_at"] = None
+        else:
+            osic_defaults["current_billing_term_ends_at"] = datetime.fromtimestamp(
+                current_term_end
+            ).replace(tzinfo=timezone.utc)
+
+    if "current_term_start" in subscription:
+        current_term_start = subscription["current_term_start"]
+        if current_term_start is None:
+            osic_defaults["current_billing_term_starts_at"] = None
+        else:
+            osic_defaults["current_billing_term_starts_at"] = datetime.fromtimestamp(
+                current_term_start
+            ).replace(tzinfo=timezone.utc)
+
     OrganisationSubscriptionInformationCache.objects.update_or_create(
         organisation_id=existing_subscription.organisation_id,
-        defaults={
-            "chargebee_updated_at": timezone.now(),
-            "allowed_30d_api_calls": subscription_metadata.api_calls,
-            "allowed_seats": subscription_metadata.seats,
-            "organisation_id": existing_subscription.organisation_id,
-            "allowed_projects": subscription_metadata.projects,
-            "chargebee_email": subscription_metadata.chargebee_email,
-        },
+        defaults=osic_defaults,
     )
     return Response(status=status.HTTP_200_OK)
