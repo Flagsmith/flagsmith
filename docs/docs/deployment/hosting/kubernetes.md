@@ -184,7 +184,7 @@ databaseExternal:
 
 :::caution
 
-Due to a [bug](https://bugs.python.org/issue33342) in python's urllib module, passwords containing \[, \] or # chars
+Due to a [bug](https://bugs.python.org/issue33342) in python's urllib module, passwords containing `[`, `]` or `#` chars
 must be urlencoded.
 
 e.g.
