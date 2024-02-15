@@ -235,5 +235,6 @@ export type Req = {
     data: { name: string }
   }
   getAuditLogItem: { id: string }
+  getProject: { id: string }
   // END OF TYPES
 }
