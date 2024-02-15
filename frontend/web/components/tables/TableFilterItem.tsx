@@ -6,15 +6,18 @@ type TableFilterItemType = {
   isActive?: boolean
   title: string | ReactNode
   onClick: () => void
+  'data-test'?: string
 }
 
 const TableFilterItem: FC<TableFilterItemType> = ({
   isActive,
   onClick,
   title,
+  ...rest
 }) => {
   return (
     <a
+      {...rest}
       href={'#'}
       onClick={(e) => {
         e.preventDefault()

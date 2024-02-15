@@ -11,6 +11,14 @@ export type PagedResponse<T> = {
   results: T[]
 }
 export type FlagsmithValue = string | number | boolean | null
+
+export type FeatureVersionState = {
+  enabled: boolean
+  feature: number
+  feature_state_value: FeatureStateValue
+  feature_segment: null | FeatureState['feature_segment']
+  multivariate_feature_state_values: Omit<MultivariateFeatureStateValue, 'id'>[]
+}
 export type Operator = {
   value: string | null
   label: string
@@ -65,6 +73,7 @@ export type Environment = {
   allow_client_traits: boolean
   hide_sensitive_data: boolean
   total_segment_overrides?: number
+  use_v2_feature_versioning: boolean
 }
 export type Project = {
   id: number
@@ -294,12 +303,18 @@ export type FeatureState = {
   enabled: boolean
   created_at: string
   updated_at: string
+  environment_feature_version: string
   version?: number
   live_from?: string
   hide_from_client?: string
   feature: number
   environment: number
-  feature_segment?: number
+  feature_segment?: {
+    id: number
+    priority: number
+    segment: number
+    uuid: string
+  }
   change_request?: number
 }
 
@@ -354,7 +369,6 @@ export type Account = {
   auth_type: AuthType
   is_superuser: boolean
 }
-
 export type Role = {
   id: number
   name: string
@@ -367,7 +381,16 @@ export type RolePermissionUser = {
   role: number
   id: number
 }
-
+export type FeatureVersion = {
+  created_at: string
+  updated_at: string
+  published: boolean
+  live_from: string
+  uuid: string
+  is_live: boolean
+  published_by: number | null
+  created_by: number | null
+}
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -427,9 +450,10 @@ export type Res = {
     }
     value: string
   }
+  featureVersion: FeatureVersion
+  versionFeatureState: FeatureState[]
   roles: Role[]
   rolePermission: { id: string }
-
   projectFlags: PagedResponse<ProjectFlag>
   projectFlag: ProjectFlag
   identityFeatureStates: IdentityFeatureState[]
@@ -443,6 +467,11 @@ export type Res = {
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
   groupSummaries: UserGroupSummary[]
+  segmentPriorities: {}
+  featureSegment: { id: string }
+  featureVersions: PagedResponse<FeatureVersion>
+  users: User[]
+  enableFeatureVersioning: { id: string }
   auditLogItem: AuditLogDetail
   featureExport: { id: string }
   featureExports: PagedResponse<FeatureExport>

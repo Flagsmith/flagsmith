@@ -5,6 +5,7 @@ import DiffEnabled from './DiffEnabled'
 import { sortBy } from 'lodash'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
+import Utils from 'common/utils/utils'
 
 type DiffSegment = {
   diff: TDiffSegment
@@ -16,8 +17,8 @@ const DiffSegment: FC<DiffSegment> = ({ diff }) => {
     <div className={'flex-row list-item list-item-sm'}>
       <div style={{ width: widths[0] }} className='table-column text-center'>
         <DiffString
-          oldValue={`${diff.created ? diff.newPriority : diff.oldPriority}`}
-          newValue={`${diff.deleted ? diff.oldPriority : diff.newPriority}`}
+          oldValue={diff.created ? diff.newPriority : diff.oldPriority}
+          newValue={diff.deleted ? diff.oldPriority : diff.newPriority}
         />
       </div>
       <div className='table-column flex-fill'>

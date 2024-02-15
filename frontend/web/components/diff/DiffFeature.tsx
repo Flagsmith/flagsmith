@@ -87,8 +87,8 @@ const DiffFeature: FC<FeatureDiffType> = ({
               }
             >
               <div className='panel-content'>
-                <div className='search-list'>
-                  <div className='flex-row mt-2 table-header'>
+                <div className='search-list mt-2'>
+                  <div className='flex-row table-header'>
                     {!hideValue && (
                       <div className='table-column flex-row flex flex-1'>
                         Value
