@@ -409,7 +409,7 @@ export default class AdminAPIKeys extends PureComponent {
         <JSONReference
           className='mt-4'
           hideCondensedButton
-          title={'Terraform API Keys'}
+          title={'API Keys'}
           json={apiKeys}
         />
         <Column className='my-4 ml-0 col-md-6'>
@@ -448,8 +448,9 @@ export default class AdminAPIKeys extends PureComponent {
             items={apiKeys}
             header={
               <Row className='table-header'>
-                <Flex className='table-column px-3'>Terraform API Keys</Flex>
+                <Flex className='table-column px-3'>API Keys</Flex>
                 <Flex className='table-column'>Created</Flex>
+                <Flex className='table-column'>Is Admin</Flex>
                 <div
                   className='table-column text-center'
                   style={{ width: '80px' }}
@@ -476,6 +477,9 @@ export default class AdminAPIKeys extends PureComponent {
                   </Flex>
                   <Flex className='table-column fs-small lh-sm'>
                     {moment(v.created).format('Do MMM YYYY HH:mma')}
+                  </Flex>
+                  <Flex className='table-column fs-small lh-sm'>
+                    <Switch checked={v.is_admin} disabled={true} />
                   </Flex>
                   <div
                     className='table-column  text-center'
