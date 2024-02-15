@@ -3,6 +3,7 @@ import {
   Segment,
   Tag,
   FeatureStateValue,
+  FeatureState,
   Role,
   ImportStrategy,
   APIKey,
@@ -15,6 +16,12 @@ export type PagedRequest<T> = T & {
 }
 export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
+export type CreateVersionFeatureState = {
+  environmentId: string
+  featureId: number
+  sha: string
+  featureState: FeatureState
+}
 export type Req = {
   getSegments: PagedRequest<{
     q?: string
@@ -55,7 +62,7 @@ export type Req = {
     identifiers: string[]
   }
   featureSegment: {
-    segment: string
+    segment: number
   }
   getIdentities: PagedRequest<{
     environmentId: string
@@ -171,6 +178,46 @@ export type Req = {
   deleteUserWihRole: { org_id: string; user_id: string; role_id: string }
   getGroupWithRole: { org_id: string; group_id: string }
   deleteGroupWithRole: { org_id: string; group_id: string; role_id: string }
+  createAndPublishFeatureVersion: {
+    environmentId: string
+    featureId: number
+    featureStates: (FeatureState & { toRemove: boolean })[]
+  }
+  createFeatureVersion: {
+    environmentId: string
+    featureId: number
+  }
+  publishFeatureVersion: {
+    sha: string
+    environmentId: string
+    featureId: number
+  }
+  createVersionFeatureState: CreateVersionFeatureState
+  deleteVersionFeatureState: CreateVersionFeatureState & { id: number }
+  updateVersionFeatureState: CreateVersionFeatureState & {
+    id: number
+    uuid: string
+  }
+  getVersionFeatureState: {
+    sha: string
+    environmentId: string
+    featureId: number
+  }
+  updateSegmentPriorities: { id: number; priority: number }[]
+  deleteFeatureSegment: { id: number }
+  getFeatureVersions: PagedRequest<{
+    featureId: number
+    environmentId: string
+  }>
+  getUsers: { organisationId: number }
+  getFeatureVersion: {
+    environmentId: string
+    featureId: string
+    uuid: string
+  }
+  enableFeatureVersioning: {
+    environmentId: string
+  }
   getChangeRequests: PagedRequest<{
     search?: string
     environmentId: string

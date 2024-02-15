@@ -10,6 +10,7 @@ import projectTest from './tests/project-test'
 import { testSegment1, testSegment2, testSegment3 } from './tests/segment-test'
 import initialiseTests from './tests/initialise-tests'
 import flagTests from './tests/flag-tests'
+import versioningTests from './tests/versioning-tests';
 
 require('dotenv').config()
 
@@ -116,5 +117,10 @@ test('Environment', async () => {
 
 test('Project', async () => {
   await projectTest()
+  await logout()
+})
+
+test('Versioning', async () => {
+  await versioningTests()
   await logout()
 })

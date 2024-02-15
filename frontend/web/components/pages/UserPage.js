@@ -161,7 +161,6 @@ const UserPage = class extends Component {
         <span className='standard-case'>{projectFlag.name}</span>
       </span>,
       <CreateFlagModal
-        isEdit
         identity={this.props.match.params.id}
         identityName={decodeURIComponent(this.props.match.params.identity)}
         environmentId={this.props.match.params.environmentId}

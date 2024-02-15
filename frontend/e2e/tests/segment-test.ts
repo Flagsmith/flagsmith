@@ -25,7 +25,8 @@ import {
   viewFeature,
   waitAndRefresh,
   waitForElementVisible,
-} from '../helpers.cafe'
+  createOrganisationAndProject,
+} from '../helpers.cafe';
 import { E2E_USER, PASSWORD } from '../config'
 
 export const testSegment1 = async () => {

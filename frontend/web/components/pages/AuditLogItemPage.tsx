@@ -103,10 +103,7 @@ const AuditLogItemPage: FC<AuditLogItemPageType> = ({ match }) => {
                               newValue={!!v.new}
                             />
                           ) : (
-                            <DiffString
-                              oldValue={`${v.old}`}
-                              newValue={`${v.new}`}
-                            />
+                            <DiffString oldValue={v.old} newValue={v.new} />
                           )}
                         </div>
                       </Row>
