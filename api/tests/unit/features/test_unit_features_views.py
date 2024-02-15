@@ -2710,7 +2710,7 @@ def test_feature_list_last_modified_values(
         Feature.objects.create(name=f"feature_{i}", project=project)
 
     # When
-    with django_assert_num_queries(18):  # TODO: reduce this number of queries!
+    with django_assert_num_queries(17):  # TODO: reduce this number of queries!
         response = staff_client.get(url)
 
     # Then
