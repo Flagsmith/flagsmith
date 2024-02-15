@@ -95,27 +95,21 @@ def send_admin_api_usage_notification(
     Send notification to admins that the API has breached a threshold.
     """
 
+    recipient_list = FFAdminUser.objects.filter(
+        userorganisation__organisation=organisation,
+    )
+
     if matched_threshold < 100:
         message = "organisations/api_usage_notification.txt"
         html_message = "organisations/api_usage_notification.html"
 
         # Since threshold < 100 only include admins.
-        recipient_list = list(
-            FFAdminUser.objects.filter(
-                userorganisation__organisation=organisation,
-                userorganisation__role=OrganisationRole.ADMIN,
-            ).values_list("email", flat=True)
+        recipient_list = recipient_list.filter(
+            userorganisation__role=OrganisationRole.ADMIN,
         )
     else:
         message = "organisations/api_usage_notification_limit.txt"
         html_message = "organisations/api_usage_notification_limit.html"
-
-        # Since threshold >= 100 include everyone in the organisation.
-        recipient_list = list(
-            FFAdminUser.objects.filter(
-                userorganisation__organisation=organisation,
-            ).values_list("email", flat=True)
-        )
 
     context = {
         "organisation": organisation,
@@ -126,7 +120,7 @@ def send_admin_api_usage_notification(
         subject=f"Flagsmith API use has reached {matched_threshold}%",
         message=render_to_string(message, context),
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=recipient_list,
+        recipient_list=list(recipient_list.values_list("email", flat=True)),
         html_message=render_to_string(html_message, context),
         fail_silently=True,
     )
