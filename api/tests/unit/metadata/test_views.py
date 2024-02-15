@@ -314,7 +314,7 @@ def test_create_model_metadata_field_for_features(
     project_content_type: ContentType,
     feature_content_type: ContentType,
     project: Project,
-):
+) -> None:
     # Given
     url = reverse(
         "api-v1:organisations:metadata-model-fields-list", args=[organisation.id]
@@ -347,7 +347,7 @@ def test_create_model_metadata_field_for_segments(
     project_content_type: ContentType,
     segment_content_type: ContentType,
     project: Project,
-):
+) -> None:
     # Given
     url = reverse(
         "api-v1:organisations:metadata-model-fields-list", args=[organisation.id]

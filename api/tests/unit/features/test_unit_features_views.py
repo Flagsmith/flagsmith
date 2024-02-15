@@ -2237,8 +2237,8 @@ def test_cannot_update_feature_of_a_feature_state(
 def test_create_feature_with_required_metadata_returns_400(
     project: Project,
     client: APIClient,
-    required_a_segment_metadata_field,
-):
+    required_a_segment_metadata_field: MetadataModelField,
+) -> None:
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
     description = "This is the description"
@@ -2306,7 +2306,7 @@ def test_create_feature_with_required_metadata_returns_201(
     project: Project,
     client: APIClient,
     required_a_feature_metadata_field: MetadataModelField,
-):
+) -> None:
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
     description = "This is the description"

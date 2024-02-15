@@ -623,10 +623,10 @@ def test_create_segment_with_required_metadata_returns_201(
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_segment_with_required_metadata_returns_400(
-    project,
-    client,
-    required_a_segment_metadata_field,
-):
+    project: Project,
+    client: APIClient,
+    required_a_segment_metadata_field: MetadataModelField,
+) -> None:
     # Given
     url = reverse("api-v1:projects:project-segments-list", args=[project.id])
     description = "This is the description"
@@ -735,7 +735,7 @@ def test_create_segment_with_optional_metadata_returns_201(
     project: Project,
     client: APIClient,
     optional_b_segment_metadata_field: MetadataModelField,
-):
+) -> None:
     # Given
     url = reverse("api-v1:projects:project-segments-list", args=[project.id])
     description = "This is the description"
