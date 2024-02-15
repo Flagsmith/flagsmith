@@ -124,7 +124,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
           {!hideAudit && (
             <div
               className='feature-action__item'
-              data-test={`feature-history-${featureIndex}`}
+              data-test={`feature-audit-${featureIndex}`}
               onClick={() => handleActionClick('audit')}
             >
               <Icon name='list' width={18} fill='#9DA4AE' />
