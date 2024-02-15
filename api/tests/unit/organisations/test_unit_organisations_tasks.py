@@ -2,6 +2,7 @@ import uuid
 from datetime import timedelta
 
 import pytest
+from django.core.mail.message import EmailMultiAlternatives
 from django.utils import timezone
 from pytest_mock import MockerFixture
 
@@ -229,6 +230,7 @@ def test_send_org_subscription_cancelled_alert(db: None, mocker: MockerFixture) 
 def test_handle_api_usage_notifications_below_100(
     mocker: MockerFixture,
     organisation: Organisation,
+    mailoutbox: list[EmailMultiAlternatives],
 ) -> None:
     # Given
     now = timezone.now()
@@ -245,9 +247,6 @@ def test_handle_api_usage_notifications_below_100(
         "organisations.tasks.get_current_api_usage",
     )
     mock_api_usage.return_value = 91
-    mock_send_mail = mocker.patch(
-        "organisations.tasks.send_mail",
-    )
     assert not OranisationAPIUsageNotification.objects.filter(
         organisation=organisation,
     ).exists()
@@ -257,31 +256,38 @@ def test_handle_api_usage_notifications_below_100(
 
     # Then
     mock_api_usage.assert_called_once_with(organisation.id, "14d")
-    mock_send_mail.assert_called_once_with(
-        subject="Flagsmith API use has reached 90%",
-        message=(
-            "Hi there,\n\nThe API usage for Test Org has reached "
-            "90% within the current subscription period. Please "
-            "consider upgrading your organisations account limits.\n\n"
-            "Thank you!\n\nThe Flagsmith Team\n"
-        ),
-        html_message=(
-            "<table>\n\n        <tr>\n\n               "
-            "<td>Hi there,</td>\n\n        </tr>\n\n        "
-            "<tr>\n\n               <td>\n                 "
-            "The API usage for Test Org has reached\n                 "
-            "90% within the current subscription period.\n                 "
-            "Please consider upgrading your organisations account limits.\n"
-            "               </td>\n\n\n        </tr>\n\n        "
-            "<tr>\n\n               <td>Thank you!</td>\n\n      "
-            "  </tr>\n\n        <tr>\n\n               "
-            "<td>The Flagsmith Team</td>\n\n        "
-            "</tr>\n\n</table>\n"
-        ),
-        from_email="noreply@flagsmith.com",
-        recipient_list=["admin@example.com"],
-        fail_silently=True,
+
+    assert len(mailoutbox) == 1
+    email = mailoutbox[0]
+    assert email.subject == "Flagsmith API use has reached 90%"
+    assert email.body == (
+        "Hi there,\n\nThe API usage for Test Org has reached "
+        "90% within the current subscription period. Please "
+        "consider upgrading your organisations account limits.\n\n"
+        "Thank you!\n\nThe Flagsmith Team\n"
     )
+
+    assert len(email.alternatives) == 1
+    assert len(email.alternatives[0]) == 2
+    assert email.alternatives[0][1] == "text/html"
+
+    assert email.alternatives[0][0] == (
+        "<table>\n\n        <tr>\n\n               "
+        "<td>Hi there,</td>\n\n        </tr>\n\n        "
+        "<tr>\n\n               <td>\n                 "
+        "The API usage for Test Org has reached\n                 "
+        "90% within the current subscription period.\n                 "
+        "Please consider upgrading your organisations account limits.\n"
+        "               </td>\n\n\n        </tr>\n\n        "
+        "<tr>\n\n               <td>Thank you!</td>\n\n      "
+        "  </tr>\n\n        <tr>\n\n               "
+        "<td>The Flagsmith Team</td>\n\n        "
+        "</tr>\n\n</table>\n"
+    )
+
+    assert email.from_email == "noreply@flagsmith.com"
+    # Only admin because threshold is under 100.
+    assert email.to == ["admin@example.com"]
 
     assert (
         OranisationAPIUsageNotification.objects.filter(
@@ -310,6 +316,7 @@ def test_handle_api_usage_notifications_below_100(
 def test_handle_api_usage_notifications_above_100(
     mocker: MockerFixture,
     organisation: Organisation,
+    mailoutbox: list[EmailMultiAlternatives],
 ) -> None:
     # Given
     now = timezone.now()
@@ -326,9 +333,7 @@ def test_handle_api_usage_notifications_above_100(
         "organisations.tasks.get_current_api_usage",
     )
     mock_api_usage.return_value = 105
-    mock_send_mail = mocker.patch(
-        "organisations.tasks.send_mail",
-    )
+
     assert not OranisationAPIUsageNotification.objects.filter(
         organisation=organisation,
     ).exists()
@@ -338,33 +343,39 @@ def test_handle_api_usage_notifications_above_100(
 
     # Then
     mock_api_usage.assert_called_once_with(organisation.id, "14d")
-    mock_send_mail.assert_called_once_with(
-        subject="Flagsmith API use has reached 100%",
-        message=(
-            "Hi there,\n\nThe API usage for Test Org has breached "
-            "100% within the current subscription period. Please "
-            "upgrade your organisations account to ensure "
-            "continued service.\n\nThank you!\n\n"
-            "The Flagsmith Team\n"
-        ),
-        html_message=(
-            "<table>\n\n        <tr>\n\n               <td>Hi "
-            "there,</td>\n\n        </tr>\n\n        <tr>\n\n    "
-            "           <td>\n                 The API usage for Test Org "
-            "has breached\n                 100% within the "
-            "current subscription period.\n                 "
-            "Please upgrade your organisations account to ensure "
-            "continued service.\n               </td>\n\n\n      "
-            "  </tr>\n\n        <tr>\n\n               <td>"
-            "Thank you!</td>\n\n        </tr>\n\n        <tr>\n\n"
-            "               <td>The Flagsmith Team</td>\n\n        "
-            "</tr>\n\n</table>\n"
-        ),
-        from_email="noreply@flagsmith.com",
-        # Extra staff included because threshold is over 100.
-        recipient_list=["admin@example.com", "staff@example.com"],
-        fail_silently=True,
+
+    assert len(mailoutbox) == 1
+    email = mailoutbox[0]
+    assert email.subject == "Flagsmith API use has reached 100%"
+    assert email.body == (
+        "Hi there,\n\nThe API usage for Test Org has breached "
+        "100% within the current subscription period. Please "
+        "upgrade your organisations account to ensure "
+        "continued service.\n\nThank you!\n\n"
+        "The Flagsmith Team\n"
     )
+
+    assert len(email.alternatives) == 1
+    assert len(email.alternatives[0]) == 2
+    assert email.alternatives[0][1] == "text/html"
+
+    assert email.alternatives[0][0] == (
+        "<table>\n\n        <tr>\n\n               <td>Hi "
+        "there,</td>\n\n        </tr>\n\n        <tr>\n\n    "
+        "           <td>\n                 The API usage for Test Org "
+        "has breached\n                 100% within the "
+        "current subscription period.\n                 "
+        "Please upgrade your organisations account to ensure "
+        "continued service.\n               </td>\n\n\n      "
+        "  </tr>\n\n        <tr>\n\n               <td>"
+        "Thank you!</td>\n\n        </tr>\n\n        <tr>\n\n"
+        "               <td>The Flagsmith Team</td>\n\n        "
+        "</tr>\n\n</table>\n"
+    )
+
+    assert email.from_email == "noreply@flagsmith.com"
+    # Extra staff included because threshold is over 100.
+    assert email.to == ["admin@example.com", "staff@example.com"]
 
     assert (
         OranisationAPIUsageNotification.objects.filter(
