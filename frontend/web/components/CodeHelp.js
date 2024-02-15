@@ -102,13 +102,15 @@ const CodeHelp = class extends Component {
 
   render() {
     const { hideHeader } = this.props
-    const language =
+    let language =
       this.state.language ||
       flagsmith.getTrait('preferred_language') ||
       Object.keys(this.props.snippets)[0]
+    // A snippet might not be available for the code help, in which case match the index or set to the first one
     const tab = language
       ? Math.max(Object.keys(this.props.snippets).indexOf(language), 0)
       : 0
+    language = Object.keys(this.props.snippets)[tab]
     return (
       <div>
         {!hideHeader && (

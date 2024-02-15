@@ -20,6 +20,7 @@ import { setViewMode } from 'common/useViewMode'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
 import { getViewMode } from 'common/useViewMode'
 import { TagStrategy } from 'common/types/responses'
+import EnvironmentDocumentCodeHelp from 'components/EnvironmentDocumentCodeHelp'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -502,6 +503,13 @@ const FeaturesPage = class extends Component {
                               this.props.match.params.environmentId,
                               projectFlags?.[0]?.name,
                             )}
+                          />
+                          <EnvironmentDocumentCodeHelp
+                            title='3: Providing feature defaults and support offline'
+                            projectId={this.props.match.params.projectId}
+                            environmentId={
+                              this.props.match.params.environmentId
+                            }
                           />
                         </FormGroup>
                         <FormGroup className='pb-4'>

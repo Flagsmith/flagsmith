@@ -5,6 +5,7 @@ import {
   FeatureStateValue,
   Role,
   ImportStrategy,
+  APIKey,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -179,6 +180,12 @@ export type Req = {
   }>
   getGroupSummaries: {
     orgId: string
+  }
+  getServersideEnvironmentKeys: { environmentId: string }
+  deleteServersideEnvironmentKeys: { environmentId: string; id: string }
+  createServersideEnvironmentKeys: {
+    environmentId: string
+    data: { name: string }
   }
   getAuditLogItem: { id: string }
   // END OF TYPES
