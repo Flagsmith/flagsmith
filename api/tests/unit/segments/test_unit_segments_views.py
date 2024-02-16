@@ -15,7 +15,9 @@ from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature
 from projects.models import Project
+from projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
+from tests.types import WithProjectPermissionsCallable
 from util.mappers import map_identity_to_identity_document
 
 User = get_user_model()
@@ -782,3 +784,48 @@ def test_create_segment_obeys_max_conditions(
     }
 
     assert Segment.objects.count() == 0
+
+
+def test_include_feature_specific_query_filter__true(
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+    project: Project,
+    segment: Segment,
+    feature_specific_segment: Segment,
+) -> None:
+    # Given
+    with_project_permissions([MANAGE_SEGMENTS, VIEW_PROJECT])
+    url = "%s?include_feature_specific=1" % (
+        reverse("api-v1:projects:project-segments-list", args=[project.id]),
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.json()["count"] == 2
+    assert [res["id"] for res in response.json()["results"]] == [
+        segment.id,
+        feature_specific_segment.id,
+    ]
+
+
+def test_include_feature_specific_query_filter__false(
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+    project: Project,
+    segment: Segment,
+    feature_specific_segment: Segment,
+) -> None:
+    # Given
+    with_project_permissions([MANAGE_SEGMENTS, VIEW_PROJECT])
+    url = "%s?include_feature_specific=0" % (
+        reverse("api-v1:projects:project-segments-list", args=[project.id]),
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.json()["count"] == 1
+    assert [res["id"] for res in response.json()["results"]] == [segment.id]

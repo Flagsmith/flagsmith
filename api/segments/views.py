@@ -1,7 +1,6 @@
 import logging
 
 from django.utils.decorators import method_decorator
-from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
 from rest_framework.decorators import action, api_view
@@ -17,31 +16,14 @@ from projects.permissions import VIEW_PROJECT
 
 from .models import Segment
 from .permissions import SegmentPermissions
-from .serializers import SegmentSerializer
+from .serializers import SegmentListQuerySerializer, SegmentSerializer
 
 logger = logging.getLogger()
 
 
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter(
-                "identity",
-                openapi.IN_QUERY,
-                "Optionally provide the id of an identity to get only the segments they match",
-                required=False,
-                type=openapi.TYPE_INTEGER,
-            ),
-            openapi.Parameter(
-                "q",
-                openapi.IN_QUERY,
-                "Search term to find segment with given term in their name",
-                required=False,
-                type=openapi.TYPE_STRING,
-            ),
-        ]
-    ),
+    decorator=swagger_auto_schema(query_serializer=SegmentListQuerySerializer()),
 )
 class SegmentViewSet(viewsets.ModelViewSet):
     serializer_class = SegmentSerializer
@@ -70,7 +52,10 @@ class SegmentViewSet(viewsets.ModelViewSet):
                 "rules__rules__rules",
             )
 
-        identity_pk = self.request.query_params.get("identity")
+        query_serializer = SegmentListQuerySerializer(data=self.request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+
+        identity_pk = query_serializer.validated_data.get("identity")
         if identity_pk:
             if identity_pk.isdigit():
                 identity = Identity.objects.get(pk=identity_pk)
@@ -79,9 +64,15 @@ class SegmentViewSet(viewsets.ModelViewSet):
                 segment_ids = EdgeIdentity.dynamo_wrapper.get_segment_ids(identity_pk)
             queryset = queryset.filter(id__in=segment_ids)
 
-        search_term = self.request.query_params.get("q")
+        search_term = query_serializer.validated_data.get("q")
         if search_term:
             queryset = queryset.filter(name__icontains=search_term)
+
+        include_feature_specific = query_serializer.validated_data[
+            "include_feature_specific"
+        ]
+        if include_feature_specific is False:
+            queryset = queryset.filter(feature__isnull=True)
 
         return queryset
 
