@@ -45,7 +45,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run E2E tests against local
         uses: ./.github/actions/local-e2e-tests
@@ -70,7 +70,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run E2E tests against local
         uses: ./.github/actions/local-e2e-tests
@@ -95,7 +95,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run E2E tests against local
         uses: ./.github/actions/local-e2e-tests
@@ -120,7 +120,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run E2E tests against local
         uses: ./.github/actions/local-e2e-tests
@@ -135,7 +135,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Build unified docker container
         uses: ./.github/actions/unified-e2e-tests
@@ -158,7 +158,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Build unified docker container
         uses: ./.github/actions/unified-e2e-tests
@@ -181,7 +181,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Build unified docker container
         uses: ./.github/actions/unified-e2e-tests
@@ -204,7 +204,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Build unified docker container
         uses: ./.github/actions/unified-e2e-tests
@@ -228,17 +228,17 @@ jobs:
 
     steps:
       - name: Checkout PR branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Build
         id: docker_build
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           push: false
           cache-from: type=gha,scope=image-unified-fb
@@ -252,17 +252,17 @@ jobs:
 
     steps:
       - name: Checkout PR branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Build
         id: docker_build
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           file: api/Dockerfile
           push: false
@@ -277,17 +277,17 @@ jobs:
 
     steps:
       - name: Checkout PR branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Build
         id: docker_build
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           file: frontend/Dockerfile
           push: false
