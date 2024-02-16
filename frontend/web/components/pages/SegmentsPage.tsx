@@ -64,6 +64,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   const [showFeatureSpecific, setShowFeatureSpecific] = useState(false)
 
   const { data, error, isLoading, refetch } = useGetSegmentsQuery({
+    include_feature_specific: showFeatureSpecific,
     page,
     page_size: 100,
     projectId,
@@ -245,9 +246,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                           !manageSegmentsPermission,
                         )
                         preselect.current = null
-                      }
-                      if (feature && !showFeatureSpecific) {
-                        return null
                       }
                       return renderWithPermission(
                         manageSegmentsPermission,

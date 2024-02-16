@@ -27,6 +27,7 @@ export type Req = {
     q?: string
     projectId: number | string
     identity?: number
+    include_feature_specific?: boolean
   }>
   deleteSegment: { projectId: number | string; id: number }
   updateSegment: { projectId: number | string; segment: Segment }
