@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v2
 
       - name: Generate UUID image name
         id: uuid
@@ -25,14 +25,14 @@ jobs:
 
       - name: Docker metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v4
         with:
           images: registry.uffizzi.com/${{ env.UUID_WORKER }}
           tags: |
             type=raw,value=30d
 
       - name: Build and Push Image to registry.uffizzi.com - Uffizzi's ephemeral Registry
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./Dockerfile
@@ -61,13 +61,13 @@ jobs:
           envsubst < docker-compose.uffizzi.yml > docker-compose.rendered.yml
           cat docker-compose.rendered.yml
       - name: Upload Rendered Compose File as Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: preview-spec
           path: docker-compose.rendered.yml
           retention-days: 2
       - name: Upload PR Event as Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: preview-spec
           path: ${{github.event_path}}
@@ -80,7 +80,7 @@ jobs:
     steps:
       # If this PR is closing, we will not render a compose file nor pass it to the next workflow.
       - name: Upload PR Event as Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: preview-spec
           path: ${{github.event_path}}
