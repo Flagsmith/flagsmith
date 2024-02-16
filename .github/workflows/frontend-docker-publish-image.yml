@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Docker metadata
         id: meta

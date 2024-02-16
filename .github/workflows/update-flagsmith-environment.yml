@@ -17,7 +17,7 @@ jobs:
       FLAGSMITH_ON_FLAGSMITH_SERVER_KEY: ${{ secrets.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v4

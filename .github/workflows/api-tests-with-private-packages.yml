@@ -41,7 +41,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install poetry
         run: pipx install poetry
@@ -55,7 +55,7 @@ jobs:
         run: make install-packages
 
       - name: Checkout rbac package
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: flagsmith/flagsmith-rbac
           token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
