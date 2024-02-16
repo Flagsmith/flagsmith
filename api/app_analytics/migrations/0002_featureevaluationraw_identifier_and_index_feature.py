@@ -5,8 +5,11 @@ from core.migration_helpers import PostgresOnlyRunSQL
 
 
 class Migration(migrations.Migration):
-
-    atomic = False
+    """
+    This migration class used to include the addition of the index that now lives
+    in 0003_add_feature_name_index. The reason for this can be attributed to the
+    discussion here: https://github.com/Flagsmith/flagsmith/issues/3425
+    """
 
     dependencies = [
         ('app_analytics', '0001_initial'),
@@ -22,20 +25,5 @@ class Migration(migrations.Migration):
             model_name='featureevaluationraw',
             name='enabled_when_evaluated',
             field=models.BooleanField(null=True, default=None),
-        ),
-        migrations.SeparateDatabaseAndState(
-            state_operations=[
-                migrations.AlterField(
-                    model_name='featureevaluationraw',
-                    name='feature_name',
-                    field=models.CharField(db_index=True, max_length=2000),
-                ),
-            ],
-            database_operations=[
-                PostgresOnlyRunSQL(
-                    'CREATE INDEX CONCURRENTLY "app_analytics_featureevaluationraw_feature_name_idx" ON "app_analytics_featureevaluationraw" ("feature_name");',
-                    reverse_sql='DROP INDEX CONCURRENTLY "app_analytics_featureevaluationraw_feature_name_idx";',
-                )
-            ],
         ),
     ]
