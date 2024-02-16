@@ -76,7 +76,7 @@ runs:
 
   steps:
     - name: Checkout SAML package
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: flagsmith/flagsmith-saml
         token: ${{ inputs.github_access_token }}
@@ -88,7 +88,7 @@ runs:
       shell: bash
 
     - name: Checkout Workflows Logic package
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: flagsmith/flagsmith-workflows
         token: ${{ inputs.github_access_token }}
@@ -100,7 +100,7 @@ runs:
       shell: bash
 
     - name: Checkout Auth Controller package
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: flagsmith/flagsmith-auth-controller
         token: ${{ inputs.github_access_token }}
@@ -112,7 +112,7 @@ runs:
       shell: bash
 
     - name: Checkout RBAC module
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: flagsmith/flagsmith-rbac
         token: ${{ inputs.github_access_token }}

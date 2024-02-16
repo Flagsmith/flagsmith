@@ -22,10 +22,10 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Checkout SAML package
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: flagsmith/flagsmith-saml
           token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
@@ -37,7 +37,7 @@ jobs:
           mv ./flagsmith-saml/saml ./api
 
       - name: Checkout Workflows Logic package
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: flagsmith/flagsmith-workflows
           token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
@@ -48,7 +48,7 @@ jobs:
         run: mv ./flagsmith-workflows/workflows_logic ./api/features/workflows/logic
 
       - name: Checkout Auth Controller package
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: flagsmith/flagsmith-auth-controller
           token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
@@ -60,7 +60,7 @@ jobs:
         shell: bash
 
       - name: Checkout RBAC module
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: flagsmith/flagsmith-rbac
           token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
@@ -79,7 +79,7 @@ jobs:
 
       - name: Docker metadata
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: |
             flagsmith/flagsmith-private-cloud
@@ -92,7 +92,7 @@ jobs:
         uses: depot/setup-action@v1
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
