@@ -46,7 +46,7 @@ jobs:
 
       - name: Build and push E2E testing docker image
         id: docker_build
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           file: frontend/Dockerfile.e2e
           push: true
