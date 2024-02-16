@@ -1164,3 +1164,7 @@ WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
 SPLIT_TESTING_INSTALLED = importlib.util.find_spec("split_testing")
 if SPLIT_TESTING_INSTALLED:
     INSTALLED_APPS += ("split_testing",)
+
+
+# Hubspot settings
+HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
