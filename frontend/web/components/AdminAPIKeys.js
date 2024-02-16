@@ -89,14 +89,16 @@ export class CreateAPIKey extends PureComponent {
       org_id: AccountStore.getOrganisation().id,
       prefix: prefix,
     }).then((res) => {
+      this.setState({
+        expiry_date: res.data.expiry_date,
+        is_admin: res.data.is_admin,
+        name: res.data.name,
+      })
       getRolesMasterAPIKeyWithMasterAPIKeyRoles(getStore(), {
         org_id: AccountStore.getOrganisation().id,
         prefix: prefix,
       }).then((rolesData) => {
         this.setState({
-          expiry_date: res.data.expiry_date,
-          is_admin: res.data.is_admin,
-          name: res.data.name,
           roles: rolesData.data.results,
         })
       })
@@ -451,6 +453,7 @@ export default class AdminAPIKeys extends PureComponent {
                 <Flex className='table-column px-3'>API Keys</Flex>
                 <Flex className='table-column'>Created</Flex>
                 <Flex className='table-column'>Is Admin</Flex>
+                <Flex className='table-column'>Expired</Flex>
                 <div
                   className='table-column text-center'
                   style={{ width: '80px' }}
@@ -480,6 +483,13 @@ export default class AdminAPIKeys extends PureComponent {
                   </Flex>
                   <Flex className='table-column fs-small lh-sm'>
                     <Switch checked={v.is_admin} disabled={true} />
+                  </Flex>
+                  <Flex className='table-column fs-small lh-sm'>
+                    {v.has_expired && (
+                      <>
+                        <span className='text-danger'>API key has expired</span>
+                      </>
+                    )}
                   </Flex>
                   <div
                     className='table-column  text-center'
