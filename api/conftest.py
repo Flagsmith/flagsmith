@@ -185,6 +185,13 @@ def segment_rule(segment):
 
 
 @pytest.fixture()
+def feature_specific_segment(feature: Feature) -> Segment:
+    return Segment.objects.create(
+        feature=feature, name="feature specific segment", project=feature.project
+    )
+
+
+@pytest.fixture()
 def environment(project):
     return Environment.objects.create(name="Test Environment", project=project)
 
