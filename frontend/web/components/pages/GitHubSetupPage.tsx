@@ -1,7 +1,10 @@
 import React, { FC, useState, useEffect } from 'react'
 import _data from 'common/data/base/_data'
 import OrganisationSelect from 'components/OrganisationSelect'
+import Input from 'components/base/forms/Input'
+import InputGroup from 'components/base/forms/InputGroup'
 import ProjectFilter from 'components/ProjectFilter'
+import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
 import { useCreateGithubIntegrationMutation } from 'common/services/useGithubIntegration'
 import { useCreateGithubRepositoryMutation } from 'common/services/useGithubRepository'
@@ -10,11 +13,12 @@ type GitHubSetupPageType = {}
 const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
   const installationId =
     new URLSearchParams(props.location.search).get('installation_id') || ''
-  const [organisation, setOrganisation] = useState<number>(0)
-  const [project, setProject] = useState<number>(0)
+  console.log('DEBUG: installationId:', installationId)
+  const [organisation, setOrganisation] = useState<string>('')
+  const [project, setProject] = useState<string>('')
   const [repositoryName, setRepositoryName] = useState<string>('')
   const [repositoryOwner, setRepositoryOwner] = useState<string>('')
-  const [repositories, setRepositories] = useState<string>('')
+  const [repositories, setRepositories] = useState<any>([])
   const [
     createGithubIntegration,
     { data, isSuccess: isSuccessCreateGithubIntegration },
@@ -28,11 +32,11 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
         'installation_id': installationId,
       })
       .catch((error) => {
-        console.log(error)
+        console.log("DEBUG: error:", error)
       })
-      .then((repos) => {
-        setRepositories(repos)
-        setRepositoryOwner(repos.repositories[0].owner.login)
+      .then((res) => {
+        setRepositories(res)
+        setRepositoryOwner(res?.repositories[0].owner.login)
       })
   }
 
@@ -42,7 +46,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
 
   useEffect(() => {
     if (isSuccessCreateGithubIntegration) {
-      toast('Saved2')
+      toast('Saved')
     }
   }, [isSuccessCreateGithubIntegration])
 
@@ -105,7 +109,9 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
           inputProps={{
             name: 'repositoryOwner',
           }}
-          onChange={(e) => setRepositoryOwner(Utils.safeParseEventValue(e))}
+          onChange={(e: InputEvent) =>
+            setRepositoryOwner(Utils.safeParseEventValue(e))
+          }
           disabled
           type='text'
           title={'Repository Owner'}

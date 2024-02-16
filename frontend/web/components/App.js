@@ -189,8 +189,10 @@ const App = class extends Component {
             return
           }
           if (this.props.location.search.includes('github-redirect')) {
-            this.context.router.history.replace('/github-setup')
-            this.setState({ asideIsVisible: false })
+            this.context.router.history.replace(
+              `/github-setup${this.props.location.search}`,
+            )
+            // this.setState({ asideIsVisible: false })
             return
           }
           this.context.router.history.replace('/projects')
