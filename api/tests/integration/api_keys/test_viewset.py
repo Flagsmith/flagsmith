@@ -2,6 +2,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from organisations.models import Organisation
+
 
 def test_create_master_api_key_returns_key_in_response(admin_client, organisation):
     # Given
@@ -56,12 +58,17 @@ def test_delete_master_api_key(admin_client, organisation, admin_master_api_key_
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_list_master_api_keys(admin_client, organisation, admin_master_api_key_prefix):
+def test_list_master_api_keys(
+    admin_client: APIClient,
+    organisation: int,
+    admin_master_api_key_prefix: str,
+) -> None:
     # Given
     url = reverse(
         "api-v1:organisations:organisation-master-api-keys-list",
         args=[organisation],
     )
+
     # When
     response = admin_client.get(url)
 
@@ -69,6 +76,28 @@ def test_list_master_api_keys(admin_client, organisation, admin_master_api_key_p
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["count"] == 1
     assert response.json()["results"][0]["prefix"] == admin_master_api_key_prefix
+    assert response.json()["results"][0]["has_expired"] is False
+
+
+def test_list_master_api_keys__when_expired(
+    admin_client: APIClient,
+    organisation: Organisation,
+    expired_api_key_prefix: str,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-master-api-keys-list",
+        args=[organisation],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["count"] == 1
+    assert response.json()["results"][0]["prefix"] == expired_api_key_prefix
+    assert response.json()["results"][0]["has_expired"] is True
 
 
 def test_retrieve_master_api_key(
