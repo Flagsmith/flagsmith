@@ -1,9 +1,17 @@
 # https://github.com/actions/labeler
 
-docs: docs/**
+docs:
+  - changed-files:
+      - any-glob-to-any-file: docs/**
 
-front-end: frontend/**
+front-end:
+  - changed-files:
+      - any-glob-to-any-file: frontend/**
 
-api: api/**
+api:
+  - changed-files:
+      - any-glob-to-any-file: api/**
 
-github: .github/**
+github:
+  - changed-files:
+      - any-glob-to-any-file: .github/**
