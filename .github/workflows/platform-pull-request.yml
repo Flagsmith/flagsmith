@@ -273,8 +273,6 @@ jobs:
         uses: depot/build-push-action@v1
         with:
           push: false
-          cache-from: type=gha,scope=image-unified-fb
-          cache-to: type=gha,mode=max,scope=image-unified-fb
           tags: flagsmith/flagsmith:testing
 
   docker-build-api:
@@ -299,8 +297,6 @@ jobs:
         with:
           file: api/Dockerfile
           push: false
-          cache-from: type=gha,scope=image-api-fb
-          cache-to: type=gha,mode=max,scope=image-api-fb
           tags: flagsmith/flagsmith-api:testing
 
   docker-build-frontend:
@@ -325,6 +321,4 @@ jobs:
         with:
           file: frontend/Dockerfile
           push: false
-          cache-from: type=gha,scope=image-frontend-fb
-          cache-to: type=gha,mode=max,scope=image-frontend-fb
           tags: flagsmith/flagsmith-frontend:testing
