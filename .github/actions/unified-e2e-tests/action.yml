@@ -16,8 +16,10 @@ runs:
   using: composite
 
   steps:
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+    - name: Set up Depot CLI
+      uses: depot/setup-action@v1
+      with:
+        oidc: true
 
     - name: Expose GitHub Runtime
       uses: crazy-max/ghaction-github-runtime@v3
@@ -36,5 +38,5 @@ runs:
         ENV: staging
         STATIC_ASSET_CDN_URL: /
       run: |
-        docker buildx bake -f docker-compose-e2e-tests.yml --load
+        depot bake -f docker-compose-e2e-tests.yml --load
       shell: bash
