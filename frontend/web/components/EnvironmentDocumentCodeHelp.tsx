@@ -23,7 +23,7 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
   const { data } = useGetServersideEnvironmentKeysQuery({ environmentId })
   const envAdmin = useHasPermission({
     id: environmentId,
-    level: 'project',
+    level: 'environment',
     permission: 'ADMIN',
   })
   return (
