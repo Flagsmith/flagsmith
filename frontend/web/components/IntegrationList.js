@@ -23,7 +23,8 @@ class Integration extends Component {
   }
 
   render() {
-    const { description, docs, image, perEnvironment } = this.props.integration
+    const { description, docs, external, image, perEnvironment } =
+      this.props.integration
     const activeIntegrations = this.props.activeIntegrations
     const showAdd = !(
       !perEnvironment &&
@@ -68,15 +69,30 @@ class Integration extends Component {
                   </Button>
                 ))}
               {showAdd && (
-                <Button
-                  className='ml-3'
-                  id='show-create-segment-btn'
-                  data-test='show-create-segment-btn'
-                  onClick={this.add}
-                  size='xSmall'
-                >
-                  Add Integration
-                </Button>
+                <>
+                  {external ? (
+                    <a
+                      href={docs}
+                      target={'_blank'}
+                      className='btn btn-primary btn-xsm ml-3'
+                      id='show-create-segment-btn'
+                      data-test='show-create-segment-btn'
+                      rel='noreferrer'
+                    >
+                      Add Integration
+                    </a>
+                  ) : (
+                    <Button
+                      className='ml-3'
+                      id='show-create-segment-btn'
+                      data-test='show-create-segment-btn'
+                      onClick={this.add}
+                      size='xSmall'
+                    >
+                      Add Integration
+                    </Button>
+                  )}
+                </>
               )}
             </Row>
           </Row>

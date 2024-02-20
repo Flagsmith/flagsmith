@@ -32,6 +32,9 @@
   &.react-diff-line--removed {
     background-color: $danger-alfa-16 !important;
   }
+  .rc-switch {
+    margin-bottom: 2px;
+  }
 }
 .react-diff-line pre {
   background-color: $black-alpha-8;

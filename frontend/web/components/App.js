@@ -413,6 +413,7 @@ const App = class extends Component {
                   {isMobile && pageHasAside && asideIsVisible ? null : (
                     <div>
                       <ButterBar
+                        projectId={projectId}
                         billingStatus={
                           AccountStore.getOrganisation()?.subscription
                             .billing_status

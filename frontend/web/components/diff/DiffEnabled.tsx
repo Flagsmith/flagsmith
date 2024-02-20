@@ -25,7 +25,7 @@ const DiffEnabled: FC<DiffType> = ({ newValue, oldValue }) => {
         <div className='react-diff-marker react-diff-marker--removed'>
           <pre>-</pre>
         </div>
-        <div className='react-diff-line react-diff-line--removed flex-fill'>
+        <div className='react-diff-line react-diff-line--removed pe-2 flex-fill'>
           <Switch checked={oldValue} />
         </div>
       </div>

@@ -30,6 +30,7 @@ import WidgetPage from './components/pages/WidgetPage'
 import BrokenPage from './components/pages/BrokenPage'
 import ProjectsPage from './components/pages/ProjectsPage'
 import AuditLogItemPage from './components/pages/AuditLogItemPage'
+import FeatureHistoryPage from './components/pages/FeatureHistoryPage'
 import SplitTestPage from './components/pages/SplitTestPage'
 
 export default (
@@ -118,6 +119,11 @@ export default (
         path='/project/:projectId/environment/:environmentId/compare'
         exact
         component={ComparePage}
+      />
+      <Route
+        path='/project/:projectId/environment/:environmentId/history'
+        exact
+        component={FeatureHistoryPage}
       />
       <Route
         path='/project/:projectId/settings'
