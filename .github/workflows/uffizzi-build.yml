@@ -41,7 +41,6 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          project: qsrts2l4gr
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           push: true

@@ -274,7 +274,6 @@ jobs:
         uses: depot/build-push-action@v1
         with:
           push: false
-          project: qsrts2l4gr
           cache-from: type=gha,scope=image-unified-fb
           cache-to: type=gha,mode=max,scope=image-unified-fb
           tags: flagsmith/flagsmith:testing
@@ -300,7 +299,6 @@ jobs:
         uses: depot/build-push-action@v1
         with:
           file: api/Dockerfile
-          project: qsrts2l4gr
           push: false
           cache-from: type=gha,scope=image-api-fb
           cache-to: type=gha,mode=max,scope=image-api-fb
@@ -327,7 +325,6 @@ jobs:
         uses: depot/build-push-action@v1
         with:
           file: frontend/Dockerfile
-          project: qsrts2l4gr
           push: false
           cache-from: type=gha,scope=image-frontend-fb
           cache-to: type=gha,mode=max,scope=image-frontend-fb

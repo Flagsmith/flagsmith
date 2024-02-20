@@ -29,7 +29,7 @@ runs:
         oidc: true
 
     - name: Build temporary Docker image for running the API
-      run: depot build --load --project qsrts2l4gr -t flagsmith/flagsmith-api:e2e-${{ github.sha }} -f api/Dockerfile .
+      run: depot build --load -t flagsmith/flagsmith-api:e2e-${{ github.sha }} -f api/Dockerfile .
       shell: bash
 
     - name: Run the API
