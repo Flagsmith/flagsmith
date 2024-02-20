@@ -35,8 +35,9 @@ type AuditLogType = {
 const pageSize = 10
 const widths = [200, 200, 150]
 const innerWidths = [200, 150, 150]
-const AuditLogPage: FC<AuditLogType> = (props) => {
+const SplitTestPage: FC<AuditLogType> = (props) => {
   const projectId = props.match.params.projectId
+  const environmentId = props.match.params.environmentId
   const { search, searchInput, setSearchInput } = useSearchThrottle()
   const [conversion_event_type_id, setConversionEvent] = useState<
     number | null
@@ -127,7 +128,10 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
       <div className='flex-row my-4'>
         Conversion Event{' '}
         <div className={'ms-2'} style={{ width: 200 }}>
-          <ConversionEventSelect onChange={setConversionEvent} />
+          <ConversionEventSelect
+            environmentId={environmentId}
+            onChange={setConversionEvent}
+          />
         </div>
       </div>
       {!conversion_event_type_id ? (
@@ -174,4 +178,4 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
   )
 }
 
-export default ConfigProvider(AuditLogPage)
+export default ConfigProvider(SplitTestPage)

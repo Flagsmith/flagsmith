@@ -1,16 +1,23 @@
 import React, { FC, useEffect, useState } from 'react'
-import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { useGetConversionEventsQuery } from 'common/services/useConversionEvent'
 import useSearchThrottle from 'common/useSearchThrottle'
 import { ConversionEvent } from 'common/types/responses'
+import ProjectStore from 'common/stores/project-store'
 
 type ConversionEventSelectType = {
   onChange: (v: number) => void
+  environmentId: string
 }
 
-const ConversionEventSelect: FC<ConversionEventSelectType> = ({ onChange }) => {
+const ConversionEventSelect: FC<ConversionEventSelectType> = ({
+  environmentId,
+  onChange,
+}) => {
   const { search, searchInput, setSearchInput } = useSearchThrottle('')
-  const { data } = useGetConversionEventsQuery({ q: `${search}` })
+  const { data } = useGetConversionEventsQuery({
+    environment_id: ProjectStore.getEnvironmentIdFromKey(environmentId),
+    q: `${search}`,
+  })
   const [selected, setSelected] = useState<ConversionEvent | null>(null)
 
   return (

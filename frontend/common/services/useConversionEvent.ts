@@ -12,9 +12,11 @@ export const conversionEventService = service
         Req['getConversionEvents']
       >({
         providesTags: [{ id: 'LIST', type: 'ConversionEvent' }],
-        query: ({ q }) => ({
-          url: `conversion_event_types?${Utils.toParam(q)}`,
-        }),
+        query: (query) => {
+          return {
+            url: `conversion_event_types?${Utils.toParam(query)}`,
+          }
+        },
       }),
       // END OF ENDPOINTS
     }),
