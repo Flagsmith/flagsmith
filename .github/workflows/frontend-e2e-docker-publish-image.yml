@@ -50,6 +50,7 @@ jobs:
         uses: depot/build-push-action@v1
         with:
           file: frontend/Dockerfile.e2e
+          project: qsrts2l4gr
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           build-args: |
