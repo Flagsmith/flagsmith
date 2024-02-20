@@ -878,6 +878,7 @@ MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
 SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
 AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
 ENABLE_FLAGSMITH_REALTIME = env.bool("ENABLE_FLAGSMITH_REALTIME", default=False)
+USE_SECURE_COOKIES = env.bool("USE_SECURE_COOKIES", default=True)
 
 # Set this to enable create organisation for only superusers
 RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS", False)
