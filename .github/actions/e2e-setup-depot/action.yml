@@ -1,5 +1,5 @@
-name: Run E2E tests in docker unified environment
-description: Run the E2E tests against docker unified environment
+name: Set up Depot for E2E Compose builds
+description: Set up Depot for E2E Compose builds
 
 inputs:
   github_actor:
@@ -7,9 +7,6 @@ inputs:
     required: true
   github_token:
     description: Github token
-    required: true
-  e2e_test_token_staging:
-    description: The staging test token.
     required: true
 
 runs:
