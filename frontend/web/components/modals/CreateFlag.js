@@ -34,7 +34,10 @@ import FeatureValue from 'components/FeatureValue'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
 import { getGithubIntegration } from 'common/services/useGithubIntegration'
-import { createExternalResource } from 'common/services/useExternalResource'
+import {
+  createExternalResource,
+  getExternalResource,
+} from 'common/services/useExternalResource'
 import {
   createFeatureExternalResource,
   deleteFeatureExternalResource,
@@ -174,6 +177,14 @@ const CreateFlag = class extends Component {
       this.props.environmentFlag
     ) {
       this.getFeatureUsage()
+    }
+
+    if (this.props.projectFlag) {
+      getExternalResource(getStore(), {
+        feature_id: this.props.projectFlag.id,
+      }).then((res) => {
+        this.setState({ externalResources: res.data.results })
+      })
     }
 
     getGithubIntegration(getStore(), {
@@ -515,6 +526,7 @@ const CreateFlag = class extends Component {
       enabledIndentity,
       enabledSegment,
       externalResourceType,
+      externalResources,
       featureExternalResource,
       hide_from_client,
       initial_value,
@@ -544,6 +556,31 @@ const CreateFlag = class extends Component {
     const existingChangeRequest = this.props.changeRequest
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
+    const _createExternalResourse = () => {
+      createExternalResource(getStore(), {
+        body: {
+          type: externalResourceType,
+          url: featureExternalResource,
+        },
+      }).then((res) => {
+        createFeatureExternalResource(getStore(), {
+          body: {
+            feature: projectFlag.id,
+          },
+          external_resource_pk: res.data.id,
+        }).then((res) => {
+          getExternalResource(
+            getStore(),
+            {
+              feature_id: projectFlag.id,
+            },
+            { forceRefetch: true },
+          ).then((res) => {
+            this.setState({ externalResources: res.data.results })
+          })
+        })
+      })
+    }
     let regexValid = true
     try {
       if (!isEdit && name && regex) {
@@ -623,7 +660,7 @@ const CreateFlag = class extends Component {
             {' '}
             Link GitHub Issue Pull-Request
           </label>
-          <Row className='cols-md-2'>
+          <Row className='cols-md-2 role-list'>
             <div style={{ width: '200px' }}>
               <Select
                 size='select-md'
@@ -674,28 +711,66 @@ const CreateFlag = class extends Component {
             ) : (
               <></>
             )}
-
-            {/* <Input
-              value={featureExternalResource}
-              data-test='featureExternalResource'
-              inputProps={{
-                name: 'featureExternalResource',
-              }}
-              onChange={(e) =>
-                this.setState({
-                  featureExternalResource: Utils.safeParseEventValue(e),
-                })
-              }
-              ds
-              type='text'
-              inputClassName='input--wide'
-              placeholder='https://github.com/repoOwner/repoName/issues/isssueId'
-            /> */}
           </Row>
+          <div className='text-right mt-2'>
+            {(externalResourceType == 'Github Issue' ||
+              externalResourceType == 'Github PR') && (
+              <Button
+                className='text-right'
+                theme='primary'
+                onClick={() => {
+                  _createExternalResourse()
+                }}
+              >
+                Link
+              </Button>
+            )}
+          </div>
         </FormGroup>
+        <PanelSearch
+          className='no-pad'
+          title='Issues and Pull Request'
+          items={externalResources}
+          header={
+            <Row className='table-header'>
+              <Flex className='table-column px-3'>URL</Flex>
+              <Flex className='table-column px-3'>Type</Flex>
+              <div
+                className='table-column text-center'
+                style={{ width: '80px' }}
+              >
+                Remove
+              </div>
+            </Row>
+          }
+          renderRow={(v) => (
+            <Row className='list-item' key={v.id}>
+              <Flex className='table-column px-3'>
+                <div className='font-weight-medium mb-1'>{v.url}</div>
+              </Flex>
+              <Flex className='table-column px-3'>
+                <div className='font-weight-medium mb-1'>{v.type}</div>
+              </Flex>
+              <div
+                className='table-column  text-center'
+                style={{ width: '80px' }}
+              >
+                <Button
+                  onClick={() => {
+                    // setProjects(projects.filter((p) => p.value !== v.value))
+                    console.log('DEBUG: delete')
+                  }}
+                  className='btn btn-with-icon'
+                >
+                  <Icon name='trash-2' width={20} fill='#656D7B' />
+                </Button>
+              </div>
+            </Row>
+          )}
+        />
 
         {!identity && (
-          <FormGroup className='mb-5 setting'>
+          <FormGroup className='mb-5 mt-3 setting'>
             <Row>
               <Switch
                 checked={this.state.is_server_key_only}
@@ -997,19 +1072,6 @@ const CreateFlag = class extends Component {
 
               const saveSettings = () => {
                 this.setState({ settingsChanged: false })
-                createExternalResource(getStore(), {
-                  body: {
-                    type: externalResourceType,
-                    url: featureExternalResource,
-                  },
-                }).then((res) => {
-                  createFeatureExternalResource(getStore(), {
-                    body: {
-                      feature: projectFlag.id,
-                    },
-                    external_resource_pk: res.data.id,
-                  })
-                })
                 this.save(editFeatureSettings, isSaving)
               }
 

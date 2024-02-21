@@ -154,7 +154,7 @@ export type Req = {
   getGroupSummaries: {
     orgId: string
   }
-  getExternalResource: { project_id: string }
+  getExternalResource: { feature_id: string }
   updateExternalResource: { id: string }
   deleteExternalResource: { id: string }
   createExternalResource: { body: ExternalResource }

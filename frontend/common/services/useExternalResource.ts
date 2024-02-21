@@ -34,7 +34,7 @@ export const externalResourceService = service
       >({
         providesTags: (res) => [{ id: res?.id, type: 'ExternalResource' }],
         query: (query: Req['getExternalResource']) => ({
-          url: `external-resources/external-resource-by-project/${query.project_id}/`,
+          url: `features/${query.feature_id}/external-resources/`,
         }),
       }),
       updateExternalResource: builder.mutation<
