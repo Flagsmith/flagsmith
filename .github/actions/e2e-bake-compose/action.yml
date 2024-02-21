@@ -1,0 +1,35 @@
+name: Bake Compose for E2E
+description: Bake Compose for E2E
+
+inputs:
+  github_actor:
+    description: Github actor
+    required: true
+  github_token:
+    description: Github token
+    required: true
+
+runs:
+  using: composite
+
+  steps:
+    - name: Set up Depot CLI
+      uses: depot/setup-action@v1
+      with:
+        oidc: true
+
+    - name: Switch Docker Runtime to Depot
+      run: depot configure-docker
+      shell: bash
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ inputs.github_actor }}
+        password: ${{ inputs.github_token }}
+
+    - name: Bake Compose
+      working-directory: frontend
+      run: depot bake -f docker-compose-e2e-tests.yml --load
+      shell: bash
