@@ -30,5 +30,6 @@ runs:
         password: ${{ inputs.github_token }}
 
     - name: Bake Compose
-      run: depot bake -f frontend/docker-compose-e2e-tests.yml --load
+      working-directory: frontend
+      run: depot bake -f docker-compose-e2e-tests.yml --load
       shell: bash
