@@ -155,8 +155,8 @@ export type Req = {
     orgId: string
   }
   getExternalResource: { feature_id: string }
-  updateExternalResource: { id: string }
-  deleteExternalResource: { id: string }
+  updateExternalResource: { external_resource_id: string }
+  deleteExternalResource: { feature_id: string }
   createExternalResource: { body: ExternalResource }
   getFeatureExternalResource: { external_resource_pk: number }
   updateFeatureExternalResource: { external_resource_pk: number }

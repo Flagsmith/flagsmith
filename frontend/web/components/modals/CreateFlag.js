@@ -37,11 +37,9 @@ import { getGithubIntegration } from 'common/services/useGithubIntegration'
 import {
   createExternalResource,
   getExternalResource,
+  deleteExternalResource,
 } from 'common/services/useExternalResource'
-import {
-  createFeatureExternalResource,
-  deleteFeatureExternalResource,
-} from 'common/services/useFeatureExternalResource'
+import { createFeatureExternalResource } from 'common/services/useFeatureExternalResource'
 import { getStore } from 'common/store'
 
 const CreateFlag = class extends Component {
@@ -729,12 +727,17 @@ const CreateFlag = class extends Component {
         </FormGroup>
         <PanelSearch
           className='no-pad'
-          title='Issues and Pull Request'
+          title='Linked Issues and Pull Requests.'
           items={externalResources}
           header={
             <Row className='table-header'>
-              <Flex className='table-column px-3'>URL</Flex>
-              <Flex className='table-column px-3'>Type</Flex>
+              <Flex
+                className='table-column px-3'
+                style={{ 'minWidth': '340px' }}
+              >
+                URL
+              </Flex>
+              <Flex className='table-column pl-1'>Type</Flex>
               <div
                 className='table-column text-center'
                 style={{ width: '80px' }}
@@ -746,19 +749,44 @@ const CreateFlag = class extends Component {
           renderRow={(v) => (
             <Row className='list-item' key={v.id}>
               <Flex className='table-column px-3'>
-                <div className='font-weight-medium mb-1'>{v.url}</div>
+                <Button
+                  theme='text'
+                  href={`${v.url}`}
+                  target='_blank'
+                  className='fw-normal'
+                >
+                  {v.url}
+                </Button>
               </Flex>
               <Flex className='table-column px-3'>
                 <div className='font-weight-medium mb-1'>{v.type}</div>
               </Flex>
               <div
-                className='table-column  text-center'
+                className='table-column text-center'
                 style={{ width: '80px' }}
               >
                 <Button
                   onClick={() => {
-                    // setProjects(projects.filter((p) => p.value !== v.value))
-                    console.log('DEBUG: delete')
+                    deleteExternalResource(
+                      getStore(),
+                      {
+                        external_resource_id: v.id,
+                      },
+                      { forceRefetch: true },
+                    ).then((res) => {
+                      getExternalResource(
+                        getStore(),
+                        {
+                          feature_id: projectFlag.id,
+                        },
+                        { forceRefetch: true },
+                      ).then((res) => {
+                        toast(
+                          `The feature ${projectFlag.name} was unlinked from the GitHub Issue/PR`,
+                        )
+                        this.setState({ externalResources: res.data.results })
+                      })
+                    })
                   }}
                   className='btn btn-with-icon'
                 >
