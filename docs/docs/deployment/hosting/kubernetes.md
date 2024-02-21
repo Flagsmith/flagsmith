@@ -273,6 +273,16 @@ By default, Flagsmith uses Postgres to store time series data. You can alternati
 The task processor itself is documented [here](/deployment/configuration/task-processor). See the table below for the
 values to set to configure the task processor using the helm chart.
 
+### Annotations
+
+To add annotaions to all resource except K8s Pod resource use 
+```yaml
+commonAnnotations: 
+  key: "value"
+```
+
+Or to annotate spesific resource use 
+
 ## Chart Values
 
 The following table lists the configurable parameters of the chart and their default values.
@@ -455,8 +465,8 @@ The following table lists the configurable parameters of the chart and their def
 | `api.statsd.hostFromNodeIp`                        | Set as true to use the node IP as the statsd host instead        | `false`                        |
 | `api.statsd.port`                                  | Host port to receive statsd metrics                              | `8125`                         |
 | `api.statsd.prefix`                                | Prefix to add to metric ids                                      | `flagsmith.api`                |
-| `commonLabels`                                     | Labels to add to all resources                                   | `{}`                           |
-| `commonAnnotations`                                | Annotations to add to all resources                              | `{}`                           |
+| `common.labels`                                    | Labels to add to all resources                                   | `{}`                           |
+| `common.annotations`                               | Annotations to add to all resources                              | `{}`                           |
 
 ---
 
