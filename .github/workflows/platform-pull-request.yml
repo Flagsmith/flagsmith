@@ -33,6 +33,10 @@ jobs:
     runs-on: ubuntu-latest
     name: E2E Local - Segments-1, Environment
 
+    permissions:
+      id-token: write
+      contents: read
+
     services:
       postgres:
         image: postgres:11.12-alpine
@@ -57,6 +61,10 @@ jobs:
   run-e2e-tests-2:
     runs-on: ubuntu-latest
     name: E2E Local - Segments-2
+
+    permissions:
+      id-token: write
+      contents: read
 
     services:
       postgres:
@@ -83,6 +91,10 @@ jobs:
     runs-on: ubuntu-latest
     name: E2E Local - Segments-3, Signup, Flag, Invite, Project
 
+    permissions:
+      id-token: write
+      contents: read
+
     services:
       postgres:
         image: postgres:11.12-alpine
@@ -107,6 +119,10 @@ jobs:
   run-e2e-tests-4:
     runs-on: ubuntu-latest
     name: E2E Local - Versioning
+
+    permissions:
+      id-token: write
+      contents: read
 
     services:
       postgres:
@@ -133,16 +149,19 @@ jobs:
     runs-on: ubuntu-latest
     name: E2E Unified - Versioning
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Cloning repo
         uses: actions/checkout@v4
 
-      - name: Build unified docker container
-        uses: ./.github/actions/unified-e2e-tests
+      - name: Bake Compose
+        uses: ./.github/actions/e2e-bake-compose
         with:
           github_actor: ${{github.actor}}
           github_token: ${{secrets.GITHUB_TOKEN}}
-          e2e_test_token_staging: ${{ secrets.E2E_TEST_TOKEN }}
 
       - name: Run tests on unified docker image
         working-directory: frontend
@@ -156,12 +175,16 @@ jobs:
     runs-on: ubuntu-latest
     name: E2E Unified - Segments-1, Environment
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Cloning repo
         uses: actions/checkout@v4
 
-      - name: Build unified docker container
-        uses: ./.github/actions/unified-e2e-tests
+      - name: Bake Compose
+        uses: ./.github/actions/e2e-bake-compose
         with:
           github_actor: ${{github.actor}}
           github_token: ${{secrets.GITHUB_TOKEN}}
@@ -179,12 +202,16 @@ jobs:
     runs-on: ubuntu-latest
     name: E2E Unified - Segments-2
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Cloning repo
         uses: actions/checkout@v4
 
-      - name: Build unified docker container
-        uses: ./.github/actions/unified-e2e-tests
+      - name: Bake Compose
+        uses: ./.github/actions/e2e-bake-compose
         with:
           github_actor: ${{github.actor}}
           github_token: ${{secrets.GITHUB_TOKEN}}
@@ -202,12 +229,16 @@ jobs:
     runs-on: ubuntu-latest
     name: E2E Unified - Segments-3, Signup, Flag, Invite, Project
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Cloning repo
         uses: actions/checkout@v4
 
-      - name: Build unified docker container
-        uses: ./.github/actions/unified-e2e-tests
+      - name: Bake Compose
+        uses: ./.github/actions/e2e-bake-compose
         with:
           github_actor: ${{github.actor}}
           github_token: ${{secrets.GITHUB_TOKEN}}
@@ -226,23 +257,22 @@ jobs:
     name: Test unified docker image build
     runs-on: ubuntu-latest
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Set up Depot CLI
+        uses: depot/setup-action@v1
 
       - name: Build
         id: docker_build
-        uses: docker/build-push-action@v5
+        uses: depot/build-push-action@v1
         with:
           push: false
-          cache-from: type=gha,scope=image-unified-fb
-          cache-to: type=gha,mode=max,scope=image-unified-fb
           tags: flagsmith/flagsmith:testing
 
   docker-build-api:
@@ -250,24 +280,23 @@ jobs:
     name: Test api docker image build
     runs-on: ubuntu-latest
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Set up Depot CLI
+        uses: depot/setup-action@v1
 
       - name: Build
         id: docker_build
-        uses: docker/build-push-action@v5
+        uses: depot/build-push-action@v1
         with:
           file: api/Dockerfile
           push: false
-          cache-from: type=gha,scope=image-api-fb
-          cache-to: type=gha,mode=max,scope=image-api-fb
           tags: flagsmith/flagsmith-api:testing
 
   docker-build-frontend:
@@ -275,22 +304,21 @@ jobs:
     name: Test frontend docker image build
     runs-on: ubuntu-latest
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Set up Depot CLI
+        uses: depot/setup-action@v1
 
       - name: Build
         id: docker_build
-        uses: docker/build-push-action@v5
+        uses: depot/build-push-action@v1
         with:
           file: frontend/Dockerfile
           push: false
-          cache-from: type=gha,scope=image-frontend-fb
-          cache-to: type=gha,mode=max,scope=image-frontend-fb
           tags: flagsmith/flagsmith-frontend:testing

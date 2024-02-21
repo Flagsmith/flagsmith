@@ -56,6 +56,5 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           file: frontend/Dockerfile
-          project: qsrts2l4gr
           push: true
           tags: ${{ steps.meta.outputs.tags }}

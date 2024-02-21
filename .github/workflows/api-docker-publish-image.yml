@@ -50,7 +50,6 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           file: api/Dockerfile
-          project: qsrts2l4gr
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
