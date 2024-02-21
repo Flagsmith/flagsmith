@@ -32,6 +32,5 @@ runs:
     - name: Bake Compose
       uses: depot/bake-action@v1
       with:
-        files:
-          - frontend/docker-compose-e2e-tests.yml
+        files: frontend/docker-compose-e2e-tests.yml
         load: true
