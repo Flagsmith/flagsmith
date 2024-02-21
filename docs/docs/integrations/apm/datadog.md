@@ -42,9 +42,10 @@ The second type of integration allows you to send Flag change events in Flagsmit
 4. Add the Datadog URL into Flagsmith as the Base URL - (This is either `https://api.datadoghq.com/` or
    `https://api.datadoghq.eu/`)
 
-![Datadog](/img/integrations/datadog/datadog-1.png)
+### Custom Source
 
-![Datadog](/img/integrations/datadog/datadog-2.png)
+By checking the 'Use Custom Source' option, we will send all events with the source 'Flagsmith'. Leaving this unchecked
+will mean events are labelled with the default 'My apps' source.
 
 Flag change events will now be sent to Datadog.
 

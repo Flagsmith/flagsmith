@@ -21,6 +21,7 @@ import { getRoles } from 'common/services/useRole'
 import { getRolesEnvironmentPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import { Link } from 'react-router-dom'
+import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersioning'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -137,8 +138,16 @@ const EnvironmentSettingsPage = class extends Component {
         name: name || env.name,
         use_identity_composite_key_for_hashing:
           !!this.state.use_identity_composite_key_for_hashing,
+        use_mv_v2_evaluation: !!this.state.use_mv_v2_evaluation,
       }),
     )
+
+    if (
+      !!this.state.use_v2_feature_versioning &&
+      !env.use_v2_feature_versioning
+    ) {
+      enableFeatureVersioning(getStore(), { environmentId: env.api_key })
+    }
   }
 
   saveDisabled = () => {
@@ -192,15 +201,15 @@ const EnvironmentSettingsPage = class extends Component {
     )
   }
 
-  confirmToggle = (description, feature, featureValue) => {
+  confirmToggle = (title, description, feature) => {
     openModal(
-      'Enable "Hide Sensitive Data"',
+      title,
       <ConfirmToggleEnvFeature
-        description={description}
+        description={`${description} Are you sure that you want to change this value?`}
         feature={feature}
-        featureValue={featureValue}
+        featureValue={this.state[feature]}
         onToggleChange={(value) => {
-          this.setState({ hide_sensitive_data: value }, this.saveEnv)
+          this.setState({ [feature]: value }, this.saveEnv)
           closeModal()
         }}
       />,
@@ -216,6 +225,7 @@ const EnvironmentSettingsPage = class extends Component {
         hide_sensitive_data,
         name,
         use_identity_composite_key_for_hashing,
+        use_v2_feature_versioning,
       },
     } = this
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
@@ -251,6 +261,7 @@ const EnvironmentSettingsPage = class extends Component {
                   name: env.name,
                   use_identity_composite_key_for_hashing:
                     !!env.use_identity_composite_key_for_hashing,
+                  use_v2_feature_versioning: !!env.use_v2_feature_versioning,
                 })
               }, 10)
             }
@@ -375,6 +386,39 @@ const EnvironmentSettingsPage = class extends Component {
                             </Row>
                           )}
                         </div>
+                        {Utils.getFlagsmithHasFeature('feature_versioning') && (
+                          <div>
+                            <div className='col-md-6 mt-4'>
+                              <Row>
+                                <Switch
+                                  data-test='enable-versioning'
+                                  disabled={use_v2_feature_versioning}
+                                  className='float-right'
+                                  checked={use_v2_feature_versioning}
+                                  onChange={(v) => {
+                                    this.confirmToggle(
+                                      'Enable "Feature Versioning"',
+                                      'Allows you to attach versions to updating feature values and segment overrides.',
+                                      'use_v2_feature_versioning',
+                                    )
+                                  }}
+                                />
+                                <h5 className='mb-0 ml-3'>
+                                  Feature versioning
+                                </h5>
+                              </Row>
+
+                              <p className='fs-small lh-sm'>
+                                Allows you to attach versions to updating
+                                feature values and segment overrides.
+                                <br />
+                                <strong>
+                                  Warning! Enabling this is irreversable
+                                </strong>
+                              </p>
+                            </div>
+                          </div>
+                        )}
                         <div className='col-md-6 mt-4'>
                           <Row className='mb-2'>
                             <Switch
@@ -412,6 +456,7 @@ const EnvironmentSettingsPage = class extends Component {
                         <FormGroup className='mt-4 col-md-6'>
                           <Row className='mb-2'>
                             <Switch
+                              className='float-right'
                               disabled={!has4EyesPermission}
                               checked={
                                 has4EyesPermission &&
@@ -660,11 +705,21 @@ const EnvironmentSettingsPage = class extends Component {
                         </div>
                       </div>
                     </TabItem>
-                    <TabItem tabLabel='Keys'>
+                    <TabItem tabLabel='SDK Keys'>
                       <FormGroup className='mt-4'>
                         <h5 className='mb-5'>Client-side Environment Key</h5>
                         <div className='col-md-6'>
-                          <label>Environment Key</label>
+                          <p className='fs-small lh-sm mb-0'>
+                            Use this key to initialise{' '}
+                            <Button
+                              theme='text'
+                              href='https://docs.flagsmith.com/clients/overview#client-side-sdks'
+                              target='__blank'
+                            >
+                              Client-side
+                            </Button>{' '}
+                            SDKs.
+                          </p>
                           <Row>
                             <Flex>
                               <Input

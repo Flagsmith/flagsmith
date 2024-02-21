@@ -166,6 +166,22 @@
                 {
                     "name": "USE_POSTGRES_FOR_ANALYTICS",
                     "value": "True"
+                },
+                {
+                    "name": "DEFAULT_THROTTLE_CLASSES",
+                    "value": "core.throttling.UserRateThrottle"
+                },
+                {
+                    "name": "USER_THROTTLE_CACHE_BACKEND",
+                    "value": "django_redis.cache.RedisCache"
+                },
+                {
+                    "name": "USER_THROTTLE_CACHE_LOCATION",
+                    "value": "rediss://serverless-redis-cache-7u3xil.serverless.euw2.cache.amazonaws.com:6379"
+                },
+                {
+                    "name": "USER_THROTTLE_CACHE_OPTIONS",
+                    "value": "CLIENT_CLASS=core.redis_cluster.SafeRedisClusterClient"
                 }
             ],
             "secrets": [

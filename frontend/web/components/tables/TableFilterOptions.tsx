@@ -4,13 +4,14 @@ import { IonIcon } from '@ionic/react'
 import { caretDown } from 'ionicons/icons'
 import classNames from 'classnames'
 import TableFilterItem from './TableFilterItem'
+import { ViewMode } from 'common/useViewMode'
 
 type TableFilterType = {
   title: string
   dropdownTitle?: ReactNode | string
   className?: string
   options: { label: string; value: string }[]
-  onChange: (value: string) => void
+  onChange: (value: ViewMode) => void | Promise<void>
   value: string
 }
 

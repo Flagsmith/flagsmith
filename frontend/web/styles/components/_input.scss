@@ -63,7 +63,7 @@ textarea {
   background-color: transparent !important;
   &.invalid hr,
   &.invalid hr.highlight {
-    border-color: $alert-danger-border;
+    border-color: $alert-danger-border-color;
   }
 
   label {
@@ -149,7 +149,7 @@ textarea {
   }
 
   &.error hr {
-    border-color: $alert-danger-border;
+    border-color: $alert-danger-border-color;
   }
 
   &.error,

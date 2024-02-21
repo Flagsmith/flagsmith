@@ -1,20 +1,18 @@
 import {
-  assertTextContent,
   byId,
   click,
   closeModal,
   createFeature,
   createRemoteConfig,
-  deleteFeature,
+  deleteFeature, editRemoteConfig,
   getText,
   log,
   login,
-  setText,
   toggleFeature,
   waitForElementVisible,
-} from '../helpers.cafe'
-import { t } from 'testcafe'
-import { E2E_USER, PASSWORD } from '../config'
+} from '../helpers.cafe';
+import { t } from 'testcafe';
+import { E2E_USER, PASSWORD } from '../config';
 
 export default async function () {
   log('Login')
@@ -33,7 +31,15 @@ export default async function () {
 
   log('Create Short Life Feature')
   await createFeature(3, 'short_life_feature', false)
+  await t.eval(() => {
+    window.scrollBy(0, 15000)
+  })
+
+  log('Delete Short Life Feature')
   await deleteFeature(3, 'short_life_feature')
+  await t.eval(() => {
+    window.scrollBy(0, 30000)
+  })
 
   log('Toggle Feature')
   await toggleFeature(0, true)
@@ -54,12 +60,7 @@ export default async function () {
   await t.expect(json.header_enabled.enabled).eql(true)
 
   log('Update feature')
-  await click(byId('feature-item-1'))
-  await setText(byId('featureValue'), '12')
-  await click('#update-feature-btn')
-  await assertTextContent(byId('feature-value-1'), '12')
-  await t.pressKey('esc')
-  await closeModal()
+  await editRemoteConfig(1,12)
 
   log('Try it again')
   await t.wait(2000)
@@ -74,11 +75,7 @@ export default async function () {
   await t.expect(json.header_size.value).eql(12)
 
   log('Change feature value to boolean')
-  await click(byId('feature-item-1'))
-  await setText(byId('featureValue'), 'false')
-  await click('#update-feature-btn')
-  await assertTextContent(byId('feature-value-1'), 'false')
-  await closeModal()
+  await editRemoteConfig(1,false)
 
   log('Try it again 2')
   await t.wait(2000)

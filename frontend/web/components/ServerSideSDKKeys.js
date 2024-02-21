@@ -1,9 +1,14 @@
 import React, { Component } from 'react'
-import _data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import Token from './Token'
 import ModalHR from './modals/ModalHR'
 import Icon from './Icon'
+import { getStore } from 'common/store'
+import {
+  createServersideEnvironmentKeys,
+  deleteServersideEnvironmentKeys,
+  getServersideEnvironmentKeys,
+} from 'common/services/useServersideEnvironmentKey'
 
 class CreateServerSideKeyModal extends Component {
   state = {}
@@ -92,11 +97,10 @@ class ServerSideSDKKeys extends Component {
       <CreateServerSideKeyModal
         environmentId={this.props.environmentId}
         onSubmit={(name) => {
-          _data
-            .post(
-              `${Project.api}environments/${this.props.environmentId}/api-keys/`,
-              { name },
-            )
+          createServersideEnvironmentKeys(getStore(), {
+            data: { name },
+            environmentId: this.props.environmentId,
+          })
             .then(() => this.fetch(this.props.environmentId))
             .finally(() => {
               closeModal()
@@ -116,10 +120,10 @@ class ServerSideSDKKeys extends Component {
       </div>,
       () => {
         this.setState({ isSaving: true })
-        _data
-          .delete(
-            `${Project.api}environments/${this.props.environmentId}/api-keys/${id}`,
-          )
+        deleteServersideEnvironmentKeys(getStore(), {
+          environmentId: this.props.environmentId,
+          id,
+        })
           .then(() => this.fetch(this.props.environmentId))
           .finally(() => {
             this.setState({ isSaving: false })
@@ -130,14 +134,13 @@ class ServerSideSDKKeys extends Component {
 
   fetch = (environmentId) => {
     this.setState({ isLoading: true })
-    return _data
-      .get(`${Project.api}environments/${environmentId}/api-keys/`)
-      .then((keys) => {
-        this.setState({ isLoading: false, keys })
-      })
-      .catch(() => {
-        this.setState({ isLoading: false })
-      })
+    return getServersideEnvironmentKeys(
+      getStore(),
+      { environmentId },
+      { forceRefetch: true },
+    ).then((res) => {
+      this.setState({ isLoading: false, keys: res.data })
+    })
   }
 
   render() {
@@ -150,7 +153,7 @@ class ServerSideSDKKeys extends Component {
             using our{' '}
             <Button
               theme='text'
-              href='https://docs.flagsmith.com/clients/overview'
+              href='https://docs.flagsmith.com/clients/overview#server-side-sdks'
               target='__blank'
             >
               Server-side Environment Keys

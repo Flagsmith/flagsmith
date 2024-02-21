@@ -1,0 +1,8 @@
+.droparea {
+  padding: 56px;
+  border: 1px dashed $basic-alpha-16;
+  border-radius: $border-radius-xlg;
+  &--condensed {
+    padding: 8px;
+  }
+}

@@ -1,4 +1,5 @@
 import { RequestLogger, Selector, t } from 'testcafe'
+import { FlagsmithValue } from '../common/types/responses';
 
 export const LONG_TIMEOUT = 40000
 
@@ -14,11 +15,16 @@ export type Rule = {
 }
 export const setText = async (selector: string, text: string) => {
   logUsingLastSection(`Set text ${selector} : ${text}`)
-  return t
-    .selectText(selector)
-    .pressKey('delete')
-    .selectText(selector) // Prevents issue where input tabs out of focus
-    .typeText(selector, `${text}`)
+  if (text) {
+     return t
+      .selectText(selector)
+      .pressKey('delete')
+      .selectText(selector) // Prevents issue where input tabs out of focus
+      .typeText(selector, `${text}`)
+  } else {
+    return t.selectText(selector) // Prevents issue where input tabs out of focus
+      .pressKey('delete')
+  }
 }
 
 export const waitForElementVisible = async (selector: string) => {
@@ -245,12 +251,49 @@ export const login = async (email: string, password: string) => {
   await setText('[name="email"]', `${email}`)
   await setText('[name="password"]', `${password}`)
   await click('#login-btn')
-  await waitForElementVisible('#project-select-page')
+  await waitForElementVisible('#project-manage-widget')
 }
 export const logout = async (t) => {
   await click('#account-settings-link')
   await click('#logout-link')
   await waitForElementVisible('#login-page')
+}
+
+export const goToFeatureVersions = async (featureIndex:number) =>{
+  await gotoFeatures()
+  await click(byId(`feature-action-${featureIndex}`))
+  await click(byId(`feature-history-${featureIndex}`))
+}
+
+export const compareVersion = async (
+    featureIndex:number,
+    versionIndex:number,
+    compareOption: 'LIVE'|'PREVIOUS'|null,
+    oldEnabled:boolean,
+    newEnabled:boolean,
+    oldValue?:FlagsmithValue,
+    newValue?:FlagsmithValue
+) =>{
+  await goToFeatureVersions(featureIndex)
+  await click(byId(`history-item-${versionIndex}-compare`))
+  if(compareOption==='LIVE') {
+    await click(byId(`history-item-${versionIndex}-compare-live`))
+  } else if(compareOption==='PREVIOUS') {
+    await click(byId(`history-item-${versionIndex}-compare-previous`))
+  }
+
+  await assertTextContent(byId(`old-enabled`), `${oldEnabled}`)
+  await assertTextContent(byId(`new-enabled`), `${newEnabled}`)
+  if(oldValue) {
+    await assertTextContent(byId(`old-value`), `${oldValue}`)
+  }
+  if(newValue) {
+    await assertTextContent(byId(`old-value`), `${oldValue}`)
+  }
+}
+export const assertNumberOfVersions = async (index:number, versions:number) =>{
+  await goToFeatureVersions(index)
+  await waitForElementVisible(byId(`history-item-${versions-2}-compare`))
 }
 
 export const createRemoteConfig = async (
@@ -281,6 +324,47 @@ export const createRemoteConfig = async (
   await click(byId('create-feature-btn'))
   await waitForElementVisible(byId(`feature-value-${index}`))
   await assertTextContent(byId(`feature-value-${index}`), expectedValue)
+}
+
+export const createOrganisationAndProject = async (organisationName:string,projectName:string) =>{
+  log('Create Organisation')
+  await click(byId('create-organisation-btn'))
+  await setText('[name="orgName"]', organisationName)
+  await click('#create-org-btn')
+  await waitForElementVisible(byId('project-manage-widget'))
+
+  log('Create Project')
+  await click('.btn-project-create')
+  await setText(byId('projectName'), projectName)
+  await click(byId('create-project-btn'))
+  await waitForElementVisible(byId('features-page'))
+}
+export const editRemoteConfig = async (
+  index: number,
+  value: string | number | boolean,
+  toggleFeature: boolean = false,
+  mvs: MultiVariate[] = [],
+) => {
+  const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`
+  await gotoFeatures()
+
+  await click(byId(`feature-item-${index}`))
+  await setText(byId('featureValue'), `${value}`)
+  if (toggleFeature) {
+    await click(byId('toggle-feature-button'))
+  }
+  await Promise.all(
+      mvs.map(async (v, i) => {
+        await setText(byId(`featureVariationValue${i}`), v.value)
+        await setText(byId(`featureVariationWeight${v.value}`), `${v.weight}`)
+      }),
+  )
+  await click(byId('update-feature-btn'))
+  if(value) {
+    await waitForElementVisible(byId(`feature-value-${index}`))
+    await assertTextContent(byId(`feature-value-${index}`), expectedValue)
+  }
+  await closeModal()
 }
 export const closeModal = async () => {
   await t.click('body', {

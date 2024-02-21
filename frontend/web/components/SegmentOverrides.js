@@ -149,10 +149,13 @@ const SegmentOverrideInner = class Override extends React.Component {
             <Row className='gap-3'>
               <Tooltip
                 title={
-                  <label className='cols-sm-2 control-label mb-0 ml-3'><Icon name='info-outlined' /></label>
+                  <label className='cols-sm-2 control-label mb-0 ml-3'>
+                    <Icon name='info-outlined' />
+                  </label>
                 }
               >
-                Set the Feature state to On or Off for Identities in this Segment
+                Set the Feature state to On or Off for Identities in this
+                Segment
               </Tooltip>
               <Switch
                 data-test={`segment-override-toggle-${index}`}
@@ -312,6 +315,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                   readOnlyValue
                   disabled={readOnly}
                   controlValue={controlValue}
+                  controlPercentage={controlPercent}
                   variationOverrides={mvOptions}
                   multivariateOptions={multivariateOptions.map((mv) => {
                     const foundMv =
@@ -495,7 +499,6 @@ class TheComponent extends Component {
       }
       return
     }
-    this.setState({ isLoading: true })
     openConfirm(
       'Delete Segment Override',
       <div>
@@ -507,9 +510,7 @@ class TheComponent extends Component {
         this.props.value[i].toRemove = true
         this.setState({ isLoading: false })
       },
-      () => {
-        this.setState({ isLoading: false })
-      },
+      () => {},
     )
   }
 
@@ -544,7 +545,6 @@ class TheComponent extends Component {
   render() {
     const {
       props: { multivariateOptions, value },
-      state: { isLoading },
     } = this
     const filter = (segment) => {
       if (segment.feature && segment.feature !== this.props.feature)
@@ -663,10 +663,7 @@ class TheComponent extends Component {
                 {visibleValues &&
                   !!visibleValues.length &&
                   !this.props.showCreateSegment && (
-                    <div
-                      style={isLoading ? { opacity: 0.5 } : null}
-                      className='overflow-visible'
-                    >
+                    <div className='overflow-visible'>
                       {!this.props.id && (
                         <div className='my-4'>
                           <InfoMessage className='mb-4 text-left faint'>
@@ -694,7 +691,7 @@ class TheComponent extends Component {
                       {value && (
                         <>
                           <InnerComponent
-                            disabled={isLoading || this.props.readOnly}
+                            disabled={this.props.readOnly}
                             id={this.props.id}
                             name={this.props.name}
                             controlValue={this.props.controlValue}

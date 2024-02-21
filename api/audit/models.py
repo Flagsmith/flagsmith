@@ -1,4 +1,5 @@
 import typing
+from functools import cached_property
 from importlib import import_module
 
 from django.db import models
@@ -78,8 +79,14 @@ class AuditLog(LifecycleModel):
         )
         return "send_environments_to_dynamodb" not in skip_signals_and_hooks
 
-    @property
+    @cached_property
     def history_record(self) -> typing.Optional[Model]:
+        if not (self.history_record_class_path and self.history_record_id):
+            # There are still AuditLog records that will not have this detail
+            # for example, audit log records which are created when segment
+            # override priorities are changed.
+            return
+
         klass = self.get_history_record_model_class(self.history_record_class_path)
         return klass.objects.filter(history_id=self.history_record_id).first()
 
@@ -116,16 +123,21 @@ class AuditLog(LifecycleModel):
         is_now=True,
     )
     def process_environment_update(self):
+        from environments.models import Environment
         from environments.tasks import process_environment_update
 
         environments_filter = Q()
         if self.environment_id:
             environments_filter = Q(id=self.environment_id)
 
-        # Use a queryset to perform update to prevent signals being called at this point.
-        # Since we're re-saving the environment, we don't want to duplicate signals.
-        self.project.environments.filter(environments_filter).update(
-            updated_at=self.created_date
-        )
+        environment_ids = self.project.environments.filter(
+            environments_filter
+        ).values_list("id", flat=True)
+
+        # Update environment individually to avoid deadlock
+        for environment_id in environment_ids:
+            Environment.objects.filter(id=environment_id).update(
+                updated_at=self.created_date
+            )
 
         process_environment_update.delay(args=(self.id,))
