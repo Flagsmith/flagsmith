@@ -1,5 +1,5 @@
-name: Set up Depot for E2E Compose builds
-description: Set up Depot for E2E Compose builds
+name: Bake Compose for E2E
+description: Bake Compose for E2E
 
 inputs:
   github_actor:
@@ -31,3 +31,9 @@ runs:
     - name: Switch Docker Runtime to Depot
       run: depot configure-docker
       shell: bash
+
+    - name: Bake Compose
+      uses: depot/bake-action@v1
+      with:
+        files: frontend/docker-compose-e2e-tests.yml
+        load: true

@@ -157,8 +157,8 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v4
 
-      - name: Set up Depot
-        uses: ./.github/actions/e2e-setup-depot
+      - name: Bake Compose
+        uses: ./.github/actions/e2e-bake-compose
         with:
           github_actor: ${{github.actor}}
           github_token: ${{secrets.GITHUB_TOKEN}}
@@ -183,8 +183,8 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v4
 
-      - name: Set up Depot
-        uses: ./.github/actions/e2e-setup-depot
+      - name: Bake Compose
+        uses: ./.github/actions/e2e-bake-compose
         with:
           github_actor: ${{github.actor}}
           github_token: ${{secrets.GITHUB_TOKEN}}
@@ -210,8 +210,8 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v4
 
-      - name: Set up Depot
-        uses: ./.github/actions/e2e-setup-depot
+      - name: Bake Compose
+        uses: ./.github/actions/e2e-bake-compose
         with:
           github_actor: ${{github.actor}}
           github_token: ${{secrets.GITHUB_TOKEN}}
@@ -237,8 +237,8 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v4
 
-      - name: Set up Depot
-        uses: ./.github/actions/e2e-setup-depot
+      - name: Bake Compose
+        uses: ./.github/actions/e2e-bake-compose
         with:
           github_actor: ${{github.actor}}
           github_token: ${{secrets.GITHUB_TOKEN}}
