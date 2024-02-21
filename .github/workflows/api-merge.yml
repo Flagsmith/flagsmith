@@ -10,7 +10,7 @@ defaults:
 
 jobs:
   test:
-    runs-on: depot-ubuntu-22.04-16
+    runs-on: depot-ubuntu-22.04-8
     name: API Unit Tests
 
     services:
