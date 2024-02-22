@@ -19,7 +19,7 @@ export const splitTestService = service
           { id: q?.conversion_event_type_id, type: 'SplitTest' },
         ],
         query: (query: Req['getSplitTest']) => ({
-          url: `split-testing/${Utils.toParam(query)}`,
+          url: `split-testing/?${Utils.toParam(query)}`,
         }),
         transformResponse: (res: PagedResponse<ServersideSplitTestResult>) => {
           const groupedFeatures = groupBy(
