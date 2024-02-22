@@ -4,6 +4,7 @@ from django.db import models
 class ExternalResources(models.Model):
     url = models.URLField()
     type = models.TextField()
+    status = models.TextField(null=True)
     feature_external_resource = models.ManyToManyField(
         to="features.Feature", blank=True, through="FeatureExternalResources"
     )

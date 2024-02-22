@@ -10,6 +10,7 @@ class ExternalResourcesSerializer(serializers.ModelSerializer):
             "id",
             "url",
             "type",
+            "status",
         )
 
 
