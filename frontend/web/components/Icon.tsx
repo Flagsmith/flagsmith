@@ -12,6 +12,7 @@ export type IconName =
   | 'checkmark-square'
   | 'checkmark'
   | 'info'
+  | 'star'
   | 'info-outlined'
   | 'close-circle'
   | 'chevron-right'
@@ -67,6 +68,23 @@ export type IconType = React.DetailedHTMLProps<
 
 const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
   switch (name) {
+    case 'star': {
+      return (
+        <svg
+          xmlns='http://www.w3.org/2000/svg'
+          className='ionicon'
+          width={width}
+          viewBox='0 0 512 512'
+        >
+          <path
+            d='M480 208H308L256 48l-52 160H32l140 96-54 160 138-100 138 100-54-160z'
+            strokeLinejoin='round'
+            fill={fill}
+            className='ionicon-stroke-width'
+          ></path>
+        </svg>
+      )
+    }
     case 'diff': {
       return (
         <svg
