@@ -21,7 +21,7 @@ import Constants from 'common/constants'
 
 const semver = require('semver')
 
-const planNames = {
+export const planNames = {
   enterprise: 'Enterprise',
   free: 'Free',
   scaleUp: 'Scale-Up',
