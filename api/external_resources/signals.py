@@ -1,6 +1,6 @@
 import logging
 
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
 from features.models import FeatureState
@@ -57,6 +57,32 @@ def trigger_feature_external_resource_added_webhooks_signal(instance, **kwargs):
             args=(
                 feature_data,
                 WebhookEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
+            ),
+        )
+    else:
+        print(
+            "No GitHub integration exists for organisation %d. Not calling webhooks.",
+            instance.feature.project.organisation.id,
+        )
+        return
+
+
+@receiver(pre_delete, sender=FeatureExternalResources)
+def trigger_feature_external_resource_removed_webhooks_signal(instance, **kwargs):
+    if hasattr(instance.feature.project.organisation, "github_config"):
+        github_configuration = instance.feature.project.organisation.github_config
+        feature_data = {
+            "id": instance.feature_id,
+            "name": instance.feature.name,
+            "url": instance.external_resource.url,
+        }
+        feature_data["installation_id"] = github_configuration.installation_id
+        feature_data["organisation_id"] = github_configuration.organisation.id
+
+        call_github_app_webhook_for_feature_state.delay(
+            args=(
+                feature_data,
+                WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
             ),
         )
     else:
