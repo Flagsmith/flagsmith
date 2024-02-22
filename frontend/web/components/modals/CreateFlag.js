@@ -189,7 +189,6 @@ const CreateFlag = class extends Component {
       organisation_pk: AccountStore.getOrganisation().id,
     }).then((res) => {
       const installationId = res?.data?.results[0]?.installation_id
-      console.log('DEBUG: githubInt:', installationId)
       data
         .get(`http://localhost:3000/api/issues`, {
           'installation_id': installationId,
@@ -532,6 +531,7 @@ const CreateFlag = class extends Component {
       multivariate_options,
       name,
       prExternalResources,
+      status,
     } = this.state
     const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID
 
@@ -557,6 +557,7 @@ const CreateFlag = class extends Component {
     const _createExternalResourse = () => {
       createExternalResource(getStore(), {
         body: {
+          status: status,
           type: externalResourceType,
           url: featureExternalResource,
         },
@@ -680,11 +681,15 @@ const CreateFlag = class extends Component {
                   size='select-md'
                   placeholder={'Select Your Issue'}
                   onChange={(v) =>
-                    this.setState({ featureExternalResource: v.value })
+                    this.setState({
+                      featureExternalResource: v.value,
+                      status: v.status,
+                    })
                   }
                   options={issuesExternalResources?.map((i) => {
                     return {
                       label: `${i.title} #${i.number}`,
+                      status: i.state,
                       value: i.html_url,
                     }
                   })}
@@ -742,6 +747,12 @@ const CreateFlag = class extends Component {
                 className='table-column text-center'
                 style={{ width: '80px' }}
               >
+                Status
+              </div>
+              <div
+                className='table-column text-center'
+                style={{ width: '80px' }}
+              >
                 Remove
               </div>
             </Row>
@@ -761,6 +772,12 @@ const CreateFlag = class extends Component {
               <Flex className='table-column px-3'>
                 <div className='font-weight-medium mb-1'>{v.type}</div>
               </Flex>
+              <div
+                className='table-column text-center'
+                style={{ width: '80px' }}
+              >
+                <div className='font-weight-medium mb-1'>{v.status}</div>
+              </div>
               <div
                 className='table-column text-center'
                 style={{ width: '80px' }}
