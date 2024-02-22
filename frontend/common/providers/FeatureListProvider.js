@@ -48,7 +48,7 @@ const FeatureListProvider = class extends React.Component {
   }
 
   toggleFlag = (projectId, environmentId, projectFlag, environmentFlag) => {
-    this.editFeatureValue(
+    AppActions.editEnvironmentFlag(
       projectId,
       environmentId,
       {
@@ -56,10 +56,9 @@ const FeatureListProvider = class extends React.Component {
         default_enabled: !environmentFlag.enabled,
       },
       projectFlag,
-      {
-        ...environmentFlag,
-        enabled: !environmentFlag.enabled,
-      },
+      environmentFlag,
+      null,
+      'VALUE',
     )
   }
 
