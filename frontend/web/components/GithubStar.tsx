@@ -15,20 +15,20 @@ const GithubStar: FC<GithubStarType> = ({}) => {
   const [stars, setStars] = useState()
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
-    if (planName === planNames.enterprise) {
-      return null
+    if (planName !== planNames.enterprise) {
+      fetch(`https://api.github.com/repos/flagsmith/flagsmith`)
+          .then(function (res) {
+            return res.json()
+          })
+          .then(function (res) {
+            setStars(res.stargazers_count)
+          })
     }
-    fetch(`https://api.github.com/repos/flagsmith/flagsmith`)
-      .then(function (res) {
-        return res.json()
-      })
-      .then(function (res) {
-        setStars(res.stargazers_count)
-      })
+
   }, [planName])
 
   if (planName === planNames.enterprise) {
-    return null
+    return <></>
   }
 
   return (
