@@ -14,6 +14,7 @@ from features.views import (
     SimpleFeatureStateViewSet,
     get_feature_by_uuid,
     get_feature_state_by_uuid,
+    get_latest_features,
 )
 
 router = routers.DefaultRouter()
@@ -45,6 +46,11 @@ urlpatterns = [
         "featurestates/get-by-uuid/<uuid:uuid>/",
         get_feature_state_by_uuid,
         name="get-feature-state-by-uuid",
+    ),
+    path(
+        "get_latest_features/<int:project_id>/",
+        get_latest_features,
+        name="get-latest-fatures",
     ),
 ]
 

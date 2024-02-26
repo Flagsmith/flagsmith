@@ -9,6 +9,7 @@ from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
 from django.db.models import Max, Q, QuerySet
+from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg import openapi
@@ -616,6 +617,20 @@ def get_feature_state_by_uuid(request, uuid):
     feature_state = get_object_or_404(qs, uuid=uuid)
     serializer = WritableNestedFeatureStateSerializer(instance=feature_state)
     return Response(serializer.data)
+
+
+@swagger_auto_schema(responses={200: ListCreateFeatureSerializer()}, method="get")
+@api_view(["GET"])
+def get_latest_features(request: Request, project_id: int) -> JsonResponse:
+    project = get_object_or_404(Project, id=project_id)
+
+    queryset = project.features.all().order_by("-created_date")[:50]
+    data = list(queryset.values())
+
+    return JsonResponse(
+        {"count": len(data), "next": None, "previous": None, "results": data},
+        safe=False,
+    )
 
 
 class SDKFeatureStates(GenericAPIView):
