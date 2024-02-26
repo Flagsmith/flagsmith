@@ -676,7 +676,7 @@ const CreateFlag = class extends Component {
               />
             </div>
             {externalResourceType == 'Github Issue' ? (
-              <div style={{ width: '350px' }}>
+              <div style={{ width: '300px' }}>
                 <Select
                   size='select-md'
                   placeholder={'Select Your Issue'}
@@ -696,7 +696,7 @@ const CreateFlag = class extends Component {
                 />
               </div>
             ) : externalResourceType == 'Github PR' ? (
-              <div style={{ width: '350px' }}>
+              <div style={{ width: '300px' }}>
                 <Select
                   size='select-md'
                   placeholder={'Select Your PR'}
@@ -714,8 +714,6 @@ const CreateFlag = class extends Component {
             ) : (
               <></>
             )}
-          </Row>
-          <div className='text-right mt-2'>
             {(externalResourceType == 'Github Issue' ||
               externalResourceType == 'Github PR') && (
               <Button
@@ -728,7 +726,7 @@ const CreateFlag = class extends Component {
                 Link
               </Button>
             )}
-          </div>
+          </Row>
         </FormGroup>
         <PanelSearch
           className='no-pad'

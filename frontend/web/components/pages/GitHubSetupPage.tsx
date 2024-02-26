@@ -120,7 +120,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
         />
       </div>
       <Row className='mr-4 mb-4'>
-        <div style={{ minWidth: '300px' }}>
+        <div style={{ minWidth: '250px' }}>
           <ProjectFilter
             showAll
             organisationId={organisation}
@@ -144,7 +144,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
           inputClassName='input--wide'
           placeholder='repositoryOwner'
         />
-        <div style={{ width: '300px' }}>
+        <div style={{ width: '250px' }}>
           <Select
             size='select-md'
             placeholder={'Select your repository'}
@@ -154,6 +154,20 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
             })}
           />
         </div>
+        <Button
+          className='ml-2 text-right'
+          theme='primary'
+          disabled={!project || !installationId || !repositoryName}
+          onClick={() => {
+            {
+              const newProjects = [...projects]
+              newProjects.push(project)
+              setProjects(newProjects)
+            }
+          }}
+        >
+          Add Project
+        </Button>
       </Row>
       <PanelSearch
         className='no-pad'
@@ -188,20 +202,6 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
           </Row>
         )}
       />
-      <Button
-        className='mr-2 text-right'
-        theme='primary'
-        disabled={!project || !installationId || !repositoryName}
-        onClick={() => {
-          {
-            const newProjects = [...projects]
-            newProjects.push(project)
-            setProjects(newProjects)
-          }
-        }}
-      >
-        Add Project
-      </Button>
       <Button
         className='mr-2 text-right'
         theme='primary'
