@@ -46,12 +46,14 @@ const UserPage = class extends Component {
     this.state = {
       preselect: Utils.fromParam().flag,
       showArchived: false,
+      tag_strategy: 'INTERSECTION',
       tags: [],
     }
   }
 
   getFilter = () => ({
     is_archived: this.state.showArchived,
+    tag_strategy: this.state.tag_strategy,
     tags:
       !this.state.tags || !this.state.tags.length
         ? undefined
@@ -159,7 +161,6 @@ const UserPage = class extends Component {
         <span className='standard-case'>{projectFlag.name}</span>
       </span>,
       <CreateFlagModal
-        isEdit
         identity={this.props.match.params.id}
         identityName={decodeURIComponent(this.props.match.params.identity)}
         environmentId={this.props.match.params.environmentId}
@@ -395,6 +396,19 @@ const UserPage = class extends Component {
                                             className='me-4'
                                             title='Tags'
                                             value={this.state.tags}
+                                            tagStrategy={
+                                              this.state.tag_strategy
+                                            }
+                                            onChangeStrategy={(
+                                              tag_strategy,
+                                            ) => {
+                                              this.setState(
+                                                {
+                                                  tag_strategy,
+                                                },
+                                                this.filter,
+                                              )
+                                            }}
                                             isLoading={
                                               FeatureListStore.isLoading
                                             }

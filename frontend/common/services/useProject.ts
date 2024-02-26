@@ -7,6 +7,12 @@ export const projectService = service
   .enhanceEndpoints({ addTagTypes: ['Project'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      getProject: builder.query<Res['project'], Req['getProject']>({
+        providesTags: (res) => [{ id: res?.id, type: 'Project' }],
+        query: (query: Req['getProject']) => ({
+          url: `projects/${query.id}`,
+        }),
+      }),
       getProjects: builder.query<Res['projects'], Req['getProjects']>({
         providesTags: [{ id: 'LIST', type: 'Project' }],
         query: (data) => ({
@@ -28,9 +34,20 @@ export async function getProjects(
     store.dispatch(projectService.util.getRunningQueriesThunk()),
   )
 }
+export async function getProject(
+  store: any,
+  data: Req['getProject'],
+  options?: Parameters<typeof projectService.endpoints.getProject.initiate>[1],
+) {
+  store.dispatch(projectService.endpoints.getProject.initiate(data, options))
+  return Promise.all(
+    store.dispatch(projectService.util.getRunningQueriesThunk()),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useGetProjectQuery,
   useGetProjectsQuery,
   // END OF EXPORTS
 } = projectService

@@ -205,6 +205,7 @@ $input-border-radius: $border-radius;
 $input-height: 48px;
 $input-height-sm: 42px;
 $input-height-xsm: 34px;
+$input-height-xxsm: 32px;
 $input-height-lg: 58px;
 $input-line-height: 24px;
 $input-font-size: $font-size-base;
@@ -255,9 +256,12 @@ $checkbox-hover-border-color: $primary;
 $checkbox-checked-hover-border-color: $primary600;
 
 //Alert
+$alert-success-bg: $success-alfa-8;
+$alert-success-border-color: $success;
 $alert-info-bg: $info-solid-alert;
 $alert-info-border-color: $info;
 $alert-danger-bg: $danger-solid-alert;
+$alert-warning-bg: $warning-solid-alert;
 $alert-danger-border-color: $danger;
 $alert-warning-border-color: $warning;
 $alert-color: $text-icon-grey;

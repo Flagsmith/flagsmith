@@ -539,18 +539,23 @@ if LOGGING_CONFIGURATION_FILE:
     with open(LOGGING_CONFIGURATION_FILE, "r") as f:
         LOGGING = json.loads(f.read())
 else:
+    LOG_FORMAT = env.str("LOG_FORMAT", default="generic")
     LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
         "formatters": {
             "generic": {"format": "%(name)-12s %(levelname)-8s %(message)s"},
+            "json": {
+                "()": "util.logging.JsonFormatter",
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+            },
         },
         "handlers": {
             "console": {
                 "level": LOG_LEVEL,
                 "class": "logging.StreamHandler",
-                "formatter": "generic",
+                "formatter": LOG_FORMAT,
             }
         },
         "loggers": {
@@ -899,6 +904,9 @@ if SAML_INSTALLED:
     INSTALLED_APPS.append("saml")
     SAML_ACCEPTED_TIME_DIFF = env.int("SAML_ACCEPTED_TIME_DIFF", default=60)
     DJOSER["SERIALIZERS"]["current_user"] = "saml.serializers.SamlCurrentUserSerializer"
+    EXTRA_ALLOWED_CANONICALIZATIONS = env.list(
+        "EXTRA_ALLOWED_CANONICALIZATIONS", default=[]
+    )
 
 
 # Additional functionality needed for using workflows in Flagsmith SaaS
@@ -1150,6 +1158,8 @@ if not 0 <= SEGMENT_CONDITION_VALUE_LIMIT < 2000000:
         "SEGMENT_CONDITION_VALUE_LIMIT must be between 0 and 2,000,000 (2MB)."
     )
 
+SEGMENT_RULES_CONDITIONS_LIMIT = env.int("SEGMENT_RULES_CONDITIONS_LIMIT", 100)
+
 WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)
 WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
 
@@ -1157,3 +1167,5 @@ WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
 SPLIT_TESTING_INSTALLED = importlib.util.find_spec("split_testing")
 if SPLIT_TESTING_INSTALLED:
     INSTALLED_APPS += ("split_testing",)
+
+ENABLE_API_USAGE_ALERTING = env.bool("ENABLE_API_USAGE_ALERTING", default=False)

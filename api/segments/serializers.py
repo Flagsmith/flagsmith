@@ -1,5 +1,6 @@
 import typing
 
+from django.conf import settings
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -58,6 +59,7 @@ class SegmentSerializer(serializers.ModelSerializer):
         self.validate_project_segment_limit(project)
 
         rules_data = validated_data.pop("rules", [])
+        self.validate_segment_rules_conditions_limit(rules_data)
 
         # create segment with nested rules and conditions
         segment = Segment.objects.create(**validated_data)
@@ -65,6 +67,15 @@ class SegmentSerializer(serializers.ModelSerializer):
             rules_data, segment=segment, is_create=True
         )
         return segment
+
+    def update(self, instance, validated_data):
+        # use the initial data since we need the ids included to determine which to update & which to create
+        rules_data = self.initial_data.pop("rules", [])
+        self.validate_segment_rules_conditions_limit(rules_data)
+        self._update_segment_rules(rules_data, segment=instance)
+        # remove rules from validated data to prevent error trying to create segment with nested rules
+        del validated_data["rules"]
+        return super().update(instance, validated_data)
 
     def validate_project_segment_limit(self, project: Project) -> None:
         if project.segments.count() >= project.max_segments_allowed:
@@ -74,13 +85,38 @@ class SegmentSerializer(serializers.ModelSerializer):
                 }
             )
 
-    def update(self, instance, validated_data):
-        # use the initial data since we need the ids included to determine which to update & which to create
-        rules_data = self.initial_data.pop("rules", [])
-        self._update_segment_rules(rules_data, segment=instance)
-        # remove rules from validated data to prevent error trying to create segment with nested rules
-        del validated_data["rules"]
-        return super().update(instance, validated_data)
+    def validate_segment_rules_conditions_limit(
+        self, rules_data: dict[str, object]
+    ) -> None:
+        if self.instance and getattr(self.instance, "whitelisted_segment", None):
+            return
+
+        count = self._calculate_condition_count(rules_data)
+
+        if count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
+            raise ValidationError(
+                {
+                    "segment": f"The segment has {count} conditions, which exceeds the maximum "
+                    f"condition count of {settings.SEGMENT_RULES_CONDITIONS_LIMIT}."
+                }
+            )
+
+    def _calculate_condition_count(
+        self,
+        rules_data: dict[str, object],
+    ) -> None:
+        count: int = 0
+
+        for rule_data in rules_data:
+            child_rules = rule_data.get("rules", [])
+            if child_rules:
+                count += self._calculate_condition_count(child_rules)
+            conditions = rule_data.get("conditions", [])
+            for condition in conditions:
+                if condition.get("delete", False) is True:
+                    continue
+                count += 1
+        return count
 
     def _update_segment_rules(self, rules_data, segment=None):
         """
@@ -152,3 +188,15 @@ class SegmentSerializerBasic(serializers.ModelSerializer):
     class Meta:
         model = Segment
         fields = ("id", "name", "description")
+
+
+class SegmentListQuerySerializer(serializers.Serializer):
+    q = serializers.CharField(
+        required=False,
+        help_text="Search term to find segment with given term in their name",
+    )
+    identity = serializers.CharField(
+        required=False,
+        help_text="Optionally provide the id of an identity to get only the segments they match",
+    )
+    include_feature_specific = serializers.BooleanField(required=False, default=True)

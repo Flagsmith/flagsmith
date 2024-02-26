@@ -21,7 +21,7 @@ import Constants from 'common/constants'
 
 const semver = require('semver')
 
-const planNames = {
+export const planNames = {
   enterprise: 'Enterprise',
   free: 'Free',
   scaleUp: 'Scale-Up',
@@ -509,6 +509,12 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         {name}
       </Tooltip>
     )
+  },
+  sanitiseDiffString: (value: FlagsmithValue) => {
+    if (value === undefined || value == null) {
+      return ''
+    }
+    return `${value}`
   },
   validateRule(rule: SegmentCondition) {
     if (!rule) return false

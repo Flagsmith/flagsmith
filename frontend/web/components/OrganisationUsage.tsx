@@ -69,7 +69,9 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
     <div className='mt-4'>
       <div className='col-md-6 mb-5'>
         <InfoMessage>
-          Please be aware that usage data can be delayed by up to 3 hours.
+          Please be aware that usage data can be delayed by up to 3 hours and that
+          these numbers show the API usage for the last 30 days,
+          not your current billing period which may differ.
         </InfoMessage>
         <label>Project</label>
         <ProjectFilter
@@ -198,12 +200,13 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
         <h5>Environment Document</h5>
         <p>
           This is a single call made by Server-Side SDKs (when running in Local
-          Evaluation Mode), and the Edge Proxy to get the entire Environment dataset so they
-          can run flag evaluations locally.
+          Evaluation Mode), and the Edge Proxy to get the entire Environment
+          dataset so they can run flag evaluations locally.
         </p>
         <p>
-          By default, server-side SDKs refresh this data every 60 seconds, and the Edge Proxy every 10 seconds. Each
-          refresh will count as a single call. These time periods are configurable.
+          By default, server-side SDKs refresh this data every 60 seconds, and
+          the Edge Proxy every 10 seconds. Each refresh will count as a single
+          call. These time periods are configurable.
         </p>
         <p>
           <a
