@@ -163,9 +163,6 @@ def _handle_api_usage_notifications(organisation: Organisation):
     send_admin_api_usage_notification(organisation, matched_threshold)
 
 
-@register_recurring_task(
-    run_every=timedelta(hours=12),
-)
 def handle_api_usage_notifications():
     for organisation in Organisation.objects.filter(
         subscription_information_cache__current_billing_term_starts_at__isnull=False,
@@ -180,3 +177,9 @@ def handle_api_usage_notifications():
                 f"Error processing api usage for organisation {organisation.id}",
                 exc_info=True,
             )
+
+
+if settings.ENABLE_API_USAGE_ALERTING:
+    register_recurring_task(
+        run_every=timedelta(hours=12),
+    )(handle_api_usage_notifications)
