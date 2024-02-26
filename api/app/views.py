@@ -54,6 +54,7 @@ def project_overrides(request):
         "preventSignup": "PREVENT_SIGNUP",
         "sentry": "SENTRY_API_KEY",
         "useSecureCookies": "USE_SECURE_COOKIES",
+        "sameSiteCookie": "SAME_SITE_COOKIE",
     }
 
     override_data = {

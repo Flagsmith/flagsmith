@@ -113,7 +113,8 @@ app.get('/config/project-overrides', (req, res) => {
       value: envToBool('DISABLE_INVITE_LINKS', false),
     },
     { name: 'albacross', value: process.env.ALBACROSS_CLIENT_ID },
-    {name: 'useSecureCookies', value: envToBool('USE_SECURE_COOKIES', true)}
+    {name: 'useSecureCookies', value: envToBool('USE_SECURE_COOKIES', true)},
+    {name: 'cookieSameSite', value: process.env.USE_SECURE_COOKIES}
   ]
   let output = values.map(getVariable).join('')
   let dynatrace = ''
