@@ -97,9 +97,9 @@ Current variables used between 'frontend/environment.js' and 'frontend/common/pr
 - `BASE_URL`: Used for specifying a base url path that's ignored during routing if serving from a subdirectory.
 - `USE_SECURE_COOKIES`: Enable / disable the use of secure cookies. If deploying the FE in a private network without a
   domain / SSL cert, disable secure cookies to ensure that session token is persisted. Default: true.
-- `COOKIE_SAME_SITE: v1.3.0`: Define the value of the samesite attribute for the session token cookie set by the
-  frontend. Further reading on this value is available [here](https://web.dev/articles/samesite-cookies-explained).
-  Default: 'none'.
+- `COOKIE_SAME_SITE`: Define the value of the samesite attribute for the session token cookie set by the frontend.
+  Further reading on this value is available [here](https://web.dev/articles/samesite-cookies-explained). Default:
+  'none'.
 
 ## E2E testing
 
