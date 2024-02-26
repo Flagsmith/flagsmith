@@ -2622,3 +2622,26 @@ def test_feature_list_last_modified_values(
         feature_data["last_modified_in_current_environment"]
         == two_hours_ago.isoformat()
     )
+
+
+def test_get_latest_50_features(
+    project: Project,
+    environment: Environment,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    for i in range(51):
+        Feature.objects.create(name=f"Feature {i}", project=project)
+
+    url = reverse(
+        "api-v1:features:get-latest-features",
+        args=[project.id],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+
+    assert len(response_json["results"]) == 50

@@ -48,9 +48,9 @@ urlpatterns = [
         name="get-feature-state-by-uuid",
     ),
     path(
-        "get_latest_features/<int:project_id>/",
+        "get-latest-features/<int:project_id>/",
         get_latest_features,
-        name="get-latest-fatures",
+        name="get-latest-features",
     ),
 ]
 
