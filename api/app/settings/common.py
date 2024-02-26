@@ -904,6 +904,9 @@ if SAML_INSTALLED:
     INSTALLED_APPS.append("saml")
     SAML_ACCEPTED_TIME_DIFF = env.int("SAML_ACCEPTED_TIME_DIFF", default=60)
     DJOSER["SERIALIZERS"]["current_user"] = "saml.serializers.SamlCurrentUserSerializer"
+    EXTRA_ALLOWED_CANONICALIZATIONS = env.list(
+        "EXTRA_ALLOWED_CANONICALIZATIONS", default=[]
+    )
 
 
 # Additional functionality needed for using workflows in Flagsmith SaaS
