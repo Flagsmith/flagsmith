@@ -237,7 +237,7 @@ global.API = {
           require('js-cookie').set(key, v, {
             expires: 30,
             path: '/',
-            sameSite: Project.sameSiteCookie || 'none',
+            sameSite: Project.cookieSameSite || 'none',
             secure: Project.useSecureCookies,
           })
         }
