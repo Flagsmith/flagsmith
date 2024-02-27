@@ -21,13 +21,15 @@ from flagsmith.offline_handlers import LocalFileHandler
 from integrations.flagsmith.exceptions import FlagsmithIntegrationError
 from integrations.flagsmith.flagsmith_service import ENVIRONMENT_JSON_PATH
 
-_flagsmith_client: typing.Optional[Flagsmith] = None
+_flagsmith_clients: dict[str, typing.Optional[Flagsmith]] | None = None
 
 
-def get_client() -> Flagsmith:
-    global _flagsmith_client
+def get_client(name: str, local_eval: bool = False) -> Flagsmith:
+    global _flagsmith_clients
 
-    if not _flagsmith_client:
+    try:
+        _flagsmith_client = _flagsmith_clients[name]
+    except (KeyError, TypeError):
         _flagsmith_client = Flagsmith(**_get_client_kwargs())
 
     return _flagsmith_client
