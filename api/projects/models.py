@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import re
+from functools import cached_property
 
 from core.models import SoftDeleteExportableModel
 from django.conf import settings
@@ -86,7 +87,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     identity_overrides_v2_migration_status = models.CharField(
         max_length=50,
         choices=IdentityOverridesV2MigrationStatus.choices,
-        default=IdentityOverridesV2MigrationStatus.COMPLETE,
+        default=IdentityOverridesV2MigrationStatus.NOT_STARTED,
     )
     stale_flags_limit_days = models.IntegerField(
         default=30,
@@ -113,6 +114,13 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
             .exists()
         )
 
+    @cached_property
+    def _should_use_edge(self) -> bool:
+        return (
+            settings.EDGE_RELEASE_DATETIME is not None
+            and settings.EDGE_RELEASE_DATETIME < timezone.now()
+        )
+
     def get_segments_from_cache(self):
         segments = project_segments_cache.get(self.id)
 
@@ -135,9 +143,12 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @hook(BEFORE_CREATE)
     def set_enable_dynamo_db(self):
-        self.enable_dynamo_db = self.enable_dynamo_db or (
-            settings.EDGE_RELEASE_DATETIME is not None
-            and settings.EDGE_RELEASE_DATETIME < timezone.now()
+        self.enable_dynamo_db = self.enable_dynamo_db or self._should_use_edge
+
+    @hook(BEFORE_CREATE)
+    def set_identity_overrides_v2_migration_status(self):
+        self.identity_overrides_v2_migration_status = (
+            self.identity_overrides_v2_migration_status or self._should_use_edge
         )
 
     @hook(AFTER_SAVE)
