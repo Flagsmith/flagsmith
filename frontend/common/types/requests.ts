@@ -27,6 +27,7 @@ export type Req = {
     q?: string
     projectId: number | string
     identity?: number
+    include_feature_specific?: boolean
   }>
   deleteSegment: { projectId: number | string; id: number }
   updateSegment: { projectId: number | string; segment: Segment }
@@ -147,6 +148,17 @@ export type Req = {
   getGetSubscriptionMetadata: { id: string }
   getEnvironment: { id: string }
   getSubscriptionMetadata: { id: string }
+  getRoleMasterApiKey: { org_id: number; role_id: number; id: string }
+  updateRoleMasterApiKey: { org_id: number; role_id: number; id: string }
+  deleteRoleMasterApiKey: { org_id: number; role_id: number; id: string }
+  createRoleMasterApiKey: { org_id: number; role_id: number }
+  getMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
+  deleteMasterAPIKeyWithMasterAPIKeyRoles: {
+    org_id: number
+    prefix: string
+    role_id: number
+  }
+  getRolesMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
   createLaunchDarklyProjectImport: {
     project_id: string
     body: {

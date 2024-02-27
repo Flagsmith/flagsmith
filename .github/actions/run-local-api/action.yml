@@ -23,8 +23,13 @@ runs:
   using: composite
 
   steps:
+    - name: Set up Depot CLI
+      uses: depot/setup-action@v1
+      with:
+        oidc: true
+
     - name: Build temporary Docker image for running the API
-      run: docker build -t flagsmith/flagsmith-api:e2e-${{ github.sha }} -f api/Dockerfile .
+      run: depot build --load -t flagsmith/flagsmith-api:e2e-${{ github.sha }} -f api/Dockerfile .
       shell: bash
 
     - name: Run the API

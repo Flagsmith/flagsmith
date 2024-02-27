@@ -380,6 +380,7 @@ export type RolePermissionUser = {
   user: number
   role: number
   id: number
+  role_name: string
 }
 export type FeatureVersion = {
   created_at: string
@@ -464,6 +465,12 @@ export type Res = {
   environment: Environment
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
+  roleMasterApiKey: { id: number; master_api_key: string; role: number }
+  masterAPIKeyWithMasterAPIKeyRoles: {
+    id: string
+    prefix: string
+    roles: RolePermissionUser[]
+  }
   userWithRoles: PagedResponse<Role>
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>

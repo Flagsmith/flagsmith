@@ -64,6 +64,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   const [showFeatureSpecific, setShowFeatureSpecific] = useState(false)
 
   const { data, error, isLoading, refetch } = useGetSegmentsQuery({
+    include_feature_specific: showFeatureSpecific,
     page,
     page_size: 100,
     projectId,
@@ -246,9 +247,15 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                         )
                         preselect.current = null
                       }
+
+                      // TODO: remove this check
+                      // I'm leaving this here for now so that we can deploy the FE and
+                      // API independently, but we should remove this once PR #3430 is
+                      // merged and released.
                       if (feature && !showFeatureSpecific) {
                         return null
                       }
+
                       return renderWithPermission(
                         manageSegmentsPermission,
                         'Manage segments',

@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from core.models import SoftDeleteExportableModel
 from django.conf import settings
 from django.core.cache import caches
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 from django_lifecycle import (
@@ -426,6 +427,8 @@ class OrganisationSubscriptionInformationCache(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     chargebee_updated_at = models.DateTimeField(auto_now=False, null=True)
     influx_updated_at = models.DateTimeField(auto_now=False, null=True)
+    current_billing_term_starts_at = models.DateTimeField(auto_now=False, null=True)
+    current_billing_term_ends_at = models.DateTimeField(auto_now=False, null=True)
 
     api_calls_24h = models.IntegerField(default=0)
     api_calls_7d = models.IntegerField(default=0)
@@ -436,6 +439,20 @@ class OrganisationSubscriptionInformationCache(models.Model):
     allowed_projects = models.IntegerField(default=1, blank=True, null=True)
 
     chargebee_email = models.EmailField(blank=True, max_length=254, null=True)
+
+
+class OranisationAPIUsageNotification(models.Model):
+    organisation = models.ForeignKey(
+        Organisation, on_delete=models.CASCADE, related_name="api_usage_notifications"
+    )
+    percent_usage = models.IntegerField(
+        null=False,
+        validators=[MinValueValidator(75), MaxValueValidator(120)],
+    )
+    notified_at = models.DateTimeField(null=True)
+
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)
 
 
 class HubspotOrganisation(models.Model):

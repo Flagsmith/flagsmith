@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('organisations', '0050_add_historical_subscription'),
+        ('organisations', '0051_create_org_api_usage_notification'),
     ]
 
     operations = [
