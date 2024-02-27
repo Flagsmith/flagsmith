@@ -2,14 +2,12 @@
 from __future__ import unicode_literals
 
 import re
-from functools import cached_property
 
 from core.models import SoftDeleteExportableModel
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
 from django.db.models import Count
-from django.utils import timezone
 from django_lifecycle import (
     AFTER_DELETE,
     AFTER_SAVE,
@@ -116,13 +114,6 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
             .exists()
         )
 
-    @cached_property
-    def _should_use_edge(self) -> bool:
-        return (
-            settings.EDGE_RELEASE_DATETIME is not None
-            and settings.EDGE_RELEASE_DATETIME < timezone.now()
-        )
-
     def get_segments_from_cache(self):
         segments = project_segments_cache.get(self.id)
 
@@ -145,15 +136,11 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @hook(BEFORE_CREATE)
     def set_enable_dynamo_db(self):
-        self.enable_dynamo_db = self.enable_dynamo_db or self._should_use_edge
+        self.enable_dynamo_db = self.enable_dynamo_db or settings.EDGE_ENABLED
 
     @hook(BEFORE_CREATE)
     def set_identity_overrides_v2_migration_status(self):
-        if (
-            self.identity_overrides_v2_migration_status
-            == IdentityOverridesV2MigrationStatus.NOT_STARTED
-            and self._should_use_edge
-        ):
+        if settings.EDGE_ENABLED:
             self.identity_overrides_v2_migration_status = (
                 IdentityOverridesV2MigrationStatus.COMPLETE
             )
