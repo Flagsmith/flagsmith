@@ -403,6 +403,7 @@ export default class AdminAPIKeys extends PureComponent {
 
   render() {
     const apiKeys = this.state.apiKeys && this.state.apiKeys.results
+    console.log('DEBUG: apiKeys:', apiKeys)
     const showRoleManagementEnabled = Utils.getFlagsmithHasFeature(
       'show_role_management',
     )
@@ -494,8 +495,12 @@ export default class AdminAPIKeys extends PureComponent {
                         </Tooltip>
                       </div>
                     ) : (
-                      <span className='icon-checkmark-circle'>
-                        <Icon name='checkmark-circle' />
+                      <span className='ml-1'>
+                        <Icon
+                          name='checkmark-circle'
+                          fill='#27AB95'
+                          width={28}
+                        />
                       </span>
                     )}
                   </Flex>
