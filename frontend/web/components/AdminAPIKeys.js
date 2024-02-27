@@ -453,7 +453,7 @@ export default class AdminAPIKeys extends PureComponent {
                 <Flex className='table-column px-3'>API Keys</Flex>
                 <Flex className='table-column'>Created</Flex>
                 <Flex className='table-column'>Is Admin</Flex>
-                <Flex className='table-column'>Expired</Flex>
+                <Flex className='table-column'>Active</Flex>
                 <div
                   className='table-column text-center'
                   style={{ width: '80px' }}
@@ -485,10 +485,18 @@ export default class AdminAPIKeys extends PureComponent {
                     <Switch checked={v.is_admin} disabled={true} />
                   </Flex>
                   <Flex className='table-column fs-small lh-sm'>
-                    {v.has_expired && (
-                      <>
-                        <span className='text-danger'>API key has expired</span>
-                      </>
+                    {v.has_expired ? (
+                      <div className='ml-1'>
+                        <Tooltip title={<Icon name='close-circle' />}>
+                          {
+                            'This API key has expired due to reaching its expiration date'
+                          }
+                        </Tooltip>
+                      </div>
+                    ) : (
+                      <span className='icon-checkmark-circle'>
+                        <Icon name='checkmark-circle' />
+                      </span>
                     )}
                   </Flex>
                   <div
