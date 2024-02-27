@@ -33,8 +33,10 @@ In order to ensure consistent performance, Flagsmith has the following limitatio
 
 - Maximum size of a Segment Rule Value is **1,000 bytes**
 
-### Rate Limit
+### Admin API Rate Limit
 
-Requests made to admin endpoints (i.e., non-SDK endpoints) are subject to a default rate limit of 500 per minute. If you
-are self-hosting, you have the flexibility to modify this limit by adjusting the value of the environment variable
-`USER_THROTTLE_RATE`.
+Requests made to [Admin API endpoints](/clients/rest#private-admin-api-endpoints) (i.e., non-SDK endpoints) are subject
+to a default rate limit of 500 requests per minute.
+
+If you are self-hosting, you have the flexibility to modify this limit by adjusting the value of the environment
+variable `USER_THROTTLE_RATE`.
