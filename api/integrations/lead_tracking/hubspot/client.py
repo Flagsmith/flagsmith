@@ -1,66 +1,77 @@
-import random
-from pprint import pprint
+import logging
 
 import hubspot
 from django.conf import settings
-from hubspot.crm.companies import (
-    ApiException,
-    SimplePublicObjectInputForCreate,
-)
+from hubspot.crm.companies import SimplePublicObjectInputForCreate
+from hubspot.crm.contacts import BatchReadInputSimplePublicObjectId
 
 from users.models import FFAdminUser
 
-random_number = random.randint(0, 10000)
+logger = logging.getLogger(__name__)
 
 
-access_token = settings.HUBSPOT_ACCESS_TOKEN
-client = hubspot.Client.create(access_token=access_token)
+class HubspotClient:
+    def __init__(self) -> None:
+        access_token = settings.HUBSPOT_ACCESS_TOKEN
+        self.client = hubspot.Client.create(access_token=access_token)
 
-
-def create_contact(user: FFAdminUser) -> dict:
-    properties = {
-        "email": user.email,
-        "firstname": user.first_name,
-        "lastname": user.last_name,
-    }
-
-    # ZACH: TODO: load company ids from some sort of search
-    #             interface / creating them as needed
-    temp_company_id = "10117147860"
-    response = client.crm.contacts.basic_api.create(
-        simple_public_object_input_for_create=SimplePublicObjectInputForCreate(
-            properties=properties,
-            associations=[
-                {
-                    "types": [
-                        {
-                            "associationCategory": "HUBSPOT_DEFINED",
-                            "associationTypeId": 1,
-                        }
-                    ],
-                    "to": {"id": temp_company_id},
-                }
-            ],
+    def get_contact(self, user: FFAdminUser) -> None | dict:
+        public_object_id = BatchReadInputSimplePublicObjectId(
+            id_property="email",
+            inputs=[{"id": user.email}],
+            properties=["email", "firstname", "lastname"],
         )
-    )
 
-    pprint(response)
+        response = self.client.crm.contacts.batch_api.read(
+            batch_read_input_simple_public_object_id=public_object_id,
+            archived=False,
+        )
 
-    return response
+        results = response.to_dict()["results"]
+        if not results:
+            return None
 
+        if len(results) > 1:
+            logger.warning(
+                "Hubspot contact endpoint is non-unique but which should not be possible"
+            )
 
-def create_company(name: str, domain: str) -> dict:
-    properties = {
-        "name": name,
-        "domain": domain,
-    }
-    simple_public_object_input_for_create = SimplePublicObjectInputForCreate(
-        properties=properties,
-    )
+        return results[0]
 
-    # ZACH: TODO: Use the ApiException class to add handlers for access to the api
-    assert ApiException
-    response = client.crm.companies.basic_api.create(
-        simple_public_object_input_for_create=simple_public_object_input_for_create,
-    )
-    return response
+    def create_contact(self, user: FFAdminUser, hubspot_company_id: str) -> dict:
+        properties = {
+            "email": user.email,
+            "firstname": user.first_name,
+            "lastname": user.last_name,
+            "hs_marketable_status": user.marketing_consent_given,
+        }
+
+        response = self.client.crm.contacts.basic_api.create(
+            simple_public_object_input_for_create=SimplePublicObjectInputForCreate(
+                properties=properties,
+                associations=[
+                    {
+                        "types": [
+                            {
+                                "associationCategory": "HUBSPOT_DEFINED",
+                                "associationTypeId": 1,
+                            }
+                        ],
+                        "to": {"id": hubspot_company_id},
+                    }
+                ],
+            )
+        )
+        return response.to_dict()
+
+    def create_company(self, name: str) -> dict:
+        properties = {"name": name}
+        simple_public_object_input_for_create = SimplePublicObjectInputForCreate(
+            properties=properties,
+        )
+
+        response = self.client.crm.companies.basic_api.create(
+            simple_public_object_input_for_create=simple_public_object_input_for_create,
+        )
+
+        return response.to_dict()
