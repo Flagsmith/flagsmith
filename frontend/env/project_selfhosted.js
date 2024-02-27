@@ -8,5 +8,6 @@ module.exports = global.Project = {
 
   // This is used for Sentry tracking
   maintenance: false,
+  useSecureCookies: true,
   ...(globalThis.projectOverrides || {}),
 }

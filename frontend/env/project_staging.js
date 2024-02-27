@@ -16,5 +16,6 @@ module.exports = global.Project = {
   flagsmithClientEdgeAPI: 'https://edge.bullet-train-staging.win/api/v1/',
   // This is used for Sentry tracking
   maintenance: false,
+  useSecureCookies: true,
   ...(globalThis.projectOverrides || {}),
 }
