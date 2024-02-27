@@ -86,7 +86,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     identity_overrides_v2_migration_status = models.CharField(
         max_length=50,
         choices=IdentityOverridesV2MigrationStatus.choices,
-        default=IdentityOverridesV2MigrationStatus.NOT_STARTED,
+        default=IdentityOverridesV2MigrationStatus.COMPLETE,
     )
     stale_flags_limit_days = models.IntegerField(
         default=30,
