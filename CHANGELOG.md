@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.102.0](https://github.com/Flagsmith/flagsmith/compare/v2.101.0...v2.102.0) (2024-02-27)
+
+
+### Features
+
+* add option to disable secure cookies and configure `samesite` ([#3441](https://github.com/Flagsmith/flagsmith/issues/3441)) ([7ec5491](https://github.com/Flagsmith/flagsmith/commit/7ec54911d617f113dae5a735a9b2007ddc7405e7))
+
 ## [2.101.0](https://github.com/Flagsmith/flagsmith/compare/v2.100.1...v2.101.0) (2024-02-26)
 
 
