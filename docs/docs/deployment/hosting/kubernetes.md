@@ -318,6 +318,7 @@ The following table lists the configurable parameters of the chart and their def
 | `api.livenessProbe.periodSeconds`                  |                                                                           | 10                             |
 | `api.livenessProbe.successThreshold`               |                                                                           | 1                              |
 | `api.livenessProbe.timeoutSeconds`                 |                                                                           | 2                              |
+| `api.logging.format`                               | Outputted log format, either `json` or `generic`                          | `generic`                      |
 | `api.readinessProbe.failureThreshold`              |                                                                           | 10                             |
 | `api.readinessProbe.initialDelaySeconds`           |                                                                           | 10                             |
 | `api.readinessProbe.periodSeconds`                 |                                                                           | 10                             |
