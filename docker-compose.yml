@@ -32,7 +32,7 @@ services:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
       USE_POSTGRES_FOR_ANALYTICS: 'true' # Store API and Flag Analytics data in Postgres
 
-      ENV: prod # set to 'prod' in production.
+      ENVIRONMENT: production # set to 'production' in production.
       DJANGO_ALLOWED_HOSTS: '*' # Change this in production
       ALLOW_ADMIN_INITIATION_VIA_CLI: 'true' # Change this in production
       FLAGSMITH_DOMAIN: localhost:8000 # Change this in production
