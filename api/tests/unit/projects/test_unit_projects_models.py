@@ -4,7 +4,9 @@ from unittest import mock
 import pytest
 from django.conf import settings
 from django.utils import timezone
+from pytest_django.fixtures import SettingsWrapper
 
+from organisations.models import Organisation
 from projects.models import IdentityOverridesV2MigrationStatus, Project
 
 now = timezone.now()
@@ -153,4 +155,20 @@ def test_show_edge_identity_overrides_for_feature(
             identity_overrides_v2_migration_status=identity_overrides_v2_migration_status
         ).show_edge_identity_overrides_for_feature
         == expected_value
+    )
+
+
+def test_create_project_sets_identity_overrides_v2_migration_status_if_edge_enabled(
+    settings: SettingsWrapper, organisation: Organisation
+) -> None:
+    # Given
+    settings.EDGE_RELEASE_DATETIME = timezone.now() - timedelta(days=1)
+
+    # When
+    project = Project.objects.create(name="test", organisation=organisation)
+
+    # Then
+    assert (
+        project.identity_overrides_v2_migration_status
+        == IdentityOverridesV2MigrationStatus.COMPLETE
     )
