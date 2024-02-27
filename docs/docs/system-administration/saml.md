@@ -89,5 +89,5 @@ To add support for other canonicalization methods, set the `EXTRA_ALLOWED_CANONI
 Example:
 
 ```
-EXTRA_ALLOWED_CANONICALIZATIONS: ["http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments"]
+EXTRA_ALLOWED_CANONICALIZATIONS: http://www.w3.org/TR/2001/REC-xml-c14n-20010315#,http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments
 ```
