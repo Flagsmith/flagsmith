@@ -87,6 +87,8 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     identity_overrides_v2_migration_status = models.CharField(
         max_length=50,
         choices=IdentityOverridesV2MigrationStatus.choices,
+        # Note that the default is actually set dynamically by a lifecycle hook on create
+        # since we need to know whether edge is enabled or not.
         default=IdentityOverridesV2MigrationStatus.NOT_STARTED,
     )
     stale_flags_limit_days = models.IntegerField(
@@ -147,9 +149,14 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @hook(BEFORE_CREATE)
     def set_identity_overrides_v2_migration_status(self):
-        self.identity_overrides_v2_migration_status = (
-            self.identity_overrides_v2_migration_status or self._should_use_edge
-        )
+        if (
+            self.identity_overrides_v2_migration_status
+            == IdentityOverridesV2MigrationStatus.NOT_STARTED
+            and self._should_use_edge
+        ):
+            self.identity_overrides_v2_migration_status = (
+                IdentityOverridesV2MigrationStatus.COMPLETE
+            )
 
     @hook(AFTER_SAVE)
     def clear_environments_cache(self):
