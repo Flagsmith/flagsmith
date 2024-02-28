@@ -17,6 +17,7 @@ from django_lifecycle import (
 from simple_history.models import HistoricalRecords
 
 from app.utils import is_enterprise, is_saas
+from integrations.lead_tracking.hubspot.tasks import track_hubspot_lead
 from organisations.chargebee import (
     get_customer_id_from_subscription_id,
     get_max_api_calls_for_plan,
@@ -179,7 +180,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
         ).exclude(id=remaining_seat_holder.id).delete()
 
 
-class UserOrganisation(models.Model):
+class UserOrganisation(LifecycleModelMixin, models.Model):
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     date_joined = models.DateTimeField(auto_now_add=True)
@@ -190,6 +191,16 @@ class UserOrganisation(models.Model):
             "user",
             "organisation",
         )
+
+    @hook(AFTER_CREATE)
+    def register_hubspot_lead_tracking(self):
+        if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
+            track_hubspot_lead.delay(
+                args=(
+                    self.user.id,
+                    self.organisation.id,
+                )
+            )
 
 
 class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
@@ -442,3 +453,14 @@ class OranisationAPIUsageNotification(models.Model):
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
+
+
+class HubspotOrganisation(models.Model):
+    organisation = models.OneToOneField(
+        Organisation,
+        related_name="hubspot_organisation",
+        on_delete=models.CASCADE,
+    )
+    hubspot_id = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
