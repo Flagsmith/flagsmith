@@ -165,13 +165,14 @@ def _handle_api_usage_notifications(organisation: Organisation):
 
 
 def handle_api_usage_notifications():
+    flagsmith_client = get_client("local", local_eval=True)
+
     for organisation in Organisation.objects.filter(
         subscription_information_cache__current_billing_term_starts_at__isnull=False,
         subscription_information_cache__current_billing_term_ends_at__isnull=False,
     ).select_related(
         "subscription_information_cache",
     ):
-        flagsmith_client = get_client("local", local_eval=True)
         if not flagsmith_client.get_identity_flags(
             f"org.{organisation.id}.{organisation.name}",
             traits={"organisation_id": organisation.id},
