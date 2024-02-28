@@ -96,25 +96,6 @@ Your Flagsmith's domain can also be configured via the `FLAGSMITH_DOMAIN` enviro
 
 ## Deploying
 
-### Using Heroku-ish Platform (e.g. Heroku, Dokku, Flynn)
-
-The application should run on any Heroku-ish platform (e.g. Dokku) by adding the required git repo and pushing the code.
-The code for running the app is contained in the Procfile.
-
-To get it running, you'll need to add the necessary config variables as outlined below.
-
-### Using ElasticBeanstalk
-
-The application will run within ElasticBeanstalk using the default Python setup. We've included the .ebextensions/ and
-.elasticbeanstalk/ directories which will run on ElasticBeanstalk.
-
-The changes required to run in your environment will be as follows
-
-`.elasticbeanstalk/config.yml` - update application_name and default_region to the relevant variables for your setup.
-
-`.ebextensions/options.config` - within the root of the project `generate.sh` will add in all environment variables that
-are required using your chosen CI/CD. Alternatively, you can add your own `options.config`.
-
 ### Using Docker
 
 If you want to run the entire Flagsmith platform, including the front end dashboard:
