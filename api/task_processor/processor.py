@@ -28,6 +28,8 @@ def run_tasks(num_tasks: int = 1) -> typing.List[TaskRun]:
         executed_tasks = []
         task_runs = []
 
+        logger.debug("Processing %d tasks", len(list(tasks)))
+
         for task in tasks:
             task, task_run = _run_task(task)
 
@@ -85,7 +87,7 @@ def run_recurring_tasks(num_tasks: int = 1) -> typing.List[RecurringTaskRun]:
 
         return task_runs
 
-    logger.debug("No tasks to process.")
+    logger.debug("No recurring tasks to process.")
     return []
 
 
