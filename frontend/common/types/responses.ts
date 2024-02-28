@@ -6,8 +6,8 @@ export type EdgePagedResponse<T> = PagedResponse<T> & {
 }
 export type PagedResponse<T> = {
   count?: number
-  next?: string
-  previous?: string
+  next?: string | null
+  previous?: string | null
   results: T[]
 }
 export type FlagsmithValue = string | number | boolean | null
@@ -382,6 +382,59 @@ export type RolePermissionUser = {
   id: number
   role_name: string
 }
+
+export type ServersideSplitTestResult = {
+  conversion_count: number
+  evaluation_count: number
+  feature: {
+    created_date: string
+    default_enabled: boolean
+    description: any
+    id: number
+    initial_value: string
+    name: string
+    type: string
+  }
+  pvalue: number
+  value_data: FeatureStateValue
+}
+
+export type PConfidence =
+  | 'VERY_LOW'
+  | 'LOW'
+  | 'REASONABLE'
+  | 'HIGH'
+  | 'VERY_HIGH'
+export type SplitTestResult = {
+  results: {
+    conversion_count: number
+    evaluation_count: number
+    conversion_percentage: number
+    pvalue: number
+    confidence: PConfidence
+    value_data: FeatureStateValue
+  }[]
+  feature: {
+    created_date: string
+    default_enabled: boolean
+    description: any
+    id: number
+    initial_value: string
+    name: string
+    type: string
+  }
+  max_conversion_percentage: number
+  max_conversion_count: number
+  conversion_variance: number
+  max_conversion_pvalue: number
+}
+
+export type ConversionEvent = {
+  id: number
+  name: string
+  updated_at: string
+  created_at: string
+}
 export type FeatureVersion = {
   created_at: string
   updated_at: string
@@ -486,5 +539,7 @@ export type Res = {
   flagsmithProjectImport: { id: string }
   featureImports: PagedResponse<FeatureImport>
   serversideEnvironmentKeys: APIKey[]
+  conversionEvents: PagedResponse<ConversionEvent>
+  splitTest: PagedResponse<SplitTestResult>
   // END OF TYPES
 }

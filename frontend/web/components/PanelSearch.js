@@ -94,7 +94,7 @@ const PanelSearch = class extends Component {
     const renderRow = ({ index, key, style }) => {
       return (
         <div key={key} style={style}>
-          {this.props.renderRow(children[index])}
+          {this.props.renderRow(children[index], index)}
         </div>
       )
     }
