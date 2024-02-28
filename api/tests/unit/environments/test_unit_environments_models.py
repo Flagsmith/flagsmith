@@ -38,7 +38,7 @@ if typing.TYPE_CHECKING:
     from features.workflows.core.models import ChangeRequest
 
 
-def test_on_environment_creation_save_feature_states_get_created(
+def test_on_environment_creation_save_feature_states(
     organisation: Organisation,
     feature: Feature,
     project: Project,
@@ -54,7 +54,7 @@ def test_on_environment_creation_save_feature_states_get_created(
     feature.feature_states.count() == 2
 
 
-def test_on_environment_update_save_feature_states_get_updated_not_created(
+def test_on_environment_update_save_feature_states(
     environment: Environment,
     feature: Feature,
 ) -> None:
