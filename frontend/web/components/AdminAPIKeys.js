@@ -489,9 +489,7 @@ export default class AdminAPIKeys extends PureComponent {
                     {v.has_expired ? (
                       <div className='ml-1'>
                         <Tooltip title={<Icon name='close-circle' />}>
-                          {
-                            'This API key has expired due to reaching its expiration date'
-                          }
+                          {'This API key has expired'}
                         </Tooltip>
                       </div>
                     ) : (
