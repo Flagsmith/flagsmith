@@ -33,7 +33,7 @@ class HubspotClient:
 
         if len(results) > 1:
             logger.warning(
-                "Hubspot contact endpoint is non-unique but which should not be possible"
+                "Hubspot contact endpoint is non-unique which should not be possible"
             )
 
         return results[0]
