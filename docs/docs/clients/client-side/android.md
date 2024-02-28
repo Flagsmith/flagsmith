@@ -16,7 +16,7 @@ In your project path `app/build.gradle` add a new dependence
 
 ```groovy
 //flagsmith
-implementation 'com.github.Flagsmith:flagsmith-kotlin-android-client:1.0.1'
+implementation 'com.github.Flagsmith:flagsmith-kotlin-android-client:1.5.0'
 ```
 
 You should be able to find the latest version in the
@@ -127,11 +127,11 @@ flagsmith.getTraits(identity = "test@test.com") { result ->
     result.fold(
         onSuccess = { traits ->
             traits.forEach {
-                Log.i("Flagsmith", "Trait - ${it.key} : ${it.value}")
+                Log.i("Flagsmith", "Trait - ${it.key} : ${it.traitValue}")
             }
         },
         onFailure = { err ->
-            Log.e("Flagsmith", "Error setting trait", err)
+            Log.e("Flagsmith", "Error getting traits", err)
         })
 }
 ```

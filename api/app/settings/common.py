@@ -878,6 +878,8 @@ MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
 SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
 AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
 ENABLE_FLAGSMITH_REALTIME = env.bool("ENABLE_FLAGSMITH_REALTIME", default=False)
+USE_SECURE_COOKIES = env.bool("USE_SECURE_COOKIES", default=True)
+COOKIE_SAME_SITE = env.str("COOKIE_SAME_SITE", default="none")
 
 # Set this to enable create organisation for only superusers
 RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS", False)
@@ -904,6 +906,9 @@ if SAML_INSTALLED:
     INSTALLED_APPS.append("saml")
     SAML_ACCEPTED_TIME_DIFF = env.int("SAML_ACCEPTED_TIME_DIFF", default=60)
     DJOSER["SERIALIZERS"]["current_user"] = "saml.serializers.SamlCurrentUserSerializer"
+    EXTRA_ALLOWED_CANONICALIZATIONS = env.list(
+        "EXTRA_ALLOWED_CANONICALIZATIONS", default=[]
+    )
 
 
 # Additional functionality needed for using workflows in Flagsmith SaaS
@@ -1026,6 +1031,13 @@ PIPEDRIVE_IGNORE_DOMAINS_REGEX = env("PIPEDRIVE_IGNORE_DOMAINS_REGEX", "")
 PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID = env(
     "PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID", None
 )
+
+# Hubspot settings
+HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
+ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
+HUBSPOT_IGNORE_DOMAINS = env.list("HUBSPOT_IGNORE_DOMAINS", [])
+HUBSPOT_IGNORE_DOMAINS_REGEX = env("HUBSPOT_IGNORE_DOMAINS_REGEX", "")
+
 
 # List of plan ids that support seat upgrades
 AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
@@ -1164,3 +1176,5 @@ WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
 SPLIT_TESTING_INSTALLED = importlib.util.find_spec("split_testing")
 if SPLIT_TESTING_INSTALLED:
     INSTALLED_APPS += ("split_testing",)
+
+ENABLE_API_USAGE_ALERTING = env.bool("ENABLE_API_USAGE_ALERTING", default=False)

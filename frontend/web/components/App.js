@@ -24,6 +24,7 @@ import AccountStore from 'common/stores/account-store'
 import InfoMessage from './InfoMessage'
 import OrganisationLimit from './OrganisationLimit'
 import OrganisationLink from './OrganisationLink'
+import GithubStar from './GithubStar'
 
 const App = class extends Component {
   static propTypes = {
@@ -370,6 +371,7 @@ const App = class extends Component {
                                     </span>
                                     Account
                                   </NavLink>
+                                  <GithubStar />
                                   <Button
                                     href='https://docs.flagsmith.com'
                                     target='_blank'
@@ -431,7 +433,7 @@ const App = class extends Component {
                             />
                           )}
                           {user && showBanner && (
-                            <Row>
+                            <Row className={'px-3'}>
                               <InfoMessage
                                 title={announcementValue.title}
                                 infoMessageClass={'announcement'}

@@ -1,5 +1,46 @@
 # Changelog
 
+## [2.102.0](https://github.com/Flagsmith/flagsmith/compare/v2.101.0...v2.102.0) (2024-02-27)
+
+
+### Features
+
+* add option to disable secure cookies and configure `samesite` ([#3441](https://github.com/Flagsmith/flagsmith/issues/3441)) ([7ec5491](https://github.com/Flagsmith/flagsmith/commit/7ec54911d617f113dae5a735a9b2007ddc7405e7))
+
+## [2.101.0](https://github.com/Flagsmith/flagsmith/compare/v2.100.1...v2.101.0) (2024-02-26)
+
+
+### Features
+
+* add fields necessary for stale flags ([#3263](https://github.com/Flagsmith/flagsmith/issues/3263)) ([aa1d6bb](https://github.com/Flagsmith/flagsmith/commit/aa1d6bb9f06dd4071ccab098f2be9cfba678e012))
+* Add role API key (BE) ([#3346](https://github.com/Flagsmith/flagsmith/issues/3346)) ([c60a145](https://github.com/Flagsmith/flagsmith/commit/c60a14518331f2f3c3f975ce517bb556bdaa6d0c))
+* Add role api keys in UI ([#3042](https://github.com/Flagsmith/flagsmith/issues/3042)) ([b746d09](https://github.com/Flagsmith/flagsmith/commit/b746d098e58d9915ee975f7c8b75d750d126e9b9))
+* **api-keys:** add `has_expired` to MasterAPIKey response ([#3432](https://github.com/Flagsmith/flagsmith/issues/3432)) ([0a28ee0](https://github.com/Flagsmith/flagsmith/commit/0a28ee02578f48affc099d084f4af87015a527ed))
+* Create api usage function ([#3340](https://github.com/Flagsmith/flagsmith/issues/3340)) ([16a2468](https://github.com/Flagsmith/flagsmith/commit/16a24685449ea33906c5b225929c1ad08717ca70))
+* **datadog:** add source type name to datadog ([#3342](https://github.com/Flagsmith/flagsmith/issues/3342)) ([a89410c](https://github.com/Flagsmith/flagsmith/commit/a89410c2ac315350c7a6dc0c4b9993ed90b1ed8c))
+* GitHub star ([#3451](https://github.com/Flagsmith/flagsmith/issues/3451)) ([b3414b3](https://github.com/Flagsmith/flagsmith/commit/b3414b3ab0561c266c969b0d37f0dd3c6e2a4516))
+* Import export environment flags ([#3161](https://github.com/Flagsmith/flagsmith/issues/3161)) ([7b8c8dc](https://github.com/Flagsmith/flagsmith/commit/7b8c8dc753af1d6073e203a745a79b7969536a8c))
+* Issue 166 json formatted logs ([#3376](https://github.com/Flagsmith/flagsmith/issues/3376)) ([c666d29](https://github.com/Flagsmith/flagsmith/commit/c666d2961b62634aa51e7c2d9ccb2ed3b4060bec))
+* project usage limits ([#3313](https://github.com/Flagsmith/flagsmith/issues/3313)) ([87501f5](https://github.com/Flagsmith/flagsmith/commit/87501f5273aaaef843e97bf26ad063b2e07cfcbb))
+* **segments:** add query param to exclude / include feature specific ([#3430](https://github.com/Flagsmith/flagsmith/issues/3430)) ([aa22aad](https://github.com/Flagsmith/flagsmith/commit/aa22aad2138feb100942feddcccf8a27bf4ac61b))
+* versioned feature states ([#2688](https://github.com/Flagsmith/flagsmith/issues/2688)) ([c02562e](https://github.com/Flagsmith/flagsmith/commit/c02562ec94f5e590d87e1e5ab30e2e2111620965))
+
+
+### Bug Fixes
+
+* Add create segment error handling ([#3413](https://github.com/Flagsmith/flagsmith/issues/3413)) ([932c62d](https://github.com/Flagsmith/flagsmith/commit/932c62d2b65503e5f707e5f4e1084546919166c8))
+* **analytics:** move feature_name index into its own migration file ([#3427](https://github.com/Flagsmith/flagsmith/issues/3427)) ([39b7300](https://github.com/Flagsmith/flagsmith/commit/39b730098371a80b7b4c5266ba400ed19955a9b5))
+* audit paging ([#3421](https://github.com/Flagsmith/flagsmith/issues/3421)) ([32f3b0a](https://github.com/Flagsmith/flagsmith/commit/32f3b0a9ccccbb3bb8b91ba854ffa9f5f5cb9ea0))
+* **db:** Fix read replica strategy ([#3426](https://github.com/Flagsmith/flagsmith/issues/3426)) ([d63a289](https://github.com/Flagsmith/flagsmith/commit/d63a2896e53edbe34edd8d5c88e13c6aba982789))
+* Docs - Bring the code examples in-line with the latest SDK ([#3456](https://github.com/Flagsmith/flagsmith/issues/3456)) ([1270b18](https://github.com/Flagsmith/flagsmith/commit/1270b18a2340962cba46eb3047340a3f74930267))
+* Get permissions by using environment instead of project scope ([#3444](https://github.com/Flagsmith/flagsmith/issues/3444)) ([1b427f2](https://github.com/Flagsmith/flagsmith/commit/1b427f29d3981d6cf9938ea41fd33eb29bad3843))
+* Limit segment rules and conditions ([#3397](https://github.com/Flagsmith/flagsmith/issues/3397)) ([c89e96e](https://github.com/Flagsmith/flagsmith/commit/c89e96ec70e67a69817897e692c47397a3a9b00c))
+* **migrations:** Fix tags migrations ([#3419](https://github.com/Flagsmith/flagsmith/issues/3419)) ([f1ebdf5](https://github.com/Flagsmith/flagsmith/commit/f1ebdf56b1c81ff9abc8601a31259a351a1350f1))
+* org switcher ([#3453](https://github.com/Flagsmith/flagsmith/issues/3453)) ([3bc1bd8](https://github.com/Flagsmith/flagsmith/commit/3bc1bd819f5e1f68a3984a4d6100ec786b8d3e5b))
+* **segments:** use API query param for feature-specific filter ([#3431](https://github.com/Flagsmith/flagsmith/issues/3431)) ([86cc3da](https://github.com/Flagsmith/flagsmith/commit/86cc3dabd8804f2d38ba8fc47913f30d1aeb943a))
+* toggle mv flags ([#3450](https://github.com/Flagsmith/flagsmith/issues/3450)) ([4214657](https://github.com/Flagsmith/flagsmith/commit/42146573f5083950769be6948e50c58f5ea12fdc))
+* Versioning test - always login regardless of skip test ([#3424](https://github.com/Flagsmith/flagsmith/issues/3424)) ([a04aafb](https://github.com/Flagsmith/flagsmith/commit/a04aafbef0a366ab6b1990092f24e48ec8511b24))
+
 ## [2.100.1](https://github.com/Flagsmith/flagsmith/compare/v2.100.0...v2.100.1) (2024-02-13)
 
 
