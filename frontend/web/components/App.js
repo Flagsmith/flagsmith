@@ -431,7 +431,7 @@ const App = class extends Component {
                             />
                           )}
                           {user && showBanner && (
-                            <Row>
+                            <Row className={'px-3'}>
                               <InfoMessage
                                 title={announcementValue.title}
                                 infoMessageClass={'announcement'}
