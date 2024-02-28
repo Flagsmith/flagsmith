@@ -25,6 +25,7 @@ import InfoMessage from './InfoMessage'
 import OrganisationLimit from './OrganisationLimit'
 import OrganisationLink from './OrganisationLink'
 import GithubStar from './GithubStar'
+import { initialiseDelighted } from 'project/libs'
 
 const App = class extends Component {
   static propTypes = {
@@ -123,6 +124,8 @@ const App = class extends Component {
     resolveAuthFlow({
       isAuthenticated: true,
     })
+
+    initialiseDelighted()
 
     let redirect = API.getRedirect()
     const invite = API.getInvite()
