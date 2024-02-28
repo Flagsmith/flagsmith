@@ -545,7 +545,10 @@ else:
         "version": 1,
         "disable_existing_loggers": False,
         "formatters": {
-            "generic": {"format": "%(name)-12s %(levelname)-8s %(message)s"},
+            "generic": {
+                "format": "%(asctime)s %(threadName)s %(name)-12s %(levelname)-8s %(message)s",
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+            },
             "json": {
                 "()": "util.logging.JsonFormatter",
                 "datefmt": "%Y-%m-%d %H:%M:%S",
