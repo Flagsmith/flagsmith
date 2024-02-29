@@ -974,7 +974,8 @@ private static FlagsmithClient flagsmith = FlagsmithClient
 </TabItem>
 <TabItem value="dotnet" label=".NET">
 
-Below you can find an implementation example of the client instantiated as a Singleton with its settings defined in a file named  `FlagsmithSettings.cs` (found below).
+Below you can find an implementation example of the client instantiated as a Singleton with its settings defined in a
+file named `FlagsmithSettings.cs` (found below).
 
 ```csharp
 
@@ -1020,17 +1021,16 @@ namespace Example.Settings
 In the `appsettings.json` file you can configure the necessary flagsmith values.
 
 ```json
-
 {
-  "AllowedHosts": "*",
-  "FlagsmithConfiguration": {
-    "EnvironmentKey": "XF4kvmrB6FBNL9EXmL3pYo",
-    "EnableClientSideEvaluation": false,
-    "EnvironmentRefreshIntervalSeconds": 60,
-    "EnableAnalytics": true,
-    "RequestTimeout": 10,
-    "Retries": 3
-  }
+ "AllowedHosts": "*",
+ "FlagsmithConfiguration": {
+  "EnvironmentKey": "XF4kvmrB6FBNL9EXmL3pYo",
+  "EnableClientSideEvaluation": false,
+  "EnvironmentRefreshIntervalSeconds": 60,
+  "EnableAnalytics": true,
+  "RequestTimeout": 10,
+  "Retries": 3
+ }
 }
 ```
 
