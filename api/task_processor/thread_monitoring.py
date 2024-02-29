@@ -1,4 +1,3 @@
-import json
 import logging
 
 from pydantic import BaseModel
@@ -15,7 +14,7 @@ class ThreadCounts(BaseModel):
 
 def write_thread_counts(thread_counts: ThreadCounts) -> None:
     with open(THREAD_COUNTS_FILE_PATH, "w+") as f:
-        f.write(json.dumps(thread_counts.dict()))
+        f.write(thread_counts.json())
 
 
 def get_thread_counts() -> ThreadCounts:
