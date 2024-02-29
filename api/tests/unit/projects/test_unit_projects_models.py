@@ -56,14 +56,14 @@ def test_get_segments_from_cache_set_not_called(project, segments, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "edge_release_datetime, expected_enable_dynamo_db_value",
-    ((yesterday, True), (tomorrow, False), (None, False)),
+    "edge_enabled, expected_enable_dynamo_db_value",
+    ((True, True), (False, False)),
 )
 def test_create_project_sets_enable_dynamo_db(
-    db, edge_release_datetime, expected_enable_dynamo_db_value, settings, organisation
+    db, edge_enabled, expected_enable_dynamo_db_value, settings, organisation
 ):
     # Given
-    settings.EDGE_RELEASE_DATETIME = edge_release_datetime
+    settings.EDGE_ENABLED = edge_enabled
 
     # When
     project = Project.objects.create(name="Test project", organisation=organisation)
@@ -162,7 +162,7 @@ def test_create_project_sets_identity_overrides_v2_migration_status_if_edge_enab
     settings: SettingsWrapper, organisation: Organisation
 ) -> None:
     # Given
-    settings.EDGE_RELEASE_DATETIME = timezone.now() - timedelta(days=1)
+    settings.EDGE_ENABLED = True
 
     # When
     project = Project.objects.create(name="test", organisation=organisation)
