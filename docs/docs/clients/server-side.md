@@ -974,57 +974,64 @@ private static FlagsmithClient flagsmith = FlagsmithClient
 </TabItem>
 <TabItem value="dotnet" label=".NET">
 
+Below you can find an implementation example of the client instantiated as a Singleton with its settings defined in a file named  `FlagsmithSettings.cs` (found below).
+
 ```csharp
-_flagsmithClient = new FlagsmithClient(
-    # Your API Token.
-    # Note that this is either the `Environment API` key or the `Server Side SDK Token`
-    # depending on if you are using Local or Remote Evaluation
-    # Required.
-    environmentKey: "FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY",
 
-    # Pass in a default Flag Handler method
-    # Optional
-    defaultFlagHandler: defaultFlagHandler,
+builder.Services.AddOptions<FlagsmithSettings>().Bind(builder.Configuration.GetSection(FlagsmithSettings.ConfigSection));
+builder.Services.AddSingleton(provider => provider.GetRequiredService<IOptions<FlagsmithSettings>>().Value);
+builder.Services.AddSingleton<IFlagsmithClient, FlagsmithClient>(provider =>
+{
+    var settings = provider.GetService<FlagsmithSettings>();
+    return new FlagsmithClient(settings);
+});
 
-    # Override the default Flagsmith API URL if you are self-hosting.
-    # Optional.
-    # Defaults to https://edge.api.flagsmith.com/api/v1/
-    apiUrl: "https://flagsmith.myproject.com"
 
-    # Controls which mode to run in; local or remote evaluation.
-    # See the `SDKs Overview Page` for more info
-    # Optional.
-    # Defaults to False.
-    enableClientSideEvaluation: false;
+```
 
-    # Controls whether Flag Analytics data is sent to the Flagsmith API
-    # See https://docs.flagsmith.com/advanced-use/flag-analytics
-    # Optional
-    # Defaults to false
-    enableAnalytics: false
+`FlagsmithSettings.cs`
 
-    # When running in local evaluation mode, defines
-    # how often to request an updated Environment document in seconds
-    # Optional
-    # Defaults to 60 seconds
-    environmentRefreshIntervalSeconds: 60
+```csharp
+using Example.Controllers;
+using Flagsmith;
+using Newtonsoft.Json;
 
-    # You can pass custom headers to the Flagsmith API with this Dictionary.
-    # This can be helpful, for example, when sending request IDs to help trace requests.
-    # Optional
-    # Defaults to None
-    customHeaders: <Dictionary>
+namespace Example.Settings
+{
+    public class FlagsmithSettings : IFlagsmithConfiguration
+    {
+        public static string ConfigSection => "FlagsmithConfiguration";
 
-    # How often to retry failed HTTP requests
-    # Optional
-    # Defaults to 1
-    retries: 1
+        public string ApiUrl { get; set; } = "https://edge.api.flagsmith.com/api/v1/";
+        public string EnvironmentKey { get; set; } = String.Empty;
+        public bool EnableClientSideEvaluation { get; set; } = false;
+        public int EnvironmentRefreshIntervalSeconds { get; set; } = 60;
+        public ILogger Logger { get; set; }
+        public bool EnableAnalytics { get; set; } = false;
+        public Double? RequestTimeout { get; set; }
+        public Dictionary<string, string> CustomHeaders { get; set; }
+        public int? Retries { get; set; } = 1;
+        public CacheConfig CacheConfig { get; set; } = new(false);
+    }
+}
 
-    # The network timeout in seconds.
-    # Optional.
-    # Defaults to null (http client default)
-    requestTimeout: null,
-)
+```
+
+In the `appsettings.json` file you can configure the necessary flagsmith values.
+
+```json
+
+{
+  "AllowedHosts": "*",
+  "FlagsmithConfiguration": {
+    "EnvironmentKey": "XF4kvmrB6FBNL9EXmL3pYo",
+    "EnableClientSideEvaluation": false,
+    "EnvironmentRefreshIntervalSeconds": 60,
+    "EnableAnalytics": true,
+    "RequestTimeout": 10,
+    "Retries": 3
+  }
+}
 ```
 
 </TabItem>
