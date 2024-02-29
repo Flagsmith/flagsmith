@@ -923,6 +923,10 @@ WORKFLOWS_LOGIC_INSTALLED = (
 if WORKFLOWS_LOGIC_INSTALLED:
     INSTALLED_APPS.append(WORKFLOWS_LOGIC_MODULE_PATH)
 
+    STALE_FLAGS_MODULE_PATH = f"{WORKFLOWS_LOGIC_MODULE_PATH}.stale_flags"
+    if importlib.util.find_spec(STALE_FLAGS_MODULE_PATH) is not None:
+        INSTALLED_APPS.append(STALE_FLAGS_MODULE_PATH)
+
 # Additional functionality for restricting authentication to a set of authentication methods in Flagsmith SaaS
 AUTH_CONTROLLER_INSTALLED = importlib.util.find_spec("auth_controller") is not None
 if AUTH_CONTROLLER_INSTALLED:
