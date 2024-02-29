@@ -1,7 +1,7 @@
 from datetime import timedelta
-from typing import Callable
 
 from django.utils import timezone
+from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
 
 from task_processor.models import RecurringTask, RecurringTaskRun, Task
@@ -39,7 +39,11 @@ def test_clean_up_old_recurring_task_runs_does_nothing_when_no_runs(db: None) ->
     assert RecurringTaskRun.objects.count() == 0
 
 
-def test_clean_up_old_tasks(settings, django_assert_num_queries, db):
+def test_clean_up_old_tasks(
+    settings: SettingsWrapper,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    db: None,
+) -> None:
     # Given
     settings.TASK_DELETE_RETENTION_DAYS = 2
     settings.TASK_DELETE_BATCH_SIZE = 1
@@ -89,7 +93,7 @@ def test_clean_up_old_tasks(settings, django_assert_num_queries, db):
 
 def test_clean_up_old_recurring_task_runs(
     settings: SettingsWrapper,
-    django_assert_num_queries: Callable[[int], None],
+    django_assert_num_queries: DjangoAssertNumQueries,
     db: None,
 ) -> None:
     # Given
@@ -124,8 +128,10 @@ def test_clean_up_old_recurring_task_runs(
 
 
 def test_clean_up_old_tasks_include_failed_tasks(
-    settings, django_assert_num_queries, db
-):
+    settings: SettingsWrapper,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    db: None,
+) -> None:
     # Given
     settings.TASK_DELETE_RETENTION_DAYS = 2
     settings.TASK_DELETE_INCLUDE_FAILED_TASKS = True
@@ -162,7 +168,7 @@ def test_clean_up_old_tasks_does_not_run_if_disabled(
 
 def test_clean_up_old_recurring_task_runs_does_not_run_if_disabled(
     settings: SettingsWrapper,
-    django_assert_num_queries: Callable[[int], None],
+    django_assert_num_queries: DjangoAssertNumQueries,
     db: None,
 ) -> None:
     # Given

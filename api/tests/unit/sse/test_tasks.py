@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Callable
 from unittest.mock import call
 
 import pytest
+from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
@@ -91,7 +91,7 @@ def test_auth_header_raises_exception_if_token_not_set(settings):
 def test_track_sse_usage(
     mocker: MockerFixture,
     environment: Environment,
-    django_assert_num_queries: Callable,
+    django_assert_num_queries: DjangoAssertNumQueries,
     settings: SettingsWrapper,
 ):
     # Given - two valid logs

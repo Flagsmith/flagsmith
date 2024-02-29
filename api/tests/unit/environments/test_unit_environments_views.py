@@ -1,5 +1,4 @@
 import json
-from typing import Callable
 from unittest import TestCase, mock
 
 import pytest
@@ -7,6 +6,7 @@ from core.constants import STRING
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from flag_engine.segments.constants import EQUAL
+from pytest_django import DjangoAssertNumQueries
 from pytest_lazyfixture import lazy_fixture
 from pytest_mock import MockerFixture
 from rest_framework import status
@@ -608,7 +608,7 @@ def test_view_environment_with_staff__query_count_is_expected(
     environment: Environment,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     project: Project,
-    django_assert_num_queries: Callable[[int], None],
+    django_assert_num_queries: DjangoAssertNumQueries,
     environment_metadata_a: Metadata,
     environment_metadata_b: Metadata,
     required_a_environment_metadata_field: MetadataModelField,
@@ -655,7 +655,7 @@ def test_view_environment_with_admin__query_count_is_expected(
     admin_client: APIClient,
     environment: Environment,
     project: Project,
-    django_assert_num_queries: Callable[[int], None],
+    django_assert_num_queries: DjangoAssertNumQueries,
     environment_metadata_a: Metadata,
     environment_metadata_b: Metadata,
     required_a_environment_metadata_field: MetadataModelField,
