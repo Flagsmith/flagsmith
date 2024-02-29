@@ -97,10 +97,6 @@ const ImportPage: FC<ImportPageType> = ({
     key: string,
     projectId: string,
   ) => {
-    createFeatureExport(getStore(), {
-      environment_id: environmentId,
-      tag_ids: [],
-    })
     createLaunchDarklyProjectImport({
       body: { project_key: key, token: LDKey },
       project_id: projectId,
