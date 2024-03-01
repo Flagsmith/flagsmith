@@ -689,14 +689,8 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
                               <div className='ml-2'>
-                                User Roles and Permissions
+                                2FA, SAML, Okta, ADFS and LDAP Authentication
                               </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <Icon name='checkmark-circle' fill='#27AB95' />
-                              <div className='ml-2'>Change Requests</div>
                             </Row>
                           </li>
                           <li>
@@ -705,8 +699,14 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
                               <div className='ml-2'>
-                                2FA, SAML, Okta, ADFS and LDAP Authentication
+                                User Roles and Permissions
                               </div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <Icon name='checkmark-circle' fill='#27AB95' />
+                              <div className='ml-2'>Change Requests</div>
                             </Row>
                           </li>
                           <li>
