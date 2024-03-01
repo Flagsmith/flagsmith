@@ -247,6 +247,8 @@ def test_handle_api_usage_notifications_below_100(
         "organisations.tasks.get_current_api_usage",
     )
     mock_api_usage.return_value = 91
+    mocker.patch("organisations.tasks.get_client")
+
     assert not OranisationAPIUsageNotification.objects.filter(
         organisation=organisation,
     ).exists()
@@ -334,6 +336,7 @@ def test_handle_api_usage_notifications_above_100(
     )
     mock_api_usage.return_value = 105
 
+    mocker.patch("organisations.tasks.get_client")
     assert not OranisationAPIUsageNotification.objects.filter(
         organisation=organisation,
     ).exists()
