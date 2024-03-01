@@ -1029,10 +1029,11 @@ _flagsmithClient = new FlagsmithClient(
 
 ### Singleton Initialization
 
-Singleton ensures a single instance of FlagsmithClient throughout the application, optimizing resources and maintaining consistency in configuration.
+Singleton ensures a single instance of FlagsmithClient throughout the application, optimizing resources and maintaining
+consistency in configuration.
 
-Below you can find an example implementation of the client instantiated as a Singleton with its configuration defined in a
-file called `FlagsmithSettings.cs` (found below), which stores Flagsmith-specific settings.
+Below you can find an example implementation of the client instantiated as a Singleton with its configuration defined in
+a file called `FlagsmithSettings.cs` (found below), which stores Flagsmith-specific settings.
 
 ```csharp
 
