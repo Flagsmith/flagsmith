@@ -254,9 +254,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (plan && plan.includes('scale-up')) {
       return planNames.scaleUp
     }
-    if (plan && plan.includes('side-project')) {
-      return planNames.startup
-    }
     if (plan && plan.includes('startup')) {
       return planNames.startup
     }
