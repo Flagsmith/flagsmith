@@ -413,6 +413,9 @@ def _get_prioritised_feature_states(
 ) -> List["FeatureState"]:
     prioritised_feature_state_by_feature_id = {}
     for feature_state in feature_states:
+        # TODO: this call to is_live was causing an N+1 issue.
+        #  For now, we have solved it with an extra select_related, but
+        #  there is probably a neater solution here.
         if not feature_state.is_live:
             continue
         if existing_feature_state := prioritised_feature_state_by_feature_id.get(
