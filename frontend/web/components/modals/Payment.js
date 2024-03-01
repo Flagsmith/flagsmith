@@ -258,6 +258,16 @@ const Payment = class extends Component {
                           </li>
                           <li>
                             <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>
+                                Two-Factor Authentication (2FA)
+                              </div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
                               <Icon
                                 name='minus-circle'
                                 fill='rgba(101, 109, 123, 0.16)'
@@ -285,17 +295,6 @@ const Payment = class extends Component {
                                 fill='rgba(101, 109, 123, 0.16)'
                               />
                               <div className='ml-2 disabled'>Audit Logs</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <Icon
-                                name='minus-circle'
-                                fill='rgba(101, 109, 123, 0.16)'
-                              />
-                              <div className='ml-2 disabled'>
-                                Two-Factor Authentication (2FA)
-                              </div>
                             </Row>
                           </li>
                           <li>
@@ -482,6 +481,16 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
                               <div className='ml-2'>
+                                Two-Factor Authentication (2FA)
+                              </div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>
                                 User Roles and Permissions
                               </div>
                             </Row>
@@ -500,16 +509,6 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
                               <div className='ml-2'>Audit Logs</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>
-                                Two-Factor Authentication (2FA)
-                              </div>
                             </Row>
                           </li>
                           <li>
