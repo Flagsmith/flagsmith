@@ -974,8 +974,65 @@ private static FlagsmithClient flagsmith = FlagsmithClient
 </TabItem>
 <TabItem value="dotnet" label=".NET">
 
-Below you can find an implementation example of the client instantiated as a Singleton with its settings defined in a
-file named `FlagsmithSettings.cs` (found below).
+```csharp
+_flagsmithClient = new FlagsmithClient(
+    # Your API Token.
+    # Note that this is either the `Environment API` key or the `Server Side SDK Token`
+    # depending on if you are using Local or Remote Evaluation
+    # Required.
+    environmentKey: "FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY",
+
+    # Pass in a default Flag Handler method
+    # Optional
+    defaultFlagHandler: defaultFlagHandler,
+
+    # Override the default Flagsmith API URL if you are self-hosting.
+    # Optional.
+    # Defaults to https://edge.api.flagsmith.com/api/v1/
+    apiUrl: "https://flagsmith.myproject.com"
+
+    # Controls which mode to run in; local or remote evaluation.
+    # See the `SDKs Overview Page` for more info
+    # Optional.
+    # Defaults to False.
+    enableClientSideEvaluation: false;
+
+    # Controls whether Flag Analytics data is sent to the Flagsmith API
+    # See https://docs.flagsmith.com/advanced-use/flag-analytics
+    # Optional
+    # Defaults to false
+    enableAnalytics: false
+
+    # When running in local evaluation mode, defines
+    # how often to request an updated Environment document in seconds
+    # Optional
+    # Defaults to 60 seconds
+    environmentRefreshIntervalSeconds: 60
+
+    # You can pass custom headers to the Flagsmith API with this Dictionary.
+    # This can be helpful, for example, when sending request IDs to help trace requests.
+    # Optional
+    # Defaults to None
+    customHeaders: <Dictionary>
+
+    # How often to retry failed HTTP requests
+    # Optional
+    # Defaults to 1
+    retries: 1
+
+    # The network timeout in seconds.
+    # Optional.
+    # Defaults to null (http client default)
+    requestTimeout: null,
+)
+```
+
+### Singleton Initialization
+
+Singleton ensures a single instance of FlagsmithClient throughout the application, optimizing resources and maintaining consistency in configuration.
+
+Below you can find an example implementation of the client instantiated as a Singleton with its configuration defined in a
+file called `FlagsmithSettings.cs` (found below), which stores Flagsmith-specific settings.
 
 ```csharp
 
@@ -1002,7 +1059,6 @@ namespace Example.Settings
     public class FlagsmithSettings : IFlagsmithConfiguration
     {
         public static string ConfigSection => "FlagsmithConfiguration";
-
         public string ApiUrl { get; set; } = "https://edge.api.flagsmith.com/api/v1/";
         public string EnvironmentKey { get; set; } = String.Empty;
         public bool EnableClientSideEvaluation { get; set; } = false;
@@ -1024,7 +1080,7 @@ In the `appsettings.json` file you can configure the necessary flagsmith values.
 {
  "AllowedHosts": "*",
  "FlagsmithConfiguration": {
-  "EnvironmentKey": "XF4kvmrB6FBNL9EXmL3pYo",
+  "EnvironmentKey": "YOUR_ENVIRONMENT_KEY",
   "EnableClientSideEvaluation": false,
   "EnvironmentRefreshIntervalSeconds": 60,
   "EnableAnalytics": true,
