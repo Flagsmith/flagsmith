@@ -97,3 +97,43 @@ def test_trigger_feature_state_change_webhooks_for_deleted_flag(
     assert data["new_state"] is None
     assert data["previous_state"]["feature_state_value"] == new_value
     assert event_type == WebhookEventType.FLAG_DELETED.value
+
+
+@pytest.mark.django_db
+def test_trigger_feature_state_change_webhooks_for_deleted_flag_uses_fs_instance(
+    mocker: MockerFixture,
+    environment: Environment,
+    feature: Feature,
+):
+    # Given
+    feature_state = FeatureState.objects.get(feature=feature, environment=environment)
+
+    # Remove history instance to make sure it's not used
+    feature_state.history.all().delete()
+
+    mock_call_environment_webhooks = mocker.patch(
+        "features.tasks.call_environment_webhooks"
+    )
+    mock_call_organisation_webhooks = mocker.patch(
+        "features.tasks.call_organisation_webhooks"
+    )
+
+    trigger_feature_state_change_webhooks(feature_state, WebhookEventType.FLAG_DELETED)
+
+    # Then
+    environment_webhook_call_args = (
+        mock_call_environment_webhooks.delay.call_args.kwargs["args"]
+    )
+    organisation_webhook_call_args = (
+        mock_call_organisation_webhooks.delay.call_args.kwargs["args"]
+    )
+
+    # verify that the data for both calls is the same
+    assert environment_webhook_call_args[1] == organisation_webhook_call_args[1]
+
+    data = environment_webhook_call_args[1]
+    event_type = environment_webhook_call_args[2]
+    assert data["new_state"] is None
+
+    assert data["previous_state"]["feature"]["id"] == feature_state.feature.id
+    assert event_type == WebhookEventType.FLAG_DELETED.value
