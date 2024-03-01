@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.103.0](https://github.com/Flagsmith/flagsmith/compare/v2.102.0...v2.103.0) (2024-03-01)
+
+
+### Features
+
+* Add has expired column in the api keys table ([#3433](https://github.com/Flagsmith/flagsmith/issues/3433)) ([3f83130](https://github.com/Flagsmith/flagsmith/commit/3f83130fb00e09878228483131187df9d61e117f))
+* Track leads to Hubspot ([#3473](https://github.com/Flagsmith/flagsmith/issues/3473)) ([02c59d2](https://github.com/Flagsmith/flagsmith/commit/02c59d25c7a440d0fc0a09a689ea62202c4e1c43))
+
+
+### Bug Fixes
+
+* Add padding to the announcement ([#3474](https://github.com/Flagsmith/flagsmith/issues/3474)) ([e5f29a1](https://github.com/Flagsmith/flagsmith/commit/e5f29a11b068c1a2537df66dd72fb47f95852209))
+* Add trailing / to delete api key endpoint ([#3506](https://github.com/Flagsmith/flagsmith/issues/3506)) ([0d655a0](https://github.com/Flagsmith/flagsmith/commit/0d655a0a0399c02032f4c2369c09c0d7b616944f))
+* N+1 on segment overrides for environment-document endpoint ([#3512](https://github.com/Flagsmith/flagsmith/issues/3512)) ([4e92f34](https://github.com/Flagsmith/flagsmith/commit/4e92f348c2e9863e19bd72f8bca1499d9a42786d))
+* toggle flag ([#3480](https://github.com/Flagsmith/flagsmith/issues/3480)) ([87cfcd9](https://github.com/Flagsmith/flagsmith/commit/87cfcd9baee2a28dee53842e6fea79bc5dea9fd3))
+
 ## [2.102.0](https://github.com/Flagsmith/flagsmith/compare/v2.101.0...v2.102.0) (2024-02-27)
 
 
