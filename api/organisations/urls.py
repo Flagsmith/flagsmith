@@ -118,17 +118,17 @@ urlpatterns = [
         name="remove-user-group-admin",
     ),
     path(
-        "<int:organisation_pk>/github/issues",
+        "<int:organisation_pk>/github/issues/",
         fetch_issues,
         name="get-github-issues",
     ),
     path(
-        "<int:organisation_pk>/github/pulls",
+        "<int:organisation_pk>/github/pulls/",
         fetch_pull_requests,
         name="get-github-pulls",
     ),
     path(
-        "github/repositories",
+        "github/repositories/",
         fetch_repositories,
         name="get-github-installation-repos",
     ),
