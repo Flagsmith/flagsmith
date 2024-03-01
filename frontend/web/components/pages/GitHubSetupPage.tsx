@@ -34,7 +34,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
 
   const getRepositories = (installationId: string) => {
     _data
-      .get(`http://localhost:3000/api/repositories`, {
+      .get(`http://127.0.0.1:8000/api/v1/organisations/github/repositories`, {
         'installation_id': installationId,
       })
       .catch((error) => {
@@ -47,8 +47,10 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
   }
 
   useEffect(() => {
-    getRepositories(installationId)
-  }, [])
+    if (organisation) {
+      getRepositories(installationId)
+    }
+  }, [organisation])
 
   useEffect(() => {
     if (isSuccessCreatedGithubRepository) {

@@ -190,9 +190,14 @@ const CreateFlag = class extends Component {
     }).then((res) => {
       const installationId = res?.data?.results[0]?.installation_id
       data
-        .get(`http://localhost:3000/api/issues`, {
-          'installation_id': installationId,
-        })
+        .get(
+          `http://127.0.0.1:8000/api/v1/organisations/${
+            AccountStore.getOrganisation().id
+          }/github/issues`,
+          {
+            'installation_id': installationId,
+          },
+        )
         .catch((error) => {
           console.log('DEBUG: error:', error)
         })
@@ -200,9 +205,14 @@ const CreateFlag = class extends Component {
           this.setState({ issuesExternalResources: issues })
         })
       data
-        .get(`http://localhost:3000/api/pulls`, {
-          'installation_id': installationId,
-        })
+        .get(
+          `http://127.0.0.1:8000/api/v1/organisations/${
+            AccountStore.getOrganisation().id
+          }/github/pulls`,
+          {
+            'installation_id': installationId,
+          },
+        )
         .catch((error) => {
           console.log('DEBUG: error:', error)
         })
