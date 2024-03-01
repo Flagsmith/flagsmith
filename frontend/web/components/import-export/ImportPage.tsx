@@ -45,6 +45,7 @@ const ImportPage: FC<ImportPageType> = ({
   const {
     data: status,
     isSuccess: statusLoaded,
+    isUninitialized,
     refetch,
   } = useGetLaunchDarklyProjectImportQuery(
     {
@@ -76,9 +77,11 @@ const ImportPage: FC<ImportPageType> = ({
   useEffect(() => {
     if (isSuccess && data?.id) {
       setImportId(data.id)
-      refetch()
+      if (!isUninitialized) {
+        refetch()
+      }
     }
-  }, [isSuccess, data, refetch])
+  }, [isSuccess, data, refetch, isUninitialized])
 
   const getProjectList = (LDKey: string) => {
     setIsLoading(true)
