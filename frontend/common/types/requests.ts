@@ -175,5 +175,8 @@ export type Req = {
   updateGithubRepository: { id: string }
   deleteGithubRepository: { id: string }
   createGithubRepository: {}
+  getGithubIssues: { org_id: string }
+  getGithubPulls: { org_id: string }
+  getGithubRepos: { installation_id: number }
   // END OF TYPES
 }

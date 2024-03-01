@@ -40,6 +40,7 @@ import {
   deleteExternalResource,
 } from 'common/services/useExternalResource'
 import { createFeatureExternalResource } from 'common/services/useFeatureExternalResource'
+import { getGithubIssues, getGithubPulls } from 'common/services/useGithub'
 import { getStore } from 'common/store'
 
 const CreateFlag = class extends Component {
@@ -189,35 +190,23 @@ const CreateFlag = class extends Component {
       organisation_pk: AccountStore.getOrganisation().id,
     }).then((res) => {
       const installationId = res?.data?.results[0]?.installation_id
-      data
-        .get(
-          `http://127.0.0.1:8000/api/v1/organisations/${
-            AccountStore.getOrganisation().id
-          }/github/issues`,
-          {
-            'installation_id': installationId,
-          },
-        )
+      getGithubIssues(getStore(), {
+        org_id: AccountStore.getOrganisation().id,
+      })
         .catch((error) => {
           console.log('DEBUG: error:', error)
         })
         .then((issues) => {
-          this.setState({ issuesExternalResources: issues })
+          this.setState({ issuesExternalResources: issues?.data })
         })
-      data
-        .get(
-          `http://127.0.0.1:8000/api/v1/organisations/${
-            AccountStore.getOrganisation().id
-          }/github/pulls`,
-          {
-            'installation_id': installationId,
-          },
-        )
+      getGithubPulls(getStore(), {
+        org_id: AccountStore.getOrganisation().id,
+      })
         .catch((error) => {
           console.log('DEBUG: error:', error)
         })
         .then((pulls) => {
-          this.setState({ prExternalResources: pulls })
+          this.setState({ prExternalResources: pulls?.data })
         })
     })
   }

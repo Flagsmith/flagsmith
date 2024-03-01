@@ -9,6 +9,7 @@ import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
 import { useCreateGithubIntegrationMutation } from 'common/services/useGithubIntegration'
 import { useCreateGithubRepositoryMutation } from 'common/services/useGithubRepository'
+import { useGetGithubReposQuery } from 'common/services/useGithub'
 import PanelSearch from 'components/PanelSearch'
 
 type GitHubSetupPageType = {}
@@ -21,6 +22,14 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
   const [repositoryName, setRepositoryName] = useState<string>('')
   const [repositoryOwner, setRepositoryOwner] = useState<string>('')
   const [repositories, setRepositories] = useState<any>([])
+
+  const { data: repos, isSuccess: reposLoaded } = useGetGithubReposQuery(
+    {
+      installation_id: installationId,
+    },
+    { skip: !installationId },
+  )
+
   const [
     createGithubIntegration,
     { data, isSuccess: isSuccessCreateGithubIntegration },
@@ -32,25 +41,12 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
     { isSuccess: isSuccessCreatedGithubRepository },
   ] = useCreateGithubRepositoryMutation()
 
-  const getRepositories = (installationId: string) => {
-    _data
-      .get(`http://127.0.0.1:8000/api/v1/organisations/github/repositories`, {
-        'installation_id': installationId,
-      })
-      .catch((error) => {
-        console.log('DEBUG: error:', error)
-      })
-      .then((res) => {
-        setRepositories(res)
-        setRepositoryOwner(res?.repositories[0].owner.login)
-      })
-  }
-
   useEffect(() => {
-    if (organisation) {
-      getRepositories(installationId)
+    if (reposLoaded && repos.repositories) {
+      setRepositoryOwner(repos?.repositories[0].owner.login)
+      setRepositories(repos)
     }
-  }, [organisation])
+  }, [repos, reposLoaded])
 
   useEffect(() => {
     if (isSuccessCreatedGithubRepository) {
