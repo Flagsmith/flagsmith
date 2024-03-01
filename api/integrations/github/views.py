@@ -99,7 +99,6 @@ def fetch_issues(request, organisation_pk):
 @api_view(["GET"])
 def fetch_repositories(request):
     installation_id = request.GET.get("installation_id")
-    print("DEBUG: installation_id:", installation_id)
 
     token = generate_token(
         installation_id,

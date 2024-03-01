@@ -14,9 +14,6 @@ from webhooks.webhooks import WebhookEventType
 logger = logging.getLogger(__name__)
 
 
-BASE_URL = "http://localhost:3000/api/flagsmith-webhook"
-
-
 class GithubResourceType(Enum):
     GITHUB_ISSUE = "Github Issue"
     GITHUB_PR = "Github PR"
@@ -42,7 +39,6 @@ def send_post_request(data: dict[str, Any]) -> None:
                 installation_id, split_url[1], split_url[2], split_url[4], body
             )
 
-        # await res.status(200).json({'text': 'Hello'})
     elif event_type == "FEATURE_EXTERNAL_RESOURCE_REMOVED":
         url = data["data"]["url"]
         pathname = urlparse(url).path
@@ -50,7 +46,6 @@ def send_post_request(data: dict[str, Any]) -> None:
         post_comment_to_github(
             installation_id, split_url[1], split_url[2], split_url[4], body
         )
-        # return await res.status(200).json({'text': 'Hello'})
     else:
         url = data.get("external_resources", [])[
             len(data.get("external_resources", [])) - 1
@@ -60,10 +55,6 @@ def send_post_request(data: dict[str, Any]) -> None:
         post_comment_to_github(
             installation_id, split_url[1], split_url[2], split_url[4], body
         )
-        # return await res.status(200).json({'text': 'Hello'})
-
-    # print("DEBUG: Sent event to GitHub. Response code was:", response)
-    # logger.debug("Sent event to GitHub. Response code was %s" % response.status_code)
 
 
 @register_task_handler()
