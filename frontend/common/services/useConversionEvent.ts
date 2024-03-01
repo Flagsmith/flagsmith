@@ -14,7 +14,7 @@ export const conversionEventService = service
         providesTags: [{ id: 'LIST', type: 'ConversionEvent' }],
         query: (query) => {
           return {
-            url: `conversion_event_types/?${Utils.toParam(query)}`,
+            url: `conversion-event-types/?${Utils.toParam(query)}`,
           }
         },
       }),
