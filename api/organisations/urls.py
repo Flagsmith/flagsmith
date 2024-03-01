@@ -12,6 +12,9 @@ from audit.views import OrganisationAuditLogViewSet
 from integrations.github.views import (
     GithubConfigurationViewSet,
     GithubRepositoryViewSet,
+    fetch_issues,
+    fetch_pull_requests,
+    fetch_repositories,
 )
 from metadata.views import MetaDataModelFieldViewSet
 from organisations.views import OrganisationWebhookViewSet
@@ -113,6 +116,21 @@ urlpatterns = [
         "<int:organisation_pk>/groups/<int:group_pk>/users/<int:user_pk>/remove-admin",
         remove_user_as_group_admin,
         name="remove-user-group-admin",
+    ),
+    path(
+        "<int:organisation_pk>/github/issues",
+        fetch_issues,
+        name="get-github-issues",
+    ),
+    path(
+        "<int:organisation_pk>/github/pulls",
+        fetch_pull_requests,
+        name="get-github-pulls",
+    ),
+    path(
+        "github/repositories",
+        fetch_repositories,
+        name="get-github-installation-repos",
     ),
 ]
 

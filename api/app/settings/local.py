@@ -3,7 +3,9 @@ from app.settings.common import *
 ENABLE_AXES = False
 
 
-ALLOWED_HOSTS.extend([".ngrok.io", "127.0.0.1", "localhost"])
+ALLOWED_HOSTS.extend(
+    [".ngrok.io", "127.0.0.1", "localhost", "efe6-131-0-199-127.ngrok-free.app"]
+)
 
 INSTALLED_APPS.extend(["debug_toolbar", "django_extensions"])
 

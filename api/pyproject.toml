@@ -104,6 +104,7 @@ pyngo = "~1.6.0"
 flagsmith = "^3.4.0"
 python-gnupg = "^0.5.1"
 django-redis = "^5.4.0"
+pygithub = "2.1.1"
 
 [tool.poetry.group.auth-controller]
 optional = true
