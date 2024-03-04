@@ -1027,6 +1027,70 @@ _flagsmithClient = new FlagsmithClient(
 )
 ```
 
+### Singleton Initialization
+
+Singleton ensures a single instance of FlagsmithClient throughout the application, optimizing resources and maintaining
+consistency in configuration.
+
+Below you can find an example implementation of the client instantiated as a Singleton with its configuration defined in
+a file called `FlagsmithSettings.cs` (found below), which stores Flagsmith-specific settings.
+
+```csharp
+
+builder.Services.AddOptions<FlagsmithSettings>().Bind(builder.Configuration.GetSection(FlagsmithSettings.ConfigSection));
+builder.Services.AddSingleton(provider => provider.GetRequiredService<IOptions<FlagsmithSettings>>().Value);
+builder.Services.AddSingleton<IFlagsmithClient, FlagsmithClient>(provider =>
+{
+    var settings = provider.GetService<FlagsmithSettings>();
+    return new FlagsmithClient(settings);
+});
+
+
+```
+
+`FlagsmithSettings.cs`
+
+```csharp
+using Example.Controllers;
+using Flagsmith;
+using Newtonsoft.Json;
+
+namespace Example.Settings
+{
+    public class FlagsmithSettings : IFlagsmithConfiguration
+    {
+        public static string ConfigSection => "FlagsmithConfiguration";
+        public string ApiUrl { get; set; } = "https://edge.api.flagsmith.com/api/v1/";
+        public string EnvironmentKey { get; set; } = String.Empty;
+        public bool EnableClientSideEvaluation { get; set; } = false;
+        public int EnvironmentRefreshIntervalSeconds { get; set; } = 60;
+        public ILogger Logger { get; set; }
+        public bool EnableAnalytics { get; set; } = false;
+        public Double? RequestTimeout { get; set; }
+        public Dictionary<string, string> CustomHeaders { get; set; }
+        public int? Retries { get; set; } = 1;
+        public CacheConfig CacheConfig { get; set; } = new(false);
+    }
+}
+
+```
+
+In the `appsettings.json` file you can configure the necessary flagsmith values.
+
+```json
+{
+ "AllowedHosts": "*",
+ "FlagsmithConfiguration": {
+  "EnvironmentKey": "YOUR_ENVIRONMENT_KEY",
+  "EnableClientSideEvaluation": false,
+  "EnvironmentRefreshIntervalSeconds": 60,
+  "EnableAnalytics": true,
+  "RequestTimeout": 10,
+  "Retries": 3
+ }
+}
+```
+
 </TabItem>
 <TabItem value="ruby" label="Ruby">
 
