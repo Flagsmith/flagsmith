@@ -374,6 +374,7 @@ const App = class extends Component {
                                   </NavLink>
                                   <GithubStar />
                                   <Tooltip
+                                    place='bottom'
                                     title={
                                       <Button
                                         href='https://docs.flagsmith.com'
