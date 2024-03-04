@@ -25,7 +25,6 @@ export const planNames = {
   enterprise: 'Enterprise',
   free: 'Free',
   scaleUp: 'Scale-Up',
-  sideProject: 'Side Project',
   startup: 'Startup',
 }
 const Utils = Object.assign({}, require('./base/_utils'), {
@@ -255,9 +254,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (plan && plan.includes('scale-up')) {
       return planNames.scaleUp
     }
-    if (plan && plan.includes('side-project')) {
-      return planNames.sideProject
-    }
     if (plan && plan.includes('startup')) {
       return planNames.startup
     }
@@ -279,9 +275,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (!plan || planName === planNames.free) {
       return false
     }
-    const isSideProjectOrGreater = planName !== planNames.sideProject
+    const isStartupOrGreater = planName !== planNames.startup
     const isScaleupOrGreater =
-      isSideProjectOrGreater && planName !== planNames.startup
+      isStartupOrGreater && planName !== planNames.startup
     const isEnterprise = planName === planNames.enterprise
 
     switch (permission) {
@@ -290,15 +286,15 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         break
       }
       case 'CREATE_ADDITIONAL_PROJECT': {
-        valid = isSideProjectOrGreater
+        valid = isStartupOrGreater
         break
       }
       case '2FA': {
-        valid = isSideProjectOrGreater
+        valid = isStartupOrGreater
         break
       }
       case 'RBAC': {
-        valid = isSideProjectOrGreater
+        valid = isScaleupOrGreater
         break
       }
       case 'AUDIT': {
@@ -314,7 +310,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         break
       }
       case 'SCHEDULE_FLAGS': {
-        valid = isSideProjectOrGreater
+        valid = isStartupOrGreater
         break
       }
       case '4_EYES': {
