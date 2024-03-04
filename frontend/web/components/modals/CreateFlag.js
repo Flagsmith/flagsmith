@@ -39,7 +39,6 @@ import {
   getExternalResource,
   deleteExternalResource,
 } from 'common/services/useExternalResource'
-import { createFeatureExternalResource } from 'common/services/useFeatureExternalResource'
 import { getGithubIssues, getGithubPulls } from 'common/services/useGithub'
 import { getStore } from 'common/store'
 
@@ -556,26 +555,20 @@ const CreateFlag = class extends Component {
     const _createExternalResourse = () => {
       createExternalResource(getStore(), {
         body: {
+          feature: projectFlag.id,
           status: status,
           type: externalResourceType,
           url: featureExternalResource,
         },
       }).then((res) => {
-        createFeatureExternalResource(getStore(), {
-          body: {
-            feature: projectFlag.id,
+        getExternalResource(
+          getStore(),
+          {
+            feature_id: projectFlag.id,
           },
-          external_resource_pk: res.data.id,
-        }).then((res) => {
-          getExternalResource(
-            getStore(),
-            {
-              feature_id: projectFlag.id,
-            },
-            { forceRefetch: true },
-          ).then((res) => {
-            this.setState({ externalResources: res.data.results })
-          })
+          { forceRefetch: true },
+        ).then((res) => {
+          this.setState({ externalResources: res.data.results })
         })
       })
     }

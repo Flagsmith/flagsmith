@@ -89,6 +89,8 @@ export type ExternalResource = {
   url: string
   type: string
   project: number
+  status: null | string
+  feature: number
 }
 
 export type LaunchDarklyProjectImport = {
@@ -610,7 +612,6 @@ export type Res = {
   changeRequests: PagedResponse<ChangeRequestSummary>
   groupSummaries: UserGroupSummary[]
   externalResource: PagedResponse<ExternalResource>
-  featureExternalResource: { id: string }
   githubIntegration: { id: string }
   githubRepository: { id: string }
   githubIssues: Issue[]
