@@ -480,7 +480,7 @@ export default {
     ORGANISATION_DESCRIPTION:
       'This is used to create a default organisation for team members to create and manage projects.',
     REMOTE_CONFIG_DESCRIPTION:
-      'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server. This is set per environment.',
+      'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.',
     REMOTE_CONFIG_DESCRIPTION_VARIATION:
       'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.<br/>Variation values are set per project, the environment weight is per environment.',
     SEGMENT_OVERRIDES_DESCRIPTION:
