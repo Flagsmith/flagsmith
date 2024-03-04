@@ -36,7 +36,7 @@ const InputGroup = class extends Component {
                 </div>
               </label>
             }
-            place={this.props.tooltipPlace || 'right'}
+            place={this.props.tooltipPlace || 'top'}
           >
             {this.props.tooltip}
           </Tooltip>
