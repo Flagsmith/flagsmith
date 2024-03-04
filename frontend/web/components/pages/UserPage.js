@@ -330,10 +330,12 @@ const UserPage = class extends Component {
                           }
                         >
                           View and manage feature states and traits for this
-                          user. This will override any feature states you have
-                          for your current environment for this user only. Any
-                          features that are not overriden for this user will
-                          fallback to the environment defaults.
+                          user.
+                          <br />
+                          Overriding features here will take priority over any
+                          segment override. Any features that are not overridden
+                          for this user will fallback to any segment overrides
+                          or the environment defaults.
                         </PageTitle>
                         <div className='row'>
                           <div className='col-md-12'>
