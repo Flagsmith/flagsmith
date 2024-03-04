@@ -6,7 +6,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from organisations.models import Organisation
-from projects.models import Project
 
 from .fields import GenericObjectID
 
@@ -16,24 +15,9 @@ METADATA_SUPPORTED_MODELS = ["environment", "feature", "project", "segment"]
 
 # A map of model name to a function that takes the object id and returns the organisation_id
 SUPPORTED_REQUIREMENTS_MAPPING = {
-    "environment": {
-        "organisation": lambda org_id: org_id,
-        "project": lambda project_id: Project.objects.get(
-            id=project_id
-        ).organisation_id,
-    },
-    "feature": {
-        "organisation": lambda org_id: org_id,
-        "project": lambda project_id: Project.objects.get(
-            id=project_id
-        ).organisation_id,
-    },
-    "segment": {
-        "organisation": lambda org_id: org_id,
-        "project": lambda project_id: Project.objects.get(
-            id=project_id
-        ).organisation_id,
-    },
+    "environment": ["organisation", "project"],
+    "feature": ["organisation", "project"],
+    "segment": ["organisation", "project"],
 }
 
 
