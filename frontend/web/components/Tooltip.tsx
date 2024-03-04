@@ -14,21 +14,20 @@ const Tooltip: FC<TooltipProps> = ({ children, place, plainText, title }) => {
 
   return (
     <>
-      {children && (
+      {title && (
         <span data-for={id} data-tip>
           {title}
         </span>
       )}
-      {!children && (
-        <span className='fa fa-info-circle' data-for={id} data-tip />
+      {!!children && (
+        <ReactTooltip className='rounded' id={id} place={place || 'top'}>
+          {plainText ? (
+            `${children}`
+          ) : (
+            <div dangerouslySetInnerHTML={{ __html: children }} />
+          )}
+        </ReactTooltip>
       )}
-      <ReactTooltip className='rounded' id={id} place={place || 'top'}>
-        {plainText ? (
-          `${children}`
-        ) : (
-          <div dangerouslySetInnerHTML={{ __html: children }} />
-        )}
-      </ReactTooltip>
     </>
   )
 }
