@@ -91,7 +91,8 @@ def fetch_issues(request, organisation_pk):
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         data = response.json()
-        return Response(data)
+        filtered_data = [issue for issue in data if "pull_request" not in issue]
+        return Response(filtered_data)
     except requests.RequestException as e:
         return JsonResponse({"error": str(e)}, status=500)
 

@@ -8,12 +8,12 @@ from integrations.github.tasks import call_github_app_webhook_for_feature_state
 from webhooks.webhooks import WebhookEventType
 
 # noinspection PyUnresolvedReferences
-from .models import FeatureExternalResources
+from .models import ExternalResources
 
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_save, sender=FeatureExternalResources)
+@receiver(post_save, sender=ExternalResources)
 def trigger_feature_external_resource_added_webhooks_signal(instance, **kwargs):
     if hasattr(instance.feature.project.organisation, "github_config"):
         github_configuration = instance.feature.project.organisation.github_config
@@ -67,14 +67,14 @@ def trigger_feature_external_resource_added_webhooks_signal(instance, **kwargs):
         return
 
 
-@receiver(pre_delete, sender=FeatureExternalResources)
+@receiver(pre_delete, sender=ExternalResources)
 def trigger_feature_external_resource_removed_webhooks_signal(instance, **kwargs):
     if hasattr(instance.feature.project.organisation, "github_config"):
         github_configuration = instance.feature.project.organisation.github_config
         feature_data = {
             "id": instance.feature_id,
             "name": instance.feature.name,
-            "url": instance.external_resource.url,
+            "url": instance.url,
         }
         feature_data["installation_id"] = github_configuration.installation_id
         feature_data["organisation_id"] = github_configuration.organisation.id

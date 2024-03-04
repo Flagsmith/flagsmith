@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import ExternalResources, FeatureExternalResources
+from .models import ExternalResources
 
 
 class ExternalResourcesSerializer(serializers.ModelSerializer):
@@ -11,11 +11,5 @@ class ExternalResourcesSerializer(serializers.ModelSerializer):
             "url",
             "type",
             "status",
+            "feature",
         )
-
-
-class FeatureExternalResourcesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FeatureExternalResources
-        fields = ("id", "feature", "external_resource")
-        read_only_fields = ("external_resource",)

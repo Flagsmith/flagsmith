@@ -71,7 +71,7 @@ def generate_body_comment(name, event_type, feature_states):
         language = parse_language(feature_value) if has_feature_value else ""
 
         feature_value_string = (
-            f"\n{language}\n{feature_value if feature_value else 'No value.'}\n\n"
+            f"\n{language}\n```{feature_value if feature_value else 'No value.'}```\n\n"
         )
 
         result += f"**{v['environment_name']}{' - ' + v['segment_name'] if v.get('segment_name') else ''}**\n"

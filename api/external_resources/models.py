@@ -1,26 +1,18 @@
 from django.db import models
 
+from features.models import Feature
+
 
 class ExternalResources(models.Model):
     url = models.URLField()
     type = models.TextField()
     status = models.TextField(null=True)
-    feature_external_resource = models.ManyToManyField(
-        to="features.Feature", blank=True, through="FeatureExternalResources"
+    feature = models.ForeignKey(
+        Feature,
+        related_name="features",
+        on_delete=models.CASCADE,
     )
 
     class Meta:
         ordering = ("id",)
         unique_together = ("url",)
-
-
-class FeatureExternalResources(models.Model):
-    feature = models.ForeignKey("features.Feature", on_delete=models.CASCADE)
-    external_resource = models.ForeignKey(
-        ExternalResources,
-        on_delete=models.CASCADE,
-        related_name="featureexternalresources",
-    )
-
-    class Meta:
-        ordering = ("id",)
