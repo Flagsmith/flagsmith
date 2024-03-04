@@ -55,6 +55,10 @@ const Tooltip = ({
 }: TooltipProps): JSX.Element => {
   const id = Utils.GUID()
 
+  if (!children) {
+    // Skip tooltip by supplying falsy children
+    return <>{title}</>
+  }
   return (
     <span className='question-tooltip'>
       {title ? (
