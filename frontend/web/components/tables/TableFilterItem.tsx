@@ -6,15 +6,25 @@ type TableFilterItemType = {
   isActive?: boolean
   title: string | ReactNode
   onClick: () => void
+  'data-test'?: string
 }
 
 const TableFilterItem: FC<TableFilterItemType> = ({
   isActive,
   onClick,
   title,
+  ...rest
 }) => {
   return (
-    <a href={'#'} onClick={onClick} className='popover-bt__list-item'>
+    <a
+      {...rest}
+      href={'#'}
+      onClick={(e) => {
+        e.preventDefault()
+        onClick()
+      }}
+      className='popover-bt__list-item'
+    >
       <Row space className='px-3 no-wrap overflow-hidden py-2'>
         {title}
         <div>

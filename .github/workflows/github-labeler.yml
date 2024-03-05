@@ -1,8 +1,7 @@
 name: Github Labeler
 
 on:
-  pull_request_target:
-    types: [opened, synchronize, reopened, ready_for_review]
+  - pull_request_target
 
 jobs:
   apply-labels:
@@ -12,4 +11,5 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/labeler@v4
+      - name: Run labeler
+        uses: actions/labeler@v5

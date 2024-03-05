@@ -136,6 +136,26 @@ export default {
       'iOS': require('./code-help/install/install-ios')(keywords),
     },
 
+    'OFFLINE_LOCAL': (envId: string) => ({
+      'cli': require('common/code-help/offline_server/offline-server-cli')(
+        envId,
+      ),
+      'curl': require('common/code-help/offline_server/offline-server-curl')(
+        envId,
+      ),
+    }),
+
+    'OFFLINE_REMOTE': (envId: string) => ({
+      'cli': require('common/code-help/offline_client/offline-client-cli')(
+        envId,
+        keywords,
+      ),
+      'curl': require('common/code-help/offline_client/offline-client-curl')(
+        envId,
+        keywords,
+      ),
+    }),
+
     'USER_TRAITS': (envId: string, userId?: string) => ({
       '.NET': require('./code-help/traits/traits-dotnet')(
         envId,
@@ -494,4 +514,5 @@ export default {
     '#AAC200',
     '#DE3163',
   ],
+  untaggedTag: { color: '#dedede', label: 'Untagged' },
 }

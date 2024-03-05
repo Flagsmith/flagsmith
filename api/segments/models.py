@@ -30,7 +30,11 @@ class Segment(
     name = models.CharField(max_length=2000)
     description = models.TextField(null=True, blank=True)
     project = models.ForeignKey(
-        Project, on_delete=models.CASCADE, related_name="segments"
+        Project,
+        # Cascade deletes are decouple from the Django ORM. See this PR for details.
+        # https://github.com/Flagsmith/flagsmith/pull/3360/
+        on_delete=models.DO_NOTHING,
+        related_name="segments",
     )
     feature = models.ForeignKey(
         Feature, on_delete=models.CASCADE, related_name="segments", null=True
@@ -198,3 +202,19 @@ class Condition(
 
     def _get_project(self) -> typing.Optional[Project]:
         return self.rule.get_segment().project
+
+
+class WhitelistedSegment(models.Model):
+    """
+    In order to grandfather in existing segments, these models represent segments
+    that do not conform to the SEGMENT_RULES_CONDITIONS_LIMIT and may have
+    more than the typically allowed number of segment rules and conditions.
+    """
+
+    segment = models.OneToOneField(
+        Segment,
+        on_delete=models.CASCADE,
+        related_name="whitelisted_segment",
+    )
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)

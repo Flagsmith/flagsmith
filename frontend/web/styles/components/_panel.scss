@@ -204,6 +204,10 @@ a.text-white {
           border-bottom-left-radius: $border-radius-default;
           border-bottom-right-radius: $border-radius-default;
         }
+        &:first-of-type {
+          border-bottom-left-radius: 0;
+          border-bottom-right-radius: 0;
+        }
       }
     }
   }
