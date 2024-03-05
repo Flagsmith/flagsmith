@@ -64,7 +64,6 @@ class TheComponent extends Component {
   copyFeature = (e) => {
     const { projectFlag } = this.props
     e?.stopPropagation()?.()
-    e?.preventDefault?.()
     e?.currentTarget?.blur?.()
     Utils.copyFeatureName(projectFlag.name)
   }
@@ -319,14 +318,11 @@ class TheComponent extends Component {
                     }
                   </Tooltip>
                 )}
-                {projectFlag.is_archived && (
-                  <Tag className='chip--xs' tag={Constants.archivedTag} />
-                )}
-                <TagValues
-                  inline
-                  projectId={`${projectId}`}
-                  value={projectFlag.tags}
-                />
+                <TagValues projectId={`${projectId}`} value={projectFlag.tags}>
+                  {projectFlag.is_archived && (
+                    <Tag className='chip--xs' tag={Constants.archivedTag} />
+                  )}
+                </TagValues>
               </Row>
               {description && !isCompact && (
                 <div

@@ -641,25 +641,35 @@ const UserPage = class extends Component {
                                                   wordBreak: 'break-all',
                                                 }}
                                               >
-                                                <span className='me-2'>
-                                                  {description ? (
-                                                    <Tooltip
-                                                      title={
-                                                        <span>
-                                                          {name}
-                                                          <span
-                                                            className={'ms-1'}
-                                                          ></span>
-                                                          <Icon name='info-outlined' />
-                                                        </span>
-                                                      }
-                                                    >
-                                                      {description}
-                                                    </Tooltip>
-                                                  ) : (
-                                                    name
-                                                  )}
-                                                </span>
+                                                <Row>
+                                                  <span>
+                                                    {description ? (
+                                                      <Tooltip
+                                                        title={
+                                                          <span>{name}</span>
+                                                        }
+                                                      >
+                                                        {description}
+                                                      </Tooltip>
+                                                    ) : (
+                                                      name
+                                                    )}
+                                                  </span>
+                                                  <Button
+                                                    onClick={(e) => {
+                                                      e?.stopPropagation()?.()
+                                                      e?.currentTarget?.blur?.()
+                                                      Utils.copyFeatureName(
+                                                        projectFlag.name,
+                                                      )
+                                                    }}
+                                                    theme='icon'
+                                                    className='ms-2 me-2'
+                                                  >
+                                                    <Icon name='copy' />
+                                                  </Button>
+                                                </Row>
+
                                                 <TagValues
                                                   projectId={`${projectId}`}
                                                   value={projectFlag.tags}
