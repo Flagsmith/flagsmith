@@ -5,6 +5,7 @@ import Constants from 'common/constants'
 
 export const themeClassNames = {
   danger: 'btn btn-danger',
+  icon: 'btn-icon',
   outline: 'btn--outline',
   primary: 'btn-primary',
   project: 'btn-project',
