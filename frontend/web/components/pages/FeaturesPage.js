@@ -19,7 +19,6 @@ import TableTagFilter from 'components/tables/TableTagFilter'
 import { setViewMode } from 'common/useViewMode'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
 import { getViewMode } from 'common/useViewMode'
-import { TagStrategy } from 'common/types/responses'
 import EnvironmentDocumentCodeHelp from 'components/EnvironmentDocumentCodeHelp'
 
 const FeaturesPage = class extends Component {
@@ -36,6 +35,8 @@ const FeaturesPage = class extends Component {
       search: null,
       showArchived: false,
       sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
+      state_enabled: null,
+      state_search: null,
       tag_strategy: 'INTERSECTION',
       tags: [],
     }
@@ -106,6 +107,9 @@ const FeaturesPage = class extends Component {
 
   getFilter = () => ({
     is_archived: this.state.showArchived,
+    state_enabled:
+      this.state.state_enabled === null ? undefined : this.state.state_enabled,
+    state_search: this.state.state_search ? this.state.state_search : undefined,
     tag_strategy: this.state.tag_strategy,
     tags:
       !this.state.tags || !this.state.tags.length
@@ -165,6 +169,9 @@ const FeaturesPage = class extends Component {
   render() {
     const { environmentId, projectId } = this.props.match.params
     const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
+    const enabledStateFilter = Utils.getFlagsmithHasFeature(
+      'feature_enabled_state_filter',
+    )
     const environment = ProjectStore.getEnvironment(environmentId)
     return (
       <div
@@ -308,6 +315,33 @@ const FeaturesPage = class extends Component {
                                         value={this.state.search}
                                       />
                                       <Row className='flex-fill justify-content-end'>
+                                        {enabledStateFilter && (
+                                          <TableFilterOptions
+                                            title={'State'}
+                                            className={'me-4'}
+                                            value={this.state.state_enabled}
+                                            onChange={(state_enabled) => {
+                                              this.setState(
+                                                { state_enabled },
+                                                this.filter,
+                                              )
+                                            }}
+                                            options={[
+                                              {
+                                                label: 'Any',
+                                                value: null,
+                                              },
+                                              {
+                                                label: 'Enabled',
+                                                value: true,
+                                              },
+                                              {
+                                                label: 'Disabled',
+                                                value: false,
+                                              },
+                                            ]}
+                                          />
+                                        )}
                                         <TableTagFilter
                                           useLocalStorage
                                           isLoading={FeatureListStore.isLoading}
