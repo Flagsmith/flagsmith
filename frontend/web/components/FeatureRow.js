@@ -14,6 +14,7 @@ import FeatureAction from './FeatureAction'
 import { getViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
 import Tag from './tags/Tag'
+import Button from './base/forms/Button'
 
 export const width = [200, 70, 55, 70, 450]
 class TheComponent extends Component {
@@ -60,6 +61,13 @@ class TheComponent extends Component {
     }
   }
 
+  copyFeature = (e) => {
+    const { projectFlag } = this.props
+    e?.stopPropagation()?.()
+    e?.preventDefault?.()
+    e?.currentTarget?.blur?.()
+    Utils.copyFeatureName(projectFlag.name)
+  }
   confirmRemove = (projectFlag, cb) => {
     openModal(
       'Remove Feature',
@@ -84,9 +92,18 @@ class TheComponent extends Component {
       `${document.location.pathname}?feature=${projectFlag.id}`,
     )
     openModal(
-      `${this.props.permission ? 'Edit Feature' : 'Feature'}: ${
-        projectFlag.name
-      }`,
+      <Row>
+        {this.props.permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
+        <Button
+          onClick={() => {
+            Utils.copyFeatureName(projectFlag.name)
+          }}
+          theme='icon'
+          className='ms-2'
+        >
+          <Icon name='copy' />
+        </Button>
+      </Row>,
       <CreateFlagModal
         environmentId={this.props.environmentId}
         projectId={this.props.projectId}
@@ -202,40 +219,37 @@ class TheComponent extends Component {
         <Flex className='table-column'>
           <Row>
             <Flex>
-              <Row
-                className='font-weight-medium'
-                style={{
-                  alignItems: 'start',
-                  lineHeight: 1,
-                  rowGap: 4,
-                  wordBreak: 'break-all',
-                }}
-              >
-                <span className='me-2'>
-                  {created_date ? (
-                    <Tooltip
-                      place='right'
-                      title={
-                        <span>
-                          {name}
-                          <span className={'ms-1'}></span>
-                          <Icon name='info-outlined' />
-                        </span>
-                      }
-                    >
-                      {isCompact && description
-                        ? `${description}<br/>Created ${moment(
-                            created_date,
-                          ).format('Do MMM YYYY HH:mma')}`
-                        : `Created ${moment(created_date).format(
-                            'Do MMM YYYY HH:mma',
-                          )}`}
-                    </Tooltip>
-                  ) : (
-                    name
-                  )}
-                </span>
-
+              <Row>
+                <Row
+                  className='font-weight-medium'
+                  style={{
+                    lineHeight: 1,
+                    wordBreak: 'break-all',
+                  }}
+                >
+                  <span>
+                    {created_date ? (
+                      <Tooltip place='right' title={<span>{name}</span>}>
+                        {isCompact && description
+                          ? `${description}<br/>Created ${moment(
+                              created_date,
+                            ).format('Do MMM YYYY HH:mma')}`
+                          : `Created ${moment(created_date).format(
+                              'Do MMM YYYY HH:mma',
+                            )}`}
+                      </Tooltip>
+                    ) : (
+                      name
+                    )}
+                  </span>
+                  <Button
+                    onClick={this.copyFeature}
+                    theme='icon'
+                    className='ms-2 me-2'
+                  >
+                    <Icon name='copy' />
+                  </Button>
+                </Row>
                 {!!projectFlag.num_segment_overrides && (
                   <div
                     onClick={(e) => {
@@ -402,10 +416,7 @@ class TheComponent extends Component {
                 removeFlag(projectId, projectFlag)
               })
             }}
-            onCopyName={() => {
-              navigator.clipboard.writeText(name)
-              toast('Copied to clipboard')
-            }}
+            onCopyName={this.copyFeature}
           />
         </div>
       </Row>
