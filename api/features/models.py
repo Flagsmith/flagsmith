@@ -417,7 +417,7 @@ class FeatureState(
 
     change_request = models.ForeignKey(
         "workflows_core.ChangeRequest",
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         related_name="feature_states",
     )
