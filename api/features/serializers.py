@@ -112,6 +112,9 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
     )
     owners = UserListSerializer(many=True, read_only=True)
     group_owners = UserPermissionGroupSummarySerializer(many=True, read_only=True)
+
+    feature_state = serializers.SerializerMethodField()
+
     num_segment_overrides = serializers.SerializerMethodField(
         help_text="Number of segment overrides that exist for the given feature "
         "in the environment provided by the `environment` query parameter."
@@ -151,6 +154,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             "group_owners",
             "uuid",
             "project",
+            "feature_state",
             "num_segment_overrides",
             "num_identity_overrides",
             "is_server_key_only",
@@ -246,6 +250,11 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             )
 
         return attrs
+
+    def get_feature_state(self, instance: Feature) -> FeatureState | None:
+        for feature_state in self.context.get("feature_states", []):
+            if feature_state.feature == instance:
+                return FeatureStateSerializerBasic(instance=feature_state).data
 
     def get_num_segment_overrides(self, instance) -> int:
         try:
