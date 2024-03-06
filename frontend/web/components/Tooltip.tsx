@@ -12,6 +12,10 @@ export type TooltipProps = {
 const Tooltip: FC<TooltipProps> = ({ children, place, plainText, title }) => {
   const id = Utils.GUID()
 
+  if (!children) {
+    // Skip tooltip by supplying falsy children
+    return <>{title}</>
+  }
   return (
     <>
       {title && (
