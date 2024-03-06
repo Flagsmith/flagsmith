@@ -253,8 +253,8 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
 
     def get_feature_state(self, instance: Feature) -> FeatureState | None:
         for feature_state in self.context.get("feature_states", []):
-            if feature_state.feature == instance:
-                return FeatureStateSerializerBasic(instance=feature_state).data
+            if feature_state.feature_id == instance.id:
+                return FeatureStateSerializerSmall(instance=feature_state).data
 
     def get_num_segment_overrides(self, instance) -> int:
         try:
@@ -312,6 +312,24 @@ class SDKFeatureSerializer(HideSensitiveFieldsSerializerMixin, FeatureSerializer
         "initial_value",
         "default_enabled",
     )
+
+
+class FeatureStateSerializerSmall(serializers.ModelSerializer):
+    feature_state_value = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FeatureState
+        fields = (
+            "id",
+            "feature_state_value",
+            "environment",
+            "identity",
+            "feature_segment",
+            "enabled",
+        )
+
+    def get_feature_state_value(self, obj):
+        return obj.get_feature_state_value(identity=self.context.get("identity"))
 
 
 class FeatureStateSerializerFull(serializers.ModelSerializer):
