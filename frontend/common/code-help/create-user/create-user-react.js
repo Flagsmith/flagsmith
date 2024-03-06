@@ -3,7 +3,25 @@ module.exports = (
   { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, TRAIT_NAME, USER_ID },
   userId,
 ) => `
-// Home Page
+// Option 1: Initialise with an identity
+import { FlagsmithProvider } from 'flagsmith/react';
+
+export default function App() {
+  return (
+    &lt;FlagsmithProvider
+      options={{
+        environmentID: '${envId}',
+        identity: '${userId || USER_ID}',
+        traits: {${TRAIT_NAME}: 21},
+      }}
+      flagsmith={flagsmith}&gt;
+      {...Your app}
+    &lt;/FlagsmithProvider>
+  );
+}
+
+
+// Option 2: Identify after initialising
 import flagsmith from '${LIB_NAME}';
 import { useFlags, useFlagsmith } from 'flagsmith/react';
 
