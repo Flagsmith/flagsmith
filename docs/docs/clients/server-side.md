@@ -21,7 +21,7 @@ Once you've got that understood, lets get the SDKs integrated!
 ## SDK Overview
 
 <Tabs groupId="language" queryString>
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 - Version Compatibility: **Python 3.8+**
 - Source Code: https://github.com/Flagsmith/flagsmith-python-client
@@ -44,7 +44,6 @@ Once you've got that understood, lets get the SDKs integrated!
 - Version Compatibility: **Node 14+**
 - Source Code:
   - https://github.com/Flagsmith/flagsmith-nodejs-client
-  - https://github.com/Flagsmith/flagsmith-nodejs-examples
 
 </TabItem>
 <TabItem value="ruby" label="Ruby">
@@ -82,7 +81,7 @@ Once you've got that understood, lets get the SDKs integrated!
 ## Add the Flagsmith package
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```bash
 pip install flagsmith
@@ -200,7 +199,7 @@ area and should be considered secret.
 :::
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```python
 from flagsmith import Flagsmith
@@ -318,7 +317,7 @@ config :flagsmith_engine, :configuration,
 ## Get Flags for an Environment
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```python
 # The method below triggers a network request
@@ -425,7 +424,7 @@ secret_button_feature_value = Flagsmith.Client.get_feature_value(flags, "secret_
 - This all happens in a single request/response.
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```python
 identifier = "delboy@trotterstraders.co.uk"
@@ -571,7 +570,7 @@ Default Flags are configured by passing in a function that is called when a Flag
 request to the API fails when retrieving flags.
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```python
 from flagsmith import Flagsmith
@@ -810,7 +809,7 @@ Evaluation mode. Please see [caching](#caching) below.
 You can modify the behaviour of the SDK during initialisation. Full configuration options are shown below.
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```python
 flagsmith = Flagsmith(
@@ -1736,7 +1735,7 @@ then include an implementation, i.e.:
 All our SDKs are Open Source.
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 https://github.com/Flagsmith/flagsmith-python-client
 
