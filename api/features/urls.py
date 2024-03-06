@@ -18,13 +18,16 @@ from features.views import (
     get_feature_state_by_uuid,
 )
 
-router = routers.DefaultRouter()
-router.register(r"", FeatureViewSet, basename="feature")
-features_router = routers.NestedSimpleRouter(router, r"", lookup="feature")
-features_router.register(
+features_router = routers.DefaultRouter()
+features_router.register(r"", FeatureViewSet, basename="feature")
+feature_external_resource_router = routers.NestedSimpleRouter(
+    features_router, r"", lookup="feature"
+)
+feature_external_resource_router.register(
     r"external-resources", ExternalResourcesViewSet, basename="external-resources"
 )
 
+router = routers.DefaultRouter()
 router.register(r"featurestates", SimpleFeatureStateViewSet, basename="featurestates")
 router.register(r"feature-segments", FeatureSegmentViewSet, basename="feature-segment")
 
@@ -33,6 +36,7 @@ app_name = "features"
 urlpatterns = [
     path("", include(router.urls)),
     path("", include(features_router.urls)),
+    path("", include(feature_external_resource_router.urls)),
     path("get-by-uuid/<uuid:uuid>/", get_feature_by_uuid, name="get-feature-by-uuid"),
     path("create-feature-export/", create_feature_export, name="create-feature-export"),
     path(
