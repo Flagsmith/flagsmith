@@ -1,6 +1,14 @@
 import { Component, FC, ReactNode } from 'react'
 import _Select from './web/components/Select'
-
+export type OpenConfirm = {
+  title: ReactNode
+  body: ReactNode
+  onYes: () => void
+  onNo?: () => void
+  destructive?: boolean
+  yesText?: string
+  noText?: string
+}
 export declare const openModal: (name?: string) => Promise<void>
 declare global {
   const openModal: (
@@ -15,15 +23,7 @@ declare global {
     className?: string,
     onClose?: () => void,
   ) => void
-  const openConfirm: (data: {
-    title: ReactNode
-    body: ReactNode
-    onYes: () => void
-    onNo?: () => void
-    destructive?: boolean
-    yesText?: string
-    noText?: string
-  }) => void
+  const openConfirm: (data: OpenConfirm) => void
   const Row: typeof Component
   const toast: (value: string) => void
   const Flex: typeof Component

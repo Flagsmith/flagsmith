@@ -11,6 +11,7 @@ import Confirm from './ModalConfirm'
 import ModalDefault, { interceptClose, setInterceptClose } from './ModalDefault'
 import { getStore } from 'common/store'
 import { Provider } from 'react-redux'
+import { OpenConfirm } from '../../../../global'
 
 export const ModalHeader = _ModalHeader
 export const ModalFooter = _ModalFooter
@@ -55,16 +56,12 @@ const _ModalDefault = withModal(ModalDefault, { shouldInterceptClose: true })
 export const openConfirm = (global.openConfirm = ({
   body,
   destructive,
+  noText,
   onNo,
   onYes,
   title,
-}: {
-  title: string
-  body: ReactNode
-  destructive?: boolean
-  onYes?: () => void
-  onNo?: () => void
-}) => {
+  yesText,
+}: OpenConfirm) => {
   document.getElementById('confirm') &&
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     unmountComponentAtNode(document.getElementById('confirm')!)
@@ -75,6 +72,8 @@ export const openConfirm = (global.openConfirm = ({
       onNo={onNo}
       onYes={onYes}
       title={title}
+      yesText={yesText}
+      noText={noText}
     >
       {body}
     </_Confirm>,
