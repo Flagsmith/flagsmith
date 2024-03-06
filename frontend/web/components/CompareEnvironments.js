@@ -12,6 +12,8 @@ import { getProjectFlags } from 'common/services/useProjectFlag'
 import { getStore } from 'common/store'
 import Icon from './Icon'
 import Constants from 'common/constants'
+import Button from './base/forms/Button'
+import Tooltip from './Tooltip'
 
 const featureNameWidth = 300
 
@@ -184,27 +186,29 @@ class CompareEnvironments extends Component {
                       className='table-column px-3'
                       style={{ width: featureNameWidth }}
                     >
-                      {p.projectFlag.description ? (
-                        <Tooltip
-                          title={
+                      <Tooltip
+                        title={
+                          <Row className={'no-wrap'}>
                             <div
                               style={{ wordWrap: 'break-word' }}
                               className='font-weight-medium'
                             >
                               {p.projectFlag.name}
                             </div>
-                          }
-                        >
-                          {p.projectFlag.description}
-                        </Tooltip>
-                      ) : (
-                        <div
-                          style={{ wordWrap: 'break-word' }}
-                          className='font-weight-medium'
-                        >
-                          {p.projectFlag.name}
-                        </div>
-                      )}
+                            <Button
+                              onClick={() => {
+                                Utils.copyFeatureName(p.projectFlag.name)
+                              }}
+                              theme='icon'
+                              className='ms-2 me-2'
+                            >
+                              <Icon name='copy' />
+                            </Button>
+                          </Row>
+                        }
+                      >
+                        {p.projectFlag.description}
+                      </Tooltip>
                     </div>
                     <Permission
                       level='environment'

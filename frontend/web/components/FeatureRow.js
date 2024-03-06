@@ -148,33 +148,85 @@ class TheComponent extends Component {
           style={{
             ...(this.props.style || {}),
           }}
-          className={
-            (classNames('flex-row'),
+          className={classNames(
+            'flex-row',
             { 'fs-small': isCompact },
-            this.props.className)
-          }
+            this.props.className,
+          )}
         >
           <div
             className={`table-column ${this.props.fadeEnabled && 'faded'}`}
             style={{ width: '120px' }}
           >
-            <Switch
-              disabled={!permission || readOnly}
-              data-test={`feature-switch-${this.props.index}${
-                environmentFlags[id] && environmentFlags[id].enabled
-                  ? '-on'
-                  : '-off'
-              }`}
-              checked={environmentFlags[id] && environmentFlags[id].enabled}
-              onChange={() => {
-                if (disableControls) return
-                if (changeRequestsEnabled) {
-                  this.editFeature(projectFlag, environmentFlags[id])
-                  return
-                }
-                this.confirmToggle()
-              }}
-            />
+            <Row>
+              {!!projectFlag.num_segment_overrides && (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    this.editFeature(projectFlag, environmentFlags[id], 1)
+                  }}
+                >
+                  <Tooltip
+                    title={
+                      <span
+                        className='chip me-2 chip--xs bg-primary text-white'
+                        style={{ border: 'none' }}
+                      >
+                        <SegmentsIcon className='chip-svg-icon' />
+                        <span>{projectFlag.num_segment_overrides}</span>
+                      </span>
+                    }
+                    place='top'
+                  >
+                    {`${projectFlag.num_segment_overrides} Segment Override${
+                      projectFlag.num_segment_overrides !== 1 ? 's' : ''
+                    }`}
+                  </Tooltip>
+                </div>
+              )}
+              {!!projectFlag.num_identity_overrides && (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    this.editFeature(projectFlag, environmentFlags[id], 2)
+                  }}
+                >
+                  <Tooltip
+                    title={
+                      <span
+                        className='chip me-2 chip--xs bg-primary text-white'
+                        style={{ border: 'none' }}
+                      >
+                        <UsersIcon className='chip-svg-icon' />
+                        <span>{projectFlag.num_identity_overrides}</span>
+                      </span>
+                    }
+                    place='top'
+                  >
+                    {`${projectFlag.num_identity_overrides} Identity Override${
+                      projectFlag.num_identity_overrides !== 1 ? 's' : ''
+                    }`}
+                  </Tooltip>
+                </div>
+              )}
+              <Switch
+                disabled={!permission || readOnly}
+                data-test={`feature-switch-${this.props.index}${
+                  environmentFlags[id] && environmentFlags[id].enabled
+                    ? '-on'
+                    : '-off'
+                }`}
+                checked={environmentFlags[id] && environmentFlags[id].enabled}
+                onChange={() => {
+                  if (disableControls) return
+                  if (changeRequestsEnabled) {
+                    this.editFeature(projectFlag, environmentFlags[id])
+                    return
+                  }
+                  this.confirmToggle()
+                }}
+              />
+            </Row>
           </div>
           <Flex
             className={`table-column clickable ${
