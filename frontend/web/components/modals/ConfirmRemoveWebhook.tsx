@@ -45,7 +45,8 @@ const ConfirmRemoveWebhook: FC<ConfirmRemoveWebhookType> = ({
                 }
               </strong>
               . You should ensure that you do not contain any references to this
-              webhook in your applications before proceeding.
+              webhook in your applications before proceeding. This action cannot
+              be undone.
             </p>
             <InputGroup
               className='mb-0'
@@ -67,10 +68,11 @@ const ConfirmRemoveWebhook: FC<ConfirmRemoveWebhookType> = ({
             </Button>
             <Button
               type='submit'
+              theme='danger'
               id='confirm-remove-feature-btn'
               disabled={challenge != url}
             >
-              Confirm changes
+              Confirm
             </Button>
           </div>
         </form>

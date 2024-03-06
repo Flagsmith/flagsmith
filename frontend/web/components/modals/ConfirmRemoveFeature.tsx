@@ -72,7 +72,7 @@ const ConfirmRemoveFeature: FC<ConfirmRemoveFeatureType> = ({
               disabled={challenge != projectFlag.name}
               theme='danger'
             >
-              Confirm changes
+              Confirm
             </Button>
           </div>
         </form>
