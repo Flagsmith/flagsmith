@@ -709,7 +709,14 @@ const CreateFlag = class extends Component {
               type='text'
               title={
                 <>
-                  <Tooltip title={isEdit ? 'ID' : 'ID*'}>
+                  <Tooltip
+                    title={
+                      <Row>
+                        <span className={'mr-1'}>{isEdit ? 'ID' : 'ID*'}</span>
+                        <Icon name='info-outlined' />
+                      </Row>
+                    }
+                  >
                     The ID that will be used by SDKs to retrieve the feature
                     value and enabled state. This cannot be edited once the
                     feature has been created.
