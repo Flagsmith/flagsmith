@@ -14,8 +14,6 @@ import { informationCircleOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import Checkbox from 'components/base/forms/Checkbox'
 
-let controller = new AbortController()
-
 const HomePage = class extends React.Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -32,8 +30,6 @@ const HomePage = class extends React.Component {
   }
 
   addAlbacross() {
-    EventTarget.prototype.oldAddEventListener =
-      EventTarget.prototype.addEventListener
     window._nQc = Project.albacross
     const script = document.createElement('script')
     script.type = 'text/javascript'
@@ -41,30 +37,7 @@ const HomePage = class extends React.Component {
     script.src = 'https://serve.albacross.com/track.js'
     script.id = 'albacross'
 
-    EventTarget.prototype.addEventListener = function (
-      type,
-      listener,
-      options = false,
-    ) {
-      const parsedOptions =
-        typeof options == 'boolean' ? { capture: options } : options
-
-      EventTarget.prototype.oldAddEventListener.call(this, type, listener, {
-        signal: controller.signal,
-        ...parsedOptions,
-      })
-    }
-
     document.body.appendChild(script)
-  }
-
-  removeAlbacross() {
-    controller.abort()
-    controller = new AbortController()
-    EventTarget.prototype.addEventListener =
-      EventTarget.prototype.oldAddEventListener
-    document.body.removeChild(document.getElementById('albacross'))
-    delete window._nQc
   }
 
   componentDidUpdate(prevProps) {
@@ -80,15 +53,7 @@ const HomePage = class extends React.Component {
         this.props.location.pathname.indexOf('signup') !== -1
       ) {
         this.addAlbacross()
-      } else if (document.getElementById('albacross')) {
-        this.removeAlbacross()
       }
-    }
-  }
-
-  componentWillUnmount() {
-    if (document.getElementById('albacross')) {
-      this.removeAlbacross()
     }
   }
 
