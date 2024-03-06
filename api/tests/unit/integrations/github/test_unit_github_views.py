@@ -108,7 +108,7 @@ def test_github_delete_repository(
 ) -> None:
     url = reverse(
         "api-v1:organisations:repositories-detail",
-        args=[organisation.id, github_configuration.id, 1],
+        args=[organisation.id, github_configuration.id, github_repository.id],
     )
     response = admin_client.delete(url)
     assert response.status_code == status.HTTP_204_NO_CONTENT
