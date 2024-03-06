@@ -193,7 +193,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 Project.objects.all(), pk=self.kwargs["project_pk"]
             ),
             user=self.request.user,
-            feature_states=getattr(self, "_feature_states", None),
+            feature_states=getattr(self, "_feature_states", []),
         )
         if self.action == "list" and "environment" in self.request.query_params:
             environment = get_object_or_404(
