@@ -709,7 +709,11 @@ const CreateFlag = class extends Component {
               type='text'
               title={
                 <>
-                  {isEdit ? 'ID' : 'ID*'}
+                  <Tooltip title={isEdit ? 'ID' : 'ID*'}>
+                    The ID that will be used by SDKs to retrieve the feature
+                    value and enabled state. This cannot be edited once the
+                    feature has been created.
+                  </Tooltip>
                   {!!regex && !isEdit && (
                     <div className='mt-2'>
                       {' '}
