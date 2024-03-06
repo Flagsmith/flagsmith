@@ -25,6 +25,7 @@ import TableSortFilter from 'components/tables/TableSortFilter'
 import { getViewMode, setViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
 import IdentifierString from 'components/IdentifierString'
+import { removeUserOverride } from 'components/RemoveUserOverride'
 const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
@@ -38,6 +39,7 @@ const valuesEqual = (actualValue, flagValue) => {
   }
   return actualValue === flagValue
 }
+
 const UserPage = class extends Component {
   static displayName = 'UserPage'
 
@@ -209,18 +211,6 @@ const UserPage = class extends Component {
         projectId={this.props.match.params.projectId}
       />,
       'p-0',
-    )
-  }
-
-  confirmRemove = (projectFlag, cb, identity) => {
-    openModal(
-      'Reset User Feature',
-      <ConfirmRemoveFeature
-        identity={identity}
-        environmentId={this.props.match.params.environmentId}
-        projectFlag={projectFlag}
-        cb={cb}
-      />,
     )
   }
 
@@ -820,27 +810,29 @@ const UserPage = class extends Component {
                                                   theme='text'
                                                   size='xSmall'
                                                   disabled={!permission}
-                                                  onClick={() =>
-                                                    this.confirmRemove(
-                                                      _.find(projectFlags, {
+                                                  onClick={() => {
+                                                    const projectFlag = _.find(
+                                                      projectFlags,
+                                                      {
                                                         id,
-                                                      }),
-                                                      () => {
-                                                        removeFlag({
-                                                          environmentId:
-                                                            this.props.match
-                                                              .params
-                                                              .environmentId,
-                                                          identity:
-                                                            this.props.match
-                                                              .params.id,
-                                                          identityFlag,
-                                                        })
                                                       },
-                                                      identity.identity
-                                                        .identifier,
                                                     )
-                                                  }
+                                                    const environmentId =
+                                                      this.props.match.params
+                                                        .environmentId
+
+                                                    removeUserOverride({
+                                                      environmentId,
+                                                      identifier:
+                                                        identity.identity
+                                                          .identifier,
+                                                      identity:
+                                                        this.props.match.params
+                                                          .id,
+                                                      identityFlag,
+                                                      projectFlag,
+                                                    })
+                                                  }}
                                                 >
                                                   <Icon
                                                     name='refresh'
