@@ -8,6 +8,7 @@ import { getStore } from 'common/store'
 import DateSelect from 'components/DateSelect'
 import { close } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
+import InfoMessage from 'components/InfoMessage'
 
 const ChangeRequestModal = class extends Component {
   static displayName = 'ChangeRequestModal'
@@ -116,26 +117,18 @@ const ChangeRequestModal = class extends Component {
               </FormGroup>
               <div>
                 <InputGroup
-                  tooltip='Allows you to set a date and time in which your change will only become active '
+                  tooltip='Allows you to set a date and time in which your change will only become active.'
                   title='Schedule Change'
                   component={
                     <Row>
                       <DateSelect
+                        dateFormat='MMMM d, yyyy h:mm aa'
                         onChange={(e) => {
                           this.setState({
                             live_from: e.toISOString(),
                           })
                         }}
                         selected={moment(this.state.live_from)._d}
-                        value={
-                          this.state.live_from
-                            ? `${moment(this.state.live_from).format(
-                                'Do MMM YYYY hh:mma',
-                              )} (${
-                                Intl.DateTimeFormat().resolvedOptions().timeZone
-                              })`
-                            : 'Immediately'
-                        }
                       />
 
                       <Button
