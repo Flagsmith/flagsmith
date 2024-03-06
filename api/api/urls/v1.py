@@ -42,11 +42,6 @@ urlpatterns = [
     url(r"^audit/", include("audit.urls")),
     url(r"^auth/", include("custom_auth.urls")),
     url(r"^metadata/", include("metadata.urls")),
-    url(
-        r"^external-resources/",
-        include("external_resources.urls"),
-        name="external-resources",
-    ),
     # Chargebee webhooks
     url(r"cb-webhook/", chargebee_webhook, name="chargebee-webhook"),
     # Client SDK urls
