@@ -3,7 +3,7 @@ import React from 'react'
 
 export default function AddVariationButton({
   disabled,
-  environmentVariations,
+  multivariateOptions,
   onClick,
 }) {
   return (
@@ -15,7 +15,7 @@ export default function AddVariationButton({
         onClick={onClick}
         theme='outline'
       >
-        {environmentVariations?.length ? 'Add Variation' : 'Create A/B/n Test'}
+        {multivariateOptions?.length ? 'Add Variation' : 'Create A/B/n Test'}
       </Button>
     </div>
   )
