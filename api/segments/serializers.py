@@ -9,7 +9,7 @@ from rest_framework.serializers import ListSerializer
 from rest_framework_recursive.fields import RecursiveField
 
 from metadata.models import Metadata
-from metadata.serializers import MetadataSerializer
+from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 
@@ -43,7 +43,7 @@ class RuleSerializer(serializers.ModelSerializer):
         fields = ("id", "type", "rules", "conditions", "delete")
 
 
-class SegmentSerializer(serializers.ModelSerializer):
+class SegmentSerializer(serializers.ModelSerializer, SerializerWithMetadata):
     rules = RuleSerializer(many=True)
     metadata = MetadataSerializer(required=False, many=True)
 
@@ -52,11 +52,16 @@ class SegmentSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def validate(self, attrs):
+        attrs = super().validate(attrs)
+        self.validate_required_metadata(attrs)
         if not attrs.get("rules"):
             raise ValidationError(
                 {"rules": "Segment cannot be created without any rules."}
             )
         return attrs
+
+    def get_project(self, validated_data: dict = None) -> Project:
+        return validated_data.get("project")
 
     def create(self, validated_data):
         project = validated_data["project"]
@@ -165,20 +170,21 @@ class SegmentSerializer(serializers.ModelSerializer):
     def _update_or_create_metadata(
         self, metadata_data: typing.Dict, segment: typing.Optional[Segment] = None
     ) -> None:
-        for metadata_item in metadata_data:
-            metadata_id = metadata_item.pop("id", None)
-            if metadata_item.get("delete"):
-                Metadata.objects.filter(id=metadata_id).delete()
-                continue
+        if metadata_data is not None:
+            for metadata_item in metadata_data:
+                metadata_id = metadata_item.pop("id", None)
+                if metadata_item.get("delete"):
+                    Metadata.objects.filter(id=metadata_id).delete()
+                    continue
 
-            Metadata.objects.update_or_create(
-                id=metadata_id,
-                defaults={
-                    **metadata_item,
-                    "content_type": ContentType.objects.get_for_model(Segment),
-                    "object_id": segment.id,
-                },
-            )
+                Metadata.objects.update_or_create(
+                    id=metadata_id,
+                    defaults={
+                        **metadata_item,
+                        "content_type": ContentType.objects.get_for_model(Segment),
+                        "object_id": segment.id,
+                    },
+                )
 
     @staticmethod
     def _update_or_create_segment_rule(
