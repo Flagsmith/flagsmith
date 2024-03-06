@@ -195,7 +195,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         )
 
     @property
-    def get_org_id(self):
+    def get_org_id(self) -> int:
         return self.organisation_id
 
 

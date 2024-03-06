@@ -3,7 +3,7 @@ import logging
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -84,6 +84,15 @@ class SegmentViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(name__icontains=search_term)
 
         return queryset
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        if "metadata" not in serializer.validated_data:
+            return Response(
+                {"error": "Metadata is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
     @action(
         detail=True,

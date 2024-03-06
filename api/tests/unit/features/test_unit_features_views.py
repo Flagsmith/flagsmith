@@ -2234,7 +2234,7 @@ def test_cannot_update_feature_of_a_feature_state(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_feature_with_required_metadata_returns_400(
+def test_create_feature_without_required_metadata_returns_400(
     project: Project,
     client: APIClient,
     required_a_feature_metadata_field: MetadataModelField,

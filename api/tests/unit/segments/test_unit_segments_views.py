@@ -622,7 +622,7 @@ def test_create_segment_with_required_metadata_returns_201(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_segment_with_required_metadata_returns_400(
+def test_create_segment_without_required_metadata_returns_400(
     project: Project,
     client: APIClient,
     required_a_segment_metadata_field: MetadataModelField,
@@ -630,19 +630,11 @@ def test_create_segment_with_required_metadata_returns_400(
     # Given
     url = reverse("api-v1:projects:project-segments-list", args=[project.id])
     description = "This is the description"
-    field_value = 10
-    content_type = 9999
     data = {
         "name": "Test Segment",
         "description": description,
         "project": project.id,
         "rules": [{"type": "ALL", "rules": [], "conditions": []}],
-        "metadata": [
-            {
-                "model_field": content_type,
-                "field_value": field_value,
-            },
-        ],
     }
 
     # When
