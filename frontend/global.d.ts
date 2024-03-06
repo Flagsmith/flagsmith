@@ -15,14 +15,15 @@ declare global {
     className?: string,
     onClose?: () => void,
   ) => void
-  const openConfirm: (
-    header: ReactNode,
-    body: ReactNode,
-    onYes: () => void,
-    onNo?: () => void,
-    yesText?: string,
-    noText?: string,
-  ) => void
+  const openConfirm: (data: {
+    title: ReactNode
+    body: ReactNode
+    onYes: () => void
+    onNo?: () => void
+    destructive?: boolean
+    yesText?: string
+    noText?: string
+  }) => void
   const Row: typeof Component
   const toast: (value: string) => void
   const Flex: typeof Component

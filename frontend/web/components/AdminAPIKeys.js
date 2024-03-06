@@ -383,22 +383,26 @@ export default class AdminAPIKeys extends PureComponent {
   }
 
   remove = (v) => {
-    openConfirm(
-      'Are you sure?',
-      <div>
-        This will revoke the API key <strong>{v.name}</strong> ({v.prefix}
-        *****************). This change cannot be reversed.
-      </div>,
-      () => {
-        data
-          .delete(
-            `${Project.api}organisations/${this.props.organisationId}/master-api-keys/${v.prefix}/`,
-          )
-          .then(() => {
-            this.fetch()
-          })
-      },
-    )
+    true,
+      openConfirm({
+        body: (
+          <div>
+            This will revoke the API key <strong>{v.name}</strong> ({v.prefix}
+            *****************). This change cannot be reversed.
+          </div>
+        ),
+        onYes: () => {
+          data
+            .delete(
+              `${Project.api}organisations/${this.props.organisationId}/master-api-keys/${v.prefix}/`,
+            )
+            .then(() => {
+              this.fetch()
+            })
+        },
+        title: 'Are you sure?',
+        yesText: 'Confirm',
+      })
   }
 
   render() {

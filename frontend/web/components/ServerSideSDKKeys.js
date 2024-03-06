@@ -112,13 +112,15 @@ class ServerSideSDKKeys extends Component {
   }
 
   remove = (id, name) => {
-    openConfirm(
-      'Delete Server-side Environment Keys',
-      <div>
-        The key <strong>{name}</strong> will be permanently deleted, are you
-        sure?
-      </div>,
-      () => {
+    openConfirm({
+      body: (
+        <div>
+          The key <strong>{name}</strong> will be permanently deleted, are you
+          sure?
+        </div>
+      ),
+      destructive: true,
+      onYes: () => {
         this.setState({ isSaving: true })
         deleteServersideEnvironmentKeys(getStore(), {
           environmentId: this.props.environmentId,
@@ -129,7 +131,9 @@ class ServerSideSDKKeys extends Component {
             this.setState({ isSaving: false })
           })
       },
-    )
+      title: 'Delete Server-side Environment Keys',
+      yesText: 'Confirm',
+    })
   }
 
   fetch = (environmentId) => {

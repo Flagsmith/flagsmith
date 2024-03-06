@@ -35,14 +35,15 @@ const ConfirmRemoveFeature: FC<ConfirmRemoveFeatureType> = ({
               {identity ? (
                 <p>
                   This will reset <strong>{projectFlag.name}</strong> for to the
-                  environment defaults for the user <strong>{identity}</strong>
+                  environment defaults for the user <strong>{identity}</strong>.
+                  This action cannot be undone.
                 </p>
               ) : (
                 <p>
                   This will remove <strong>{projectFlag.name}</strong> for{' '}
                   <strong>all environments</strong>. You should ensure that you
                   do not contain any references to this feature in your
-                  applications before proceeding.
+                  applications before proceeding. This action cannot be undone.
                 </p>
               )}
               <InputGroup
@@ -69,7 +70,7 @@ const ConfirmRemoveFeature: FC<ConfirmRemoveFeatureType> = ({
               id='confirm-remove-feature-btn'
               type='submit'
               disabled={challenge != projectFlag.name}
-              theme='primary'
+              theme='danger'
             >
               Confirm changes
             </Button>

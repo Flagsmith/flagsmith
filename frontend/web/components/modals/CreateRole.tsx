@@ -264,14 +264,14 @@ const CreateRole: FC<CreateRoleType> = ({
           onClosing() {
             if (roleNameChanged || roleDescChanged) {
               return new Promise((resolve) => {
-                openConfirm(
-                  'Are you sure?',
-                  'Closing this will discard your unsaved changes.',
-                  () => resolve(true),
-                  () => resolve(false),
-                  'Ok',
-                  'Cancel',
-                )
+                openConfirm({
+                  body: 'Closing this will discard your unsaved changes.',
+                  noText: 'Cancel',
+                  onNo: () => resolve(false),
+                  onYes: () => resolve(true),
+                  title: 'Are you sure?',
+                  yesText: 'Ok',
+                })
               })
             } else {
               return Promise.resolve(true)
@@ -389,16 +389,16 @@ const CreateRole: FC<CreateRoleType> = ({
       const changed = ref.current.tabChanged()
       if (changed && newTab !== tab) {
         return new Promise((resolve) => {
-          openConfirm(
-            'Are you sure?',
-            'Changing this tab will discard your unsaved changes.',
-            () => {
+          openConfirm({
+            body: 'Changing this tab will discard your unsaved changes.',
+            noText: 'Cancel',
+            onNo: () => resolve(false),
+            onYes: () => {
               resolve(true), setTab(newTab)
             },
-            () => resolve(false),
-            'Ok',
-            'Cancel',
-          )
+            title: 'Are you sure?',
+            yesText: 'Ok',
+          })
         })
       } else {
         setTab(newTab)

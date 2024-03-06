@@ -59,16 +59,18 @@ const AddEditTags: FC<AddEditTagsType> = ({
   }
 
   const confirmDeleteTag = (tag: TTag) => {
-    openConfirm(
-      'Please confirm',
-      <div>
-        Are you sure you wish to delete the tag{' '}
-        <div className='d-inline-block'>
-          <Tag tag={tag} />
+    openConfirm({
+      body: (
+        <div>
+          Are you sure you wish to delete the tag{' '}
+          <div className='d-inline-block'>
+            <Tag tag={tag} />
+          </div>
+          ? This action cannot be undone.
         </div>
-        ?
-      </div>,
-      () => {
+      ),
+      destructive: true,
+      onYes: () => {
         onChange(loFilter(value || [], (id) => id !== tag.id))
         deleteTag({
           id: tag.id,
@@ -76,7 +78,9 @@ const AddEditTags: FC<AddEditTagsType> = ({
         })
         setIsOpen(true)
       },
-    )
+      title: 'Please confirm',
+      yesText: 'Confirm',
+    })
   }
 
   const filteredTags = useMemo(() => {

@@ -378,13 +378,13 @@ const ProjectSettingsPage = class extends Component {
                             <Button
                               disabled={isSaving || Utils.isMigrating()}
                               onClick={() =>
-                                openConfirm(
-                                  'Are you sure?',
-                                  'This will migrate your project to the Global Edge API.',
-                                  () => {
+                                openConfirm({
+                                  body: 'This will migrate your project to the Global Edge API.',
+                                  onYes: () => {
                                     this.migrate(project)
                                   },
-                                )
+                                  title: 'Are you sure?',
+                                })
                               }
                               size='xSmall'
                               theme='outline'

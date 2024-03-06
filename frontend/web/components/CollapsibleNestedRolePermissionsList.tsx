@@ -99,14 +99,14 @@ const CollapsibleNestedRolePermissionsList: React.FC<CollapsibleNestedRolePermis
           onClosing() {
             if (unsavedProjects.length > 0) {
               return new Promise((resolve) => {
-                openConfirm(
-                  'Are you sure?',
-                  'Closing this will discard your unsaved changes.',
-                  () => resolve(true),
-                  () => resolve(false),
-                  'Ok',
-                  'Cancel',
-                )
+                openConfirm({
+                  body: 'Closing this will discard your unsaved changes.',
+                  noText: 'Cancel',
+                  onNo: () => resolve(false),
+                  onYes: () => resolve(true),
+                  title: 'Are you sure?',
+                  yesText: 'Ok',
+                })
               })
             } else {
               return Promise.resolve(true)
