@@ -8,10 +8,12 @@ type SettingsButtonType = {
 
 const SettingsButton: FC<SettingsButtonType> = ({ children, onClick }) => {
   return (
-    <Row className='cursor-pointer hover-color-primary' onClick={onClick}>
-      <label className='cols-sm-2 control-label cursor-pointer'>
-        {children} <Icon name='setting' width={20} fill={'#656D7B'} />
-      </label>
+    <Row>
+      <Row className='cursor-pointer hover-color-primary' onClick={onClick}>
+        <label className='cols-sm-2 control-label cursor-pointer'>
+          {children} <Icon name='setting' width={20} fill={'#656D7B'} />
+        </label>
+      </Row>
     </Row>
   )
 }
