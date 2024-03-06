@@ -5,6 +5,8 @@ import Constants from 'common/constants'
 import VariationOptions from './mv/VariationOptions'
 import AddVariationButton from './mv/AddVariationButton'
 import ErrorMessage from './ErrorMessage'
+import Tooltip from './Tooltip'
+import Icon from './Icon'
 
 export default class Feature extends PureComponent {
   static displayName = 'Feature'
@@ -49,7 +51,7 @@ export default class Feature extends PureComponent {
       ? 'User override'
       : !!multivariate_options && multivariate_options.length
       ? `Control Value - ${controlPercentage}%`
-      : `Value (optional)${' - these can be set per environment'}`
+      : `Value (optional)`
 
     const showValue = !(
       !!identity &&
@@ -58,16 +60,28 @@ export default class Feature extends PureComponent {
     )
     return (
       <div>
-        <FormGroup className='mb-4 flex-row'>
-          <Switch
-            data-test='toggle-feature-button'
-            defaultChecked={checked}
-            disabled={disabled || readOnly}
-            checked={!disabled && checked}
-            onChange={onCheckedChange}
-            className='ml-0'
-          />
-          <div className='label-switch ml-3'>{enabledString || 'Enabled'}</div>
+        <FormGroup className='mb-4'>
+          <Tooltip
+            title={
+              <div className='flex-row'>
+                <Switch
+                  data-test='toggle-feature-button'
+                  defaultChecked={checked}
+                  disabled={disabled || readOnly}
+                  checked={!disabled && checked}
+                  onChange={onCheckedChange}
+                  className='ml-0'
+                />
+                <div className='label-switch ml-3 mr-1'>
+                  {enabledString || 'Enabled'}
+                </div>
+                {!isEdit && <Icon name='info-outlined' />}
+              </div>
+            }
+          >
+            {!isEdit &&
+              'This will determine the initial enabled state for all environments. You can edit the this individually for each environment once the feature is created.'}
+          </Tooltip>
         </FormGroup>
 
         {showValue && (
@@ -86,7 +100,11 @@ export default class Feature extends PureComponent {
                   placeholder="e.g. 'big' "
                 />
               }
-              tooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION}
+              tooltip={`${Constants.strings.REMOTE_CONFIG_DESCRIPTION}${
+                !isEdit
+                  ? '<br/>Setting this when creating a feature will set the value for all environments. You can edit the this individually for each environment once the feature is created.'
+                  : ''
+              }`}
               title={`${valueString}`}
             />
           </FormGroup>
