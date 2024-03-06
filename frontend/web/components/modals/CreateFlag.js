@@ -640,11 +640,11 @@ const CreateFlag = class extends Component {
                   </label>
                 }
               >
-                Archiving a flag allows you to filter out flags from the
+                {`Archiving a flag allows you to filter out flags from the
                 Flagsmith dashboard that are no longer relevant.
                 <br />
                 An archived flag will still return as normal in all SDK
-                endpoints.
+                endpoints.`}
               </Tooltip>
             </Row>
           </FormGroup>
@@ -668,7 +668,7 @@ const CreateFlag = class extends Component {
                     Hide from SDKs <Icon name='info-outlined' />
                   </label>
                 }
-                place='right'
+                place='top'
               >
                 {Constants.strings.HIDE_FROM_SDKS_DESCRIPTION}
               </Tooltip>
@@ -1160,7 +1160,7 @@ const CreateFlag = class extends Component {
                                                   <Icon name='info-outlined' />
                                                 </h5>
                                               }
-                                              place='right'
+                                              place='top'
                                             >
                                               {
                                                 Constants.strings
@@ -1356,7 +1356,7 @@ const CreateFlag = class extends Component {
                                                   />
                                                 </h5>
                                               }
-                                              place='right'
+                                              place='top'
                                             >
                                               {
                                                 Constants.strings
