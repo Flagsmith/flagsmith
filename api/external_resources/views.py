@@ -10,7 +10,10 @@ class ExternalResourcesViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return ExternalResources.objects.filter(id=self.kwargs["pk"])
+        if "pk" in self.kwargs:
+            return ExternalResources.objects.filter(id=self.kwargs["pk"])
+        else:
+            return ExternalResources.objects.all()
 
     def perform_update(self, serializer):
         external_resource_id = int(self.kwargs["id"])

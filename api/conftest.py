@@ -24,12 +24,14 @@ from environments.permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
 )
+from external_resources.models import ExternalResources
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
+from integrations.github.models import GithubConfiguration, GithubRepository
 from metadata.models import (
     Metadata,
     MetadataField,
@@ -629,4 +631,33 @@ def flagsmith_environments_v2_table(dynamodb: DynamoDBServiceResource) -> Table:
             {"AttributeName": "document_key", "AttributeType": "S"},
         ],
         BillingMode="PAY_PER_REQUEST",
+    )
+
+
+@pytest.fixture()
+def external_resource(feature: Feature) -> ExternalResources:
+    return ExternalResources.objects.create(
+        url="https://github.com/userexample/example-project-repo/issues/11",
+        type="GitHub Issue",
+        feature=feature,
+    )
+
+
+@pytest.fixture()
+def github_configuration(organisation: Organisation) -> GithubConfiguration:
+    return GithubConfiguration.objects.create(
+        organisation=organisation, installation_id=1234567
+    )
+
+
+@pytest.fixture()
+def github_repository(
+    github_configuration: GithubConfiguration,
+    project: Project,
+) -> GithubRepository:
+    return GithubRepository.objects.create(
+        github_configuration=github_configuration,
+        repository_owner="repositoryownertest",
+        repository_name="repositorynametest",
+        project=project,
     )
