@@ -494,7 +494,7 @@ const ProjectSettingsPage = class extends Component {
                         roles={this.state.roles}
                       />
                     </TabItem>
-                    {!!ProjectStore.getEnvironment() && (
+                    {!!ProjectStore.getEnvs()?.length && (
                       <TabItem data-test='js-import-page' tabLabel='Import'>
                         <ImportPage
                           environmentId={this.props.match.params.environmentId}
@@ -503,7 +503,7 @@ const ProjectSettingsPage = class extends Component {
                         />
                       </TabItem>
                     )}
-                    {!!ProjectStore.getEnvironment() &&
+                    {!!ProjectStore.getEnvs()?.length &&
                       Utils.getFlagsmithHasFeature(
                         'flagsmith_import_export',
                       ) && (
