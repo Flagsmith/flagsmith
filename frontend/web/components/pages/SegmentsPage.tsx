@@ -147,7 +147,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     return permission ? (
       el
     ) : (
-      <Tooltip title={el} place='right' html>
+      <Tooltip title={el} place='right'>
         {Constants.projectPermissions('Manage segments')}
       </Tooltip>
     )

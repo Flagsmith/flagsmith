@@ -188,7 +188,6 @@ const CreateEnvironmentPage = class extends Component {
                                   </Button>
                                 ) : (
                                   <Tooltip
-                                    html
                                     title={
                                       <Button
                                         id='create-env-btn'

@@ -109,7 +109,6 @@ const UsersPage: FC<UsersPageType> = (props) => {
               </FormGroup>
             ) : (
               <Tooltip
-                html
                 title={
                   <Button
                     disabled

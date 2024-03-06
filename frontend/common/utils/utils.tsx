@@ -506,7 +506,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return permission ? (
       el
     ) : (
-      <Tooltip title={<div>{el}</div>} place='right' html>
+      <Tooltip title={<div>{el}</div>} place='right'>
         {name}
       </Tooltip>
     )

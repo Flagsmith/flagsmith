@@ -154,7 +154,6 @@ export const FeatureAction: FC<FeatureActionProps> = ({
                   removeFeaturePermission,
                   Constants.projectPermissions('Delete Feature'),
                   <Tooltip
-                    html
                     title={
                       <div
                         className={classNames('feature-action__item', {

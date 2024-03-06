@@ -25,6 +25,7 @@ import InfoMessage from './InfoMessage'
 import OrganisationLimit from './OrganisationLimit'
 import OrganisationLink from './OrganisationLink'
 import GithubStar from './GithubStar'
+import Tooltip from './Tooltip'
 
 const App = class extends Component {
   static propTypes = {
@@ -372,28 +373,43 @@ const App = class extends Component {
                                     Account
                                   </NavLink>
                                   <GithubStar />
-                                  <Button
-                                    href='https://docs.flagsmith.com'
-                                    target='_blank'
-                                    className='btn btn-with-icon mr-2'
-                                    size='small'
+                                  <Tooltip
+                                    place='bottom'
+                                    title={
+                                      <Button
+                                        href='https://docs.flagsmith.com'
+                                        target='_blank'
+                                        className='btn btn-with-icon mr-2'
+                                        size='small'
+                                      >
+                                        <Icon
+                                          name='file-text'
+                                          width={20}
+                                          fill='#9DA4AE'
+                                        />
+                                      </Button>
+                                    }
                                   >
-                                    <Icon
-                                      name='file-text'
-                                      width={20}
-                                      fill='#9DA4AE'
-                                    />
-                                  </Button>
+                                    Docs
+                                  </Tooltip>
+
                                   <Headway className='cursor-pointer mr-2' />
-                                  <div className='dark-mode mt-0'>
-                                    <Switch
-                                      checked={Utils.getFlagsmithHasFeature(
-                                        'dark_mode',
-                                      )}
-                                      onChange={this.toggleDarkMode}
-                                      darkMode
-                                    />
-                                  </div>
+                                  <Tooltip
+                                    place='bottom'
+                                    title={
+                                      <div className='dark-mode mt-0'>
+                                        <Switch
+                                          checked={Utils.getFlagsmithHasFeature(
+                                            'dark_mode',
+                                          )}
+                                          onChange={this.toggleDarkMode}
+                                          darkMode
+                                        />
+                                      </div>
+                                    }
+                                  >
+                                    Dark Mode
+                                  </Tooltip>
                                 </Row>
                               </nav>
                             </React.Fragment>

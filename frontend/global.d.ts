@@ -1,5 +1,6 @@
 import { Component, FC, ReactNode } from 'react'
 import _Select from './web/components/Select'
+import { TooltipProps } from './web/components/Tooltip'
 
 export declare const openModal: (name?: string) => Promise<void>
 declare global {
@@ -37,10 +38,5 @@ declare global {
   const dtrum: undefined | { identifyUser: (id: string) => void }
   const closeModal: () => void
   const toast: (message: string) => void
-  const Tooltip: FC<{
-    title: ReactNode
-    children: ReactNode
-    place?: string
-    html?: boolean
-  }>
+  const Tooltip: FC<TooltipProps>
 }

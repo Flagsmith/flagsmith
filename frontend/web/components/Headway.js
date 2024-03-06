@@ -1,6 +1,7 @@
 import React from 'react'
 import Button from './base/forms/Button'
 import Icon from './Icon'
+import Tooltip from './Tooltip'
 
 let prom
 class _Headway extends React.Component {
@@ -31,20 +32,27 @@ class _Headway extends React.Component {
       return null
     }
     return (
-      <Row className={this.props.className}>
-        <Button
-          onClick={() => {
-            Headway.show()
-          }}
-          className='btn-with-icon'
-          size='small'
-        >
-          <Icon name='bell' width={20} fill='#9DA4AE' />
-        </Button>
-        <span id='headway'>
-          <span />
-        </span>
-      </Row>
+      <Tooltip
+        place='bottom'
+        title={
+          <Row className={this.props.className}>
+            <Button
+              onClick={() => {
+                Headway.show()
+              }}
+              className='btn-with-icon'
+              size='small'
+            >
+              <Icon name='bell' width={20} fill='#9DA4AE' />
+            </Button>
+            <span id='headway'>
+              <span />
+            </span>
+          </Row>
+        }
+      >
+        Updates
+      </Tooltip>
     )
   }
 }
