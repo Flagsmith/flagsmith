@@ -139,6 +139,7 @@ export default class Feature extends PureComponent {
                 this.props.canCreateFeature,
                 Constants.projectPermissions('Create Feature'),
                 <AddVariationButton
+                  environmentVariations={environmentVariations}
                   disabled={!this.props.canCreateFeature || readOnly}
                   onClick={this.props.addVariation}
                 />,
