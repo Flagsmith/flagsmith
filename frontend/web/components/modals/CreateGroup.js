@@ -8,6 +8,8 @@ import { components } from 'react-select'
 import { setInterceptClose } from './base/ModalDefault'
 import Icon from 'components/Icon'
 import Tooltip from 'components/Tooltip'
+import { IonIcon } from '@ionic/react'
+import { informationCircle } from 'ionicons/icons'
 
 const widths = [80, 80]
 const CreateGroup = class extends Component {
@@ -342,10 +344,19 @@ const CreateGroup = class extends Component {
                                 style={{ paddingLeft: 5, width: widths[0] }}
                                 className='table-column'
                               >
-                                Admin
+                                <Tooltip
+                                  title={
+                                    <Row>
+                                      Admin <IonIcon icon={informationCircle} />
+                                    </Row>
+                                  }
+                                >
+                                  Allows inviting additional team members to the
+                                  group
+                                </Tooltip>
                               </div>
                               <div
-                                className='table-column text-center'
+                                className='table-column ml-1 text-center'
                                 style={{ width: widths[1] }}
                               >
                                 Remove
