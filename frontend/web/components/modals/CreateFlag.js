@@ -1530,6 +1530,18 @@ const CreateFlag = class extends Component {
 
                                         {this.drawChart(usageData)}
                                       </FormGroup>
+                                      <InfoMessage>
+                                        The Flag Analytics data will be visible
+                                        in the Dashboard between 30 minutes and
+                                        1 hour after it has been collected.{' '}
+                                        <a
+                                          target='_blank'
+                                          href='https://docs.flagsmith.com/advanced-use/flag-analytics'
+                                          rel='noreferrer'
+                                        >
+                                          View docs
+                                        </a>
+                                      </InfoMessage>
                                     </TabItem>
                                   )}
                                 {!existingChangeRequest && createFeature && (
