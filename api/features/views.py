@@ -156,20 +156,23 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         if environment_id:
             page = self.paginate_queryset(queryset)
+
             environment = Environment.objects.get(id=environment_id)
-            feature_states = (
-                FeatureState.objects.get_live_feature_states(
-                    environment,
-                    additional_filters=Q(
-                        feature_id__in=[feature.id for feature in page]
-                    ),
-                )
-                .prefetch_related("multivariate_feature_state_values")
-                .select_related("feature_state_value", "feature")
-            )
+            feature_states = FeatureState.objects.get_live_feature_states(
+                environment,
+                additional_filters=Q(feature_id__in=[feature.id for feature in page]),
+            ).select_related("feature_state_value", "feature")
+
             self._feature_states = feature_states
 
         return queryset
+
+    def paginate_queryset(self, queryset: QuerySet[Feature]) -> list[Feature]:
+        if getattr(self, "_page", None):
+            return self._page
+
+        self._page = super().paginate_queryset(queryset)
+        return self._page
 
     def perform_create(self, serializer):
         serializer.save(
