@@ -16,7 +16,9 @@ import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 import { getRolesProjectPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
-import ImportPage from './ImportPage'
+import ImportPage from 'components/import-export/ImportPage'
+import FeatureExport from 'components/import-export/FeatureExport'
+import ProjectUsage from 'components/ProjectUsage'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -77,12 +79,6 @@ const ProjectSettingsPage = class extends Component {
       AppActions.getProject(this.props.match.params.projectId)
     }
   }
-
-  onRemove = () => {
-    toast('Your project has been removed')
-    this.context.router.history.replace('/projects')
-  }
-
   confirmRemove = (project, cb) => {
     openModal(
       'Delete Project',
@@ -163,7 +159,6 @@ const ProjectSettingsPage = class extends Component {
       <div className='app-container container'>
         <ProjectProvider
           id={this.props.match.params.projectId}
-          onRemove={this.onRemove}
           onSave={this.onSave}
         >
           {({ deleteProject, editProject, isLoading, isSaving, project }) => {
@@ -430,6 +425,7 @@ const ProjectSettingsPage = class extends Component {
                           <Button
                             onClick={() =>
                               this.confirmRemove(project, () => {
+                                this.context.router.history.replace('/projects')
                                 deleteProject(this.props.match.params.projectId)
                               })
                             }
@@ -478,6 +474,11 @@ const ProjectSettingsPage = class extends Component {
                         </form>
                       </div>
                     </TabItem>
+                    <TabItem tabLabel='Usage'>
+                      <ProjectUsage
+                        projectId={this.props.match.params.projectId}
+                      />
+                    </TabItem>
                     <TabItem tabLabel='Permissions'>
                       <EditPermissions
                         onSaveUser={() => {
@@ -494,10 +495,20 @@ const ProjectSettingsPage = class extends Component {
                     </TabItem>
                     <TabItem data-test='js-import-page' tabLabel='Import'>
                       <ImportPage
+                        environmentId={this.props.match.params.environmentId}
                         projectId={this.props.match.params.projectId}
                         projectName={project.name}
                       />
                     </TabItem>
+                    {Utils.getFlagsmithHasFeature(
+                      'flagsmith_import_export',
+                    ) && (
+                      <TabItem tabLabel='Export'>
+                        <FeatureExport
+                          projectId={this.props.match.params.projectId}
+                        />
+                      </TabItem>
+                    )}
                   </Tabs>
                 }
               </div>

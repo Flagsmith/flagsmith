@@ -162,15 +162,14 @@
 }
 .dark {
     .text-body {
-        color: white;
+        color: white !important;
         >path{
-            fill: white;
+            fill: white !important;
         }
     }
     .bg-primary {
         background: $bt-brand-primary-dark !important;
     }
-
 }
 
 .link-unstyled {
@@ -179,6 +178,10 @@
         text-decoration: none;
         color: $bt-brand-primary-dark
     }
+}
+
+.mh-auto {
+    min-height: auto !important;
 }
 
 .text-overflow {

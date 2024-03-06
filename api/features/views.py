@@ -8,7 +8,7 @@ from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
-from django.db.models import Q, QuerySet
+from django.db.models import Max, Q, QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg import openapi
@@ -117,8 +117,18 @@ class FeatureViewSet(viewsets.ModelViewSet):
         accessible_projects = self.request.user.get_permitted_projects(VIEW_PROJECT)
 
         project = get_object_or_404(accessible_projects, pk=self.kwargs["project_pk"])
-        queryset = project.features.all().prefetch_related(
-            "multivariate_options", "owners", "tags", "group_owners"
+
+        queryset = (
+            project.features.all()
+            .annotate(
+                last_modified_in_any_environment=Max(
+                    "feature_states__environment_feature_version__created_at",
+                    filter=Q(
+                        feature_states__environment_feature_version__published_at__isnull=False
+                    ),
+                ),
+            )
+            .prefetch_related("multivariate_options", "owners", "tags", "group_owners")
         )
 
         query_serializer = FeatureQuerySerializer(data=self.request.query_params)
@@ -126,6 +136,17 @@ class FeatureViewSet(viewsets.ModelViewSet):
         query_data = query_serializer.validated_data
 
         queryset = self._filter_queryset(queryset)
+
+        if environment_id := query_data.get("environment"):
+            queryset = queryset.annotate(
+                last_modified_in_current_environment=Max(
+                    "feature_states__environment_feature_version__created_at",
+                    filter=Q(
+                        feature_states__environment=environment_id,
+                        feature_states__environment_feature_version__published_at__isnull=False,
+                    ),
+                )
+            )
 
         sort = "%s%s" % (
             "-" if query_data["sort_direction"] == "DESC" else "",
@@ -602,8 +623,8 @@ class SDKFeatureStates(GenericAPIView):
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
     renderer_classes = [JSONRenderer]
-    throttle_classes = []
     pagination_class = None
+    throttle_classes = []
 
     @swagger_auto_schema(
         query_serializer=SDKFeatureStatesQuerySerializer(),

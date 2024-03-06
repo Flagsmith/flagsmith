@@ -22,6 +22,7 @@ In order to ensure consistent performance, Flagsmith has the following limitatio
 - **400** Features per Project
 - **100** Segments per Project
 - **100** Segment Overrides per Environment
+- **100** Segment Rules Conditions
 
 ### Entity Data Elements
 
@@ -31,3 +32,11 @@ In order to ensure consistent performance, Flagsmith has the following limitatio
 ### Segment Data Elements
 
 - Maximum size of a Segment Rule Value is **1,000 bytes**
+
+### Admin API Rate Limit
+
+Requests made to [Admin API endpoints](/clients/rest#private-admin-api-endpoints) (i.e., non-SDK endpoints) are subject
+to a default rate limit of 500 requests per minute.
+
+If you are self-hosting, you have the flexibility to modify this limit by adjusting the value of the environment
+variable `USER_THROTTLE_RATE`.

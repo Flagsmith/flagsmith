@@ -60,6 +60,11 @@ class Command(BaseCommand):
         grace_period_ms = options["graceperiodms"]
         queue_pop_size = options["queuepopsize"]
 
+        logger.debug(
+            "Running task processor with args: %s",
+            ",".join([f"{k}={v}" for k, v in options.items()]),
+        )
+
         self._threads.extend(
             [
                 TaskRunner(

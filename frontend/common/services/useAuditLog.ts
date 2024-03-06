@@ -2,6 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
+import transformCorePaging from 'common/transformCorePaging'
 
 export const auditLogService = service
   .enhanceEndpoints({ addTagTypes: ['AuditLog'] })
@@ -24,6 +25,7 @@ export const auditLogService = service
             url: `audit/?${Utils.toParam(params)}`,
           }
         },
+        transformResponse: (res, _, req) => transformCorePaging(req, res),
       }),
       // END OF ENDPOINTS
     }),

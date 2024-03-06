@@ -57,7 +57,7 @@ const CreateFlag = class extends Component {
       multivariate_options,
       name,
       tags,
-    } = this.props.isEdit
+    } = this.props.projectFlag
       ? Utils.getFlagValue(
           this.props.projectFlag,
           this.props.environmentFlag,
@@ -76,6 +76,7 @@ const CreateFlag = class extends Component {
       description,
       enabledIndentity: false,
       enabledSegment: false,
+      environmentFlag: this.props.environmentFlag,
       externalResource: {},
       externalResources: [],
       hide_from_client,
@@ -90,6 +91,7 @@ const CreateFlag = class extends Component {
         typeof feature_state_value === 'undefined'
           ? undefined
           : Utils.getTypedValue(feature_state_value),
+      isEdit: !!this.props.projectFlag,
       is_archived,
       is_server_key_only,
       multivariate_options: _.cloneDeep(multivariate_options),
@@ -102,11 +104,28 @@ const CreateFlag = class extends Component {
     AppActions.getGroups(AccountStore.getOrganisation().id)
   }
 
+  getState = () => {}
+
   close() {
     closeModal()
   }
 
   componentDidUpdate(prevProps) {
+    ES6Component(this)
+    this.listenTo(FeatureListStore, 'saved', () => {
+      if (this.props.projectFlag) {
+        //update the active environment flag as the ID would have changed
+        const envFlags = FeatureListStore.getEnvironmentFlags()
+        const projectFlag = this.props.projectFlag
+        const newEnvironmentFlag = envFlags?.[projectFlag.id] || {}
+        this.setState({
+          environmentFlag: {
+            ...this.state.environmentFlag,
+            ...(newEnvironmentFlag || {}),
+          },
+        })
+      }
+    })
     if (
       !this.props.identity &&
       this.props.environmentVariations !== prevProps.environmentVariations
@@ -138,7 +157,7 @@ const CreateFlag = class extends Component {
   }
 
   onClosing = () => {
-    if (this.props.isEdit) {
+    if (this.state.isEdit) {
       return new Promise((resolve) => {
         if (
           this.state.valueChanged ||
@@ -163,7 +182,7 @@ const CreateFlag = class extends Component {
 
   componentDidMount = () => {
     setInterceptClose(this.onClosing)
-    if (!this.props.isEdit && !E2E) {
+    if (!this.state.isEdit && !E2E) {
       this.focusTimeout = setTimeout(() => {
         this.input.focus()
         this.focusTimeout = null
@@ -172,7 +191,7 @@ const CreateFlag = class extends Component {
     if (
       !Project.disableAnalytics &&
       this.props.projectFlag &&
-      this.props.environmentFlag
+      this.state.environmentFlag
     ) {
       this.getFeatureUsage()
     }
@@ -264,10 +283,10 @@ const CreateFlag = class extends Component {
   }
 
   getFeatureUsage = () => {
-    if (this.props.environmentFlag) {
+    if (this.state.environmentFlag) {
       AppActions.getFeatureUsage(
         this.props.projectId,
-        this.props.environmentFlag.environment,
+        this.state.environmentFlag.environment,
         this.props.projectFlag.id,
         this.state.period,
       )
@@ -275,7 +294,6 @@ const CreateFlag = class extends Component {
   }
   save = (func, isSaving) => {
     const {
-      environmentFlag,
       environmentId,
       identity,
       identityFlag,
@@ -285,6 +303,7 @@ const CreateFlag = class extends Component {
     const {
       default_enabled,
       description,
+      environmentFlag,
       hide_from_client,
       initial_value,
       is_archived,
@@ -296,9 +315,9 @@ const CreateFlag = class extends Component {
       ..._projectFlag,
     }
     const hasMultivariate =
-      this.props.environmentFlag &&
-      this.props.environmentFlag.multivariate_feature_state_values &&
-      this.props.environmentFlag.multivariate_feature_state_values.length
+      this.state.environmentFlag &&
+      this.state.environmentFlag.multivariate_feature_state_values &&
+      this.state.environmentFlag.multivariate_feature_state_values.length
     if (identity) {
       !isSaving &&
         name &&
@@ -309,7 +328,7 @@ const CreateFlag = class extends Component {
           identityFlag: Object.assign({}, identityFlag || {}, {
             enabled: default_enabled,
             feature_state_value: hasMultivariate
-              ? this.props.environmentFlag.feature_state_value
+              ? this.state.environmentFlag.feature_state_value
               : initial_value,
             multivariate_options: this.state.identityVariations,
           }),
@@ -445,7 +464,8 @@ const CreateFlag = class extends Component {
   }
 
   addItem = () => {
-    const { environmentFlag, environmentId, identity, projectFlag } = this.props
+    const { environmentId, identity, projectFlag } = this.props
+    const { environmentFlag } = this.state
     this.setState({ isLoading: true })
     const selectedIdentity = this.state.selectedIdentity.value
     const identities = identity ? identity.identifier : []
@@ -525,6 +545,7 @@ const CreateFlag = class extends Component {
       featureExternalResource,
       hide_from_client,
       initial_value,
+      isEdit,
       issuesExternalResources,
       multivariate_options,
       name,
@@ -533,7 +554,7 @@ const CreateFlag = class extends Component {
     } = this.state
     const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID
 
-    const { identity, identityName, isEdit, projectFlag } = this.props
+    const { identity, identityName, projectFlag } = this.props
     const Provider = identity ? IdentityProvider : FeatureListProvider
     const environmentVariations = this.props.environmentVariations
     const environment = ProjectStore.getEnvironment(this.props.environmentId)
@@ -920,7 +941,7 @@ const CreateFlag = class extends Component {
                       <InfoMessage>
                         {' '}
                         This must conform to the regular expression{' '}
-                        <code>{regex}</code>
+                        <pre>{regex}</pre>
                       </InfoMessage>
                     </div>
                   )}
@@ -976,7 +997,7 @@ const CreateFlag = class extends Component {
               onChangeIdentityVariations={(identityVariations) => {
                 this.setState({ identityVariations, valueChanged: true })
               }}
-              environmentFlag={this.props.environmentFlag}
+              environmentFlag={this.state.environmentFlag}
               projectFlag={projectFlag}
               onValueChange={(e) => {
                 const initial_value = Utils.getTypedValue(
@@ -1192,7 +1213,7 @@ const CreateFlag = class extends Component {
                                         />
                                         <JSONReference
                                           title={'Feature state'}
-                                          json={this.props.environmentFlag}
+                                          json={this.state.environmentFlag}
                                         />
                                       </>
                                     )}

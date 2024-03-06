@@ -27,6 +27,7 @@ from permissions.models import (
 )
 from projects.managers import ProjectManager
 from projects.tasks import (
+    handle_cascade_delete,
     migrate_project_environments_to_v2,
     write_environments_to_dynamodb,
 )
@@ -86,6 +87,10 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         max_length=50,
         choices=IdentityOverridesV2MigrationStatus.choices,
         default=IdentityOverridesV2MigrationStatus.NOT_STARTED,
+    )
+    stale_flags_limit_days = models.IntegerField(
+        default=30,
+        help_text="Number of days without modification in any environment before a flag is considered stale.",
     )
 
     objects = ProjectManager()
@@ -157,6 +162,10 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     @hook(AFTER_DELETE)
     def clean_up_dynamo(self):
         DynamoProjectMetadata(self.id).delete()
+
+    @hook(AFTER_DELETE)
+    def handle_cascade_delete(self) -> None:
+        handle_cascade_delete.delay(kwargs={"project_id": self.id})
 
     @property
     def is_edge_project_by_default(self) -> bool:

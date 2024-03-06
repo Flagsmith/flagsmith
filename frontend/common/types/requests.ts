@@ -3,8 +3,11 @@ import {
   Segment,
   Tag,
   FeatureStateValue,
+  FeatureState,
   Role,
   ExternalResource,
+  ImportStrategy,
+  APIKey,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -14,11 +17,18 @@ export type PagedRequest<T> = T & {
 }
 export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
+export type CreateVersionFeatureState = {
+  environmentId: string
+  featureId: number
+  sha: string
+  featureState: FeatureState
+}
 export type Req = {
   getSegments: PagedRequest<{
     q?: string
     projectId: number | string
     identity?: number
+    include_feature_specific?: boolean
   }>
   deleteSegment: { projectId: number | string; id: number }
   updateSegment: { projectId: number | string; segment: Segment }
@@ -54,7 +64,7 @@ export type Req = {
     identifiers: string[]
   }
   featureSegment: {
-    segment: string
+    segment: number
   }
   getIdentities: PagedRequest<{
     environmentId: string
@@ -104,7 +114,9 @@ export type Req = {
     environmentId: string
     featureId: string
     enabled: boolean
-    feature_segment: featureSegment
+    feature_segment: {
+      segment: number
+    }
     feature_state_value: FeatureStateValue
   }
   getRoles: { organisation_id: string }
@@ -137,13 +149,88 @@ export type Req = {
   getGetSubscriptionMetadata: { id: string }
   getEnvironment: { id: string }
   getSubscriptionMetadata: { id: string }
-  createLaunchDarklyProjectImport: { project_id: string }
-  getLaunchDarklyProjectImport: { project_id: string }
-  getLaunchDarklyProjectsImport: { project_id: string; import_id: string }
+  getRoleMasterApiKey: { org_id: number; role_id: number; id: string }
+  updateRoleMasterApiKey: { org_id: number; role_id: number; id: string }
+  deleteRoleMasterApiKey: { org_id: number; role_id: number; id: string }
+  createRoleMasterApiKey: { org_id: number; role_id: number }
+  getMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
+  deleteMasterAPIKeyWithMasterAPIKeyRoles: {
+    org_id: number
+    prefix: string
+    role_id: number
+  }
+  getRolesMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
+  createLaunchDarklyProjectImport: {
+    project_id: string
+    body: {
+      project_key: string
+      token: string
+    }
+  }
+  createFeatureExport: {
+    environment_id: string
+    tag_ids?: (number | string)[]
+  }
+  getFeatureExport: {
+    id: string
+  }
+  getFeatureExports: {
+    projectId: string
+  }
+  createFlagsmithProjectImport: {
+    environment_id: number | string
+    strategy: ImportStrategy
+    file: File
+  }
+  getFeatureImports: {
+    projectId: string
+  }
+  getLaunchDarklyProjectImport: { project_id: string; import_id: string }
+  getLaunchDarklyProjectsImport: { project_id: string }
   getUserWithRoles: { org_id: string; user_id: string }
   deleteUserWihRole: { org_id: string; user_id: string; role_id: string }
   getGroupWithRole: { org_id: string; group_id: string }
   deleteGroupWithRole: { org_id: string; group_id: string; role_id: string }
+  createAndPublishFeatureVersion: {
+    environmentId: string
+    featureId: number
+    featureStates: (FeatureState & { toRemove: boolean })[]
+  }
+  createFeatureVersion: {
+    environmentId: string
+    featureId: number
+  }
+  publishFeatureVersion: {
+    sha: string
+    environmentId: string
+    featureId: number
+  }
+  createVersionFeatureState: CreateVersionFeatureState
+  deleteVersionFeatureState: CreateVersionFeatureState & { id: number }
+  updateVersionFeatureState: CreateVersionFeatureState & {
+    id: number
+    uuid: string
+  }
+  getVersionFeatureState: {
+    sha: string
+    environmentId: string
+    featureId: number
+  }
+  updateSegmentPriorities: { id: number; priority: number }[]
+  deleteFeatureSegment: { id: number }
+  getFeatureVersions: PagedRequest<{
+    featureId: number
+    environmentId: string
+  }>
+  getUsers: { organisationId: number }
+  getFeatureVersion: {
+    environmentId: string
+    featureId: string
+    uuid: string
+  }
+  enableFeatureVersioning: {
+    environmentId: string
+  }
   getChangeRequests: PagedRequest<{
     search?: string
     environmentId: string
@@ -173,5 +260,13 @@ export type Req = {
   getGithubIssues: { org_id: string }
   getGithubPulls: { org_id: string }
   getGithubRepos: { installation_id: number }
+  getServersideEnvironmentKeys: { environmentId: string }
+  deleteServersideEnvironmentKeys: { environmentId: string; id: string }
+  createServersideEnvironmentKeys: {
+    environmentId: string
+    data: { name: string }
+  }
+  getAuditLogItem: { id: string }
+  getProject: { id: string }
   // END OF TYPES
 }

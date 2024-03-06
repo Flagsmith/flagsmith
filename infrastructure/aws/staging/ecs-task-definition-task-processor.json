@@ -138,6 +138,18 @@
                 {
                     "name": "AWS_SSE_LOGS_BUCKET_NAME",
                     "value": "flagsmith-fastly-logs-staging"
+                },
+                {
+                    "name": "ENABLE_API_USAGE_ALERTING",
+                    "value": "True"
+                },
+                {
+                    "name": "ENABLE_HUBSPOT_LEAD_TRACKING",
+                    "value": "True"
+                },
+                {
+                    "name": "HUBSPOT_IGNORE_DOMAINS",
+                    "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io,flagsmithe2etestdomain.io"
                 }
             ],
             "secrets": [
@@ -188,6 +200,10 @@
                 {
                     "name": "INFLUXDB_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:INFLUXDB_TOKEN::"
+                },
+                {
+                    "name": "HUBSPOT_ACCESS_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:HUBSPOT_ACCESS_TOKEN::"
                 }
             ],
             "logConfiguration": {

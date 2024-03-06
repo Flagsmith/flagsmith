@@ -114,7 +114,8 @@ def test_stream_access_logs(mocker: MockerFixture, aws_credentials: None) -> Non
     first_encrypted_object_data = b"first_bucket_encrypted_data"
     first_decrypted_object_data = (
         f"{first_log.generated_at},{first_log.api_key}\n"
-        f"{second_log.generated_at},{second_log.api_key}".encode()
+        f"{second_log.generated_at},{second_log.api_key}\n"
+        "some,invalid,log,entry,111,222".encode()
     )
     second_encrypted_object_data = b"second_bucket_encrypted_data"
     second_decrypted_object_data = (

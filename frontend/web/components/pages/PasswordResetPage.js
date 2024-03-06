@@ -56,7 +56,7 @@ const PasswordResetPage = class extends Component {
                   <InputGroup
                     inputProps={{
                       className: 'full-width',
-                      error: error && error.new_password1,
+                      error: error && error.new_password,
                       name: 'new-password',
                     }}
                     title='New Password'
