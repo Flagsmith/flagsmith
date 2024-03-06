@@ -226,7 +226,7 @@ const CreateGroup = class extends Component {
                     <InputGroup
                       title='External ID'
                       tooltip={
-                        'The external ID of the group in your provider, used for synchronising users.'
+                        'The external ID of the group in your SSO provider, used for synchronising users.'
                       }
                       ref={(e) => (this.input = e)}
                       data-test='groupName'
