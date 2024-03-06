@@ -13,6 +13,7 @@ import Input from 'components/base/forms/Input'
 import Button from 'components/base/forms/Button'
 import ModalHR from 'components/modals/ModalHR'
 import Icon from 'components/Icon'
+import TagUsage from 'components/TagUsage'
 
 type AddEditTagsType = {
   value?: number[]
@@ -66,7 +67,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
         <div className='d-inline-block'>
           <Tag tag={tag} />
         </div>
-        ?
+        ?<TagUsage projectId={projectId} tag={tag.id} />
       </div>,
       () => {
         onChange(loFilter(value || [], (id) => id !== tag.id))
