@@ -14,7 +14,7 @@ export const externalResourceService = service
         query: (query: Req['createExternalResource']) => ({
           body: query.body,
           method: 'POST',
-          url: `external-resources/`,
+          url: `features/${query.feature_id}/external-resources/`,
         }),
       }),
       deleteExternalResource: builder.mutation<
@@ -24,7 +24,7 @@ export const externalResourceService = service
         invalidatesTags: [{ id: 'LIST', type: 'ExternalResource' }],
         query: (query: Req['deleteExternalResource']) => ({
           method: 'DELETE',
-          url: `external-resources/${query.external_resource_id}/`,
+          url: `features/${query.feature_id}/external-resources/${query.external_resource_id}/`,
         }),
       }),
       getExternalResource: builder.query<

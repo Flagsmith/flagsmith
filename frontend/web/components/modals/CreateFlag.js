@@ -581,6 +581,7 @@ const CreateFlag = class extends Component {
           type: externalResourceType,
           url: featureExternalResource,
         },
+        feature_id: projectFlag.id,
       }).then((res) => {
         getExternalResource(
           getStore(),
@@ -799,6 +800,7 @@ const CreateFlag = class extends Component {
                       getStore(),
                       {
                         external_resource_id: v.id,
+                        feature_id: projectFlag.id,
                       },
                       { forceRefetch: true },
                     ).then((res) => {
