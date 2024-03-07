@@ -149,34 +149,6 @@ const CodeHelp = class extends Component {
             )}
 
             <div className='code-help'>
-              <Select
-                data-test='select-segment'
-                placeholder='Select a language'
-                value={{
-                  label: language,
-                }}
-                onChange={(v) => {
-                  const lang = v.label
-                  this.setState({ language: lang })
-                  flagsmith.setTrait('preferred_language', lang)
-                  this.setState({ tab })
-                }}
-                options={_.sortBy(Object.keys(this.props.snippets), (key) =>
-                  key[0].toLowerCase(),
-                ).map((v, i) => ({
-                  label: v,
-                  value: i,
-                }))}
-                styles={{
-                  control: (base) => ({
-                    ...base,
-                    '&:hover': { borderColor: '$bt-brand-secondary' },
-                    alignSelf: 'flex-end',
-                    border: '1px solid $bt-brand-secondary',
-                    width: 200,
-                  }),
-                }}
-              />
               {_.map(this.props.snippets, (s, key) => {
                 const docs = getDocsLink(key)
                 const github = getGithubLink(key)
@@ -186,6 +158,35 @@ const CodeHelp = class extends Component {
                       key !== language ? 'd-none' : 'hljs-container mt-2 mb-2'
                     }
                   >
+                    <Select
+                      data-test='select-segment'
+                      placeholder='Select a language'
+                      value={{
+                        label: language,
+                      }}
+                      onChange={(v) => {
+                        const lang = v.label
+                        this.setState({ language: lang })
+                        flagsmith.setTrait('preferred_language', lang)
+                        this.setState({ tab })
+                      }}
+                      options={_.sortBy(
+                        Object.keys(this.props.snippets),
+                        (key) => key[0].toLowerCase(),
+                      ).map((v, i) => ({
+                        label: v,
+                        value: i,
+                      }))}
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          '&:hover': { borderColor: '$bt-brand-secondary' },
+                          alignSelf: 'flex-end',
+                          border: '1px solid $bt-brand-secondary',
+                          width: 200,
+                        }),
+                      }}
+                    />
                     <Highlight
                       forceExpanded
                       preventEscape
