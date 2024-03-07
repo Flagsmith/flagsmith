@@ -99,9 +99,16 @@ class FeatureQuerySerializer(serializers.Serializer):
         help_text="Integer ID of the environment to view features in the context of.",
     )
     state_enabled = serializers.BooleanField(
-        allow_null=True, required=False, default=None
+        allow_null=True,
+        required=False,
+        default=None,
+        help_text="Boolean value to filter features as enabled or disabled.",
     )
-    state_search = serializers.CharField(required=False, default=None)
+    state_search = serializers.CharField(
+        required=False,
+        default=None,
+        help_text="Value of type int, string, or boolean to filter features based on their values",
+    )
 
     def validate_tags(self, tags):
         try:
