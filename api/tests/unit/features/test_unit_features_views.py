@@ -2525,7 +2525,7 @@ def test_list_features_with_feature_state(
         name="another_feature", project=project, initial_value="initial_value"
     )
     feature3 = Feature.objects.create(
-        name="missing_feature", project=project, initial_value="gone"
+        name="fancy_feature", project=project, initial_value="gone"
     )
 
     Environment.objects.create(
@@ -2588,14 +2588,14 @@ def test_list_features_with_feature_state(
     assert len(response.data["results"]) == 3
     results = response.data["results"]
 
-    assert results[0]["feature_state"]["enabled"] is True
-    assert results[0]["feature_state"]["feature_state_value"] == 1945
+    assert results[0]["environment_feature_state"]["enabled"] is True
+    assert results[0]["environment_feature_state"]["feature_state_value"] == 1945
     assert results[0]["name"] == feature.name
-    assert results[1]["feature_state"]["enabled"] is True
-    assert results[1]["feature_state"]["feature_state_value"] is True
+    assert results[1]["environment_feature_state"]["enabled"] is True
+    assert results[1]["environment_feature_state"]["feature_state_value"] is True
     assert results[1]["name"] == feature2.name
-    assert results[2]["feature_state"]["enabled"] is False
-    assert results[2]["feature_state"]["feature_state_value"] == "present"
+    assert results[2]["environment_feature_state"]["enabled"] is False
+    assert results[2]["environment_feature_state"]["feature_state_value"] == "present"
     assert results[2]["name"] == feature3.name
 
 
