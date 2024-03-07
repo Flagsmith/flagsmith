@@ -63,10 +63,14 @@ class ChangeRequest(
 
     title = models.CharField(max_length=500)
     description = models.TextField(blank=True, null=True)
+
+    # We allow null here so that deleting users does not cascade to deleting change
+    # requests which can be used for historical purposes.
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="change_requests",
+        null=True,
     )
 
     environment = models.ForeignKey(

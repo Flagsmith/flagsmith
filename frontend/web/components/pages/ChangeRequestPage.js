@@ -237,7 +237,7 @@ const ChangeRequestsPage = class extends Component {
       this.fetchFeature(featureId)
     }
     const user =
-      changeRequest && orgUsers.find((v) => v.id === changeRequest.user)
+      changeRequest && changeRequest.user && orgUsers.find((v) => v.id === changeRequest.user)
     const committedBy =
       (changeRequest.committed_by &&
         orgUsers &&
