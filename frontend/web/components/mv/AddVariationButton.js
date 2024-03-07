@@ -1,7 +1,11 @@
 import Button from 'components/base/forms/Button'
 import React from 'react'
 
-export default function AddVariationButton({ disabled, onClick }) {
+export default function AddVariationButton({
+  disabled,
+  multivariateOptions,
+  onClick,
+}) {
   return (
     <div className='text-end'>
       <Button
@@ -11,7 +15,7 @@ export default function AddVariationButton({ disabled, onClick }) {
         onClick={onClick}
         theme='outline'
       >
-        Add Variation
+        {multivariateOptions?.length ? 'Add Variation' : 'Create A/B/n Test'}
       </Button>
     </div>
   )
