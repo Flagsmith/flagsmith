@@ -709,7 +709,18 @@ const CreateFlag = class extends Component {
               type='text'
               title={
                 <>
-                  {isEdit ? 'ID' : 'ID*'}
+                  <Tooltip
+                    title={
+                      <Row>
+                        <span className={'mr-1'}>{isEdit ? 'ID' : 'ID*'}</span>
+                        <Icon name='info-outlined' />
+                      </Row>
+                    }
+                  >
+                    The ID that will be used by SDKs to retrieve the feature
+                    value and enabled state. This cannot be edited once the
+                    feature has been created.
+                  </Tooltip>
                   {!!regex && !isEdit && (
                     <div className='mt-2'>
                       {' '}
@@ -1340,6 +1351,22 @@ const CreateFlag = class extends Component {
                                       data-test='identity_overrides'
                                       tabLabel='Identity Overrides'
                                     >
+                                      <InfoMessage className='mb-4 text-left faint'>
+                                        Identity overrides override feature
+                                        values for individual identities. The
+                                        overrides take priority over an segment
+                                        overrides and environment defaults.
+                                        Identity overrides will only apply when
+                                        you identify via the SDK.{' '}
+                                        <a
+                                          target='_blank'
+                                          href='https://docs.flagsmith.com/basic-features/managing-identities'
+                                          rel='noreferrer'
+                                        >
+                                          Check the Docs for more details
+                                        </a>
+                                        .
+                                      </InfoMessage>
                                       <FormGroup className='mb-4'>
                                         <PanelSearch
                                           id='users-list'
@@ -1530,6 +1557,18 @@ const CreateFlag = class extends Component {
 
                                         {this.drawChart(usageData)}
                                       </FormGroup>
+                                      <InfoMessage>
+                                        The Flag Analytics data will be visible
+                                        in the Dashboard between 30 minutes and
+                                        1 hour after it has been collected.{' '}
+                                        <a
+                                          target='_blank'
+                                          href='https://docs.flagsmith.com/advanced-use/flag-analytics'
+                                          rel='noreferrer'
+                                        >
+                                          View docs
+                                        </a>
+                                      </InfoMessage>
                                     </TabItem>
                                   )}
                                 {!existingChangeRequest && createFeature && (
