@@ -221,12 +221,16 @@ class FeatureViewSet(viewsets.ModelViewSet):
         if state_enabled is not None:
             filter_enabled_q = filter_enabled_q | Q(enabled=state_enabled)
 
+        base_q = Q(
+            identity__isnull=True,
+            feature_segment__isnull=True,
+        )
         if not getattr(self, "environment", None):
             self.environment = Environment.objects.get(id=environment_id)
 
         feature_states = FeatureState.objects.get_live_feature_states(
             environment=self.environment,
-            additional_filters=filter_search_q & filter_enabled_q,
+            additional_filters=base_q & filter_search_q & filter_enabled_q,
         )
 
         feature_ids = {fs.feature_id for fs in feature_states}
