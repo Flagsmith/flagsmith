@@ -198,38 +198,39 @@ class FeatureViewSet(viewsets.ModelViewSet):
             )
         state_enabled = query_data["state_enabled"]
         state_search = query_data["state_search"]
-        environment = query_data["environment"]
+        environment_id = query_data["environment"]
 
         filter_search_q = Q()
         if state_search is not None:
             filter_search_q = filter_search_q | Q(
-                feature_states__feature_state_value__string_value__icontains=state_search,
+                feature_state_value__string_value__icontains=state_search,
             )
 
             if state_search.lower() in {"true", "false"}:
                 boolean_search = state_search.lower() == "true"
                 filter_search_q = filter_search_q | Q(
-                    feature_states__feature_state_value__boolean_value=boolean_search
+                    feature_state_value__boolean_value=boolean_search
                 )
 
-            # TODO: Should the integer search be an icontains
-            # equivalent? If so, how?
             if state_search.isdigit():
                 integer_search = int(state_search)
                 filter_search_q = filter_search_q | Q(
-                    feature_states__feature_state_value__integer_value=integer_search
+                    feature_state_value__integer_value=integer_search
                 )
         filter_enabled_q = Q()
         if state_enabled is not None:
-            filter_enabled_q = filter_enabled_q | Q(
-                feature_states__enabled=state_enabled
-            )
-        queryset = queryset.filter(
-            filter_search_q,
-            filter_enabled_q,
-            feature_states__environment=environment,
+            filter_enabled_q = filter_enabled_q | Q(enabled=state_enabled)
+
+        if not getattr(self, "environment", None):
+            self.environment = Environment.objects.get(id=environment_id)
+
+        feature_states = FeatureState.objects.get_live_feature_states(
+            environment=self.environment,
+            additional_filters=filter_search_q & filter_enabled_q,
         )
-        return queryset
+
+        feature_ids = {fs.feature_id for fs in feature_states}
+        return queryset.filter(id__in=feature_ids)
 
     @swagger_auto_schema(
         request_body=FeatureGroupOwnerInputSerializer,
