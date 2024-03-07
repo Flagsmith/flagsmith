@@ -246,7 +246,10 @@ export type Req = {
     environmentId: string
     data: { name: string }
   }
-  getAuditLogItem: { id: string }
+  getAuditLogItem: {
+    projectId: string
+    id: string
+  }
   getProject: { id: string }
   // END OF TYPES
 }
