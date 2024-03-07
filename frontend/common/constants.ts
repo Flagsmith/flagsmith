@@ -484,7 +484,7 @@ export default {
     REMOTE_CONFIG_DESCRIPTION_VARIATION:
       'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.<br/>Variation values are set per project, the environment weight is per environment.',
     SEGMENT_OVERRIDES_DESCRIPTION:
-      'Set different values for your feature based on what segments users are in.',
+      'Set different values for your feature based on what segments users are in. Identity overrides will take priority over any segment override.',
     TAGS_DESCRIPTION:
       'Organise your flags with tags, tagging your features as "<strong>protected</strong>" will prevent them from accidentally being deleted.',
     USER_PROPERTY_DESCRIPTION:
