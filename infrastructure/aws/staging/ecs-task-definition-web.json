@@ -182,10 +182,6 @@
                 {
                     "name": "USER_THROTTLE_CACHE_OPTIONS",
                     "value": "CLIENT_CLASS=core.redis_cluster.SafeRedisClusterClient"
-                },
-                {
-                    "name": "ENABLE_HUBSPOT_LEAD_TRACKING",
-                    "value": "True"
                 }
             ],
             "secrets": [
