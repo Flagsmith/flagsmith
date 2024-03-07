@@ -3,6 +3,7 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import data from 'common/data/base/_data'
 import { BaseQueryFn } from '@reduxjs/toolkit/query'
+import Utils from 'common/utils/utils'
 
 function recursivePageGet(
   url: string,
@@ -47,7 +48,10 @@ export const projectFlagService = service
         ],
         queryFn: async (args, _, _2, baseQuery) => {
           return await recursivePageGet(
-            `projects/${args.project}/features/?page_size=999`,
+            `projects/${args.project}/features/?${Utils.toParam({
+              ...args,
+              page_size: 999,
+            })}`,
             null,
             baseQuery,
           )

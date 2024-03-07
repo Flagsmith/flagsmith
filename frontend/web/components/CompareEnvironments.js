@@ -8,10 +8,10 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Tag from './tags/Tag'
-import { getProjectFlags } from 'common/services/useProjectFlag'
-import { getStore } from 'common/store'
 import Icon from './Icon'
 import Constants from 'common/constants'
+import Button from './base/forms/Button'
+import Tooltip from './Tooltip'
 
 const featureNameWidth = 300
 
@@ -30,7 +30,8 @@ class CompareEnvironments extends Component {
       environmentLeft: props.environmentId,
       environmentRight: '',
       isLoading: true,
-      projectFlags: null,
+      projectFlagsLeft: null,
+      projectFlagsRight: null,
       showArchived: false,
     }
   }
@@ -47,59 +48,90 @@ class CompareEnvironments extends Component {
   fetch = () => {
     this.setState({ isLoading: true })
     return Promise.all([
-      this.state.projectFlags
-        ? Promise.resolve({ results: this.state.projectFlags })
-        : getProjectFlags(getStore(), { project: this.props.projectId }).then(
-            (res) => res.data,
-          ),
+      data.get(
+        `${Project.api}projects/${
+          this.props.projectId
+        }/features/?page_size=999&environment=${ProjectStore.getEnvironmentIdFromKey(
+          this.state.environmentLeft,
+        )}`,
+      ),
+      data.get(
+        `${Project.api}projects/${
+          this.props.projectId
+        }/features/?page_size=999&environment=${ProjectStore.getEnvironmentIdFromKey(
+          this.state.environmentRight,
+        )}`,
+      ),
       data.get(
         `${Project.api}environments/${this.state.environmentLeft}/featurestates/?page_size=999`,
       ),
       data.get(
         `${Project.api}environments/${this.state.environmentRight}/featurestates/?page_size=999`,
       ),
-    ]).then(([projectFlags, environmentLeftFlags, environmentRightFlags]) => {
-      const changes = []
-      const same = []
-      _.each(
-        _.sortBy(projectFlags.results, (p) => p.name),
-        (projectFlag) => {
-          const leftSide = environmentLeftFlags.results.find(
-            (v) => v.feature === projectFlag.id,
-          )
-          const rightSide = environmentRightFlags.results.find(
-            (v) => v.feature === projectFlag.id,
-          )
-          const change = {
-            leftEnabled: leftSide.enabled,
-            leftEnvironmentFlag: leftSide,
-            leftValue: leftSide.feature_state_value,
-            projectFlag,
-            rightEnabled: rightSide.enabled,
-            rightEnvironmentFlag: rightSide,
-            rightValue: rightSide.feature_state_value,
-          }
-          change.enabledChanged = change.rightEnabled !== change.leftEnabled
-          change.valueChanged = change.rightValue !== change.leftValue
-          if (change.enabledChanged || change.valueChanged) {
-            changes.push(change)
-          } else {
-            same.push(change)
-          }
-        },
-      )
-      this.setState({
-        changes,
-        environmentLeftFlags: _.keyBy(environmentLeftFlags.results, 'feature'),
-        environmentRightFlags: _.keyBy(
-          environmentRightFlags.results,
-          'feature',
-        ),
-        isLoading: false,
-        projectFlags: projectFlags.results,
-        same,
-      })
-    })
+    ]).then(
+      ([
+        environmentLeftProjectFlags,
+        environmentRightProjectFlags,
+        environmentLeftFlags,
+        environmentRightFlags,
+      ]) => {
+        const changes = []
+        const same = []
+        _.each(
+          _.sortBy(environmentLeftProjectFlags.results, (p) => p.name),
+          (projectFlagLeft) => {
+            const projectFlagRight = environmentRightProjectFlags.results?.find(
+              (projectFlagRight) => projectFlagRight.id === projectFlagLeft.id,
+            )
+            const leftSide = environmentLeftFlags.results.find(
+              (v) => v.feature === projectFlagLeft.id,
+            )
+            const rightSide = environmentRightFlags.results.find(
+              (v) => v.feature === projectFlagLeft.id,
+            )
+            const change = {
+              leftEnabled: leftSide.enabled,
+              leftEnvironmentFlag: leftSide,
+              leftValue: leftSide.feature_state_value,
+              projectFlagLeft,
+              projectFlagRight,
+              rightEnabled: rightSide.enabled,
+              rightEnvironmentFlag: rightSide,
+              rightValue: rightSide.feature_state_value,
+            }
+            change.enabledChanged = change.rightEnabled !== change.leftEnabled
+            change.valueChanged = change.rightValue !== change.leftValue
+            if (
+              change.enabledChanged ||
+              change.valueChanged ||
+              projectFlagLeft.num_identity_overrides ||
+              projectFlagLeft.num_segment_overrides ||
+              projectFlagRight.num_identity_overrides ||
+              projectFlagRight.num_segment_overrides
+            ) {
+              changes.push(change)
+            } else {
+              same.push(change)
+            }
+          },
+        )
+        this.setState({
+          changes,
+          environmentLeftFlags: _.keyBy(
+            environmentLeftFlags.results,
+            'feature',
+          ),
+          environmentRightFlags: _.keyBy(
+            environmentRightFlags.results,
+            'feature',
+          ),
+          isLoading: false,
+          projectFlagsLeft: environmentLeftProjectFlags.results,
+          projectFlagsRight: environmentLeftProjectFlags.results,
+          same,
+        })
+      },
+    )
   }
 
   onSave = () => this.fetch()
@@ -111,7 +143,7 @@ class CompareEnvironments extends Component {
       if (this.state.showArchived) {
         return true
       }
-      return !v.projectFlag.is_archived
+      return !v.projectFlagLeft.is_archived
     })
   }
 
@@ -184,27 +216,29 @@ class CompareEnvironments extends Component {
                       className='table-column px-3'
                       style={{ width: featureNameWidth }}
                     >
-                      {p.projectFlag.description ? (
-                        <Tooltip
-                          title={
+                      <Tooltip
+                        title={
+                          <Row className={'no-wrap'}>
                             <div
                               style={{ wordWrap: 'break-word' }}
                               className='font-weight-medium'
                             >
-                              {p.projectFlag.name}
+                              {p.projectFlagLeft.name}
                             </div>
-                          }
-                        >
-                          {p.projectFlag.description}
-                        </Tooltip>
-                      ) : (
-                        <div
-                          style={{ wordWrap: 'break-word' }}
-                          className='font-weight-medium'
-                        >
-                          {p.projectFlag.name}
-                        </div>
-                      )}
+                            <Button
+                              onClick={() => {
+                                Utils.copyFeatureName(p.projectFlagLeft.name)
+                              }}
+                              theme='icon'
+                              className='ms-2 me-2'
+                            >
+                              <Icon name='copy' />
+                            </Button>
+                          </Row>
+                        }
+                      >
+                        {p.projectFlagLeft.description}
+                      </Tooltip>
                     </div>
                     <Permission
                       level='environment'
@@ -222,7 +256,7 @@ class CompareEnvironments extends Component {
                           fadeEnabled={fadeEnabled}
                           fadeValue={fadeValue}
                           environmentFlags={this.state.environmentLeftFlags}
-                          projectFlags={this.state.projectFlags}
+                          projectFlags={this.state.projectFlagsLeft}
                           permission={permission}
                           environmentId={this.state.environmentLeft}
                           projectId={this.props.projectId}
@@ -230,7 +264,7 @@ class CompareEnvironments extends Component {
                           canDelete={permission}
                           toggleFlag={toggleFlag}
                           removeFlag={removeFlag}
-                          projectFlag={p.projectFlag}
+                          projectFlag={p.projectFlagLeft}
                         />
                       )}
                     </Permission>
@@ -250,7 +284,7 @@ class CompareEnvironments extends Component {
                           fadeEnabled={fadeEnabled}
                           fadeValue={fadeValue}
                           environmentFlags={this.state.environmentRightFlags}
-                          projectFlags={this.state.projectFlags}
+                          projectFlags={this.state.projectFlagsRight}
                           permission={permission}
                           environmentId={this.state.environmentRight}
                           projectId={this.props.projectId}
@@ -258,7 +292,7 @@ class CompareEnvironments extends Component {
                           canDelete={permission}
                           toggleFlag={toggleFlag}
                           removeFlag={removeFlag}
-                          projectFlag={p.projectFlag}
+                          projectFlag={p.projectFlagRight}
                         />
                       )}
                     </Permission>
@@ -310,7 +344,7 @@ class CompareEnvironments extends Component {
                               <Flex className='flex-row'>
                                 <div
                                   className='table-column'
-                                  style={{ width: '120px' }}
+                                  style={{ width: '80px' }}
                                 >
                                   {
                                     ProjectStore.getEnvironment(
@@ -318,12 +352,12 @@ class CompareEnvironments extends Component {
                                     ).name
                                   }
                                 </div>
-                                <Flex className='table-column'>Value</Flex>
+                                <Flex className='table-column'></Flex>
                               </Flex>
                               <Flex className='flex-row'>
                                 <div
                                   className='table-column'
-                                  style={{ width: '120px' }}
+                                  style={{ width: '80px' }}
                                 >
                                   {
                                     ProjectStore.getEnvironment(
@@ -331,7 +365,7 @@ class CompareEnvironments extends Component {
                                     ).name
                                   }
                                 </div>
-                                <Flex className='table-column'>Value</Flex>
+                                <Flex className='table-column'></Flex>
                               </Flex>
                             </Row>
                           }
@@ -361,7 +395,7 @@ class CompareEnvironments extends Component {
                                 <Flex className='flex-row'>
                                   <div
                                     className='table-column'
-                                    style={{ width: '120px' }}
+                                    style={{ width: '80px' }}
                                   >
                                     {
                                       ProjectStore.getEnvironment(
@@ -374,7 +408,7 @@ class CompareEnvironments extends Component {
                                 <Flex className='flex-row'>
                                   <div
                                     className='table-column'
-                                    style={{ width: '120px' }}
+                                    style={{ width: '80px' }}
                                   >
                                     {
                                       ProjectStore.getEnvironment(
