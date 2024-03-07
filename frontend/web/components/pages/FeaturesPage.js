@@ -455,7 +455,7 @@ const FeaturesPage = class extends Component {
                                     this.getFilter(),
                                   )
                                 }
-                                items={projectFlags}
+                                items={projectFlags?.filter((v) => !v.ignore)}
                                 renderFooter={() => (
                                   <>
                                     <JSONReference
