@@ -1351,6 +1351,22 @@ const CreateFlag = class extends Component {
                                       data-test='identity_overrides'
                                       tabLabel='Identity Overrides'
                                     >
+                                      <InfoMessage className='mb-4 text-left faint'>
+                                        Identity overrides override feature
+                                        values for individual identities. The
+                                        overrides take priority over an segment
+                                        overrides and environment defaults.
+                                        Identity overrides will only apply when
+                                        you identify via the SDK.{' '}
+                                        <a
+                                          target='_blank'
+                                          href='https://docs.flagsmith.com/basic-features/managing-identities'
+                                          rel='noreferrer'
+                                        >
+                                          Check the Docs for more details
+                                        </a>
+                                        .
+                                      </InfoMessage>
                                       <FormGroup className='mb-4'>
                                         <PanelSearch
                                           id='users-list'
