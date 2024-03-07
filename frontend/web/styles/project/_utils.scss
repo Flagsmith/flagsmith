@@ -6,6 +6,17 @@
     clear: both;
     height: 0;
 }
+.hover-color-primary {
+    &:hover {
+        color: $primary;
+        >*{
+          color: $primary;
+        }
+        path {
+            fill: $primary;
+        }
+    }
+}
 .bg-secondary {
     background-color: $bt-brand-secondary;
 }
