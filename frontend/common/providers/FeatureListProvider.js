@@ -31,8 +31,8 @@ const FeatureListProvider = class extends React.Component {
       })
     })
 
-    this.listenTo(FeatureListStore, 'saved', () => {
-      this.props.onSave && this.props.onSave()
+    this.listenTo(FeatureListStore, 'saved', (isCreate) => {
+      this.props.onSave && this.props.onSave(isCreate)
     })
 
     this.listenTo(FeatureListStore, 'problem', () => {
