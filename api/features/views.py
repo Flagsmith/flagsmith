@@ -157,13 +157,19 @@ class FeatureViewSet(viewsets.ModelViewSet):
         if environment_id:
             page = self.paginate_queryset(queryset)
 
-            environment = Environment.objects.get(id=environment_id)
+            if not getattr(self, "environment", None):
+                self.environment = Environment.objects.get(id=environment_id)
+            q = Q(
+                feature_id__in=[feature.id for feature in page],
+                identity__isnull=True,
+                feature_segment__isnull=True,
+            )
             feature_states = FeatureState.objects.get_live_feature_states(
-                environment,
-                additional_filters=Q(feature_id__in=[feature.id for feature in page]),
+                self.environment,
+                additional_filters=q,
             ).select_related("feature_state_value", "feature")
 
-            self._feature_states = feature_states
+            self._feature_states = {fs.feature_id: fs for fs in feature_states}
 
         return queryset
 
@@ -196,7 +202,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 Project.objects.all(), pk=self.kwargs["project_pk"]
             ),
             user=self.request.user,
-            feature_states=getattr(self, "_feature_states", []),
+            feature_states=getattr(self, "_feature_states", {}),
         )
         if self.action == "list" and "environment" in self.request.query_params:
             environment = get_object_or_404(
