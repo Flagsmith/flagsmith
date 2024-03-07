@@ -113,8 +113,8 @@ const FeaturesPage = class extends Component {
         : this.state.tags.join(','),
   })
 
-  onSave = () => {
-    toast('Saved')
+  onSave = (isCreate) => {
+    toast(`${isCreate ? 'Created' : 'Updated'} Feature`)
   }
 
   onError = (error) => {
