@@ -88,3 +88,9 @@
   height: 16px;
   border-radius: 8px;
 }
+
+.truncated-tag {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
