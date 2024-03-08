@@ -38,6 +38,14 @@ info around achieving this in our [Javascript FAQ](/clients/javascript/#faqs).
 
 ### Real Time Flag Updates
 
+In our experience, most applications do not benefit a great deal from real time flag updates. In addition, and
+especially with client-side flags, thought needs to be given to ensuring features/UI widgets don't appear/disappear in
+real time due to flag changes.
+
+That being said, there are use-cases for real time flags. Using our
+[real-time flags service](/advanced-use/real-time-flags) negates the need to poll the API from the client SDK, which can
+significantly reduce API usage.
+
 ## Server Side
 
 ### Local Evaluation Mode
@@ -62,3 +70,6 @@ tolerate, and overriding the Flagsmith API URL within the SDK to point to your C
 Note that you almost certainly _don't_ want to cache the Get the Flags for an Identity.
 
 ### Edge Proxy
+
+Using the [Edge Proxy](/advanced-use/edge-proxy) can significantly reduce API usage. Again, consideration needs to be
+given to the caveats of running the Edge Proxy.
