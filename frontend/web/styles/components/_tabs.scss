@@ -19,6 +19,17 @@
   .tab-line {
     display: none;
   }
+  .hljs-container {
+    code {
+
+      padding-top: 80px;
+    }
+    .react-select {
+      position: absolute;
+      top:16px;
+      left:16px;
+    }
+  }
 }
 .dark {
   .tabs {

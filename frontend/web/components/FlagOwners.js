@@ -7,6 +7,7 @@ import { close } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import { getProjectFlag } from 'common/services/useProjectFlag'
 import { getStore } from 'common/store'
+import SettingsButton from './SettingsButton'
 
 class TheComponent extends Component {
   state = {}
@@ -56,17 +57,13 @@ class TheComponent extends Component {
           const ownerUsers = this.getOwners(users, this.state.owners || [])
           const res = (
             <div>
-              <Row
-                className='clickable'
+              <SettingsButton
                 onClick={() => {
                   if (hasPermission) this.setState({ showUsers: true })
                 }}
               >
-                <label className='cols-sm-2 control-label'>
-                  Assigned users{' '}
-                  <Icon name='setting' width={20} fill={'#656D7B'} />
-                </label>
-              </Row>
+                Assigned users
+              </SettingsButton>
               <Row style={{ rowGap: '12px' }}>
                 {hasPermission &&
                   ownerUsers.map((u) => (

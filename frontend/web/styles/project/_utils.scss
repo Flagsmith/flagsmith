@@ -6,6 +6,17 @@
     clear: both;
     height: 0;
 }
+.hover-color-primary {
+    &:hover {
+        color: $primary;
+        >*{
+          color: $primary;
+        }
+        path {
+            fill: $primary;
+        }
+    }
+}
 .bg-secondary {
     background-color: $bt-brand-secondary;
 }
@@ -162,15 +173,14 @@
 }
 .dark {
     .text-body {
-        color: white;
+        color: white !important;
         >path{
-            fill: white;
+            fill: white !important;
         }
     }
     .bg-primary {
         background: $bt-brand-primary-dark !important;
     }
-
 }
 
 .link-unstyled {
