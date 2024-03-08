@@ -17,6 +17,7 @@ from django_lifecycle import (
     AFTER_CREATE,
     AFTER_SAVE,
     AFTER_UPDATE,
+    BEFORE_DELETE,
     LifecycleModel,
     LifecycleModelMixin,
     hook,
@@ -39,6 +40,7 @@ from features.versioning.tasks import trigger_update_version_webhooks
 from ...versioning.models import EnvironmentFeatureVersion
 from .exceptions import (
     CannotApproveOwnChangeRequest,
+    ChangeRequestDeletionError,
     ChangeRequestNotApprovedError,
 )
 
@@ -63,10 +65,14 @@ class ChangeRequest(
 
     title = models.CharField(max_length=500)
     description = models.TextField(blank=True, null=True)
+
+    # We allow null here so that deleting users does not cascade to deleting change
+    # requests which can be used for historical purposes.
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="change_requests",
+        null=True,
     )
 
     environment = models.ForeignKey(
@@ -227,6 +233,16 @@ class ChangeRequest(
                 create_feature_state_updated_by_change_request_audit_log.delay(
                     args=(feature_state.id,)
                 )
+
+    @hook(BEFORE_DELETE)
+    def prevent_change_request_delete_if_committed(self) -> None:
+        # In the workflows-logic module, we prevent change requests from being
+        # deleted but, since this can have unexpected effects on published
+        # feature states, we also want to prevent it at the ORM level.
+        if self.committed_at and not self.environment.deleted_at:
+            raise ChangeRequestDeletionError(
+                "Cannot delete a Change Request that has been committed."
+            )
 
 
 class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factory()):
