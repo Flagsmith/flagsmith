@@ -4286,7 +4286,7 @@ test = ["pytest"]
 
 [[package]]
 name = "workflows-logic"
-version = "1.3.0"
+version = "2.0.0"
 description = "Workflows logic plugin for Flagsmith application."
 optional = false
 python-versions = "^3.10"
@@ -4300,8 +4300,8 @@ flagsmith_task_processor = {git = "https://github.com/Flagsmith/flagsmith-task-p
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
-reference = "fix/duplicate-error-serializer"
-resolved_reference = "482863ba106807bd8d560d2948fdfee83346ffa7"
+reference = "v2.0.0"
+resolved_reference = "c13a413cb7721d7b34af409e8ea4ea17205c9aea"
 
 [[package]]
 name = "wrapt"
@@ -4521,4 +4521,4 @@ requests = ">=2.7,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "7de6f0f7e681af3e806bf9a41556a4a0ee3674c3bccd7a31e786acf6802f7cd6"
+content-hash = "43f359304fb98209207e8cb641a0a9c2cdc0794695d9cd306dcfe314d04766fc"
