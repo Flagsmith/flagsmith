@@ -10,6 +10,7 @@ from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from audit.constants import SEGMENT_DELETED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
@@ -174,6 +175,32 @@ def test_audit_log_created_when_segment_updated(project, segment, client):
     assert (
         AuditLog.objects.filter(
             related_object_type=RelatedObjectType.SEGMENT.name
+        ).count()
+        == 1
+    )
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_audit_log_created_when_segment_deleted(project, segment, client):
+    # Given
+    segment = Segment.objects.create(name="Test segment", project=project)
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project.id, segment.id],
+    )
+
+    # When
+    res = client.delete(url, content_type="application/json")
+
+    # Then
+    assert res.status_code == status.HTTP_204_NO_CONTENT
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.SEGMENT.name,
+            log=SEGMENT_DELETED_MESSAGE % segment.name,
         ).count()
         == 1
     )

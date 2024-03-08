@@ -11,7 +11,11 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from flag_engine.segments import constants
 
-from audit.constants import SEGMENT_CREATED_MESSAGE, SEGMENT_UPDATED_MESSAGE
+from audit.constants import (
+    SEGMENT_CREATED_MESSAGE,
+    SEGMENT_DELETED_MESSAGE,
+    SEGMENT_UPDATED_MESSAGE,
+)
 from audit.related_object_type import RelatedObjectType
 from features.models import Feature
 from projects.models import Project
@@ -81,6 +85,9 @@ class Segment(
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         return SEGMENT_UPDATED_MESSAGE % self.name
+
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+        return SEGMENT_DELETED_MESSAGE % self.name
 
     def _get_project(self):
         return self.project
