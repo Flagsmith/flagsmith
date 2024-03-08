@@ -3,7 +3,6 @@ import typing
 from copy import deepcopy
 
 from core.models import (
-    AbstractBaseExportableModel,
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
@@ -87,7 +86,7 @@ class Segment(
         return self.project
 
 
-class SegmentRule(AbstractBaseExportableModel):
+class SegmentRule(SoftDeleteExportableModel):
     ALL_RULE = "ALL"
     ANY_RULE = "ANY"
     NONE_RULE = "NONE"
@@ -132,7 +131,7 @@ class SegmentRule(AbstractBaseExportableModel):
 
 
 class Condition(
-    AbstractBaseExportableModel, abstract_base_auditable_model_factory(["uuid"])
+    SoftDeleteExportableModel, abstract_base_auditable_model_factory(["uuid"])
 ):
     history_record_class_path = "segments.models.HistoricalCondition"
     related_object_type = RelatedObjectType.SEGMENT
