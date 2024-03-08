@@ -23,9 +23,16 @@ const HomePage = class extends React.Component {
 
   constructor(props, context) {
     super(props, context)
+
+    // Note that we are explicitly setting marketing consent to true
+    // here to reduce the complexity of the change. This is due to
+    // the addition of wording in our ToS and the move from Pipedrive
+    // to Hubspot.
+    // TODO: this can probably all be removed from the FE and the BE
+    // can handle always setting the marketing consent.
+    API.setCookie('marketing_consent_given', 'true')
     this.state = {
-      marketing_consent_given:
-        API.getCookie('marketing_consent_given') === 'true',
+      marketing_consent_given: true
     }
   }
 
@@ -437,216 +444,193 @@ const HomePage = class extends React.Component {
                                     </Link>
                                   </Row>
                                 )}
+                              </div>
+                            )}
+                          </React.Fragment>
+                        ) : (
+                            <React.Fragment>
+                              <Card className='mb-3'>
+                                {!!oauths.length && (
+                                    <div className='row mb-4'>{oauths}</div>
+                                )}
 
-                                <div className='mt-4 text-center text-small text-muted'>
-                                  By signing up you agree to our{' '}
-                                  <a
+                                {!preventEmailPassword && (
+                                    <form
+                                        id='form'
+                                        name='form'
+                                        onSubmit={(e) => {
+                                          Utils.preventDefault(e)
+                                          const isInvite =
+                                              document.location.href.indexOf(
+                                                  'invite',
+                                              ) !== -1
+                                          register(
+                                              {
+                                                email,
+                                                first_name,
+                                                last_name,
+                                                marketing_consent_given: this.state.marketing_consent_given,
+                                                password,
+                                              },
+                                              isInvite,
+                                          )
+                                        }}
+                                    >
+                                      {error && (
+                                          <FormGroup>
+                                            <div
+                                                id='error-alert'
+                                                className='font-weight-medium'
+                                            >
+                                              <ErrorMessage
+                                                  error={
+                                                    typeof AccountStore.error ===
+                                                    'string'
+                                                        ? AccountStore.error
+                                                        : 'Please check your details and try again'
+                                                  }
+                                              />
+                                            </div>
+                                          </FormGroup>
+                                      )}
+                                      {isInvite && (
+                                          <div className='notification flex-row'>
+                                      <span className='notification__icon mb-2'>
+                                        <IonIcon
+                                            icon={informationCircleOutline}
+                                        />
+                                      </span>
+                                            <p className='notification__text pl-3'>
+                                              Create an account to accept your invite
+                                            </p>
+                                          </div>
+                                      )}
+                                      <fieldset id='details' className=''>
+                                        <InputGroup
+                                            title='First Name'
+                                            data-test='firstName'
+                                            inputProps={{
+                                              className: 'full-width',
+                                              error: error && error.first_name,
+                                              name: 'firstName',
+                                            }}
+                                            onChange={(e) => {
+                                              this.setState({
+                                                first_name:
+                                                    Utils.safeParseEventValue(e),
+                                              })
+                                            }}
+                                            className='input-default full-width'
+                                            type='text'
+                                            name='firstName'
+                                            id='firstName'
+                                        />
+                                        <InputGroup
+                                            title='Last Name'
+                                            data-test='lastName'
+                                            inputProps={{
+                                              className: 'full-width',
+                                              error: error && error.last_name,
+                                              name: 'lastName',
+                                            }}
+                                            onChange={(e) => {
+                                              this.setState({
+                                                last_name:
+                                                    Utils.safeParseEventValue(e),
+                                              })
+                                            }}
+                                            className='input-default full-width'
+                                            type='text'
+                                            name='lastName'
+                                            id='lastName'
+                                        />
+                                        <InputGroup
+                                            title='Email Address'
+                                            data-test='email'
+                                            inputProps={{
+                                              className: 'full-width',
+                                              error: error && error.email,
+                                              name: 'email',
+                                            }}
+                                            onChange={(e) => {
+                                              this.setState({
+                                                email: Utils.safeParseEventValue(e),
+                                              })
+                                            }}
+                                            className='input-default full-width'
+                                            type='email'
+                                            name='email'
+                                            id='email'
+                                        />
+                                        <InputGroup
+                                            title='Password'
+                                            data-test='password'
+                                            inputProps={{
+                                              className: 'full-width',
+                                              error: error && error.password,
+                                              name: 'password',
+                                            }}
+                                            onChange={(e) => {
+                                              this.setState({
+                                                password:
+                                                    Utils.safeParseEventValue(e),
+                                              })
+                                            }}
+                                            className='input-default full-width'
+                                            type='password'
+                                            name='password'
+                                            id='password'
+                                        />
+                                        <div className='form-cta'>
+                                          <Button
+                                              data-test='signup-btn'
+                                              name='signup-btn'
+                                              disabled={isLoading || isSaving}
+                                              className='px-4 mt-3 full-width'
+                                              type='submit'
+                                          >
+                                            Create Account
+                                          </Button>
+                                        </div>
+                                      </fieldset>
+                                    </form>
+                                )}
+                              </Card>
+                              <Row className='justify-content-center'>
+                                Have an account?{' '}
+                                <Button
+                                    theme='text'
+                                    className='ml-1 fw-bold'
+                                    onClick={() => {
+                                      window.location.href = `/login${redirect}`
+                                    }}
+                                >
+                                  Log in
+                                </Button>
+                              </Row>
+                              <div className='mt-4 text-center text-small text-muted'>
+                                By signing up you agree to our{' '}
+                                <a
                                     style={{ opacity: 0.8 }}
                                     target='_blank'
                                     className='text-small'
                                     href='https://flagsmith.com/terms-of-service/'
                                     rel='noreferrer'
-                                  >
-                                    Terms of Service
-                                  </a>{' '}
-                                  and{' '}
-                                  <a
+                                >
+                                  Terms of Service
+                                </a>{' '}
+                                and{' '}
+                                <a
                                     style={{ opacity: 0.8 }}
                                     target='_blank'
                                     className='text-small'
                                     href='https://flagsmith.com/privacy-policy/'
                                     rel='noreferrer'
-                                  >
-                                    Privacy Policy
-                                  </a>
-                                </div>
-                              </div>
-                            )}
-                          </React.Fragment>
-                        ) : (
-                          <React.Fragment>
-                            <Card className='mb-3'>
-                              {!!oauths.length && (
-                                <div className='row mb-4'>{oauths}</div>
-                              )}
-
-                              {!preventEmailPassword && (
-                                <form
-                                  id='form'
-                                  name='form'
-                                  onSubmit={(e) => {
-                                    Utils.preventDefault(e)
-                                    const isInvite =
-                                      document.location.href.indexOf(
-                                        'invite',
-                                      ) !== -1
-                                    register(
-                                      {
-                                        email,
-                                        first_name,
-                                        last_name,
-                                        marketing_consent_given:
-                                          this.state.marketing_consent_given,
-                                        password,
-                                      },
-                                      isInvite,
-                                    )
-                                  }}
                                 >
-                                  {error && (
-                                    <FormGroup>
-                                      <div
-                                        id='error-alert'
-                                        className='font-weight-medium'
-                                      >
-                                        <ErrorMessage
-                                          error={
-                                            typeof AccountStore.error ===
-                                            'string'
-                                              ? AccountStore.error
-                                              : 'Please check your details and try again'
-                                          }
-                                        />
-                                      </div>
-                                    </FormGroup>
-                                  )}
-                                  {isInvite && (
-                                    <div className='notification flex-row'>
-                                      <span className='notification__icon mb-2'>
-                                        <IonIcon
-                                          icon={informationCircleOutline}
-                                        />
-                                      </span>
-                                      <p className='notification__text pl-3'>
-                                        Create an account to accept your invite
-                                      </p>
-                                    </div>
-                                  )}
-                                  <fieldset id='details' className=''>
-                                    <InputGroup
-                                      title='First Name'
-                                      data-test='firstName'
-                                      inputProps={{
-                                        className: 'full-width',
-                                        error: error && error.first_name,
-                                        name: 'firstName',
-                                      }}
-                                      onChange={(e) => {
-                                        this.setState({
-                                          first_name:
-                                            Utils.safeParseEventValue(e),
-                                        })
-                                      }}
-                                      className='input-default full-width'
-                                      type='text'
-                                      name='firstName'
-                                      id='firstName'
-                                    />
-                                    <InputGroup
-                                      title='Last Name'
-                                      data-test='lastName'
-                                      inputProps={{
-                                        className: 'full-width',
-                                        error: error && error.last_name,
-                                        name: 'lastName',
-                                      }}
-                                      onChange={(e) => {
-                                        this.setState({
-                                          last_name:
-                                            Utils.safeParseEventValue(e),
-                                        })
-                                      }}
-                                      className='input-default full-width'
-                                      type='text'
-                                      name='lastName'
-                                      id='lastName'
-                                    />
-                                    <InputGroup
-                                      title='Email Address'
-                                      data-test='email'
-                                      inputProps={{
-                                        className: 'full-width',
-                                        error: error && error.email,
-                                        name: 'email',
-                                      }}
-                                      onChange={(e) => {
-                                        this.setState({
-                                          email: Utils.safeParseEventValue(e),
-                                        })
-                                      }}
-                                      className='input-default full-width'
-                                      type='email'
-                                      name='email'
-                                      id='email'
-                                    />
-                                    <InputGroup
-                                      title='Password'
-                                      data-test='password'
-                                      inputProps={{
-                                        className: 'full-width',
-                                        error: error && error.password,
-                                        name: 'password',
-                                      }}
-                                      onChange={(e) => {
-                                        this.setState({
-                                          password:
-                                            Utils.safeParseEventValue(e),
-                                        })
-                                      }}
-                                      className='input-default full-width'
-                                      type='password'
-                                      name='password'
-                                      id='password'
-                                    />
-                                    {Utils.getFlagsmithHasFeature(
-                                      'mailing_list',
-                                    ) && (
-                                      <div>
-                                        <Checkbox
-                                          label={
-                                            'Yes, I would like to signup for the twice monthly newsletter (optional)'
-                                          }
-                                          onChange={() => {
-                                            this.setState({
-                                              marketing_consent_given:
-                                                !this.state
-                                                  .marketing_consent_given,
-                                            })
-                                          }}
-                                          checked={
-                                            this.state.marketing_consent_given
-                                          }
-                                        />
-                                      </div>
-                                    )}
-                                    <div className='form-cta'>
-                                      <Button
-                                        data-test='signup-btn'
-                                        name='signup-btn'
-                                        disabled={isLoading || isSaving}
-                                        className='px-4 mt-3 full-width'
-                                        type='submit'
-                                      >
-                                        Create Account
-                                      </Button>
-                                    </div>
-                                  </fieldset>
-                                </form>
-                              )}
-                            </Card>
-                            <Row className='justify-content-center'>
-                              Have an account?{' '}
-                              <Button
-                                theme='text'
-                                className='ml-1 fw-bold'
-                                onClick={() => {
-                                  window.location.href = `/login${redirect}`
-                                }}
-                              >
-                                Log in
-                              </Button>
-                            </Row>
-                          </React.Fragment>
+                                  Privacy Policy
+                                </a>
+                              </div>
+                            </React.Fragment>
                         )}
                       </div>
                     )}
