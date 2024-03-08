@@ -51,11 +51,10 @@ if settings.SAML_INSTALLED:
     urlpatterns.append(path("api/v1/auth/saml/", include("saml.urls")))
 
 if settings.WORKFLOWS_LOGIC_INSTALLED:
-    module_path = settings.WORKFLOWS_LOGIC_MODULE_PATH
-    workflow_views = importlib.import_module(f"{module_path}.views")
+    workflow_views = importlib.import_module("workflows_logic.views")
     urlpatterns.extend(
         [
-            path("api/v1/features/workflows/", include(f"{module_path}.urls")),
+            path("api/v1/features/workflows/", include("workflows_logic.urls")),
             path(
                 "api/v1/environments/<str:environment_api_key>/create-change-request/",
                 workflow_views.create_change_request,

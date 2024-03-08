@@ -336,9 +336,7 @@ class ChangeRequestGroupAssignment(AbstractBaseExportableModel, LifecycleModel):
     @hook(AFTER_SAVE)
     def notify_group(self):
         if settings.WORKFLOWS_LOGIC_INSTALLED:
-            workflows_tasks = importlib.import_module(
-                f"{settings.WORKFLOWS_LOGIC_MODULE_PATH}.tasks"
-            )
+            workflows_tasks = importlib.import_module("workflows_logic.tasks")
             workflows_tasks.notify_group_of_change_request_assignment.delay(
                 kwargs={"change_request_group_assignment_id": self.id}
             )
