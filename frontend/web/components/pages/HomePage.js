@@ -444,29 +444,6 @@ const HomePage = class extends React.Component {
                                     </Link>
                                   </Row>
                                 )}
-
-                                <div className='mt-4 text-center text-small text-muted'>
-                                  By signing up you agree to our{' '}
-                                  <a
-                                    style={{ opacity: 0.8 }}
-                                    target='_blank'
-                                    className='text-small'
-                                    href='https://flagsmith.com/terms-of-service/'
-                                    rel='noreferrer'
-                                  >
-                                    Terms of Service
-                                  </a>{' '}
-                                  and{' '}
-                                  <a
-                                    style={{ opacity: 0.8 }}
-                                    target='_blank'
-                                    className='text-small'
-                                    href='https://flagsmith.com/privacy-policy/'
-                                    rel='noreferrer'
-                                  >
-                                    Privacy Policy
-                                  </a>
-                                </div>
                               </div>
                             )}
                           </React.Fragment>
