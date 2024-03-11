@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.103.3](https://github.com/Flagsmith/flagsmith/compare/v2.103.2...v2.103.3) (2024-03-11)
+
+
+### Bug Fixes
+
+* **audit:** add segment deleted audit log ([#3585](https://github.com/Flagsmith/flagsmith/issues/3585)) ([e2b8a92](https://github.com/Flagsmith/flagsmith/commit/e2b8a9287269133f3a19fd0a51fc8bb53a63551b))
+* poetry audit ([#3592](https://github.com/Flagsmith/flagsmith/issues/3592)) ([c2155b2](https://github.com/Flagsmith/flagsmith/commit/c2155b2c2e76e44b5fee09a66f4de6e52aa93fe9))
+* remove duplicate tos ([#3589](https://github.com/Flagsmith/flagsmith/issues/3589)) ([0f2506e](https://github.com/Flagsmith/flagsmith/commit/0f2506e7dc85948e0aa690cd6e8b35073f4df763))
+
 ## [2.103.2](https://github.com/Flagsmith/flagsmith/compare/v2.103.1...v2.103.2) (2024-03-08)
 
 
