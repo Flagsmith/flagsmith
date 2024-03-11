@@ -911,17 +911,10 @@ if SAML_INSTALLED:
     )
 
 
-# Additional functionality needed for using workflows in Flagsmith SaaS
-# python module path to the workflows logic module, e.g. "path.to.workflows"
-WORKFLOWS_LOGIC_MODULE_PATH = env(
-    "WORKFLOWS_LOGIC_MODULE_PATH", "features.workflows.logic"
-)
-WORKFLOWS_LOGIC_INSTALLED = (
-    importlib.util.find_spec(WORKFLOWS_LOGIC_MODULE_PATH) is not None
-)
+WORKFLOWS_LOGIC_INSTALLED = importlib.util.find_spec("workflows_logic") is not None
 
 if WORKFLOWS_LOGIC_INSTALLED:
-    INSTALLED_APPS.append(WORKFLOWS_LOGIC_MODULE_PATH)
+    INSTALLED_APPS.append("workflows_logic")
 
     STALE_FLAGS_MODULE_PATH = f"{WORKFLOWS_LOGIC_MODULE_PATH}.stale_flags"
     if importlib.util.find_spec(STALE_FLAGS_MODULE_PATH) is not None:

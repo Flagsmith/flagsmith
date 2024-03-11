@@ -1,7 +1,6 @@
 import json
 import urllib
 from unittest import mock
-from unittest.case import TestCase
 
 import pytest
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER, STRING
@@ -27,265 +26,503 @@ from environments.permissions.constants import (
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import Feature, FeatureSegment, FeatureState
 from integrations.amplitude.models import AmplitudeConfiguration
-from organisations.models import Organisation, OrganisationRole
+from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
-from util.tests import Helper
 
 
-@pytest.mark.django_db
-class IdentityTestCase(TestCase):
-    identifier = "user1"
-    put_template = '{ "enabled" : "%r" }'
-    post_template = '{ "feature" : "%s", "enabled" : "%r" }'
-    feature_states_url = "/api/v1/environments/%s/identities/%s/featurestates/"
-    feature_states_detail_url = feature_states_url + "%d/"
-    identities_url = "/api/v1/environments/%s/identities/%s/"
+def test_should_return_identities_list_when_requested(
+    environment: Environment,
+    identity: Identity,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-identities-detail",
+        args=[environment.api_key, identity.id],
+    )
 
-    def setUp(self):
-        self.client = APIClient()
-        user = Helper.create_ffadminuser()
-        self.client.force_authenticate(user=user)
+    # When
+    response = admin_client.get(url)
 
-        self.organisation = Organisation.objects.create(name="Test Org")
-        user.add_organisation(
-            self.organisation, OrganisationRole.ADMIN
-        )  # admin to bypass perms
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["environment"] == environment.id
+    assert response.data["id"] == identity.id
+    assert response.data["identifier"] == identity.identifier
 
-        self.project = Project.objects.create(
-            name="Test project", organisation=self.organisation
-        )
-        self.environment = Environment.objects.create(
-            name="Test Environment", project=self.project
-        )
-        self.identity = Identity.objects.create(
-            identifier=self.identifier, environment=self.environment
-        )
 
-    def test_should_return_identities_list_when_requested(self):
-        # Given - set up data
+def test_should_create_identity_feature_when_post(
+    feature: Feature,
+    admin_client: APIClient,
+    identity: Identity,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:identity-featurestates-list",
+        args=[identity.environment.api_key, identity.id],
+    )
 
-        # When
-        response = self.client.get(
-            self.identities_url % (self.identity.environment.api_key, self.identity.id)
-        )
+    # When
+    response = admin_client.post(
+        url,
+        data=json.dumps({"feature": feature.id, "enabled": True}),
+        content_type="application/json",
+    )
 
-        # Then
-        assert response.status_code == status.HTTP_200_OK
+    # Then
+    identity_features = identity.identity_features
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.data["feature"] == feature.id
+    assert response.data["identity"] == identity.id
+    assert identity_features.count() == 1
 
-    def test_should_create_identity_feature_when_post(self):
-        # Given
-        feature = Feature.objects.create(name="feature1", project=self.project)
 
-        # When
-        response = self.client.post(
-            self.feature_states_url
-            % (self.identity.environment.api_key, self.identity.id),
-            data=self.post_template % (feature.id, True),
-            content_type="application/json",
-        )
+def test_should_return_400_when_duplicate_identity_feature_is_posted(
+    feature: Feature,
+    admin_client: APIClient,
+    identity: Identity,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:identity-featurestates-list",
+        args=[identity.environment.api_key, identity.id],
+    )
 
-        # Then
-        identity_features = self.identity.identity_features
-        assert response.status_code == status.HTTP_201_CREATED
-        assert identity_features.count() == 1
+    # When
+    initial_response = admin_client.post(
+        url,
+        data=json.dumps({"feature": feature.id, "enabled": True}),
+        content_type="application/json",
+    )
+    second_response = admin_client.post(
+        url,
+        data=json.dumps({"feature": feature.id, "enabled": True}),
+        content_type="application/json",
+    )
 
-    def test_should_return_BadRequest_when_duplicate_identityFeature_is_posted(self):
-        # Given
-        feature = Feature.objects.create(name="feature2", project=self.project)
+    # Then
+    assert initial_response.status_code == status.HTTP_201_CREATED
+    assert second_response.status_code == status.HTTP_400_BAD_REQUEST
+    identity_feature = identity.identity_features
+    assert identity_feature.count() == 1
 
-        # When
-        initial_response = self.client.post(
-            self.feature_states_url
-            % (self.identity.environment.api_key, self.identity.id),
-            data=self.post_template % (feature.id, True),
-            content_type="application/json",
-        )
-        second_response = self.client.post(
-            self.feature_states_url
-            % (self.identity.environment.api_key, self.identity.id),
-            data=self.post_template % (feature.id, True),
-            content_type="application/json",
-        )
 
-        # Then
-        identity_feature = self.identity.identity_features
-        assert initial_response.status_code == status.HTTP_201_CREATED
-        assert second_response.status_code == status.HTTP_400_BAD_REQUEST
-        assert identity_feature.count() == 1
+def test_should_change_enabled_state_when_put(
+    feature: Feature,
+    admin_client: APIClient,
+    identity: Identity,
+    environment: Environment,
+) -> None:
+    # Given
+    feature_state = FeatureState.objects.create(
+        feature=feature,
+        identity=identity,
+        enabled=False,
+        environment=environment,
+    )
 
-    def test_should_change_enabled_state_when_put(self):
-        # Given
-        feature = Feature.objects.create(name="feature1", project=self.project)
-        feature_state = FeatureState.objects.create(
-            feature=feature,
-            identity=self.identity,
-            enabled=False,
-            environment=self.environment,
-        )
+    url = reverse(
+        "api-v1:environments:identity-featurestates-detail",
+        args=[environment.api_key, identity.id, feature_state.id],
+    )
+    # When
+    response = admin_client.put(
+        url,
+        data=json.dumps({"enabled": True}),
+        content_type="application/json",
+    )
+    feature_state.refresh_from_db()
 
-        # When
-        response = self.client.put(
-            self.feature_states_detail_url
-            % (self.identity.environment.api_key, self.identity.id, feature_state.id),
-            data=self.put_template % True,
-            content_type="application/json",
-        )
-        feature_state.refresh_from_db()
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert feature_state.enabled
 
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-        assert feature_state.enabled
 
-    def test_should_remove_identity_feature_when_delete(self):
-        # Given
-        feature_one = Feature.objects.create(name="feature1", project=self.project)
-        feature_two = Feature.objects.create(name="feature2", project=self.project)
-        identity_feature_one = FeatureState.objects.create(
-            feature=feature_one,
-            identity=self.identity,
-            enabled=False,
-            environment=self.environment,
-        )
-        FeatureState.objects.create(
-            feature=feature_two,
-            identity=self.identity,
-            enabled=True,
-            environment=self.environment,
-        )
+def test_should_remove_identity_feature_when_delete(
+    admin_client: APIClient,
+    feature: Feature,
+    project: Project,
+    identity: Identity,
+    environment: Environment,
+) -> None:
+    # Given
+    feature2 = Feature.objects.create(name="feature2", project=project)
+    identity_feature1 = FeatureState.objects.create(
+        feature=feature,
+        identity=identity,
+        enabled=False,
+        environment=environment,
+    )
+    FeatureState.objects.create(
+        feature=feature2,
+        identity=identity,
+        enabled=True,
+        environment=environment,
+    )
 
-        # When
-        self.client.delete(
-            self.feature_states_detail_url
-            % (
-                self.identity.environment.api_key,
-                self.identity.id,
-                identity_feature_one.id,
-            ),
-            content_type="application/json",
-        )
+    url = reverse(
+        "api-v1:environments:identity-featurestates-detail",
+        args=[environment.api_key, identity.id, identity_feature1.id],
+    )
 
-        # Then
-        identity_features = FeatureState.objects.filter(identity=self.identity)
-        assert identity_features.count() == 1
+    # When
+    admin_client.delete(url, content_type="application/json")
 
-    def test_can_search_for_identities(self):
-        # Given
-        Identity.objects.create(identifier="user2", environment=self.environment)
-        base_url = reverse(
-            "api-v1:environments:environment-identities-list",
-            args=[self.environment.api_key],
-        )
-        url = "%s?q=%s" % (base_url, self.identifier)
+    # Then
+    identity_features = FeatureState.objects.filter(identity=identity)
+    assert identity_features.count() == 1
 
-        # When
-        res = self.client.get(url)
 
-        # Then
-        assert res.status_code == status.HTTP_200_OK
+def test_can_search_for_identities(
+    admin_client: APIClient,
+    identity: Identity,
+    environment: Environment,
+) -> None:
+    # Given
+    base_url = reverse(
+        "api-v1:environments:environment-identities-list",
+        args=[environment.api_key],
+    )
+    url = f"{base_url}?q={identity.identifier}"
 
-        # and - only identity matching search appears
-        assert res.json().get("count") == 1
+    # Identity for non-inclusion.
+    Identity.objects.create(identifier="identifier2", environment=environment)
 
-    def test_can_search_for_identities_with_exact_match(self):
-        # Given
-        identity_to_return = Identity.objects.create(
-            identifier="1", environment=self.environment
-        )
-        Identity.objects.create(identifier="12", environment=self.environment)
-        Identity.objects.create(identifier="121", environment=self.environment)
-        base_url = reverse(
-            "api-v1:environments:environment-identities-list",
-            args=[self.environment.api_key],
-        )
-        url = "%s?%s" % (base_url, urllib.parse.urlencode({"q": '"1"'}))
+    # When
+    response = admin_client.get(url)
 
-        # When
-        res = self.client.get(url)
+    # Then
+    assert response.status_code == status.HTTP_200_OK
 
-        # Then
-        assert res.status_code == status.HTTP_200_OK
+    # Only identity matching search appears.
+    assert response.data["count"] == 1
+    assert response.data["results"][0]["identifier"] == identity.identifier
 
-        # and - only identity matching search appears
-        assert res.json().get("count") == 1
-        assert res.json()["results"][0]["id"] == identity_to_return.id
 
-    def test_search_is_case_insensitive(self):
-        # Given
-        Identity.objects.create(identifier="user2", environment=self.environment)
-        base_url = reverse(
-            "api-v1:environments:environment-identities-list",
-            args=[self.environment.api_key],
-        )
-        url = "%s?q=%s" % (base_url, self.identifier.upper())
+def test_can_search_for_identities_with_exact_match(
+    environment: Environment,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    # Note that the idenifiers all have the number 1, but only the
+    # exact match will be returned due to the quotes in the query.
+    identity_to_return = Identity.objects.create(
+        identifier="1", environment=environment
+    )
+    Identity.objects.create(identifier="12", environment=environment)
+    Identity.objects.create(identifier="121", environment=environment)
+    base_url = reverse(
+        "api-v1:environments:environment-identities-list",
+        args=[environment.api_key],
+    )
+    path_encoded = urllib.parse.urlencode({"q": '"1"'})
+    url = f"{base_url}?{path_encoded}"
 
-        # When
-        res = self.client.get(url)
+    # When
+    response = admin_client.get(url)
 
-        # Then
-        assert res.status_code == status.HTTP_200_OK
+    # Then
+    assert response.status_code == status.HTTP_200_OK
 
-        # and - identity matching search appears
-        assert res.json().get("count") == 1
+    # Only identity matching search appears
+    assert response.data["count"] == 1
+    assert response.data["results"][0]["id"] == identity_to_return.id
 
-    def test_no_identities_returned_if_search_matches_none(self):
-        # Given
-        base_url = reverse(
-            "api-v1:environments:environment-identities-list",
-            args=[self.environment.api_key],
-        )
-        url = "%s?q=%s" % (base_url, "some invalid search string")
 
-        # When
-        res = self.client.get(url)
+def test_search_identities_is_case_insensitive(
+    identity: Identity,
+    environment: Environment,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    base_url = reverse(
+        "api-v1:environments:environment-identities-list",
+        args=[environment.api_key],
+    )
+    assert identity.identifier != identity.identifier.upper()
+    url = f"{base_url}?q={identity.identifier.upper()}"
 
-        # Then
-        assert res.status_code == status.HTTP_200_OK
+    # When
+    response = admin_client.get(url)
 
-        # and
-        assert res.json().get("count") == 0
+    # Then
+    assert response.status_code == status.HTTP_200_OK
 
-    def test_search_identities_still_allows_paging(self):
-        # Given
-        self._create_n_identities(10)
-        base_url = reverse(
-            "api-v1:environments:environment-identities-list",
-            args=[self.environment.api_key],
-        )
-        url = "%s?q=%s&page_size=%s" % (base_url, "user", "10")
+    # and - identity matching search appears
+    assert response.data["count"] == 1
 
-        res1 = self.client.get(url)
-        second_page = res1.json().get("next")
 
-        # When
-        res2 = self.client.get(second_page)
+def test_no_identities_returned_if_search_matches_none(
+    environment: Environment,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    base_url = reverse(
+        "api-v1:environments:environment-identities-list",
+        args=[environment.api_key],
+    )
+    url = "%s?q=%s" % (base_url, "some invalid search string")
 
-        # Then
-        assert res2.status_code == status.HTTP_200_OK
+    # When
+    response = admin_client.get(url)
 
-        # and
-        assert res2.json().get("results")
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["count"] == 0
 
-    def _create_n_identities(self, n):
-        for i in range(2, n + 2):
-            identifier = "user%d" % i
-            Identity.objects.create(identifier=identifier, environment=self.environment)
 
-    def test_can_delete_identity(self):
-        # Given
-        url = reverse(
-            "api-v1:environments:environment-identities-detail",
-            args=[self.environment.api_key, self.identity.id],
-        )
+def test_search_identities_still_allows_paging(
+    environment: Environment,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    for i in range(12):
+        identifier = f"user.{i}"
+        Identity.objects.create(identifier=identifier, environment=environment)
+    base_url = reverse(
+        "api-v1:environments:environment-identities-list",
+        args=[environment.api_key],
+    )
+    url = f"{base_url}?q=user&page_size=10"
 
-        # When
-        res = self.client.delete(url)
+    response1 = admin_client.get(url)
+    second_page = response1.data["next"]
 
-        # Then
-        assert res.status_code == status.HTTP_204_NO_CONTENT
+    # When
+    response2 = admin_client.get(second_page)
 
-        # and
-        assert not Identity.objects.filter(id=self.identity.id).exists()
+    # Then
+    assert response2.status_code == status.HTTP_200_OK
+    assert response2.data["results"]
+
+
+def test_can_delete_identity(
+    environment: Environment,
+    admin_client: APIClient,
+    identity: Identity,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-identities-detail",
+        args=[environment.api_key, identity.id],
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not Identity.objects.filter(id=identity.id).exists()
+
+
+def test_identities_endpoint_returns_all_feature_states_for_identity_if_feature_not_provided(
+    identity: Identity,
+    environment: Environment,
+    api_client: APIClient,
+) -> None:
+    # Given
+    base_url = reverse("api-v1:sdk-identities")
+    url = base_url + "?identifier=" + identity.identifier
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    Feature.objects.create(project=environment.project, name="Test Feature 1")
+    Feature.objects.create(project=environment.project, name="Test Feature 2")
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data["flags"]) == 2
+
+
+@mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
+def test_identities_endpoint_get_all_feature_amplitude_called(
+    mock_amplitude_wrapper: mock.MagicMock,
+    environment: Environment,
+    identity: Identity,
+    api_client: APIClient,
+) -> None:
+    # Given
+    # amplitude configuration for environment
+    AmplitudeConfiguration.objects.create(api_key="abc-123", environment=environment)
+    base_url = reverse("api-v1:sdk-identities")
+    url = base_url + "?identifier=" + identity.identifier
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    Feature.objects.create(project=environment.project, name="Test Feature 1")
+    Feature.objects.create(project=environment.project, name="Test Feature 2")
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data["flags"]) == 2
+
+    # and amplitude identify users should be called
+    mock_amplitude_wrapper.assert_called()
+
+
+@mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
+def test_identities_endpoint_returns_traits(
+    mock_amplitude_wrapper: mock.MagicMock,
+    identity: Identity,
+    api_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    trait = Trait.objects.create(
+        identity=identity,
+        trait_key="trait_key",
+        value_type=STRING,
+        string_value="trait_value",
+    )
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    base_url = reverse("api-v1:sdk-identities")
+    url = base_url + "?identifier=" + identity.identifier
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.data["traits"] is not None
+    assert response.data["traits"][0].get("trait_value") == trait.get_trait_value()
+
+    # and amplitude identify users should not be called
+    mock_amplitude_wrapper.assert_not_called()
+
+
+def test_identities_endpoint_returns_single_feature_state_if_feature_provided(
+    identity: Identity,
+    environment: Environment,
+    api_client: APIClient,
+) -> None:
+    # Given
+    feature_1 = Feature.objects.create(
+        project=environment.project, name="Test Feature 1"
+    )
+    Feature.objects.create(project=environment.project, name="Test Feature 2")
+
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    base_url = reverse("api-v1:sdk-identities")
+    url = f"{base_url}?identifier={identity.identifier}&feature={feature_1.name}"
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["feature"]["name"] == feature_1.name
+
+
+@mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
+def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment(
+    mock_amplitude_wrapper: mock.MagicMock,
+    identity: Identity,
+    api_client: APIClient,
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given
+    trait_key = "trait_key"
+    trait_value = "trait_value"
+    Trait.objects.create(
+        identity=identity,
+        trait_key=trait_key,
+        value_type=STRING,
+        string_value=trait_value,
+    )
+    segment_rule = SegmentRule.objects.create(
+        segment=segment, type=SegmentRule.ALL_RULE
+    )
+    Condition.objects.create(
+        operator="EQUAL", property=trait_key, value=trait_value, rule=segment_rule
+    )
+    Feature.objects.create(project=environment.project, name="Test Feature 1")
+    feature_2 = Feature.objects.create(
+        project=environment.project, name="Test Feature 2"
+    )
+
+    feature_segment = FeatureSegment.objects.create(
+        segment=segment,
+        feature=feature_2,
+        environment=environment,
+        priority=1,
+    )
+    FeatureState.objects.create(
+        feature=feature_2,
+        feature_segment=feature_segment,
+        environment=environment,
+        enabled=True,
+    )
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    base_url = reverse("api-v1:sdk-identities")
+    url = base_url + "?identifier=" + identity.identifier
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["flags"][1]["enabled"] is True
+
+    # and amplitude identify users should not be called
+    mock_amplitude_wrapper.assert_not_called()
+
+
+@mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
+def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment_and_feature_specified(
+    mock_amplitude_wrapper: mock.MagicMock,
+    identity: Identity,
+    api_client: APIClient,
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given
+    trait_key = "trait_key"
+    trait_value = "trait_value"
+    Trait.objects.create(
+        identity=identity,
+        trait_key=trait_key,
+        value_type=STRING,
+        string_value=trait_value,
+    )
+    segment_rule = SegmentRule.objects.create(
+        segment=segment, type=SegmentRule.ALL_RULE
+    )
+    Condition.objects.create(
+        operator="EQUAL", property=trait_key, value=trait_value, rule=segment_rule
+    )
+    feature_1 = Feature.objects.create(
+        project=environment.project, name="Test Feature 1"
+    )
+    Feature.objects.create(project=environment.project, name="Test Feature 2")
+
+    feature_segment = FeatureSegment.objects.create(
+        segment=segment,
+        feature=feature_1,
+        environment=environment,
+        priority=1,
+    )
+    FeatureState.objects.create(
+        feature_segment=feature_segment,
+        feature=feature_1,
+        environment=environment,
+        enabled=True,
+    )
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    base_url = reverse("api-v1:sdk-identities")
+    url = f"{base_url}?identifier={identity.identifier}&feature={feature_1.name}"
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["enabled"] is True
+
+    # and amplitude identify users should not be called
+    mock_amplitude_wrapper.assert_not_called()
 
 
 @pytest.mark.django_db
@@ -311,195 +548,6 @@ class SDKIdentitiesTestCase(APITestCase):
 
     def tearDown(self) -> None:
         Segment.objects.all().delete()
-
-    def test_identities_endpoint_returns_all_feature_states_for_identity_if_feature_not_provided(
-        self,
-    ):
-        # Given
-        base_url = reverse("api-v1:sdk-identities")
-        url = base_url + "?identifier=" + self.identity.identifier
-
-        # When
-        response = self.client.get(url)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-
-        # and
-        assert len(response.json().get("flags")) == 2
-
-    @mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
-    def test_identities_endpoint_get_all_feature_amplitude_called(
-        self, mock_amplitude_wrapper
-    ):
-        # Given
-        # amplitude configuration for environment
-        AmplitudeConfiguration.objects.create(
-            api_key="abc-123", environment=self.environment
-        )
-        base_url = reverse("api-v1:sdk-identities")
-        url = base_url + "?identifier=" + self.identity.identifier
-
-        # When
-        response = self.client.get(url)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-
-        # and
-        assert len(response.json().get("flags")) == 2
-
-        # and amplitude identify users should be called
-        mock_amplitude_wrapper.assert_called()
-
-    @mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
-    def test_identities_endpoint_returns_traits(self, mock_amplitude_wrapper):
-        # Given
-        base_url = reverse("api-v1:sdk-identities")
-        url = base_url + "?identifier=" + self.identity.identifier
-        trait = Trait.objects.create(
-            identity=self.identity,
-            trait_key="trait_key",
-            value_type=STRING,
-            string_value="trait_value",
-        )
-
-        # When
-        response = self.client.get(url)
-
-        # Then
-        assert response.json().get("traits") is not None
-
-        # and
-        assert (
-            response.json().get("traits")[0].get("trait_value")
-            == trait.get_trait_value()
-        )
-
-        # and amplitude identify users should not be called
-        mock_amplitude_wrapper.assert_not_called()
-
-    def test_identities_endpoint_returns_single_feature_state_if_feature_provided(self):
-        # Given
-        base_url = reverse("api-v1:sdk-identities")
-        url = (
-            base_url
-            + "?identifier="
-            + self.identity.identifier
-            + "&feature="
-            + self.feature_1.name
-        )
-
-        # When
-        response = self.client.get(url)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-
-        # and
-        assert response.json().get("feature").get("name") == self.feature_1.name
-
-    @mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
-    def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment(
-        self, mock_amplitude_wrapper
-    ):
-        # Given
-        base_url = reverse("api-v1:sdk-identities")
-        url = base_url + "?identifier=" + self.identity.identifier
-
-        trait_key = "trait_key"
-        trait_value = "trait_value"
-        Trait.objects.create(
-            identity=self.identity,
-            trait_key=trait_key,
-            value_type=STRING,
-            string_value=trait_value,
-        )
-        segment = Segment.objects.create(name="Test Segment", project=self.project)
-        segment_rule = SegmentRule.objects.create(
-            segment=segment, type=SegmentRule.ALL_RULE
-        )
-        Condition.objects.create(
-            operator="EQUAL", property=trait_key, value=trait_value, rule=segment_rule
-        )
-        feature_segment = FeatureSegment.objects.create(
-            segment=segment,
-            feature=self.feature_2,
-            environment=self.environment,
-            priority=1,
-        )
-        FeatureState.objects.create(
-            feature=self.feature_2,
-            feature_segment=feature_segment,
-            environment=self.environment,
-            enabled=True,
-        )
-
-        # When
-        response = self.client.get(url)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-
-        # and
-        assert response.json().get("flags")[1].get("enabled")
-
-        # and amplitude identify users should not be called
-        mock_amplitude_wrapper.assert_not_called()
-
-    @mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
-    def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment_and_feature_specified(
-        self, mock_amplitude_wrapper
-    ):
-        # Given
-        base_url = reverse("api-v1:sdk-identities")
-        url = (
-            base_url
-            + "?identifier="
-            + self.identity.identifier
-            + "&feature="
-            + self.feature_1.name
-        )
-
-        trait_key = "trait_key"
-        trait_value = "trait_value"
-        Trait.objects.create(
-            identity=self.identity,
-            trait_key=trait_key,
-            value_type=STRING,
-            string_value=trait_value,
-        )
-        segment = Segment.objects.create(name="Test Segment", project=self.project)
-        segment_rule = SegmentRule.objects.create(
-            segment=segment, type=SegmentRule.ALL_RULE
-        )
-        Condition.objects.create(
-            operator="EQUAL", property=trait_key, value=trait_value, rule=segment_rule
-        )
-        feature_segment = FeatureSegment.objects.create(
-            segment=segment,
-            feature=self.feature_1,
-            environment=self.environment,
-            priority=1,
-        )
-        FeatureState.objects.create(
-            feature_segment=feature_segment,
-            feature=self.feature_1,
-            environment=self.environment,
-            enabled=True,
-        )
-
-        # When
-        response = self.client.get(url)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-
-        # and
-        assert response.json().get("enabled")
-
-        # and amplitude identify users should not be called
-        mock_amplitude_wrapper.assert_not_called()
 
     @mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
     def test_identities_endpoint_returns_value_for_segment_if_rule_type_percentage_split_and_identity_in_segment(

@@ -1,5 +1,52 @@
 # Changelog
 
+## [2.103.3](https://github.com/Flagsmith/flagsmith/compare/v2.103.2...v2.103.3) (2024-03-11)
+
+
+### Bug Fixes
+
+* **audit:** add segment deleted audit log ([#3585](https://github.com/Flagsmith/flagsmith/issues/3585)) ([e2b8a92](https://github.com/Flagsmith/flagsmith/commit/e2b8a9287269133f3a19fd0a51fc8bb53a63551b))
+* poetry audit ([#3592](https://github.com/Flagsmith/flagsmith/issues/3592)) ([c2155b2](https://github.com/Flagsmith/flagsmith/commit/c2155b2c2e76e44b5fee09a66f4de6e52aa93fe9))
+* remove duplicate tos ([#3589](https://github.com/Flagsmith/flagsmith/issues/3589)) ([0f2506e](https://github.com/Flagsmith/flagsmith/commit/0f2506e7dc85948e0aa690cd6e8b35073f4df763))
+
+## [2.103.2](https://github.com/Flagsmith/flagsmith/compare/v2.103.1...v2.103.2) (2024-03-08)
+
+
+### Bug Fixes
+
+* **audit:** create audit log for deleted conditions in a segment ([#3577](https://github.com/Flagsmith/flagsmith/issues/3577)) ([1330b4a](https://github.com/Flagsmith/flagsmith/commit/1330b4a5d8c68c8840814c867fb4105374e2e089))
+* **audit:** use correct endpoint for retrieve ([#3578](https://github.com/Flagsmith/flagsmith/issues/3578)) ([5f98b1b](https://github.com/Flagsmith/flagsmith/commit/5f98b1ba0746acfeeb1b430ab892890ed4de34a3))
+* clear schedule date ([#3558](https://github.com/Flagsmith/flagsmith/issues/3558)) ([fa9c68f](https://github.com/Flagsmith/flagsmith/commit/fa9c68f7717d68382803da472e132125655d05a4))
+* enable hubspot for staging ([#3545](https://github.com/Flagsmith/flagsmith/issues/3545)) ([2460c81](https://github.com/Flagsmith/flagsmith/commit/2460c8151ee81174d73934817691f4bd0ce54569))
+* prevent cascade deletes from users deleting change requests ([#3580](https://github.com/Flagsmith/flagsmith/issues/3580)) ([b961790](https://github.com/Flagsmith/flagsmith/commit/b9617904e45b167a50908f1df5c7494f6ec42859))
+* Project settings with no environments ([#3572](https://github.com/Flagsmith/flagsmith/issues/3572)) ([becfff1](https://github.com/Flagsmith/flagsmith/commit/becfff19c11a9720b583d20645c637dcdf64308c))
+* Refresh filter after tagging ([#3575](https://github.com/Flagsmith/flagsmith/issues/3575)) ([62f8f69](https://github.com/Flagsmith/flagsmith/commit/62f8f69aa198cf03aaada3e736ff7f6f14f1f776))
+* **revert:** disable hubspot for staging ([#3576](https://github.com/Flagsmith/flagsmith/issues/3576)) ([c647fbd](https://github.com/Flagsmith/flagsmith/commit/c647fbdcccd3a14cd2940668d70c9e32e99a3095))
+
+## [2.103.1](https://github.com/Flagsmith/flagsmith/compare/v2.103.0...v2.103.1) (2024-03-05)
+
+
+### Bug Fixes
+
+* Dasherize conversion event types path ([#3516](https://github.com/Flagsmith/flagsmith/issues/3516)) ([994eb55](https://github.com/Flagsmith/flagsmith/commit/994eb556123b0c04495f00d16369c12943927fa6))
+* **fs-delete/webhook:** use fs instance instead of historical ([#3475](https://github.com/Flagsmith/flagsmith/issues/3475)) ([90e10cf](https://github.com/Flagsmith/flagsmith/commit/90e10cf656dba13c2a137e2c5630b325b8290776))
+
+## [2.103.0](https://github.com/Flagsmith/flagsmith/compare/v2.102.0...v2.103.0) (2024-03-01)
+
+
+### Features
+
+* Add has expired column in the api keys table ([#3433](https://github.com/Flagsmith/flagsmith/issues/3433)) ([3f83130](https://github.com/Flagsmith/flagsmith/commit/3f83130fb00e09878228483131187df9d61e117f))
+* Track leads to Hubspot ([#3473](https://github.com/Flagsmith/flagsmith/issues/3473)) ([02c59d2](https://github.com/Flagsmith/flagsmith/commit/02c59d25c7a440d0fc0a09a689ea62202c4e1c43))
+
+
+### Bug Fixes
+
+* Add padding to the announcement ([#3474](https://github.com/Flagsmith/flagsmith/issues/3474)) ([e5f29a1](https://github.com/Flagsmith/flagsmith/commit/e5f29a11b068c1a2537df66dd72fb47f95852209))
+* Add trailing / to delete api key endpoint ([#3506](https://github.com/Flagsmith/flagsmith/issues/3506)) ([0d655a0](https://github.com/Flagsmith/flagsmith/commit/0d655a0a0399c02032f4c2369c09c0d7b616944f))
+* N+1 on segment overrides for environment-document endpoint ([#3512](https://github.com/Flagsmith/flagsmith/issues/3512)) ([4e92f34](https://github.com/Flagsmith/flagsmith/commit/4e92f348c2e9863e19bd72f8bca1499d9a42786d))
+* toggle flag ([#3480](https://github.com/Flagsmith/flagsmith/issues/3480)) ([87cfcd9](https://github.com/Flagsmith/flagsmith/commit/87cfcd9baee2a28dee53842e6fea79bc5dea9fd3))
+
 ## [2.102.0](https://github.com/Flagsmith/flagsmith/compare/v2.101.0...v2.102.0) (2024-02-27)
 
 
