@@ -3,9 +3,6 @@ name: API Security Audit
 on:
   schedule:
     - cron: 0 8 * * *
-  push:
-    branches:
-      - 'fix/poetry-audit'
 
 defaults:
   run:
