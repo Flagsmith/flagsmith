@@ -46,9 +46,22 @@ class SDKCreateUpdateTraitSerializer(serializers.ModelSerializer):
             else STRING,
         }
 
-        return Trait.objects.update_or_create(
-            identity=identity, trait_key=trait_key, defaults=defaults
-        )[0]
+        try:
+            trait_obj = Trait.objects.get(identity=identity, trait_key=trait_key)
+            updated = False
+            for field, value in defaults.items():
+                existing_value = getattr(trait_obj, field)
+                if value is not None and value != existing_value:
+                    setattr(trait_obj, field, value)
+                    updated = True
+            if updated:
+                trait_obj.save()
+        except Trait.DoesNotExist:
+            trait_obj = Trait.objects.create(
+                identity=identity, trait_key=trait_key, **defaults
+            )
+
+        return trait_obj
 
     def validate(self, attrs):
         request = self.context["request"]
