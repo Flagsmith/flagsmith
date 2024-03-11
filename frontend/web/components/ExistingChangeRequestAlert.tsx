@@ -22,7 +22,7 @@ const ExistingChangeRequestAlert: FC<ExistingChangeRequestAlertType> = ({
   const { data: scheduledChangeRequests } = useGetChangeRequestsQuery({
     environmentId,
     feature_id: featureId,
-    live_from_after: moment().startOf('hour').toISOString(),
+    live_from_after: moment().toISOString(),
   })
 
   if (scheduledChangeRequests?.results?.length) {
