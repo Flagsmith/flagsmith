@@ -8,7 +8,6 @@ from django.conf import settings
 from django.core.cache import caches
 from django.db import models
 from django.db.models import Count
-from django.utils import timezone
 from django_lifecycle import (
     AFTER_DELETE,
     AFTER_SAVE,
@@ -86,6 +85,8 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     identity_overrides_v2_migration_status = models.CharField(
         max_length=50,
         choices=IdentityOverridesV2MigrationStatus.choices,
+        # Note that the default is actually set dynamically by a lifecycle hook on create
+        # since we need to know whether edge is enabled or not.
         default=IdentityOverridesV2MigrationStatus.NOT_STARTED,
     )
     stale_flags_limit_days = models.IntegerField(
@@ -135,10 +136,14 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @hook(BEFORE_CREATE)
     def set_enable_dynamo_db(self):
-        self.enable_dynamo_db = self.enable_dynamo_db or (
-            settings.EDGE_RELEASE_DATETIME is not None
-            and settings.EDGE_RELEASE_DATETIME < timezone.now()
-        )
+        self.enable_dynamo_db = self.enable_dynamo_db or settings.EDGE_ENABLED
+
+    @hook(BEFORE_CREATE)
+    def set_identity_overrides_v2_migration_status(self):
+        if settings.EDGE_ENABLED:
+            self.identity_overrides_v2_migration_status = (
+                IdentityOverridesV2MigrationStatus.COMPLETE
+            )
 
     @hook(AFTER_SAVE)
     def clear_environments_cache(self):
