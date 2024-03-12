@@ -853,6 +853,7 @@ def test_post_identities_with_traits_fails_if_client_cannot_set_traits(
     )
 
     # Then
+    assert Trait.objects.count() == 0
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
@@ -864,9 +865,10 @@ def test_post_identities_with_traits_success_if_client_cannot_set_traits_server_
 ) -> None:
     # Given
     url = reverse("api-v1:sdk-identities")
+    trait_key, trait_value = "foo", "bar"
     data = {
         "identifier": identity.identifier,
-        "traits": [{"trait_key": "foo", "trait_value": "bar"}],
+        "traits": [{"trait_key": trait_key, "trait_value": trait_value}],
     }
 
     environment_api_key = EnvironmentAPIKey.objects.create(environment=environment)
@@ -881,6 +883,11 @@ def test_post_identities_with_traits_success_if_client_cannot_set_traits_server_
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+
+    assert Trait.objects.count() == 1
+    trait = Trait.objects.first()
+    assert trait.trait_key == trait_key
+    assert trait.trait_value == trait_value
 
 
 def test_post_identities_request_includes_updated_at_header(
