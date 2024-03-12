@@ -642,11 +642,11 @@ const CreateFlag = class extends Component {
                   </label>
                 }
               >
-                Archiving a flag allows you to filter out flags from the
+                {`Archiving a flag allows you to filter out flags from the
                 Flagsmith dashboard that are no longer relevant.
                 <br />
                 An archived flag will still return as normal in all SDK
-                endpoints.
+                endpoints.`}
               </Tooltip>
             </Row>
           </FormGroup>
@@ -670,7 +670,7 @@ const CreateFlag = class extends Component {
                     Hide from SDKs <Icon name='info-outlined' />
                   </label>
                 }
-                place='right'
+                place='top'
               >
                 {Constants.strings.HIDE_FROM_SDKS_DESCRIPTION}
               </Tooltip>
@@ -711,7 +711,18 @@ const CreateFlag = class extends Component {
               type='text'
               title={
                 <>
-                  {isEdit ? 'ID' : 'ID*'}
+                  <Tooltip
+                    title={
+                      <Row>
+                        <span className={'mr-1'}>{isEdit ? 'ID' : 'ID*'}</span>
+                        <Icon name='info-outlined' />
+                      </Row>
+                    }
+                  >
+                    The ID that will be used by SDKs to retrieve the feature
+                    value and enabled state. This cannot be edited once the
+                    feature has been created.
+                  </Tooltip>
                   {!!regex && !isEdit && (
                     <div className='mt-2'>
                       {' '}
@@ -1162,7 +1173,7 @@ const CreateFlag = class extends Component {
                                                   <Icon name='info-outlined' />
                                                 </h5>
                                               }
-                                              place='right'
+                                              place='top'
                                             >
                                               {
                                                 Constants.strings
@@ -1342,6 +1353,22 @@ const CreateFlag = class extends Component {
                                       data-test='identity_overrides'
                                       tabLabel='Identity Overrides'
                                     >
+                                      <InfoMessage className='mb-4 text-left faint'>
+                                        Identity overrides override feature
+                                        values for individual identities. The
+                                        overrides take priority over an segment
+                                        overrides and environment defaults.
+                                        Identity overrides will only apply when
+                                        you identify via the SDK.{' '}
+                                        <a
+                                          target='_blank'
+                                          href='https://docs.flagsmith.com/basic-features/managing-identities'
+                                          rel='noreferrer'
+                                        >
+                                          Check the Docs for more details
+                                        </a>
+                                        .
+                                      </InfoMessage>
                                       <FormGroup className='mb-4'>
                                         <PanelSearch
                                           id='users-list'
@@ -1358,7 +1385,7 @@ const CreateFlag = class extends Component {
                                                   />
                                                 </h5>
                                               }
-                                              place='right'
+                                              place='top'
                                             >
                                               {
                                                 Constants.strings
@@ -1561,6 +1588,18 @@ const CreateFlag = class extends Component {
 
                                         {this.drawChart(usageData)}
                                       </FormGroup>
+                                      <InfoMessage>
+                                        The Flag Analytics data will be visible
+                                        in the Dashboard between 30 minutes and
+                                        1 hour after it has been collected.{' '}
+                                        <a
+                                          target='_blank'
+                                          href='https://docs.flagsmith.com/advanced-use/flag-analytics'
+                                          rel='noreferrer'
+                                        >
+                                          View docs
+                                        </a>
+                                      </InfoMessage>
                                     </TabItem>
                                   )}
                                 {!existingChangeRequest && createFeature && (
