@@ -91,6 +91,7 @@ export type Project = {
   max_features_allowed?: number | null
   max_segment_overrides_allowed?: number | null
   total_features?: number
+  stale_flags_limit_days?: number
   total_segments?: number
   environments: Environment[]
 }

@@ -20,6 +20,7 @@ import ImportPage from 'components/import-export/ImportPage'
 import FeatureExport from 'components/import-export/FeatureExport'
 import ProjectUsage from 'components/ProjectUsage'
 import ProjectStore from 'common/stores/project-store'
+import Tooltip from 'components/Tooltip'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -154,7 +155,7 @@ const ProjectSettingsPage = class extends Component {
   }
 
   render() {
-    const { name } = this.state
+    const { name, stale_flags_limit_days } = this.state
 
     return (
       <div className='app-container container'>
@@ -163,6 +164,15 @@ const ProjectSettingsPage = class extends Component {
           onSave={this.onSave}
         >
           {({ deleteProject, editProject, isLoading, isSaving, project }) => {
+            if (
+              !this.state.stale_flags_limit_days &&
+              project?.stale_flags_limit_days
+            ) {
+              this.state.stale_flags_limit_days = project.stale_flags_limit_days
+            }
+            if (!this.state.name && project?.name) {
+              this.state.name = project.name
+            }
             if (
               !this.state.populatedProjectState &&
               project?.feature_name_regex
@@ -181,7 +191,10 @@ const ProjectSettingsPage = class extends Component {
               e.preventDefault()
               !isSaving &&
                 name &&
-                editProject(Object.assign({}, project, { name }))
+                !!stale_flags_limit_days &&
+                editProject(
+                  Object.assign({}, project, { name, stale_flags_limit_days }),
+                )
             }
 
             const featureRegexEnabled =
@@ -200,14 +213,13 @@ const ProjectSettingsPage = class extends Component {
                         />
                         <label>Project Name</label>
                         <FormGroup>
-                          <form onSubmit={saveProject}>
-                            <Row className='align-items-start col-md-8'>
+                          <form className='col-md-6' onSubmit={saveProject}>
+                            <Row className='align-items-start'>
                               <Flex className='ml-0'>
                                 <Input
                                   ref={(e) => (this.input = e)}
-                                  defaultValue={project.name}
                                   value={this.state.name}
-                                  inputClassName='input--wide'
+                                  inputClassName='full-width'
                                   name='proj-name'
                                   onChange={(e) =>
                                     this.setState({
@@ -220,15 +232,47 @@ const ProjectSettingsPage = class extends Component {
                                   placeholder='My Project Name'
                                 />
                               </Flex>
+                            </Row>
+                            <Tooltip
+                              title={
+                                <label className='mt-4'>
+                                  Days before a feature is marked as stale{' '}
+                                  <Icon name='info-outlined' />
+                                </label>
+                              }
+                            >
+                              {
+                                'If no changes have been made to a feature in any environment within this threshold the feature will be tagged as stale.'
+                              }
+                            </Tooltip>
+                            <div style={{ width: 200 }} className='ml-0'>
+                              <Input
+                                ref={(e) => (this.input = e)}
+                                value={this.state.stale_flags_limit_days}
+                                onChange={(e) =>
+                                  this.setState({
+                                    stale_flags_limit_days: parseInt(
+                                      Utils.safeParseEventValue(e),
+                                    ),
+                                  })
+                                }
+                                isValid={!!stale_flags_limit_days}
+                                type='number'
+                                placeholder='Number of Days'
+                              />
+                            </div>
+                            <div className='text-right'>
                               <Button
                                 type='submit'
                                 id='save-proj-btn'
-                                disabled={isSaving || !name}
+                                disabled={
+                                  isSaving || !name || !stale_flags_limit_days
+                                }
                                 className='ml-3'
                               >
-                                {isSaving ? 'Updating' : 'Update Name'}
+                                {isSaving ? 'Updating' : 'Update'}
                               </Button>
-                            </Row>
+                            </div>
                           </form>
                         </FormGroup>
                       </div>

@@ -6,7 +6,7 @@ import { IonIcon } from '@ionic/react'
 import { alarmOutline, lockClosed } from 'ionicons/icons'
 import Tooltip from 'components/Tooltip'
 import { getTagColor } from './Tag'
-import Project from 'common/project'
+import ProjectStore from 'common/stores/project-store'
 type TagContent = {
   tag: Partial<TTag>
 }
@@ -20,7 +20,7 @@ const getTooltip = (tag: TTag | undefined) => {
   let tooltip = null
   switch (tag.type) {
     case 'STALE': {
-      tooltip = `A feature is marked as stale if no changes have been made to it in any environment within ${Project.stale_flags_limit_days} days. This is automatically applied and will be re-evaluated every 3 days if you remove this tag unless you apply a permanent tag to the feature.`
+      tooltip = `A feature is marked as stale if no changes have been made to it in any environment within ${ProjectStore.getStaleFlagsLimit()} days. This is automatically applied and will be re-evaluated every 3 days if you remove this tag unless you apply a permanent tag to the feature.`
       break
     }
     default:
