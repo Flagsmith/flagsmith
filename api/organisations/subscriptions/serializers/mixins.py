@@ -29,7 +29,9 @@ class ReadOnlyIfNotValidPlanMixin:
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.invalid_plans_regex_matcher = re.compile(self.invalid_plans_regex)
+        self.invalid_plans_regex_matcher = (
+            re.compile(self.invalid_plans_regex) if self.invalid_plans_regex else None
+        )
 
     def get_fields(self, *args, **kwargs):
         fields = super().get_fields(*args, **kwargs)
