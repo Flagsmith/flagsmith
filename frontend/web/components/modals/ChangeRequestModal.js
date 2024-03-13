@@ -134,7 +134,7 @@ const ChangeRequestModal = class extends Component {
                       <Button
                         className='ml-2'
                         onClick={() => {
-                          this.setState({ live_from: null })
+                          this.setState({ live_from: undefined })
                         }}
                         theme='secondary'
                         size='large'

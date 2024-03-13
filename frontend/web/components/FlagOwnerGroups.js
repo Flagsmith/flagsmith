@@ -9,6 +9,7 @@ import GroupSelect from './GroupSelect'
 import { getProjectFlag } from 'common/services/useProjectFlag'
 import { getStore } from 'common/store'
 import ConnectedGroupSelect from './ConnectedGroupSelect'
+import SettingsButton from './SettingsButton'
 
 class TheComponent extends Component {
   state = {}
@@ -59,17 +60,13 @@ class TheComponent extends Component {
         {({ groups }) => {
           const res = (
             <div>
-              <Row
-                className='clickable'
+              <SettingsButton
                 onClick={() => {
                   if (hasPermission) this.setState({ showUsers: true })
                 }}
               >
-                <label className='cols-sm-2 control-label'>
-                  Assigned groups{' '}
-                  <Icon name='setting' width={20} fill={'#656D7B'} />
-                </label>
-              </Row>
+                Assigned groups
+              </SettingsButton>
               <ConnectedGroupSelect
                 orgId={AccountStore.getOrganisation()?.id}
                 showValues={hasPermission}

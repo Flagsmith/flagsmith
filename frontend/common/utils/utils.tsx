@@ -77,6 +77,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return typeof value === 'number'
   },
 
+  copyFeatureName: (featureName: string) => {
+    navigator.clipboard.writeText(featureName)
+    toast('Copied to clipboard')
+  },
+
   displayLimitAlert(type: string, percentage: number | undefined) {
     const envOrProject =
       type === 'segment overrides' ? 'environment' : 'project'
@@ -275,9 +280,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (!plan || planName === planNames.free) {
       return false
     }
-    const isStartupOrGreater = planName !== planNames.startup
-    const isScaleupOrGreater =
-      isStartupOrGreater && planName !== planNames.startup
+    const isScaleupOrGreater = planName !== planNames.startup
     const isEnterprise = planName === planNames.enterprise
 
     switch (permission) {
@@ -286,11 +289,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         break
       }
       case 'CREATE_ADDITIONAL_PROJECT': {
-        valid = isStartupOrGreater
+        valid = true // startup or greater
         break
       }
       case '2FA': {
-        valid = isStartupOrGreater
+        valid = true // startup or greater
         break
       }
       case 'RBAC': {
@@ -310,7 +313,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         break
       }
       case 'SCHEDULE_FLAGS': {
-        valid = isStartupOrGreater
+        valid = true // startup or greater
         break
       }
       case '4_EYES': {
@@ -323,6 +326,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return valid
   },
+
   getPlansPermission: (permission: string) => {
     const isOrgPermission = permission !== '2FA'
     const plans = isOrgPermission
@@ -340,10 +344,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     )
     return !!found
   },
-
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
+
   getSDKEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
 
@@ -450,7 +454,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
-
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (
@@ -501,7 +504,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return permission ? (
       el
     ) : (
-      <Tooltip title={<div>{el}</div>} place='right' html>
+      <Tooltip title={<div>{el}</div>} place='right'>
         {name}
       </Tooltip>
     )

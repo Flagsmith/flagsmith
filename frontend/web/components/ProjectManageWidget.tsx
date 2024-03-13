@@ -179,7 +179,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                                 >
                                   {name[0]}
                                 </h2>
-                                <div className='font-weight-medium btn-project-title'>
+                                <div className='font-weight-medium btn-project-title overflow-hidden'>
                                   {name}
                                 </div>
                               </Row>
