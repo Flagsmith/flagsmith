@@ -190,9 +190,10 @@ export type Req = {
   deleteUserWihRole: { org_id: string; user_id: string; role_id: string }
   getGroupWithRole: { org_id: string; group_id: string }
   deleteGroupWithRole: { org_id: string; group_id: string; role_id: string }
-  createAndPublishFeatureVersion: {
+  createAndSetFeatureVersion: {
     environmentId: string
     featureId: number
+    skipPublish?: boolean
     featureStates: (FeatureState & { toRemove: boolean })[]
   }
   createFeatureVersion: {
