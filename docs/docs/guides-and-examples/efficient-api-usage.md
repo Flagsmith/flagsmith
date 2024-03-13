@@ -71,5 +71,9 @@ Note that you almost certainly _don't_ want to cache the Get the Flags for an Id
 
 ### Edge Proxy
 
-Using the [Edge Proxy](/advanced-use/edge-proxy) can significantly reduce API usage. Again, consideration needs to be
-given to the caveats of running the Edge Proxy.
+Using the [Edge Proxy](/advanced-use/edge-proxy) can significantly reduce API usage. A single instance of the Edge Proxy
+makes one API request by default every 10 seconds to the Flagsmith API. With that request data it can then serve
+potentially thousands of requests per second.
+
+Consideration needs to be given to the caveats of running the Edge Proxy, but its deployment can have a dramatic effect
+on reducing API call volume.
