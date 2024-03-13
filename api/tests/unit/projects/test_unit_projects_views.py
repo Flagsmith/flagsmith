@@ -41,9 +41,16 @@ yesterday = now - timedelta(days=1)
 
 def test_should_create_a_project(settings, admin_user, admin_client, organisation):
     # Given
-    project_name = "project1"
     settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = None
-    data = {"name": project_name, "organisation": organisation.id}
+
+    project_name = "project1"
+    stale_flags_limit_days = 15
+
+    data = {
+        "name": project_name,
+        "organisation": organisation.id,
+        "stale_flags_limit_days": stale_flags_limit_days,
+    }
     url = reverse("api-v1:projects:project-list")
 
     # When
@@ -52,6 +59,10 @@ def test_should_create_a_project(settings, admin_user, admin_client, organisatio
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert Project.objects.filter(name=project_name).count() == 1
+
+    project = Project.objects.get(name=project_name)
+    assert project.stale_flags_limit_days == stale_flags_limit_days
+
     assert (
         response.json()["migration_status"]
         == ProjectIdentityMigrationStatus.NOT_APPLICABLE.value
@@ -98,7 +109,13 @@ def test_should_create_a_project_with_admin_master_api_key_client(
 def test_can_update_project(client, project, organisation):
     # Given
     new_name = "New project name"
-    data = {"name": new_name, "organisation": organisation.id}
+    new_stale_flags_limit_days = 15
+
+    data = {
+        "name": new_name,
+        "organisation": organisation.id,
+        "stale_flags_limit_days": new_stale_flags_limit_days,
+    }
     url = reverse("api-v1:projects:project-detail", args=[project.id])
 
     # When
@@ -107,6 +124,7 @@ def test_can_update_project(client, project, organisation):
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["name"] == new_name
+    assert response.json()["stale_flags_limit_days"] == new_stale_flags_limit_days
 
 
 @pytest.mark.parametrize(
