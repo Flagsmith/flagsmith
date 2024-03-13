@@ -259,7 +259,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
     }
     return warnings
   }, [operators, rules])
-  const hasNoRules = !rules[0]?.rules?.length
+  //Find any non-deleted rules
+  const hasNoRules = !rules[0]?.rules?.find((v) => !v.delete)
+
   const rulesEl = (
     <div className='overflow-visible'>
       <div>
