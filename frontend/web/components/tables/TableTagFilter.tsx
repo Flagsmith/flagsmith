@@ -8,6 +8,7 @@ import TableFilterItem from './TableFilterItem'
 import Constants from 'common/constants'
 import { TagStrategy } from 'common/types/responses'
 import { AsyncStorage } from 'polyfill-react-native'
+import TagContent from 'components/tags/TagContent'
 
 type TableFilterType = {
   projectId: string
@@ -219,7 +220,7 @@ const TableTagFilter: FC<TableFilterType> = ({
                     style={{ width: 150 }}
                     className='ml-2 text-nowrap text-overflow'
                   >
-                    {tag.label}
+                    <TagContent tag={tag} />
                   </div>
                 </Row>
               }
