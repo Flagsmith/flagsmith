@@ -911,17 +911,13 @@ if SAML_INSTALLED:
     )
 
 
-# Additional functionality needed for using workflows in Flagsmith SaaS
-# python module path to the workflows logic module, e.g. "path.to.workflows"
-WORKFLOWS_LOGIC_MODULE_PATH = env(
-    "WORKFLOWS_LOGIC_MODULE_PATH", "features.workflows.logic"
-)
-WORKFLOWS_LOGIC_INSTALLED = (
-    importlib.util.find_spec(WORKFLOWS_LOGIC_MODULE_PATH) is not None
-)
+WORKFLOWS_LOGIC_INSTALLED = importlib.util.find_spec("workflows_logic") is not None
 
 if WORKFLOWS_LOGIC_INSTALLED:
-    INSTALLED_APPS.append(WORKFLOWS_LOGIC_MODULE_PATH)
+    INSTALLED_APPS.append("workflows_logic")
+
+    if importlib.util.find_spec("workflows_logic.stale_flags") is not None:
+        INSTALLED_APPS.append("workflows_logic.stale_flags")
 
 # Additional functionality for restricting authentication to a set of authentication methods in Flagsmith SaaS
 AUTH_CONTROLLER_INSTALLED = importlib.util.find_spec("auth_controller") is not None

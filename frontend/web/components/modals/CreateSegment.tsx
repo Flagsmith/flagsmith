@@ -421,7 +421,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
       {readOnly ? (
         <div className='text-right'>
           <Tooltip
-            html
             title={
               <Button
                 disabled
