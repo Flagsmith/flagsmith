@@ -165,6 +165,18 @@ def chargebee_subscription(organisation: Organisation) -> Subscription:
 
 
 @pytest.fixture()
+def tag(project):
+    return Tag.objects.create(label="tag", project=project, color="#000000")
+
+
+@pytest.fixture()
+def system_tag(project: Project) -> Tag:
+    return Tag.objects.create(
+        label="system-tag", project=project, color="#FFFFFF", is_system_tag=True
+    )
+
+
+@pytest.fixture()
 def enterprise_subscription(organisation: Organisation) -> Subscription:
     Subscription.objects.filter(organisation=organisation).update(
         plan="enterprise", subscription_id="subscription-id"
@@ -176,11 +188,6 @@ def enterprise_subscription(organisation: Organisation) -> Subscription:
 @pytest.fixture()
 def project(organisation):
     return Project.objects.create(name="Test Project", organisation=organisation)
-
-
-@pytest.fixture()
-def tag(project):
-    return Tag.objects.create(label="tag", project=project, color="#000000")
 
 
 @pytest.fixture()
@@ -238,13 +245,17 @@ def with_project_permissions(
     """
 
     def _with_project_permissions(
-        permission_keys: list[str], project_id: typing.Optional[int] = None
+        permission_keys: list[str] = None,
+        project_id: typing.Optional[int] = None,
+        admin: bool = False,
     ) -> UserProjectPermission:
         project_id = project_id or project.id
         upp, __ = UserProjectPermission.objects.get_or_create(
-            project_id=project_id, user=staff_user
+            project_id=project_id, user=staff_user, admin=admin
         )
-        upp.permissions.add(*permission_keys)
+
+        if permission_keys:
+            upp.permissions.add(*permission_keys)
 
         return upp
 
