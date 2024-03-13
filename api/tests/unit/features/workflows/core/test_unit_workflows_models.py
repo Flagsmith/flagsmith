@@ -18,6 +18,7 @@ from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.versioning_service import get_environment_flags_list
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
+    ChangeRequestDeletionError,
     ChangeRequestNotApprovedError,
 )
 from features.workflows.core.models import (
@@ -610,3 +611,18 @@ def test_commit_change_request_publishes_environment_feature_versions(
     assert environment_feature_version.published
     assert environment_feature_version.published_by == admin_user
     assert environment_feature_version.live_from == now
+
+
+def test_cannot_delete_committed_change_request(
+    change_request: ChangeRequest, admin_user: FFAdminUser
+) -> None:
+    # Given
+    change_request.commit(admin_user)
+    change_request.save()
+
+    # When
+    with pytest.raises(ChangeRequestDeletionError):
+        change_request.delete()
+
+    # Then
+    # exception raised
