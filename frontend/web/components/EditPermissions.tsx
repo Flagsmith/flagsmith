@@ -263,6 +263,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           `${level.charAt(0).toUpperCase() + level.slice(1)} permissions Saved`,
         )
         permissionChanged?.()
+        setInterceptClose(null)
         onSave?.()
         setSaving(false)
         if (editPermissionsFromSettings) {
@@ -420,6 +421,12 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           entityPermissions,
         )
           .then(() => {
+            setInterceptClose(null)
+            toast(
+              `${
+                level.charAt(0).toUpperCase() + level.slice(1)
+              } Permissions Saved`,
+            )
             onSave && onSave()
             close()
           })
