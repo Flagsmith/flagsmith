@@ -157,7 +157,7 @@ const controller = {
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
-  removeUserFlag(identity, identityFlag, environmentId) {
+  removeUserFlag(identity, identityFlag, environmentId, cb) {
     store.saving()
     API.trackEvent(Constants.events.REMOVE_USER_FEATURE)
     data
@@ -169,9 +169,12 @@ const controller = {
         }/`,
       )
       .then(() =>
-        controller
-          .getIdentity(environmentId, identity)
-          .then(() => store.saved()),
+        controller.getIdentity(environmentId, identity).then(() => {
+          store.saved()
+          if (cb) {
+            cb()
+          }
+        }),
       )
   },
   toggleUserFlag({
@@ -239,6 +242,7 @@ const store = Object.assign({}, BaseStore, {
 store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   const action = payload.action // this is our action from handleViewAction
   const {
+    cb,
     environmentFlag,
     environmentId,
     identity,
@@ -272,7 +276,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       controller.editTrait({ environmentId, identity, trait })
       break
     case Actions.REMOVE_USER_FLAG:
-      controller.removeUserFlag(identity, identityFlag, environmentId)
+      controller.removeUserFlag(identity, identityFlag, environmentId, cb)
       break
     case Actions.DELETE_IDENTITY_TRAIT:
       controller.deleteIdentityTrait(action.envId, action.identity, action.id)

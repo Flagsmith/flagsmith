@@ -25,7 +25,7 @@ type AuditLogItemPageType = {
 const AuditLogItemPage: FC<AuditLogItemPageType> = ({ match }) => {
   const { data, error, isLoading } = useGetAuditLogItemQuery({
     id: match.params.id,
-    projectId: match.params.projectId
+    projectId: match.params.projectId,
   })
 
   const index = (ProjectStore.getEnvs() as Environment[] | null)?.findIndex(

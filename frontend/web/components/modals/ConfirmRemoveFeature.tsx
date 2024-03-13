@@ -21,7 +21,7 @@ const ConfirmRemoveFeature: FC<ConfirmRemoveFeatureType> = ({
   const submit = (e: FormEvent) => {
     e.preventDefault()
     if (challenge == projectFlag.name) {
-      closeModal()
+      closeModal2()
       cb()
     }
   }
