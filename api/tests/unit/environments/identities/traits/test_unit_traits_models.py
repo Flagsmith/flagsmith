@@ -1,5 +1,7 @@
 import pytest
+from pytest_django import DjangoAssertNumQueries
 
+from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 
 
@@ -67,3 +69,83 @@ def test_trait_bulk_delete_deletes_objects(trait):
 
     # Then
     Trait.objects.filter(identity=trait.identity).count() == 0
+
+
+def test_trait_manager_update_or_create_if_changed_does_not_write_to_db_if_not_changed(
+    trait: Trait, django_assert_num_queries: DjangoAssertNumQueries
+) -> None:
+    # When
+    with django_assert_num_queries(1):
+        returned_trait, created = Trait.objects.update_or_create_if_changed(
+            identity=trait.identity,
+            trait_key=trait.trait_key,
+            defaults={"string_value": trait.string_value},
+        )
+
+    # Then
+    assert returned_trait == trait
+    assert created is False
+
+
+def test_trait_manager_update_or_create_if_changed_creates_trait_if_not_found(
+    identity: Identity, django_assert_num_queries: DjangoAssertNumQueries
+) -> None:
+    # Given
+    trait_key = "foo"
+    string_value = "bar"
+
+    # When
+    with django_assert_num_queries(2):
+        created_trait, created = Trait.objects.update_or_create_if_changed(
+            identity=identity,
+            trait_key=trait_key,
+            defaults={"string_value": string_value},
+        )
+
+    # Then
+    assert created_trait.identity == identity
+    assert created_trait.string_value == string_value
+    assert created_trait.trait_key == trait_key
+    assert created is True
+
+
+def test_trait_manager_update_or_create_if_changed_updates_trait_if_different(
+    trait: Trait, django_assert_num_queries: DjangoAssertNumQueries
+) -> None:
+    # Given
+    new_string_value = f"{trait.string_value} updated"
+
+    # When
+    with django_assert_num_queries(2):
+        updated_trait, created = Trait.objects.update_or_create_if_changed(
+            identity=trait.identity,
+            trait_key=trait.trait_key,
+            defaults={"string_value": new_string_value},
+        )
+
+    # Then
+    assert updated_trait.identity == trait.identity
+    assert updated_trait.string_value == new_string_value
+    assert updated_trait.trait_key == trait.trait_key
+    assert created is False
+
+
+def test_trait_manager_update_or_create_updates_trait_if_different(
+    trait: Trait, django_assert_num_queries: DjangoAssertNumQueries
+) -> None:
+    # Given
+    new_string_value = f"{trait.string_value} updated"
+
+    # When
+    with django_assert_num_queries(2):
+        updated_trait, created = Trait.objects.update_or_create(
+            identity=trait.identity,
+            trait_key=trait.trait_key,
+            defaults={"string_value": new_string_value},
+        )
+
+    # Then
+    assert updated_trait.identity == trait.identity
+    assert updated_trait.string_value == new_string_value
+    assert updated_trait.trait_key == trait.trait_key
+    assert created is False

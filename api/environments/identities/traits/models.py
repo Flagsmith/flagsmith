@@ -2,9 +2,60 @@ import typing
 
 from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
+from django.db import models, transaction
+from django.db.models.utils import resolve_callables
 
 from environments.identities.traits.exceptions import TraitPersistenceError
+
+
+class TraitManager(models.Manager):
+    def update_or_create_if_changed(
+        self, defaults: dict[str, typing.Any], **kwargs
+    ) -> typing.Tuple["Trait", bool, bool]:
+        """
+        Re-implement update_or_create to only write to the database if
+        the object has changed.
+
+        :return: a 3-tuple of:
+            1. the updated, created or unmodified trait,
+            2. a boolean representing whether the trait was created,
+            3. a boolean representing whether the trait was updated.
+        """
+
+        defaults = defaults or {}
+        self._for_write = True
+        created = False
+
+        with transaction.atomic(using=self.db):
+            try:
+                trait_obj = self.get(**kwargs)
+                updated = False
+                for field, value in resolve_callables(defaults):
+                    existing_value = getattr(trait_obj, field)
+                    if value != existing_value:
+                        setattr(trait_obj, field, value)
+                        updated = True
+                if updated:
+                    trait_obj.save(using=self.db)
+            except Trait.DoesNotExist:
+                trait_obj = self.create(**kwargs, **defaults)
+                created = True
+
+        return trait_obj, created, updated
+
+    """
+    self._for_write = True
+    with transaction.atomic(using=self.db):
+        # Lock the row so that a concurrent update is blocked until
+        # update_or_create() has performed its save.
+        obj, created = self.select_for_update().get_or_create(defaults, **kwargs)
+        if created:
+            return obj, created
+        for k, v in resolve_callables(defaults):
+            setattr(obj, k, v)
+        obj.save(using=self.db)
+    return obj, False
+    """
 
 
 class Trait(models.Model):
@@ -37,6 +88,8 @@ class Trait(models.Model):
     float_value = models.FloatField(null=True, blank=True)
 
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
+
+    objects = TraitManager()
 
     class Meta:
         verbose_name_plural = "User Traits"
