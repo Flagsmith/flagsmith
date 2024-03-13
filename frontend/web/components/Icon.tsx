@@ -52,7 +52,6 @@ export type IconName =
   | 'timer'
   | 'request'
   | 'people'
-  | 'system'
   | 'more-vertical'
 
 export type IconType = React.DetailedHTMLProps<
