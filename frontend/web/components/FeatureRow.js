@@ -68,7 +68,7 @@ class TheComponent extends Component {
     Utils.copyFeatureName(projectFlag.name)
   }
   confirmRemove = (projectFlag, cb) => {
-    openModal(
+    openModal2(
       'Remove Feature',
       <ConfirmRemoveFeature
         environmentId={this.props.environmentId}

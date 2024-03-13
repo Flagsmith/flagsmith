@@ -21,7 +21,7 @@ const ConfirmRemoveFeature: FC<ConfirmRemoveFeatureType> = ({
   const submit = (e: FormEvent) => {
     e.preventDefault()
     if (challenge == projectFlag.name) {
-      closeModal()
+      closeModal2()
       cb()
     }
   }
@@ -62,7 +62,7 @@ const ConfirmRemoveFeature: FC<ConfirmRemoveFeatureType> = ({
 
           <ModalHR />
           <div className='modal-footer'>
-            <Button className='mr-2' theme='secondary' onClick={closeModal}>
+            <Button className='mr-2' theme='secondary' onClick={closeModal2}>
               Cancel
             </Button>
             <Button
