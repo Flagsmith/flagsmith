@@ -18,15 +18,12 @@ from projects.models import (
 from users.serializers import UserListSerializer, UserPermissionGroupSerializer
 
 
-class ProjectListSerializer(ReadOnlyIfNotValidPlanMixin, serializers.ModelSerializer):
+class ProjectListSerializer(serializers.ModelSerializer):
     migration_status = serializers.SerializerMethodField(
         help_text="Edge migration status of the project; can be one of: "
         + ", ".join([k.value for k in ProjectIdentityMigrationStatus])
     )
     use_edge_identities = serializers.SerializerMethodField()
-
-    invalid_plans_regex = r"^(free|startup.*|scale-up.*)$"
-    field_names = ("stale_flags_limit_days",)
 
     class Meta:
         model = Project
@@ -65,6 +62,13 @@ class ProjectListSerializer(ReadOnlyIfNotValidPlanMixin, serializers.ModelSerial
             self.context["migration_status"]
             == ProjectIdentityMigrationStatus.MIGRATION_COMPLETED.value
         )
+
+
+class ProjectUpdateOrCreateSerializer(
+    ReadOnlyIfNotValidPlanMixin, ProjectListSerializer
+):
+    invalid_plans_regex = r"^(free|startup.*|scale-up.*)$"
+    field_names = ("stale_flags_limit_days",)
 
     def get_subscription(self) -> typing.Optional[Subscription]:
         view = self.context["view"]
