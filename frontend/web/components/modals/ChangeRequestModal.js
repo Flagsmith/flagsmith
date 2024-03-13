@@ -145,6 +145,15 @@ const ChangeRequestModal = class extends Component {
                   }
                 />
               </div>
+              {moment(this.state.live_from).isAfter(moment()) && (
+                <InfoMessage>
+                  This change will be scheduled to go live at{' '}
+                  <strong>
+                    {moment(this.state.live_from).format('Do MMM YYYY hh:mma')}{' '}
+                    ({Intl.DateTimeFormat().resolvedOptions().timeZone} Time).
+                  </strong>
+                </InfoMessage>
+              )}
               {!this.props.changeRequest &&
                 this.props.showAssignees &&
                 !Utils.getFlagsmithHasFeature('disable_users_as_reviewers') && (
