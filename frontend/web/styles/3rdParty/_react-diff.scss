@@ -9,6 +9,12 @@
 .token.number,.token.boolean {
   color: $info;
 }
+.react-diff-1igno8l-gutter,.react-diff-1wdmqof-code-fold {
+  background-color: $black-alpha-8 !important;
+}
+.react-diff-1989f1g-code-fold-gutter {
+  background-color: $black-alpha-8 !important;
+}
 .react-diff-marker {
   background-color: $black-alpha-8;
   width: 31px;

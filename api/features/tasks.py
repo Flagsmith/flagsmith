@@ -34,7 +34,7 @@ def trigger_feature_state_change_webhooks(
         else _get_feature_state_webhook_data(instance)
     )
     data = {"new_state": new_state, "changed_by": changed_by, "timestamp": timestamp}
-    previous_state = _get_previous_state(history_instance, event_type)
+    previous_state = _get_previous_state(instance, history_instance, event_type)
     if previous_state:
         data.update(previous_state=previous_state)
 
@@ -52,10 +52,12 @@ def trigger_feature_state_change_webhooks(
 
 
 def _get_previous_state(
-    history_instance: HistoricalFeatureState, event_type: WebhookEventType
+    instance: FeatureState,
+    history_instance: HistoricalFeatureState,
+    event_type: WebhookEventType,
 ) -> dict:
     if event_type == WebhookEventType.FLAG_DELETED:
-        return _get_feature_state_webhook_data(history_instance.instance)
+        return _get_feature_state_webhook_data(instance)
     if history_instance and history_instance.prev_record:
         return _get_feature_state_webhook_data(
             history_instance.prev_record.instance, previous=True

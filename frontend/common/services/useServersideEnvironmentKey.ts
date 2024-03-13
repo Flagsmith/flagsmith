@@ -25,7 +25,7 @@ export const serversideEnvironmentKeyService = service
         query: (query: Req['deleteServersideEnvironmentKeys']) => ({
           body: query,
           method: 'DELETE',
-          url: `environments/${query.environmentId}/api-keys/${query.id}`,
+          url: `environments/${query.environmentId}/api-keys/${query.id}/`,
         }),
       }),
       getServersideEnvironmentKeys: builder.query<

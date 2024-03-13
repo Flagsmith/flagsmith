@@ -25,7 +25,6 @@ export const planNames = {
   enterprise: 'Enterprise',
   free: 'Free',
   scaleUp: 'Scale-Up',
-  sideProject: 'Side Project',
   startup: 'Startup',
 }
 const Utils = Object.assign({}, require('./base/_utils'), {
@@ -76,6 +75,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
   changeRequestsEnabled(value: number | null | undefined) {
     return typeof value === 'number'
+  },
+
+  copyFeatureName: (featureName: string) => {
+    navigator.clipboard.writeText(featureName)
+    toast('Copied to clipboard')
   },
 
   displayLimitAlert(type: string, percentage: number | undefined) {
@@ -255,9 +259,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (plan && plan.includes('scale-up')) {
       return planNames.scaleUp
     }
-    if (plan && plan.includes('side-project')) {
-      return planNames.sideProject
-    }
     if (plan && plan.includes('startup')) {
       return planNames.startup
     }
@@ -279,9 +280,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (!plan || planName === planNames.free) {
       return false
     }
-    const isSideProjectOrGreater = planName !== planNames.sideProject
-    const isScaleupOrGreater =
-      isSideProjectOrGreater && planName !== planNames.startup
+    const isScaleupOrGreater = planName !== planNames.startup
     const isEnterprise = planName === planNames.enterprise
 
     switch (permission) {
@@ -290,15 +289,15 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         break
       }
       case 'CREATE_ADDITIONAL_PROJECT': {
-        valid = isSideProjectOrGreater
+        valid = true // startup or greater
         break
       }
       case '2FA': {
-        valid = isSideProjectOrGreater
+        valid = true // startup or greater
         break
       }
       case 'RBAC': {
-        valid = isSideProjectOrGreater
+        valid = isScaleupOrGreater
         break
       }
       case 'AUDIT': {
@@ -314,7 +313,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         break
       }
       case 'SCHEDULE_FLAGS': {
-        valid = isSideProjectOrGreater
+        valid = true // startup or greater
         break
       }
       case '4_EYES': {
@@ -327,6 +326,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return valid
   },
+
   getPlansPermission: (permission: string) => {
     const isOrgPermission = permission !== '2FA'
     const plans = isOrgPermission
@@ -344,10 +344,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     )
     return !!found
   },
-
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
+
   getSDKEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
 
@@ -454,7 +454,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
-
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (
@@ -505,7 +504,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return permission ? (
       el
     ) : (
-      <Tooltip title={<div>{el}</div>} place='right' html>
+      <Tooltip title={<div>{el}</div>} place='right'>
         {name}
       </Tooltip>
     )
