@@ -173,10 +173,11 @@ def handle_api_usage_notifications():
     ).select_related(
         "subscription_information_cache",
     ):
-        if not flagsmith_client.get_identity_flags(
+        feature_enabled = flagsmith_client.get_identity_flags(
             f"org.{organisation.id}.{organisation.name}",
             traits={"organisation_id": organisation.id},
-        ).is_feature_enabled("api_usage_alerting"):
+        ).is_feature_enabled("api_usage_alerting")
+        if not feature_enabled:
             continue
 
         try:
