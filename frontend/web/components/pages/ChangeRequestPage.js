@@ -22,6 +22,7 @@ import { IonIcon } from '@ionic/react'
 import { useGetSegmentsQuery } from 'common/services/useSegment'
 import DiffFeature from 'components/diff/DiffFeature'
 import Breadcrumb from 'components/Breadcrumb'
+import SettingsButton from 'components/SettingsButton'
 
 const labelWidth = 120
 
@@ -246,7 +247,9 @@ const ChangeRequestsPage = class extends Component {
       this.fetchFeature(featureId)
     }
     const user =
-      changeRequest && orgUsers.find((v) => v.id === changeRequest.user)
+      changeRequest &&
+      changeRequest.user &&
+      orgUsers.find((v) => v.id === changeRequest.user)
     const committedBy =
       (changeRequest.committed_by &&
         orgUsers &&
@@ -370,19 +373,13 @@ const ChangeRequestsPage = class extends Component {
                             'disable_users_as_reviewers',
                           ) && (
                             <div className='mb-4'>
-                              <Row
+                              <SettingsButton
                                 onClick={() =>
                                   this.setState({ showUsers: true })
                                 }
-                                className='font-weight-medium clickable'
                               >
-                                <div className='mr-2'>Assigned users</div>
-                                <Icon
-                                  name='setting'
-                                  width={20}
-                                  fill='#656D7B'
-                                />
-                              </Row>
+                                Assigned users
+                              </SettingsButton>
                               <Row className='mt-2'>
                                 {ownerUsers.length !== 0 &&
                                   ownerUsers.map((u) => (
@@ -421,15 +418,13 @@ const ChangeRequestsPage = class extends Component {
                             </div>
                           )}
                           <div className='mb-4'>
-                            <Row
+                            <SettingsButton
                               onClick={() =>
                                 this.setState({ showGroups: true })
                               }
-                              className='font-weight-medium clickable'
                             >
-                              <div className='mr-2'>Assigned groups</div>
-                              <Icon name='setting' width={20} fill='#656D7B' />
-                            </Row>
+                              Assigned groups
+                            </SettingsButton>
                             <Row className='mt-2'>
                               {!!ownerGroups?.length &&
                                 ownerGroups.map((g) => (

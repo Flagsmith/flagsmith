@@ -9,6 +9,8 @@ export type OpenConfirm = {
   yesText?: string
   noText?: string
 }
+import { TooltipProps } from './web/components/Tooltip'
+
 export declare const openModal: (name?: string) => Promise<void>
 declare global {
   const openModal: (
@@ -38,10 +40,5 @@ declare global {
   const dtrum: undefined | { identifyUser: (id: string) => void }
   const closeModal: () => void
   const toast: (message: string) => void
-  const Tooltip: FC<{
-    title: ReactNode
-    children: ReactNode
-    place?: string
-    html?: boolean
-  }>
+  const Tooltip: FC<TooltipProps>
 }
