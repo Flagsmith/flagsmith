@@ -162,8 +162,9 @@
       background: $bg-light200 !important;
       cursor:pointer;
     }
-    a
-
+    &--is-focused {
+      background: $bg-light300 !important;
+    }
     &--is-selected {
       background-color: $primary-alfa-8 !important;
     }
