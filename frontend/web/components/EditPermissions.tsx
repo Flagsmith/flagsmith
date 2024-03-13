@@ -140,7 +140,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                   noText: 'Cancel',
                   onNo: () => resolve(false),
                   onYes: () => resolve(true),
-                  title: 'Are you sure?',
+                  title: 'Discard changes',
                   yesText: 'Ok',
                 })
               })

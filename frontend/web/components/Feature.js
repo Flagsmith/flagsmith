@@ -19,7 +19,7 @@ export default class Feature extends PureComponent {
         onYes: () => {
           this.props.removeVariation(i)
         },
-        title: 'Please confirm',
+        title: 'Delete variation',
         yesText: 'Confirm',
       })
     } else {

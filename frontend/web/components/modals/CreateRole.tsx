@@ -269,7 +269,7 @@ const CreateRole: FC<CreateRoleType> = ({
                   noText: 'Cancel',
                   onNo: () => resolve(false),
                   onYes: () => resolve(true),
-                  title: 'Are you sure?',
+                  title: 'Discard changes',
                   yesText: 'Ok',
                 })
               })
@@ -396,7 +396,7 @@ const CreateRole: FC<CreateRoleType> = ({
             onYes: () => {
               resolve(true), setTab(newTab)
             },
-            title: 'Are you sure?',
+            title: 'Discard changes',
             yesText: 'Ok',
           })
         })

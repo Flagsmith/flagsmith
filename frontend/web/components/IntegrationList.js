@@ -233,7 +233,7 @@ class IntegrationList extends Component {
             .catch(this.onError)
         }
       },
-      title: 'Confirm remove integration',
+      title: 'Delete integration',
       yesText: 'Confirm',
     })
   }

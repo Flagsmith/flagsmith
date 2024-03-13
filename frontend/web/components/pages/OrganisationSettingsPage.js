@@ -137,7 +137,7 @@ const OrganisationSettingsPage = class extends Component {
       ),
       destructive: true,
       onYes: () => AppActions.deleteUser(id),
-      title: 'Remove User',
+      title: 'Delete User',
       yesText: 'Confirm',
     })
   }

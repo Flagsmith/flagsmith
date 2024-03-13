@@ -383,7 +383,7 @@ const ProjectSettingsPage = class extends Component {
                                   onYes: () => {
                                     this.migrate(project)
                                   },
-                                  title: 'Are you sure?',
+                                  title: 'Migrate to Global Edge API',
                                 })
                               }
                               size='xSmall'

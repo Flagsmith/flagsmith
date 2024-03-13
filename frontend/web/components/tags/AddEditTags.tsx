@@ -78,7 +78,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
         })
         setIsOpen(true)
       },
-      title: 'Please confirm',
+      title: 'Delete tag',
       yesText: 'Confirm',
     })
   }

@@ -387,7 +387,7 @@ export default class AdminAPIKeys extends PureComponent {
       body: (
         <div>
           This will revoke the API key <strong>{v.name}</strong> ({v.prefix}
-          *****************). This change cannot be reversed.
+          *****************). This change cannot be undone.
         </div>
       ),
       onYes: () => {
@@ -399,7 +399,7 @@ export default class AdminAPIKeys extends PureComponent {
             this.fetch()
           })
       },
-      title: 'Are you sure?',
+      title: 'Revoke the API key',
       yesText: 'Confirm',
     })
   }
