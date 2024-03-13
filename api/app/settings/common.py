@@ -911,17 +911,13 @@ if SAML_INSTALLED:
     )
 
 
-# Additional functionality needed for using workflows in Flagsmith SaaS
-# python module path to the workflows logic module, e.g. "path.to.workflows"
-WORKFLOWS_LOGIC_MODULE_PATH = env(
-    "WORKFLOWS_LOGIC_MODULE_PATH", "features.workflows.logic"
-)
-WORKFLOWS_LOGIC_INSTALLED = (
-    importlib.util.find_spec(WORKFLOWS_LOGIC_MODULE_PATH) is not None
-)
+WORKFLOWS_LOGIC_INSTALLED = importlib.util.find_spec("workflows_logic") is not None
 
 if WORKFLOWS_LOGIC_INSTALLED:
-    INSTALLED_APPS.append(WORKFLOWS_LOGIC_MODULE_PATH)
+    INSTALLED_APPS.append("workflows_logic")
+
+    if importlib.util.find_spec("workflows_logic.stale_flags") is not None:
+        INSTALLED_APPS.append("workflows_logic.stale_flags")
 
 # Additional functionality for restricting authentication to a set of authentication methods in Flagsmith SaaS
 AUTH_CONTROLLER_INSTALLED = importlib.util.find_spec("auth_controller") is not None
@@ -1031,6 +1027,13 @@ PIPEDRIVE_IGNORE_DOMAINS_REGEX = env("PIPEDRIVE_IGNORE_DOMAINS_REGEX", "")
 PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID = env(
     "PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID", None
 )
+
+# Hubspot settings
+HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
+ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
+HUBSPOT_IGNORE_DOMAINS = env.list("HUBSPOT_IGNORE_DOMAINS", [])
+HUBSPOT_IGNORE_DOMAINS_REGEX = env("HUBSPOT_IGNORE_DOMAINS_REGEX", "")
+
 
 # List of plan ids that support seat upgrades
 AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])

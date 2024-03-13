@@ -3,6 +3,7 @@ FEATURE_DELETED_MESSAGE = "Flag / Remote Config Deleted: %s"
 FEATURE_UPDATED_MESSAGE = "Flag / Remote Config updated: %s"
 SEGMENT_CREATED_MESSAGE = "New Segment created: %s"
 SEGMENT_UPDATED_MESSAGE = "Segment updated: %s"
+SEGMENT_DELETED_MESSAGE = "Segment deleted: %s"
 FEATURE_SEGMENT_UPDATED_MESSAGE = (
     "Segment rules updated for flag: %s in environment: %s"
 )

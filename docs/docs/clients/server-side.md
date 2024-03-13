@@ -21,7 +21,7 @@ Once you've got that understood, lets get the SDKs integrated!
 ## SDK Overview
 
 <Tabs groupId="language" queryString>
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 - Version Compatibility: **Python 3.8+**
 - Source Code: https://github.com/Flagsmith/flagsmith-python-client
@@ -44,7 +44,6 @@ Once you've got that understood, lets get the SDKs integrated!
 - Version Compatibility: **Node 14+**
 - Source Code:
   - https://github.com/Flagsmith/flagsmith-nodejs-client
-  - https://github.com/Flagsmith/flagsmith-nodejs-examples
 
 </TabItem>
 <TabItem value="ruby" label="Ruby">
@@ -82,7 +81,7 @@ Once you've got that understood, lets get the SDKs integrated!
 ## Add the Flagsmith package
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```bash
 pip install flagsmith
@@ -200,7 +199,7 @@ area and should be considered secret.
 :::
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```python
 from flagsmith import Flagsmith
@@ -318,7 +317,7 @@ config :flagsmith_engine, :configuration,
 ## Get Flags for an Environment
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```python
 # The method below triggers a network request
@@ -425,7 +424,7 @@ secret_button_feature_value = Flagsmith.Client.get_feature_value(flags, "secret_
 - This all happens in a single request/response.
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```python
 identifier = "delboy@trotterstraders.co.uk"
@@ -571,7 +570,7 @@ Default Flags are configured by passing in a function that is called when a Flag
 request to the API fails when retrieving flags.
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```python
 from flagsmith import Flagsmith
@@ -810,7 +809,7 @@ Evaluation mode. Please see [caching](#caching) below.
 You can modify the behaviour of the SDK during initialisation. Full configuration options are shown below.
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```python
 flagsmith = Flagsmith(
@@ -1025,6 +1024,70 @@ _flagsmithClient = new FlagsmithClient(
     # Defaults to null (http client default)
     requestTimeout: null,
 )
+```
+
+### Singleton Initialization
+
+Singleton ensures a single instance of FlagsmithClient throughout the application, optimizing resources and maintaining
+consistency in configuration.
+
+Below you can find an example implementation of the client instantiated as a Singleton with its configuration defined in
+a file called `FlagsmithSettings.cs` (found below), which stores Flagsmith-specific settings.
+
+```csharp
+
+builder.Services.AddOptions<FlagsmithSettings>().Bind(builder.Configuration.GetSection(FlagsmithSettings.ConfigSection));
+builder.Services.AddSingleton(provider => provider.GetRequiredService<IOptions<FlagsmithSettings>>().Value);
+builder.Services.AddSingleton<IFlagsmithClient, FlagsmithClient>(provider =>
+{
+    var settings = provider.GetService<FlagsmithSettings>();
+    return new FlagsmithClient(settings);
+});
+
+
+```
+
+`FlagsmithSettings.cs`
+
+```csharp
+using Example.Controllers;
+using Flagsmith;
+using Newtonsoft.Json;
+
+namespace Example.Settings
+{
+    public class FlagsmithSettings : IFlagsmithConfiguration
+    {
+        public static string ConfigSection => "FlagsmithConfiguration";
+        public string ApiUrl { get; set; } = "https://edge.api.flagsmith.com/api/v1/";
+        public string EnvironmentKey { get; set; } = String.Empty;
+        public bool EnableClientSideEvaluation { get; set; } = false;
+        public int EnvironmentRefreshIntervalSeconds { get; set; } = 60;
+        public ILogger Logger { get; set; }
+        public bool EnableAnalytics { get; set; } = false;
+        public Double? RequestTimeout { get; set; }
+        public Dictionary<string, string> CustomHeaders { get; set; }
+        public int? Retries { get; set; } = 1;
+        public CacheConfig CacheConfig { get; set; } = new(false);
+    }
+}
+
+```
+
+In the `appsettings.json` file you can configure the necessary flagsmith values.
+
+```json
+{
+ "AllowedHosts": "*",
+ "FlagsmithConfiguration": {
+  "EnvironmentKey": "YOUR_ENVIRONMENT_KEY",
+  "EnableClientSideEvaluation": false,
+  "EnvironmentRefreshIntervalSeconds": 60,
+  "EnableAnalytics": true,
+  "RequestTimeout": 10,
+  "Retries": 3
+ }
+}
 ```
 
 </TabItem>
@@ -1672,7 +1735,7 @@ then include an implementation, i.e.:
 All our SDKs are Open Source.
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 https://github.com/Flagsmith/flagsmith-python-client
 

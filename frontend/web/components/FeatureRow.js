@@ -6,14 +6,15 @@ import CreateFlagModal from './modals/CreateFlag'
 import ProjectStore from 'common/stores/project-store'
 import Constants from 'common/constants'
 import { hasProtectedTag } from 'common/utils/hasProtectedTag'
-import SegmentsIcon from './svg/SegmentsIcon'
-import UsersIcon from './svg/UsersIcon' // we need this to make JSX compile
 import Icon from './Icon'
 import FeatureValue from './FeatureValue'
 import FeatureAction from './FeatureAction'
 import { getViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
 import Tag from './tags/Tag'
+import Button from './base/forms/Button'
+import SegmentOverridesIcon from './SegmentOverridesIcon'
+import IdentityOverridesIcon from './IdentityOverridesIcon'
 
 export const width = [200, 70, 55, 70, 450]
 class TheComponent extends Component {
@@ -60,6 +61,12 @@ class TheComponent extends Component {
     }
   }
 
+  copyFeature = (e) => {
+    const { projectFlag } = this.props
+    e?.stopPropagation()?.()
+    e?.currentTarget?.blur?.()
+    Utils.copyFeatureName(projectFlag.name)
+  }
   confirmRemove = (projectFlag, cb) => {
     openModal(
       'Remove Feature',
@@ -84,9 +91,18 @@ class TheComponent extends Component {
       `${document.location.pathname}?feature=${projectFlag.id}`,
     )
     openModal(
-      `${this.props.permission ? 'Edit Feature' : 'Feature'}: ${
-        projectFlag.name
-      }`,
+      <Row>
+        {this.props.permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
+        <Button
+          onClick={() => {
+            Utils.copyFeatureName(projectFlag.name)
+          }}
+          theme='icon'
+          className='ms-2'
+        >
+          <Icon name='copy' />
+        </Button>
+      </Row>,
       <CreateFlagModal
         environmentId={this.props.environmentId}
         projectId={this.props.projectId}
@@ -132,50 +148,70 @@ class TheComponent extends Component {
           style={{
             ...(this.props.style || {}),
           }}
-          className={
-            (classNames('flex-row'),
+          className={classNames(
+            'flex-row',
             { 'fs-small': isCompact },
-            this.props.className)
-          }
+            this.props.className,
+          )}
         >
           <div
             className={`table-column ${this.props.fadeEnabled && 'faded'}`}
-            style={{ width: '120px' }}
+            style={{ width: '80px' }}
           >
-            <Switch
-              disabled={!permission || readOnly}
-              data-test={`feature-switch-${this.props.index}${
-                environmentFlags[id] && environmentFlags[id].enabled
-                  ? '-on'
-                  : '-off'
-              }`}
-              checked={environmentFlags[id] && environmentFlags[id].enabled}
-              onChange={() => {
-                if (disableControls) return
-                if (changeRequestsEnabled) {
-                  this.editFeature(projectFlag, environmentFlags[id])
-                  return
-                }
-                this.confirmToggle()
-              }}
-            />
+            <Row>
+              <Switch
+                disabled={!permission || readOnly}
+                data-test={`feature-switch-${this.props.index}${
+                  environmentFlags[id] && environmentFlags[id].enabled
+                    ? '-on'
+                    : '-off'
+                }`}
+                checked={environmentFlags[id] && environmentFlags[id].enabled}
+                onChange={() => {
+                  if (disableControls) return
+                  if (changeRequestsEnabled) {
+                    this.editFeature(projectFlag, environmentFlags[id])
+                    return
+                  }
+                  this.confirmToggle()
+                }}
+              />
+            </Row>
           </div>
-          <Flex
-            className={`table-column clickable ${
-              this.props.fadeValue && 'faded'
-            }`}
-          >
-            <FeatureValue
-              onClick={() =>
-                permission &&
-                !readOnly &&
-                this.editFeature(projectFlag, environmentFlags[id])
-              }
-              value={
-                environmentFlags[id] && environmentFlags[id].feature_state_value
-              }
-              data-test={`feature-value-${this.props.index}`}
-            />
+          <Flex className={'table-column clickable'}>
+            <Row>
+              <div
+                onClick={() =>
+                  permission &&
+                  !readOnly &&
+                  this.editFeature(projectFlag, environmentFlags[id])
+                }
+                className={`flex-fill ${this.props.fadeValue ? 'faded' : ''}`}
+              >
+                <FeatureValue
+                  value={
+                    environmentFlags[id] &&
+                    environmentFlags[id].feature_state_value
+                  }
+                  data-test={`feature-value-${this.props.index}`}
+                />
+              </div>
+
+              <SegmentOverridesIcon
+                onClick={(e) => {
+                  e.stopPropagation()
+                  this.editFeature(projectFlag, environmentFlags[id], 1)
+                }}
+                count={projectFlag.num_segment_overrides}
+              />
+              <IdentityOverridesIcon
+                onClick={(e) => {
+                  e.stopPropagation()
+                  this.editFeature(projectFlag, environmentFlags[id], 1)
+                }}
+                count={projectFlag.num_identity_overrides}
+              />
+            </Row>
           </Flex>
         </Flex>
       )
@@ -202,92 +238,51 @@ class TheComponent extends Component {
         <Flex className='table-column'>
           <Row>
             <Flex>
-              <Row
-                className='font-weight-medium'
-                style={{
-                  alignItems: 'start',
-                  lineHeight: 1,
-                  rowGap: 4,
-                  wordBreak: 'break-all',
-                }}
-              >
-                <span className='me-2'>
-                  {created_date ? (
-                    <Tooltip
-                      place='right'
-                      title={
-                        <span>
-                          {name}
-                          <span className={'ms-1'}></span>
-                          <Icon name='info-outlined' />
-                        </span>
-                      }
-                    >
-                      {isCompact && description
-                        ? `${description}<br/>Created ${moment(
-                            created_date,
-                          ).format('Do MMM YYYY HH:mma')}`
-                        : `Created ${moment(created_date).format(
-                            'Do MMM YYYY HH:mma',
-                          )}`}
-                    </Tooltip>
-                  ) : (
-                    name
-                  )}
-                </span>
-
-                {!!projectFlag.num_segment_overrides && (
-                  <div
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      this.editFeature(projectFlag, environmentFlags[id], 1)
-                    }}
+              <Row>
+                <Row
+                  className='font-weight-medium'
+                  style={{
+                    lineHeight: 1,
+                    wordBreak: 'break-all',
+                  }}
+                >
+                  <span>
+                    {created_date ? (
+                      <Tooltip place='right' title={<span>{name}</span>}>
+                        {isCompact && description
+                          ? `${description}<br/>Created ${moment(
+                              created_date,
+                            ).format('Do MMM YYYY HH:mma')}`
+                          : `Created ${moment(created_date).format(
+                              'Do MMM YYYY HH:mma',
+                            )}`}
+                      </Tooltip>
+                    ) : (
+                      name
+                    )}
+                  </span>
+                  <Button
+                    onClick={this.copyFeature}
+                    theme='icon'
+                    className='ms-2 me-2'
                   >
-                    <Tooltip
-                      title={
-                        <span
-                          className='chip me-2 chip--xs bg-primary text-white'
-                          style={{ border: 'none' }}
-                        >
-                          <SegmentsIcon className='chip-svg-icon' />
-                          <span>{projectFlag.num_segment_overrides}</span>
-                        </span>
-                      }
-                      place='top'
-                    >
-                      {`${projectFlag.num_segment_overrides} Segment Override${
-                        projectFlag.num_segment_overrides !== 1 ? 's' : ''
-                      }`}
-                    </Tooltip>
-                  </div>
-                )}
-                {!!projectFlag.num_identity_overrides && (
-                  <div
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      this.editFeature(projectFlag, environmentFlags[id], 2)
-                    }}
-                  >
-                    <Tooltip
-                      title={
-                        <span
-                          className='chip me-2 chip--xs bg-primary text-white'
-                          style={{ border: 'none' }}
-                        >
-                          <UsersIcon className='chip-svg-icon' />
-                          <span>{projectFlag.num_identity_overrides}</span>
-                        </span>
-                      }
-                      place='top'
-                    >
-                      {`${
-                        projectFlag.num_identity_overrides
-                      } Identity Override${
-                        projectFlag.num_identity_overrides !== 1 ? 's' : ''
-                      }`}
-                    </Tooltip>
-                  </div>
-                )}
+                    <Icon name='copy' />
+                  </Button>
+                </Row>
+                <SegmentOverridesIcon
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    this.editFeature(projectFlag, environmentFlags[id], 1)
+                  }}
+                  count={projectFlag.num_segment_overrides}
+                />
+                <IdentityOverridesIcon
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    this.editFeature(projectFlag, environmentFlags[id], 1)
+                  }}
+                  count={projectFlag.num_identity_overrides}
+                />
                 {projectFlag.is_server_key_only && (
                   <Tooltip
                     title={
@@ -305,14 +300,11 @@ class TheComponent extends Component {
                     }
                   </Tooltip>
                 )}
-                {projectFlag.is_archived && (
-                  <Tag className='chip--xs' tag={Constants.archivedTag} />
-                )}
-                <TagValues
-                  inline
-                  projectId={`${projectId}`}
-                  value={projectFlag.tags}
-                />
+                <TagValues projectId={`${projectId}`} value={projectFlag.tags}>
+                  {projectFlag.is_archived && (
+                    <Tag className='chip--xs' tag={Constants.archivedTag} />
+                  )}
+                </TagValues>
               </Row>
               {description && !isCompact && (
                 <div
@@ -402,10 +394,7 @@ class TheComponent extends Component {
                 removeFlag(projectId, projectFlag)
               })
             }}
-            onCopyName={() => {
-              navigator.clipboard.writeText(name)
-              toast('Copied to clipboard')
-            }}
+            onCopyName={this.copyFeature}
           />
         </div>
       </Row>

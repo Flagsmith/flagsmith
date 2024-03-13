@@ -93,7 +93,7 @@ if settings.SPLIT_TESTING_INSTALLED:
             name="conversion-events",
         ),
         path(
-            "conversion_event_types/",
+            "conversion-event-types/",
             ConversionEventTypeView.as_view(),
             name="conversion-event-types",
         ),

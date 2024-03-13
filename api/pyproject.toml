@@ -104,6 +104,7 @@ pyngo = "~1.6.0"
 flagsmith = "^3.4.0"
 python-gnupg = "^0.5.1"
 django-redis = "^5.4.0"
+hubspot-api-client = "^8.2.1"
 
 [tool.poetry.group.auth-controller]
 optional = true
@@ -122,6 +123,12 @@ optional = true
 
 [tool.poetry.group.ldap.dependencies]
 flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v0.1.0" }
+
+[tool.poetry.group.workflows]
+optional = true
+
+[tool.poetry.group.workflows.dependencies]
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.2.1" }
 
 [tool.poetry.group.dev.dependencies]
 django-test-migrations = "~1.2.0"
