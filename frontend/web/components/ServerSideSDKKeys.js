@@ -115,8 +115,8 @@ class ServerSideSDKKeys extends Component {
     openConfirm({
       body: (
         <div>
-          The key <strong>{name}</strong> will be permanently deleted, are you
-          sure?
+          Are you sure you want to remove the SDK key <strong>{name}</strong>?
+          This action cannot be undone.
         </div>
       ),
       destructive: true,
