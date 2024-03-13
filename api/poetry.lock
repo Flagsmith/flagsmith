@@ -4300,8 +4300,8 @@ flagsmith_task_processor = {git = "https://github.com/Flagsmith/flagsmith-task-p
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
-reference = "v2.2.0"
-resolved_reference = "f1ff8de21349da824f74e2a6caefcf8a5f65f1f3"
+reference = "v2.2.1"
+resolved_reference = "9752ee48629bb10f06910a949749a992494a8d5c"
 
 [[package]]
 name = "wrapt"
@@ -4521,4 +4521,4 @@ requests = ">=2.7,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "9cc9028c4fbd8793d5764dabcfe2227fae9e775817983a8166b4bad3dafbe9c4"
+content-hash = "b41d0cbed2983ff5bfee92b75b91a92e6dd90e58fdfae58fd2d33a77d835ccf7"
