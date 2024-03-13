@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -35,6 +36,11 @@ class TagViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         project_id = int(self.kwargs["project_pk"])
         serializer.save(project_id=project_id)
+
+    def perform_destroy(self, instance: Tag):
+        if instance.is_system_tag:
+            raise ValidationError("Cannot delete system tags.")
+        return super().perform_destroy(instance)
 
     @action(
         detail=False,
