@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
-import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
 import CreateFlagModal from 'components/modals/CreateFlag'
 import CreateTraitModal from 'components/modals/CreateTrait'
 import TryIt from 'components/TryIt'
