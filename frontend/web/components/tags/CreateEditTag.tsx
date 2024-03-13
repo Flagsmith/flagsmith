@@ -15,6 +15,7 @@ import Tag from './Tag'
 import InlineModal from 'components/InlineModal'
 import ErrorMessage from 'components/ErrorMessage'
 import Switch from 'components/Switch'
+import Icon from 'components/Icon'
 
 type CreateEditTagType = {
   projectId: string
@@ -168,7 +169,9 @@ const CreateEditTag: FC<CreateEditTagType> = ({
                 checked={tag?.is_permanent}
                 onChange={(e: InputEvent) => update('is_permanent', e)}
               />
-              <div className='label-switch ml-3'>Is permanent?</div>
+              <div className='label-switch ml-3'>
+                Is permanent? <Icon className='ms-1' name={'info-outlined'} />
+              </div>
             </FormGroup>
           }
           place='top'

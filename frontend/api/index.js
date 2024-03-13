@@ -108,6 +108,7 @@ app.get('/config/project-overrides', (req, res) => {
     { name: 'amplitude', value: process.env.AMPLITUDE_API_KEY },
     { name: 'delighted', value: process.env.DELIGHTED_API_KEY },
     { name: 'capterraKey', value: process.env.CAPTERRA_API_KEY },
+    { name: 'stale_flags_limit_days', value: process.env.STALE_FLAG_LIMIT_DAYS || "30" },
     {
       name: 'hideInviteLinks',
       value: envToBool('DISABLE_INVITE_LINKS', false),

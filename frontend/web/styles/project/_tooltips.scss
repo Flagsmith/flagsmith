@@ -8,7 +8,7 @@ $shadow-dark: 0 4px 4px 0 #00000029;
   font-size: $font-size-sm;
   color: $body-text !important;
   text-transform: none;
-
+  text-wrap: wrap;
   &.show {
     opacity: 1;
   }

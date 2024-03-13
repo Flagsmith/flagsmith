@@ -250,6 +250,7 @@ export type Tag = {
   label: string
   is_system_tag: boolean
   is_permanent: boolean
+  type: 'STALE' | 'NONE'
 }
 
 export type MultivariateFeatureStateValue = {

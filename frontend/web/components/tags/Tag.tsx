@@ -9,40 +9,39 @@ import TagContent from './TagContent'
 
 type TagType = {
   className?: string
-  deselectedColor?: string
   hideNames?: boolean
   onClick?: (tag: TTag) => void
   selected?: boolean
   tag: Partial<TTag>
-  isTruncated?: boolean
   isDot?: boolean
+}
+
+export const getTagColor = (tag: Partial<TTag>, selected?: boolean) => {
+  if (Utils.getFlagsmithHasFeature('dark_mode') && tag.color === '#344562') {
+    return '#9DA4AE'
+  }
+  if (selected) {
+    return tag.color
+  }
+  return tag.color
 }
 
 const Tag: FC<TagType> = ({
   className,
-  deselectedColor,
   hideNames,
   isDot,
-  isTruncated,
   onClick,
   selected,
   tag,
 }) => {
-  const getColor = () => {
-    if (Utils.getFlagsmithHasFeature('dark_mode') && tag.color === '#344562') {
-      return '#9DA4AE'
-    }
-    if (selected) {
-      return tag.color
-    }
-    return deselectedColor || tag.color
-  }
-
+  const tagColor = getTagColor(tag, selected)
   if (isDot) {
     return (
       <div
         className={'tag--dot'}
-        style={{ backgroundColor: `${color(getColor()).darken(0.1)}` }}
+        style={{
+          backgroundColor: `${color(tagColor).darken(0.1)}`,
+        }}
       />
     )
   }
@@ -50,7 +49,7 @@ const Tag: FC<TagType> = ({
   if (!hideNames && !!onClick) {
     return (
       <ToggleChip
-        color={getColor()}
+        color={tagColor}
         active={selected}
         onClick={onClick ? () => onClick(tag as TTag) : null}
       >
@@ -59,32 +58,13 @@ const Tag: FC<TagType> = ({
     )
   }
 
-  return isTruncated && `${tag.label}`.length > 12 ? (
-    <Tooltip
-      plainText
-      title={
-        <div
-          onClick={() => onClick?.(tag as TTag)}
-          style={{
-            backgroundColor: `${color(getColor()).fade(0.92)}`,
-            border: `1px solid ${color(getColor()).fade(0.76)}`,
-            color: `${color(getColor()).darken(0.1)}`,
-          }}
-          className={cx('chip', className)}
-        >
-          <TagContent tag={tag} truncateTo={12} />
-        </div>
-      }
-    >
-      <TagContent tag={tag} />
-    </Tooltip>
-  ) : (
+  return (
     <div
       onClick={() => onClick?.(tag as TTag)}
       style={{
-        backgroundColor: `${color(getColor()).fade(0.92)}`,
-        border: `1px solid ${color(getColor()).fade(0.76)}`,
-        color: `${color(getColor()).darken(0.1)}`,
+        backgroundColor: `${color(tagColor).fade(0.92)}`,
+        border: `1px solid ${color(tagColor).fade(0.76)}`,
+        color: `${color(tagColor).darken(0.1)}`,
       }}
       className={cx('chip', className)}
     >
