@@ -1,5 +1,6 @@
 import uuid
 from datetime import timedelta
+from unittest.mock import MagicMock
 
 import pytest
 from django.core.mail.message import EmailMultiAlternatives
@@ -227,6 +228,45 @@ def test_send_org_subscription_cancelled_alert(db: None, mocker: MockerFixture) 
     )
 
 
+def test_handle_api_usage_notifications_when_feature_flag_is_off(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    mailoutbox: list[EmailMultiAlternatives],
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+    )
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = False
+
+    # When
+    handle_api_usage_notifications()
+
+    # Then
+    mock_api_usage.assert_not_called()
+
+    assert len(mailoutbox) == 0
+    assert (
+        OranisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 0
+    )
+
+
 def test_handle_api_usage_notifications_below_100(
     mocker: MockerFixture,
     organisation: Organisation,
@@ -247,7 +287,10 @@ def test_handle_api_usage_notifications_below_100(
         "organisations.tasks.get_current_api_usage",
     )
     mock_api_usage.return_value = 91
-    mocker.patch("organisations.tasks.get_client")
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
 
     assert not OranisationAPIUsageNotification.objects.filter(
         organisation=organisation,
@@ -336,7 +379,11 @@ def test_handle_api_usage_notifications_above_100(
     )
     mock_api_usage.return_value = 105
 
-    mocker.patch("organisations.tasks.get_client")
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
     assert not OranisationAPIUsageNotification.objects.filter(
         organisation=organisation,
     ).exists()
