@@ -14,7 +14,7 @@ from rest_framework.test import APIClient
 from environments.dynamodb.types import ProjectIdentityMigrationStatus
 from environments.identities.models import Identity
 from features.models import Feature, FeatureSegment
-from organisations.models import Organisation, OrganisationRole
+from organisations.models import Organisation, OrganisationRole, Subscription
 from organisations.permissions.models import (
     OrganisationPermissionModel,
     UserOrganisationPermission,
@@ -39,7 +39,13 @@ now = timezone.now()
 yesterday = now - timedelta(days=1)
 
 
-def test_should_create_a_project(settings, admin_user, admin_client, organisation):
+def test_should_create_a_project(
+    settings: SettingsWrapper,
+    admin_user: FFAdminUser,
+    admin_client: APIClient,
+    organisation: Organisation,
+    enterprise_subscription: Subscription,
+) -> None:
     # Given
     settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = None
 
@@ -106,7 +112,12 @@ def test_should_create_a_project_with_admin_master_api_key_client(
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_can_update_project(client, project, organisation):
+def test_can_update_project(
+    client: APIClient,
+    project: Project,
+    organisation: Organisation,
+    enterprise_subscription: Subscription,
+) -> None:
     # Given
     new_name = "New project name"
     new_stale_flags_limit_days = 15
