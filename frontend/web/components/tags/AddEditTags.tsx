@@ -1,4 +1,4 @@
-import React, { FC, useMemo, useState } from 'react'
+import React, { FC, useEffect, useMemo, useState } from 'react'
 import { filter as loFilter } from 'lodash'
 import { useHasPermission } from 'common/providers/Permission'
 import Utils from 'common/utils/utils'
@@ -45,6 +45,11 @@ const AddEditTags: FC<AddEditTagsType> = ({
     permission: 'ADMIN',
   })
 
+  useEffect(() => {
+    if (!isOpen) {
+      setTab('SELECT')
+    }
+  }, [isOpen])
   const selectTag = (tag: TTag) => {
     const _value = value || []
     const isSelected = _value?.includes(tag.id)

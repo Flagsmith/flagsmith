@@ -26,6 +26,10 @@ const getTooltip = (tag: TTag | undefined) => {
     default:
       break
   }
+  if (tag.is_permanent) {
+    tooltip =
+      'Features marked with this tag are not monitored for staleness and have deletion protection.'
+  }
   const tagColor = getTagColor(tag, false)
 
   if (isTruncated) {
