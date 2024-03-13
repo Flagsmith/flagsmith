@@ -14,6 +14,7 @@ import Button from 'components/base/forms/Button'
 import Tag from './Tag'
 import InlineModal from 'components/InlineModal'
 import ErrorMessage from 'components/ErrorMessage'
+import Switch from 'components/Switch'
 
 type CreateEditTagType = {
   projectId: string
@@ -159,6 +160,23 @@ const CreateEditTag: FC<CreateEditTagType> = ({
           title='Name'
           onChange={(e: InputEvent) => update('label', e)}
         />
+        <Tooltip
+          title={
+            <FormGroup className='mb-4 mt-2 flex-row'>
+              <Switch
+                defaultChecked={tag?.is_permanent}
+                checked={tag?.is_permanent}
+                onChange={(e: InputEvent) => update('is_permanent', e)}
+              />
+              <div className='label-switch ml-3'>Is permanent?</div>
+            </FormGroup>
+          }
+          place='top'
+        >
+          Flags marked with permanent tags are not monitored for staleness and
+          have deletion protection.
+        </Tooltip>
+
         <InputGroup
           title='Select a color'
           component={
