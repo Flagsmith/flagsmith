@@ -8,11 +8,14 @@ type TagUsageType = {
 }
 
 const TagUsage: FC<TagUsageType> = ({ projectId, tag }) => {
-  const { data } = useGetProjectFlagsQuery({
-    is_archived: false,
-    project: projectId,
-    tags: [tag],
-  })
+  const { data } = useGetProjectFlagsQuery(
+    {
+      is_archived: false,
+      project: projectId,
+      tags: [tag],
+    },
+    { refetchOnMountOrArgChange: true },
+  )
   if (!data?.count) {
     return null
   }
