@@ -23,40 +23,44 @@ $shadow-dark: 0 4px 4px 0 #00000029;
   &.place-top {
     &:after {
       box-shadow: $shadow;
-      background-color: white;
+      border-top-color: white;
       border-right-width: $arrow;
       border-left-width: $arrow;
-      margin-left: -$arrow;
+      margin-top: -$arrow;
+      padding-top: 1px;
     }
   }
 
   &.place-bottom {
     &:after {
       box-shadow: $shadow;
-      background-color: white;
+      border-bottom-color: white;
       border-right-width: $arrow;
       border-left-width: $arrow;
       margin-left: -$arrow;
+      padding-bottom: 1px;
     }
   }
 
   &.place-right {
     &:after {
       box-shadow: $shadow;
-      background-color: white;
+      border-right-color: white;
       border-top-width: $arrow;
       border-bottom-width: $arrow;
       margin-top: -5px;
+      padding-right: 1px;
     }
   }
 
   &.place-left {
     &:after {
       box-shadow: $shadow;
-      background-color: white;
+      border-left-color: white;
       border-top-width: $arrow;
       border-bottom-width: $arrow;
       margin-top: -5px;
+      padding-left: 1px;
     }
   }
 }
@@ -70,28 +74,28 @@ $shadow-dark: 0 4px 4px 0 #00000029;
     &.place-top {
       &:after {
         box-shadow: $shadow-dark;
-        background-color: $text-icon-dark;
+        border-top-color: $text-icon-dark;
       }
     }
 
     &.place-bottom {
       &:after {
         box-shadow: $shadow-dark;
-        background-color: $text-icon-dark;
+        border-bottom-color: $text-icon-dark;
       }
     }
 
     &.place-right {
       &:after {
         box-shadow: $shadow-dark;
-        background-color: $text-icon-dark;
+        border-right-color: $text-icon-dark;
       }
     }
 
     &.place-left {
       &:after {
         box-shadow: $shadow-dark;
-        background-color: $text-icon-dark;
+        border-left-color: $text-icon-dark;
       }
     }
   }
