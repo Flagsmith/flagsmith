@@ -215,7 +215,12 @@ const TableTagFilter: FC<TableFilterType> = ({
                     className='px-2 py-2 mr-1'
                     tag={tag}
                   />
-                  <div className='ml-2'>{tag.label}</div>
+                  <div
+                    style={{ width: 150 }}
+                    className='ml-2 text-nowrap text-overflow'
+                  >
+                    {tag.label}
+                  </div>
                 </Row>
               }
               key={tag.id}
