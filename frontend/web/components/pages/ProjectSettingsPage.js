@@ -191,7 +191,6 @@ const ProjectSettingsPage = class extends Component {
               e.preventDefault()
               !isSaving &&
                 name &&
-                !!stale_flags_limit_days &&
                 editProject(
                   Object.assign({}, project, { name, stale_flags_limit_days }),
                 )
@@ -265,9 +264,7 @@ const ProjectSettingsPage = class extends Component {
                               <Button
                                 type='submit'
                                 id='save-proj-btn'
-                                disabled={
-                                  isSaving || !name || !stale_flags_limit_days
-                                }
+                                disabled={isSaving || !name}
                                 className='ml-3'
                               >
                                 {isSaving ? 'Updating' : 'Update'}
