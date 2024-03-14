@@ -37,15 +37,19 @@ const UserGroupsList: FC<UserGroupsListType> = ({
   const isAdmin = AccountStore.isAdmin()
 
   const removeGroup = (id: number, name: string) => {
-    openConfirm(
-      'Delete Group',
-      <div>
-        {'Are you sure you want to delete '}
-        <strong>{name}</strong>
-        {'?'}
-      </div>,
-      () => deleteGroup({ id, orgId }),
-    )
+    openConfirm({
+      body: (
+        <div>
+          {'Are you sure you want to delete '}
+          <strong>{name}</strong>
+          {'? This action cannot be undone.'}
+        </div>
+      ),
+      destructive: true,
+      onYes: () => deleteGroup({ id, orgId }),
+      title: 'Delete Group',
+      yesText: 'Confirm',
+    })
   }
 
   return (

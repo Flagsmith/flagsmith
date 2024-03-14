@@ -156,14 +156,14 @@ const CreateFlag = class extends Component {
           this.state.segmentsChanged ||
           this.state.settingsChanged
         ) {
-          openConfirm(
-            'Are you sure?',
-            'Closing this will discard your unsaved changes.',
-            () => resolve(true),
-            () => resolve(false),
-            'Ok',
-            'Cancel',
-          )
+          openConfirm({
+            body: 'Closing this will discard your unsaved changes.',
+            noText: 'Cancel',
+            onNo: () => resolve(false),
+            onYes: () => resolve(true),
+            title: 'Discard changes',
+            yesText: 'Ok',
+          })
         } else {
           resolve(true)
         }
@@ -899,16 +899,15 @@ const CreateFlag = class extends Component {
                 } else if (
                   document.getElementById('language-validation-error')
                 ) {
-                  openConfirm(
-                    'Validation error',
-                    'Your remote config value does not pass validation for the language you have selected. Are you sure you wish to save?',
-                    () => {
+                  openConfirm({
+                    body: 'Your remote config value does not pass validation for the language you have selected. Are you sure you wish to save?',
+                    noText: 'Cancel',
+                    onYes: () => {
                       this.save(editFeatureValue, isSaving)
                     },
-                    null,
-                    'Save',
-                    'Cancel',
-                  )
+                    title: 'Validation error',
+                    yesText: 'Save',
+                  })
                 } else {
                   this.save(editFeatureValue, isSaving)
                 }

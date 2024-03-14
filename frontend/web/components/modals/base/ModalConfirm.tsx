@@ -12,6 +12,7 @@ interface Confirm {
   onNo?: () => void
   noText?: string
   disabled?: boolean
+  destructive?: boolean
   disabledYes?: boolean
   yesText?: string
   toggle: () => void

@@ -84,7 +84,7 @@ const ConfirmToggleFeature: FC<ConfirmToggleFeatureType> = ({
               className='btn btn-primary'
               id='confirm-toggle-feature-btn'
             >
-              Confirm changes
+              Confirm
             </Button>
           </div>
         </div>

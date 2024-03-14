@@ -33,7 +33,7 @@ const ConfirmRemoveProject: FC<ConfirmRemoveProjectType> = ({
               This will remove <strong>{project.name}</strong> and{' '}
               <strong>all environments</strong>. You should ensure that you do
               not contain any references to this project in your applications
-              before proceeding.
+              before proceeding. This action cannot be undone.
             </p>
             <InputGroup
               className='mb-0'
@@ -51,8 +51,12 @@ const ConfirmRemoveProject: FC<ConfirmRemoveProjectType> = ({
             <Button className='mr-2' onClick={closeModal} theme='secondary'>
               Cancel
             </Button>
-            <Button disabled={challenge != project.name} type='submit'>
-              Confirm changes
+            <Button
+              theme='danger'
+              disabled={challenge != project.name}
+              type='submit'
+            >
+              Confirm
             </Button>
           </div>
         </form>
