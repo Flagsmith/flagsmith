@@ -1,13 +1,7 @@
 ---
-title: Importing and Exporting
+title: Bulk Data
 sidebar_position: 110
 ---
-
-:::tip
-
-You need to be running Flagsmith version `2.28.4` or greater to be able to export and import your Flagsmith data.
-
-:::
 
 Flagsmith offers some helpful utilities if you want to migrate your application from one Flagsmith instance to another.
 
@@ -167,7 +161,7 @@ e.g.
 python manage.py import-organisation-from-s3 my-export-bucket exports/organisation-1.json
 ```
 
-#### Using localstack to achieve local/test imports with s3 can be done using
+#### Using localstack to achieve local/test imports with s3 can be done using
 
 [localstack](https://github.com/localstack/localstack) and the
 [service-specific endpoint](https://docs.aws.amazon.com/sdkref/latest/guide/feature-ss-endpoints.html) strategy.
