@@ -23,8 +23,8 @@ const TagUsage: FC<TagUsageType> = ({ projectId, tag }) => {
     <div className='mt-4'>
       <WarningMessage
         warningMessage={`${data?.count} feature${
-          data?.count !== 1 ? 's' : ''
-        } are using this tag.`}
+          data?.count !== 1 ? 's are' : ' is'
+        } using this tag.`}
       />
     </div>
   )
