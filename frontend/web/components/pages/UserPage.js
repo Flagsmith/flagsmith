@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
-import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
 import CreateFlagModal from 'components/modals/CreateFlag'
 import CreateTraitModal from 'components/modals/CreateTrait'
 import TryIt from 'components/TryIt'
@@ -25,6 +24,8 @@ import TableSortFilter from 'components/tables/TableSortFilter'
 import { getViewMode, setViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
 import IdentifierString from 'components/IdentifierString'
+import Button from 'components/base/forms/Button'
+import { removeUserOverride } from 'components/RemoveUserOverride'
 const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
@@ -38,6 +39,7 @@ const valuesEqual = (actualValue, flagValue) => {
   }
   return actualValue === flagValue
 }
+
 const UserPage = class extends Component {
   static displayName = 'UserPage'
 
@@ -142,7 +144,6 @@ const UserPage = class extends Component {
       'p-0',
     )
   }
-
   editFeature = (
     projectFlag,
     environmentFlag,
@@ -157,8 +158,19 @@ const UserPage = class extends Component {
     API.trackEvent(Constants.events.VIEW_USER_FEATURE)
     openModal(
       <span>
-        Edit User Feature:{' '}
-        <span className='standard-case'>{projectFlag.name}</span>
+        <Row>
+          Edit User Feature:{' '}
+          <span className='standard-case'>{projectFlag.name}</span>
+          <Button
+            onClick={() => {
+              Utils.copyFeatureName(projectFlag.name)
+            }}
+            theme='icon'
+            className='ms-2'
+          >
+            <Icon name='copy' />
+          </Button>
+        </Row>
       </span>,
       <CreateFlagModal
         identity={this.props.match.params.id}
@@ -209,18 +221,6 @@ const UserPage = class extends Component {
         projectId={this.props.match.params.projectId}
       />,
       'p-0',
-    )
-  }
-
-  confirmRemove = (projectFlag, cb, identity) => {
-    openModal(
-      'Reset User Feature',
-      <ConfirmRemoveFeature
-        identity={identity}
-        environmentId={this.props.match.params.environmentId}
-        projectFlag={projectFlag}
-        cb={cb}
-      />,
     )
   }
 
@@ -330,10 +330,12 @@ const UserPage = class extends Component {
                           }
                         >
                           View and manage feature states and traits for this
-                          user. This will override any feature states you have
-                          for your current environment for this user only. Any
-                          features that are not overriden for this user will
-                          fallback to the environment defaults.
+                          user.
+                          <br />
+                          Overriding features here will take priority over any
+                          segment override. Any features that are not overridden
+                          for this user will fallback to any segment overrides
+                          or the environment defaults.
                         </PageTitle>
                         <div className='row'>
                           <div className='col-md-12'>
@@ -630,25 +632,35 @@ const UserPage = class extends Component {
                                                   wordBreak: 'break-all',
                                                 }}
                                               >
-                                                <span className='me-2'>
-                                                  {description ? (
-                                                    <Tooltip
-                                                      title={
-                                                        <span>
-                                                          {name}
-                                                          <span
-                                                            className={'ms-1'}
-                                                          ></span>
-                                                          <Icon name='info-outlined' />
-                                                        </span>
-                                                      }
-                                                    >
-                                                      {description}
-                                                    </Tooltip>
-                                                  ) : (
-                                                    name
-                                                  )}
-                                                </span>
+                                                <Row>
+                                                  <span>
+                                                    {description ? (
+                                                      <Tooltip
+                                                        title={
+                                                          <span>{name}</span>
+                                                        }
+                                                      >
+                                                        {description}
+                                                      </Tooltip>
+                                                    ) : (
+                                                      name
+                                                    )}
+                                                  </span>
+                                                  <Button
+                                                    onClick={(e) => {
+                                                      e?.stopPropagation()?.()
+                                                      e?.currentTarget?.blur?.()
+                                                      Utils.copyFeatureName(
+                                                        projectFlag.name,
+                                                      )
+                                                    }}
+                                                    theme='icon'
+                                                    className='ms-2 me-2'
+                                                  >
+                                                    <Icon name='copy' />
+                                                  </Button>
+                                                </Row>
+
                                                 <TagValues
                                                   projectId={`${projectId}`}
                                                   value={projectFlag.tags}
@@ -820,27 +832,29 @@ const UserPage = class extends Component {
                                                   theme='text'
                                                   size='xSmall'
                                                   disabled={!permission}
-                                                  onClick={() =>
-                                                    this.confirmRemove(
-                                                      _.find(projectFlags, {
+                                                  onClick={() => {
+                                                    const projectFlag = _.find(
+                                                      projectFlags,
+                                                      {
                                                         id,
-                                                      }),
-                                                      () => {
-                                                        removeFlag({
-                                                          environmentId:
-                                                            this.props.match
-                                                              .params
-                                                              .environmentId,
-                                                          identity:
-                                                            this.props.match
-                                                              .params.id,
-                                                          identityFlag,
-                                                        })
                                                       },
-                                                      identity.identity
-                                                        .identifier,
                                                     )
-                                                  }
+                                                    const environmentId =
+                                                      this.props.match.params
+                                                        .environmentId
+
+                                                    removeUserOverride({
+                                                      environmentId,
+                                                      identifier:
+                                                        identity.identity
+                                                          .identifier,
+                                                      identity:
+                                                        this.props.match.params
+                                                          .id,
+                                                      identityFlag,
+                                                      projectFlag,
+                                                    })
+                                                  }}
                                                 >
                                                   <Icon
                                                     name='refresh'

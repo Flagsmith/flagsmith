@@ -969,7 +969,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                 {role === 'ADMIN' ? (
                                   <Flex className='table-column fs-small lh-sm'>
                                     <Tooltip
-                                      html
                                       title={'Organisation Administrator'}
                                     >
                                       {

@@ -33,6 +33,8 @@ import ModalHR from './ModalHR'
 import FeatureValue from 'components/FeatureValue'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
+import Button from 'components/base/forms/Button'
+import { removeUserOverride } from 'components/RemoveUserOverride'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -640,11 +642,11 @@ const CreateFlag = class extends Component {
                   </label>
                 }
               >
-                Archiving a flag allows you to filter out flags from the
+                {`Archiving a flag allows you to filter out flags from the
                 Flagsmith dashboard that are no longer relevant.
                 <br />
                 An archived flag will still return as normal in all SDK
-                endpoints.
+                endpoints.`}
               </Tooltip>
             </Row>
           </FormGroup>
@@ -668,7 +670,7 @@ const CreateFlag = class extends Component {
                     Hide from SDKs <Icon name='info-outlined' />
                   </label>
                 }
-                place='right'
+                place='top'
               >
                 {Constants.strings.HIDE_FROM_SDKS_DESCRIPTION}
               </Tooltip>
@@ -709,7 +711,18 @@ const CreateFlag = class extends Component {
               type='text'
               title={
                 <>
-                  {isEdit ? 'ID' : 'ID*'}
+                  <Tooltip
+                    title={
+                      <Row>
+                        <span className={'mr-1'}>{isEdit ? 'ID' : 'ID*'}</span>
+                        <Icon name='info-outlined' />
+                      </Row>
+                    }
+                  >
+                    The ID that will be used by SDKs to retrieve the feature
+                    value and enabled state. This cannot be edited once the
+                    feature has been created.
+                  </Tooltip>
                   {!!regex && !isEdit && (
                     <div className='mt-2'>
                       {' '}
@@ -1160,7 +1173,7 @@ const CreateFlag = class extends Component {
                                                   <Icon name='info-outlined' />
                                                 </h5>
                                               }
-                                              place='right'
+                                              place='top'
                                             >
                                               {
                                                 Constants.strings
@@ -1340,6 +1353,22 @@ const CreateFlag = class extends Component {
                                       data-test='identity_overrides'
                                       tabLabel='Identity Overrides'
                                     >
+                                      <InfoMessage className='mb-4 text-left faint'>
+                                        Identity overrides override feature
+                                        values for individual identities. The
+                                        overrides take priority over an segment
+                                        overrides and environment defaults.
+                                        Identity overrides will only apply when
+                                        you identify via the SDK.{' '}
+                                        <a
+                                          target='_blank'
+                                          href='https://docs.flagsmith.com/basic-features/managing-identities'
+                                          rel='noreferrer'
+                                        >
+                                          Check the Docs for more details
+                                        </a>
+                                        .
+                                      </InfoMessage>
                                       <FormGroup className='mb-4'>
                                         <PanelSearch
                                           id='users-list'
@@ -1356,7 +1385,7 @@ const CreateFlag = class extends Component {
                                                   />
                                                 </h5>
                                               }
-                                              place='right'
+                                              place='top'
                                             >
                                               {
                                                 Constants.strings
@@ -1433,69 +1462,98 @@ const CreateFlag = class extends Component {
                                               </div>
                                             )
                                           }
-                                          renderRow={({
-                                            enabled,
-                                            feature_state_value,
-                                            id,
-                                            identity,
-                                          }) => (
-                                            <Row
-                                              space
-                                              className='list-item cursor-pointer'
-                                              key={id}
-                                            >
-                                              <Row>
-                                                <div
-                                                  className='table-column'
-                                                  style={{ width: '65px' }}
-                                                >
-                                                  <Switch
-                                                    checked={enabled}
-                                                    onChange={() =>
-                                                      this.toggleUserFlag({
-                                                        enabled,
-                                                        id,
-                                                        identity,
-                                                      })
-                                                    }
-                                                    disabled={Utils.getIsEdge()}
-                                                  />
-                                                </div>
-                                                <div className='font-weight-medium fs-small lh-sm'>
-                                                  {identity.identifier}
-                                                </div>
-                                              </Row>
-                                              <Row>
-                                                <div
-                                                  className='table-column'
-                                                  style={{ width: '188px' }}
-                                                >
-                                                  {feature_state_value !==
-                                                    null && (
-                                                    <FeatureValue
-                                                      value={
-                                                        feature_state_value
-                                                      }
-                                                    />
-                                                  )}
-                                                </div>
-                                                <div className='table-column'>
-                                                  <Button
-                                                    target='_blank'
-                                                    href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
-                                                    className='btn btn-link fs-small lh-sm font-weight-medium'
+                                          renderRow={(identityFlag) => {
+                                            const {
+                                              enabled,
+                                              feature_state_value,
+                                              id,
+                                              identity,
+                                            } = identityFlag
+                                            return (
+                                              <Row
+                                                space
+                                                className='list-item cursor-pointer'
+                                                key={id}
+                                              >
+                                                <Row>
+                                                  <div
+                                                    className='table-column'
+                                                    style={{ width: '65px' }}
                                                   >
-                                                    <Icon
-                                                      name='edit'
-                                                      width={20}
-                                                      fill='#6837FC'
-                                                    />{' '}
-                                                    Edit
-                                                  </Button>
-                                                </div>
+                                                    <Switch
+                                                      checked={enabled}
+                                                      onChange={() =>
+                                                        this.toggleUserFlag({
+                                                          enabled,
+                                                          id,
+                                                          identity,
+                                                        })
+                                                      }
+                                                      disabled={Utils.getIsEdge()}
+                                                    />
+                                                  </div>
+                                                  <div className='font-weight-medium fs-small lh-sm'>
+                                                    {identity.identifier}
+                                                  </div>
+                                                </Row>
+                                                <Row>
+                                                  <div
+                                                    className='table-column'
+                                                    style={{ width: '188px' }}
+                                                  >
+                                                    {feature_state_value !==
+                                                      null && (
+                                                      <FeatureValue
+                                                        value={
+                                                          feature_state_value
+                                                        }
+                                                      />
+                                                    )}
+                                                  </div>
+                                                  <div className='table-column'>
+                                                    <Button
+                                                      target='_blank'
+                                                      href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
+                                                      className='btn btn-link fs-small lh-sm font-weight-medium'
+                                                    >
+                                                      <Icon
+                                                        name='edit'
+                                                        width={20}
+                                                        fill='#6837FC'
+                                                      />{' '}
+                                                      Edit
+                                                    </Button>
+                                                    <Button
+                                                      onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        removeUserOverride({
+                                                          cb: () =>
+                                                            this.userOverridesPage(
+                                                              1,
+                                                            ),
+                                                          environmentId:
+                                                            this.props
+                                                              .environmentId,
+                                                          identifier:
+                                                            identity.identifier,
+                                                          identity: identity.id,
+                                                          identityFlag,
+                                                          projectFlag,
+                                                        })
+                                                      }}
+                                                      className='btn ml-2 btn-with-icon'
+                                                    >
+                                                      <Icon
+                                                        name='trash-2'
+                                                        width={20}
+                                                        fill='#656D7B'
+                                                      />
+                                                    </Button>
+                                                  </div>
+                                                </Row>
                                               </Row>
-                                            </Row>
-                                          )}
+                                            )
+                                          }}
                                           renderNoResults={
                                             <Row className='list-item'>
                                               <div className='table-column'>
@@ -1530,6 +1588,18 @@ const CreateFlag = class extends Component {
 
                                         {this.drawChart(usageData)}
                                       </FormGroup>
+                                      <InfoMessage>
+                                        The Flag Analytics data will be visible
+                                        in the Dashboard between 30 minutes and
+                                        1 hour after it has been collected.{' '}
+                                        <a
+                                          target='_blank'
+                                          href='https://docs.flagsmith.com/advanced-use/flag-analytics'
+                                          rel='noreferrer'
+                                        >
+                                          View docs
+                                        </a>
+                                      </InfoMessage>
                                     </TabItem>
                                   )}
                                 {!existingChangeRequest && createFeature && (
