@@ -98,13 +98,13 @@ class FeatureQuerySerializer(serializers.Serializer):
         required=False,
         help_text="Integer ID of the environment to view features in the context of.",
     )
-    state_enabled = serializers.BooleanField(
+    is_enabled = serializers.BooleanField(
         allow_null=True,
         required=False,
         default=None,
         help_text="Boolean value to filter features as enabled or disabled.",
     )
-    state_search = serializers.CharField(
+    value_search = serializers.CharField(
         required=False,
         default=None,
         help_text="Value of type int, string, or boolean to filter features based on their values",
