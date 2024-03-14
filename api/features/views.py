@@ -33,6 +33,7 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
+from features.value_types import BOOLEAN, INTEGER, STRING
 from projects.models import Project
 from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser, UserPermissionGroup
@@ -148,7 +149,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 )
             )
 
-        if query_data["state_search"] or query_data["state_enabled"] is not None:
+        if query_data["value_search"] or query_data["is_enabled"] is not None:
             queryset = self.apply_state_to_queryset(query_data, queryset)
         sort = "%s%s" % (
             "-" if query_data["sort_direction"] == "DESC" else "",
@@ -196,30 +197,33 @@ class FeatureViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError(
                 "Environment is required in order to filter by state search or by state enabled"
             )
-        state_enabled = query_data["state_enabled"]
-        state_search = query_data["state_search"]
+        is_enabled = query_data["is_enabled"]
+        value_search = query_data["value_search"]
         environment_id = query_data["environment"]
 
         filter_search_q = Q()
-        if state_search is not None:
+        if value_search is not None:
             filter_search_q = filter_search_q | Q(
-                feature_state_value__string_value__icontains=state_search,
+                feature_state_value__string_value__icontains=value_search,
+                feature_state_value__type=STRING,
             )
 
-            if state_search.lower() in {"true", "false"}:
-                boolean_search = state_search.lower() == "true"
+            if value_search.lower() in {"true", "false"}:
+                boolean_search = value_search.lower() == "true"
                 filter_search_q = filter_search_q | Q(
-                    feature_state_value__boolean_value=boolean_search
+                    feature_state_value__boolean_value=boolean_search,
+                    feature_state_value__type=BOOLEAN,
                 )
 
-            if state_search.isdigit():
-                integer_search = int(state_search)
+            if value_search.isdigit():
+                integer_search = int(value_search)
                 filter_search_q = filter_search_q | Q(
-                    feature_state_value__integer_value=integer_search
+                    feature_state_value__integer_value=integer_search,
+                    feature_state_value__type=INTEGER,
                 )
         filter_enabled_q = Q()
-        if state_enabled is not None:
-            filter_enabled_q = filter_enabled_q | Q(enabled=state_enabled)
+        if is_enabled is not None:
+            filter_enabled_q = filter_enabled_q | Q(enabled=is_enabled)
 
         base_q = Q(
             identity__isnull=True,
