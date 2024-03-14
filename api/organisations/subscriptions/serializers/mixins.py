@@ -1,3 +1,4 @@
+import re
 import typing
 
 from organisations.models import Subscription
@@ -24,6 +25,13 @@ class ReadOnlyIfNotValidPlanMixin:
 
     invalid_plans: typing.Iterable[str] = None
     field_names: typing.Iterable[str] = None
+    invalid_plans_regex: str = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.invalid_plans_regex_matcher = (
+            re.compile(self.invalid_plans_regex) if self.invalid_plans_regex else None
+        )
 
     def get_fields(self, *args, **kwargs):
         fields = super().get_fields(*args, **kwargs)
@@ -33,12 +41,15 @@ class ReadOnlyIfNotValidPlanMixin:
 
         subscription = self.get_subscription()
         field_names = self.field_names or []
-        invalid_plans = self.invalid_plans or []
 
         for field_name in field_names:
             if field_name in fields and (
                 not (subscription and subscription.plan)
-                or subscription.plan in invalid_plans
+                or (self.invalid_plans and subscription.plan in self.invalid_plans)
+                or (
+                    self.invalid_plans_regex
+                    and re.match(self.invalid_plans_regex_matcher, subscription.plan)
+                )
             ):
                 fields[field_name].read_only = True
 
