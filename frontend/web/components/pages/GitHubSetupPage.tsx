@@ -1,5 +1,4 @@
 import React, { FC, useState, useEffect } from 'react'
-import _data from 'common/data/base/_data'
 import OrganisationSelect from 'components/OrganisationSelect'
 import Input from 'components/base/forms/Input'
 import Icon from 'components/Icon'
@@ -146,7 +145,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
           <Select
             size='select-md'
             placeholder={'Select your repository'}
-            onChange={(v) => setRepositoryName(v.label)}
+            onChange={(v: string) => setRepositoryName(v.label)}
             options={repositories?.repositories?.map((r) => {
               return { label: r.name, value: r.name }
             })}

@@ -207,7 +207,6 @@ const CreateFlag = class extends Component {
     getGithubIntegration(getStore(), {
       organisation_pk: AccountStore.getOrganisation().id,
     }).then((res) => {
-      const installationId = res?.data?.results[0]?.installation_id
       getGithubIssues(getStore(), {
         org_id: AccountStore.getOrganisation().id,
       })
