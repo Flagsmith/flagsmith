@@ -47,12 +47,14 @@ def test_read_only_if_not_valid_plan_mixin_does_not_set_read_only_if_plan_valid(
     # Given
     valid_plan_id = "plan-id"
     invalid_plan_id = "invalid-plan-id"
+    invalid_plans_regex_ = r"^another-invalid-plan-id-.*$"
 
     mock_view = MagicMock()
 
     class MySerializer(ReadOnlyIfNotValidPlanMixin, serializers.Serializer):
         invalid_plans = (invalid_plan_id,)
         field_names = ("foo",)
+        invalid_plans_regex = invalid_plans_regex_
 
         foo = serializers.CharField()
 
