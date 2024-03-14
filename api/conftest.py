@@ -177,6 +177,15 @@ def system_tag(project: Project) -> Tag:
 
 
 @pytest.fixture()
+def enterprise_subscription(organisation: Organisation) -> Subscription:
+    Subscription.objects.filter(organisation=organisation).update(
+        plan="enterprise", subscription_id="subscription-id"
+    )
+    organisation.refresh_from_db()
+    return organisation.subscription
+
+
+@pytest.fixture()
 def project(organisation):
     return Project.objects.create(name="Test Project", organisation=organisation)
 
