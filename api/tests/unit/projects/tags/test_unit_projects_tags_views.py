@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
@@ -68,3 +70,51 @@ def test_get_tag_by__uuid_returns_200_for_user_with_view_project_permission(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["uuid"] == str(tag.uuid)
+
+
+def test_cannot_delete_a_system_tag(
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+    project: Project,
+    system_tag: Tag,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:tags-detail", args=(project.id, system_tag.id))
+
+    with_project_permissions(admin=True)
+
+    # When
+    response = staff_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"message": "Cannot delete a system tag."}
+
+
+def test_cannot_update_a_system_tag(
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+    project: Project,
+    system_tag: Tag,
+):
+    # Given
+    url = reverse("api-v1:projects:tags-detail", args=(project.id, system_tag.id))
+
+    with_project_permissions(admin=True)
+
+    updated_label = f"{system_tag.label} updated"
+
+    data = {
+        "id": system_tag.id,
+        "color": system_tag.color,
+        "label": updated_label,
+        "project": system_tag.project_id,
+        "description": "",
+    }
+
+    # When
+    response = staff_client.put(url, json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"non_field_errors": ["Cannot update a system tag."]}
