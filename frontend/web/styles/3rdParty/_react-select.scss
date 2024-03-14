@@ -52,16 +52,6 @@
     height: $input-height;
     border-radius: $border-radius;
     border: 1px solid $input-border-color;
-    &:hover {
-      border: 1px solid $basic-alpha-48;
-    }
-    &--is-focused {
-      border: 1px solid $primary;
-      box-shadow: none;
-      &:hover {
-        border: 1px solid $primary;
-      }
-    }
     &--is-disabled {
       border: 1px solid $basic-alpha-8;
       .react-select__indicators {
@@ -172,6 +162,9 @@
       background: $bg-light200 !important;
       cursor:pointer;
     }
+    &--is-focused {
+      background: $bg-light300 !important;
+    }
     &--is-selected {
       background-color: $primary-alfa-8 !important;
     }
@@ -194,10 +187,6 @@
       border: none;
       box-shadow: none;
       border: 1px solid $input-border-color-dark;
-      &--is-focused {
-        border: 1px solid $primary;
-        box-shadow: none !important;
-      }
       &--is-disabled {
         border: 1px solid $black-alpha-32;
         .react-select__indicator {
@@ -223,6 +212,10 @@
       &:hover {
         background: $bg-dark200 !important;
         color: white !important;
+        cursor:pointer;
+      }
+      &--is-focused {
+        background: $bg-dark200 !important;
         cursor:pointer;
       }
       &--is-selected {
