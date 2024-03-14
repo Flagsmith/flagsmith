@@ -259,6 +259,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
     }
     return warnings
   }, [operators, rules])
+  //Find any non-deleted rules
+  const hasNoRules = !rules[0]?.rules?.find((v) => !v.delete)
+
   const rulesEl = (
     <div className='overflow-visible'>
       <div>
@@ -296,6 +299,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
               )
             })}
         </div>
+        {hasNoRules && (
+          <InfoMessage>
+            Add at least one AND/NOT rule to create a segment.
+          </InfoMessage>
+        )}
         <Row className='justify-content-end'>
           {!readOnly && (
             <div onClick={() => addRule('ANY')} className='text-center'>
