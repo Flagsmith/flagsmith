@@ -19,7 +19,7 @@ import TableTagFilter from 'components/tables/TableTagFilter'
 import { setViewMode } from 'common/useViewMode'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
 import { getViewMode } from 'common/useViewMode'
-import { TagStrategy } from 'common/types/responses'
+import Format from 'common/utils/format'
 import EnvironmentDocumentCodeHelp from 'components/EnvironmentDocumentCodeHelp'
 
 const FeaturesPage = class extends Component {
@@ -31,13 +31,19 @@ const FeaturesPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
+    const params = Utils.fromParam()
     this.state = {
       loadedOnce: false,
-      search: null,
-      showArchived: false,
-      sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
-      tag_strategy: 'INTERSECTION',
-      tags: [],
+      page: params.page ? parseInt(params.page) : 1,
+      search: params.search || null,
+      showArchived: !!params.is_archived,
+      sort: {
+        label: Format.camelCase(params.sortBy || 'Name'),
+        sortBy: params.sortBy || 'name',
+        sortOrder: params.sortOrder || 'asc',
+      },
+      tag_strategy: params.tag_strategy || 'INTERSECTION',
+      tags: typeof params.tags === 'string' ? params.tags.split(',') : [],
     }
     ES6Component(this)
     getTags(getStore(), {
@@ -49,7 +55,7 @@ const FeaturesPage = class extends Component {
       true,
       this.state.search,
       this.state.sort,
-      0,
+      this.state.page,
       this.getFilter(),
     )
   }
@@ -66,15 +72,7 @@ const FeaturesPage = class extends Component {
       params.projectId !== oldParams.projectId
     ) {
       this.state.loadedOnce = false
-      AppActions.getFeatures(
-        params.projectId,
-        params.environmentId,
-        true,
-        this.state.search,
-        this.state.sort,
-        0,
-        this.getFilter(),
-      )
+      this.filter()
     }
   }
 
@@ -104,6 +102,15 @@ const FeaturesPage = class extends Component {
     )
   }
 
+  getURLParams = () => ({
+    ...this.getFilter(),
+    page: this.state.page || 1,
+    search: this.state.search || '',
+    sortBy: this.state.sort.sortBy,
+    sortOrder: this.state.sort.sortOrder,
+    tags: (this.state.tags || [])?.join(','),
+  })
+
   getFilter = () => ({
     is_archived: this.state.showArchived,
     tag_strategy: this.state.tag_strategy,
@@ -130,16 +137,36 @@ const FeaturesPage = class extends Component {
     }
   }
 
-  filter = () => {
-    AppActions.searchFeatures(
-      this.props.match.params.projectId,
-      this.props.match.params.environmentId,
-      true,
-      this.state.search,
-      this.state.sort,
-      0,
-      this.getFilter(),
-    )
+  filter = (skipRouting, page) => {
+    const currentParams = Utils.fromParam()
+    // this.props.router.push()
+    this.setState({ page }, () => {
+      if (!currentParams.feature && !skipRouting) {
+        this.props.router.history.replace(
+          `${document.location.pathname}?${Utils.toParam(this.getURLParams())}`,
+        )
+      }
+      if (page) {
+        AppActions.getFeatures(
+          this.props.match.params.projectId,
+          this.props.match.params.environmentId,
+          true,
+          this.state.search,
+          this.state.sort,
+          page,
+          this.getFilter(),
+        )
+      } else {
+        AppActions.searchFeatures(
+          this.props.match.params.projectId,
+          this.props.match.params.environmentId,
+          true,
+          this.state.search,
+          this.state.sort,
+          this.getFilter(),
+        )
+      }
+    })
   }
 
   createFeaturePermission(el) {
@@ -187,16 +214,17 @@ const FeaturesPage = class extends Component {
               totalFeatures,
               maxFeaturesAllowed,
             )
-            if (projectFlags?.length && !this.state.loadedOnce) {
+            if (FeatureListStore.hasLoaded && !this.state.loadedOnce) {
               this.state.loadedOnce = true
             }
             return (
               <div className='features-page'>
-                {isLoading && (!projectFlags || !projectFlags.length) && (
-                  <div className='centered-container'>
-                    <Loader />
-                  </div>
-                )}
+                {(isLoading || !this.state.loadedOnce) &&
+                  (!projectFlags || !projectFlags.length) && (
+                    <div className='centered-container'>
+                      <Loader />
+                    </div>
+                  )}
                 {(!isLoading || this.state.loadedOnce) && (
                   <div>
                     {this.state.loadedOnce ||
@@ -290,19 +318,7 @@ const FeaturesPage = class extends Component {
                                               search:
                                                 Utils.safeParseEventValue(e),
                                             },
-                                            () => {
-                                              AppActions.searchFeatures(
-                                                this.props.match.params
-                                                  .projectId,
-                                                this.props.match.params
-                                                  .environmentId,
-                                                true,
-                                                this.state.search,
-                                                this.state.sort,
-                                                0,
-                                                this.getFilter(),
-                                              )
-                                            },
+                                            this.filter,
                                           )
                                         }}
                                         value={this.state.search}
@@ -315,12 +331,15 @@ const FeaturesPage = class extends Component {
                                           className='me-4'
                                           title='Tags'
                                           tagStrategy={this.state.tag_strategy}
-                                          onChangeStrategy={(tag_strategy) => {
+                                          onChangeStrategy={(
+                                            tag_strategy,
+                                            isAutomated,
+                                          ) => {
                                             this.setState(
                                               {
                                                 tag_strategy,
                                               },
-                                              this.filter,
+                                              () => this.filter(isAutomated),
                                             )
                                           }}
                                           value={this.state.tags}
@@ -346,7 +365,7 @@ const FeaturesPage = class extends Component {
                                               this.filter,
                                             )
                                           }}
-                                          onChange={(tags) => {
+                                          onChange={(tags, isAutomated) => {
                                             FeatureListStore.isLoading = true
                                             if (
                                               tags.includes('') &&
@@ -357,7 +376,8 @@ const FeaturesPage = class extends Component {
                                               ) {
                                                 this.setState(
                                                   { tags: [''] },
-                                                  this.filter,
+                                                  () =>
+                                                    this.filter(isAutomated),
                                                 )
                                               } else {
                                                 this.setState(
@@ -366,19 +386,15 @@ const FeaturesPage = class extends Component {
                                                       (v) => !!v,
                                                     ),
                                                   },
-                                                  this.filter,
+                                                  () =>
+                                                    this.filter(isAutomated),
                                                 )
                                               }
                                             } else {
-                                              this.setState(
-                                                { tags },
-                                                this.filter,
+                                              this.setState({ tags }, () =>
+                                                this.filter(isAutomated),
                                               )
                                             }
-                                            AsyncStorage.setItem(
-                                              `${projectId}tags`,
-                                              JSON.stringify(tags),
-                                            )
                                           }}
                                         />
                                         <TableFilterOptions
@@ -423,38 +439,18 @@ const FeaturesPage = class extends Component {
                                   </Row>
                                 }
                                 nextPage={() =>
-                                  AppActions.getFeatures(
-                                    this.props.match.params.projectId,
-                                    this.props.match.params.environmentId,
-                                    true,
-                                    this.state.search,
-                                    this.state.sort,
+                                  this.filter(
+                                    false,
                                     FeatureListStore.paging.next,
-                                    this.getFilter(),
                                   )
                                 }
                                 prevPage={() =>
-                                  AppActions.getFeatures(
-                                    this.props.match.params.projectId,
-                                    this.props.match.params.environmentId,
-                                    true,
-                                    this.state.search,
-                                    this.state.sort,
+                                  this.filter(
+                                    false,
                                     FeatureListStore.paging.previous,
-                                    this.getFilter(),
                                   )
                                 }
-                                goToPage={(page) =>
-                                  AppActions.getFeatures(
-                                    this.props.match.params.projectId,
-                                    this.props.match.params.environmentId,
-                                    true,
-                                    this.state.search,
-                                    this.state.sort,
-                                    page,
-                                    this.getFilter(),
-                                  )
-                                }
+                                goToPage={(page) => this.filter(false, page)}
                                 items={projectFlags?.filter((v) => !v.ignore)}
                                 renderFooter={() => (
                                   <>
@@ -522,7 +518,8 @@ const FeaturesPage = class extends Component {
                         </FormGroup>
                       </div>
                     ) : (
-                      !isLoading && (
+                      !isLoading &&
+                      this.state.loadedOnce && (
                         <div>
                           <h3>Brilliant! Now create your features.</h3>
                           <FormGroup>

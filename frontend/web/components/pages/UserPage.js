@@ -26,6 +26,7 @@ import classNames from 'classnames'
 import IdentifierString from 'components/IdentifierString'
 import Button from 'components/base/forms/Button'
 import { removeUserOverride } from 'components/RemoveUserOverride'
+import Format from 'common/utils/format'
 const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
@@ -45,11 +46,19 @@ const UserPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
+
+    const params = Utils.fromParam()
     this.state = {
       preselect: Utils.fromParam().flag,
-      showArchived: false,
-      tag_strategy: 'INTERSECTION',
-      tags: [],
+      search: params.search || null,
+      showArchived: !!params.is_archived,
+      sort: {
+        label: Format.camelCase(params.sortBy || 'Name'),
+        sortBy: params.sortBy || 'name',
+        sortOrder: params.sortOrder || 'asc',
+      },
+      tag_strategy: params.tag_strategy || 'INTERSECTION',
+      tags: typeof params.tags === 'string' ? params.tags.split(',') : [],
     }
   }
 
@@ -248,7 +257,6 @@ const UserPage = class extends Component {
       true,
       this.state.search,
       this.state.sort,
-      0,
       this.getFilter(),
     )
   }

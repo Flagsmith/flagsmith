@@ -13,12 +13,12 @@ type TableFilterType = {
   projectId: string
   value: (number | string)[] | undefined
   isLoading: boolean
-  onChange: (value: (number | string)[]) => void
+  onChange: (value: (number | string)[], isAutomatedChange?: boolean) => void
   showArchived: boolean
   onToggleArchived: (value: boolean) => void
   className?: string
   tagStrategy: TagStrategy
-  onChangeStrategy: (value: TagStrategy) => void
+  onChangeStrategy: (value: TagStrategy, isAutomatedChange?: boolean) => void
   useLocalStorage?: boolean
 }
 
@@ -44,24 +44,6 @@ const TableTagFilter: FC<TableFilterType> = ({
   const length = (value?.length || 0) + (showArchived ? 1 : 0)
   const checkedLocalStorage = useRef(false)
   useEffect(() => {
-    if (useLocalStorage && checkedLocalStorage.current) {
-      AsyncStorage.setItem(`${projectId}-tags`, JSON.stringify(value))
-    }
-  }, [useLocalStorage, projectId, value])
-  useEffect(() => {
-    if (useLocalStorage && checkedLocalStorage.current) {
-      AsyncStorage.setItem(
-        `${projectId}-showArchived`,
-        showArchived ? 'true' : 'false',
-      )
-    }
-  }, [useLocalStorage, projectId, showArchived])
-  useEffect(() => {
-    if (tagStrategy && checkedLocalStorage.current) {
-      AsyncStorage.setItem(`${projectId}-tagStrategy`, tagStrategy)
-    }
-  }, [tagStrategy, projectId, showArchived])
-  useEffect(() => {
     const checkLocalStorage = async function () {
       if (useLocalStorage && !checkedLocalStorage.current && data) {
         checkedLocalStorage.current = true
@@ -74,7 +56,10 @@ const TableTagFilter: FC<TableFilterType> = ({
           try {
             const storedTags = JSON.parse(tags)
             onChange(
-              storedTags.filter((v) => !!data.find((tag) => tag.id === v)),
+              storedTags.filter(
+                (v) => v === '' || !!data.find((tag) => tag.id === v),
+              ),
+              true,
             )
           } catch (e) {}
         }
@@ -82,7 +67,7 @@ const TableTagFilter: FC<TableFilterType> = ({
           onToggleArchived(showArchived === 'true')
         }
         if (tagStrategy) {
-          onChangeStrategy(tagStrategy)
+          onChangeStrategy(tagStrategy, true)
         }
       }
     }
@@ -149,10 +134,6 @@ const TableTagFilter: FC<TableFilterType> = ({
               search
             />
           </div>
-          {filteredTags?.length === 0 && (
-            <div className='text-center'>No tags</div>
-          )}
-
           <TableFilterItem
             onClick={() => {
               if (!isLoading) {
