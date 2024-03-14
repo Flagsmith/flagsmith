@@ -31,6 +31,300 @@ from projects.permissions import VIEW_PROJECT
 from util.tests import Helper
 
 
+def test_can_set_trait_for_an_identity(
+    api_client: APIClient,
+    identity: Identity,
+    environment: Environment,
+) -> None:
+    # Given
+    url = reverse("api-v1:sdk-traits-list")
+    trait_key = "some-key"
+    trait_value = "some-value"
+    data = {
+        "identity": {"identifier": identity.identifier},
+        "trait_key": trait_key,
+        "trait_value": trait_value,
+    }
+
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert Trait.objects.filter(identity=identity, trait_key=trait_key).exists()
+
+
+def test_cannot_set_trait_for_an_identity_for_organisations_without_persistence(
+    api_client: APIClient,
+    identity: Identity,
+    organisation: Organisation,
+    environment: Environment,
+) -> None:
+    # Given
+    url = reverse("api-v1:sdk-traits-list")
+    trait_key = "some-key"
+    trait_value = "some-value"
+    data = {
+        "identity": {"identifier": identity.identifier},
+        "trait_key": trait_key,
+        "trait_value": trait_value,
+    }
+
+    # an organisation that is configured to not store traits
+    organisation.persist_trait_data = False
+    organisation.save()
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    # the request fails
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.data["detail"] == (
+        "Organisation is not authorised to store traits."
+    )
+
+    # and no traits are stored
+    assert Trait.objects.count() == 0
+
+
+def test_can_set_trait_with_boolean_value_for_an_identity(
+    api_client: APIClient,
+    identity: Identity,
+    environment: Environment,
+) -> None:
+    # Given
+    url = reverse("api-v1:sdk-traits-list")
+    trait_key = "some-key"
+    trait_value = True
+    data = {
+        "identity": {"identifier": identity.identifier},
+        "trait_key": trait_key,
+        "trait_value": trait_value,
+    }
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert (
+        Trait.objects.get(identity=identity, trait_key=trait_key).get_trait_value()
+        == trait_value
+    )
+
+
+def test_can_set_trait_with_identity_value_for_an_identity(
+    api_client: APIClient,
+    identity: Identity,
+    environment: Environment,
+) -> None:
+    # Given
+    url = reverse("api-v1:sdk-traits-list")
+    trait_key = "some-key"
+    trait_value = 12
+    data = {
+        "identity": {"identifier": identity.identifier},
+        "trait_key": trait_key,
+        "trait_value": trait_value,
+    }
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert (
+        Trait.objects.get(identity=identity, trait_key=trait_key).get_trait_value()
+        == trait_value
+    )
+
+
+def test_can_set_trait_with_float_value_for_an_identity(
+    api_client: APIClient,
+    identity: Identity,
+    environment: Environment,
+) -> None:
+    # Given
+    url = reverse("api-v1:sdk-traits-list")
+    trait_key = "some-key"
+    trait_value = 10.5
+    data = {
+        "identity": {"identifier": identity.identifier},
+        "trait_key": trait_key,
+        "trait_value": trait_value,
+    }
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    # and
+    assert (
+        Trait.objects.get(identity=identity, trait_key=trait_key).get_trait_value()
+        == trait_value
+    )
+
+
+def test_add_trait_creates_identity_if_it_doesnt_exist(
+    api_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    url = reverse("api-v1:sdk-traits-list")
+    identifier = "new-identity"
+    trait_key = "some-key"
+    trait_value = 10.5
+    data = {
+        "identity": {"identifier": identifier},
+        "trait_key": trait_key,
+        "trait_value": trait_value,
+    }
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert Identity.objects.filter(
+        identifier=identifier, environment=environment
+    ).exists()
+    assert Trait.objects.filter(
+        identity__identifier=identifier, trait_key=trait_key
+    ).exists()
+
+
+def test_trait_is_updated_if_already_exists(
+    identity: Identity,
+    api_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    url = reverse("api-v1:sdk-traits-list")
+    trait_key = "some-key"
+    trait_value = 10.5
+    trait = Trait.objects.create(
+        trait_key=trait_key,
+        value_type=STRING,
+        string_value=trait_value,
+        identity=identity,
+    )
+    new_value = "Some new value"
+    data = {
+        "identity": {"identifier": identity.identifier},
+        "trait_key": trait_key,
+        "trait_value": new_value,
+    }
+
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    # When
+    api_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    trait.refresh_from_db()
+    assert trait.get_trait_value() == new_value
+
+
+def test_increment_value_increments_trait_value_if_value_positive_integer(
+    identity: Identity,
+    api_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    initial_value = 2
+    increment_by = 2
+    trait_key = "some-key"
+    url = reverse("api-v1:sdk-traits-increment-value")
+    trait = Trait.objects.create(
+        identity=identity,
+        trait_key=trait_key,
+        value_type=INTEGER,
+        integer_value=initial_value,
+    )
+    data = {
+        "trait_key": trait_key,
+        "identifier": identity.identifier,
+        "increment_by": increment_by,
+    }
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    trait.refresh_from_db()
+    assert trait.get_trait_value() == initial_value + increment_by
+
+
+def test_increment_value_decrements_trait_value_if_value_negative_integer(
+    api_client: APIClient,
+    identity: Identity,
+    environment: Environment,
+) -> None:
+    # Given
+    initial_value = 2
+    increment_by = -2
+    trait_key = "some-key"
+
+    url = reverse("api-v1:sdk-traits-increment-value")
+    trait = Trait.objects.create(
+        identity=identity,
+        trait_key=trait_key,
+        value_type=INTEGER,
+        integer_value=initial_value,
+    )
+    data = {
+        "trait_key": trait_key,
+        "identifier": identity.identifier,
+        "increment_by": increment_by,
+    }
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.post(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    trait.refresh_from_db()
+    assert trait.get_trait_value() == initial_value + increment_by
+
+
 class SDKTraitsTest(APITestCase):
     JSON = "application/json"
 
@@ -48,215 +342,6 @@ class SDKTraitsTest(APITestCase):
         self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
         self.trait_key = "trait_key"
         self.trait_value = "trait_value"
-
-    def test_can_set_trait_for_an_identity(self):
-        # Given
-        url = reverse("api-v1:sdk-traits-list")
-
-        # When
-        res = self.client.post(
-            url, data=self._generate_json_trait_data(), content_type=self.JSON
-        )
-
-        # Then
-        assert res.status_code == status.HTTP_200_OK
-
-        # and
-        assert Trait.objects.filter(
-            identity=self.identity, trait_key=self.trait_key
-        ).exists()
-
-    def test_cannot_set_trait_for_an_identity_for_organisations_without_persistence(
-        self,
-    ):
-        # Given
-        url = reverse("api-v1:sdk-traits-list")
-
-        # an organisation that is configured to not store traits
-        self.organisation.persist_trait_data = False
-        self.organisation.save()
-
-        # When
-        response = self.client.post(
-            url, data=self._generate_json_trait_data(), content_type=self.JSON
-        )
-
-        # Then
-        # the request fails
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-        response_json = response.json()
-        assert response_json["detail"] == (
-            "Organisation is not authorised to store traits."
-        )
-
-        # and no traits are stored
-        assert Trait.objects.count() == 0
-
-    def test_can_set_trait_with_boolean_value_for_an_identity(self):
-        # Given
-        url = reverse("api-v1:sdk-traits-list")
-        trait_value = True
-
-        # When
-        res = self.client.post(
-            url,
-            data=self._generate_json_trait_data(trait_value=trait_value),
-            content_type=self.JSON,
-        )
-
-        # Then
-        assert res.status_code == status.HTTP_200_OK
-
-        # and
-        assert (
-            Trait.objects.get(
-                identity=self.identity, trait_key=self.trait_key
-            ).get_trait_value()
-            == trait_value
-        )
-
-    def test_can_set_trait_with_identity_value_for_an_identity(self):
-        # Given
-        url = reverse("api-v1:sdk-traits-list")
-        trait_value = 12
-
-        # When
-        res = self.client.post(
-            url,
-            data=self._generate_json_trait_data(trait_value=trait_value),
-            content_type=self.JSON,
-        )
-
-        # Then
-        assert res.status_code == status.HTTP_200_OK
-
-        # and
-        assert (
-            Trait.objects.get(
-                identity=self.identity, trait_key=self.trait_key
-            ).get_trait_value()
-            == trait_value
-        )
-
-    def test_can_set_trait_with_float_value_for_an_identity(self):
-        # Given
-        url = reverse("api-v1:sdk-traits-list")
-        float_trait_value = 10.5
-
-        # When
-        res = self.client.post(
-            url,
-            data=self._generate_json_trait_data(trait_value=float_trait_value),
-            content_type=self.JSON,
-        )
-
-        # Then
-        assert res.status_code == status.HTTP_200_OK
-
-        # and
-        assert (
-            Trait.objects.get(
-                identity=self.identity, trait_key=self.trait_key
-            ).get_trait_value()
-            == float_trait_value
-        )
-
-    def test_add_trait_creates_identity_if_it_doesnt_exist(self):
-        # Given
-        url = reverse("api-v1:sdk-traits-list")
-        identifier = "new-identity"
-
-        # When
-        res = self.client.post(
-            url,
-            data=self._generate_json_trait_data(identifier=identifier),
-            content_type=self.JSON,
-        )
-
-        # Then
-        assert res.status_code == status.HTTP_200_OK
-
-        # and
-        assert Identity.objects.filter(
-            identifier=identifier, environment=self.environment
-        ).exists()
-
-        # and
-        assert Trait.objects.filter(
-            identity__identifier=identifier, trait_key=self.trait_key
-        ).exists()
-
-    def test_trait_is_updated_if_already_exists(self):
-        # Given
-        url = reverse("api-v1:sdk-traits-list")
-        trait = Trait.objects.create(
-            trait_key=self.trait_key,
-            value_type=STRING,
-            string_value=self.trait_value,
-            identity=self.identity,
-        )
-        new_value = "Some new value"
-
-        # When
-        self.client.post(
-            url,
-            data=self._generate_json_trait_data(trait_value=new_value),
-            content_type=self.JSON,
-        )
-
-        # Then
-        trait.refresh_from_db()
-        assert trait.get_trait_value() == new_value
-
-    def test_increment_value_increments_trait_value_if_value_positive_integer(self):
-        # Given
-        initial_value = 2
-        increment_by = 2
-
-        url = reverse("api-v1:sdk-traits-increment-value")
-        trait = Trait.objects.create(
-            identity=self.identity,
-            trait_key=self.trait_key,
-            value_type=INTEGER,
-            integer_value=initial_value,
-        )
-        data = {
-            "trait_key": self.trait_key,
-            "identifier": self.identity.identifier,
-            "increment_by": increment_by,
-        }
-
-        # When
-        self.client.post(url, data=data)
-
-        # Then
-        trait.refresh_from_db()
-        assert trait.get_trait_value() == initial_value + increment_by
-
-    def test_increment_value_decrements_trait_value_if_value_negative_integer(self):
-        # Given
-        initial_value = 2
-        increment_by = -2
-
-        url = reverse("api-v1:sdk-traits-increment-value")
-        trait = Trait.objects.create(
-            identity=self.identity,
-            trait_key=self.trait_key,
-            value_type=INTEGER,
-            integer_value=initial_value,
-        )
-        data = {
-            "trait_key": self.trait_key,
-            "identifier": self.identity.identifier,
-            "increment_by": increment_by,
-        }
-
-        # When
-        self.client.post(url, data=data)
-
-        # Then
-        trait.refresh_from_db()
-        assert trait.get_trait_value() == initial_value + increment_by
 
     def test_increment_value_initialises_trait_with_a_value_of_zero_if_it_doesnt_exist(
         self,
@@ -308,7 +393,7 @@ class SDKTraitsTest(APITestCase):
         res = self.client.post(
             url,
             data=self._generate_json_trait_data(trait_value=trait_value),
-            content_type=self.JSON,
+            content_type="application/json",
         )
 
         # Then
@@ -327,7 +412,7 @@ class SDKTraitsTest(APITestCase):
         res = self.client.post(
             url,
             data=self._generate_json_trait_data(trait_value=bad_trait_value),
-            content_type=self.JSON,
+            content_type="application/json",
         )
 
         # Then
@@ -477,7 +562,7 @@ class SDKTraitsTest(APITestCase):
         data = self._generate_json_trait_data()
 
         # When
-        self.client.post(url, data=data, content_type=self.JSON)
+        self.client.post(url, data=data, content_type="application/json")
 
         # Then
         args, kwargs = mocked_forward_trait_request.delay.call_args_list[0]
