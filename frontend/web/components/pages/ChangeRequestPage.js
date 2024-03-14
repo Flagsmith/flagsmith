@@ -100,17 +100,24 @@ const ChangeRequestsPage = class extends Component {
   componentDidMount = () => {}
 
   deleteChangeRequest = () => {
-    openConfirm(
-      'Delete Change Request',
-      <div>Are you sure you want to delete this change request?</div>,
-      () => {
+    openConfirm({
+      body: (
+        <div>
+          Are you sure you want to delete this change request? This action
+          cannot be undone.
+        </div>
+      ),
+      destructive: true,
+      onYes: () => {
         AppActions.deleteChangeRequest(this.props.match.params.id, () => {
           this.context.router.history.replace(
             `/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/change-requests`,
           )
         })
       },
-    )
+      title: 'Delete Change Request',
+      yesText: 'Confirm',
+    })
   }
 
   editChangeRequest = (projectFlag, environmentFlag) => {
@@ -152,17 +159,18 @@ const ChangeRequestsPage = class extends Component {
       new Date().valueOf()
     const scheduledDate = moment(changeRequest.feature_states[0].live_from)
 
-    openConfirm(
-      `${isScheduled ? 'Schedule' : 'Publish'} Change Request`,
-      <div>
-        Are you sure you want to {isScheduled ? 'schedule' : 'publish'} this
-        change request
-        {isScheduled
-          ? ` for ${scheduledDate.format('Do MMM YYYY hh:mma')}`
-          : ''}
-        ? This will adjust the feature for your environment.
-      </div>,
-      () => {
+    openConfirm({
+      body: (
+        <div>
+          Are you sure you want to {isScheduled ? 'schedule' : 'publish'} this
+          change request
+          {isScheduled
+            ? ` for ${scheduledDate.format('Do MMM YYYY hh:mma')}`
+            : ''}
+          ? This will adjust the feature for your environment.
+        </div>
+      ),
+      onYes: () => {
         AppActions.actionChangeRequest(
           this.props.match.params.id,
           'commit',
@@ -175,7 +183,8 @@ const ChangeRequestsPage = class extends Component {
           },
         )
       },
-    )
+      title: `${isScheduled ? 'Schedule' : 'Publish'} Change Request`,
+    })
   }
 
   fetchFeature = (featureId) => {
@@ -238,7 +247,9 @@ const ChangeRequestsPage = class extends Component {
       this.fetchFeature(featureId)
     }
     const user =
-      changeRequest && orgUsers.find((v) => v.id === changeRequest.user)
+      changeRequest &&
+      changeRequest.user &&
+      orgUsers.find((v) => v.id === changeRequest.user)
     const committedBy =
       (changeRequest.committed_by &&
         orgUsers &&

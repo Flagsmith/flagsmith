@@ -280,9 +280,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (!plan || planName === planNames.free) {
       return false
     }
-    const isStartupOrGreater = planName !== planNames.startup
-    const isScaleupOrGreater =
-      isStartupOrGreater && planName !== planNames.startup
+    const isScaleupOrGreater = planName !== planNames.startup
     const isEnterprise = planName === planNames.enterprise
 
     switch (permission) {
@@ -291,11 +289,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         break
       }
       case 'CREATE_ADDITIONAL_PROJECT': {
-        valid = isStartupOrGreater
+        valid = true // startup or greater
         break
       }
       case '2FA': {
-        valid = isStartupOrGreater
+        valid = true // startup or greater
         break
       }
       case 'RBAC': {
@@ -315,7 +313,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         break
       }
       case 'SCHEDULE_FLAGS': {
-        valid = isStartupOrGreater
+        valid = true // startup or greater
         break
       }
       case '4_EYES': {

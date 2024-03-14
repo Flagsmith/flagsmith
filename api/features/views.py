@@ -353,7 +353,26 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 feature_state, WebhookEventType.FLAG_DELETED
             )
 
-    def _filter_queryset(self, queryset: QuerySet) -> QuerySet:
+    def filter_owners_and_group_owners(
+        self,
+        queryset: QuerySet[Feature],
+        query_data: dict[str, typing.Any],
+    ) -> QuerySet[Feature]:
+        owners_q = Q()
+        if query_data.get("owners"):
+            owners_q = owners_q | Q(
+                owners__id__in=query_data["owners"],
+            )
+
+        group_owners_q = Q()
+        if query_data.get("group_owners"):
+            group_owners_q = group_owners_q | Q(
+                group_owners__id__in=query_data["group_owners"],
+            )
+
+        return queryset.filter(owners_q | group_owners_q)
+
+    def _filter_queryset(self, queryset: QuerySet[Feature]) -> QuerySet[Feature]:
         query_serializer = FeatureQuerySerializer(data=self.request.query_params)
         query_serializer.is_valid(raise_exception=True)
         query_data = query_serializer.validated_data
@@ -376,6 +395,8 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         if "is_archived" in query_serializer.initial_data:
             queryset = queryset.filter(is_archived=query_data["is_archived"])
+
+        queryset = self.filter_owners_and_group_owners(queryset, query_data)
 
         return queryset
 
