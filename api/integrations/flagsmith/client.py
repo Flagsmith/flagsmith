@@ -10,7 +10,6 @@ identity_flags = get_client().get_identity_flags()
 ```
 """
 import typing
-from time import sleep
 
 from django.conf import settings
 from flagsmith import Flagsmith
@@ -31,13 +30,6 @@ def get_client(name: str = "default", local_eval: bool = False) -> Flagsmith:
         kwargs = _get_client_kwargs()
         kwargs["enable_local_evaluation"] = local_eval
         _flagsmith_client = Flagsmith(**kwargs)
-        # TODO: Remove this once client has been merged below.
-        # https://github.com/Flagsmith/flagsmith-python-client/pull/76
-        #
-        # If the client is loaded then used too fast the flags
-        # returned from the method will be empty.
-        if local_eval:
-            sleep(0.5)
         _flagsmith_clients[name] = _flagsmith_client
 
     return _flagsmith_client
