@@ -38,6 +38,7 @@ from features.models import (
     FeatureStateValue,
 )
 from features.multivariate.models import MultivariateFeatureOption
+from features.value_types import BOOLEAN, INTEGER, STRING
 from features.versioning.models import EnvironmentFeatureVersion
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
@@ -2510,7 +2511,7 @@ def test_list_features_with_intersection_tag(
     assert response.data["results"][0]["tags"] == [tag1.id, tag2.id]
 
 
-def test_list_features_with_sort_by_state_string_and_int(
+def test_list_features_with_filter_by_value_search_string_and_int(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -2541,6 +2542,7 @@ def test_list_features_with_sort_by_state_string_and_int(
     feature_state_value1 = feature_state1.feature_state_value
     feature_state_value1.string_value = None
     feature_state_value1.integer_value = 1945
+    feature_state_value1.type = INTEGER
     feature_state_value1.save()
 
     feature_state2 = feature2.feature_states.filter(environment=environment).first()
@@ -2550,6 +2552,7 @@ def test_list_features_with_sort_by_state_string_and_int(
     feature_state_value2 = feature_state2.feature_state_value
     feature_state_value2.string_value = None
     feature_state_value2.boolean_value = True
+    feature_state_value2.type = BOOLEAN
     feature_state_value2.save()
 
     feature_state_value3 = (
@@ -2558,6 +2561,7 @@ def test_list_features_with_sort_by_state_string_and_int(
         .feature_state_value
     )
     feature_state_value3.string_value = "present"
+    feature_state_value3.type = STRING
     feature_state_value3.save()
 
     feature_state4 = feature4.feature_states.filter(environment=environment).first()
@@ -2566,13 +2570,11 @@ def test_list_features_with_sort_by_state_string_and_int(
 
     feature_state_value4 = feature_state4.feature_state_value
     feature_state_value4.string_value = "year 1945"
+    feature_state_value4.type = STRING
     feature_state_value4.save()
 
     base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    url = (
-        f"{base_url}?environment={environment.id}&"
-        "state_search=1945&state_enabled=true"
-    )
+    url = f"{base_url}?environment={environment.id}&value_search=1945&is_enabled=true"
 
     # When
     response = staff_client.get(url)
@@ -2587,7 +2589,7 @@ def test_list_features_with_sort_by_state_string_and_int(
     assert feature4.name in features
 
 
-def test_list_features_with_sort_by_state_boolean(
+def test_list_features_with_filter_by_search_value_boolean(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -2618,6 +2620,7 @@ def test_list_features_with_sort_by_state_boolean(
     feature_state_value1 = feature_state1.feature_state_value
     feature_state_value1.string_value = None
     feature_state_value1.integer_value = 1945
+    feature_state_value1.type = INTEGER
     feature_state_value1.save()
 
     feature_state2 = feature2.feature_states.filter(environment=environment).first()
@@ -2627,6 +2630,7 @@ def test_list_features_with_sort_by_state_boolean(
     feature_state_value2 = feature_state2.feature_state_value
     feature_state_value2.string_value = None
     feature_state_value2.boolean_value = True
+    feature_state_value2.type = BOOLEAN
     feature_state_value2.save()
 
     feature_state_value3 = (
@@ -2635,6 +2639,7 @@ def test_list_features_with_sort_by_state_boolean(
         .feature_state_value
     )
     feature_state_value3.string_value = "present"
+    feature_state_value3.type = STRING
     feature_state_value3.save()
 
     feature_state4 = feature4.feature_states.filter(environment=environment).first()
@@ -2643,13 +2648,11 @@ def test_list_features_with_sort_by_state_boolean(
 
     feature_state_value4 = feature_state4.feature_state_value
     feature_state_value4.string_value = "year 1945"
+    feature_state_value4.type = STRING
     feature_state_value4.save()
 
     base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    url = (
-        f"{base_url}?environment={environment.id}&"
-        "state_search=true&state_enabled=false"
-    )
+    url = f"{base_url}?environment={environment.id}&value_search=true&is_enabled=false"
 
     # When
     response = staff_client.get(url)
