@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -35,6 +35,18 @@ class TagViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         project_id = int(self.kwargs["project_pk"])
         serializer.save(project_id=project_id)
+
+    def destroy(self, request: Request, *args, **kwargs):
+        instance = self.get_object()
+
+        if instance.is_system_tag:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"message": "Cannot delete a system tag."},
+            )
+
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,

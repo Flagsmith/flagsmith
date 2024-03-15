@@ -499,19 +499,22 @@ class TheComponent extends Component {
       }
       return
     }
-    openConfirm(
-      'Delete Segment Override',
-      <div>
-        {
-          'Are you sure you want to delete this segment override? This will be applied when you click Update Segment Overrides.'
-        }
-      </div>,
-      () => {
+    openConfirm({
+      body: (
+        <div>
+          {
+            'Are you sure you want to delete this segment override? This will be applied when you click Update Segment Overrides and cannot be undone.'
+          }
+        </div>
+      ),
+      destructive: true,
+      onYes: () => {
         this.props.value[i].toRemove = true
         this.setState({ isLoading: false })
       },
-      () => {},
-    )
+      title: 'Delete Segment Override',
+      yesText: 'Confirm',
+    })
   }
 
   setValue = (i, value) => {
