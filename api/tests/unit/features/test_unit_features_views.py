@@ -38,6 +38,7 @@ from features.models import (
     FeatureStateValue,
 )
 from features.multivariate.models import MultivariateFeatureOption
+from features.value_types import BOOLEAN, INTEGER, STRING
 from features.versioning.models import EnvironmentFeatureVersion
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
@@ -2508,6 +2509,159 @@ def test_list_features_with_intersection_tag(
 
     assert response.data["results"][0]["id"] == feature2.id
     assert response.data["results"][0]["tags"] == [tag1.id, tag2.id]
+
+
+def test_list_features_with_filter_by_value_search_string_and_int(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    environment: Environment,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+    feature2 = Feature.objects.create(
+        name="another_feature", project=project, initial_value="initial_value"
+    )
+    feature3 = Feature.objects.create(
+        name="missing_feature", project=project, initial_value="gone"
+    )
+    feature4 = Feature.objects.create(
+        name="fancy_feature", project=project, initial_value="fancy"
+    )
+
+    Environment.objects.create(
+        name="Out of test scope environment",
+        project=project,
+    )
+
+    feature_state1 = feature.feature_states.filter(environment=environment).first()
+    feature_state1.enabled = True
+    feature_state1.save()
+
+    feature_state_value1 = feature_state1.feature_state_value
+    feature_state_value1.string_value = None
+    feature_state_value1.integer_value = 1945
+    feature_state_value1.type = INTEGER
+    feature_state_value1.save()
+
+    feature_state2 = feature2.feature_states.filter(environment=environment).first()
+    feature_state2.enabled = True
+    feature_state2.save()
+
+    feature_state_value2 = feature_state2.feature_state_value
+    feature_state_value2.string_value = None
+    feature_state_value2.boolean_value = True
+    feature_state_value2.type = BOOLEAN
+    feature_state_value2.save()
+
+    feature_state_value3 = (
+        feature3.feature_states.filter(environment=environment)
+        .first()
+        .feature_state_value
+    )
+    feature_state_value3.string_value = "present"
+    feature_state_value3.type = STRING
+    feature_state_value3.save()
+
+    feature_state4 = feature4.feature_states.filter(environment=environment).first()
+    feature_state4.enabled = True
+    feature_state4.save()
+
+    feature_state_value4 = feature_state4.feature_state_value
+    feature_state_value4.string_value = "year 1945"
+    feature_state_value4.type = STRING
+    feature_state_value4.save()
+
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    url = f"{base_url}?environment={environment.id}&value_search=1945&is_enabled=true"
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    # Only two features met the criteria.
+    assert len(response.data["results"]) == 2
+    features = {result["name"] for result in response.data["results"]}
+    assert feature.name in features
+    assert feature4.name in features
+
+
+def test_list_features_with_filter_by_search_value_boolean(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    environment: Environment,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+    feature2 = Feature.objects.create(
+        name="another_feature", project=project, initial_value="initial_value"
+    )
+    feature3 = Feature.objects.create(
+        name="missing_feature", project=project, initial_value="gone"
+    )
+    feature4 = Feature.objects.create(
+        name="fancy_feature", project=project, initial_value="fancy"
+    )
+
+    Environment.objects.create(
+        name="Out of test scope environment",
+        project=project,
+    )
+
+    feature_state1 = feature.feature_states.filter(environment=environment).first()
+    feature_state1.enabled = True
+    feature_state1.save()
+
+    feature_state_value1 = feature_state1.feature_state_value
+    feature_state_value1.string_value = None
+    feature_state_value1.integer_value = 1945
+    feature_state_value1.type = INTEGER
+    feature_state_value1.save()
+
+    feature_state2 = feature2.feature_states.filter(environment=environment).first()
+    feature_state2.enabled = False
+    feature_state2.save()
+
+    feature_state_value2 = feature_state2.feature_state_value
+    feature_state_value2.string_value = None
+    feature_state_value2.boolean_value = True
+    feature_state_value2.type = BOOLEAN
+    feature_state_value2.save()
+
+    feature_state_value3 = (
+        feature3.feature_states.filter(environment=environment)
+        .first()
+        .feature_state_value
+    )
+    feature_state_value3.string_value = "present"
+    feature_state_value3.type = STRING
+    feature_state_value3.save()
+
+    feature_state4 = feature4.feature_states.filter(environment=environment).first()
+    feature_state4.enabled = True
+    feature_state4.save()
+
+    feature_state_value4 = feature_state4.feature_state_value
+    feature_state_value4.string_value = "year 1945"
+    feature_state_value4.type = STRING
+    feature_state_value4.save()
+
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    url = f"{base_url}?environment={environment.id}&value_search=true&is_enabled=false"
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert len(response.data["results"]) == 1
+    assert response.data["results"][0]["name"] == feature2.name
 
 
 def test_simple_feature_state_returns_only_latest_versions(
