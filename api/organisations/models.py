@@ -398,10 +398,18 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         if not is_enterprise():
             return FREE_PLAN_SUBSCRIPTION_METADATA
 
+        # TODO: this feels odd returning to the organisation that we likely just came
+        #  from to get to this method.
+        if hasattr(self.organisation, "licence"):
+            licence_information = self.organisation.licence.get_licence_information()
+            return BaseSubscriptionMetadata(
+                seats=licence_information.num_seats,
+                projects=licence_information.num_projects,
+            )
+
         return BaseSubscriptionMetadata(
-            seats=self.max_seats,
-            api_calls=self.max_api_calls,
-            projects=None,
+            seats=MAX_SEATS_IN_FREE_PLAN,
+            projects=settings.MAX_PROJECTS_IN_FREE_PLAN,
         )
 
     def add_single_seat(self):

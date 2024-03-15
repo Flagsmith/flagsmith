@@ -7,9 +7,9 @@ class BaseSubscriptionMetadata:
     def __init__(
         self,
         seats: int = 0,
-        api_calls: int = 0,
+        api_calls: typing.Optional[int] = None,
         projects: typing.Optional[int] = None,
-        chargebee_email=None,
+        chargebee_email: str = None,
     ):
         self.seats = seats
         self.api_calls = api_calls
