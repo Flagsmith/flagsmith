@@ -16,6 +16,7 @@ import CreateEditTag from './CreateEditTag'
 import Input from 'components/base/forms/Input'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
+import TagUsage from 'components/TagUsage'
 
 type AddEditTagsType = {
   value?: number[]
@@ -71,6 +72,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
             <Tag tag={tag} />
           </div>
           ? This action cannot be undone.
+          <TagUsage projectId={projectId} tag={tag.id} />
         </div>
       ),
       destructive: true,
