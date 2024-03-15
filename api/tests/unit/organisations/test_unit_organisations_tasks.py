@@ -227,6 +227,7 @@ def test_send_org_subscription_cancelled_alert(db: None, mocker: MockerFixture) 
     )
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_handle_api_usage_notifications_below_100(
     mocker: MockerFixture,
     organisation: Organisation,
@@ -313,6 +314,7 @@ def test_handle_api_usage_notifications_below_100(
     assert OranisationAPIUsageNotification.objects.first() == api_usage_notification
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_handle_api_usage_notifications_above_100(
     mocker: MockerFixture,
     organisation: Organisation,
