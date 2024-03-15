@@ -149,6 +149,24 @@ const Format = {
     return value ? value + (s[(v - 20) % 10] || s[v] || s[0]) : ''
   },
 
+  permissionList(isAdmin, permissions) {
+    // ['VIEW_PROJECT', 'CREATE_ENVIRONMENT', 'VIEW_AUDIT_LOG', 'DELETE_FEATURE'] > View project, Create environment, View audit log, +1 more
+    if (isAdmin) {
+      return 'Project Administrator'
+    }
+    const permissionsSummary =
+      permissions &&
+      permissions.length > 0 &&
+      permissions.includes('VIEW_PROJECT')
+        ? permissions
+            .slice(0, 3)
+            .map((item) => Format.enumeration.get(item))
+            .join(', ') +
+          (permissions.length > 3 ? `, +${permissions.length - 3} more` : '')
+        : ''
+    return permissionsSummary
+  },
+
   removeAccents(str) {
     // Sergio Agüero > Sergio Aguero
     if (!str) {

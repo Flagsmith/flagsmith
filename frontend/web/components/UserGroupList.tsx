@@ -2,37 +2,48 @@ import React, { FC, useState } from 'react'
 const CreateGroup = require('./modals/CreateGroup')
 import Button from './base/forms/Button'
 import AccountStore from 'common/stores/account-store'
-import { UserGroup } from 'common/types/responses'
-import {
-  useDeleteGroupMutation,
-  useGetGroupsQuery,
-} from 'common/services/useGroup'
+import { UserGroup, GroupPermission } from 'common/types/responses'
+import { useDeleteGroupMutation } from 'common/services/useGroup'
+import { useGetUserGroupPermissionQuery } from 'common/services/useUserGroupPermission'
 import PanelSearch from './PanelSearch'
 import { sortBy } from 'lodash'
 import InfoMessage from './InfoMessage' // we need this to make JSX compile
 import Icon from './Icon'
 import { useGetGroupSummariesQuery } from 'common/services/useGroupSummary'
+import Format from 'common/utils/format'
 const Panel = require('components/base/grid/Panel')
 
 type UserGroupsListType = {
   noTitle?: boolean
   orgId: string
+  projectId: string | boolean
   showRemove?: boolean
   onClick: (group: UserGroup) => void
   onEditPermissions?: (group: UserGroup) => void
 }
 
-const UserGroupsList: FC<UserGroupsListType> = ({
-  noTitle,
+type UserGroupsRowType = {
+  id: string | number
+  index: number
+  name: string
+  permissionSummary?: string
+  group: UserGroup
+  orgId: string
+  showRemove?: boolean
+  onClick: (group: UserGroup) => void
+  onEditPermissions?: (group: UserGroup) => void
+}
+const UserGroupsRow: FC<UserGroupsRowType> = ({
+  group,
+  id,
+  index,
+  name,
   onClick,
   onEditPermissions,
   orgId,
+  permissionSummary,
   showRemove,
 }) => {
-  const [page, setPage] = useState(1)
-  const { data: userGroups, isLoading } = useGetGroupSummariesQuery({
-    orgId: `${orgId}`,
-  })
   const [deleteGroup] = useDeleteGroupMutation({})
   const isAdmin = AccountStore.isAdmin()
 
@@ -51,6 +62,116 @@ const UserGroupsList: FC<UserGroupsListType> = ({
       yesText: 'Confirm',
     })
   }
+  const _onClick = () => {
+    if (onClick) {
+      onClick(group)
+    } else {
+      openModal(
+        'Edit Group',
+        <CreateGroup isEdit orgId={orgId} group={group} />,
+        'side-modal',
+      )
+    }
+  }
+  return (
+    <Row
+      space
+      className='list-item list-item-sm clickable'
+      key={id}
+      data-test={`user-item-${index}`}
+    >
+      <Flex onClick={_onClick} className=' table-column px-3'>
+        <div className='font-weight-medium'>{name}</div>
+      </Flex>
+      {permissionSummary && (
+        <Flex>
+          <div className='font-weight-small'>{permissionSummary}</div>
+        </Flex>
+      )}
+
+      {onEditPermissions && isAdmin ? (
+        <div
+          style={{
+            width: '170px',
+          }}
+          onClick={() => onEditPermissions(group)}
+          className='table-column'
+        >
+          <Button theme='text' size='small'>
+            <Icon name='edit' width={18} fill='#6837FC' /> Edit Permissions
+          </Button>
+        </div>
+      ) : (
+        <div style={{ width: '140px' }} className='table-column'></div>
+      )}
+      {showRemove ? (
+        <div style={{ width: '80px' }} className='table-column text-center'>
+          {isAdmin && (
+            <Button
+              id='remove-group'
+              type='button'
+              onClick={() => removeGroup(id, name)}
+              className='btn btn-with-icon'
+            >
+              <Icon name='trash-2' width={20} fill='#656D7B' />
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div
+          onClick={_onClick}
+          style={{ width: '72px' }}
+          className='px-3 text-center'
+        >
+          <Icon name='setting' width={20} fill='#656D7B' />
+        </div>
+      )}
+    </Row>
+  )
+}
+
+const UserGroupsList: FC<UserGroupsListType> = ({
+  noTitle,
+  onClick,
+  onEditPermissions,
+  orgId,
+  projectId,
+  showRemove,
+}) => {
+  const [page, setPage] = useState(1)
+  const { data: userGroups, isLoading } = useGetGroupSummariesQuery({
+    orgId: `${orgId}`,
+  })
+  const { data: userGroupsPermission, isLoading: userGroupPermissionLoading } =
+    useGetUserGroupPermissionQuery(
+      {
+        project_id: `${projectId}`,
+      },
+      {
+        skip: !projectId,
+      },
+    )
+
+  const mergeduserGroupsPermissionWithUserGroups = userGroupsPermission
+    ? [...userGroupsPermission]
+    : []
+
+  if (userGroupsPermission?.length > 0) {
+    userGroups?.forEach((group) => {
+      const existingPermissionIndex =
+        mergeduserGroupsPermissionWithUserGroups.findIndex(
+          (userGroupPermission) => userGroupPermission.group.id === group.id,
+        )
+      if (existingPermissionIndex === -1) {
+        mergeduserGroupsPermissionWithUserGroups.push({
+          admin: false,
+          group: group,
+          id: group.id,
+          permissions: [],
+        })
+      }
+    })
+  }
 
   return (
     <FormGroup>
@@ -66,8 +187,12 @@ const UserGroupsList: FC<UserGroupsListType> = ({
         title={noTitle ? '' : 'Groups'}
         className='no-pad'
         itemHeight={64}
-        items={sortBy(userGroups, 'name')}
-        paging={userGroups}
+        items={
+          userGroupsPermission
+            ? sortBy(mergeduserGroupsPermissionWithUserGroups, 'group.name')
+            : sortBy(userGroups, 'name')
+        }
+        paging={mergeduserGroupsPermissionWithUserGroups || userGroups}
         nextPage={() => setPage(page + 1)}
         prevPage={() => setPage(page - 1)}
         goToPage={setPage}
@@ -87,75 +212,40 @@ const UserGroupsList: FC<UserGroupsListType> = ({
             </Row>
           )
         }
-        renderRow={(group: UserGroup, index: number) => {
-          const { id, name, users } = group
-          const _onClick = () => {
-            if (onClick) {
-              onClick(group)
-            } else {
-              openModal(
-                'Edit Group',
-                <CreateGroup isEdit orgId={orgId} group={group} />,
-                'side-modal',
-              )
-            }
+        renderRow={(group: UserGroup | GroupPermission, index: number) => {
+          if (userGroupsPermission) {
+            const { admin, group: userPermissionGroup, permissions } = group
+            const permissionSummary = Format.permissionList(admin, permissions)
+            return (
+              <UserGroupsRow
+                group={userPermissionGroup}
+                id={userPermissionGroup.id}
+                index={index}
+                name={userPermissionGroup.name}
+                onClick={onClick}
+                onEditPermissions={onEditPermissions}
+                orgId={orgId}
+                permissionSummary={permissionSummary}
+                showRemove={showRemove}
+              />
+            )
+          } else {
+            const { id, name } = group
+            return (
+              <UserGroupsRow
+                group={group}
+                id={id}
+                index={index}
+                name={name}
+                onClick={onClick}
+                onEditPermissions={onEditPermissions}
+                orgId={orgId}
+                showRemove={showRemove}
+              />
+            )
           }
-          return (
-            <Row
-              space
-              className='list-item list-item-sm clickable'
-              key={id}
-              data-test={`user-item-${index}`}
-            >
-              <Flex onClick={_onClick} className=' table-column px-3'>
-                <div className='font-weight-medium'>{name}</div>
-              </Flex>
-
-              {onEditPermissions && isAdmin ? (
-                <div
-                  style={{
-                    width: '170px',
-                  }}
-                  onClick={() => onEditPermissions(group)}
-                  className='table-column'
-                >
-                  <Button theme='text' size='small'>
-                    <Icon name='edit' width={18} fill='#6837FC' /> Edit
-                    Permissions
-                  </Button>
-                </div>
-              ) : (
-                <div style={{ width: '170px' }} className='table-column'></div>
-              )}
-              {showRemove ? (
-                <div
-                  style={{ width: '80px' }}
-                  className='table-column text-center'
-                >
-                  {isAdmin && (
-                    <Button
-                      id='remove-group'
-                      type='button'
-                      onClick={() => removeGroup(id, name)}
-                      className='btn btn-with-icon'
-                    >
-                      <Icon name='trash-2' width={20} fill='#656D7B' />
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <div
-                  onClick={_onClick}
-                  style={{ width: '72px' }}
-                  className='px-3 text-center'
-                >
-                  <Icon name='setting' width={20} fill='#656D7B' />
-                </div>
-              )}
-            </Row>
-          )
         }}
-        isLoading={isLoading}
+        isLoading={isLoading || userGroupPermissionLoading}
         renderNoResults={
           <Panel title={noTitle ? '' : 'Groups'} className='no-pad'>
             <div className='search-list'>
