@@ -225,20 +225,26 @@ const UserPage = class extends Component {
   }
 
   removeTrait = (id, trait_key) => {
-    openConfirm(
-      'Delete Trait',
-      <div>
-        {'Are you sure you want to delete trait '}
-        <strong>{trait_key}</strong>
-        {' from this user?'}
-      </div>,
-      () =>
+    openConfirm({
+      body: (
+        <div>
+          {'Are you sure you want to delete trait '}
+          <strong>{trait_key}</strong>
+          {
+            ' from this user? Traits can be re-added here or via one of our SDKs.'
+          }
+        </div>
+      ),
+      destructive: true,
+      onYes: () =>
         AppActions.deleteIdentityTrait(
           this.props.match.params.environmentId,
           this.props.match.params.id,
           id || trait_key,
         ),
-    )
+      title: 'Delete Trait',
+      yesText: 'Confirm',
+    })
   }
 
   filter = () => {
