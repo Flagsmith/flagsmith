@@ -753,7 +753,10 @@ client_configuration = Flagsmith.Client.new(environment_key: "MY_SDK_KEY", defau
 
 :::info
 
-Offline handlers are still in active development for some SDKs.
+Offline handlers are still in active development. We are building them for all our SDKs; those that are production ready
+are listed below.
+
+Progress on the remaining SDKs can be seen [here](https://github.com/Flagsmith/flagsmith/issues/2024).
 
 :::
 
@@ -868,7 +871,10 @@ Evaluation mode. Please see [caching](#caching) below.
 
 :::info
 
-Offline mode is still in active development for some SDKs.
+Offline mode is still in active development for some SDKs. We are building it for all our SDKs; those that are
+production ready are listed below.
+
+Progress on the remaining SDKs can be seen [here](https://github.com/Flagsmith/flagsmith/issues/2024).
 
 :::
 
