@@ -131,7 +131,12 @@ export type Req = {
     environment: string
     user: string
   }
-  getProjectFlags: { project: string; environmentId?: string }
+  getProjectFlags: {
+    project: string
+    environmentId?: string
+    tags?: string[]
+    is_archived?: boolean
+  }
   getProjectFlag: { project: string; id: string }
   getRolesPermissionUsers: { organisation_id: string; role_id: string }
   deleteRolesPermissionUsers: {
