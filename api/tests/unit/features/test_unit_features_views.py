@@ -2518,9 +2518,12 @@ def test_list_features_with_feature_state(
     with_project_permissions: WithProjectPermissionsCallable,
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
+    identity: Identity,
+    feature_segment: FeatureSegment,
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])
+
     feature2 = Feature.objects.create(
         name="another_feature", project=project, initial_value="initial_value"
     )
@@ -2535,6 +2538,7 @@ def test_list_features_with_feature_state(
 
     feature_state1 = feature.feature_states.filter(environment=environment).first()
     feature_state1.enabled = True
+    feature_state1.version = 1
     feature_state1.save()
 
     feature_state_value1 = feature_state1.feature_state_value
@@ -2542,6 +2546,19 @@ def test_list_features_with_feature_state(
     feature_state_value1.integer_value = 1945
     feature_state_value1.type = INTEGER
     feature_state_value1.save()
+
+    # This should be ignored due to versioning.
+    feature_state_versioned = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        enabled=True,
+        version=100,
+    )
+    feature_state_value_versioned = feature_state_versioned.feature_state_value
+    feature_state_value_versioned.string_value = None
+    feature_state_value_versioned.integer_value = 2005
+    feature_state_value_versioned.type = INTEGER
+    feature_state_value_versioned.save()
 
     feature_state2 = feature2.feature_states.filter(environment=environment).first()
     feature_state2.enabled = True
@@ -2561,7 +2578,21 @@ def test_list_features_with_feature_state(
     feature_state_value3.string_value = "present"
     feature_state_value3.save()
 
-    # Include multivariate to test non-inclusion.
+    # This should be ignored due to identity being set.
+    FeatureState.objects.create(
+        feature=feature2,
+        environment=environment,
+        identity=identity,
+    )
+
+    # This should be ignored due to feature segment being set.
+    FeatureState.objects.create(
+        feature=feature2,
+        environment=environment,
+        feature_segment=feature_segment,
+    )
+
+    # Multivariate should be ignored.
     MultivariateFeatureOption.objects.create(
         feature=feature2,
         default_percentage_allocation=30,
@@ -2589,7 +2620,7 @@ def test_list_features_with_feature_state(
     results = response.data["results"]
 
     assert results[0]["environment_feature_state"]["enabled"] is True
-    assert results[0]["environment_feature_state"]["feature_state_value"] == 1945
+    assert results[0]["environment_feature_state"]["feature_state_value"] == 2005
     assert results[0]["name"] == feature.name
     assert results[1]["environment_feature_state"]["enabled"] is True
     assert results[1]["environment_feature_state"]["feature_state_value"] is True
