@@ -228,6 +228,7 @@ def test_send_org_subscription_cancelled_alert(db: None, mocker: MockerFixture) 
     )
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_handle_api_usage_notifications_when_feature_flag_is_off(
     mocker: MockerFixture,
     organisation: Organisation,
