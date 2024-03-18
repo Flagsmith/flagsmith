@@ -15,7 +15,9 @@ def get_edge_identity_overrides(
             environment_id=environment_id, feature_id=feature_id
         )
     )
-    for item in override_items:
-        item["environment_id"] = str(item["environment_id"])
-
-    return [IdentityOverrideV2.model_validate(item) for item in override_items]
+    return [
+        IdentityOverrideV2.model_validate(
+            {**item, "environment_id": str(item["environment_id"])}
+        )
+        for item in override_items
+    ]
