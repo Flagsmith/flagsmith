@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
-import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
 import CreateFlagModal from 'components/modals/CreateFlag'
 import CreateTraitModal from 'components/modals/CreateTrait'
 import TryIt from 'components/TryIt'
@@ -26,6 +25,7 @@ import { getViewMode, setViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
 import IdentifierString from 'components/IdentifierString'
 import Button from 'components/base/forms/Button'
+import { removeUserOverride } from 'components/RemoveUserOverride'
 const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
@@ -39,6 +39,7 @@ const valuesEqual = (actualValue, flagValue) => {
   }
   return actualValue === flagValue
 }
+
 const UserPage = class extends Component {
   static displayName = 'UserPage'
 
@@ -223,33 +224,27 @@ const UserPage = class extends Component {
     )
   }
 
-  confirmRemove = (projectFlag, cb, identity) => {
-    openModal(
-      'Reset User Feature',
-      <ConfirmRemoveFeature
-        identity={identity}
-        environmentId={this.props.match.params.environmentId}
-        projectFlag={projectFlag}
-        cb={cb}
-      />,
-    )
-  }
-
   removeTrait = (id, trait_key) => {
-    openConfirm(
-      'Delete Trait',
-      <div>
-        {'Are you sure you want to delete trait '}
-        <strong>{trait_key}</strong>
-        {' from this user?'}
-      </div>,
-      () =>
+    openConfirm({
+      body: (
+        <div>
+          {'Are you sure you want to delete trait '}
+          <strong>{trait_key}</strong>
+          {
+            ' from this user? Traits can be re-added here or via one of our SDKs.'
+          }
+        </div>
+      ),
+      destructive: true,
+      onYes: () =>
         AppActions.deleteIdentityTrait(
           this.props.match.params.environmentId,
           this.props.match.params.id,
           id || trait_key,
         ),
-    )
+      title: 'Delete Trait',
+      yesText: 'Confirm',
+    })
   }
 
   filter = () => {
@@ -843,27 +838,29 @@ const UserPage = class extends Component {
                                                   theme='text'
                                                   size='xSmall'
                                                   disabled={!permission}
-                                                  onClick={() =>
-                                                    this.confirmRemove(
-                                                      _.find(projectFlags, {
+                                                  onClick={() => {
+                                                    const projectFlag = _.find(
+                                                      projectFlags,
+                                                      {
                                                         id,
-                                                      }),
-                                                      () => {
-                                                        removeFlag({
-                                                          environmentId:
-                                                            this.props.match
-                                                              .params
-                                                              .environmentId,
-                                                          identity:
-                                                            this.props.match
-                                                              .params.id,
-                                                          identityFlag,
-                                                        })
                                                       },
-                                                      identity.identity
-                                                        .identifier,
                                                     )
-                                                  }
+                                                    const environmentId =
+                                                      this.props.match.params
+                                                        .environmentId
+
+                                                    removeUserOverride({
+                                                      environmentId,
+                                                      identifier:
+                                                        identity.identity
+                                                          .identifier,
+                                                      identity:
+                                                        this.props.match.params
+                                                          .id,
+                                                      identityFlag,
+                                                      projectFlag,
+                                                    })
+                                                  }}
                                                 >
                                                   <Icon
                                                     name='refresh'

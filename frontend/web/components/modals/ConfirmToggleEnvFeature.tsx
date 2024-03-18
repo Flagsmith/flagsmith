@@ -45,7 +45,7 @@ const ConfirmToggleEnvFeature: FC<ConfirmToggleEnvFeatureType> = ({
             className='btn btn-primary'
             id='confirm-toggle-feature-btn'
           >
-            Confirm changes
+            Confirm
           </Button>
         </FormGroup>
       </div>

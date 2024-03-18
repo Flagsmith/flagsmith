@@ -33,6 +33,8 @@ import ModalHR from './ModalHR'
 import FeatureValue from 'components/FeatureValue'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
+import Button from 'components/base/forms/Button'
+import { removeUserOverride } from 'components/RemoveUserOverride'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -154,14 +156,14 @@ const CreateFlag = class extends Component {
           this.state.segmentsChanged ||
           this.state.settingsChanged
         ) {
-          openConfirm(
-            'Are you sure?',
-            'Closing this will discard your unsaved changes.',
-            () => resolve(true),
-            () => resolve(false),
-            'Ok',
-            'Cancel',
-          )
+          openConfirm({
+            body: 'Closing this will discard your unsaved changes.',
+            noText: 'Cancel',
+            onNo: () => resolve(false),
+            onYes: () => resolve(true),
+            title: 'Discard changes',
+            yesText: 'Ok',
+          })
         } else {
           resolve(true)
         }
@@ -897,16 +899,15 @@ const CreateFlag = class extends Component {
                 } else if (
                   document.getElementById('language-validation-error')
                 ) {
-                  openConfirm(
-                    'Validation error',
-                    'Your remote config value does not pass validation for the language you have selected. Are you sure you wish to save?',
-                    () => {
+                  openConfirm({
+                    body: 'Your remote config value does not pass validation for the language you have selected. Are you sure you wish to save?',
+                    noText: 'Cancel',
+                    onYes: () => {
                       this.save(editFeatureValue, isSaving)
                     },
-                    null,
-                    'Save',
-                    'Cancel',
-                  )
+                    title: 'Validation error',
+                    yesText: 'Save',
+                  })
                 } else {
                   this.save(editFeatureValue, isSaving)
                 }
@@ -1460,69 +1461,98 @@ const CreateFlag = class extends Component {
                                               </div>
                                             )
                                           }
-                                          renderRow={({
-                                            enabled,
-                                            feature_state_value,
-                                            id,
-                                            identity,
-                                          }) => (
-                                            <Row
-                                              space
-                                              className='list-item cursor-pointer'
-                                              key={id}
-                                            >
-                                              <Row>
-                                                <div
-                                                  className='table-column'
-                                                  style={{ width: '65px' }}
-                                                >
-                                                  <Switch
-                                                    checked={enabled}
-                                                    onChange={() =>
-                                                      this.toggleUserFlag({
-                                                        enabled,
-                                                        id,
-                                                        identity,
-                                                      })
-                                                    }
-                                                    disabled={Utils.getIsEdge()}
-                                                  />
-                                                </div>
-                                                <div className='font-weight-medium fs-small lh-sm'>
-                                                  {identity.identifier}
-                                                </div>
-                                              </Row>
-                                              <Row>
-                                                <div
-                                                  className='table-column'
-                                                  style={{ width: '188px' }}
-                                                >
-                                                  {feature_state_value !==
-                                                    null && (
-                                                    <FeatureValue
-                                                      value={
-                                                        feature_state_value
-                                                      }
-                                                    />
-                                                  )}
-                                                </div>
-                                                <div className='table-column'>
-                                                  <Button
-                                                    target='_blank'
-                                                    href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
-                                                    className='btn btn-link fs-small lh-sm font-weight-medium'
+                                          renderRow={(identityFlag) => {
+                                            const {
+                                              enabled,
+                                              feature_state_value,
+                                              id,
+                                              identity,
+                                            } = identityFlag
+                                            return (
+                                              <Row
+                                                space
+                                                className='list-item cursor-pointer'
+                                                key={id}
+                                              >
+                                                <Row>
+                                                  <div
+                                                    className='table-column'
+                                                    style={{ width: '65px' }}
                                                   >
-                                                    <Icon
-                                                      name='edit'
-                                                      width={20}
-                                                      fill='#6837FC'
-                                                    />{' '}
-                                                    Edit
-                                                  </Button>
-                                                </div>
+                                                    <Switch
+                                                      checked={enabled}
+                                                      onChange={() =>
+                                                        this.toggleUserFlag({
+                                                          enabled,
+                                                          id,
+                                                          identity,
+                                                        })
+                                                      }
+                                                      disabled={Utils.getIsEdge()}
+                                                    />
+                                                  </div>
+                                                  <div className='font-weight-medium fs-small lh-sm'>
+                                                    {identity.identifier}
+                                                  </div>
+                                                </Row>
+                                                <Row>
+                                                  <div
+                                                    className='table-column'
+                                                    style={{ width: '188px' }}
+                                                  >
+                                                    {feature_state_value !==
+                                                      null && (
+                                                      <FeatureValue
+                                                        value={
+                                                          feature_state_value
+                                                        }
+                                                      />
+                                                    )}
+                                                  </div>
+                                                  <div className='table-column'>
+                                                    <Button
+                                                      target='_blank'
+                                                      href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
+                                                      className='btn btn-link fs-small lh-sm font-weight-medium'
+                                                    >
+                                                      <Icon
+                                                        name='edit'
+                                                        width={20}
+                                                        fill='#6837FC'
+                                                      />{' '}
+                                                      Edit
+                                                    </Button>
+                                                    <Button
+                                                      onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        removeUserOverride({
+                                                          cb: () =>
+                                                            this.userOverridesPage(
+                                                              1,
+                                                            ),
+                                                          environmentId:
+                                                            this.props
+                                                              .environmentId,
+                                                          identifier:
+                                                            identity.identifier,
+                                                          identity: identity.id,
+                                                          identityFlag,
+                                                          projectFlag,
+                                                        })
+                                                      }}
+                                                      className='btn ml-2 btn-with-icon'
+                                                    >
+                                                      <Icon
+                                                        name='trash-2'
+                                                        width={20}
+                                                        fill='#656D7B'
+                                                      />
+                                                    </Button>
+                                                  </div>
+                                                </Row>
                                               </Row>
-                                            </Row>
-                                          )}
+                                            )
+                                          }}
                                           renderNoResults={
                                             <Row className='list-item'>
                                               <div className='table-column'>

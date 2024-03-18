@@ -16,6 +16,7 @@ import CreateEditTag from './CreateEditTag'
 import Input from 'components/base/forms/Input'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
+import TagUsage from 'components/TagUsage'
 
 type AddEditTagsType = {
   value?: number[]
@@ -63,16 +64,19 @@ const AddEditTags: FC<AddEditTagsType> = ({
   }
 
   const confirmDeleteTag = (tag: TTag) => {
-    openConfirm(
-      'Please confirm',
-      <div>
-        Are you sure you wish to delete the tag{' '}
-        <div className='d-inline-block'>
-          <Tag tag={tag} />
+    openConfirm({
+      body: (
+        <div>
+          Are you sure you wish to delete the tag{' '}
+          <div className='d-inline-block'>
+            <Tag tag={tag} />
+          </div>
+          ? This action cannot be undone.
+          <TagUsage projectId={projectId} tag={tag.id} />
         </div>
-        ?
-      </div>,
-      () => {
+      ),
+      destructive: true,
+      onYes: () => {
         onChange(loFilter(value || [], (id) => id !== tag.id))
         deleteTag({
           id: tag.id,
@@ -80,7 +84,9 @@ const AddEditTags: FC<AddEditTagsType> = ({
         })
         setIsOpen(true)
       },
-    )
+      title: 'Delete tag',
+      yesText: 'Confirm',
+    })
   }
 
   const filteredTags = useMemo(() => {
