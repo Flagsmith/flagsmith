@@ -157,8 +157,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         if environment_id:
             page = self.paginate_queryset(queryset)
 
-            if not getattr(self, "environment", None):
-                self.environment = Environment.objects.get(id=environment_id)
+            self.environment = Environment.objects.get(id=environment_id)
             q = Q(
                 feature_id__in=[feature.id for feature in page],
                 identity__isnull=True,
