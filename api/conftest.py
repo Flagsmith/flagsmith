@@ -531,6 +531,28 @@ def required_a_feature_metadata_field(
 
 
 @pytest.fixture()
+def required_a_feature_metadata_field_using_organisation_content_type(
+    organisation: Organisation,
+    a_metadata_field: MetadataField,
+    feature_content_type: ContentType,
+    project: Project,
+    organisation_content_type: ContentType,
+) -> MetadataModelField:
+    model_field = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=feature_content_type,
+    )
+
+    MetadataModelFieldRequirement.objects.create(
+        content_type=organisation_content_type,
+        object_id=organisation.id,
+        model_field=model_field,
+    )
+
+    return model_field
+
+
+@pytest.fixture()
 def required_a_segment_metadata_field(
     organisation: Organisation,
     a_metadata_field: MetadataField,
@@ -545,6 +567,28 @@ def required_a_segment_metadata_field(
 
     MetadataModelFieldRequirement.objects.create(
         content_type=project_content_type, object_id=project.id, model_field=model_field
+    )
+
+    return model_field
+
+
+@pytest.fixture()
+def required_a_segment_metadata_field_using_organisation_content_type(
+    organisation: Organisation,
+    a_metadata_field: MetadataField,
+    segment_content_type: ContentType,
+    project: Project,
+    organisation_content_type: ContentType,
+) -> MetadataModelField:
+    model_field = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=segment_content_type,
+    )
+
+    MetadataModelFieldRequirement.objects.create(
+        content_type=organisation_content_type,
+        object_id=organisation.id,
+        model_field=model_field,
     )
 
     return model_field
@@ -634,6 +678,11 @@ def segment_content_type() -> ContentType:
 @pytest.fixture()
 def project_content_type() -> ContentType:
     return ContentType.objects.get_for_model(Project)
+
+
+@pytest.fixture()
+def organisation_content_type() -> ContentType:
+    return ContentType.objects.get_for_model(Organisation)
 
 
 @pytest.fixture
