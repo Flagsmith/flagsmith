@@ -49,6 +49,9 @@ const CreateEditTag: FC<CreateEditTagType> = ({
 
   const { data: tags } = useGetTagsQuery({ projectId })
   const existingTag = useMemo(() => {
+    if (isEdit) {
+      return false
+    }
     if (tag?.label && tags) {
       const lowercaseTag = tag?.label.toLowerCase()
       return tags?.find((tag) => {
@@ -56,7 +59,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
       })
     }
     return false
-  }, [tags, tag?.label])
+  }, [tags, isEdit, tag?.label])
 
   const tagsSaving = creating || saving
 
