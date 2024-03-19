@@ -45,7 +45,7 @@ readme = "readme.md"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
-django = "~3.2.24"
+django = "~3.2.25"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
 backoff = "~2.2.1"
