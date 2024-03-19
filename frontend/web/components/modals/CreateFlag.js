@@ -196,36 +196,41 @@ const CreateFlag = class extends Component {
       this.getFeatureUsage()
     }
 
-    if (this.props.projectFlag) {
+    if (
+      this.props.projectFlag &&
+      Utils.getFlagsmithHasFeature('github_integration')
+    ) {
       getExternalResource(getStore(), {
         feature_id: this.props.projectFlag.id,
       }).then((res) => {
         this.setState({ externalResources: res.data.results })
       })
     }
-
-    getGithubIntegration(getStore(), {
-      organisation_pk: AccountStore.getOrganisation().id,
-    }).then((res) => {
-      getGithubIssues(getStore(), {
-        org_id: AccountStore.getOrganisation().id,
+    if (Utils.getFlagsmithHasFeature('github_integration')) {
+      getGithubIntegration(getStore(), {
+        organisation_pk: AccountStore.getOrganisation().id,
+      }).then((res) => {
+        console.log('DEBUG: getGithubIntegration: res:', res)
+        getGithubIssues(getStore(), {
+          org_id: AccountStore.getOrganisation().id,
+        })
+          .catch((error) => {
+            console.log('DEBUG: error:', error)
+          })
+          .then((issues) => {
+            this.setState({ issuesExternalResources: issues?.data })
+          })
+        getGithubPulls(getStore(), {
+          org_id: AccountStore.getOrganisation().id,
+        })
+          .catch((error) => {
+            console.log('DEBUG: error:', error)
+          })
+          .then((pulls) => {
+            this.setState({ prExternalResources: pulls?.data })
+          })
       })
-        .catch((error) => {
-          console.log('DEBUG: error:', error)
-        })
-        .then((issues) => {
-          this.setState({ issuesExternalResources: issues?.data })
-        })
-      getGithubPulls(getStore(), {
-        org_id: AccountStore.getOrganisation().id,
-      })
-        .catch((error) => {
-          console.log('DEBUG: error:', error)
-        })
-        .then((pulls) => {
-          this.setState({ prExternalResources: pulls?.data })
-        })
-    })
+    }
   }
 
   componentWillUnmount() {
@@ -667,164 +672,170 @@ const CreateFlag = class extends Component {
             placeholder="e.g. 'This determines what size the header is' "
           />
         </FormGroup>
-        <FormGroup className='mb-5 setting'>
-          <label className='cols-sm-2 control-label'>
-            {' '}
-            Link GitHub Issue Pull-Request
-          </label>
-          <Row className='cols-md-2 role-list'>
-            <div style={{ width: '200px' }}>
-              <Select
-                size='select-md'
-                placeholder={'Select Type'}
-                onChange={(v) =>
-                  this.setState({ externalResourceType: v.label })
-                }
-                options={[
-                  { id: 1, type: 'Github Issue' },
-                  { id: 2, type: 'Github PR' },
-                ].map((e) => {
-                  return { label: e.type, value: e.id }
-                })}
-              />
-            </div>
-            {externalResourceType == 'Github Issue' ? (
-              <div style={{ width: '300px' }}>
-                <Select
-                  size='select-md'
-                  placeholder={'Select Your Issue'}
-                  onChange={(v) =>
-                    this.setState({
-                      featureExternalResource: v.value,
-                      status: v.status,
-                    })
-                  }
-                  options={issuesExternalResources?.map((i) => {
-                    return {
-                      label: `${i.title} #${i.number}`,
-                      status: i.state,
-                      value: i.html_url,
+        {Utils.getFlagsmithHasFeature('github_integration') && (
+          <>
+            <FormGroup className='mb-5 setting'>
+              <label className='cols-sm-2 control-label'>
+                {' '}
+                Link GitHub Issue Pull-Request
+              </label>
+              <Row className='cols-md-2 role-list'>
+                <div style={{ width: '200px' }}>
+                  <Select
+                    size='select-md'
+                    placeholder={'Select Type'}
+                    onChange={(v) =>
+                      this.setState({ externalResourceType: v.label })
                     }
-                  })}
-                />
-              </div>
-            ) : externalResourceType == 'Github PR' ? (
-              <div style={{ width: '300px' }}>
-                <Select
-                  size='select-md'
-                  placeholder={'Select Your PR'}
-                  onChange={(v) =>
-                    this.setState({ featureExternalResource: v.value })
-                  }
-                  options={prExternalResources?.map((i) => {
-                    return {
-                      label: `${i.title} #${i.number}`,
-                      value: i.html_url,
-                    }
-                  })}
-                />
-              </div>
-            ) : (
-              <></>
-            )}
-            {(externalResourceType == 'Github Issue' ||
-              externalResourceType == 'Github PR') && (
-              <Button
-                className='text-right'
-                theme='primary'
-                onClick={() => {
-                  _createExternalResourse()
-                }}
-              >
-                Link
-              </Button>
-            )}
-          </Row>
-        </FormGroup>
-        <PanelSearch
-          className='no-pad'
-          title='Linked Issues and Pull Requests.'
-          items={externalResources}
-          header={
-            <Row className='table-header'>
-              <Flex
-                className='table-column px-3'
-                style={{ 'minWidth': '340px' }}
-              >
-                URL
-              </Flex>
-              <Flex className='table-column pl-1'>Type</Flex>
-              <div
-                className='table-column text-center'
-                style={{ width: '80px' }}
-              >
-                Status
-              </div>
-              <div
-                className='table-column text-center'
-                style={{ width: '80px' }}
-              >
-                Remove
-              </div>
-            </Row>
-          }
-          renderRow={(v) => (
-            <Row className='list-item' key={v.id}>
-              <Flex className='table-column px-3'>
-                <Button
-                  theme='text'
-                  href={`${v.url}`}
-                  target='_blank'
-                  className='fw-normal'
-                >
-                  {v.url}
-                </Button>
-              </Flex>
-              <Flex className='table-column px-3'>
-                <div className='font-weight-medium mb-1'>{v.type}</div>
-              </Flex>
-              <div
-                className='table-column text-center'
-                style={{ width: '80px' }}
-              >
-                <div className='font-weight-medium mb-1'>{v.status}</div>
-              </div>
-              <div
-                className='table-column text-center'
-                style={{ width: '80px' }}
-              >
-                <Button
-                  onClick={() => {
-                    deleteExternalResource(
-                      getStore(),
-                      {
-                        external_resource_id: v.id,
-                        feature_id: projectFlag.id,
-                      },
-                      { forceRefetch: true },
-                    ).then((res) => {
-                      getExternalResource(
-                        getStore(),
-                        {
-                          feature_id: projectFlag.id,
-                        },
-                        { forceRefetch: true },
-                      ).then((res) => {
-                        toast(
-                          `The feature ${projectFlag.name} was unlinked from the GitHub Issue/PR`,
-                        )
-                        this.setState({ externalResources: res.data.results })
-                      })
-                    })
-                  }}
-                  className='btn btn-with-icon'
-                >
-                  <Icon name='trash-2' width={20} fill='#656D7B' />
-                </Button>
-              </div>
-            </Row>
-          )}
-        />
+                    options={[
+                      { id: 1, type: 'Github Issue' },
+                      { id: 2, type: 'Github PR' },
+                    ].map((e) => {
+                      return { label: e.type, value: e.id }
+                    })}
+                  />
+                </div>
+                {externalResourceType == 'Github Issue' ? (
+                  <div style={{ width: '300px' }}>
+                    <Select
+                      size='select-md'
+                      placeholder={'Select Your Issue'}
+                      onChange={(v) =>
+                        this.setState({
+                          featureExternalResource: v.value,
+                          status: v.status,
+                        })
+                      }
+                      options={issuesExternalResources?.map((i) => {
+                        return {
+                          label: `${i.title} #${i.number}`,
+                          status: i.state,
+                          value: i.html_url,
+                        }
+                      })}
+                    />
+                  </div>
+                ) : externalResourceType == 'Github PR' ? (
+                  <div style={{ width: '300px' }}>
+                    <Select
+                      size='select-md'
+                      placeholder={'Select Your PR'}
+                      onChange={(v) =>
+                        this.setState({ featureExternalResource: v.value })
+                      }
+                      options={prExternalResources?.map((i) => {
+                        return {
+                          label: `${i.title} #${i.number}`,
+                          value: i.html_url,
+                        }
+                      })}
+                    />
+                  </div>
+                ) : (
+                  <></>
+                )}
+                {(externalResourceType == 'Github Issue' ||
+                  externalResourceType == 'Github PR') && (
+                  <Button
+                    className='text-right'
+                    theme='primary'
+                    onClick={() => {
+                      _createExternalResourse()
+                    }}
+                  >
+                    Link
+                  </Button>
+                )}
+              </Row>
+            </FormGroup>
+            <PanelSearch
+              className='no-pad'
+              title='Linked Issues and Pull Requests.'
+              items={externalResources}
+              header={
+                <Row className='table-header'>
+                  <Flex
+                    className='table-column px-3'
+                    style={{ 'minWidth': '340px' }}
+                  >
+                    URL
+                  </Flex>
+                  <Flex className='table-column pl-1'>Type</Flex>
+                  <div
+                    className='table-column text-center'
+                    style={{ width: '80px' }}
+                  >
+                    Status
+                  </div>
+                  <div
+                    className='table-column text-center'
+                    style={{ width: '80px' }}
+                  >
+                    Remove
+                  </div>
+                </Row>
+              }
+              renderRow={(v) => (
+                <Row className='list-item' key={v.id}>
+                  <Flex className='table-column px-3'>
+                    <Button
+                      theme='text'
+                      href={`${v.url}`}
+                      target='_blank'
+                      className='fw-normal'
+                    >
+                      {v.url}
+                    </Button>
+                  </Flex>
+                  <Flex className='table-column px-3'>
+                    <div className='font-weight-medium mb-1'>{v.type}</div>
+                  </Flex>
+                  <div
+                    className='table-column text-center'
+                    style={{ width: '80px' }}
+                  >
+                    <div className='font-weight-medium mb-1'>{v.status}</div>
+                  </div>
+                  <div
+                    className='table-column text-center'
+                    style={{ width: '80px' }}
+                  >
+                    <Button
+                      onClick={() => {
+                        deleteExternalResource(
+                          getStore(),
+                          {
+                            external_resource_id: v.id,
+                            feature_id: projectFlag.id,
+                          },
+                          { forceRefetch: true },
+                        ).then((res) => {
+                          getExternalResource(
+                            getStore(),
+                            {
+                              feature_id: projectFlag.id,
+                            },
+                            { forceRefetch: true },
+                          ).then((res) => {
+                            toast(
+                              `The feature ${projectFlag.name} was unlinked from the GitHub Issue/PR`,
+                            )
+                            this.setState({
+                              externalResources: res.data.results,
+                            })
+                          })
+                        })
+                      }}
+                      className='btn btn-with-icon'
+                    >
+                      <Icon name='trash-2' width={20} fill='#656D7B' />
+                    </Button>
+                  </div>
+                </Row>
+              )}
+            />
+          </>
+        )}
 
         {!identity && (
           <FormGroup className='mb-5 mt-3 setting'>

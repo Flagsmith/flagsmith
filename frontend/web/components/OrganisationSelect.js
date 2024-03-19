@@ -27,7 +27,6 @@ const OrganisationSelect = class extends Component {
                 }}
                 onChange={({ value }) => {
                   API.setCookie('organisation', `${value}`)
-                  console.log('DEBUG: value:', value)
                   this.props.onChange && this.props.onChange(value)
                 }}
                 options={
