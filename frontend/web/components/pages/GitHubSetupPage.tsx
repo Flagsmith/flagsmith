@@ -71,7 +71,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
             promises.push(promise)
           }
           await Promise.all(promises)
-          toast('Saved')
+          toast('Integration Created')
         }
       } catch (error) {
         console.error('Error creating:', error)
@@ -91,10 +91,15 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
   return (
     <div
       id='login-page'
-      style={{ flexDirection: 'column' }}
+      style={{
+        alignContent: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        flexWrap: 'wrap',
+      }}
       className='ml-4 bg-light200'
     >
-      <h3>Configure your integration with GitHub</h3>
+      <h3 className='my-3'>Configure your integration with GitHub</h3>
       <InputGroup
         value={installationId}
         data-test='InstallationId'
@@ -107,7 +112,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
         title={'GitHub App Installation Id'}
       />
       <div className='mr-4 mb-4'>
-        <p>Select your Organisation</p>
+        <label>Select your Flagsmith Organisation</label>
         <OrganisationSelect
           onChange={(organisationId) => {
             setOrganisation(organisationId)
@@ -116,7 +121,8 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
           firstOrganisation
         />
       </div>
-      <Row className='mr-4 mb-4'>
+      <label>Select your Flagsmith Project and your Github Repository</label>
+      <Row className='mb-2'>
         <div style={{ minWidth: '250px' }}>
           <ProjectFilter
             showAll
@@ -152,7 +158,6 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
           />
         </div>
         <Button
-          className='ml-2 text-right'
           theme='primary'
           disabled={!project || !installationId || !repositoryName}
           onClick={() => {
@@ -167,7 +172,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
         </Button>
       </Row>
       <PanelSearch
-        className='no-pad'
+        className='no-pad mb-4'
         title='Projects'
         items={projects}
         header={
@@ -200,9 +205,8 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
         )}
       />
       <Button
-        className='mr-2 text-right'
         theme='primary'
-        disabled={!projects || !installationId || !repositoryName}
+        disabled={!projects.length || !installationId || !repositoryName}
         onClick={() => {
           createGithubIntegration({
             body: {

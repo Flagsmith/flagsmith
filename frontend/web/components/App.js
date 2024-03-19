@@ -166,11 +166,13 @@ const App = class extends Component {
             const lastOrg = _.find(AccountStore.getUser().organisations, {
               id: lastEnv.orgId,
             })
-            if (this.props.location.search.includes('github-redirect')) {
+            if (
+              this.props.location.search.includes('github-redirect') &&
+              Utils.getFlagsmithHasFeature('github_integration')
+            ) {
               this.context.router.history.replace(
                 `/github-setup${this.props.location.search}`,
               )
-              // this.setState({ asideIsVisible: false })
               return
             }
             if (!lastOrg) {
@@ -189,11 +191,13 @@ const App = class extends Component {
             )
             return
           }
-          if (this.props.location.search.includes('github-redirect')) {
+          if (
+            this.props.location.search.includes('github-redirect') &&
+            Utils.getFlagsmithHasFeature('github_integration')
+          ) {
             this.context.router.history.replace(
               `/github-setup${this.props.location.search}`,
             )
-            // this.setState({ asideIsVisible: false })
             return
           }
           this.context.router.history.replace('/projects')
@@ -260,6 +264,7 @@ const App = class extends Component {
       pathname === '/' ||
       pathname === '/login' ||
       pathname === '/signup' ||
+      pathname === '/github-setup' ||
       pathname.includes('/invite')
     if (Project.amplitude) {
       amplitude.getInstance().init(Project.amplitude)
