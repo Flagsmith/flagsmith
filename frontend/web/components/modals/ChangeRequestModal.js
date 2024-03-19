@@ -117,7 +117,7 @@ const ChangeRequestModal = class extends Component {
               </FormGroup>
               <div>
                 <InputGroup
-                  tooltip='Allows you to set a date and time in which your change will only become active.'
+                  tooltip='Allows you to set a date and time in which your change will only become active. All dates are displayed in your local timezone.'
                   title='Schedule Change'
                   component={
                     <Row>
