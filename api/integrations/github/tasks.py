@@ -87,7 +87,7 @@ def call_github_app_webhook_for_feature_state(
     if not feature_external_resources:
         logger.debug(
             "No GitHub external resources are associated with this feature id %d. Not calling webhooks.",
-            event_data["new_state"]["feature"]["id"],
+            event_data["id"],
         )
         return
 
