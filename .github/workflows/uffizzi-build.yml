@@ -67,13 +67,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: preview-spec
-          path: docker-compose.rendered.yml
-          retention-days: 2
-      - name: Upload PR Event as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: preview-spec
-          path: ${{github.event_path}}
+          path: |
+            docker-compose.rendered.yml
+            ${{github.event_path}}
           retention-days: 2
 
   delete-preview:
