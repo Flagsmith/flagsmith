@@ -7,6 +7,8 @@ import {
   Role,
   ImportStrategy,
   APIKey,
+  UserGroup,
+  GroupUser,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -256,5 +258,10 @@ export type Req = {
     id: string
   }
   getProject: { id: string }
+  createGroup: {
+    orgId: string
+    data: Omit<UserGroup, 'id'>
+    usersToAddAdmin: GroupUser[] | null
+  }
   // END OF TYPES
 }
