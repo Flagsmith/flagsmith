@@ -45,6 +45,7 @@ const ImportPage: FC<ImportPageType> = ({
   const {
     data: status,
     isSuccess: statusLoaded,
+    isUninitialized,
     refetch,
   } = useGetLaunchDarklyProjectImportQuery(
     {
@@ -76,9 +77,11 @@ const ImportPage: FC<ImportPageType> = ({
   useEffect(() => {
     if (isSuccess && data?.id) {
       setImportId(data.id)
-      refetch()
+      if (!isUninitialized) {
+        refetch()
+      }
     }
-  }, [isSuccess, data, refetch])
+  }, [isSuccess, data, refetch, isUninitialized])
 
   const getProjectList = (LDKey: string) => {
     setIsLoading(true)
@@ -97,10 +100,6 @@ const ImportPage: FC<ImportPageType> = ({
     key: string,
     projectId: string,
   ) => {
-    createFeatureExport(getStore(), {
-      environment_id: environmentId,
-      tag_ids: [],
-    })
     createLaunchDarklyProjectImport({
       body: { project_key: key, token: LDKey },
       project_id: projectId,
@@ -174,19 +173,22 @@ const ImportPage: FC<ImportPageType> = ({
                       <Button
                         className='btn-project'
                         onClick={() =>
-                          openConfirm(
-                            'Import LaunchDarkly project',
-                            <span>
-                              Flagsmith will import {<strong>{name}</strong>} to{' '}
-                              {<strong>{projectName}</strong>}. Are you sure?
-                            </span>,
-                            () => {
-                              createImportLDProjects(LDKey, key, projectId)
-                            },
-                            () => {
+                          openConfirm({
+                            body: (
+                              <span>
+                                Flagsmith will import {<strong>{name}</strong>}{' '}
+                                to {<strong>{projectName}</strong>}. Are you
+                                sure?
+                              </span>
+                            ),
+                            onNo: () => {
                               return
                             },
-                          )
+                            onYes: () => {
+                              createImportLDProjects(LDKey, key, projectId)
+                            },
+                            title: 'Import LaunchDarkly project',
+                          })
                         }
                       >
                         <Row className='flex-nowrap'>

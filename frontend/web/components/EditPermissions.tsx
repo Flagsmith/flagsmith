@@ -61,6 +61,7 @@ import {
 } from 'common/services/useGroupWithRole'
 
 import MyRoleSelect from './MyRoleSelect'
+import { setInterceptClose } from './modals/base/ModalDefault'
 const OrganisationProvider = require('common/providers/OrganisationProvider')
 const Project = require('common/project')
 
@@ -105,9 +106,33 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     const [parentError, setParentError] = useState(false)
     const [saving, setSaving] = useState(false)
     const [showRoles, setShowRoles] = useState<boolean>(false)
+    const [valueChanged, setValueChanged] = useState(false)
+
     const [permissionWasCreated, setPermissionWasCreated] =
       useState<boolean>(false)
     const [rolesSelected, setRolesSelected] = useState<Array>([])
+
+    useEffect(() => {
+      setInterceptClose(() => {
+        if (valueChanged) {
+          return new Promise((resolve) => {
+            openConfirm({
+              body: 'Closing this will discard your unsaved changes.',
+              noText: 'Cancel',
+              onNo: () => resolve(false),
+              onYes: () => resolve(true),
+              title: 'Discard changes',
+              yesText: 'Ok',
+            })
+          })
+        } else {
+          return Promise.resolve(true)
+        }
+      })
+      return () => {
+        setInterceptClose(null)
+      }
+    }, [valueChanged])
     const {
       editPermissionsFromSettings,
       envId,
@@ -128,30 +153,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       roles,
       user,
     } = props
-    useImperativeHandle(
-      ref,
-      () => {
-        return {
-          onClosing() {
-            if (valueChanged) {
-              return new Promise((resolve) => {
-                openConfirm(
-                  'Are you sure?',
-                  'Closing this will discard your unsaved changes.',
-                  () => resolve(true),
-                  () => resolve(false),
-                  'Ok',
-                  'Cancel',
-                )
-              })
-            } else {
-              return Promise.resolve(true)
-            }
-          },
-        }
-      },
-      [],
-    )
+
     const { data: permissions } = useGetAvailablePermissionsQuery({ level })
     const { data: userWithRolesData, isSuccess: userWithRolesDataSuccesfull } =
       useGetUserWithRolesQuery(
@@ -261,6 +263,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           `${level.charAt(0).toUpperCase() + level.slice(1)} permissions Saved`,
         )
         permissionChanged?.()
+        setInterceptClose(null)
         onSave?.()
         setSaving(false)
         if (editPermissionsFromSettings) {
@@ -418,6 +421,12 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           entityPermissions,
         )
           .then(() => {
+            setInterceptClose(null)
+            toast(
+              `${
+                level.charAt(0).toUpperCase() + level.slice(1)
+              } Permissions Saved`,
+            )
             onSave && onSave()
             close()
           })
@@ -638,7 +647,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                 </Flex>
                 <Switch
                   disabled={!hasRbacPermission}
-                  onChange={toggleAdmin}
+                  onChange={() => {
+                    toggleAdmin()
+                    setValueChanged(true)
+                  }}
                   checked={isAdmin}
                 />
               </Row>
@@ -666,7 +678,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                       <div className='list-item-subtitle'>{p.description}</div>
                     </Flex>
                     <Switch
-                      onChange={() => togglePermission(p.key)}
+                      onChange={() => {
+                        setValueChanged(true)
+                        togglePermission(p.key)
+                      }}
                       disabled={disabled || admin() || !hasRbacPermission}
                       checked={!disabled && hasPermission(p.key)}
                     />
@@ -954,7 +969,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                 {role === 'ADMIN' ? (
                                   <Flex className='table-column fs-small lh-sm'>
                                     <Tooltip
-                                      html
                                       title={'Organisation Administrator'}
                                     >
                                       {

@@ -242,7 +242,7 @@ const SegmentOverrideInner = class Override extends React.Component {
           </div>
         </Row>
 
-        <div className='text-left pb-2 mt-4'>
+        <div className='text-left mt-2'>
           {showValue ? (
             <>
               <label>Value (optional)</label>
@@ -287,7 +287,7 @@ const SegmentOverrideInner = class Override extends React.Component {
           )}
           {!!controlValue &&
             (!multivariateOptions || !multivariateOptions.length) && (
-              <div className='mt-2 mb-3 text-right'>
+              <div className='mt-2 text-right'>
                 <Button
                   theme='text'
                   className='text-primary'
@@ -307,7 +307,7 @@ const SegmentOverrideInner = class Override extends React.Component {
               </div>
             )}
 
-          {
+          {!!multivariateOptions?.length && (
             <div>
               <FormGroup className='mb-4'>
                 <VariationOptions
@@ -351,7 +351,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                 />
               </FormGroup>
             </div>
-          }
+          )}
         </div>
       </div>
     )
@@ -499,19 +499,22 @@ class TheComponent extends Component {
       }
       return
     }
-    openConfirm(
-      'Delete Segment Override',
-      <div>
-        {
-          'Are you sure you want to delete this segment override? This will be applied when you click Update Segment Overrides.'
-        }
-      </div>,
-      () => {
+    openConfirm({
+      body: (
+        <div>
+          {
+            'Are you sure you want to delete this segment override? This will be applied when you click Update Segment Overrides and cannot be undone.'
+          }
+        </div>
+      ),
+      destructive: true,
+      onYes: () => {
         this.props.value[i].toRemove = true
         this.setState({ isLoading: false })
       },
-      () => {},
-    )
+      title: 'Delete Segment Override',
+      yesText: 'Confirm',
+    })
   }
 
   setValue = (i, value) => {
@@ -667,11 +670,11 @@ class TheComponent extends Component {
                       {!this.props.id && (
                         <div className='my-4'>
                           <InfoMessage className='mb-4 text-left faint'>
-                            Prioritise a segment override by dragging it to the
-                            top of the list.
-                            <br />
-                            Segment overrides will only apply when you identify
-                            via the SDK.{' '}
+                            Segment overrides override the environment defaults,
+                            prioritise them by dragging it to the top of the
+                            list. Segment overrides will only apply when you
+                            identify via the SDK, any identity overrides will
+                            take priority.{' '}
                             <a
                               target='_blank'
                               href='https://docs.flagsmith.com/basic-features/managing-segments'

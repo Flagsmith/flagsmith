@@ -890,13 +890,13 @@ files = [
 
 [[package]]
 name = "django"
-version = "3.2.24"
+version = "3.2.25"
 description = "A high-level Python Web framework that encourages rapid development and clean, pragmatic design."
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "Django-3.2.24-py3-none-any.whl", hash = "sha256:5dd5b787c3ba39637610fe700f54bf158e33560ea0dba600c19921e7ff926ec5"},
-    {file = "Django-3.2.24.tar.gz", hash = "sha256:aaee9fb0fb4ebd4311520887ad2e33313d368846607f82a9a0ed461cd4c35b18"},
+    {file = "Django-3.2.25-py3-none-any.whl", hash = "sha256:a52ea7fcf280b16f7b739cec38fa6d3f8953a5456986944c3ca97e79882b4e38"},
+    {file = "Django-3.2.25.tar.gz", hash = "sha256:7ca38a78654aee72378594d63e51636c04b8e28574f5505dff630895b5472777"},
 ]
 
 [package.dependencies]
@@ -1542,6 +1542,32 @@ type = "git"
 url = "https://github.com/flagsmith/flagsmith-ldap"
 reference = "v0.1.0"
 resolved_reference = "e9edc5668711523eabdb833203d677bf64f98531"
+
+[[package]]
+name = "flagsmith-task-processor"
+version = "1.0.0"
+description = "Task Processor plugin for Flagsmith application."
+optional = false
+python-versions = "^3.10"
+files = []
+develop = false
+
+[package.dependencies]
+backoff = "~2.2.1"
+dj-database-url = "~0.5.0"
+django = "^3.2.23"
+django-health-check = "~3.14.3"
+djangorestframework = "~3.12.1"
+drf-yasg = "~1.21.6"
+environs = "~9.2.0"
+psycopg2-binary = "~2.9.5"
+simplejson = "~3.19.1"
+
+[package.source]
+type = "git"
+url = "https://github.com/Flagsmith/flagsmith-task-processor.git"
+reference = "init"
+resolved_reference = "cf373be4ad6a7fcabc1c7b2c8125b753648d0e22"
 
 [[package]]
 name = "flake8"
@@ -4343,6 +4369,25 @@ attrs = "*"
 test = ["pytest"]
 
 [[package]]
+name = "workflows-logic"
+version = "2.0.0"
+description = "Workflows logic plugin for Flagsmith application."
+optional = false
+python-versions = "^3.10"
+files = []
+develop = false
+
+[package.dependencies]
+django = "~3.2.23"
+flagsmith_task_processor = {git = "https://github.com/Flagsmith/flagsmith-task-processor.git", branch = "init"}
+
+[package.source]
+type = "git"
+url = "https://github.com/flagsmith/flagsmith-workflows"
+reference = "v2.3.0"
+resolved_reference = "1a8ead6395c511ee3ac80ddfc4b5f13dcd7363fc"
+
+[[package]]
 name = "wrapt"
 version = "1.15.0"
 description = "Module for decorators, wrappers and monkey patching."
@@ -4560,4 +4605,4 @@ requests = ">=2.7,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "9eb2d8740fd9a43abe0de542a8ca7ff10acc85fa1e32e2d69ecb91975875bccf"
+content-hash = "86b53abbd4a749e6bfb449dd4df6c6da2b25cb38b19ae7c70fa612afd3231b19"
