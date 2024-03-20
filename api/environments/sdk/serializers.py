@@ -41,9 +41,11 @@ class SDKCreateUpdateTraitSerializer(serializers.ModelSerializer):
 
         defaults = {
             value_key: trait_value,
-            "value_type": trait_value_type
-            if trait_value_type in [FLOAT, INTEGER, BOOLEAN]
-            else STRING,
+            "value_type": (
+                trait_value_type
+                if trait_value_type in [FLOAT, INTEGER, BOOLEAN]
+                else STRING
+            ),
         }
 
         return Trait.objects.update_or_create(
