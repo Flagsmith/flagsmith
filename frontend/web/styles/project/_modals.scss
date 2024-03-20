@@ -249,3 +249,10 @@ $side-width: 660px;
     overflow-y: auto;
   }
 }
+
+.modal-open {
+  #crisp-chatbox {
+    opacity: 0;
+    pointer-events: none;
+  }
+}

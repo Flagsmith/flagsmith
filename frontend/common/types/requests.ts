@@ -132,7 +132,12 @@ export type Req = {
     environment: string
     user: string
   }
-  getProjectFlags: { project: string }
+  getProjectFlags: {
+    project: string
+    environmentId?: string
+    tags?: string[]
+    is_archived?: boolean
+  }
   getProjectFlag: { project: string; id: string }
   getRolesPermissionUsers: { organisation_id: string; role_id: string }
   deleteRolesPermissionUsers: {
@@ -266,7 +271,10 @@ export type Req = {
     environmentId: string
     data: { name: string }
   }
-  getAuditLogItem: { id: string }
+  getAuditLogItem: {
+    projectId: string
+    id: string
+  }
   getProject: { id: string }
   // END OF TYPES
 }

@@ -206,15 +206,17 @@ class IntegrationList extends Component {
       ? ProjectStore.getEnvironment(integration.flagsmithEnvironment)
       : ''
     const name = env && env.name
-    openConfirm(
-      'Confirm remove integration',
-      <span>
-        This will remove your integration from the{' '}
-        {integration.flagsmithEnvironment ? 'environment ' : 'project'}
-        {name ? <strong>{name}</strong> : ''}, it will no longer receive data.
-        Are you sure?
-      </span>,
-      () => {
+    openConfirm({
+      body: (
+        <span>
+          This will remove your integration from the{' '}
+          {integration.flagsmithEnvironment ? 'environment ' : 'project'}
+          {name ? <strong>{name}</strong> : ''}, it will no longer receive data.
+          Are you sure?
+        </span>
+      ),
+      destructive: true,
+      onYes: () => {
         if (integration.flagsmithEnvironment) {
           _data
             .delete(
@@ -231,7 +233,9 @@ class IntegrationList extends Component {
             .catch(this.onError)
         }
       },
-    )
+      title: 'Delete integration',
+      yesText: 'Confirm',
+    })
   }
 
   addIntegration = (integration, id) => {

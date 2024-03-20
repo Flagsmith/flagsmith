@@ -21,7 +21,7 @@ Once you've got that understood, lets get the SDKs integrated!
 ## SDK Overview
 
 <Tabs groupId="language" queryString>
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 - Version Compatibility: **Python 3.8+**
 - Source Code: https://github.com/Flagsmith/flagsmith-python-client
@@ -44,7 +44,6 @@ Once you've got that understood, lets get the SDKs integrated!
 - Version Compatibility: **Node 14+**
 - Source Code:
   - https://github.com/Flagsmith/flagsmith-nodejs-client
-  - https://github.com/Flagsmith/flagsmith-nodejs-examples
 
 </TabItem>
 <TabItem value="ruby" label="Ruby">
@@ -82,7 +81,7 @@ Once you've got that understood, lets get the SDKs integrated!
 ## Add the Flagsmith package
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```bash
 pip install flagsmith
@@ -200,7 +199,7 @@ area and should be considered secret.
 :::
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```python
 from flagsmith import Flagsmith
@@ -318,7 +317,7 @@ config :flagsmith_engine, :configuration,
 ## Get Flags for an Environment
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```python
 # The method below triggers a network request
@@ -425,7 +424,7 @@ secret_button_feature_value = Flagsmith.Client.get_feature_value(flags, "secret_
 - This all happens in a single request/response.
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```python
 identifier = "delboy@trotterstraders.co.uk"
@@ -571,7 +570,7 @@ Default Flags are configured by passing in a function that is called when a Flag
 request to the API fails when retrieving flags.
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```python
 from flagsmith import Flagsmith
@@ -750,6 +749,69 @@ client_configuration = Flagsmith.Client.new(environment_key: "MY_SDK_KEY", defau
 </TabItem>
 </Tabs>
 
+### Using an Offline Handler
+
+:::info
+
+Offline handlers are still in active development. We are building them for all our SDKs; those that are production ready
+are listed below.
+
+Progress on the remaining SDKs can be seen [here](https://github.com/Flagsmith/flagsmith/issues/2024).
+
+:::
+
+Flagsmith SDKs can be configured to include an offline handler which has 2 functions:
+
+1. It can be used alongside [Offline Mode](server-side.md#offline-mode) to evaluate flags in environments with no
+   network access
+2. It can be used as a means of defining the behaviour for evaluating default flags, when something goes wrong with the
+   regular evaluation process. To do this, simply set the offline handler initialisation parameter without enabling
+   offline mode.
+
+To use it as a default handler, we recommend using the [flagsmith CLI](https://github.com/Flagsmith/flagsmith-cli) to
+generate the environment document and use our LocalFileHandler class, but you can also create your own offline handlers,
+by extending the base class.
+
+<Tabs groupId="language">
+<TabItem value="python" label="Python">
+
+```python
+# Using the built-in local file handler
+
+local_file_handler = LocalFileHandler(environment_document_path="/app/environment.json")
+flagsmith = Flagsmith(..., offline_handler=local_file_handler)
+
+# Defining a custom offline handler
+
+class MyCustomOfflineHandler(BaseOfflineHandler):
+    def get_environment(self) -> EnvironmentModel:
+        return some_function_to_get_the_environment()
+```
+
+</TabItem>
+
+<TabItem value="java" label="Java">
+
+```java
+// Using the built-in local file handler
+
+FlagsmithConfig flagsmithConfig = FlagsmithConfig.newBuilder()
+    .withOfflineHandler(new LocalFileHandler("/app/environment.json"))
+    ...
+    .build()
+
+// Defining a custom offline handler
+
+public class MyCustomOfflineHandler implements IOfflineHandler:
+    public EnvironmentModel getEnvironment() {
+        return someMethodToGetTheEnvironment()
+    }
+```
+
+</TabItem>
+
+</Tabs>
+
 ## Network Behaviour
 
 The Server Side SDKS share the same network behaviour across the different languages:
@@ -805,12 +867,28 @@ Evaluation mode. Please see [caching](#caching) below.
 </TabItem>
 </Tabs>
 
+### Offline Mode
+
+:::info
+
+Offline mode is still in active development for some SDKs. We are building it for all our SDKs; those that are
+production ready are listed below.
+
+Progress on the remaining SDKs can be seen [here](https://github.com/Flagsmith/flagsmith/issues/2024).
+
+:::
+
+To run the SDK in a fully offline mode, you can set the client to offline mode. This will prevent the SDK from making
+any calls to the Flagsmith API. To use offline mode, you must also provide an
+[offline handler](server-side.md#using-an-offline-handler). See
+[Configuring the SDK](server-side.md#configuring-the-sdk) for more details on initialising the SDK in offline mode.
+
 ## Configuring the SDK
 
 You can modify the behaviour of the SDK during initialisation. Full configuration options are shown below.
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```python
 flagsmith = Flagsmith(
@@ -864,12 +942,23 @@ flagsmith = Flagsmith(
     # the request to flagsmith fails or the flag requested is not included in the
     # response
     # Optional
-    default_flag_handler = lambda feature_name: return DefaultFlag(enabled=False, value=None)
+    default_flag_handler = lambda feature_name: return DefaultFlag(enabled=False, value=None),
 
     # (Available in 3.2.0+) Pass a mapping of protocol to proxy URL as per
     # https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies
     # Optional
-    proxies: typing.Dict[str, str] = None
+    proxies: typing.Dict[str, str] = None,
+
+    # (Available in 3.4.0+) Set the SDK into offline mode.
+    # Optional
+    # Defaults to False
+    offline_mode: bool = False,
+
+    # (Available in 3.4.0+) Provide an offline handler to use with offline mode, or
+    # as a means of returning default flags.
+    # Optional
+    # Defaults to None
+    offline_handler: BaseOfflineHander = None,
 )
 ```
 
@@ -965,6 +1054,15 @@ private static FlagsmithClient flagsmith = FlagsmithClient
         // Optional
         // Defaults to False
         .withEnableAnalytics(Boolean enable)
+
+        // (Available in v7.2.0+) Set the SDK into offline mode.
+        // Optional
+        // Defaults to False
+        .withOfflineMode(Boolean enable)
+
+        // (Available in v7.2.0+) Provide an offline handler to use with offline mode, or as a means of returning default flags.
+        // Optional
+        .withOfflineHandler(IOfflineHandler offlineHandler)
 
         .build())
 
@@ -1736,7 +1834,7 @@ then include an implementation, i.e.:
 All our SDKs are Open Source.
 
 <Tabs groupId="language">
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 https://github.com/Flagsmith/flagsmith-python-client
 

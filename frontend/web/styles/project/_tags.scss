@@ -64,7 +64,7 @@
   }
 }
 .tag-list {
-  max-height: 250px;
+  max-height: 230px;
   overflow-y: auto;
   user-select: none;
   margin-right: -1.5rem;
@@ -87,4 +87,10 @@
   width: 16px;
   height: 16px;
   border-radius: 8px;
+}
+
+.truncated-tag {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
