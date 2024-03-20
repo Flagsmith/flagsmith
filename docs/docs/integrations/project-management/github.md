@@ -2,9 +2,12 @@
 title: GitHub
 description: View your Flagsmith flags inside GitHub
 sidebar_position: 10
+hide_title: true
 ---
 
-View your Flagsmith flags inside your issues and pull request in GitHub
+<img src="/img/integrations/github/github-logo.svg" alt="GitHub Logo" width="30%" height="30%"/>
+
+View your Flagsmith Flags inside your GitHub Issues and Pull Request
 
 :::tip
 
@@ -17,14 +20,14 @@ View your Flagsmith flags inside your issues and pull request in GitHub
 1. In GitHub, add the app from the [GitHub Marketplace](https://github.com/apps/flagsmith-github-integration).
 2. Select your organisation.
 3. Select your repositories where you want install the app.
-4. You was redirected to flagsmith app -> GitHub Setup.
-5. Select the Organisation.
-6. Select the Project you want to associate with the Integration.
-7. Copy and paste the issue or pull request URL in the external resource field.
+4. You was redirected to Flagsmith app -> GitHub Setup.
+5. Select your Flagsmith Organisation.
+6. Select the Flagmsith Project you want to associate with the repository where the app was installed to create the Integration.
 
 ## Adding a Flagsmith Flag to a GitHub issue or pull request
 
 1. Create or select a Feature Flag.
 2. Go to settings section.
-3. Select your external resource and save.
-4. Add the webhook in the settings in all your environments.
+3. Select your integration.
+4. Select GitHub Issue or GitHub PR.
+5. Select your external resource and save.
