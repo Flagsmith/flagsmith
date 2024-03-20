@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.104.0](https://github.com/Flagsmith/flagsmith/compare/v2.103.4...v2.104.0) (2024-03-20)
+
+
+### Features
+
+* Add state feature filter ([#3541](https://github.com/Flagsmith/flagsmith/issues/3541)) ([2ffe8e9](https://github.com/Flagsmith/flagsmith/commit/2ffe8e9adf9006d4fe1d2a5efc3c5af94bde300a))
+* Filter features by owners and group owners ([#3579](https://github.com/Flagsmith/flagsmith/issues/3579)) ([79ad523](https://github.com/Flagsmith/flagsmith/commit/79ad5236e5277db4a42b53f0780640baa6499d27))
+* **tags:** prevent system tag modifications ([#3605](https://github.com/Flagsmith/flagsmith/issues/3605)) ([974dfc5](https://github.com/Flagsmith/flagsmith/commit/974dfc57537003626ba10cdab98f394dbdf69ab7))
+
+
+### Bug Fixes
+
+* Add stale_flags_limit_days to Project serializer ([#3607](https://github.com/Flagsmith/flagsmith/issues/3607)) ([99e0148](https://github.com/Flagsmith/flagsmith/commit/99e0148df93eac328f3f3779813db78f78c7f7e5))
+* **change-requests:** prevent incorrect scheduled changes warning ([#3593](https://github.com/Flagsmith/flagsmith/issues/3593)) ([165088b](https://github.com/Flagsmith/flagsmith/commit/165088b893910d1cfe451fc8ff5289af5fd8c3a1))
+* Freeze time for tests to ensure dependability ([#3627](https://github.com/Flagsmith/flagsmith/issues/3627)) ([2f647f2](https://github.com/Flagsmith/flagsmith/commit/2f647f250d299128e2d9432bbfc28f15d3637be0))
+* remove feature modal ([#3608](https://github.com/Flagsmith/flagsmith/issues/3608)) ([9d737ad](https://github.com/Flagsmith/flagsmith/commit/9d737ad456dbf07596cb0dd7b796a7e3175c1ab8))
+* startup plan does not allow correct permissions ([#3602](https://github.com/Flagsmith/flagsmith/issues/3602)) ([9642e2f](https://github.com/Flagsmith/flagsmith/commit/9642e2f3f23f00c586820b6b21a26280dd9689f2))
+
 ## [2.103.4](https://github.com/Flagsmith/flagsmith/compare/v2.103.3...v2.103.4) (2024-03-11)
 
 
