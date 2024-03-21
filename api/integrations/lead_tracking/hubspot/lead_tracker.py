@@ -54,18 +54,24 @@ class HubspotLeadTracker(LeadTracker):
             # for an existing organisation, so return early.
             return
 
-        hubspot_id = self.get_or_create_organisation_hubspot_id(organisation)
+        hubspot_id = self.get_or_create_organisation_hubspot_id(organisation, user)
 
         self.client.create_contact(user, hubspot_id)
 
-    def get_or_create_organisation_hubspot_id(self, organisation: Organisation) -> str:
+    def get_or_create_organisation_hubspot_id(
+        self, organisation: Organisation, user: FFAdminUser
+    ) -> str:
         """
         Return the Hubspot API's id for an organisation.
         """
         if getattr(organisation, "hubspot_organisation", None):
             return organisation.hubspot_organisation.hubspot_id
 
-        response = self.client.create_company(name=organisation.name)
+        if user.email_domain in settings.HUBSPOT_IGNORE_ORGANISATION_DOMAINS:
+            domain = None
+        else:
+            domain = user.email_domain
+        response = self.client.create_company(name=organisation.name, domain=domain)
         # Store the organisation data in the database since we are
         # unable to look them up via a unique identifier.
         HubspotOrganisation.objects.create(
