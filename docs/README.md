@@ -17,6 +17,13 @@ npm run start
 This command starts a local development server and opens up a browser window. Most changes are reflected live without
 having to restart the server.
 
+When forwarding port 3000 from a remote server or VM, you can run the dev server on 0.0.0.0 to make it listen on the
+local IP.
+
+```console
+npm run start -- --host 0.0.0.0
+```
+
 ## Build
 
 ```console

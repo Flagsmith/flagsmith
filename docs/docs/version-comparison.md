@@ -24,7 +24,7 @@ Open Source, SaaS hosted and Enterprise versions:
 :::tip
 
 You can switch between SaaS and Self Hosted Flagsmith using our
-[Import and Export tools](deployment/configuration/importing-and-exporting.md).
+[Import and Export tools](system-administration/importing-and-exporting/data-migration).
 
 :::
 
