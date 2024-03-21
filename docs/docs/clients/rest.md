@@ -61,7 +61,7 @@ To authenticate, you can use the API Token associated with your Organisation. Th
 page from the top navigation panel. You need to create a token and then provide it as an HTTP header:
 
 ```bash
-authorization: Token <API TOKEN FROM ORGANISATION PAGE>
+Authorization: Api-Key <API TOKEN FROM ORGANISATION PAGE>
 ```
 
 For example, to create a new Environment:
