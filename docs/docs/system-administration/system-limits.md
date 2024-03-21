@@ -2,19 +2,6 @@
 title: System Limits
 ---
 
-## Overriding Limits
-
-### SaaS
-
-Please contact us if you want to override the current system limits.
-
-### Self Hosted
-
-You can modify the system limits on a per-Project basis. These limits are defined in the database against the Project.
-The easiest way to modify them is with the [Django admin](/deployment/configuration/django-admin.md) interface.
-
-## Current Limits
-
 In order to ensure consistent performance, Flagsmith has the following limitations.
 
 ### Entity Counts
@@ -40,3 +27,14 @@ to a default rate limit of 500 requests per minute.
 
 If you are self-hosting, you have the flexibility to modify this limit by adjusting the value of the environment
 variable `USER_THROTTLE_RATE`.
+
+## Overriding Limits
+
+### SaaS
+
+Please contact us if you want to override the current system limits.
+
+### Self Hosted
+
+You can modify the system limits on a per-Project basis. These limits are defined in the database against the Project.
+The easiest way to modify them is with the [Django admin](/deployment/configuration/django-admin.md) interface.
