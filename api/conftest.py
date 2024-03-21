@@ -635,7 +635,7 @@ def optional_b_environment_metadata_field(
 @pytest.fixture()
 def environment_metadata_a(
     environment: Environment,
-    required_a_environment_metadata_field: MetadataModelFieldRequirement,
+    required_a_environment_metadata_field: MetadataModelField,
 ) -> Metadata:
     environment_type = ContentType.objects.get_for_model(environment)
     return Metadata.objects.create(
@@ -649,7 +649,7 @@ def environment_metadata_a(
 @pytest.fixture()
 def environment_metadata_b(
     environment: Environment,
-    optional_b_environment_metadata_field: MetadataModelFieldRequirement,
+    optional_b_environment_metadata_field: MetadataModelField,
 ) -> Metadata:
     environment_type = ContentType.objects.get_for_model(environment)
     return Metadata.objects.create(
