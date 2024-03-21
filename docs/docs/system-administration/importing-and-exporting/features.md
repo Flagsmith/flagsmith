@@ -4,7 +4,7 @@ sidebar_position: 110
 ---
 
 The import and export of feature data associated with a given environment is possible on Flagsmith. The feature data
-that's export includes multivariate features, but does not include other data that's associated with tags, owners, group
+that's exported includes multivariate features, but does not include other data that's associated with tags, owners, group
 owners, etc.
 
 ## Exporting
