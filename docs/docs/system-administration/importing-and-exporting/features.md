@@ -4,19 +4,20 @@ sidebar_position: 110
 ---
 
 The import and export of feature data associated with a given environment is possible on Flagsmith. The feature data
-that's exported includes multivariate features, but does not include other data that's associated with tags, owners, group
-owners, etc.
+that's exported includes multivariate features, but does not include other data that's associated with tags, owners,
+group owners, etc. It's useful for transfering features between any running instances of Flagsmith, even when only a
+subset of features (e.g., importing features of a given tag) are needed.
 
 ## Exporting
 
-On the Export tab of the project settings page it is possible to export the project's features using the default values
-from a given environment. Simply select the source environment from the drop down list and, if required, select one or
-more feature tags to filter the features.
+On the Export tab of the project settings page it is possible to export the project's features using the environment's
+values. Simply select the source environment from the drop down list and, if required, select one or more feature tags
+to filter the features.
 
 By tapping the Export Features button the feature export should quickly process and a list of processed features exports
 is available at the bottom of the page.
 
-:::caution
+:::tip
 
 Feature exports are available for only two weeks, so if an export is needed for a longer period of time be sure to make
 a local backup.
