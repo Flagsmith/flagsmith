@@ -69,7 +69,7 @@ For example, to create a new Environment:
 ```bash
 curl 'https://api.flagsmith.com/api/v1/environments/' \
     -H 'content-type: application/json' \
-    -H 'authorization: Token <API TOKEN FROM ORGANISATION PAGE>' \
+    -H 'authorization: Api-Key <API TOKEN FROM ORGANISATION PAGE>' \
     --data-binary '{"name":"New Environment","project":"<Project ID>"}'
 ```
 
