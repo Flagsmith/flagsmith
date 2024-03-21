@@ -315,10 +315,10 @@ class TheComponent extends Component {
                     </div>
                   </div>
                 </TabItem>
-                <TabItem tabLabel='Keys'>
+                <TabItem tabLabel='API Keys'>
                   <div className='mt-6'>
                     <div className='col-md-6'>
-                      <h5>API Token</h5>
+                      <h5>Manage API Keys</h5>
                       <InfoMessage>
                         <p>
                           You can use this token to securely integrate with the
