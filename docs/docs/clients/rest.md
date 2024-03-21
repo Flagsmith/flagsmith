@@ -57,11 +57,11 @@ For SaaS customers, the URL to hit for this API is [`https://edge.api.flagsmith.
 You can also do things like create new flags, environments, toggle flags or indeed anything that is possible from the
 administrative front end via the API.
 
-To authenticate, you can use the API Token associated with your account. This can be found in the "Account" page from
-the top navigation panel. You need to provide the token as an HTTP header of the form:
+To authenticate, you can use the API Token associated with your Organisation. This can be found in the `Organisation`
+page from the top navigation panel. You need to create a token and then provide it as an HTTP header:
 
 ```bash
-authorization: Token <API TOKEN FROM ACCOUNT PAGE>
+authorization: Token <API TOKEN FROM ORGANISATION PAGE>
 ```
 
 For example, to create a new Environment:
@@ -69,7 +69,7 @@ For example, to create a new Environment:
 ```bash
 curl 'https://api.flagsmith.com/api/v1/environments/' \
     -H 'content-type: application/json' \
-    -H 'authorization: Token <API TOKEN FROM ACCOUNT PAGE>' \
+    -H 'authorization: Token <API TOKEN FROM ORGANISATION PAGE>' \
     --data-binary '{"name":"New Environment","project":"<Project ID>"}'
 ```
 
