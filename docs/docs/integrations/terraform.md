@@ -23,20 +23,20 @@ from your account settings page which will help you access these variables.
 
 ## Prerequisite
 
-### Terraform API Key
+### Organisation API Key
 
-In order to configure the Flagsmith Terraform provider we are going to need an API key. To generate that head over to
-the Organisation Settings page, and click on `Create Terraform API Key`.
+In order to configure the Flagsmith Terraform provider we need an API key. To generate one, head over to the
+Organisation Settings page (click `Organisation` at the top of the page), then `API Keys`, then `Create API Key`.
 
 :::info
 
-Organisation Administrator permission is required to generate Terraform API Key.
+Organisation Administrator permission is required to generate an Organisation API Key.
 
 :::
 
 ## Using the Flagsmith Terraform Provider
 
-Once you have the Terraform Provider key you can go ahead and create a Terraform config file, which will look something
+Once you have the Organisation API Key you can go ahead and create a Terraform config file, which will look something
 like this:
 
 ```hcl
