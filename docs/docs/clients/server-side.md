@@ -96,11 +96,11 @@ pip install flagsmith
 <dependency>
   <groupId>com.flagsmith</groupId>
   <artifactId>flagsmith-java-client</artifactId>
-  <version>5.0.0</version>
+  <version>7.2.0</version>
 </dependency>
 
 # Gradle
-implementation 'com.flagsmith:flagsmith-java-client:5.0.0'
+implementation 'com.flagsmith:flagsmith-java-client:7.2.0'
 ```
 
 </TabItem>
@@ -110,16 +110,16 @@ implementation 'com.flagsmith:flagsmith-java-client:5.0.0'
 # Check https://www.nuget.org/packages/Flagsmith for the latest version!
 
 # Package Manager
-Install-Package Flagsmith -Version 5.1.0
+Install-Package Flagsmith -Version 5.2.2
 
 #.NET CLI
-dotnet add package Flagsmith --version 5.1.0
+dotnet add package Flagsmith --version 5.2.2
 
 # PackageReference
-<PackageReference Include="Flagsmith" Version="5.1.0" />
+<PackageReference Include="Flagsmith" Version="5.2.2" />
 
 # Paket CLI
-paket add Flagsmith --version 5.1.0
+paket add Flagsmith --version 5.2.2
 ```
 
 </TabItem>
