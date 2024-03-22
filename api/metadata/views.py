@@ -1,3 +1,5 @@
+from itertools import chain
+
 from django.contrib.contenttypes.models import ContentType
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
@@ -7,7 +9,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from .models import (
-    METADATA_SUPPORTED_MODELS,
     SUPPORTED_REQUIREMENTS_MAPPING,
     MetadataField,
     MetadataModelField,
@@ -81,7 +82,13 @@ class MetaDataModelFieldViewSet(viewsets.ModelViewSet):
         url_path="supported-content-types",
     )
     def supported_content_types(self, request, organisation_pk=None):
-        qs = ContentType.objects.filter(model__in=METADATA_SUPPORTED_MODELS)
+        need_content_type_of = list(
+            chain.from_iterable(
+                (key, *value) for key, value in SUPPORTED_REQUIREMENTS_MAPPING.items()
+            )
+        )
+
+        qs = ContentType.objects.filter(model__in=need_content_type_of)
         serializer = ContentTypeSerializer(qs, many=True)
 
         return Response(serializer.data)

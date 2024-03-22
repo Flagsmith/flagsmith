@@ -10,7 +10,7 @@ from metadata.models import (
     MetadataModelField,
     MetadataModelFieldRequirement,
 )
-from metadata.views import METADATA_SUPPORTED_MODELS
+from metadata.views import SUPPORTED_REQUIREMENTS_MAPPING
 from organisations.models import Organisation
 from projects.models import Project
 
@@ -394,21 +394,26 @@ def test_can_not_create_model_metadata_field_using_field_from_other_organisation
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_get_supported_content_type(admin_client, organisation):
+def test_get_supported_content_type(
+    admin_client: APIClient, organisation: Organisation
+):
     # Given
     url = reverse(
         "api-v1:organisations:metadata-model-fields-supported-content-types",
         args=[organisation.id],
     )
+
+    supported_models = list(SUPPORTED_REQUIREMENTS_MAPPING.keys())
+
     # When
     response = admin_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.json()) == len(METADATA_SUPPORTED_MODELS)
+    assert len(response.json()) == len(supported_models)
 
     assert set(content_type["model"] for content_type in response.json()) == set(
-        METADATA_SUPPORTED_MODELS
+        supported_models
     )
 
 

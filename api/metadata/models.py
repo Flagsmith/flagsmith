@@ -18,6 +18,8 @@ SUPPORTED_REQUIREMENTS_MAPPING = {
     "environment": ["organisation", "project"],
     "feature": ["organisation", "project"],
     "segment": ["organisation", "project"],
+    "project": [],
+    "organisation": [],
 }
 
 
