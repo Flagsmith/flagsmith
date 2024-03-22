@@ -462,7 +462,7 @@ export type Res = {
   versionFeatureState: FeatureState[]
   role: Role
   roles: Role[]
-  rolePermission: PagedResponse<RolePermissionUser>
+  rolePermission: PagedResponse<UserPermission>
   projectFlags: PagedResponse<ProjectFlag>
   projectFlag: ProjectFlag
   identityFeatureStates: IdentityFeatureState[]
