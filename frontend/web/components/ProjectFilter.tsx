@@ -2,7 +2,7 @@ import { FC, useMemo } from 'react'
 import { useGetProjectsQuery } from 'common/services/useProject'
 
 export type ProjectFilterType = {
-  organisationId: string
+  organisationId: string | number
   value?: string
   onChange: (value: string) => void
   showAll?: boolean
@@ -14,7 +14,10 @@ const ProjectFilter: FC<ProjectFilterType> = ({
   showAll,
   value,
 }) => {
-  const { data } = useGetProjectsQuery({ organisationId })
+  const { data } = useGetProjectsQuery(
+    { organisationId: `${organisationId}` },
+    { skip: !organisationId },
+  )
   const foundValue = useMemo(
     () => data?.find((project) => `${project.id}` === value),
     [value, data],

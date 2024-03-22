@@ -382,6 +382,12 @@ export type RolePermissionUser = {
   id: number
   role_name: string
 }
+export type RolePermissionGroup = {
+  group: number
+  role: number
+  id: number
+  role_name: string
+}
 export type FeatureVersion = {
   created_at: string
   updated_at: string
@@ -454,13 +460,16 @@ export type Res = {
   }
   featureVersion: FeatureVersion
   versionFeatureState: FeatureState[]
+  role: Role
   roles: Role[]
-  rolePermission: { id: string }
+  rolePermission: PagedResponse<RolePermissionUser>
   projectFlags: PagedResponse<ProjectFlag>
   projectFlag: ProjectFlag
   identityFeatureStates: IdentityFeatureState[]
-  rolesPermissionUsers: RolePermissionUser
-  rolePermissionGroup: { id: string }
+  createRolesPermissionUsers: RolePermissionUser
+  rolesPermissionUsers: PagedResponse<RolePermissionUser>
+  createRolePermissionGroup: RolePermissionGroup
+  rolePermissionGroup: PagedResponse<RolePermissionGroup>
   getSubscriptionMetadata: { id: string }
   environment: Environment
   launchDarklyProjectImport: LaunchDarklyProjectImport

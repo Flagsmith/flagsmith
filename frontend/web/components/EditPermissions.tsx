@@ -100,7 +100,7 @@ type EntityPermissions = Omit<
 }
 
 const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
-  (props, ref) => {
+  (props) => {
     const [entityPermissions, setEntityPermissions] =
       useState<EntityPermissions>({ admin: false, permissions: [] })
     const [parentError, setParentError] = useState(false)

@@ -1,25 +1,32 @@
 import React, {
   FC,
-  useEffect,
-  useState,
-  useRef,
   forwardRef,
+  useEffect,
   useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
 } from 'react'
 import InputGroup from 'components/base/forms/InputGroup'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import CollapsibleNestedRolePermissionsList from 'components/CollapsibleNestedRolePermissionsList'
 import {
-  useGetRoleQuery,
   useCreateRoleMutation,
+  useGetRoleQuery,
   useUpdateRoleMutation,
 } from 'common/services/useRole'
 
 import { EditPermissionsModal } from 'components/EditPermissions'
 import OrganisationStore from 'common/stores/organisation-store'
 import ProjectFilter from 'components/ProjectFilter'
-import { Environment, User } from 'common/types/responses'
+import {
+  Environment,
+  Project,
+  Role,
+  User,
+  UserGroup,
+} from 'common/types/responses'
 import { setInterceptClose } from './base/ModalDefault'
 import UserSelect from 'components/UserSelect'
 import MyGroupsSelect from 'components/MyGroupsSelect'
@@ -35,14 +42,21 @@ import {
 } from 'common/services/useRolePermissionGroup'
 import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
+import Utils from 'common/utils/utils'
+import Button from 'components/base/forms/Button'
+import Input from 'components/base/forms/Input'
 
+type TabRef = {
+  onClosing: () => Promise<void>
+  tabChanged: () => boolean
+}
 type CreateRoleType = {
-  organisationId?: string
-  role: Role
-  onComplete: () => void
+  groups: UserGroup[]
   isEdit?: boolean
+  onComplete: () => void
+  organisationId?: number
+  role: Role
   users: User[]
-  groups: Array
 }
 const CreateRole: FC<CreateRoleType> = ({
   groups,
@@ -59,15 +73,25 @@ const CreateRole: FC<CreateRoleType> = ({
   const [environments, setEnvironments] = useState<Environment[]>([])
   const [showUserSelect, setShowUserSelect] = useState<boolean>(false)
   const [showGroupSelect, setShowGroupSelect] = useState<boolean>(false)
-  const [userSelected, setUserSelected] = useState<Array>([])
-  const [groupSelected, setGroupSelected] = useState<Array>([])
+  const [userSelected, setUserSelected] = useState<
+    {
+      user_role_id: number
+      user: number
+    }[]
+  >([])
+  const [groupSelected, setGroupSelected] = useState<
+    {
+      group: number
+      role_group_id: number
+    }[]
+  >([])
 
-  const projectData = OrganisationStore.getProjects()
+  const projectData: Project[] = OrganisationStore.getProjects()
 
   const [createRolePermissionUser, { data: usersData, isSuccess: userAdded }] =
     useCreateRolesPermissionUsersMutation()
 
-  const [deleteRolePermissionUser, { deleted: roleUserDeleted }] =
+  const [deleteRolePermissionUser, { isSuccess: roleUserDeleted }] =
     useDeleteRolesPermissionUsersMutation()
 
   const [
@@ -75,7 +99,7 @@ const CreateRole: FC<CreateRoleType> = ({
     { data: groupsData, isSuccess: groupAdded },
   ] = useCreateRolePermissionGroupMutation()
 
-  const [deleteRolePermissionGroup, { deleted: roleGroupDeleted }] =
+  const [deleteRolePermissionGroup, { isSuccess: roleGroupDeleted }] =
     useDeleteRolePermissionGroupMutation()
 
   const {
@@ -84,7 +108,7 @@ const CreateRole: FC<CreateRoleType> = ({
     refetch,
   } = useGetRolesPermissionUsersQuery(
     {
-      organisation_id: organisationId,
+      organisation_id: organisationId!,
       role_id: role?.id,
     },
     { skip: !role || !organisationId },
@@ -96,7 +120,7 @@ const CreateRole: FC<CreateRoleType> = ({
     refetch: refetchGroups,
   } = useGetRolePermissionGroupQuery(
     {
-      organisation_id: organisationId,
+      organisation_id: organisationId!,
       role_id: role?.id,
     },
     { skip: !role || !organisationId },
@@ -115,28 +139,29 @@ const CreateRole: FC<CreateRoleType> = ({
   }, [groupAdded, roleGroupDeleted, refetchGroups])
 
   useEffect(() => {
-    if (isSuccess) {
-      setUserSelected(() => {
-        return userList.results.map((u) => ({
+    if (isSuccess && userList.results) {
+      setUserSelected(
+        userList.results.map((u) => ({
           user: u.user,
           user_role_id: u.id,
-        }))
-      })
+        })),
+      )
     }
   }, [userList, isSuccess])
 
   useEffect(() => {
     if (groupListLoaded && groupList?.results) {
-      setGroupSelected(() => {
-        return groupList.results.map((g) => ({
+      setGroupSelected(
+        groupList.results.map((g) => ({
           group: g.group,
           role_group_id: g.id,
-        }))
-      })
+        })),
+      )
     }
   }, [groupList, groupListLoaded])
 
-  const addUserOrGroup = (id: string, isUser = true) => {
+  const addUserOrGroup = (id: number, isUser = true) => {
+    if (!organisationId) return
     if (isUser) {
       createRolePermissionUser({
         data: {
@@ -155,101 +180,102 @@ const CreateRole: FC<CreateRoleType> = ({
       })
     }
   }
-
-  const removeUserOrGroup = (id: string, isUser = true) => {
+  const removeUserOrGroup = (id: number, isUser = true) => {
     const userRole = usersAdded.find((item) => item.id === id)
+    if (!organisationId) return
     if (isUser) {
-      deleteRolePermissionUser({
-        organisation_id: organisationId,
-        role_id: role.id,
-        user_id: userRole.user_role_id,
-      })
-      setUserSelected((userSelected || []).filter((v) => v.user !== id))
-      toast('User role was removed')
+      if (userRole) {
+        deleteRolePermissionUser({
+          organisation_id: organisationId,
+          role_id: role.id,
+          user_id: userRole?.user_role_id,
+        }).then((res) => {
+          // @ts-ignore rtk types are wrong
+          if (!res.error) {
+            toast('User role was removed')
+          }
+        })
+        setUserSelected((userSelected || []).filter((v) => v.user !== id))
+      }
     } else {
       const groupRole = groupsAdded.find((item) => item.id === id)
-      deleteRolePermissionGroup({
-        group_id: groupRole.role_group_id,
-        organisation_id: organisationId,
-        role_id: role.id,
-      })
-      setGroupSelected((groupSelected || []).filter((v) => v.group !== id))
-      toast('Group role was removed')
+      if (groupRole && organisationId) {
+        deleteRolePermissionGroup({
+          group_id: groupRole.role_group_id,
+          organisation_id: organisationId,
+          role_id: role.id,
+        })
+        setGroupSelected((groupSelected || []).filter((v) => v.group !== id))
+        toast('Group role was removed')
+      }
     }
   }
 
-  const getUsers = (users = [], selectedRoles) => {
-    return users
-      .filter((v) => selectedRoles.find((a) => a.user === v.id))
+  const usersAdded = useMemo(() => {
+    return (users || [])
+      ?.filter((v) => userSelected?.find((a) => a.user === v.id))
       .map((user) => {
-        const matchedRole = selectedRoles.find((role) => role.user === user.id)
-        if (matchedRole) {
-          return {
-            ...user,
-            user_role_id: matchedRole.user_role_id,
-          }
+        const matchedRole = userSelected!.find((role) => role.user === user.id)!
+        return {
+          ...user,
+          user_role_id: matchedRole.user_role_id,
         }
-        return user
       })
-  }
+  }, [users, userSelected])
 
-  const getGroup = (groups = [], groupSelected) => {
-    return groups
+  const groupsAdded = useMemo(() => {
+    return (groups || [])
       .filter((v) => groupSelected.find((a) => a.group === v.id))
       .map((group) => {
         const matchingGroup = groupSelected.find(
           (selected) => selected.group === group.id,
         )
-        if (matchingGroup) {
-          return { ...group, role_group_id: matchingGroup.role_group_id }
-        }
-        return group
+        return { ...group, role_group_id: matchingGroup!.role_group_id }
       })
-  }
-
-  const usersAdded = getUsers(users, userSelected || [])
-  const groupsAdded = getGroup(groups, groupSelected || [])
+  }, [groups, groupSelected])
 
   useEffect(() => {
-    if (project) {
+    if (project && projectData) {
       const environments = projectData.find(
         (p) => p.id === parseInt(project),
-      ).environments
-      setEnvironments(environments)
+      )?.environments
+      setEnvironments(environments || [])
     }
   }, [project, projectData])
 
   useEffect(() => {
-    if (userAdded) {
+    if (userAdded && usersData) {
       setUserSelected(
         (userSelected || []).concat({
-          user: usersData?.user,
-          user_role_id: usersData?.id,
+          user: usersData.user,
+          user_role_id: usersData.id,
         }),
       )
       toast('Role assigned')
     }
+    //eslint-disable-next-line
   }, [userAdded, usersData])
 
   useEffect(() => {
-    if (groupAdded) {
+    if (groupAdded && groupsData) {
       setGroupSelected(
         (groupSelected || []).concat({
-          group: groupsData?.group,
-          role_group_id: groupsData?.id,
+          group: groupsData.group,
+          role_group_id: groupsData.id,
         }),
       )
       toast('Role assigned')
     }
+    //eslint-disable-next-line
   }, [groupAdded, groupsData])
 
   const Tab1 = forwardRef((props, ref) => {
     const { data: roleData, isLoading } = useGetRoleQuery(
       {
-        organisation_id: role?.organisation,
-        role_id: role?.id,
+        organisation_id: role?.organisation as any,
+        role_id: role?.id as any,
       },
-      { skip: !role },
+      { skip: !role || !organisationId },
     )
     const [roleName, setRoleName] = useState<string>('')
     const [roleDesc, setRoleDesc] = useState<string>('')
@@ -287,7 +313,7 @@ const CreateRole: FC<CreateRoleType> = ({
     useEffect(() => {
       if (!isLoading && isEdit && roleData) {
         setRoleName(roleData.name)
-        setRoleDesc(roleData.description)
+        setRoleDesc(roleData.description || '')
       }
     }, [roleData, isLoading])
 
@@ -305,6 +331,7 @@ const CreateRole: FC<CreateRoleType> = ({
     }, [createSuccess, updateSuccess])
 
     const save = () => {
+      if (!organisationId) return
       if (isEdit) {
         editRole({
           body: { description: roleDesc, name: roleName },
@@ -327,14 +354,15 @@ const CreateRole: FC<CreateRoleType> = ({
     ) : (
       <div className='my-4'>
         <InputGroup
-          title='Role name'
+          title='Name*'
           inputProps={{
             className: 'full-width',
             name: 'roleName',
           }}
+          autoFocus={!isEdit}
           value={roleName}
           unsaved={isEdit && roleNameChanged}
-          onChange={(event) => {
+          onChange={(event: InputEvent) => {
             setRoleNameChanged(true)
             setRoleName(Utils.safeParseEventValue(event))
           }}
@@ -342,14 +370,14 @@ const CreateRole: FC<CreateRoleType> = ({
           placeholder='E.g. Viewers'
         />
         <InputGroup
-          title='Role Description'
+          title='Description'
           inputProps={{
             className: 'full-width',
             name: 'description',
           }}
           value={roleDesc}
           unsaved={isEdit && roleDescChanged}
-          onChange={(event) => {
+          onChange={(event: InputEvent) => {
             setRoleDescChanged(true)
             setRoleDesc(Utils.safeParseEventValue(event))
           }}
@@ -377,16 +405,16 @@ const CreateRole: FC<CreateRoleType> = ({
   const TabValue = () => {
     const [searchProject, setSearchProject] = useState<string>('')
     const [searchEnv, setSearchEnv] = useState<string>('')
-    const ref = useRef(null)
-    const ref2 = useRef(null)
+    const ref = useRef<TabRef>(null)
+    const ref2 = useRef<TabRef>(null)
     useEffect(() => {
       if (isEdit) {
-        setInterceptClose(() => ref.current.onClosing())
+        setInterceptClose(() => ref.current?.onClosing() || Promise.resolve())
       }
     }, [])
 
-    const changeTab = (newTab) => {
-      const changed = ref.current.tabChanged()
+    const changeTab = (newTab: number) => {
+      const changed = ref.current!.tabChanged()
       if (changed && newTab !== tab) {
         return new Promise((resolve) => {
           openConfirm({
@@ -407,7 +435,9 @@ const CreateRole: FC<CreateRoleType> = ({
 
     return isEdit ? (
       <Tabs value={tab} onChange={changeTab} buttonTheme='text'>
-        <TabItem tabLabel={<Row className='justify-content-center'>Role</Row>}>
+        <TabItem
+          tabLabel={<Row className='justify-content-center'>General</Row>}
+        >
           <Tab1 ref={ref} />
         </TabItem>
         <TabItem
@@ -474,7 +504,7 @@ const CreateRole: FC<CreateRoleType> = ({
                   <Button theme='text' onClick={() => setShowGroupSelect(true)}>
                     Assign role to group
                   </Button>
-                  {showGroupSelect && (
+                  {showGroupSelect && organisationId && (
                     <MyGroupsSelect
                       orgId={organisationId}
                       value={groupsAdded && groupsAdded.map((v) => v.id)}
@@ -509,7 +539,7 @@ const CreateRole: FC<CreateRoleType> = ({
         <TabItem
           tabLabel={<Row className='justify-content-center'>Organisation</Row>}
         >
-          <EditPermissionsModal level={'organisation'} role={role} ref={ref2} />
+          <EditPermissionsModal level={'organisation'} role={role} />
         </TabItem>
         <TabItem
           tabLabel={<Row className='justify-content-center'>Project</Row>}
@@ -557,7 +587,6 @@ const CreateRole: FC<CreateRoleType> = ({
             organisationId={role.organisation}
             onChange={setProject}
             value={project}
-            className='mb-2'
           />
           {environments.length > 0 && (
             <CollapsibleNestedRolePermissionsList

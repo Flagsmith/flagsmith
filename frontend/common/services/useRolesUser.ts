@@ -7,7 +7,7 @@ export const rolesUserService = service
   .injectEndpoints({
     endpoints: (builder) => ({
       createRolesPermissionUsers: builder.mutation<
-        Res['rolesUsers'],
+        Res['createRolesPermissionUsers'],
         Req['createRolesPermissionUsers']
       >({
         invalidatesTags: [
@@ -21,7 +21,7 @@ export const rolesUserService = service
         }),
       }),
       deleteRolesPermissionUsers: builder.mutation<
-        Res['rolesUsers'],
+        Res['rolesPermissionUsers'],
         Req['deleteRolesPermissionUsers']
       >({
         invalidatesTags: [{ type: 'User-role' }, { type: 'RolesUser' }],
@@ -30,15 +30,15 @@ export const rolesUserService = service
           method: 'DELETE',
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/users/${query.user_id}/`,
         }),
-        transformResponse: () => {
+        transformResponse: (res) => {
           toast('User role was removed')
+          return res
         },
       }),
       getRolesPermissionUsers: builder.query<
-        Res['rolesUsers'],
+        Res['rolesPermissionUsers'],
         Req['getRolesPermissionUsers']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'RolesUser' }],
         query: (query: Req['getRolesPermissionUsers']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/users/`,
         }),
@@ -49,35 +49,42 @@ export const rolesUserService = service
 
 export async function createPermissionRolesUsers(
   store: any,
-  data: Req['createRolesUsers'],
+  data: Req['createRolesPermissionUsers'],
   options?: Parameters<
-    typeof rolesUserService.endpoints.createRolesUsers.initiate
+    typeof rolesUserService.endpoints.createRolesPermissionUsers.initiate
   >[1],
 ) {
   return store.dispatch(
-    rolesUserService.endpoints.createRolesUsers.initiate(data, options),
+    rolesUserService.endpoints.createRolesPermissionUsers.initiate(
+      data,
+      options,
+    ),
   )
 }
 export async function deletePermissionRolesUsers(
   store: any,
   data: Req['deleteRolesPermissionUsers'],
   options?: Parameters<
-    typeof rolesUserService.endpoints.deleteRolesUsers.initiate
+    typeof rolesUserService.endpoints.deleteRolesPermissionUsers.initiate
   >[1],
 ) {
   return store.dispatch(
-    rolesUserService.endpoints.deleteRolesUsers.initiate(data, options),
+    rolesUserService.endpoints.deleteRolesPermissionUsers.initiate(
+      data,
+      options,
+    ),
   )
 }
+
 export async function getRolesPermissionUsers(
   store: any,
   data: Req['getRolesPermissionUsers'],
   options?: Parameters<
-    typeof rolesUserService.endpoints.getRolesUsers.initiate
+    typeof rolesUserService.endpoints.getRolesPermissionUsers.initiate
   >[1],
 ) {
   return store.dispatch(
-    rolesUserService.endpoints.getRolesUsers.initiate(data, options),
+    rolesUserService.endpoints.getRolesPermissionUsers.initiate(data, options),
   )
 }
 // END OF FUNCTION_EXPORTS
