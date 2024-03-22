@@ -354,15 +354,14 @@ const CreateRole: FC<CreateRoleType> = ({
     ) : (
       <div className='my-4'>
         <InputGroup
-          title='Name*'
+          title='Role name'
           inputProps={{
             className: 'full-width',
             name: 'roleName',
           }}
-          autoFocus={!isEdit}
           value={roleName}
           unsaved={isEdit && roleNameChanged}
-          onChange={(event: InputEvent) => {
+          onChange={(event) => {
             setRoleNameChanged(true)
             setRoleName(Utils.safeParseEventValue(event))
           }}
@@ -370,7 +369,7 @@ const CreateRole: FC<CreateRoleType> = ({
           placeholder='E.g. Viewers'
         />
         <InputGroup
-          title='Description'
+          title='Role Description'
           inputProps={{
             className: 'full-width',
             name: 'description',
@@ -435,9 +434,7 @@ const CreateRole: FC<CreateRoleType> = ({
 
     return isEdit ? (
       <Tabs value={tab} onChange={changeTab} buttonTheme='text'>
-        <TabItem
-          tabLabel={<Row className='justify-content-center'>General</Row>}
-        >
+        <TabItem tabLabel={<Row className='justify-content-center'>Role</Row>}>
           <Tab1 ref={ref} />
         </TabItem>
         <TabItem
