@@ -8,6 +8,7 @@ const _ = require('lodash')
 const controller = {
   createProject: (name) => {
     store.saving()
+    const defaultEnvironmentNames = Utils.getFlagsmithValue('default_environment_names_for_new_project') ? JSON.parse(Utils.getFlagsmithValue('default_environment_names_for_new_project')) : ['Development', 'Production']
     const createSampleUser = (res, envName, project) =>
       data
         .post(
@@ -30,20 +31,16 @@ const controller = {
     data
       .post(`${Project.api}projects/`, { name, organisation: store.id })
       .then((project) => {
-        Promise.all([
-          data
-            .post(`${Project.api}environments/`, {
-              name: 'Development',
-              project: project.id,
-            })
-            .then((res) => createSampleUser(res, 'development', project)),
-          data
-            .post(`${Project.api}environments/`, {
-              name: 'Production',
-              project: project.id,
-            })
-            .then((res) => createSampleUser(res, 'production', project)),
-        ]).then((res) => {
+        Promise.all(
+          defaultEnvironmentNames.map((v) => {
+            data
+              .post(`${Project.api}environments/`, {
+                name: v,
+                project: project.id,
+              })
+              .then((res) => createSampleUser(res, 'development', project))
+          })
+        ).then((res) => {
           project.environments = res
           store.model.projects = store.model.projects.concat(project)
           store.savedId = {
