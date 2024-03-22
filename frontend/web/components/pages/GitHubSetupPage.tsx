@@ -11,13 +11,31 @@ import { useCreateGithubRepositoryMutation } from 'common/services/useGithubRepo
 import { useGetGithubReposQuery } from 'common/services/useGithub'
 import PanelSearch from 'components/PanelSearch'
 
-type GitHubSetupPageType = {}
+type Location = {
+  search: string
+}
+
+type GitHubSetupPageType = {
+  location: Location
+}
+
+type projectType = {
+  value: string
+  label: string
+}
+
+type repoType = {
+  value: string
+  label: string
+  name?: string
+}
+
 const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
   const installationId =
     new URLSearchParams(props.location.search).get('installation_id') || ''
   const [organisation, setOrganisation] = useState<string>('')
   const [project, setProject] = useState<any>({})
-  const [projects, setProjects] = useState<any>([])
+  const [projects, setProjects] = useState<projectType[]>([])
   const [repositoryName, setRepositoryName] = useState<string>('')
   const [repositoryOwner, setRepositoryOwner] = useState<string>('')
   const [repositories, setRepositories] = useState<any>([])
@@ -114,7 +132,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
       <div className='mr-4 mb-4'>
         <label>Select your Flagsmith Organisation</label>
         <OrganisationSelect
-          onChange={(organisationId) => {
+          onChange={(organisationId: string) => {
             setOrganisation(organisationId)
           }}
           showSettings={false}
@@ -151,8 +169,8 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
           <Select
             size='select-md'
             placeholder={'Select your repository'}
-            onChange={(v: string) => setRepositoryName(v.label)}
-            options={repositories?.repositories?.map((r) => {
+            onChange={(v: repoType) => setRepositoryName(v.label)}
+            options={repositories?.repositories?.map((r: repoType) => {
               return { label: r.name, value: r.name }
             })}
           />
@@ -183,7 +201,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
             </div>
           </Row>
         }
-        renderRow={(v) => (
+        renderRow={(v: projectType) => (
           <Row className='list-item' key={v.value}>
             <Flex className='table-column px-3'>
               <div className='font-weight-medium mb-1'>{v.label}</div>
@@ -194,7 +212,9 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
             >
               <Button
                 onClick={() => {
-                  setProjects(projects.filter((p) => p.value !== v.value))
+                  setProjects(
+                    projects.filter((p: projectType) => p.value !== v.value),
+                  )
                 }}
                 className='btn btn-with-icon'
               >
