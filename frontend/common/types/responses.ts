@@ -171,7 +171,6 @@ export type Issue = {
   author_association: string
   active_lock_reason: null | string
   body: string
-  reactions: Reaction
   timeline_url: string
   performed_via_github_app: null | any
   state_reason: null | string
@@ -213,14 +212,12 @@ export type PullRequest = {
     ref: string
     sha: string
     user: User
-    repo: Repo
   }
   base: {
     label: string
     ref: string
     sha: string
     user: User
-    repo: Repo
   }
   _links: {
     self: { href: string }

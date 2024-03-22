@@ -7,7 +7,6 @@ import {
   Role,
   ExternalResource,
   ImportStrategy,
-  APIKey,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -248,23 +247,54 @@ export type Req = {
   }
   getExternalResource: { feature_id: string }
   updateExternalResource: { external_resource_id: string }
-  deleteExternalResource: { feature_id: string }
-  createExternalResource: { body: ExternalResource }
+  deleteExternalResource: { feature_id: string; external_resource_id: string }
+  createExternalResource: { feature_id: string; body: ExternalResource }
 
   getGithubIntegration: {
     organisation_pk: number
     id: string
   }
-  updateGithubIntegration: { id: string }
-  deleteGithubIntegration: { id: string }
-  createGithubIntegration: {}
-  getGithubRepository: { id: string }
-  updateGithubRepository: { id: string }
-  deleteGithubRepository: { id: string }
-  createGithubRepository: {}
+  updateGithubIntegration: {
+    organisation_pk: string
+    github_integration_id: string
+  }
+  deleteGithubIntegration: {
+    organisation_pk: string
+    github_integration_id: string
+  }
+  createGithubIntegration: {
+    organisation_pk: string
+    body: {
+      installation_id: string
+    }
+  }
+  getGithubRepository: {
+    organisation_pk: string
+    github_pk: string
+    id: string
+  }
+  updateGithubRepository: {
+    organisation_pk: string
+    github_pk: string
+    id: string
+  }
+  deleteGithubRepository: {
+    organisation_pk: string
+    github_pk: string
+    id: string
+  }
+  createGithubRepository: {
+    organisation_pk: string
+    github_pk: string
+    body: {
+      project: string
+      repository_name: string
+      repository_owner: string
+    }
+  }
   getGithubIssues: { org_id: string }
   getGithubPulls: { org_id: string }
-  getGithubRepos: { installation_id: number }
+  getGithubRepos: { installation_id: string }
   getServersideEnvironmentKeys: { environmentId: string }
   deleteServersideEnvironmentKeys: { environmentId: string; id: string }
   createServersideEnvironmentKeys: {

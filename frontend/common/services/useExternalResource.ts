@@ -31,7 +31,7 @@ export const externalResourceService = service
         Res['externalResource'],
         Req['getExternalResource']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'ExternalResource' }],
+        providesTags: [{ id: 'LIST', type: 'ExternalResource' }],
         query: (query: Req['getExternalResource']) => ({
           url: `features/${query.feature_id}/external-resources/`,
         }),
@@ -40,14 +40,11 @@ export const externalResourceService = service
         Res['externalResource'],
         Req['updateExternalResource']
       >({
-        invalidatesTags: (res) => [
-          { id: 'LIST', type: 'ExternalResource' },
-          { id: res?.id, type: 'ExternalResource' },
-        ],
+        invalidatesTags: [{ id: 'LIST', type: 'ExternalResource' }],
         query: (query: Req['updateExternalResource']) => ({
           body: query,
           method: 'PUT',
-          url: `external-resources/${query.id}/`,
+          url: `external-resources/${query.external_resource_id}/`,
         }),
       }),
       // END OF ENDPOINTS
