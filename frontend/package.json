@@ -131,7 +131,7 @@
     "webpack": "5.76.0",
     "webpack-bundle-analyzer": "^4.5.0",
     "webpack-cli": "^4.10.0",
-    "webpack-dev-middleware": "5.3.3",
+    "webpack-dev-middleware": "5.3.4",
     "webpack-hot-middleware": "2.25.3",
     "whatwg-fetch": "3.0.0",
     "x-frame-options": "^1.0.0",
