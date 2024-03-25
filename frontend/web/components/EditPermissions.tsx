@@ -471,12 +471,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                 : (`${level}s` as PermissionLevel),
             organisation_id: role.organisation,
             role_id: role.id,
-          }).then((res) => {
-            // @ts-ignore rtk incorrect types
-            if (res.error) {
-              toast('Failed to Save', 'danger')
-            }
-          })
+          }).then(onRoleSaved as any)
         } else {
           createRolePermissions({
             body: body as Req['createRolePermission']['body'],
@@ -486,12 +481,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                 : (`${level}s` as PermissionLevel),
             organisation_id: role.organisation,
             role_id: role.id,
-          }).then((res) => {
-            // @ts-ignore rtk incorrect types
-            if (res.error) {
-              toast('Failed to Save', 'danger')
-            }
-          })
+          }).then(onRoleSaved as any)
         }
       }
     }
@@ -555,6 +545,21 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       }
     }
 
+    const onRoleRemoved = (res: { error?: any }) => {
+      if (!res?.error) {
+        toast('User role removed')
+      } else {
+        toast('Error removing role', 'danger')
+      }
+    }
+
+    const onRoleSaved = (res: { error?: any }) => {
+      // @ts-ignore rtk incorrect types
+      if (res.error) {
+        toast('Failed to Save', 'danger')
+      }
+    }
+
     const removeOwner = (roleId: number) => {
       const roleSelected = rolesAdded.find((item) => item.id === roleId)
       if (level === 'organisation') {
@@ -564,13 +569,13 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               org_id: id,
               role_id: roleId,
               user_id: user?.id,
-            })
+            }).then(onRoleRemoved as any)
           } else {
             deleteRolePermissionUser({
               organisation_id: id,
               role_id: roleId,
               user_id: roleSelected?.user_role_id,
-            })
+            }).then(onRoleRemoved as any)
           }
         }
         if (group) {
@@ -579,13 +584,13 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               group_id: group?.id,
               org_id: id,
               role_id: roleId,
-            })
+            }).then(onRoleRemoved as any)
           } else {
             deleteRolePermissionGroup({
               group_id: roleSelected.group_role_id,
               organisation_id: id,
               role_id: roleId,
-            })
+            }).then(onRoleRemoved as any)
           }
         }
       }

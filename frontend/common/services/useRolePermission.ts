@@ -19,9 +19,6 @@ export const rolePermissionService = service
           method: 'POST',
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/${query.level}-permissions/`,
         }),
-        transformErrorResponse: () => {
-          toast('Failed to Save', 'danger')
-        },
       }),
 
       getRoleEnvironmentPermissions: builder.query<
