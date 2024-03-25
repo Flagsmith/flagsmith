@@ -154,84 +154,33 @@ export type Issue = {
   events_url: string
   html_url: string
   id: number
-  node_id: string
   number: number
   title: string
-  user: User
-  labels: any[]
   state: string
-  locked: boolean
-  assignee: null | any
-  assignees: any[]
-  milestone: null | any
-  comments: number
   created_at: string
   updated_at: string
   closed_at: null | string
-  author_association: string
-  active_lock_reason: null | string
   body: string
   timeline_url: string
-  performed_via_github_app: null | any
-  state_reason: null | string
 }
 
 export type PullRequest = {
   url: string
   id: number
-  node_id: string
   html_url: string
-  diff_url: string
-  patch_url: string
   issue_url: string
   number: number
   state: string
   locked: boolean
   title: string
-  user: any[]
   body: string | null
   created_at: string
   updated_at: string
   closed_at: string | null
   merged_at: string | null
-  merge_commit_sha: string | null
-  assignee: User | null
-  assignees: User[]
-  requested_reviewers: User[]
-  requested_teams: any[]
-  labels: any[]
-  milestone: any
   draft: boolean
-  commits_url: string
-  review_comments_url: string
-  review_comment_url: string
   comments_url: string
   statuses_url: string
-  head: {
-    label: string
-    ref: string
-    sha: string
-    user: User
-  }
-  base: {
-    label: string
-    ref: string
-    sha: string
-    user: User
-  }
-  _links: {
-    self: { href: string }
-    html: { href: string }
-    issue: { href: string }
-    comments: { href: string }
-    review_comments: { href: string }
-    review_comment: { href: string }
-    commits: { href: string }
-    statuses: { href: string }
-  }
-  author_association: string
-  auto_merge: string | null
-  active_lock_reason: string | null
 }
 
 export type GithubPaginatedRepos<T> = {

@@ -40,9 +40,10 @@ import {
   getExternalResource,
   deleteExternalResource,
 } from 'common/services/useExternalResource'
-import { getGithubIssues, getGithubPulls } from 'common/services/useGithub'
 import { getStore } from 'common/store'
 import { removeUserOverride } from 'components/RemoveUserOverride'
+import MyIssueSelect from 'components/MyIssuesSelect'
+import MyPullRequestsSelect from 'components/MyPullRequestsSelect'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -216,18 +217,6 @@ const CreateFlag = class extends Component {
         this.setState({
           hasIntegrationWithGithub: !!res?.data?.results?.length,
         })
-        if (res?.data?.results?.length) {
-          getGithubIssues(getStore(), {
-            organisation_id: AccountStore.getOrganisation().id,
-          }).then((issues) => {
-            this.setState({ issuesExternalResources: issues?.data })
-          })
-          getGithubPulls(getStore(), {
-            organisation_id: AccountStore.getOrganisation().id,
-          }).then((pulls) => {
-            this.setState({ prExternalResources: pulls?.data })
-          })
-        }
       })
     }
   }
@@ -550,10 +539,8 @@ const CreateFlag = class extends Component {
       hide_from_client,
       initial_value,
       isEdit,
-      issuesExternalResources,
       multivariate_options,
       name,
-      prExternalResources,
       status,
     } = this.state
     const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID
@@ -697,41 +684,22 @@ const CreateFlag = class extends Component {
                     />
                   </div>
                   {externalResourceType == 'Github Issue' ? (
-                    <div style={{ width: '300px' }}>
-                      <Select
-                        size='select-md'
-                        placeholder={'Select Your Issue'}
-                        onChange={(v) =>
-                          this.setState({
-                            featureExternalResource: v.value,
-                            status: v.status,
-                          })
-                        }
-                        options={issuesExternalResources?.map((i) => {
-                          return {
-                            label: `${i.title} #${i.number}`,
-                            status: i.state,
-                            value: i.html_url,
-                          }
-                        })}
-                      />
-                    </div>
+                    <MyIssueSelect
+                      orgId={AccountStore.getOrganisation().id}
+                      onChange={(v) =>
+                        this.setState({
+                          featureExternalResource: v,
+                          status: 'open',
+                        })
+                      }
+                    />
                   ) : externalResourceType == 'Github PR' ? (
-                    <div style={{ width: '300px' }}>
-                      <Select
-                        size='select-md'
-                        placeholder={'Select Your PR'}
-                        onChange={(v) =>
-                          this.setState({ featureExternalResource: v.value })
-                        }
-                        options={prExternalResources?.map((i) => {
-                          return {
-                            label: `${i.title} #${i.number}`,
-                            value: i.html_url,
-                          }
-                        })}
-                      />
-                    </div>
+                    <MyPullRequestsSelect
+                      orgId={AccountStore.getOrganisation().id}
+                      onChange={(v) =>
+                        this.setState({ featureExternalResource: v.value })
+                      }
+                    />
                   ) : (
                     <></>
                   )}

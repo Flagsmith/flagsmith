@@ -1,14 +1,18 @@
 import { FC } from 'react'
 import { useGetGithubPullsQuery } from 'common/services/useGithub'
-import GroupSelect, { GroupSelectType } from './GroupSelect' // we need this to make JSX compile
+import PullRequestSelect from './PullRequestSelect'
 
 type MyGithubPullRequestSelectType = {
   orgId: string
+  onChange: (value: string) => void
 }
 
-const MyGithubPullRequest: FC<MyGithubPullsSelectType> = ({ orgId }) => {
-  const { data } = useGetGithubPullsQuery({ orgId })
-  return <GroupSelect {...props} groups={data?.results} />
+const MyGithubPullRequests: FC<MyGithubPullRequestSelectType> = ({
+  onChange,
+  orgId,
+}) => {
+  const { data } = useGetGithubPullsQuery({ organisation_id: orgId })
+  return <PullRequestSelect pullRequest={data} onChange={onChange} />
 }
 
-export default MyGithubPullRequest
+export default MyGithubPullRequests
