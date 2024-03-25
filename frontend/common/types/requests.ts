@@ -243,7 +243,7 @@ export type Req = {
   getLaunchDarklyProjectImport: { project_id: string; import_id: string }
   getLaunchDarklyProjectsImport: { project_id: string }
   getUserWithRoles: { org_id: number; user_id: number }
-  deleteUserWihRole: { org_id: number; user_id: number; role_id: number }
+  deleteUserWithRole: { org_id: number; user_id: number; role_id: number }
   getGroupWithRole: { org_id: number; group_id: number }
   deleteGroupWithRole: { org_id: number; group_id: number; role_id: number }
   createAndPublishFeatureVersion: {

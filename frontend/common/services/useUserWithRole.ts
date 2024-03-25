@@ -3,30 +3,24 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
 export const userWithRolesService = service
-  .enhanceEndpoints({ addTagTypes: ['User-role', 'RolesUser'] })
+  .enhanceEndpoints({ addTagTypes: ['RolesUser'] })
   .injectEndpoints({
     endpoints: (builder) => ({
-      deleteUserWithRoles: builder.mutation<
-        Res['User-role'],
-        Req['deleteUserWithRoles']
-      >({
-        invalidatesTags: [{ type: 'User-role' }, { type: 'RolesUser' }],
-        query: (query: Req['deleteUserWithRoles']) => ({
+      deleteUserWithRoles: builder.mutation<{}, Req['deleteUserWithRole']>({
+        invalidatesTags: [{ type: 'RolesUser' }],
+        query: (query: Req['deleteUserWithRole']) => ({
           method: 'DELETE',
           url: `organisations/${query.org_id}/users/${query.user_id}/roles/${query.role_id}/`,
         }),
-        transformResponse: () => {
-          toast('User role was removed')
-        },
       }),
       getUserWithRoles: builder.query<
         Res['userWithRoles'],
         Req['getUserWithRoles']
       >({
-        invalidatesTags: [{ type: 'User-role' }],
-        providesTags: (result, error, userId) => {
-          const tags = result ? [{ id: userId, type: 'User-role' }] : []
-          return tags
+        providesTags: (result, error, req) => {
+          return result
+            ? [{ id: `${req.user_id}-${req.org_id}`, type: 'RolesUser' }]
+            : []
         },
         query: (query: Req['getUserWithRoles']) => ({
           url: `organisations/${query.org_id}/users/${query.user_id}/roles/`,
@@ -50,13 +44,13 @@ export async function getUserWithRoles(
 
 export async function deleteUserRole(
   store: any,
-  data: Req['deleteUserWithRoles'],
+  data: Req['deleteUserWithRole'],
   options?: Parameters<
-    typeof UserRoleService.endpoints.deleteUserWithRoles.initiate
+    typeof userWithRolesService.endpoints.deleteUserWithRoles.initiate
   >[1],
 ) {
   return store.dispatch(
-    UserRoleService.endpoints.deleteUserWithRoles.initiate(data, options),
+    userWithRolesService.endpoints.deleteUserWithRoles.initiate(data, options),
   )
 }
 // END OF FUNCTION_EXPORTS

@@ -59,7 +59,7 @@ const RoleSelect: FC<RoleSelectType> = ({
                   if (isRemove && onRemove) {
                     onRemove(v.id)
                   } else if (!isRemove && onAdd) {
-                    onAdd(isRoleApiKey ? v : v.id)
+                    onAdd((isRoleApiKey ? v : v.id) as number)
                   }
                 }}
                 space

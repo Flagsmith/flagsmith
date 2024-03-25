@@ -2,7 +2,6 @@ import React, { FC, forwardRef, useEffect, useState } from 'react'
 import { find } from 'lodash'
 import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
-
 import _data from 'common/data/base/_data'
 import {
   AvailablePermission,

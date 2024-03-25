@@ -3,17 +3,14 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
 export const rolesUserService = service
-  .enhanceEndpoints({ addTagTypes: ['RolesUser', 'User-role'] })
+  .enhanceEndpoints({ addTagTypes: ['RolesUser'] })
   .injectEndpoints({
     endpoints: (builder) => ({
       createRolesPermissionUsers: builder.mutation<
         Res['createRolesPermissionUsers'],
         Req['createRolesPermissionUsers']
       >({
-        invalidatesTags: [
-          { type: 'User-role' },
-          { id: 'LIST', type: 'RolesUser' },
-        ],
+        invalidatesTags: [{ id: 'LIST', type: 'RolesUser' }],
         query: (query: Req['createRolesPermissionUsers']) => ({
           body: query.data,
           method: 'POST',
@@ -24,16 +21,12 @@ export const rolesUserService = service
         Res['rolesPermissionUsers'],
         Req['deleteRolesPermissionUsers']
       >({
-        invalidatesTags: [{ type: 'User-role' }, { type: 'RolesUser' }],
+        invalidatesTags: [{ type: 'RolesUser' }],
         query: (query: Req['deleteRolesPermissionUsers']) => ({
           body: query,
           method: 'DELETE',
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/users/${query.user_id}/`,
         }),
-        transformResponse: (res) => {
-          toast('User role was removed')
-          return res
-        },
       }),
       getRolesPermissionUsers: builder.query<
         Res['rolesPermissionUsers'],
