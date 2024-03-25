@@ -1,7 +1,7 @@
 import requests
 from django.http import JsonResponse
 from rest_framework import viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -36,6 +36,7 @@ class GithubConfigurationViewSet(viewsets.ModelViewSet):
 
 
 class GithubRepositoryViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated, HasPermissionToGithubConfiguration)
     serializer_class = GithubRepositorySerializer
     model_class = GithubRepository
 
@@ -50,6 +51,7 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
 def fetch_pull_requests(request, organisation_pk):
     organisation = Organisation.objects.get(id=organisation_pk)
 
@@ -76,6 +78,7 @@ def fetch_pull_requests(request, organisation_pk):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
 def fetch_issues(request, organisation_pk):
     organisation = Organisation.objects.get(id=organisation_pk)
     token = generate_token(
@@ -101,6 +104,7 @@ def fetch_issues(request, organisation_pk):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
 def fetch_repositories(request):
     installation_id = request.GET.get("installation_id")
 
