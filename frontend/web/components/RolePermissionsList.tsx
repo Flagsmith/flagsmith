@@ -14,6 +14,7 @@ import {
 import Format from 'common/utils/format'
 import { PermissionLevel, Req } from 'common/types/requests'
 import { Role } from 'common/types/responses'
+import PanelSearch from './PanelSearch'
 
 type NameAndId = {
   name: string
@@ -25,7 +26,7 @@ type RolePermissionsListProps = {
   mainItems: NameAndId[]
   role: Role
   ref?: Ref<any>
-  level: string
+  level: PermissionLevel
   filter: string
 }
 
@@ -88,8 +89,10 @@ const PermissionsSummary: FC<PermissionsSummaryType> = ({
 
 const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
   ({ filter, level, mainItems, role }, ref) => {
-    const [expandedItems, setExpandedItems] = useState<string[]>([])
-    const [unsavedProjects, setUnsavedProjects] = useState<string[]>([])
+    const [expandedItems, setExpandedItems] = useState<(string | number)[]>([])
+    const [unsavedProjects, setUnsavedProjects] = useState<(string | number)[]>(
+      [],
+    )
 
     const mainItemsFiltered =
       mainItems &&
@@ -99,7 +102,7 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
         return `${v.name}`.toLowerCase().includes(search)
       })
 
-    const toggleExpand = (id: string) => {
+    const toggleExpand = (id: string | number) => {
       setExpandedItems((prevExpanded) =>
         prevExpanded.includes(id)
           ? prevExpanded.filter((item) => item !== id)
@@ -107,7 +110,7 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
       )
     }
 
-    const removeUnsavedProject = (projectId) => {
+    const removeUnsavedProject = (projectId: number) => {
       setUnsavedProjects((prevUnsavedProjects) =>
         prevUnsavedProjects.filter((id) => id !== projectId),
       )
@@ -142,13 +145,21 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
     )
 
     return (
-      <div className='collapsible-nested-list list-container'>
-        {mainItemsFiltered?.map((mainItem, index) => (
-          <div key={index}>
+      <PanelSearch
+        header={
+          <Row className='table-header'>
+            <Flex className='px-3'>Name</Flex>
+          </Row>
+        }
+        renderRow={(mainItem: NameAndId, index: number) => (
+          <div
+            className='list-item mh-auto py-2 list-item-xs clickable'
+            key={index}
+          >
             <Row
+              className='px-3 flex-fill align-items-center user-select-none'
               key={index}
               onClick={() => toggleExpand(mainItem.id)}
-              className='clickable cursor-pointer list-item-sm px-3 list-row'
             >
               <Flex>
                 <div className={'list-item-subtitle'}>
@@ -167,14 +178,16 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
                   />
                 </div>
               </Flex>
-              <Icon
-                name={
-                  expandedItems.includes(mainItem.id)
-                    ? 'chevron-down'
-                    : 'chevron-right'
-                }
-                width={25}
-              />
+              <div>
+                <Icon
+                  fill={'#9DA4AE'}
+                  name={
+                    expandedItems.includes(mainItem.id)
+                      ? 'chevron-down'
+                      : 'chevron-right'
+                  }
+                />
+              </div>
             </Row>
             <div>
               {expandedItems.includes(mainItem.id) && (
@@ -182,6 +195,7 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
                   id={mainItem.id}
                   level={level}
                   role={role}
+                  className='mt-2 px-3'
                   permissionChanged={() => {
                     if (!unsavedProjects.includes(mainItem.id)) {
                       setUnsavedProjects((prevUnsavedProjects) => [
@@ -195,8 +209,10 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
               )}
             </div>
           </div>
-        ))}
-      </div>
+        )}
+        items={mainItemsFiltered || []}
+        className='no-pad'
+      />
     )
   },
 )

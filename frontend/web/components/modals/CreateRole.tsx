@@ -45,6 +45,7 @@ import { IonIcon } from '@ionic/react'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
+import SettingsButton from 'components/SettingsButton'
 
 type TabRef = {
   onClosing: () => Promise<void>
@@ -354,7 +355,7 @@ const CreateRole: FC<CreateRoleType> = ({
     ) : (
       <div className='my-4'>
         <InputGroup
-          title='Role name'
+          title='Name'
           inputProps={{
             className: 'full-width',
             name: 'roleName',
@@ -369,7 +370,7 @@ const CreateRole: FC<CreateRoleType> = ({
           placeholder='E.g. Viewers'
         />
         <InputGroup
-          title='Role Description'
+          title='Description'
           inputProps={{
             className: 'full-width',
             name: 'description',
@@ -412,188 +413,201 @@ const CreateRole: FC<CreateRoleType> = ({
       }
     }, [])
 
+    const openConfirmNavigation = (
+      newTab: number,
+      setTab: (v: number) => void,
+    ) => {
+      return new Promise((resolve) => {
+        openConfirm({
+          body: 'Changing this tab will discard your unsaved changes.',
+          noText: 'Cancel',
+          onNo: () => resolve(false),
+          onYes: () => {
+            resolve(true), setTab(newTab)
+          },
+          title: 'Discard changes',
+          yesText: 'Ok',
+        })
+      })
+    }
+
     const changeTab = (newTab: number) => {
       const changed = ref.current!.tabChanged()
       if (changed && newTab !== tab) {
-        return new Promise((resolve) => {
-          openConfirm({
-            body: 'Changing this tab will discard your unsaved changes.',
-            noText: 'Cancel',
-            onNo: () => resolve(false),
-            onYes: () => {
-              resolve(true), setTab(newTab)
-            },
-            title: 'Discard changes',
-            yesText: 'Ok',
-          })
-        })
+        openConfirmNavigation(newTab, setTab)
       } else {
         setTab(newTab)
       }
     }
 
+    const changeSubTab = (newTab: number) => {
+      const changed = ref.current!.tabChanged()
+      if (changed && newTab !== userGroupTab) {
+        openConfirmNavigation(newTab, setUserGroupTab)
+      } else {
+        setUserGroupTab(newTab)
+      }
+    }
+
     return isEdit ? (
       <Tabs value={tab} onChange={changeTab} buttonTheme='text'>
-        <TabItem tabLabel={<Row className='justify-content-center'>Role</Row>}>
+        <TabItem
+          tabLabel={<Row className='justify-content-center'>General</Row>}
+        >
           <Tab1 ref={ref} />
         </TabItem>
         <TabItem
           tabLabel={<Row className='justify-content-center'>Members</Row>}
         >
-          <h5 className='mt-4 title'>Assign Roles</h5>
-          <Tabs
-            value={userGroupTab}
-            onChange={setUserGroupTab}
-            theme='pill m-0'
-            isRoles={true}
-          >
-            <TabItem
-              tabLabel={<Row className='justify-content-center'>Users</Row>}
-            >
-              <div>
-                <h5 style={{ width: 110 }} className='mt-4'>
-                  Users List:
-                </h5>
-                <Row>
-                  <Button theme='text' onClick={() => setShowUserSelect(true)}>
-                    Assign role to user
-                  </Button>
-                  {showUserSelect && (
-                    <UserSelect
-                      users={users}
-                      value={usersAdded && usersAdded.map((v) => v.id)}
-                      onAdd={addUserOrGroup}
-                      onRemove={removeUserOrGroup}
-                      isOpen={showUserSelect}
-                      onToggle={() => setShowUserSelect(!showUserSelect)}
-                      size='-sm'
-                    />
-                  )}
+          <div>
+            <div className='mt-4'>
+              <SettingsButton onClick={() => setShowUserSelect(true)}>
+                Assigned users
+              </SettingsButton>
+              {showUserSelect && (
+                <UserSelect
+                  users={users}
+                  value={usersAdded && usersAdded.map((v) => v.id)}
+                  onAdd={addUserOrGroup}
+                  onRemove={removeUserOrGroup}
+                  isOpen={showUserSelect}
+                  onToggle={() => setShowUserSelect(!showUserSelect)}
+                />
+              )}
+            </div>
+            <div className='flex-row flex-wrap'>
+              {usersAdded?.map((u) => (
+                <Row
+                  key={u.id}
+                  onClick={() => removeUserOrGroup(u.id)}
+                  className='chip my-1 justify-content-between'
+                >
+                  <span className='font-weight-bold'>
+                    {u.first_name} {u.last_name}
+                  </span>
+                  <span className='chip-icon ion'>
+                    <IonIcon icon={closeIcon} style={{ fontSize: '13px' }} />
+                  </span>
                 </Row>
-                {usersAdded.length !== 0 &&
-                  usersAdded.map((u) => (
-                    <Row
-                      key={u.id}
-                      onClick={() => removeUserOrGroup(u.id)}
-                      className='chip my-1 role-list'
-                    >
-                      <span className='font-weight-bold'>
-                        {u.first_name} {u.last_name}
-                      </span>
-                      <span className='chip-icon ion'>
-                        <IonIcon
-                          icon={closeIcon}
-                          style={{ fontSize: '13px' }}
-                        />
-                      </span>
-                    </Row>
-                  ))}
+              ))}
+            </div>
+            <div className='mt-2'>
+              <SettingsButton onClick={() => setShowGroupSelect(true)}>
+                Assigned groups
+              </SettingsButton>
+              {showGroupSelect && organisationId && (
+                <MyGroupsSelect
+                  orgId={organisationId}
+                  value={groupsAdded && groupsAdded.map((v) => v.id)}
+                  onAdd={addUserOrGroup}
+                  onRemove={removeUserOrGroup}
+                  isOpen={showGroupSelect}
+                  onToggle={() => setShowGroupSelect(!showGroupSelect)}
+                  size='-sm'
+                />
+              )}
+
+              <div className='flex-row flex-wrap'>
+                {groupsAdded?.map((g) => (
+                  <Row
+                    key={g.id}
+                    onClick={() => removeUserOrGroup(g.id, false)}
+                    className='chip my-1 justify-content-between'
+                  >
+                    <span className='font-weight-bold'>{g.name}</span>
+                    <span className='chip-icon ion'>
+                      <IonIcon icon={closeIcon} style={{ fontSize: '13px' }} />
+                    </span>
+                  </Row>
+                ))}
               </div>
-            </TabItem>
-            <TabItem
-              tabLabel={<Row className='justify-content-center'>Groups</Row>}
+            </div>
+          </div>
+        </TabItem>
+        <TabItem
+          tabLabel={<Row className='justify-content-center'>Permissions</Row>}
+        >
+          <div className='mt-4'>
+            <Tabs
+              value={userGroupTab}
+              onChange={changeSubTab}
+              theme='pill m-0'
+              isRoles={true}
             >
-              <div>
-                <h5 style={{ width: 120 }} className='mt-4'>
-                  Groups List:
-                </h5>
-                <Row>
-                  <Button theme='text' onClick={() => setShowGroupSelect(true)}>
-                    Assign role to group
-                  </Button>
-                  {showGroupSelect && organisationId && (
-                    <MyGroupsSelect
-                      orgId={organisationId}
-                      value={groupsAdded && groupsAdded.map((v) => v.id)}
-                      onAdd={addUserOrGroup}
-                      onRemove={removeUserOrGroup}
-                      isOpen={showGroupSelect}
-                      onToggle={() => setShowGroupSelect(!showGroupSelect)}
-                      size='-sm'
-                    />
-                  )}
+              <TabItem
+                tabLabel={
+                  <Row className='justify-content-center'>Organisation</Row>
+                }
+              >
+                <EditPermissionsModal
+                  className='mt-2'
+                  level={'organisation'}
+                  role={role}
+                />
+              </TabItem>
+              <TabItem
+                tabLabel={<Row className='justify-content-center'>Project</Row>}
+              >
+                <Row className='justify-content-between'>
+                  <h5 className='my-3'>Permissions</h5>
+                  <Input
+                    type='text'
+                    className='ml-3'
+                    value={searchProject}
+                    onChange={(e: InputEvent) =>
+                      setSearchProject(Utils.safeParseEventValue(e))
+                    }
+                    size='small'
+                    placeholder='Search'
+                    search
+                  />
                 </Row>
-                {groupsAdded.length !== 0 &&
-                  groupsAdded.map((g) => (
-                    <Row
-                      key={g.id}
-                      onClick={() => removeUserOrGroup(g.id, false)}
-                      className='chip my-1 role-list'
-                    >
-                      <span className='font-weight-bold'>{g.name}</span>
-                      <span className='chip-icon ion'>
-                        <IonIcon
-                          icon={closeIcon}
-                          style={{ fontSize: '13px' }}
-                        />
-                      </span>
-                    </Row>
-                  ))}
-              </div>
-            </TabItem>
-          </Tabs>
-        </TabItem>
-        <TabItem
-          tabLabel={<Row className='justify-content-center'>Organisation</Row>}
-        >
-          <EditPermissionsModal level={'organisation'} role={role} />
-        </TabItem>
-        <TabItem
-          tabLabel={<Row className='justify-content-center'>Project</Row>}
-        >
-          <Row className='role-list'>
-            <h5 className='my-4 title'>Edit Permissions</h5>
-            <Input
-              type='text'
-              className='ml-3'
-              value={searchProject}
-              onChange={(e: InputEvent) =>
-                setSearchProject(Utils.safeParseEventValue(e))
-              }
-              size='small'
-              placeholder='Search'
-              search
-            />
-          </Row>
-          <RolePermissionsList
-            filter={searchProject}
-            mainItems={projectData}
-            role={role!}
-            level={'project'}
-            ref={ref}
-          />
-        </TabItem>
-        <TabItem
-          tabLabel={<Row className='justify-content-center'>Environment</Row>}
-        >
-          <Row className='role-list'>
-            <h5 className='my-4 title'>Edit Permissions</h5>
-            <Input
-              type='text'
-              className='ml-3'
-              value={searchEnv}
-              onChange={(e: InputEvent) =>
-                setSearchEnv(Utils.safeParseEventValue(e))
-              }
-              size='small'
-              placeholder='Search'
-              search
-            />
-          </Row>
-          <ProjectFilter
-            organisationId={role!.organisation}
-            onChange={setProject}
-            value={project}
-          />
-          {environments.length > 0 && (
-            <RolePermissionsList
-              filter={searchEnv}
-              mainItems={environments}
-              role={role!}
-              level={'environment'}
-              ref={ref}
-            />
-          )}
+                <RolePermissionsList
+                  filter={searchProject}
+                  mainItems={projectData}
+                  role={role!}
+                  level={'project'}
+                  ref={ref}
+                />
+              </TabItem>
+              <TabItem
+                tabLabel={
+                  <Row className='justify-content-center'>Environment</Row>
+                }
+              >
+                <Row className='justify-content-between'>
+                  <h5 className='my-3'>Permissions</h5>
+                  <Input
+                    type='text'
+                    className='ml-3'
+                    value={searchEnv}
+                    onChange={(e: InputEvent) =>
+                      setSearchEnv(Utils.safeParseEventValue(e))
+                    }
+                    size='small'
+                    placeholder='Search'
+                    search
+                  />
+                </Row>
+                <div className='mb-2' style={{ width: 250 }}>
+                  <ProjectFilter
+                    organisationId={role!.organisation}
+                    onChange={setProject}
+                    value={project}
+                  />
+                </div>
+                {environments.length > 0 && (
+                  <RolePermissionsList
+                    filter={searchEnv}
+                    mainItems={environments}
+                    role={role!}
+                    level={'environment'}
+                    ref={ref}
+                  />
+                )}
+              </TabItem>
+            </Tabs>
+          </div>
         </TabItem>
       </Tabs>
     ) : (

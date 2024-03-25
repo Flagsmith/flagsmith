@@ -58,6 +58,7 @@ import MyRoleSelect from './MyRoleSelect'
 import { setInterceptClose } from './modals/base/ModalDefault'
 import Panel from './base/grid/Panel'
 import InputGroup from './base/forms/InputGroup'
+import classNames from 'classnames'
 
 const OrganisationProvider = require('common/providers/OrganisationProvider')
 const Project = require('common/project')
@@ -65,6 +66,7 @@ const Project = require('common/project')
 type EditPermissionModalType = {
   group?: UserGroup
   id: number
+  className?: string
   isGroup?: boolean
   level: PermissionLevel
   name: string
@@ -140,6 +142,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       }
     }, [valueChanged])
     const {
+      className,
       editPermissionsFromSettings,
       envId,
       group,
@@ -642,16 +645,18 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     const isAdmin = admin()
     const hasRbacPermission = Utils.getPlansPermission('RBAC')
 
+    const [search, setSearch] = useState()
+
     return !permissions || !entityPermissions ? (
       <div className='modal-body text-center'>
         <Loader />
       </div>
     ) : (
       <div>
-        <div className='modal-body px-4'>
-          <div className='mb-2 mt-4'>
-            {level !== 'organisation' && (
-              <Row className={role ? 'px-3 py-2' : ''}>
+        <div className={classNames('modal-body', className || 'px-4')}>
+          {level !== 'organisation' && (
+            <div className='mb-2'>
+              <Row className={role ? 'py-2' : ''}>
                 <Flex>
                   <div className='font-weight-medium text-dark mb-1'>
                     Administrator
@@ -685,9 +690,14 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                   checked={isAdmin}
                 />
               </Row>
-            )}
-          </div>
+            </div>
+          )}
           <PanelSearch
+            filterRow={(item: AvailablePermission, search) => {
+              return Format.enumeration
+                .get(item.key)
+                .includes(search?.toLowerCase() || '')
+            }}
             title='Permissions'
             className='no-pad mb-2'
             items={permissions}
@@ -912,7 +922,9 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
 
   return (
     <div className='mt-4'>
-      <h5>Manage Permissions</h5>
+      <Row>
+        <h5>Manage Permissions</h5>
+      </Row>
       <p className='fs-small lh-sm col-md-8 mb-4'>
         Flagsmith lets you manage fine-grained permissions for your projects and
         environments.{' '}
