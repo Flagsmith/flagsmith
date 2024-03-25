@@ -78,7 +78,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
         </Button>
       </Row>
       <p className='fs-small lh-sm'>
-        Create custom roles, assign permissions, and keys to the role, and then
+        Create custom roles, assign permissions and keys to the role, and then
         you can assign roles to users and/or groups.
       </p>
       <PanelSearch
