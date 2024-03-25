@@ -153,6 +153,8 @@ def _call_webhook(
     headers = {"content-type": "application/json"}
     json_data = json.dumps(data, sort_keys=True, cls=DjangoJSONEncoder)
     if webhook.secret:
+        # signPayload of frontend/web/components/TestWebHook on the frontend replicates this
+        # exact function, change the function there if this changes.
         signature = sign_payload(json_data, key=webhook.secret)
         headers.update({FLAGSMITH_SIGNATURE_HEADER: signature})
 
@@ -199,6 +201,8 @@ def call_webhook_with_failure_mail_after_retries(
     headers = {"content-type": "application/json"}
     json_data = json.dumps(data, sort_keys=True, cls=DjangoJSONEncoder)
     if webhook.secret:
+        # signPayload of frontend/web/components/TestWebHook on the frontend replicates this
+        # exact function, change the function there if this changes.
         signature = sign_payload(json_data, key=webhook.secret)
         headers.update({FLAGSMITH_SIGNATURE_HEADER: signature})
 
