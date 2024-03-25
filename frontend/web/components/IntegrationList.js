@@ -23,8 +23,14 @@ class Integration extends Component {
   }
 
   render() {
-    const { description, docs, external, image, perEnvironment } =
-      this.props.integration
+    const {
+      description,
+      docs,
+      external,
+      image,
+      isExternalInstallation,
+      perEnvironment,
+    } = this.props.integration
     const activeIntegrations = this.props.activeIntegrations
     const showAdd = !(
       !perEnvironment &&
@@ -72,7 +78,11 @@ class Integration extends Component {
                 <>
                   {external ? (
                     <a
-                      href={docs}
+                      href={
+                        isExternalInstallation
+                          ? 'https://github.com/apps/flagsmith-github-integration/installations/select_target'
+                          : docs
+                      }
                       target={'_blank'}
                       className='btn btn-primary btn-xsm ml-3'
                       id='show-create-segment-btn'
