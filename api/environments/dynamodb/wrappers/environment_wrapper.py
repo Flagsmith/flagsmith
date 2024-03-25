@@ -67,17 +67,18 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         feature_id: int | None = None,
     ) -> typing.List[dict[str, Any]]:
         try:
-            response = self.table.query(
-                KeyConditionExpression=Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
-                    str(environment_id),
-                )
-                & Key(ENVIRONMENTS_V2_SORT_KEY).begins_with(
-                    get_environments_v2_identity_override_document_key(
-                        feature_id=feature_id,
-                    ),
+            return list(
+                self.query_get_all_items(
+                    KeyConditionExpression=Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
+                        str(environment_id),
+                    )
+                    & Key(ENVIRONMENTS_V2_SORT_KEY).begins_with(
+                        get_environments_v2_identity_override_document_key(
+                            feature_id=feature_id,
+                        ),
+                    )
                 )
             )
-            return response["Items"]
         except KeyError as e:
             raise ObjectDoesNotExist() from e
 
