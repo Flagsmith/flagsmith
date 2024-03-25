@@ -20,7 +20,7 @@ View your Flagsmith Flags inside your GitHub Issues and Pull Request
 1. In GitHub, add the app from the [GitHub Marketplace](https://github.com/apps/flagsmith-github-integration).
 2. Select your organisation.
 3. Select your repositories where you want install the app.
-4. You was redirected to Flagsmith app -> GitHub Setup.
+4. You will be redirected back to the Flagsmith app to finish the integration setup.
 5. Select your Flagsmith Organisation.
 6. Select the Flagmsith Project you want to associate with the repository where the app was installed to create the
    Integration.
