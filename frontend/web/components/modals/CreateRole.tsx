@@ -51,12 +51,12 @@ type TabRef = {
   tabChanged: () => boolean
 }
 type CreateRoleType = {
-  groups: UserGroup[]
+  groups?: UserGroup[]
   isEdit?: boolean
   onComplete: () => void
   organisationId?: number
-  role: Role
-  users: User[]
+  role?: Role
+  users?: User[]
 }
 const CreateRole: FC<CreateRoleType> = ({
   groups,
@@ -109,7 +109,7 @@ const CreateRole: FC<CreateRoleType> = ({
   } = useGetRolesPermissionUsersQuery(
     {
       organisation_id: organisationId!,
-      role_id: role?.id,
+      role_id: role?.id as any,
     },
     { skip: !role || !organisationId },
   )
@@ -121,7 +121,7 @@ const CreateRole: FC<CreateRoleType> = ({
   } = useGetRolePermissionGroupQuery(
     {
       organisation_id: organisationId!,
-      role_id: role?.id,
+      role_id: role?.id as any,
     },
     { skip: !role || !organisationId },
   )
@@ -161,7 +161,7 @@ const CreateRole: FC<CreateRoleType> = ({
   }, [groupList, groupListLoaded])
 
   const addUserOrGroup = (id: number, isUser = true) => {
-    if (!organisationId) return
+    if (!organisationId || !role) return
     if (isUser) {
       createRolePermissionUser({
         data: {
@@ -182,7 +182,7 @@ const CreateRole: FC<CreateRoleType> = ({
   }
   const removeUserOrGroup = (id: number, isUser = true) => {
     const userRole = usersAdded.find((item) => item.id === id)
-    if (!organisationId) return
+    if (!organisationId || !role) return
     if (isUser) {
       if (userRole) {
         deleteRolePermissionUser({
@@ -331,7 +331,7 @@ const CreateRole: FC<CreateRoleType> = ({
     }, [createSuccess, updateSuccess])
 
     const save = () => {
-      if (!organisationId) return
+      if (!organisationId || !role) return
       if (isEdit) {
         editRole({
           body: { description: roleDesc, name: roleName },
@@ -361,7 +361,7 @@ const CreateRole: FC<CreateRoleType> = ({
           }}
           value={roleName}
           unsaved={isEdit && roleNameChanged}
-          onChange={(event) => {
+          onChange={(event: InputEvent) => {
             setRoleNameChanged(true)
             setRoleName(Utils.safeParseEventValue(event))
           }}
@@ -558,7 +558,7 @@ const CreateRole: FC<CreateRoleType> = ({
           <CollapsibleNestedRolePermissionsList
             filter={searchProject}
             mainItems={projectData}
-            role={role}
+            role={role!}
             level={'project'}
             ref={ref}
           />
@@ -581,7 +581,7 @@ const CreateRole: FC<CreateRoleType> = ({
             />
           </Row>
           <ProjectFilter
-            organisationId={role.organisation}
+            organisationId={role!.organisation}
             onChange={setProject}
             value={project}
           />
@@ -589,7 +589,7 @@ const CreateRole: FC<CreateRoleType> = ({
             <CollapsibleNestedRolePermissionsList
               filter={searchEnv}
               mainItems={environments}
-              role={role}
+              role={role!}
               level={'environment'}
               ref={ref}
             />

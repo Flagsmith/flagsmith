@@ -118,7 +118,7 @@ export type Req = {
     }
     feature_state_value: FeatureStateValue
   }
-  getRoles: { organisation_id: string }
+  getRoles: { organisation_id: number }
   createRole: {
     organisation_id: number
     description: string | null

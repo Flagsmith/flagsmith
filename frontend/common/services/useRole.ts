@@ -27,6 +27,7 @@ export const roleService = service
         }),
       }),
       getRoles: builder.query<Res['roles'], Req['getRoles']>({
+        providesTags: [{ id: 'LIST', type: 'Role' }],
         query: (query: Req['getRoles']) => ({
           url: `organisations/${query.organisation_id}/roles/`,
         }),

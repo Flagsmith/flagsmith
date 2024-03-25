@@ -4,7 +4,7 @@ import Utils from 'common/utils/utils'
 import { useDeleteRoleMutation } from 'common/services/useRole'
 import ModalHR from './ModalHR'
 import ErrorMessage from 'components/ErrorMessage'
-
+import { Role } from 'common/types/responses'
 type ConfirmDeleteRoleType = {
   role: Role
   onComplete?: () => void
