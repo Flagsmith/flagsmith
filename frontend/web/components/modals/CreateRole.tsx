@@ -10,7 +10,7 @@ import React, {
 import InputGroup from 'components/base/forms/InputGroup'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
-import CollapsibleNestedRolePermissionsList from 'components/CollapsibleNestedRolePermissionsList'
+import RolePermissionsList from 'components/RolePermissionsList'
 import {
   useCreateRoleMutation,
   useGetRoleQuery,
@@ -555,7 +555,7 @@ const CreateRole: FC<CreateRoleType> = ({
               search
             />
           </Row>
-          <CollapsibleNestedRolePermissionsList
+          <RolePermissionsList
             filter={searchProject}
             mainItems={projectData}
             role={role!}
@@ -586,7 +586,7 @@ const CreateRole: FC<CreateRoleType> = ({
             value={project}
           />
           {environments.length > 0 && (
-            <CollapsibleNestedRolePermissionsList
+            <RolePermissionsList
               filter={searchEnv}
               mainItems={environments}
               role={role!}

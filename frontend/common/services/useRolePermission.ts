@@ -28,7 +28,6 @@ export const rolePermissionService = service
         Res['rolePermission'],
         Req['getRolePermission']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'rolePermission' }],
         query: (query: Req['getRolePermission']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/environments-permissions/?environment=${query.env_id}`,
         }),
@@ -37,7 +36,6 @@ export const rolePermissionService = service
         Res['rolePermission'],
         Req['getRolePermission']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'rolePermission' }],
         query: (query: Req['getRolePermission']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/organisation-permissions/`,
         }),
@@ -46,7 +44,6 @@ export const rolePermissionService = service
         Res['rolePermission'],
         Req['getRolePermission']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'rolePermission' }],
         query: (query: Req['getRolePermission']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/projects-permissions/?project=${query.project_id}`,
         }),
@@ -56,7 +53,6 @@ export const rolePermissionService = service
         Res['rolePermission'],
         Req['getRolePermission']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'rolePermission' }],
         query: (query: Req['getRolePermission']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/environments-permissions/?environment=${query.env_id}`,
         }),
@@ -66,7 +62,6 @@ export const rolePermissionService = service
         Res['rolePermission'],
         Req['getRolePermission']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'rolePermission' }],
         query: (query: Req['getRolePermission']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/projects-permissions/?project=${query.project_id}`,
         }),
@@ -82,9 +77,6 @@ export const rolePermissionService = service
           method: 'PUT',
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/${query.level}-permissions/${query.id}/`,
         }),
-        transformErrorResponse: () => {
-          toast('Failed to Save', 'danger')
-        },
       }),
 
       // END OF ENDPOINTS
@@ -181,7 +173,7 @@ export async function createRolePermissions(
 }
 export async function getRolesProjectPermissions(
   store: any,
-  data: Req['getRolesPermission'],
+  data: Req['getRolePermission'],
   options?: Parameters<
     typeof rolePermissionService.endpoints.getRolesProjectPermissions.initiate
   >[1],
@@ -196,7 +188,7 @@ export async function getRolesProjectPermissions(
 
 export async function getRolesEnvironmentPermissions(
   store: any,
-  data: Req['getRolesEnvironment'],
+  data: Req['getRolePermission'],
   options?: Parameters<
     typeof rolePermissionService.endpoints.getRolesProjectPermissions.initiate
   >[1],

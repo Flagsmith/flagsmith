@@ -1,10 +1,4 @@
-import React, {
-  FC,
-  useEffect,
-  useState,
-  forwardRef,
-  useImperativeHandle,
-} from 'react'
+import React, { FC, forwardRef, useEffect, useState } from 'react'
 import { find } from 'lodash'
 import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
@@ -33,10 +27,10 @@ import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePer
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from './Icon'
 import {
+  useCreateRolePermissionsMutation,
   useGetRoleEnvironmentPermissionsQuery,
   useGetRoleOrganisationPermissionsQuery,
   useGetRoleProjectPermissionsQuery,
-  useCreateRolePermissionsMutation,
   useUpdateRolePermissionsMutation,
 } from 'common/services/useRolePermission'
 
@@ -51,17 +45,18 @@ import {
 } from 'common/services/useRolePermissionGroup'
 
 import {
-  useGetUserWithRolesQuery,
   useDeleteUserWithRolesMutation,
+  useGetUserWithRolesQuery,
 } from 'common/services/useUserWithRole'
 
 import {
-  useGetGroupWithRoleQuery,
   useDeleteGroupWithRoleMutation,
+  useGetGroupWithRoleQuery,
 } from 'common/services/useGroupWithRole'
 
 import MyRoleSelect from './MyRoleSelect'
 import { setInterceptClose } from './modals/base/ModalDefault'
+
 const OrganisationProvider = require('common/providers/OrganisationProvider')
 const Project = require('common/project')
 
@@ -452,6 +447,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
             level: level === 'organisation' ? level : `${level}s`,
             organisation_id: role.organisation,
             role_id: role.id,
+          }).then((res) => {
+            if (res.error) {
+              toast('Failed to Save', 'danger')
+            }
           })
         } else {
           createRolePermissions({
@@ -460,6 +459,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
             level: level === 'organisation' ? level : `${level}s`,
             organisation_id: role.organisation,
             role_id: role.id,
+          }).then((res) => {
+            if (res.error) {
+              toast('Failed to Save', 'danger')
+            }
           })
         }
       }

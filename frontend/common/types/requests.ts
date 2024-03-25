@@ -124,20 +124,32 @@ export type Req = {
     description: string | null
     name: string
   }
-  getRole: { organisation_id: string; role_id: string }
+  getRole: { organisation_id: string; role_id: number }
   updateRole: {
     organisation_id: number
     role_id: number
     body: { description: string | null; name: string }
   }
   deleteRole: { organisation_id: number; role_id: number }
-  getRolePermission: { organisation_id: string; role_id: string }
-  updateRolePermission: {
-    organisation_id: string
-    role_id: string
+  getRolePermission: {
+    organisation_id: number
+    role_id: number
+    project_id: number
+    env_id: number
   }
-  deleteRolePermission: { organisation_id: string; role_id: string }
-  createRolePermission: { organisation_id: string; role_id: string }
+  updateRolePermission: {
+    level: PermissionLevel
+    id: number
+    body: {
+      admin?: boolean
+      permissions: string[]
+      project: number
+    }
+    organisation_id: string
+    role_id: number
+  }
+  deleteRolePermission: { organisation_id: string; role_id: number }
+  createRolePermission: { organisation_id: string; role_id: number }
   getIdentityFeatureStates: {
     environment: string
     user: string
@@ -222,9 +234,9 @@ export type Req = {
   getLaunchDarklyProjectImport: { project_id: string; import_id: string }
   getLaunchDarklyProjectsImport: { project_id: string }
   getUserWithRoles: { org_id: string; user_id: string }
-  deleteUserWihRole: { org_id: string; user_id: string; role_id: string }
+  deleteUserWihRole: { org_id: string; user_id: string; role_id: number }
   getGroupWithRole: { org_id: string; group_id: string }
-  deleteGroupWithRole: { org_id: string; group_id: string; role_id: string }
+  deleteGroupWithRole: { org_id: string; group_id: string; role_id: number }
   createAndPublishFeatureVersion: {
     environmentId: string
     featureId: number

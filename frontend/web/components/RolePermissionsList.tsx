@@ -21,7 +21,7 @@ type NameAndId = {
   [key: string]: any
 }
 
-type CollapsibleNestedRolePermissionsListProps = {
+type RolePermissionsListProps = {
   mainItems: NameAndId[]
   role: Role
   ref?: Ref<any>
@@ -32,7 +32,7 @@ type CollapsibleNestedRolePermissionsListProps = {
 export type PermissionsSummaryType = {
   level: PermissionLevel
   levelId: number
-  role: Role | null
+  role: Role
 }
 const PermissionsSummary: FC<PermissionsSummaryType> = ({
   level,
@@ -42,9 +42,9 @@ const PermissionsSummary: FC<PermissionsSummaryType> = ({
   const { data: projectPermissions, isLoading: projectIsLoading } =
     useGetRoleProjectPermissionsQuery(
       {
-        organisation_id: role?.organisation,
+        organisation_id: role.organisation,
         project_id: levelId,
-        role_id: role?.id,
+        role_id: role.id,
       },
       { skip: !levelId || level == 'project' },
     )
@@ -86,8 +86,8 @@ const PermissionsSummary: FC<PermissionsSummaryType> = ({
   )
 }
 
-const CollapsibleNestedRolePermissionsList: React.FC<CollapsibleNestedRolePermissionsListProps> =
-  forwardRef(({ filter, level, mainItems, role }, ref) => {
+const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
+  ({ filter, level, mainItems, role }, ref) => {
     const [expandedItems, setExpandedItems] = useState<string[]>([])
     const [unsavedProjects, setUnsavedProjects] = useState<string[]>([])
 
@@ -198,6 +198,7 @@ const CollapsibleNestedRolePermissionsList: React.FC<CollapsibleNestedRolePermis
         ))}
       </div>
     )
-  })
+  },
+)
 
-export default CollapsibleNestedRolePermissionsList
+export default RolePermissionsList
