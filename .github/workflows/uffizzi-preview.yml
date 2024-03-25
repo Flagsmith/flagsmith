@@ -44,7 +44,7 @@ jobs:
             fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/preview-spec.zip`, Buffer.from(download.data));
 
       - name: 'Accept event from first stage'
-        run: unzip preview-spec.zip
+        run: unzip -j preview-spec.zip
 
       - name: Read Event into ENV
         id: event
@@ -58,7 +58,6 @@ jobs:
         # If the previous workflow was triggered by a PR close event, we will not have a compose file artifact.
         if: ${{ steps.event.outputs.ACTION != 'closed' }}
         run: |
-          unzip preview-spec.zip
           echo "COMPOSE_FILE_HASH=$(md5sum docker-compose.rendered.yml | awk '{ print $1 }')" >> $GITHUB_OUTPUT
 
       - name: Cache Rendered Compose File
