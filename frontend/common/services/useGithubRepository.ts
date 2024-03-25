@@ -14,7 +14,7 @@ export const githubRepositoryService = service
         query: (query: Req['createGithubRepository']) => ({
           body: query.body,
           method: 'POST',
-          url: `organisations/${query.organisation_pk}/integrations/github/${query.github_pk}/repositories/`,
+          url: `organisations/${query.organisation_id}/integrations/github/${query.github_pk}/repositories/`,
         }),
       }),
       deleteGithubRepository: builder.mutation<
@@ -25,7 +25,7 @@ export const githubRepositoryService = service
         query: (query: Req['deleteGithubRepository']) => ({
           body: query,
           method: 'DELETE',
-          url: `organisations/${query.organisation_pk}/integrations/github/${query.github_pk}/repositories/${query.id}/`,
+          url: `organisations/${query.organisation_id}/integrations/github/${query.github_pk}/repositories/${query.id}/`,
         }),
       }),
       getGithubRepository: builder.query<
@@ -34,7 +34,7 @@ export const githubRepositoryService = service
       >({
         providesTags: (res) => [{ id: res?.id, type: 'GithubRepository' }],
         query: (query: Req['getGithubRepository']) => ({
-          url: `organisations/${query.organisation_pk}/integrations/github/${query.github_pk}/repositories/${query.id}/`,
+          url: `organisations/${query.organisation_id}/integrations/github/${query.github_pk}/repositories/${query.id}/`,
         }),
       }),
       updateGithubRepository: builder.mutation<
@@ -48,7 +48,7 @@ export const githubRepositoryService = service
         query: (query: Req['updateGithubRepository']) => ({
           body: query,
           method: 'PUT',
-          url: `organisations/${query.organisation_pk}/integrations/github/${query.github_pk}/repositories/${query.id}/`,
+          url: `organisations/${query.organisation_id}/integrations/github/${query.github_pk}/repositories/${query.id}/`,
         }),
       }),
       // END OF ENDPOINTS

@@ -211,36 +211,24 @@ const CreateFlag = class extends Component {
     }
     if (Utils.getFlagsmithHasFeature('github_integration')) {
       getGithubIntegration(getStore(), {
-        organisation_pk: AccountStore.getOrganisation().id,
-      })
-        .then((res) => {
-          this.setState({
-            hasIntegrationWithGithub: !!res?.data?.results?.length,
+        organisation_id: AccountStore.getOrganisation().id,
+      }).then((res) => {
+        this.setState({
+          hasIntegrationWithGithub: !!res?.data?.results?.length,
+        })
+        if (res?.data?.results?.length) {
+          getGithubIssues(getStore(), {
+            organisation_id: AccountStore.getOrganisation().id,
+          }).then((issues) => {
+            this.setState({ issuesExternalResources: issues?.data })
           })
-          if (res?.data?.results?.length) {
-            getGithubIssues(getStore(), {
-              org_id: AccountStore.getOrganisation().id,
-            })
-              .catch((error) => {
-                console.log(error)
-              })
-              .then((issues) => {
-                this.setState({ issuesExternalResources: issues?.data })
-              })
-            getGithubPulls(getStore(), {
-              org_id: AccountStore.getOrganisation().id,
-            })
-              .catch((error) => {
-                console.log(error)
-              })
-              .then((pulls) => {
-                this.setState({ prExternalResources: pulls?.data })
-              })
-          }
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+          getGithubPulls(getStore(), {
+            organisation_id: AccountStore.getOrganisation().id,
+          }).then((pulls) => {
+            this.setState({ prExternalResources: pulls?.data })
+          })
+        }
+      })
     }
   }
 

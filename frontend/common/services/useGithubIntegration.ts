@@ -14,7 +14,7 @@ export const githubIntegrationService = service
         query: (query: Req['createGithubIntegration']) => ({
           body: query.body,
           method: 'POST',
-          url: `organisations/${query.organisation_pk}/integrations/github/`,
+          url: `organisations/${query.organisation_id}/integrations/github/`,
         }),
       }),
       deleteGithubIntegration: builder.mutation<
@@ -25,7 +25,7 @@ export const githubIntegrationService = service
         query: (query: Req['deleteGithubIntegration']) => ({
           body: query,
           method: 'DELETE',
-          url: `organisations/${query.organisation_pk}/integrations/github/${query.github_integration_id}/`,
+          url: `organisations/${query.organisation_id}/integrations/github/${query.github_integration_id}/`,
         }),
       }),
       getGithubIntegration: builder.query<
@@ -34,7 +34,7 @@ export const githubIntegrationService = service
       >({
         providesTags: (res) => [{ id: res?.id, type: 'GithubIntegration' }],
         query: (query: Req['getGithubIntegration']) => ({
-          url: `organisations/${query.organisation_pk}/integrations/github/`,
+          url: `organisations/${query.organisation_id}/integrations/github/`,
         }),
       }),
       updateGithubIntegration: builder.mutation<
@@ -48,7 +48,7 @@ export const githubIntegrationService = service
         query: (query: Req['updateGithubIntegration']) => ({
           body: query,
           method: 'PUT',
-          url: `organisations/${query.organisation_pk}/integrations/github/${query.github_integration_id}/`,
+          url: `organisations/${query.organisation_id}/integrations/github/${query.github_integration_id}/`,
         }),
       }),
       // END OF ENDPOINTS

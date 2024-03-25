@@ -13,13 +13,13 @@ export const githubService = service
       >({
         providesTags: [{ id: 'LIST', type: 'Github' }],
         query: (query: Req['getGithubIssues']) => ({
-          url: `organisations/${query.org_id}/github/issues/`,
+          url: `organisations/${query.organisation_id}/github/issues/`,
         }),
       }),
       getGithubPulls: builder.query<Res['githubPulls'], Req['getGithubPulls']>({
         providesTags: [{ id: 'LIST', type: 'Github' }],
         query: (query: Req['getGithubPulls']) => ({
-          url: `organisations/${query.org_id}/github/pulls/`,
+          url: `organisations/${query.organisation_id}/github/pulls/`,
         }),
       }),
       getGithubRepos: builder.query<Res['githubRepos'], Req['getGithubRepos']>({

@@ -251,40 +251,40 @@ export type Req = {
   createExternalResource: { feature_id: string; body: ExternalResource }
 
   getGithubIntegration: {
-    organisation_pk: number
+    organisation_id: number
     id: string
   }
   updateGithubIntegration: {
-    organisation_pk: string
+    organisation_id: string
     github_integration_id: string
   }
   deleteGithubIntegration: {
-    organisation_pk: string
+    organisation_id: string
     github_integration_id: string
   }
   createGithubIntegration: {
-    organisation_pk: string
+    organisation_id: string
     body: {
       installation_id: string
     }
   }
   getGithubRepository: {
-    organisation_pk: string
+    organisation_id: string
     github_pk: string
     id: string
   }
   updateGithubRepository: {
-    organisation_pk: string
+    organisation_id: string
     github_pk: string
     id: string
   }
   deleteGithubRepository: {
-    organisation_pk: string
+    organisation_id: string
     github_pk: string
     id: string
   }
   createGithubRepository: {
-    organisation_pk: string
+    organisation_id: string
     github_pk: string
     body: {
       project: string
@@ -292,8 +292,8 @@ export type Req = {
       repository_owner: string
     }
   }
-  getGithubIssues: { org_id: string }
-  getGithubPulls: { org_id: string }
+  getGithubIssues: { organisation_id: string }
+  getGithubPulls: { organisation_id: string }
   getGithubRepos: { installation_id: string }
   getServersideEnvironmentKeys: { environmentId: string }
   deleteServersideEnvironmentKeys: { environmentId: string; id: string }

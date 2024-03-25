@@ -84,7 +84,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
                 repository_owner: repositoryOwner,
               },
               github_pk: data.id,
-              organisation_pk: organisation,
+              organisation_id: organisation,
             })
             promises.push(promise)
           }
@@ -232,7 +232,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
             body: {
               installation_id: installationId,
             },
-            organisation_pk: organisation,
+            organisation_id: organisation,
           })
         }}
       >
