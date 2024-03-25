@@ -699,9 +699,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           )}
           <PanelSearch
             filterRow={(item: AvailablePermission, search) => {
-              return Format.enumeration
-                .get(item.key)
-                .includes(search?.toLowerCase() || '')
+              const name = Format.enumeration.get(item.key).toLowerCase()
+              return name.includes(search?.toLowerCase() || '')
             }}
             title='Permissions'
             className='no-pad mb-2'
