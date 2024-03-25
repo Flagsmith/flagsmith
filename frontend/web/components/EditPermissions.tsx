@@ -653,7 +653,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       </div>
     ) : (
       <div>
-        <div className={classNames('modal-body', className || 'px-4')}>
+        <div className={classNames('modal-body', className || 'px-4 mt-4')}>
           {level !== 'organisation' && (
             <div className='mb-2'>
               <Row className={role ? 'py-2' : ''}>
