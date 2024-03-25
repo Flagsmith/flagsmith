@@ -26,43 +26,27 @@ export const rolePermissionService = service
 
       getRoleEnvironmentPermissions: builder.query<
         Res['rolePermission'],
-        Req['getRolePermission']
+        Req['getRolePermissionEnvironment']
       >({
-        query: (query: Req['getRolePermission']) => ({
+        query: (query: Req['getRolePermissionEnvironment']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/environments-permissions/?environment=${query.env_id}`,
         }),
       }),
+
       getRoleOrganisationPermissions: builder.query<
         Res['rolePermission'],
-        Req['getRolePermission']
+        Req['getRolePermissionOrganisation']
       >({
-        query: (query: Req['getRolePermission']) => ({
+        query: (query: Req['getRolePermissionOrganisation']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/organisation-permissions/`,
         }),
       }),
+
       getRoleProjectPermissions: builder.query<
         Res['rolePermission'],
-        Req['getRolePermission']
+        Req['getRolePermissionProject']
       >({
-        query: (query: Req['getRolePermission']) => ({
-          url: `organisations/${query.organisation_id}/roles/${query.role_id}/projects-permissions/?project=${query.project_id}`,
-        }),
-      }),
-
-      getRolesEnvironmentPermissions: builder.query<
-        Res['rolePermission'],
-        Req['getRolePermission']
-      >({
-        query: (query: Req['getRolePermission']) => ({
-          url: `organisations/${query.organisation_id}/roles/${query.role_id}/environments-permissions/?environment=${query.env_id}`,
-        }),
-      }),
-
-      getRolesProjectPermissions: builder.query<
-        Res['rolePermission'],
-        Req['getRolePermission']
-      >({
-        query: (query: Req['getRolePermission']) => ({
+        query: (query: Req['getRolePermissionProject']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/projects-permissions/?project=${query.project_id}`,
         }),
       }),
@@ -85,7 +69,7 @@ export const rolePermissionService = service
 
 export async function getRoleOrganisationPermissions(
   store: any,
-  data: Req['getRolePermission'],
+  data: Req['getRolePermissionOrganisation'],
   options?: Parameters<
     typeof rolePermissionService.endpoints.getRoleOrganisationPermissions.initiate
   >[1],
@@ -120,7 +104,7 @@ export async function updateRolePermissions(
 
 export async function getRoleProjectPermissions(
   store: any,
-  data: Req['getRolePermission'],
+  data: Req['getRolePermissionProject'],
   options?: Parameters<
     typeof rolePermissionService.endpoints.getRoleProjectPermissions.initiate
   >[1],
@@ -138,7 +122,7 @@ export async function getRoleProjectPermissions(
 
 export async function getRoleEnvironmentPermissions(
   store: any,
-  data: Req['getRolePermission'],
+  data: Req['getRolePermissionEnvironment'],
   options?: Parameters<
     typeof rolePermissionService.endpoints.getRoleEnvironmentPermissions.initiate
   >[1],
@@ -169,35 +153,6 @@ export async function createRolePermissions(
   )
   return Promise.all(
     store.dispatch(rolePermissionService.util.getRunningQueriesThunk()),
-  )
-}
-export async function getRolesProjectPermissions(
-  store: any,
-  data: Req['getRolePermission'],
-  options?: Parameters<
-    typeof rolePermissionService.endpoints.getRolesProjectPermissions.initiate
-  >[1],
-) {
-  return store.dispatch(
-    rolePermissionService.endpoints.getRolesProjectPermissions.initiate(
-      data,
-      options,
-    ),
-  )
-}
-
-export async function getRolesEnvironmentPermissions(
-  store: any,
-  data: Req['getRolePermission'],
-  options?: Parameters<
-    typeof rolePermissionService.endpoints.getRolesProjectPermissions.initiate
-  >[1],
-) {
-  return store.dispatch(
-    rolePermissionService.endpoints.getRolesEnvironmentPermissions.initiate(
-      data,
-      options,
-    ),
   )
 }
 

@@ -6,13 +6,13 @@ import Utils from 'common/utils/utils'
 import Icon from './Icon'
 
 export type RoleSelectType = {
-  disabled: boolean
+  disabled?: boolean
   roles: Role[] | undefined
   value: number[] | undefined
-  isOpen: boolean
-  isRoleApiKey: boolean
-  onAdd: (id: number, isUser: boolean) => void
-  onRemove: (id: number, isUser: boolean) => void
+  isOpen?: boolean
+  isRoleApiKey?: boolean
+  onAdd: (id: number, isUser?: boolean) => void
+  onRemove: (id: number, isUser?: boolean) => void
   onToggle: () => void
 }
 const RoleSelect: FC<RoleSelectType> = ({
