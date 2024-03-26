@@ -9,7 +9,7 @@ def run_by_processor(monkeypatch):
     monkeypatch.setenv("RUN_BY_PROCESSOR", "True")
 
 
-class GetCaptureTaskProcessorLogger(typing.Protocol):
+class GetTaskProcessorCaplog(typing.Protocol):
     def __call__(
         self, log_level: str | int = logging.INFO
     ) -> pytest.LogCaptureFixture: ...
@@ -18,7 +18,7 @@ class GetCaptureTaskProcessorLogger(typing.Protocol):
 @pytest.fixture
 def get_task_processor_caplog(
     caplog: pytest.LogCaptureFixture,
-) -> GetCaptureTaskProcessorLogger:
+) -> GetTaskProcessorCaplog:
     # caplog doesn't allow you to capture logging outputs from loggers that don't
     # propagate to root. Quick hack here to get the task_processor logger to
     # propagate.

@@ -15,7 +15,7 @@ from task_processor.exceptions import InvalidArgumentsError
 from task_processor.models import RecurringTask, Task, TaskPriority
 from task_processor.task_registry import get_task
 from task_processor.task_run_method import TaskRunMethod
-from tests.unit.task_processor.conftest import GetCaptureTaskProcessorLogger
+from tests.unit.task_processor.conftest import GetTaskProcessorCaplog
 
 
 @pytest.fixture
@@ -31,7 +31,7 @@ def mock_thread_class(
 
 @pytest.mark.django_db
 def test_register_task_handler_run_in_thread__transaction_commit__true__default(
-    get_task_processor_caplog: GetCaptureTaskProcessorLogger,
+    get_task_processor_caplog: GetTaskProcessorCaplog,
     mock_thread_class: MagicMock,
 ) -> None:
     # Given
@@ -65,7 +65,7 @@ def test_register_task_handler_run_in_thread__transaction_commit__true__default(
 
 
 def test_register_task_handler_run_in_thread__transaction_commit__false(
-    get_task_processor_caplog: GetCaptureTaskProcessorLogger,
+    get_task_processor_caplog: GetTaskProcessorCaplog,
     mock_thread_class: MagicMock,
 ) -> None:
     # Given

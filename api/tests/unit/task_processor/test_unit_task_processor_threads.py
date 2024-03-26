@@ -5,13 +5,13 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from task_processor.threads import TaskRunner
-from tests.unit.task_processor.conftest import GetCaptureTaskProcessorLogger
+from tests.unit.task_processor.conftest import GetTaskProcessorCaplog
 
 
 def test_task_runner_is_resilient_to_database_errors(
     db: None,
     mocker: MockerFixture,
-    get_task_processor_caplog: GetCaptureTaskProcessorLogger,
+    get_task_processor_caplog: GetTaskProcessorCaplog,
     settings: SettingsWrapper,
 ) -> None:
     # Given
