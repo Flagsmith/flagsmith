@@ -1,6 +1,7 @@
 /**
  * Created by kylejohnson on 02/08/2016.
  */
+require('dotenv').config()
 require('colors')
 const fs = require('fs-extra')
 const path = require('path')
