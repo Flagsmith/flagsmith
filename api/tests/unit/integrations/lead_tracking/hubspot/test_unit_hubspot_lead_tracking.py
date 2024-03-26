@@ -88,7 +88,9 @@ def test_hubspot_with_new_contact_and_new_organisation(
     # Then
     organisation.refresh_from_db()
     assert organisation.hubspot_organisation.hubspot_id == future_hubspot_id
-    mock_create_company.assert_called_once_with(name=organisation.name)
+    mock_create_company.assert_called_once_with(
+        name=organisation.name, active_subscription="free"
+    )
     mock_create_contact.assert_called_once_with(user, future_hubspot_id)
     mock_get_contact.assert_called_once_with(user)
 
