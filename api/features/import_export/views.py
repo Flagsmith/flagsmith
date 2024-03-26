@@ -76,9 +76,9 @@ def download_feature_export(request: Request, feature_export_id: int) -> Respons
     response = Response(
         json.loads(feature_export.data), content_type="application/json"
     )
-    response.headers[
-        "Content-Disposition"
-    ] = f"attachment; filename=feature_export.{feature_export_id}.json"
+    response.headers["Content-Disposition"] = (
+        f"attachment; filename=feature_export.{feature_export_id}.json"
+    )
     return response
 
 
@@ -105,9 +105,9 @@ def download_flagsmith_on_flagsmith(request: Request) -> Response:
     response = Response(
         json.loads(fof.feature_export.data), content_type="application/json"
     )
-    response.headers[
-        "Content-Disposition"
-    ] = f"attachment; filename=flagsmith_on_flagsmith.{fof.id}.json"
+    response.headers["Content-Disposition"] = (
+        f"attachment; filename=flagsmith_on_flagsmith.{fof.id}.json"
+    )
     return response
 
 
