@@ -83,7 +83,7 @@ django-collect-static:
 
 .PHONY: serve
 serve:
-	poetry run gunicorn --bind 0.0.0.0:8000 app.wsgi --reload
+	poetry run gunicorn --config scripts/gunicorn.conf.py --bind 0.0.0.0:8000 app.wsgi --reload
 
 .PHONY: generate-ld-client-types
 generate-ld-client-types:
