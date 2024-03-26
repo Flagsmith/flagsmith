@@ -1,6 +1,6 @@
 import os
 
-accesslog = os.getenv("ACCESS_LOG_LOCATION")
+accesslog = os.getenv("ACCESS_LOG_LOCATION", "-")
 access_log_format = os.getenv("ACCESS_LOG_FORMAT") or (
     r'%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" '
     r'"%(a)s" %({origin}i)s %({access-control-allow-origin}o)s'
