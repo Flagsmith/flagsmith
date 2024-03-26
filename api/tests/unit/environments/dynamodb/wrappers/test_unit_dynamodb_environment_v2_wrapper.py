@@ -65,9 +65,9 @@ def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__last_
 ) -> None:
     # Given
     wrapper = DynamoEnvironmentV2Wrapper()
-    mocker.patch.object(
-        wrapper, "get_table"
-    ).return_value = table_mock = mocker.MagicMock(spec=flagsmith_environments_v2_table)
+    mocker.patch.object(wrapper, "get_table").return_value = table_mock = (
+        mocker.MagicMock(spec=flagsmith_environments_v2_table)
+    )
 
     last_evaluated_key = "next_page_key"
     override_document = {"test": "document"}
