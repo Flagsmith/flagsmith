@@ -422,29 +422,6 @@ const OrganisationSettingsPage = class extends Component {
                   const canManageGroups =
                     this.state.permissions.includes('MANAGE_USER_GROUPS') ||
                     !!groups?.length
-
-                  const displayedTabs = [SettingsTab.Projects]
-
-                  if (this.state.permissionsError) {
-                    if (canManageGroups) {
-                      displayedTabs.push(SettingsTab.Groups)
-                    }
-                  } else {
-                    displayedTabs.push(
-                      ...[
-                        SettingsTab.General,
-                        SettingsTab.Keys,
-                        SettingsTab.Members,
-                        SettingsTab.Webhooks,
-                        SettingsTab.Usage,
-                      ],
-                    )
-
-                    if (!Project.disableAnalytics) {
-                      displayedTabs.push(SettingsTab.Usage)
-                    }
-                  }
-
                   const { max_seats } = subscriptionMeta ||
                     organisation.subscription || { max_seats: 1 }
                   const isAWS =
