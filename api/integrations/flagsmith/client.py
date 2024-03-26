@@ -12,6 +12,7 @@ identity_flags = get_client().get_identity_flags()
 Possible extensions:
  - Allow for multiple clients?
 """
+
 import typing
 
 from django.conf import settings

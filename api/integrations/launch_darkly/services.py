@@ -537,9 +537,9 @@ def _set_imported_mv_feature_state_values(
                         feature_state=feature_state,
                         multivariate_feature_option=mv_feature_option,
                         defaults={
-                            "percentage_allocation": 100
-                            if variation_idx == mv_variation
-                            else 0
+                            "percentage_allocation": (
+                                100 if variation_idx == mv_variation else 0
+                            )
                         },
                     )
             elif rollout is not None:

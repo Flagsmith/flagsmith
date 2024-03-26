@@ -182,15 +182,15 @@ def _create_segment_override(
         "feature_segment": feature_segment_id,
         "feature_state_value": {
             "type": segment_override_type,
-            "string_value": segment_override_value
-            if segment_override_type == STRING
-            else None,
-            "integer_value": segment_override_value
-            if segment_override_type == INTEGER
-            else None,
-            "boolean_value": segment_override_value
-            if segment_override_type == BOOLEAN
-            else None,
+            "string_value": (
+                segment_override_value if segment_override_type == STRING else None
+            ),
+            "integer_value": (
+                segment_override_value if segment_override_type == INTEGER else None
+            ),
+            "boolean_value": (
+                segment_override_value if segment_override_type == BOOLEAN else None
+            ),
         },
         "enabled": True,
         "environment": environment_id,

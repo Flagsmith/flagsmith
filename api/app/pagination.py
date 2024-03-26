@@ -94,9 +94,11 @@ class EdgeIdentityPagination(CustomPagination):
                     ("results", data),
                     (
                         "last_evaluated_key",
-                        self.last_evaluated_key
-                        if hasattr(self, "last_evaluated_key")
-                        else None,
+                        (
+                            self.last_evaluated_key
+                            if hasattr(self, "last_evaluated_key")
+                            else None
+                        ),
                     ),
                 ]
             )

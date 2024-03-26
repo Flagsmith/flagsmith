@@ -107,9 +107,9 @@ class OrganisationList(ListView):
         except AttributeError:
             subscription_information_caches_influx_updated_at = None
 
-        data[
-            "subscription_information_caches_influx_updated_at"
-        ] = subscription_information_caches_influx_updated_at
+        data["subscription_information_caches_influx_updated_at"] = (
+            subscription_information_caches_influx_updated_at
+        )
 
         return data
 

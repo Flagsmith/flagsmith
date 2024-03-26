@@ -423,9 +423,9 @@ def _get_prioritised_feature_states(
         ):
             if existing_feature_state > feature_state:
                 continue
-        prioritised_feature_state_by_feature_id[
-            feature_state.feature_id
-        ] = feature_state
+        prioritised_feature_state_by_feature_id[feature_state.feature_id] = (
+            feature_state
+        )
     return list(prioritised_feature_state_by_feature_id.values())
 
 

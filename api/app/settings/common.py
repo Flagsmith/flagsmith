@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
+
 import importlib
 import json
 import os
@@ -967,9 +968,11 @@ MAX_SELF_MIGRATABLE_IDENTITIES = env.int("MAX_SELF_MIGRATABLE_IDENTITIES", 10000
 TASK_RUN_METHOD = env.enum(
     "TASK_RUN_METHOD",
     type=TaskRunMethod,
-    default=TaskRunMethod.TASK_PROCESSOR.value
-    if env.bool("RUN_BY_PROCESSOR", False)
-    else TaskRunMethod.SEPARATE_THREAD.value,
+    default=(
+        TaskRunMethod.TASK_PROCESSOR.value
+        if env.bool("RUN_BY_PROCESSOR", False)
+        else TaskRunMethod.SEPARATE_THREAD.value
+    ),
 )
 ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
