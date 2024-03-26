@@ -16,7 +16,7 @@ class GetCaptureTaskProcessorLogger(typing.Protocol):
 
 
 @pytest.fixture
-def capture_task_processor_logger(
+def get_task_processor_caplog(
     caplog: pytest.LogCaptureFixture,
 ) -> GetCaptureTaskProcessorLogger:
     # caplog doesn't allow you to capture logging outputs from loggers that don't

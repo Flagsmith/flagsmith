@@ -11,11 +11,11 @@ from tests.unit.task_processor.conftest import GetCaptureTaskProcessorLogger
 def test_task_runner_is_resilient_to_database_errors(
     db: None,
     mocker: MockerFixture,
-    capture_task_processor_logger: GetCaptureTaskProcessorLogger,
+    get_task_processor_caplog: GetCaptureTaskProcessorLogger,
     settings: SettingsWrapper,
 ) -> None:
     # Given
-    caplog = capture_task_processor_logger(logging.DEBUG)
+    caplog = get_task_processor_caplog(logging.DEBUG)
 
     task_runner = TaskRunner()
     mocker.patch(

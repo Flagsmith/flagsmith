@@ -31,11 +31,11 @@ def mock_thread_class(
 
 @pytest.mark.django_db
 def test_register_task_handler_run_in_thread__transaction_commit__true__default(
-    capture_task_processor_logger: GetCaptureTaskProcessorLogger,
+    get_task_processor_caplog: GetCaptureTaskProcessorLogger,
     mock_thread_class: MagicMock,
 ) -> None:
     # Given
-    caplog = capture_task_processor_logger()
+    caplog = get_task_processor_caplog()
 
     @register_task_handler()
     def my_function(*args: str, **kwargs: str) -> None:
@@ -65,11 +65,11 @@ def test_register_task_handler_run_in_thread__transaction_commit__true__default(
 
 
 def test_register_task_handler_run_in_thread__transaction_commit__false(
-    capture_task_processor_logger: GetCaptureTaskProcessorLogger,
+    get_task_processor_caplog: GetCaptureTaskProcessorLogger,
     mock_thread_class: MagicMock,
 ) -> None:
     # Given
-    caplog = capture_task_processor_logger()
+    caplog = get_task_processor_caplog()
 
     @register_task_handler(transaction_on_commit=False)
     def my_function(*args, **kwargs):
