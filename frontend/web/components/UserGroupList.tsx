@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, ReactNode, useState } from 'react'
 const CreateGroup = require('./modals/CreateGroup')
 import Button from './base/forms/Button'
 import AccountStore from 'common/stores/account-store'
@@ -10,7 +10,7 @@ import { sortBy } from 'lodash'
 import InfoMessage from './InfoMessage' // we need this to make JSX compile
 import Icon from './Icon'
 import { useGetGroupSummariesQuery } from 'common/services/useGroupSummary'
-import Format from 'common/utils/format'
+import PermissionsSummaryList from './PermissionsSummaryList'
 const Panel = require('components/base/grid/Panel')
 
 type UserGroupsListType = {
@@ -26,7 +26,7 @@ type UserGroupsRowType = {
   id: string | number
   index: number
   name: string
-  permissionSummary?: string
+  permissionSummary?: ReactNode
   group: UserGroup
   orgId: string
   showRemove?: boolean
@@ -83,11 +83,7 @@ const UserGroupsRow: FC<UserGroupsRowType> = ({
       <Flex onClick={_onClick} className=' table-column px-3'>
         <div className='font-weight-medium'>{name}</div>
       </Flex>
-      {permissionSummary && (
-        <Flex>
-          <div className='font-weight-small'>{permissionSummary}</div>
-        </Flex>
-      )}
+      {permissionSummary && <Flex>{permissionSummary}</Flex>}
 
       {onEditPermissions && isAdmin ? (
         <div
@@ -214,8 +210,11 @@ const UserGroupsList: FC<UserGroupsListType> = ({
         }
         renderRow={(group: UserGroup | GroupPermission, index: number) => {
           if (userGroupsPermission) {
-            const { admin, group: userPermissionGroup, permissions } = group
-            const permissionSummary = Format.permissionList(admin, permissions)
+            const {
+              admin,
+              group: userPermissionGroup,
+              permissions,
+            } = group as GroupPermission
             return (
               <UserGroupsRow
                 group={userPermissionGroup}
@@ -225,12 +224,18 @@ const UserGroupsList: FC<UserGroupsListType> = ({
                 onClick={onClick}
                 onEditPermissions={onEditPermissions}
                 orgId={orgId}
-                permissionSummary={permissionSummary}
+                permissionSummary={
+                  <PermissionsSummaryList
+                    permissions={permissions}
+                    isAdmin={admin}
+                    numberToTruncate={3}
+                  />
+                }
                 showRemove={showRemove}
               />
             )
           } else {
-            const { id, name } = group
+            const { id, name } = group as UserGroup
             return (
               <UserGroupsRow
                 group={group}
