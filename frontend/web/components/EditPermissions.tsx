@@ -1032,6 +1032,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
               <UserGroupList
                 noTitle
                 orgId={AccountStore.getOrganisation().id}
+                projectId={level === 'project' && id}
                 onClick={(group: UserGroup) => editGroupPermissions(group)}
               />
             </div>
