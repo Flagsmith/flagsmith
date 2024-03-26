@@ -212,3 +212,61 @@ def test_hubspot_with_existing_contact_and_new_organisation(
     # further hubspot resources.
     mock_create_company.assert_not_called()
     mock_create_contact.assert_not_called()
+
+
+def test_update_company_active_subscription(
+    organisation: Organisation,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    mock_update_company = mocker.patch(
+        "integrations.lead_tracking.hubspot.client.HubspotClient.update_company"
+    )
+    hubspot_id = "12345"
+    # Create an existing hubspot organisation to mimic a previous
+    # successful API call.
+    HubspotOrganisation.objects.create(
+        organisation=organisation,
+        hubspot_id=hubspot_id,
+    )
+
+    assert organisation.subscription.plan == "free"
+
+    # When
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+
+    # Then
+    mock_update_company.assert_called_once_with(
+        active_subscription=organisation.subscription.plan,
+        hubspot_company_id=hubspot_id,
+    )
+
+
+def test_update_company_active_subscription_not_called(
+    organisation: Organisation,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Set to False to ensure update doesn't happen.
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = False
+    mock_update_company = mocker.patch(
+        "integrations.lead_tracking.hubspot.client.HubspotClient.update_company"
+    )
+    hubspot_id = "12345"
+    # Create an existing hubspot organisation to mimic a previous
+    # successful API call.
+    HubspotOrganisation.objects.create(
+        organisation=organisation,
+        hubspot_id=hubspot_id,
+    )
+
+    assert organisation.subscription.plan == "free"
+
+    # When
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+
+    # Then
+    mock_update_company.assert_not_called()
