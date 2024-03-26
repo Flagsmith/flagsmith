@@ -1,5 +1,6 @@
 from environments.models import Webhook
 from features.models import Feature, FeatureState
+from integrations.github.tasks import call_github_app_webhook_for_feature_state
 from task_processor.decorators import register_task_handler
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 from webhooks.webhooks import (
@@ -35,6 +36,7 @@ def trigger_feature_state_change_webhooks(
     )
     data = {"new_state": new_state, "changed_by": changed_by, "timestamp": timestamp}
     previous_state = _get_previous_state(instance, history_instance, event_type)
+
     if previous_state:
         data.update(previous_state=previous_state)
 
@@ -49,6 +51,49 @@ def trigger_feature_state_change_webhooks(
             event_type.value,
         )
     )
+
+    if hasattr(instance.environment.project.organisation, "github_config"):
+        github_configuration = instance.environment.project.organisation.github_config
+
+        feature_data = {
+            "id": history_instance.feature.id,
+            "name": history_instance.feature.name,
+            "feature_states": [],
+        }
+        feature_data["installation_id"] = github_configuration.installation_id
+        feature_data["organisation_id"] = github_configuration.organisation.id
+
+        feature_state = {
+            "environment_name": new_state["environment"]["name"],
+            "feature_value": new_state["enabled"],
+        }
+
+        if instance.feature_state_value.string_value is not None:
+            feature_state["string_value"] = instance.feature_state_value.string_value
+        if instance.feature_state_value.boolean_value is not None:
+            feature_state["boolean_value"] = instance.feature_state_value.boolean_value
+        if instance.feature_state_value.integer_value is not None:
+            feature_state["integer_value"] = instance.feature_state_value.integer_value
+        if (
+            hasattr(feature_state, "feature_segment")
+            and instance.feature_segment is not None
+        ):
+            feature_state["segment_name"] = instance.feature_segment.segment.name
+
+        feature_data["feature_states"].append(feature_state)
+
+        call_github_app_webhook_for_feature_state.delay(
+            args=(
+                feature_data,
+                event_type.value,
+            ),
+        )
+    else:
+        print(
+            "No GitHub integration exists for organisation %d. Not calling webhooks.",
+            instance.environment.project.organisation.id,
+        )
+        return
 
 
 def _get_previous_state(
