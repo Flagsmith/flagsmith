@@ -31,7 +31,7 @@ class ExternalResources(LifecycleModelMixin, models.Model):
     )
 
     @hook(AFTER_SAVE)
-    def trigger_feature_external_resource_added_hook(self):
+    def create_feature_external_resource_added_comment(self):
         if hasattr(self.feature.project.organisation, "github_config"):
             github_configuration = self.feature.project.organisation.github_config
 
@@ -83,7 +83,7 @@ class ExternalResources(LifecycleModelMixin, models.Model):
             )
 
     @hook(BEFORE_DELETE)
-    def trigger_feature_external_resource_removed_hook(self):
+    def create_feature_external_resource_removed_comment(self):
         if hasattr(self.feature.project.organisation, "github_config"):
             github_configuration = self.feature.project.organisation.github_config
             feature_data = {
