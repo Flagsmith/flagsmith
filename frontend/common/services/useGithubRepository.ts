@@ -14,7 +14,7 @@ export const githubRepositoryService = service
         query: (query: Req['createGithubRepository']) => ({
           body: query.body,
           method: 'POST',
-          url: `organisations/${query.organisation_id}/integrations/github/${query.github_pk}/repositories/`,
+          url: `organisations/${query.organisation_id}/integrations/github/${query.github_id}/repositories/`,
         }),
       }),
       deleteGithubRepository: builder.mutation<
@@ -25,30 +25,27 @@ export const githubRepositoryService = service
         query: (query: Req['deleteGithubRepository']) => ({
           body: query,
           method: 'DELETE',
-          url: `organisations/${query.organisation_id}/integrations/github/${query.github_pk}/repositories/${query.id}/`,
+          url: `organisations/${query.organisation_id}/integrations/github/${query.github_id}/repositories/${query.id}/`,
         }),
       }),
-      getGithubRepository: builder.query<
+      getGithubRepositories: builder.query<
         Res['githubRepository'],
-        Req['getGithubRepository']
+        Req['getGithubRepositories']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'GithubRepository' }],
-        query: (query: Req['getGithubRepository']) => ({
-          url: `organisations/${query.organisation_id}/integrations/github/${query.github_pk}/repositories/${query.id}/`,
+        providesTags: [{ id: 'LIST', type: 'GithubRepository' }],
+        query: (query: Req['getGithubRepositories']) => ({
+          url: `organisations/${query.organisation_id}/integrations/github/${query.github_id}/repositories/`,
         }),
       }),
       updateGithubRepository: builder.mutation<
         Res['githubRepository'],
         Req['updateGithubRepository']
       >({
-        invalidatesTags: (res) => [
-          { id: 'LIST', type: 'GithubRepository' },
-          { id: res?.id, type: 'GithubRepository' },
-        ],
+        invalidatesTags: [{ id: 'LIST', type: 'GithubRepository' }],
         query: (query: Req['updateGithubRepository']) => ({
           body: query,
           method: 'PUT',
-          url: `organisations/${query.organisation_id}/integrations/github/${query.github_pk}/repositories/${query.id}/`,
+          url: `organisations/${query.organisation_id}/integrations/github/${query.github_id}/repositories/${query.id}/`,
         }),
       }),
       // END OF ENDPOINTS
@@ -83,15 +80,15 @@ export async function deleteGithubRepository(
     ),
   )
 }
-export async function getGithubRepository(
+export async function getGithubRepositories(
   store: any,
-  data: Req['getGithubRepository'],
+  data: Req['getGithubRepositories'],
   options?: Parameters<
-    typeof githubRepositoryService.endpoints.getGithubRepository.initiate
+    typeof githubRepositoryService.endpoints.getGithubRepositories.initiate
   >[1],
 ) {
   return store.dispatch(
-    githubRepositoryService.endpoints.getGithubRepository.initiate(
+    githubRepositoryService.endpoints.getGithubRepositories.initiate(
       data,
       options,
     ),
@@ -116,7 +113,7 @@ export async function updateGithubRepository(
 export const {
   useCreateGithubRepositoryMutation,
   useDeleteGithubRepositoryMutation,
-  useGetGithubRepositoryQuery,
+  useGetGithubRepositoriesQuery,
   useUpdateGithubRepositoryMutation,
   // END OF EXPORTS
 } = githubRepositoryService

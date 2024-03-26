@@ -268,24 +268,23 @@ export type Req = {
       installation_id: string
     }
   }
-  getGithubRepository: {
+  getGithubRepositories: {
     organisation_id: string
-    github_pk: string
-    id: string
+    github_id: string
   }
   updateGithubRepository: {
     organisation_id: string
-    github_pk: string
+    github_id: string
     id: string
   }
   deleteGithubRepository: {
     organisation_id: string
-    github_pk: string
+    github_id: string
     id: string
   }
   createGithubRepository: {
     organisation_id: string
-    github_pk: string
+    github_id: string
     body: {
       project: string
       repository_name: string

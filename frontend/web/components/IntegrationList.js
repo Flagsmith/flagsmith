@@ -2,6 +2,8 @@ import React, { Component } from 'react'
 import _data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import { getStore } from 'common/store'
+import { getGithubIntegration } from 'common/services/useGithubIntegration'
 
 const CreateEditIntegration = require('./modals/CreateEditIntegrationModal')
 
@@ -76,7 +78,7 @@ class Integration extends Component {
                 ))}
               {showAdd && (
                 <>
-                  {external ? (
+                  {external && !this.props.hasIntegrationWithGithub ? (
                     <a
                       href={
                         isExternalInstallation
@@ -91,6 +93,18 @@ class Integration extends Component {
                     >
                       Add Integration
                     </a>
+                  ) : external &&
+                    this.props.hasIntegrationWithGithub &&
+                    isExternalInstallation ? (
+                    <Button
+                      className='ml-3'
+                      id='show-create-segment-btn'
+                      data-test='show-create-segment-btn'
+                      onClick={this.add}
+                      size='xSmall'
+                    >
+                      Manage GitHub Integration
+                    </Button>
                   ) : (
                     <Button
                       className='ml-3'
@@ -133,7 +147,10 @@ class Integration extends Component {
 }
 
 class IntegrationList extends Component {
-  state = {}
+  state = {
+    github_id: 0,
+    hasIntegrationWithGithub: false,
+  }
 
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -141,6 +158,17 @@ class IntegrationList extends Component {
 
   componentDidMount() {
     this.fetch()
+    if (Utils.getFlagsmithHasFeature('github_integration')) {
+      getGithubIntegration(getStore(), {
+        organisation_id: AccountStore.getOrganisation().id,
+      }).then((res) => {
+        console.log('DEBUG: res?.data?.results?', res?.data?.results[0]?.id)
+        this.setState({
+          github_id: res?.data?.results[0].id,
+          hasIntegrationWithGithub: !!res?.data?.results?.length,
+        })
+      })
+    }
   }
 
   fetch = () => {
@@ -306,6 +334,7 @@ class IntegrationList extends Component {
                 key={i}
                 activeIntegrations={this.state.activeIntegrations[index]}
                 integration={integrationList[i]}
+                hasIntegrationWithGithub={this.state.hasIntegrationWithGithub}
               />
             ))
           ) : (

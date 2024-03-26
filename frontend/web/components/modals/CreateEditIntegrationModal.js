@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import EnvironmentSelect from 'components/EnvironmentSelect'
+import MyRepositoriesSelect from 'components/MyRepositoriesSelect'
 import _data from 'common/data/base/_data'
 import ErrorMessage from 'components/ErrorMessage'
 import ModalHR from './ModalHR'
@@ -178,6 +179,14 @@ const CreateEditIntegration = class extends Component {
                   this.update('flagsmithEnvironment', environment)
                 }
               />
+            </div>
+          )}
+          {this.props.integration.isExternalInstallation && (
+            <div className='mb-3'>
+              <label className={!this.props.modal ? 'mb-1 fw-bold' : ''}>
+                GitHub Repositories
+              </label>
+              <MyRepositoriesSelect orgId={AccountStore.getOrganisation().id} />
             </div>
           )}
           {this.state.fields &&
