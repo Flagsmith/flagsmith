@@ -3,7 +3,11 @@ import logging
 from django.conf import settings
 
 from integrations.lead_tracking.lead_tracking import LeadTracker
-from organisations.models import HubspotOrganisation, Organisation
+from organisations.models import (
+    HubspotOrganisation,
+    Organisation,
+    Subscription,
+)
 from users.models import FFAdminUser
 
 from .client import HubspotClient
@@ -65,14 +69,36 @@ class HubspotLeadTracker(LeadTracker):
         if getattr(organisation, "hubspot_organisation", None):
             return organisation.hubspot_organisation.hubspot_id
 
-        response = self.client.create_company(name=organisation.name)
+        response = self.client.create_company(
+            name=organisation.name,
+            active_subscription=organisation.subscription.plan,
+        )
+
         # Store the organisation data in the database since we are
         # unable to look them up via a unique identifier.
         HubspotOrganisation.objects.create(
             organisation=organisation,
             hubspot_id=response["id"],
         )
+
         return response["id"]
+
+    def update_company_active_subscription(self, subscription: Subscription) -> dict:
+        if not subscription.plan:
+            return
+
+        organisation = subscription.organisation
+
+        # Check if we're missing the associated hubspot id.
+        if not getattr(organisation, "hubspot_organisation", None):
+            return
+
+        response = self.client.update_company(
+            active_subscription=subscription.plan,
+            hubspot_company_id=organisation.hubspot_organisation.hubspot_id,
+        )
+
+        return response
 
     def _get_client(self) -> HubspotClient:
         return HubspotClient()
