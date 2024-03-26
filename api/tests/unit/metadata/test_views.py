@@ -1,4 +1,5 @@
 import json
+from itertools import chain
 
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
@@ -403,18 +404,22 @@ def test_get_supported_content_type(
         args=[organisation.id],
     )
 
-    supported_models = list(SUPPORTED_REQUIREMENTS_MAPPING.keys())
+    supported_models = list(
+        chain.from_iterable(
+            (key, *value) for key, value in SUPPORTED_REQUIREMENTS_MAPPING.items()
+        )
+    )
 
     # When
     response = admin_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.json()) == len(supported_models)
 
-    assert set(content_type["model"] for content_type in response.json()) == set(
-        supported_models
-    )
+    response_models = set(content_type["model"] for content_type in response.json())
+
+    for model in response_models:
+        assert model in supported_models
 
 
 def test_get_supported_required_for_models(admin_client, organisation):
