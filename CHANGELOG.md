@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.104.1](https://github.com/Flagsmith/flagsmith/compare/v2.104.0...v2.104.1) (2024-03-26)
+
+
+### Bug Fixes
+
+* Create group should auto focus on the name input ([#3632](https://github.com/Flagsmith/flagsmith/issues/3632)) ([ddb0b7f](https://github.com/Flagsmith/flagsmith/commit/ddb0b7f35b5e414d8a2f6d01dc88f642b0514f92))
+* No pagination when querying `environments_v2` ([#3661](https://github.com/Flagsmith/flagsmith/issues/3661)) ([7e19f4f](https://github.com/Flagsmith/flagsmith/commit/7e19f4ff2b2f3941e55360936b816879af4d06b6))
+
 ## [2.104.0](https://github.com/Flagsmith/flagsmith/compare/v2.103.4...v2.104.0) (2024-03-20)
 
 
