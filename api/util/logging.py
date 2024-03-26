@@ -24,15 +24,10 @@ class JsonFormatter(logging.Formatter):
         }
 
     def format(self, record: logging.LogRecord) -> str:
-        """
-        %s is replaced with {} because legacy string formatting
-        conventions in django-axes module prevent correct
-        interpolation of arguments when using this formatter.
-        """
         try:
             return json.dumps(self.get_json_record(record))
         except (ValueError, TypeError) as e:
-            return f"Error formatting log record: {str(e)}"
+            return json.dumps({"message": f"{e} when dumping log"})
 
 
 class GunicornAccessLogJsonFormatter(JsonFormatter):
@@ -56,7 +51,7 @@ class GunicornAccessLogJsonFormatter(JsonFormatter):
         }
 
 
-class GunicornJsonLogger(GunicornLogger):
+class GunicornJsonCapableLogger(GunicornLogger):
     def setup(self, cfg: Config) -> None:
         super().setup(cfg)
         if settings.LOG_FORMAT == "json":
