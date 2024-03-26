@@ -84,7 +84,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   useEffect(() => {
     if (error) {
       // Kick user back out to projects
-      props.router.history.replace('/projects')
+      props.router.history.replace('/organisation-settings')
     }
   }, [error, props.router.history])
   const newSegment = () => {

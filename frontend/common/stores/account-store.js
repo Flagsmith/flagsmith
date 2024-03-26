@@ -52,7 +52,7 @@ const controller = {
 
         store.saved()
         if (isLoginPage) {
-          window.location.href = `/projects`
+          window.location.href = `/organisation-settings`
         }
       })
       .catch((e) => {
