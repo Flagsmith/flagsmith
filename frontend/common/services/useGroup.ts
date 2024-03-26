@@ -3,7 +3,9 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
 export const groupService = service
-  .enhanceEndpoints({ addTagTypes: ['Group'] })
+  .enhanceEndpoints({
+    addTagTypes: ['Group', 'UserGroupPermission', 'GroupSummary'],
+  })
   .injectEndpoints({
     endpoints: (builder) => ({
       createGroupAdmin: builder.mutation<
@@ -18,7 +20,11 @@ export const groupService = service
         }),
       }),
       deleteGroup: builder.mutation<Res['groups'], Req['deleteGroup']>({
-        invalidatesTags: [{ id: 'LIST', type: 'Group' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'Group' },
+          { type: 'UserGroupPermission' },
+          { type: 'GroupSummary' },
+        ],
         query: (query: Req['deleteGroup']) => ({
           body: query,
           method: 'DELETE',

@@ -486,5 +486,6 @@ export type Res = {
   flagsmithProjectImport: { id: string }
   featureImports: PagedResponse<FeatureImport>
   serversideEnvironmentKeys: APIKey[]
+  userGroupPermissions: GroupPermission[]
   // END OF TYPES
 }
