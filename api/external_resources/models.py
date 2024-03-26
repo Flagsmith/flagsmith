@@ -10,11 +10,20 @@ from features.models import Feature, FeatureState
 from integrations.github.tasks import call_github_app_webhook_for_feature_state
 from webhooks.webhooks import WebhookEventType
 
+RESOURCE_TYPES = [
+    ("1", "github"),
+]
+
+STATUS = [
+    ("1", "open"),
+    ("2", "closed"),
+]
+
 
 class ExternalResources(LifecycleModelMixin, models.Model):
     url = models.URLField()
-    type = models.TextField()
-    status = models.TextField(null=True)
+    type = models.CharField(max_length=20, choices=RESOURCE_TYPES)
+    status = models.CharField(max_length=20, choices=STATUS, null=True)
     feature = models.ForeignKey(
         Feature,
         related_name="features",

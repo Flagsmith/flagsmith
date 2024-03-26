@@ -1,9 +1,13 @@
 import datetime
+import logging
 
 import requests
 
 from integrations.github.client import generate_token
 from integrations.github.constants import GITHUB_API_URL, GITHUB_APP_ID
+from webhooks.webhooks import WebhookEventType
+
+logger = logging.getLogger(__name__)
 
 
 def post_comment_to_github(installation_id, owner, repo, issue, body):
@@ -24,7 +28,7 @@ def post_comment_to_github(installation_id, owner, repo, issue, body):
 
         return response.json() if response.status_code == 200 else None
     except requests.RequestException as e:
-        print(f" {e}")
+        logger.info(f" {e}")
         return None
 
 
@@ -41,8 +45,8 @@ def generate_body_comment(name, event_type, feature_states):
     def parse_language(value):
         return ""
 
-    is_update = event_type == "FLAG_UPDATED"
-    is_removed = event_type == "FEATURE_EXTERNAL_RESOURCE_REMOVED"
+    is_update = event_type == WebhookEventType.FLAG_UPDATED.value
+    is_removed = event_type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
     delete_text = f"### The feature flag {name} was unlinked from the issue/PR"
 
     if is_removed:

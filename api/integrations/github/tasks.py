@@ -30,7 +30,7 @@ def send_post_request(data: dict[str, Any]) -> None:
     installation_id = data["data"]["installation_id"]
     body = generate_body_comment(feature_name, event_type, feature_states)
 
-    if event_type == "FLAG_UPDATED":
+    if event_type == WebhookEventType.FLAG_UPDATED.value:
         for resource in data.get("external_resources", []):
             url = resource.get("url")
             pathname = urlparse(url).path
@@ -39,7 +39,7 @@ def send_post_request(data: dict[str, Any]) -> None:
                 installation_id, split_url[1], split_url[2], split_url[4], body
             )
 
-    elif event_type == "FEATURE_EXTERNAL_RESOURCE_REMOVED":
+    elif event_type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
         url = data["data"]["url"]
         pathname = urlparse(url).path
         split_url = pathname.split("/")

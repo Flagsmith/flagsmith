@@ -12,7 +12,7 @@ def test_create_external_resources(
 ) -> None:
     # Given
     external_resource_data = {
-        "type": "Test External Resource",
+        "type": "1",
         "url": "https://example.com",
         "feature": feature.id,
     }
@@ -22,6 +22,24 @@ def test_create_external_resources(
     response = admin_client.post(url, data=external_resource_data)
     # Then
     assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_cannot_create_external_resources(
+    admin_client: APIClient,
+    feature: Feature,
+) -> None:
+    # Given
+    external_resource_data = {
+        "type": "999",
+        "url": "https://example.com",
+        "feature": feature.id,
+    }
+    url = reverse("api-v1:features:external-resources-list", args=[feature.id])
+
+    # When
+    response = admin_client.post(url, data=external_resource_data)
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 def test_delete_external_resources(
