@@ -20,6 +20,7 @@ import { setViewMode } from 'common/useViewMode'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
 import { getViewMode } from 'common/useViewMode'
 import EnvironmentDocumentCodeHelp from 'components/EnvironmentDocumentCodeHelp'
+import TableValueFilter from 'components/tables/TableValueFilter'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -31,14 +32,14 @@ const FeaturesPage = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {
+      is_enabled: null,
       loadedOnce: false,
       search: null,
       showArchived: false,
       sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
-      state_enabled: null,
-      state_search: null,
       tag_strategy: 'INTERSECTION',
       tags: [],
+      value_search: null,
     }
     ES6Component(this)
     getTags(getStore(), {
@@ -107,14 +108,14 @@ const FeaturesPage = class extends Component {
 
   getFilter = () => ({
     is_archived: this.state.showArchived,
-    state_enabled:
-      this.state.state_enabled === null ? undefined : this.state.state_enabled,
-    state_search: this.state.state_search ? this.state.state_search : undefined,
+    is_enabled:
+      this.state.is_enabled === null ? undefined : this.state.is_enabled,
     tag_strategy: this.state.tag_strategy,
     tags:
       !this.state.tags || !this.state.tags.length
         ? undefined
         : this.state.tags.join(','),
+    value_search: this.state.value_search ? this.state.value_search : undefined,
   })
 
   onSave = () => {
@@ -316,13 +317,25 @@ const FeaturesPage = class extends Component {
                                       />
                                       <Row className='flex-fill justify-content-end'>
                                         {enabledStateFilter && (
-                                          <TableFilterOptions
+                                          <TableValueFilter
                                             title={'State'}
                                             className={'me-4'}
-                                            value={this.state.state_enabled}
-                                            onChange={(state_enabled) => {
+                                            projectId={projectId}
+                                            useLocalStorage
+                                            value={{
+                                              enabled: this.state.is_enabled,
+                                              valueSearch:
+                                                this.state.value_search,
+                                            }}
+                                            onChange={({
+                                              enabled,
+                                              valueSearch,
+                                            }) => {
                                               this.setState(
-                                                { state_enabled },
+                                                {
+                                                  is_enabled: enabled,
+                                                  value_search: valueSearch,
+                                                },
                                                 this.filter,
                                               )
                                             }}
