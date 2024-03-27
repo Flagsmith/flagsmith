@@ -56,12 +56,14 @@ class TheComponent extends Component {
     })
   }
 
-  confirmDeleteAccount = (lastUserOrganisations, id) => {
+  confirmDeleteAccount = (lastUserOrganisations, id, email, auth_type) => {
     openModal(
       'Are you sure?',
       <ConfirmDeleteAccount
         userId={id}
         lastUserOrganisations={lastUserOrganisations}
+        email={email}
+        auth_type={auth_type}
       />,
       'p-0',
     )
@@ -126,6 +128,7 @@ class TheComponent extends Component {
   render() {
     const {
       state: {
+        auth_type,
         current_password,
         email,
         error,
@@ -305,7 +308,12 @@ class TheComponent extends Component {
                           id='delete-user-btn'
                           data-test='delete-user-btn'
                           onClick={() =>
-                            this.confirmDeleteAccount(lastUserOrganisations, id)
+                            this.confirmDeleteAccount(
+                              lastUserOrganisations,
+                              id,
+                              email,
+                              auth_type,
+                            )
                           }
                           className='btn-with-icon btn-remove'
                         >
