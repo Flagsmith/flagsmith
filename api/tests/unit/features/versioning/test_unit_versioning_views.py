@@ -9,8 +9,14 @@ from freezegun import freeze_time
 from rest_framework import status
 
 from environments.models import Environment
+from environments.permissions.constants import VIEW_ENVIRONMENT
 from features.models import FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
+from projects.permissions import VIEW_PROJECT
+from tests.types import (
+    WithEnvironmentPermissionsCallable,
+    WithProjectPermissionsCallable,
+)
 
 if typing.TYPE_CHECKING:
     from rest_framework.test import APIClient
@@ -520,3 +526,59 @@ def test_cannot_delete_environment_default_feature_state_for_unpublished_environ
 
     segment_override.refresh_from_db()
     assert segment_override.deleted is False
+
+
+def test_filter_versions_by_is_live(
+    environment_v2_versioning: Environment,
+    feature: "Feature",
+    staff_user: "FFAdminUser",
+    staff_client: "APIClient",
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    # we give the user the correct permissions
+    with_environment_permissions([VIEW_ENVIRONMENT], environment_v2_versioning.id)
+    with_project_permissions([VIEW_PROJECT])
+
+    # an unpublished environment feature version
+    unpublished_environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    # and a published version
+    published_environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    published_environment_feature_version.publish(staff_user)
+
+    _base_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+    live_versions_url = "%s?is_live=true" % _base_url
+    not_live_versions_url = "%s?is_live=false" % _base_url
+
+    # When
+    live_versions_response = staff_client.get(live_versions_url)
+    not_live_versions_response = staff_client.get(not_live_versions_url)
+
+    # Then
+    # only the live versions are returned (the initial version) and the one we
+    # published above when we request the live versions
+    assert live_versions_response.status_code == status.HTTP_200_OK
+
+    live_versions_response_json = live_versions_response.json()
+    assert live_versions_response_json["count"] == 2
+    assert unpublished_environment_feature_version.uuid not in [
+        result["uuid"] for result in live_versions_response_json["results"]
+    ]
+
+    # and only the unpublished version is returned when we request the 'not live' versions
+    assert not_live_versions_response.status_code == status.HTTP_200_OK
+
+    not_live_versions_response_json = not_live_versions_response.json()
+    assert not_live_versions_response_json["count"] == 1
+    assert not_live_versions_response_json["results"][0]["uuid"] == str(
+        unpublished_environment_feature_version.uuid
+    )

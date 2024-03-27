@@ -1,4 +1,8 @@
+from django.db.models import BooleanField, ExpressionWrapper, Q
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import action
 from rest_framework.mixins import (
     CreateModelMixin,
@@ -25,12 +29,19 @@ from features.versioning.permissions import (
 from features.versioning.serializers import (
     EnvironmentFeatureVersionFeatureStateSerializer,
     EnvironmentFeatureVersionPublishSerializer,
+    EnvironmentFeatureVersionQuerySerializer,
     EnvironmentFeatureVersionSerializer,
 )
 from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser
 
 
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(
+        query_serializer=EnvironmentFeatureVersionQuerySerializer()
+    ),
+)
 class EnvironmentFeatureVersionViewSet(
     GenericViewSet,
     ListModelMixin,
@@ -77,9 +88,25 @@ class EnvironmentFeatureVersionViewSet(
         if getattr(self, "swagger_fake_view", False):
             return EnvironmentFeatureVersion.objects.none()
 
-        return EnvironmentFeatureVersion.objects.filter(
+        queryset = EnvironmentFeatureVersion.objects.filter(
             environment=self.environment, feature_id=self.feature
         )
+
+        query_serializer = EnvironmentFeatureVersionQuerySerializer(
+            data=self.request.query_params
+        )
+        query_serializer.is_valid(raise_exception=True)
+
+        if (is_live := query_serializer.validated_data.get("is_live")) is not None:
+            queryset = queryset.annotate(
+                _is_live=ExpressionWrapper(
+                    Q(published_at__isnull=False, live_from__lte=timezone.now()),
+                    output_field=BooleanField(),
+                )
+            )
+            queryset = queryset.filter(_is_live=is_live)
+
+        return queryset
 
     def perform_create(self, serializer: Serializer) -> None:
         created_by = None
