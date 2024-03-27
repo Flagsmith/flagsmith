@@ -13,11 +13,11 @@ Flags within Flagsmith are a combination of both:
 
 and then optionally:
 
-- A String/Integer/Float value - the `Flag Value`
+- A String/Integer/Boolean value - the `Flag Value`
 
 or
 
-- A selected Multivariate String/Integer/Float - the `Flag Value`
+- A selected Multivariate String/Integer/Boolean - the `Flag Value`
 
 You are free to use either the `Flag State`, or the `Flag Value` or a combination of both `Flag State` and `Flag Value`
 within each flag. You don't have to provide or use a `Flag Value`. If you just want a boolean flag, you can just ignore
@@ -48,10 +48,10 @@ If you provide a `Flag Value` to a flag, this will always be included and return
 You can create a new feature flag by going to the Flags page within any Environment and hitting the Create Feature
 button.
 
-Flags default to On (true) or Off (false). You can also optionally store and override String and numerical (int and
-float) values. The Flagsmith SDKs allow you to call both `hasFeature` as well as `getValue` on the same flag. These
-calls will retrieve both the Boolean value as well as the String/Numerical value if specified. The SDKs generally return
-False/Null if the flag is missing or the value is not set, but there are variations between different languages.
+Flags default to On (true) or Off (false). You can also optionally store and override String and Integer values. The
+Flagsmith SDKs allow you to call both `hasFeature` as well as `getValue` on the same flag. These calls will retrieve
+both the Boolean value as well as the String/Numerical value if specified. The SDKs generally return False/Null if the
+flag is missing or the value is not set, but there are variations between different languages.
 
 ## Multi-Variate Flags
 
