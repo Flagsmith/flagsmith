@@ -131,7 +131,12 @@ export type Req = {
     environment: string
     user: string
   }
-  getProjectFlags: { project: string; environmentId?: string }
+  getProjectFlags: {
+    project: string
+    environmentId?: string
+    tags?: string[]
+    is_archived?: boolean
+  }
   getProjectFlag: { project: string; id: string }
   getRolesPermissionUsers: { organisation_id: string; role_id: string }
   deleteRolesPermissionUsers: {
@@ -252,5 +257,6 @@ export type Req = {
     id: string
   }
   getProject: { id: string }
+  getUserGroupPermission: { project_id: string }
   // END OF TYPES
 }

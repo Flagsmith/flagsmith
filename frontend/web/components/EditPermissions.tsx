@@ -116,14 +116,14 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       setInterceptClose(() => {
         if (valueChanged) {
           return new Promise((resolve) => {
-            openConfirm(
-              'Are you sure?',
-              'Closing this will discard your unsaved changes.',
-              () => resolve(true),
-              () => resolve(false),
-              'Ok',
-              'Cancel',
-            )
+            openConfirm({
+              body: 'Closing this will discard your unsaved changes.',
+              noText: 'Cancel',
+              onNo: () => resolve(false),
+              onYes: () => resolve(true),
+              title: 'Discard changes',
+              yesText: 'Ok',
+            })
           })
         } else {
           return Promise.resolve(true)
@@ -263,6 +263,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           `${level.charAt(0).toUpperCase() + level.slice(1)} permissions Saved`,
         )
         permissionChanged?.()
+        setInterceptClose(null)
         onSave?.()
         setSaving(false)
         if (editPermissionsFromSettings) {
@@ -420,6 +421,12 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           entityPermissions,
         )
           .then(() => {
+            setInterceptClose(null)
+            toast(
+              `${
+                level.charAt(0).toUpperCase() + level.slice(1)
+              } Permissions Saved`,
+            )
             onSave && onSave()
             close()
           })
@@ -1025,6 +1032,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
               <UserGroupList
                 noTitle
                 orgId={AccountStore.getOrganisation().id}
+                projectId={level === 'project' && id}
                 onClick={(group: UserGroup) => editGroupPermissions(group)}
               />
             </div>

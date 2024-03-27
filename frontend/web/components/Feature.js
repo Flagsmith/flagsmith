@@ -15,13 +15,15 @@ export default class Feature extends PureComponent {
     const idToRemove = this.props.multivariate_options[i].id
 
     if (idToRemove) {
-      openConfirm(
-        'Please confirm',
-        'This will remove the variation on your feature for all environments, if you wish to turn it off just for this environment you can set the % value to 0.',
-        () => {
+      openConfirm({
+        body: 'This will remove the variation on your feature for all environments, if you wish to turn it off just for this environment you can set the % value to 0.',
+        destructive: true,
+        onYes: () => {
           this.props.removeVariation(i)
         },
-      )
+        title: 'Delete variation',
+        yesText: 'Confirm',
+      })
     } else {
       this.props.removeVariation(i)
     }

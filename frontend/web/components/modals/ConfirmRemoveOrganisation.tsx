@@ -33,7 +33,7 @@ const ConfirmRemoveOrganisation: FC<ConfirmRemoveOrganisationType> = ({
               This will remove <strong>{organisation.name}</strong> and{' '}
               <strong>all of it's projects</strong>. You should ensure that you
               do not contain any references to this organisation in your
-              applications before proceeding.
+              applications before proceeding. This action cannot be undone.
             </>
             <InputGroup
               className='mb-0'
@@ -53,9 +53,10 @@ const ConfirmRemoveOrganisation: FC<ConfirmRemoveOrganisationType> = ({
             <Button
               id='confirm-del-org-btn'
               type='submit'
+              theme='danger'
               disabled={challenge != organisation.name}
             >
-              Confirm changes
+              Confirm
             </Button>
           </div>
         </form>
