@@ -1,6 +1,8 @@
 from django.db.models import BooleanField, ExpressionWrapper, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import action
 from rest_framework.mixins import (
     CreateModelMixin,
@@ -34,6 +36,12 @@ from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser
 
 
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(
+        query_serializer=EnvironmentFeatureVersionQuerySerializer()
+    ),
+)
 class EnvironmentFeatureVersionViewSet(
     GenericViewSet,
     ListModelMixin,
