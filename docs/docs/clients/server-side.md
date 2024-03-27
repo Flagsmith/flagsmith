@@ -807,6 +807,31 @@ public class MyCustomOfflineHandler implements IOfflineHandler:
 ```
 
 </TabItem>
+<TabItem value="ruby" label="Ruby">
+
+```ruby
+# Using the built-in local file handler
+
+offline_handler = \
+Flagsmith::OfflineHandlers::LocalFileHandler.new("environment.json")
+
+# Instantiate the client with offline mode set to true
+
+flagsmith = Flagsmith::Client.new(
+  offline_mode: true,
+  offline_handler: offline_handler,
+)
+
+# Defining a custom offline handler
+
+class MyCustomOfflineHandler
+  def environment
+    # Some code providing the environment for the handler
+  end
+end
+```
+
+</TabItem>
 
 </Tabs>
 

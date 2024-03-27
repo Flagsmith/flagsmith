@@ -71,7 +71,12 @@ class HubspotLeadTracker(LeadTracker):
             domain = None
         else:
             domain = user.email_domain
-        response = self.client.create_company(name=organisation.name, domain=domain)
+        response = self.client.create_company(
+            name=organisation.name,
+            organisation_id=organisation.id,
+            domain=domain,
+        )
+
         # Store the organisation data in the database since we are
         # unable to look them up via a unique identifier.
         HubspotOrganisation.objects.create(

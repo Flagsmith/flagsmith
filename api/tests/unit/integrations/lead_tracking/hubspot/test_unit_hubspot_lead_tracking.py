@@ -89,7 +89,12 @@ def test_hubspot_with_new_contact_and_new_organisation(
     # Then
     organisation.refresh_from_db()
     assert organisation.hubspot_organisation.hubspot_id == future_hubspot_id
-    mock_create_company.assert_called_once_with(name=organisation.name, domain=domain)
+
+    mock_create_company.assert_called_once_with(
+        name=organisation.name,
+        domain=domain,
+        organisation_id=organisation.id,
+    )
     mock_create_contact.assert_called_once_with(user, future_hubspot_id)
     mock_get_contact.assert_called_once_with(user)
 
@@ -177,7 +182,11 @@ def test_hubspot_with_filtered_email_domain_contact_and_new_organisation(
     organisation.refresh_from_db()
     assert organisation.hubspot_organisation.hubspot_id == future_hubspot_id
     # Domain is `None` since it was filtered out.
-    mock_create_company.assert_called_once_with(name=organisation.name, domain=None)
+    mock_create_company.assert_called_once_with(
+        name=organisation.name,
+        domain=None,
+        organisation_id=organisation.id,
+    )
     mock_create_contact.assert_called_once_with(user, future_hubspot_id)
     mock_get_contact.assert_called_once_with(user)
 
