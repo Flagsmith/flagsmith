@@ -1036,7 +1036,31 @@ HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
 ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
 HUBSPOT_IGNORE_DOMAINS = env.list("HUBSPOT_IGNORE_DOMAINS", [])
 HUBSPOT_IGNORE_DOMAINS_REGEX = env("HUBSPOT_IGNORE_DOMAINS_REGEX", "")
-
+HUBSPOT_IGNORE_ORGANISATION_DOMAINS = env.list(
+    "HUBSPOT_IGNORE_ORGANISATION_DOMAINS",
+    [
+        "126.com",
+        "163.com",
+        "aol.com",
+        "att.net",
+        "comcast.net",
+        "gmail.com",
+        "gmx.com",
+        "hotmail.com",
+        "icloud.com",
+        "live.com",
+        "mail.com",
+        "mail.ru",
+        "outlook.co.uk",
+        "outlook.com",
+        "protonmail.com",
+        "qq.com",
+        "sina.com",
+        "yahoo.com",
+        "yandex.com",
+        "zoho.com",
+    ],
+)
 
 # List of plan ids that support seat upgrades
 AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
