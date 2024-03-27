@@ -21,8 +21,9 @@ type TableFilterType = {
   orgId: string | undefined
 }
 
-const TableOwnerFilter: FC<TableFilterType> = ({
+const TableGroupsFilter: FC<TableFilterType> = ({
   className,
+  isLoading,
   onChange,
   orgId,
   projectId,
@@ -30,7 +31,6 @@ const TableOwnerFilter: FC<TableFilterType> = ({
   value,
 }) => {
   const checkedLocalStorage = useRef(false)
-  const [showUsers, setShowUsers] = useState(false)
   const { data } = useGetGroupSummariesQuery(
     { orgId: orgId! },
     { skip: !orgId },
@@ -71,7 +71,15 @@ const TableOwnerFilter: FC<TableFilterType> = ({
   return (
     <TableFilterOptions
       className={className}
-      title={'Groups'}
+      title={
+        <Row>
+          Groups{' '}
+          {!!value?.length && (
+            <span className='mx-1 unread d-inline'>{value.length}</span>
+          )}
+        </Row>
+      }
+      isLoading={isLoading}
       multiple
       showSearch
       options={groups}
@@ -81,4 +89,4 @@ const TableOwnerFilter: FC<TableFilterType> = ({
   )
 }
 
-export default TableOwnerFilter
+export default TableGroupsFilter

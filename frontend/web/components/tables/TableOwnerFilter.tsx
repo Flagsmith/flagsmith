@@ -28,7 +28,6 @@ const TableOwnerFilter: FC<TableFilterType> = ({
   value,
 }) => {
   const checkedLocalStorage = useRef(false)
-  const [showUsers, setShowUsers] = useState(false)
   const orgUsers = OrganisationStore.model && OrganisationStore.model.users
   const users = useMemo(() => {
     return sortBy(
@@ -65,7 +64,15 @@ const TableOwnerFilter: FC<TableFilterType> = ({
   return (
     <TableFilterOptions
       className={className}
-      title={'Users'}
+      isLoading={isLoading}
+      title={
+        <Row>
+          Users{' '}
+          {!!value?.length && (
+            <span className='mx-1 unread d-inline'>{value.length}</span>
+          )}
+        </Row>
+      }
       multiple
       showSearch
       options={users}

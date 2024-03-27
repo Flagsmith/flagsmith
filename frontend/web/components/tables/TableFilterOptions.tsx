@@ -8,9 +8,10 @@ import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
 
 type TableFilterType = {
-  title: string
+  title: ReactNode
   dropdownTitle?: ReactNode | string
   className?: string
+  isLoading?: boolean
   options: { label: string; value: string | number; subtitle?: string }[]
   onChange: (value: string | string[]) => void | Promise<void>
   value: (string | number) | (string | number)[]
@@ -20,6 +21,7 @@ type TableFilterType = {
 
 const TableFilter: FC<TableFilterType> = ({
   className,
+  isLoading,
   multiple,
   onChange,
   options,
@@ -46,7 +48,7 @@ const TableFilter: FC<TableFilterType> = ({
   }, [options, filter])
 
   return (
-    <>
+    <div className={isLoading ? 'disabled' : ''}>
       <Row
         onClick={toggle}
         className={classNames('cursor-pointer user-select-none', className)}
@@ -121,7 +123,7 @@ const TableFilter: FC<TableFilterType> = ({
           ))}
         </InlineModal>
       )}
-    </>
+    </div>
   )
 }
 
