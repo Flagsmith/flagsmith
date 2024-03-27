@@ -27,12 +27,12 @@ export const externalResourceService = service
           url: `features/${query.feature_id}/external-resources/${query.external_resource_id}/`,
         }),
       }),
-      getExternalResource: builder.query<
+      getExternalResources: builder.query<
         Res['externalResource'],
-        Req['getExternalResource']
+        Req['getExternalResources']
       >({
         providesTags: [{ id: 'LIST', type: 'ExternalResource' }],
-        query: (query: Req['getExternalResource']) => ({
+        query: (query: Req['getExternalResources']) => ({
           url: `features/${query.feature_id}/external-resources/`,
         }),
       }),
@@ -79,15 +79,15 @@ export async function deleteExternalResource(
     ),
   )
 }
-export async function getExternalResource(
+export async function getExternalResources(
   store: any,
-  data: Req['getExternalResource'],
+  data: Req['getExternalResources'],
   options?: Parameters<
-    typeof externalResourceService.endpoints.getExternalResource.initiate
+    typeof externalResourceService.endpoints.getExternalResources.initiate
   >[1],
 ) {
   return store.dispatch(
-    externalResourceService.endpoints.getExternalResource.initiate(
+    externalResourceService.endpoints.getExternalResources.initiate(
       data,
       options,
     ),
@@ -112,7 +112,7 @@ export async function updateExternalResource(
 export const {
   useCreateExternalResourceMutation,
   useDeleteExternalResourceMutation,
-  useGetExternalResourceQuery,
+  useGetExternalResourcesQuery,
   useUpdateExternalResourceMutation,
   // END OF EXPORTS
 } = externalResourceService
@@ -120,5 +120,5 @@ export const {
 /* Usage examples:
 const { data, isLoading } = useGetExternalResourceQuery({ id: 2 }, {}) //get hook
 const [createExternalResource, { isLoading, data, isSuccess }] = useCreateExternalResourceMutation() //create hook
-externalResourceService.endpoints.getExternalResource.select({id: 2})(store.getState()) //access data from any function
+externalResourceService.endpoints.getExternalResources.select({id: 2})(store.getState()) //access data from any function
 */

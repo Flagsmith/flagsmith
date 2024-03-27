@@ -245,7 +245,7 @@ export type Req = {
   getGroupSummaries: {
     orgId: string
   }
-  getExternalResource: { feature_id: string }
+  getExternalResources: { feature_id: string }
   updateExternalResource: { external_resource_id: string }
   deleteExternalResource: { feature_id: string; external_resource_id: string }
   createExternalResource: { feature_id: string; body: ExternalResource }
@@ -291,8 +291,16 @@ export type Req = {
       repository_owner: string
     }
   }
-  getGithubIssues: { organisation_id: string }
-  getGithubPulls: { organisation_id: string }
+  getGithubIssues: {
+    organisation_id: string
+    repo_name: string
+    repo_owner: string
+  }
+  getGithubPulls: {
+    organisation_id: string
+    repo_name: string
+    repo_owner: string
+  }
   getGithubRepos: { installation_id: string }
   getServersideEnvironmentKeys: { environmentId: string }
   deleteServersideEnvironmentKeys: { environmentId: string; id: string }

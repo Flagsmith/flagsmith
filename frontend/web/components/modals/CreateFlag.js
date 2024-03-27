@@ -44,6 +44,7 @@ import { getStore } from 'common/store'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import MyIssueSelect from 'components/MyIssuesSelect'
 import MyPullRequestsSelect from 'components/MyPullRequestsSelect'
+import MyRepositoriesSelect from 'components/MyRepositoriesSelect'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'

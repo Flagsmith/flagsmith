@@ -298,6 +298,7 @@ export type Repository = {
 }
 
 export type GithubRepository = {
+  id: number
   github_configuration: number
   project: number
   repository_owner: string

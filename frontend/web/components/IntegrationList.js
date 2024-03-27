@@ -9,7 +9,19 @@ const CreateEditIntegration = require('./modals/CreateEditIntegrationModal')
 
 class Integration extends Component {
   add = () => {
-    this.props.addIntegration(this.props.integration, this.props.id)
+    const isGithubIntegration =
+      this.props.githubId && this.props.integration.isExternalInstallation
+    console.log('DEBUG: installationId:', this.props.installationId)
+    if (isGithubIntegration) {
+      this.props.addIntegration(
+        this.props.integration,
+        this.props.id,
+        this.props.githubId,
+        this.props.installationId,
+      )
+    } else {
+      this.props.addIntegration(this.props.integration, this.props.id)
+    }
   }
 
   remove = (integration) => {
@@ -103,7 +115,7 @@ class Integration extends Component {
                       onClick={this.add}
                       size='xSmall'
                     >
-                      Manage GitHub Integration
+                      Manage Integration
                     </Button>
                   ) : (
                     <Button
@@ -148,8 +160,9 @@ class Integration extends Component {
 
 class IntegrationList extends Component {
   state = {
-    github_id: 0,
+    githubId: 0,
     hasIntegrationWithGithub: false,
+    installationId: '',
   }
 
   static contextTypes = {
@@ -162,10 +175,10 @@ class IntegrationList extends Component {
       getGithubIntegration(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,
       }).then((res) => {
-        console.log('DEBUG: res?.data?.results?', res?.data?.results[0]?.id)
         this.setState({
-          github_id: res?.data?.results[0].id,
+          githubId: res?.data?.results[0].id,
           hasIntegrationWithGithub: !!res?.data?.results?.length,
+          installationId: res?.data?.results[0].installation_id,
         })
       })
     }
@@ -276,7 +289,12 @@ class IntegrationList extends Component {
     })
   }
 
-  addIntegration = (integration, id) => {
+  addIntegration = (
+    integration,
+    id,
+    githubId = undefined,
+    installationId = undefined,
+  ) => {
     const params = Utils.fromParam()
     openModal(
       `${integration.title} Integration`,
@@ -291,6 +309,8 @@ class IntegrationList extends Component {
               }
             : null
         }
+        githubId={githubId}
+        installationId={installationId}
         projectId={this.props.projectId}
         onComplete={this.fetch}
       />,
@@ -332,6 +352,8 @@ class IntegrationList extends Component {
                 projectId={this.props.projectId}
                 id={i}
                 key={i}
+                githubId={this.state.githubId}
+                installationId={this.state.installationId}
                 activeIntegrations={this.state.activeIntegrations[index]}
                 integration={integrationList[i]}
                 hasIntegrationWithGithub={this.state.hasIntegrationWithGithub}

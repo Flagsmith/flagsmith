@@ -83,7 +83,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
                 repository_name: repositoryName,
                 repository_owner: repositoryOwner,
               },
-              github_pk: data.id,
+              github_id: data.id,
               organisation_id: organisation,
             })
             promises.push(promise)

@@ -19,7 +19,12 @@ export const githubService = service
       getGithubPulls: builder.query<Res['githubPulls'], Req['getGithubPulls']>({
         providesTags: [{ id: 'LIST', type: 'Github' }],
         query: (query: Req['getGithubPulls']) => ({
-          url: `organisations/${query.organisation_id}/github/pulls/`,
+          url: `organisations/?${
+            query.organisation_id
+          }/github/pulls/?${Utils.toParam({
+            repo_name: query.repo_name,
+            repo_owner: query.repo_owner,
+          })}`,
         }),
       }),
       getGithubRepos: builder.query<Res['githubRepos'], Req['getGithubRepos']>({

@@ -1,11 +1,15 @@
 import React, { Component } from 'react'
 import EnvironmentSelect from 'components/EnvironmentSelect'
-import MyRepositoriesSelect from 'components/MyRepositoriesSelect'
+import MyGitHubRepositoriesSelect from 'components/MyGitHubRepositoriesSelect'
 import _data from 'common/data/base/_data'
 import ErrorMessage from 'components/ErrorMessage'
 import ModalHR from './ModalHR'
 import Button from 'components/base/forms/Button'
+import GithubRepositoriesTable from 'components/GithubRepositoriesTable'
 import classNames from 'classnames'
+import { getGithubRepositories } from 'common/services/useGithubRepository'
+import { getStore } from 'common/store'
+
 const CreateEditIntegration = class extends Component {
   static displayName = 'CreateEditIntegration'
 
@@ -23,6 +27,7 @@ const CreateEditIntegration = class extends Component {
         ? { ...this.props.data }
         : { fields, ...defaultValues },
       fields,
+      githubRepositories: [],
     }
     if (this.props.id === 'slack' && this.state.data.flagsmithEnvironment) {
       _data
@@ -45,6 +50,22 @@ const CreateEditIntegration = class extends Component {
     }
   }
 
+  componentDidMount() {
+    if (
+      Utils.getFlagsmithHasFeature('github_integration') &&
+      this.props.githubId
+    ) {
+      getGithubRepositories(getStore(), {
+        github_id: this.props.githubId,
+        organisation_id: AccountStore.getOrganisation().id,
+      }).then((res) => {
+        this.setState({
+          githubRepositories: res?.data?.results,
+        })
+      })
+    }
+  }
+
   update = (key, e) => {
     this.setState({
       data: {
@@ -63,6 +84,9 @@ const CreateEditIntegration = class extends Component {
     const isOauth = this.props.integration.isOauth && !this.state.authorised
     const isEdit = this.props.data && this.props.data.id
     Utils.preventDefault(e)
+    if (this.props.integration.isExternalInstallation) {
+      closeModal()
+    }
     if (this.state.isLoading) {
       return
     }
@@ -182,12 +206,23 @@ const CreateEditIntegration = class extends Component {
             </div>
           )}
           {this.props.integration.isExternalInstallation && (
-            <div className='mb-3'>
-              <label className={!this.props.modal ? 'mb-1 fw-bold' : ''}>
-                GitHub Repositories
-              </label>
-              <MyRepositoriesSelect orgId={AccountStore.getOrganisation().id} />
-            </div>
+            <>
+              <div className='mb-3'>
+                <label className={!this.props.modal ? 'mb-1 fw-bold' : ''}>
+                  GitHub Repositories
+                </label>
+                <MyGitHubRepositoriesSelect
+                  githubId={this.props.githubId}
+                  installationId={this.props.installationId}
+                  organisationId={AccountStore.getOrganisation().id}
+                  projectId={this.props.projectId}
+                />
+              </div>
+              <GithubRepositoriesTable
+                githubId={this.props.githubId}
+                organisationId={AccountStore.getOrganisation().id}
+              />
+            </>
           )}
           {this.state.fields &&
             this.state.fields.map((field) => (
@@ -265,27 +300,28 @@ const CreateEditIntegration = class extends Component {
           <ErrorMessage error={this.state.error} />
         </div>
 
-        {!this.props.readOnly && (
-          <div className={'text-right mt-2 modal-footer'}>
-            {!!this.props.modal && (
-              <Button onClick={closeModal} className='mr-2' theme='secondary'>
-                Cancel
+        {!this.props.readOnly &&
+          !this.props.integration.isExternalInstallation && (
+            <div className={'text-right mt-2 modal-footer'}>
+              {!!this.props.modal && (
+                <Button onClick={closeModal} className='mr-2' theme='secondary'>
+                  Cancel
+                </Button>
+              )}
+              <Button
+                disabled={
+                  this.state.isLoading ||
+                  (!this.state.data.flagsmithEnvironment &&
+                    this.props.integration.perEnvironment)
+                }
+                type='submit'
+              >
+                {this.props.integration.isOauth && !this.state.authorised
+                  ? 'Authorise'
+                  : 'Save'}
               </Button>
-            )}
-            <Button
-              disabled={
-                this.state.isLoading ||
-                (!this.state.data.flagsmithEnvironment &&
-                  this.props.integration.perEnvironment)
-              }
-              type='submit'
-            >
-              {this.props.integration.isOauth && !this.state.authorised
-                ? 'Authorise'
-                : 'Save'}
-            </Button>
-          </div>
-        )}
+            </div>
+          )}
       </form>
     )
   }
