@@ -135,7 +135,7 @@ const TableTagFilter: FC<TableFilterType> = ({
         }
       >
         <div className='inline-modal__list d-flex flex-column mx-0 py-0'>
-          <div className='px-2 mt-2'>
+          <div className='px-2 my-2'>
             <Input
               autoFocus
               onChange={(e: InputEvent) => {

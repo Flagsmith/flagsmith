@@ -9,6 +9,7 @@ import OrganisationStore from 'common/stores/organisation-store'
 import TableFilter from './TableFilter'
 import TableFilterOptions from './TableFilterOptions'
 import { sortBy } from 'lodash'
+import { useGetGroupSummariesQuery } from 'common/services/useGroupSummary'
 
 type TableFilterType = {
   value: number[]
@@ -17,40 +18,45 @@ type TableFilterType = {
   useLocalStorage?: boolean
   isLoading?: boolean
   projectId: string
+  orgId: string | undefined
 }
 
 const TableOwnerFilter: FC<TableFilterType> = ({
   className,
-  isLoading,
   onChange,
+  orgId,
   projectId,
   useLocalStorage,
   value,
 }) => {
   const checkedLocalStorage = useRef(false)
   const [showUsers, setShowUsers] = useState(false)
-  const orgUsers = OrganisationStore.model && OrganisationStore.model.users
-  const users = useMemo(() => {
+  const { data } = useGetGroupSummariesQuery(
+    { orgId: orgId! },
+    { skip: !orgId },
+  )
+  const groups = useMemo(() => {
     return sortBy(
-      (orgUsers || []).map((item: User) => ({
-        label: `${item.first_name} ${item.last_name}`,
-        subtitle: item.email,
+      (data || []).map((item) => ({
+        label: `${item.name}`,
         value: item.id,
       })),
       'label',
     )
-  }, [orgUsers, value])
+  }, [data, value])
 
   useEffect(() => {
     if (checkedLocalStorage.current && useLocalStorage) {
-      AsyncStorage.setItem(`${projectId}-owners`, JSON.stringify(value))
+      AsyncStorage.setItem(`${projectId}-owner-groups`, JSON.stringify(value))
     }
   }, [value, projectId, useLocalStorage])
   useEffect(() => {
     const checkLocalStorage = async function () {
       if (useLocalStorage && !checkedLocalStorage.current) {
         checkedLocalStorage.current = true
-        const storedValue = await AsyncStorage.getItem(`${projectId}-owners`)
+        const storedValue = await AsyncStorage.getItem(
+          `${projectId}-owner-groups`,
+        )
         if (storedValue) {
           try {
             const storedValueObject = JSON.parse(storedValue)
@@ -65,10 +71,10 @@ const TableOwnerFilter: FC<TableFilterType> = ({
   return (
     <TableFilterOptions
       className={className}
-      title={'Users'}
+      title={'Groups'}
       multiple
       showSearch
-      options={users}
+      options={groups}
       onChange={onChange as any}
       value={value}
     />

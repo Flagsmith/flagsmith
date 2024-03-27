@@ -1,34 +1,50 @@
-import React, { FC, ReactNode, useState } from 'react'
+import React, { FC, ReactNode, useMemo, useState } from 'react'
 import InlineModal from 'components/InlineModal'
 import { IonIcon } from '@ionic/react'
-import { caretDown } from 'ionicons/icons'
+import { caretDown, search } from 'ionicons/icons'
 import classNames from 'classnames'
 import TableFilterItem from './TableFilterItem'
-import { ViewMode } from 'common/useViewMode'
+import Input from 'components/base/forms/Input'
+import Utils from 'common/utils/utils'
 
 type TableFilterType = {
   title: string
   dropdownTitle?: ReactNode | string
   className?: string
-  options: { label: string; value: string }[]
-  onChange: (value: ViewMode) => void | Promise<void>
-  value: string
+  options: { label: string; value: string | number; subtitle?: string }[]
+  onChange: (value: string | string[]) => void | Promise<void>
+  value: (string | number) | (string | number)[]
+  multiple?: boolean
+  showSearch?: boolean
 }
 
 const TableFilter: FC<TableFilterType> = ({
   className,
-  dropdownTitle,
+  multiple,
   onChange,
   options,
+  showSearch,
   title,
   value,
 }) => {
+  const [filter, setFilter] = useState('')
+
   const [open, setOpen] = useState(false)
   const toggle = function () {
     if (!open) {
       setOpen(true)
     }
   }
+
+  const filteredOptions = useMemo(() => {
+    const lowerSearch = filter?.toLowerCase()
+    return filter
+      ? options.filter((v) => {
+          return v.label.toLowerCase().includes(lowerSearch)
+        })
+      : options
+  }, [options, filter])
+
   return (
     <>
       <Row
@@ -58,15 +74,49 @@ const TableFilter: FC<TableFilterType> = ({
           containerClassName='px-0'
           className='inline-modal table-filter inline-modal--sm right'
         >
-          {options.map((v) => (
+          {!!showSearch && (
+            <div className='px-2 mt-2 mb-2'>
+              <Input
+                autoFocus
+                onChange={(e: InputEvent) => {
+                  setFilter(Utils.safeParseEventValue(e))
+                }}
+                className='full-width'
+                value={filter}
+                type='text'
+                size='xSmall'
+                placeholder='Search'
+                search
+              />
+              {!filteredOptions?.length && (
+                <div className='text-center py-2'>No results</div>
+              )}
+            </div>
+          )}
+          {filteredOptions.map((v) => (
             <TableFilterItem
               key={v.value}
               title={v.label}
+              subtitle={v.subtitle}
               onClick={() => {
-                setOpen(false)
-                onChange(v.value)
+                if (!multiple) {
+                  setOpen(false)
+                }
+                if (multiple) {
+                  if (value.includes(v.value)) {
+                    onChange(
+                      ((value as string[]) || []).filter(
+                        (item) => item !== v.value,
+                      ),
+                    )
+                  } else {
+                    onChange(((value as string[]) || []).concat([v.value]))
+                  }
+                } else {
+                  onChange(v.value)
+                }
               }}
-              isActive={value === v.value}
+              isActive={multiple ? value?.includes(v.value) : value === v.value}
             />
           ))}
         </InlineModal>

@@ -16,12 +16,11 @@ import { IonIcon } from '@ionic/react'
 import TableSortFilter from 'components/tables/TableSortFilter'
 import TableSearchFilter from 'components/tables/TableSearchFilter'
 import TableTagFilter from 'components/tables/TableTagFilter'
-import { setViewMode } from 'common/useViewMode'
+import { getViewMode, setViewMode } from 'common/useViewMode'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
-import { getViewMode } from 'common/useViewMode'
-import { TagStrategy } from 'common/types/responses'
 import EnvironmentDocumentCodeHelp from 'components/EnvironmentDocumentCodeHelp'
 import TableOwnerFilter from 'components/tables/TableOwnerFilter'
+import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -33,7 +32,8 @@ const FeaturesPage = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {
-      groupOwners: [],
+      group_owners: [],
+      group_owners: [],
       loadedOnce: false,
       owners: [],
       search: null,
@@ -108,8 +108,8 @@ const FeaturesPage = class extends Component {
   }
 
   getFilter = () => ({
-    group_owners: this.state.groupOwners?.length
-      ? this.state.groupOwners
+    group_owners: this.state.group_owners?.length
+      ? this.state.group_owners
       : undefined,
     is_archived: this.state.showArchived,
     owners: this.state.owners?.length ? this.state.owners : undefined,
@@ -316,31 +316,6 @@ const FeaturesPage = class extends Component {
                                         value={this.state.search}
                                       />
                                       <Row className='flex-fill justify-content-end'>
-                                        {ownersFilter && (
-                                          <TableOwnerFilter
-                                            title={'Owners'}
-                                            className={'me-4'}
-                                            projectId={projectId}
-                                            useLocalStorage
-                                            value={{
-                                              groupOwners:
-                                                this.state.group_owners,
-                                              owners: this.state.owners,
-                                            }}
-                                            onChange={({
-                                              groupOwners,
-                                              owners,
-                                            }) => {
-                                              this.setState(
-                                                {
-                                                  group_owners: groupOwners,
-                                                  owners: owners,
-                                                },
-                                                this.filter,
-                                              )
-                                            }}
-                                          />
-                                        )}
                                         <TableTagFilter
                                           useLocalStorage
                                           isLoading={FeatureListStore.isLoading}
@@ -414,6 +389,43 @@ const FeaturesPage = class extends Component {
                                             )
                                           }}
                                         />
+                                        {ownersFilter && (
+                                          <TableOwnerFilter
+                                            title={'Owners'}
+                                            className={'me-4'}
+                                            projectId={projectId}
+                                            useLocalStorage
+                                            value={this.state.owners}
+                                            onChange={(owners) => {
+                                              this.setState(
+                                                {
+                                                  owners: owners,
+                                                },
+                                                this.filter,
+                                              )
+                                            }}
+                                          />
+                                        )}
+                                        {ownersFilter && (
+                                          <TableGroupsFilter
+                                            title={'Groups'}
+                                            className={'me-4'}
+                                            projectId={projectId}
+                                            orgId={
+                                              AccountStore.getOrganisation()?.id
+                                            }
+                                            useLocalStorage
+                                            value={this.state.group_owners}
+                                            onChange={(owners) => {
+                                              this.setState(
+                                                {
+                                                  group_owners: owners,
+                                                },
+                                                this.filter,
+                                              )
+                                            }}
+                                          />
+                                        )}
                                         <TableFilterOptions
                                           title={'View'}
                                           className={'me-4'}

@@ -4,6 +4,7 @@ import classNames from 'classnames'
 
 type TableFilterItemType = {
   isActive?: boolean
+  subtitle?: string
   title: string | ReactNode
   onClick: () => void
   'data-test'?: string
@@ -12,6 +13,7 @@ type TableFilterItemType = {
 const TableFilterItem: FC<TableFilterItemType> = ({
   isActive,
   onClick,
+  subtitle,
   title,
   ...rest
 }) => {
@@ -23,10 +25,13 @@ const TableFilterItem: FC<TableFilterItemType> = ({
         e.preventDefault()
         onClick()
       }}
-      className='popover-bt__list-item'
+      className='table-filter-item'
     >
       <Row space className='px-3 no-wrap overflow-hidden py-2'>
-        {title}
+        <div>
+          {title}
+          {subtitle && <div className='text-muted fw-normal'>{subtitle}</div>}
+        </div>
         <div>
           <Icon
             className={classNames('text-body', { 'opacity-0': !isActive })}
