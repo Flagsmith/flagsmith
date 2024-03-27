@@ -307,5 +307,6 @@ export type Req = {
     id: string
   }
   getProject: { id: string }
+  getUserGroupPermission: { project_id: string }
   // END OF TYPES
 }
