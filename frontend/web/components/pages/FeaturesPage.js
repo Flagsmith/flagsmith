@@ -118,8 +118,8 @@ const FeaturesPage = class extends Component {
     value_search: this.state.value_search ? this.state.value_search : undefined,
   })
 
-  onSave = () => {
-    toast('Saved')
+  onSave = (isCreate) => {
+    toast(`${isCreate ? 'Created' : 'Updated'} Feature`)
   }
 
   onError = (error) => {
@@ -502,7 +502,7 @@ const FeaturesPage = class extends Component {
                                     this.getFilter(),
                                   )
                                 }
-                                items={projectFlags}
+                                items={projectFlags?.filter((v) => !v.ignore)}
                                 renderFooter={() => (
                                   <>
                                     <JSONReference

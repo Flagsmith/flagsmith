@@ -89,14 +89,16 @@ export class CreateAPIKey extends PureComponent {
       org_id: AccountStore.getOrganisation().id,
       prefix: prefix,
     }).then((res) => {
+      this.setState({
+        expiry_date: res.data.expiry_date,
+        is_admin: res.data.is_admin,
+        name: res.data.name,
+      })
       getRolesMasterAPIKeyWithMasterAPIKeyRoles(getStore(), {
         org_id: AccountStore.getOrganisation().id,
         prefix: prefix,
       }).then((rolesData) => {
         this.setState({
-          expiry_date: res.data.expiry_date,
-          is_admin: res.data.is_admin,
-          name: res.data.name,
           roles: rolesData.data.results,
         })
       })
@@ -381,13 +383,14 @@ export default class AdminAPIKeys extends PureComponent {
   }
 
   remove = (v) => {
-    openConfirm(
-      'Are you sure?',
-      <div>
-        This will revoke the API key <strong>{v.name}</strong> ({v.prefix}
-        *****************). This change cannot be reversed.
-      </div>,
-      () => {
+    openConfirm({
+      body: (
+        <div>
+          This will revoke the API key <strong>{v.name}</strong> ({v.prefix}
+          *****************). This change cannot be undone.
+        </div>
+      ),
+      onYes: () => {
         data
           .delete(
             `${Project.api}organisations/${this.props.organisationId}/master-api-keys/${v.prefix}/`,
@@ -396,11 +399,14 @@ export default class AdminAPIKeys extends PureComponent {
             this.fetch()
           })
       },
-    )
+      title: 'Revoke the API key',
+      yesText: 'Confirm',
+    })
   }
 
   render() {
     const apiKeys = this.state.apiKeys && this.state.apiKeys.results
+    console.log('DEBUG: apiKeys:', apiKeys)
     const showRoleManagementEnabled = Utils.getFlagsmithHasFeature(
       'show_role_management',
     )
@@ -451,6 +457,7 @@ export default class AdminAPIKeys extends PureComponent {
                 <Flex className='table-column px-3'>API Keys</Flex>
                 <Flex className='table-column'>Created</Flex>
                 <Flex className='table-column'>Is Admin</Flex>
+                <Flex className='table-column'>Active</Flex>
                 <div
                   className='table-column text-center'
                   style={{ width: '80px' }}
@@ -480,6 +487,23 @@ export default class AdminAPIKeys extends PureComponent {
                   </Flex>
                   <Flex className='table-column fs-small lh-sm'>
                     <Switch checked={v.is_admin} disabled={true} />
+                  </Flex>
+                  <Flex className='table-column fs-small lh-sm'>
+                    {v.has_expired ? (
+                      <div className='ml-1'>
+                        <Tooltip title={<Icon name='close-circle' />}>
+                          {'This API key has expired'}
+                        </Tooltip>
+                      </div>
+                    ) : (
+                      <span className='ml-1'>
+                        <Icon
+                          name='checkmark-circle'
+                          fill='#27AB95'
+                          width={28}
+                        />
+                      </span>
+                    )}
                   </Flex>
                   <div
                     className='table-column  text-center'

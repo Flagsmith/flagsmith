@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
+
 import importlib
 import json
 import os
@@ -534,13 +535,13 @@ CHARGEBEE_API_KEY = env("CHARGEBEE_API_KEY", default=None)
 CHARGEBEE_SITE = env("CHARGEBEE_SITE", default=None)
 
 # Logging configuration
+LOG_FORMAT = env.str("LOG_FORMAT", default="generic")
+LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
 LOGGING_CONFIGURATION_FILE = env.str("LOGGING_CONFIGURATION_FILE", default=None)
 if LOGGING_CONFIGURATION_FILE:
     with open(LOGGING_CONFIGURATION_FILE, "r") as f:
         LOGGING = json.loads(f.read())
 else:
-    LOG_FORMAT = env.str("LOG_FORMAT", default="generic")
-    LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
@@ -911,17 +912,13 @@ if SAML_INSTALLED:
     )
 
 
-# Additional functionality needed for using workflows in Flagsmith SaaS
-# python module path to the workflows logic module, e.g. "path.to.workflows"
-WORKFLOWS_LOGIC_MODULE_PATH = env(
-    "WORKFLOWS_LOGIC_MODULE_PATH", "features.workflows.logic"
-)
-WORKFLOWS_LOGIC_INSTALLED = (
-    importlib.util.find_spec(WORKFLOWS_LOGIC_MODULE_PATH) is not None
-)
+WORKFLOWS_LOGIC_INSTALLED = importlib.util.find_spec("workflows_logic") is not None
 
 if WORKFLOWS_LOGIC_INSTALLED:
-    INSTALLED_APPS.append(WORKFLOWS_LOGIC_MODULE_PATH)
+    INSTALLED_APPS.append("workflows_logic")
+
+    if importlib.util.find_spec("workflows_logic.stale_flags") is not None:
+        INSTALLED_APPS.append("workflows_logic.stale_flags")
 
 # Additional functionality for restricting authentication to a set of authentication methods in Flagsmith SaaS
 AUTH_CONTROLLER_INSTALLED = importlib.util.find_spec("auth_controller") is not None
@@ -971,9 +968,11 @@ MAX_SELF_MIGRATABLE_IDENTITIES = env.int("MAX_SELF_MIGRATABLE_IDENTITIES", 10000
 TASK_RUN_METHOD = env.enum(
     "TASK_RUN_METHOD",
     type=TaskRunMethod,
-    default=TaskRunMethod.TASK_PROCESSOR.value
-    if env.bool("RUN_BY_PROCESSOR", False)
-    else TaskRunMethod.SEPARATE_THREAD.value,
+    default=(
+        TaskRunMethod.TASK_PROCESSOR.value
+        if env.bool("RUN_BY_PROCESSOR", False)
+        else TaskRunMethod.SEPARATE_THREAD.value
+    ),
 )
 ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
@@ -1031,6 +1030,13 @@ PIPEDRIVE_IGNORE_DOMAINS_REGEX = env("PIPEDRIVE_IGNORE_DOMAINS_REGEX", "")
 PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID = env(
     "PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID", None
 )
+
+# Hubspot settings
+HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
+ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
+HUBSPOT_IGNORE_DOMAINS = env.list("HUBSPOT_IGNORE_DOMAINS", [])
+HUBSPOT_IGNORE_DOMAINS_REGEX = env("HUBSPOT_IGNORE_DOMAINS_REGEX", "")
+
 
 # List of plan ids that support seat upgrades
 AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
