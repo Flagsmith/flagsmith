@@ -3,7 +3,10 @@ const CreateGroup = require('./modals/CreateGroup')
 import Button from './base/forms/Button'
 import AccountStore from 'common/stores/account-store'
 import { UserGroup, GroupPermission } from 'common/types/responses'
-import { useDeleteGroupMutation } from 'common/services/useGroup'
+import {
+  useDeleteGroupMutation,
+  useGetGroupsQuery,
+} from 'common/services/useGroup'
 import { useGetUserGroupPermissionQuery } from 'common/services/useUserGroupPermission'
 import PanelSearch from './PanelSearch'
 import { sortBy } from 'lodash'
@@ -135,8 +138,9 @@ const UserGroupsList: FC<UserGroupsListType> = ({
   showRemove,
 }) => {
   const [page, setPage] = useState(1)
-  const { data: userGroups, isLoading } = useGetGroupSummariesQuery({
+  const { data: userGroups, isLoading } = useGetGroupsQuery({
     orgId: `${orgId}`,
+    page: 1,
   })
   const { data: userGroupsPermission, isLoading: userGroupPermissionLoading } =
     useGetUserGroupPermissionQuery(
@@ -153,7 +157,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
     : []
 
   if (userGroupsPermission?.length > 0) {
-    userGroups?.forEach((group) => {
+    userGroups?.results.forEach((group) => {
       const existingPermissionIndex =
         mergeduserGroupsPermissionWithUserGroups.findIndex(
           (userGroupPermission) => userGroupPermission.group.id === group.id,
@@ -186,7 +190,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
         items={
           userGroupsPermission
             ? sortBy(mergeduserGroupsPermissionWithUserGroups, 'group.name')
-            : sortBy(userGroups, 'name')
+            : sortBy(userGroups?.results, 'name')
         }
         paging={mergeduserGroupsPermissionWithUserGroups || userGroups}
         nextPage={() => setPage(page + 1)}

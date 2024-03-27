@@ -419,9 +419,7 @@ const OrganisationSettingsPage = class extends Component {
                   subscriptionMeta,
                   users,
                 }) => {
-                  const canManageGroups =
-                    this.state.permissions.includes('MANAGE_USER_GROUPS') ||
-                    !!groups?.length
+                  const canManageGroups = !!groups?.length
                   const { max_seats } = subscriptionMeta ||
                     organisation.subscription || { max_seats: 1 }
                   const isAWS =
