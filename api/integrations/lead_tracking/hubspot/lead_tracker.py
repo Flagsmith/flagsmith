@@ -83,7 +83,9 @@ class HubspotLeadTracker(LeadTracker):
 
         return response["id"]
 
-    def update_company_active_subscription(self, subscription: Subscription) -> dict:
+    def update_company_active_subscription(
+        self, subscription: Subscription
+    ) -> dict | None:
         if not subscription.plan:
             return
 
