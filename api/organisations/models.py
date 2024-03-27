@@ -17,7 +17,10 @@ from django_lifecycle import (
 from simple_history.models import HistoricalRecords
 
 from app.utils import is_enterprise, is_saas
-from integrations.lead_tracking.hubspot.tasks import track_hubspot_lead
+from integrations.lead_tracking.hubspot.tasks import (
+    track_hubspot_lead,
+    update_hubspot_active_subscription,
+)
 from organisations.chargebee import (
     get_customer_id_from_subscription_id,
     get_max_api_calls_for_plan,
@@ -250,6 +253,13 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
     @property
     def is_free_plan(self) -> bool:
         return self.plan == FREE_PLAN_ID
+
+    @hook(AFTER_SAVE, when="plan", has_changed=True)
+    def update_hubspot_active_subscription(self):
+        if not settings.ENABLE_HUBSPOT_LEAD_TRACKING:
+            return
+
+        update_hubspot_active_subscription.delay(args=(self.id,))
 
     @hook(AFTER_SAVE, when="cancellation_date", has_changed=True)
     @hook(AFTER_SAVE, when="subscription_id", has_changed=True)
