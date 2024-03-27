@@ -33,7 +33,6 @@ const FeaturesPage = class extends Component {
     super(props, context)
     this.state = {
       group_owners: [],
-      group_owners: [],
       loadedOnce: false,
       owners: [],
       search: null,
