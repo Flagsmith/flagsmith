@@ -40,6 +40,7 @@ from features.models import (
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import BOOLEAN, INTEGER, STRING
 from features.versioning.models import EnvironmentFeatureVersion
+from metadata.models import MetadataModelField
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
@@ -2230,6 +2231,138 @@ def test_cannot_update_feature_of_a_feature_state(
     )
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_create_feature_without_required_metadata_returns_400(
+    project: Project,
+    client: APIClient,
+    required_a_feature_metadata_field: MetadataModelField,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    description = "This is the description"
+    data = {
+        "name": "Test feature",
+        "description": description,
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_create_feature_with_optional_metadata_returns_201(
+    project: Project,
+    client: APIClient,
+    optional_b_feature_metadata_field: MetadataModelField,
+):
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    description = "This is the description"
+    field_value = 10
+    data = {
+        "name": "Test feature",
+        "description": description,
+        "metadata": [
+            {
+                "model_field": optional_b_feature_metadata_field.id,
+                "field_value": field_value,
+            },
+        ],
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert (
+        response.json()["metadata"][0]["model_field"]
+        == optional_b_feature_metadata_field.id
+    )
+    assert response.json()["metadata"][0]["field_value"] == str(field_value)
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_create_feature_with_required_metadata_returns_201(
+    project: Project,
+    client: APIClient,
+    required_a_feature_metadata_field: MetadataModelField,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    description = "This is the description"
+    field_value = 10
+    data = {
+        "name": "Test feature",
+        "description": description,
+        "metadata": [
+            {
+                "model_field": required_a_feature_metadata_field.id,
+                "field_value": field_value,
+            },
+        ],
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert (
+        response.json()["metadata"][0]["model_field"]
+        == required_a_feature_metadata_field.id
+    )
+    assert response.json()["metadata"][0]["field_value"] == str(field_value)
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_create_feature_with_required_metadata_using_organisation_content_typereturns_201(
+    project: Project,
+    client: APIClient,
+    required_a_feature_metadata_field_using_organisation_content_type: MetadataModelField,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    description = "This is the description"
+    field_value = 10
+    data = {
+        "name": "Test feature",
+        "description": description,
+        "metadata": [
+            {
+                "model_field": required_a_feature_metadata_field_using_organisation_content_type.id,
+                "field_value": field_value,
+            },
+        ],
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert (
+        response.json()["metadata"][0]["model_field"]
+        == required_a_feature_metadata_field_using_organisation_content_type.id
+    )
+    assert response.json()["metadata"][0]["field_value"] == str(field_value)
+
+
 def test_create_segment_override__using_simple_feature_state_viewset__allows_manage_segment_overrides(
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -2402,7 +2535,7 @@ def test_list_features_n_plus_1(
         v1_feature_state.clone(env=environment, version=i, live_from=timezone.now())
 
     # When
-    with django_assert_num_queries(14):
+    with django_assert_num_queries(15):
         response = staff_client.get(url)
 
     # Then
@@ -2759,7 +2892,7 @@ def test_feature_list_last_modified_values(
         Feature.objects.create(name=f"feature_{i}", project=project)
 
     # When
-    with django_assert_num_queries(14):  # TODO: reduce this number of queries!
+    with django_assert_num_queries(17):  # TODO: reduce this number of queries!
         response = staff_client.get(url)
 
     # Then

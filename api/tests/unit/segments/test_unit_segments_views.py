@@ -15,6 +15,7 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature
+from metadata.models import MetadataModelField
 from projects.models import Project
 from projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
@@ -336,8 +337,8 @@ def test_get_segment_by_uuid(client, project, segment):
 @pytest.mark.parametrize(
     "client, num_queries",
     [
-        (lazy_fixture("admin_master_api_key_client"), 11),
-        (lazy_fixture("admin_client"), 10),
+        (lazy_fixture("admin_master_api_key_client"), 16),
+        (lazy_fixture("admin_client"), 15),
     ],
 )
 def test_list_segments(django_assert_num_queries, project, client, num_queries):
@@ -608,6 +609,108 @@ def test_update_segment_delete_existing_rule(project, client, segment, segment_r
     assert segment_rule.conditions.count() == 0
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_create_segment_with_required_metadata_returns_201(
+    project: Project,
+    client: APIClient,
+    required_a_segment_metadata_field: MetadataModelField,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    description = "This is the description"
+    field_value = 10
+    data = {
+        "name": "Test Segment",
+        "description": description,
+        "project": project.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        "metadata": [
+            {
+                "model_field": required_a_segment_metadata_field.id,
+                "field_value": field_value,
+            },
+        ],
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert (
+        response.json()["metadata"][0]["model_field"]
+        == required_a_segment_metadata_field.id
+    )
+    assert response.json()["metadata"][0]["field_value"] == str(field_value)
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_create_segment_with_required_metadata_using_organisation_content_type_returns_201(
+    project: Project,
+    client: APIClient,
+    required_a_segment_metadata_field_using_organisation_content_type: MetadataModelField,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    description = "This is the description"
+    field_value = 10
+    data = {
+        "name": "Test Segment",
+        "description": description,
+        "project": project.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        "metadata": [
+            {
+                "model_field": required_a_segment_metadata_field_using_organisation_content_type.id,
+                "field_value": field_value,
+            },
+        ],
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert (
+        response.json()["metadata"][0]["model_field"]
+        == required_a_segment_metadata_field_using_organisation_content_type.id
+    )
+    assert response.json()["metadata"][0]["field_value"] == str(field_value)
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_create_segment_without_required_metadata_returns_400(
+    project: Project,
+    client: APIClient,
+    required_a_segment_metadata_field: MetadataModelField,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    description = "This is the description"
+    data = {
+        "name": "Test Segment",
+        "description": description,
+        "project": project.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
 def test_update_segment_obeys_max_conditions(
     project: Project,
     admin_client: APIClient,
@@ -681,6 +784,44 @@ def test_update_segment_obeys_max_conditions(
 
     nested_rule.refresh_from_db()
     assert nested_rule.conditions.count() == 1
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_create_segment_with_optional_metadata_returns_201(
+    project: Project,
+    client: APIClient,
+    optional_b_segment_metadata_field: MetadataModelField,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    description = "This is the description"
+    field_value = 10
+    data = {
+        "name": "Test Segment",
+        "description": description,
+        "project": project.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        "metadata": [
+            {
+                "model_field": optional_b_segment_metadata_field.id,
+                "field_value": field_value,
+            },
+        ],
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert (
+        response.json()["metadata"][0]["model_field"]
+        == optional_b_segment_metadata_field.id
+    )
+    assert response.json()["metadata"][0]["field_value"] == str(field_value)
 
 
 def test_update_segment_evades_max_conditions_when_whitelisted(
@@ -809,7 +950,6 @@ def test_create_segment_obeys_max_conditions(
     assert response.json() == {
         "segment": "The segment has 11 conditions, which exceeds the maximum condition count of 10."
     }
-
     assert Segment.objects.count() == 0
 
 
