@@ -139,7 +139,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
   const [page, setPage] = useState(1)
   const { data: userGroups, isLoading } = useGetGroupsQuery({
     orgId: `${orgId}`,
-    page: 1,
+    page,
   })
   const { data: userGroupsPermission, isLoading: userGroupPermissionLoading } =
     useGetUserGroupPermissionQuery(
