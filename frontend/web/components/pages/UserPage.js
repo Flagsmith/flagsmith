@@ -407,29 +407,6 @@ const UserPage = class extends Component {
                                           value={this.state.search}
                                         />
                                         <Row className='flex-fill justify-content-end'>
-                                          {enabledStateFilter && (
-                                            <TableValueFilter
-                                              className='me-4'
-                                              useLocalStorage
-                                              value={{
-                                                enabled: this.state.is_enabled,
-                                                valueSearch:
-                                                  this.state.value_search,
-                                              }}
-                                              onChange={({
-                                                enabled,
-                                                valueSearch,
-                                              }) => {
-                                                this.setState(
-                                                  {
-                                                    is_enabled: enabled,
-                                                    value_search: valueSearch,
-                                                  },
-                                                  this.filter,
-                                                )
-                                              }}
-                                            />
-                                          )}
                                           <TableTagFilter
                                             useLocalStorage
                                             projectId={projectId}
@@ -515,6 +492,29 @@ const UserPage = class extends Component {
                                               )
                                             }}
                                           />
+                                          {enabledStateFilter && (
+                                            <TableValueFilter
+                                              className='me-4'
+                                              useLocalStorage
+                                              value={{
+                                                enabled: this.state.is_enabled,
+                                                valueSearch:
+                                                  this.state.value_search,
+                                              }}
+                                              onChange={({
+                                                enabled,
+                                                valueSearch,
+                                              }) => {
+                                                this.setState(
+                                                  {
+                                                    is_enabled: enabled,
+                                                    value_search: valueSearch,
+                                                  },
+                                                  this.filter,
+                                                )
+                                              }}
+                                            />
+                                          )}
                                           <TableFilterOptions
                                             title={'View'}
                                             className={'me-4'}

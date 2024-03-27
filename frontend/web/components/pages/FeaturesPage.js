@@ -316,45 +316,6 @@ const FeaturesPage = class extends Component {
                                         value={this.state.search}
                                       />
                                       <Row className='flex-fill justify-content-end'>
-                                        {enabledStateFilter && (
-                                          <TableValueFilter
-                                            title={'State'}
-                                            className={'me-4'}
-                                            projectId={projectId}
-                                            useLocalStorage
-                                            value={{
-                                              enabled: this.state.is_enabled,
-                                              valueSearch:
-                                                this.state.value_search,
-                                            }}
-                                            onChange={({
-                                              enabled,
-                                              valueSearch,
-                                            }) => {
-                                              this.setState(
-                                                {
-                                                  is_enabled: enabled,
-                                                  value_search: valueSearch,
-                                                },
-                                                this.filter,
-                                              )
-                                            }}
-                                            options={[
-                                              {
-                                                label: 'Any',
-                                                value: null,
-                                              },
-                                              {
-                                                label: 'Enabled',
-                                                value: true,
-                                              },
-                                              {
-                                                label: 'Disabled',
-                                                value: false,
-                                              },
-                                            ]}
-                                          />
-                                        )}
                                         <TableTagFilter
                                           useLocalStorage
                                           isLoading={FeatureListStore.isLoading}
@@ -428,6 +389,45 @@ const FeaturesPage = class extends Component {
                                             )
                                           }}
                                         />
+                                        {enabledStateFilter && (
+                                          <TableValueFilter
+                                            title={'State'}
+                                            className={'me-4'}
+                                            projectId={projectId}
+                                            useLocalStorage
+                                            value={{
+                                              enabled: this.state.is_enabled,
+                                              valueSearch:
+                                                this.state.value_search,
+                                            }}
+                                            onChange={({
+                                              enabled,
+                                              valueSearch,
+                                            }) => {
+                                              this.setState(
+                                                {
+                                                  is_enabled: enabled,
+                                                  value_search: valueSearch,
+                                                },
+                                                this.filter,
+                                              )
+                                            }}
+                                            options={[
+                                              {
+                                                label: 'Any',
+                                                value: null,
+                                              },
+                                              {
+                                                label: 'Enabled',
+                                                value: true,
+                                              },
+                                              {
+                                                label: 'Disabled',
+                                                value: false,
+                                              },
+                                            ]}
+                                          />
+                                        )}
                                         <TableFilterOptions
                                           title={'View'}
                                           className={'me-4'}
