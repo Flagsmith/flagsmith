@@ -2,9 +2,7 @@
 
 :::tip
 
-Real-time Flags are part of our SaaS Scale-Up and Enterprise plans.
-
-Real-time Flags are currently in beta. Please contact us to join the beta!
+Real-time Flags are currently part of our SaaS Enterprise plans.
 
 :::
 
