@@ -1,10 +1,10 @@
 import json
 import logging
+import os
 import sys
 from datetime import datetime
 from typing import Any
 
-from django.conf import settings
 from gunicorn.config import Config
 from gunicorn.glogging import Logger as GunicornLogger
 
@@ -54,7 +54,7 @@ class GunicornAccessLogJsonFormatter(JsonFormatter):
 class GunicornJsonCapableLogger(GunicornLogger):
     def setup(self, cfg: Config) -> None:
         super().setup(cfg)
-        if settings.LOG_FORMAT == "json":
+        if os.getenv("LOG_FORMAT") == "json":
             self._set_handler(
                 self.error_log,
                 cfg.errorlog,
