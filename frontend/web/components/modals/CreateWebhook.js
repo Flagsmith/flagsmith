@@ -139,6 +139,7 @@ const CreateWebhook = class extends Component {
                     <TestWebhook
                       json={Constants.exampleWebhook}
                       webhook={this.state.url}
+                      secret={this.state.secret}
                     />
                     {isEdit ? (
                       <Button
