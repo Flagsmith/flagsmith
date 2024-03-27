@@ -7,7 +7,7 @@ export const githubIntegrationService = service
   .injectEndpoints({
     endpoints: (builder) => ({
       createGithubIntegration: builder.mutation<
-        Res['githubIntegration'],
+        Res['githubIntegrations'],
         Req['createGithubIntegration']
       >({
         invalidatesTags: [{ id: 'LIST', type: 'GithubIntegration' }],
@@ -18,7 +18,7 @@ export const githubIntegrationService = service
         }),
       }),
       deleteGithubIntegration: builder.mutation<
-        Res['githubIntegration'],
+        Res['githubIntegrations'],
         Req['deleteGithubIntegration']
       >({
         invalidatesTags: [{ id: 'LIST', type: 'GithubIntegration' }],
@@ -29,22 +29,19 @@ export const githubIntegrationService = service
         }),
       }),
       getGithubIntegration: builder.query<
-        Res['githubIntegration'],
+        Res['githubIntegrations'],
         Req['getGithubIntegration']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'GithubIntegration' }],
+        providesTags: [{ id: 'LIST', type: 'GithubIntegration' }],
         query: (query: Req['getGithubIntegration']) => ({
           url: `organisations/${query.organisation_id}/integrations/github/`,
         }),
       }),
       updateGithubIntegration: builder.mutation<
-        Res['githubIntegration'],
+        Res['githubIntegrations'],
         Req['updateGithubIntegration']
       >({
-        invalidatesTags: (res) => [
-          { id: 'LIST', type: 'GithubIntegration' },
-          { id: res?.id, type: 'GithubIntegration' },
-        ],
+        invalidatesTags: [{ id: 'LIST', type: 'GithubIntegration' }],
         query: (query: Req['updateGithubIntegration']) => ({
           body: query,
           method: 'PUT',

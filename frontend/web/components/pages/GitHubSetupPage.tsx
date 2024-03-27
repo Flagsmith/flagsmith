@@ -66,22 +66,40 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
   }, [repos, reposLoaded])
 
   useEffect(() => {
-    if (isSuccessCreatedGithubRepository) {
+    if (
+      isSuccessCreatedGithubRepository &&
+      !localStorage?.githubIntegrationTrigger
+    ) {
       window.location.href = `${baseUrl}/`
     }
   }, [isSuccessCreatedGithubRepository])
 
   useEffect(() => {
     if (localStorage?.githubIntegrationTrigger) {
-      const dataToSend = { 'installationId': installationId }
-      window.opener.postMessage(dataToSend, '*')
+      createGithubIntegration({
+        body: {
+          installation_id: installationId,
+        },
+        organisation_id: JSON.parse(localStorage.lastEnv).orgId,
+      })
     }
   }, [])
 
   useEffect(() => {
     const createRepositories = async () => {
       try {
-        if (data && isSuccessCreateGithubIntegration) {
+        if (
+          isSuccessCreateGithubIntegration &&
+          localStorage?.githubIntegrationTrigger
+        ) {
+          const dataToSend = { 'installationId': installationId }
+          window.opener.postMessage(dataToSend, '*')
+        }
+        if (
+          data &&
+          isSuccessCreateGithubIntegration &&
+          !localStorage?.githubIntegrationTrigger
+        ) {
           const promises = []
           for (const project of projects) {
             const promise = createGithubRepository({

@@ -7,8 +7,6 @@ import ModalHR from './ModalHR'
 import Button from 'components/base/forms/Button'
 import GithubRepositoriesTable from 'components/GithubRepositoriesTable'
 import classNames from 'classnames'
-import { getGithubRepositories } from 'common/services/useGithubRepository'
-import { getStore } from 'common/store'
 
 const CreateEditIntegration = class extends Component {
   static displayName = 'CreateEditIntegration'
@@ -27,7 +25,6 @@ const CreateEditIntegration = class extends Component {
         ? { ...this.props.data }
         : { fields, ...defaultValues },
       fields,
-      githubRepositories: [],
     }
     if (this.props.id === 'slack' && this.state.data.flagsmithEnvironment) {
       _data
@@ -47,22 +44,6 @@ const CreateEditIntegration = class extends Component {
           })
           this.setState({ authorised: true })
         })
-    }
-  }
-
-  componentDidMount() {
-    if (
-      Utils.getFlagsmithHasFeature('github_integration') &&
-      this.props.githubId
-    ) {
-      getGithubRepositories(getStore(), {
-        github_id: this.props.githubId,
-        organisation_id: AccountStore.getOrganisation().id,
-      }).then((res) => {
-        this.setState({
-          githubRepositories: res?.data?.results,
-        })
-      })
     }
   }
 

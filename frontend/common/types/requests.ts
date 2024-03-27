@@ -251,8 +251,8 @@ export type Req = {
   createExternalResource: { feature_id: string; body: ExternalResource }
 
   getGithubIntegration: {
-    organisation_id: number
-    id: string
+    organisation_id: string
+    id?: string
   }
   updateGithubIntegration: {
     organisation_id: string

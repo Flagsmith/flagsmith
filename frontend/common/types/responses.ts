@@ -305,6 +305,12 @@ export type GithubRepository = {
   repository_name: string
 }
 
+export type githubIntegration = {
+  id: string
+  installation_id: string
+  organisation: string
+}
+
 export type User = {
   id: number
   email: string
@@ -644,7 +650,7 @@ export type Res = {
   changeRequests: PagedResponse<ChangeRequestSummary>
   groupSummaries: UserGroupSummary[]
   externalResource: PagedResponse<ExternalResource>
-  githubIntegration: { id: string }
+  githubIntegrations: PagedResponse<githubIntegration>
   githubRepository: PagedResponse<GithubRepository>
   githubIssues: Issue[]
   githubPulls: PullRequest[]

@@ -9,6 +9,7 @@ const CreateEditIntegration = require('./modals/CreateEditIntegrationModal')
 
 class Integration extends Component {
   state = {
+    reFetchgithubId: '',
     windowInstallationId: '',
   }
   add = () => {
@@ -18,8 +19,15 @@ class Integration extends Component {
       this.props.addIntegration(
         this.props.integration,
         this.props.id,
-        this.props.githubId,
         this.props.installationId,
+        this.props.githubId,
+      )
+    } else if (this.state.windowInstallationId) {
+      this.props.addIntegration(
+        this.props.integration,
+        this.props.id,
+        this.state.windowInstallationId,
+        this.state.reFetchgithubId,
       )
     } else {
       this.props.addIntegration(this.props.integration, this.props.id)
@@ -39,10 +47,20 @@ class Integration extends Component {
         event.source === childWindow &&
         event.data?.hasOwnProperty('installationId')
       ) {
-        console.log('DEBUG: addEventListener', event.data.installationId)
         this.setState({ windowInstallationId: event.data.installationId })
         localStorage.removeItem('githubIntegrationTrigger')
         childWindow.close()
+        getGithubIntegration(
+          getStore(),
+          {
+            organisation_id: AccountStore.getOrganisation().id,
+          },
+          { forceRefetch: true },
+        ).then((res) => {
+          this.setState({
+            reFetchgithubId: res?.data?.results[0]?.id,
+          })
+        })
       }
     })
   }
@@ -324,8 +342,8 @@ class IntegrationList extends Component {
   addIntegration = (
     integration,
     id,
-    githubId = undefined,
     installationId = undefined,
+    githubId = undefined,
   ) => {
     const params = Utils.fromParam()
     openModal(
