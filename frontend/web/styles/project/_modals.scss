@@ -165,6 +165,19 @@ $side-width: 660px;
   }
   &.table-filter {
     top:12px;
+    .table-filter-lg {
+      width: 300px;
+    }
+  }
+  &--lg {
+    width: 355px;
+    .inline-modal__title {
+      padding: 8px 12px;
+      * {
+        font-size: $font-sm !important;
+        line-height: $line-height-sm !important;
+      }
+    }
   }
   &--sm {
     min-width: 200px;
@@ -256,7 +269,13 @@ $side-width: 660px;
     pointer-events: none;
   }
 }
-
+.table-filter-list {
+  overflow-y: auto;
+  max-height: 350px;
+  @include customScroll();
+  text-overflow: ellipsis;
+  overflow-x: hidden;
+}
 .table-filter-item {
   display: block;
   border-bottom: 1px solid $input-border-color;

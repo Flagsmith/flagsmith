@@ -63,6 +63,7 @@ const TableOwnerFilter: FC<TableFilterType> = ({
 
   return (
     <TableFilterOptions
+      size='lg'
       className={className}
       isLoading={isLoading}
       title={

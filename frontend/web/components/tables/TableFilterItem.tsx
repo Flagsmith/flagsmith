@@ -28,7 +28,7 @@ const TableFilterItem: FC<TableFilterItemType> = ({
       className='table-filter-item'
     >
       <Row space className='px-3 no-wrap overflow-hidden py-2'>
-        <div>
+        <div className={'overflow-ellipsis'}>
           {title}
           {subtitle && <div className='text-muted fw-normal'>{subtitle}</div>}
         </div>

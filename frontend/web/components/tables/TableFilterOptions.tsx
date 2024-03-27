@@ -11,6 +11,7 @@ type TableFilterType = {
   title: ReactNode
   dropdownTitle?: ReactNode | string
   className?: string
+  size?: 'sm' | 'lg'
   isLoading?: boolean
   options: { label: string; value: string | number; subtitle?: string }[]
   onChange: (value: string | string[]) => void | Promise<void>
@@ -26,6 +27,7 @@ const TableFilter: FC<TableFilterType> = ({
   onChange,
   options,
   showSearch,
+  size = 'sm',
   title,
   value,
 }) => {
@@ -74,7 +76,7 @@ const TableFilter: FC<TableFilterType> = ({
             }, 10)
           }}
           containerClassName='px-0'
-          className='inline-modal table-filter inline-modal--sm right'
+          className={`inline-modal table-filter inline-modal--${size} right`}
         >
           {!!showSearch && (
             <div className='px-2 mt-2 mb-2'>
@@ -95,32 +97,36 @@ const TableFilter: FC<TableFilterType> = ({
               )}
             </div>
           )}
-          {filteredOptions.map((v) => (
-            <TableFilterItem
-              key={v.value}
-              title={v.label}
-              subtitle={v.subtitle}
-              onClick={() => {
-                if (!multiple) {
-                  setOpen(false)
-                }
-                if (multiple) {
-                  if (value.includes(v.value)) {
-                    onChange(
-                      ((value as string[]) || []).filter(
-                        (item) => item !== v.value,
-                      ),
-                    )
-                  } else {
-                    onChange(((value as string[]) || []).concat([v.value]))
+          <div className='table-filter-list'>
+            {filteredOptions.map((v) => (
+              <TableFilterItem
+                key={v.value}
+                title={v.label}
+                subtitle={v.subtitle}
+                onClick={() => {
+                  if (!multiple) {
+                    setOpen(false)
                   }
-                } else {
-                  onChange(v.value)
+                  if (multiple) {
+                    if (value.includes(v.value)) {
+                      onChange(
+                        ((value as string[]) || []).filter(
+                          (item) => item !== v.value,
+                        ),
+                      )
+                    } else {
+                      onChange(((value as string[]) || []).concat([v.value]))
+                    }
+                  } else {
+                    onChange(v.value)
+                  }
+                }}
+                isActive={
+                  multiple ? value?.includes(v.value) : value === v.value
                 }
-              }}
-              isActive={multiple ? value?.includes(v.value) : value === v.value}
-            />
-          ))}
+              />
+            ))}
+          </div>
         </InlineModal>
       )}
     </div>
