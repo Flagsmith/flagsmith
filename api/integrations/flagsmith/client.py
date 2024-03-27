@@ -9,6 +9,7 @@ environment_flags = get_client().get_environment_flags()
 identity_flags = get_client().get_identity_flags()
 ```
 """
+
 import typing
 
 from django.conf import settings

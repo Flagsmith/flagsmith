@@ -1,5 +1,4 @@
 import json
-import logging
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -16,19 +15,7 @@ from task_processor.exceptions import InvalidArgumentsError
 from task_processor.models import RecurringTask, Task, TaskPriority
 from task_processor.task_registry import get_task
 from task_processor.task_run_method import TaskRunMethod
-
-
-@pytest.fixture
-def capture_task_processor_logger(caplog: pytest.LogCaptureFixture) -> None:
-    # caplog doesn't allow you to capture logging outputs from loggers that don't
-    # propagate to root. Quick hack here to get the task_processor logger to
-    # propagate.
-    # TODO: look into using loguru.
-    task_processor_logger = logging.getLogger("task_processor")
-    task_processor_logger.propagate = True
-    # Assume required level for the logger.
-    task_processor_logger.setLevel(logging.INFO)
-    caplog.set_level(logging.INFO)
+from tests.unit.task_processor.conftest import GetTaskProcessorCaplog
 
 
 @pytest.fixture
@@ -44,11 +31,12 @@ def mock_thread_class(
 
 @pytest.mark.django_db
 def test_register_task_handler_run_in_thread__transaction_commit__true__default(
-    capture_task_processor_logger: None,
-    caplog: pytest.LogCaptureFixture,
+    get_task_processor_caplog: GetTaskProcessorCaplog,
     mock_thread_class: MagicMock,
 ) -> None:
     # Given
+    caplog = get_task_processor_caplog()
+
     @register_task_handler()
     def my_function(*args: str, **kwargs: str) -> None:
         pass
@@ -77,11 +65,12 @@ def test_register_task_handler_run_in_thread__transaction_commit__true__default(
 
 
 def test_register_task_handler_run_in_thread__transaction_commit__false(
-    capture_task_processor_logger: None,
-    caplog: pytest.LogCaptureFixture,
+    get_task_processor_caplog: GetTaskProcessorCaplog,
     mock_thread_class: MagicMock,
 ) -> None:
     # Given
+    caplog = get_task_processor_caplog()
+
     @register_task_handler(transaction_on_commit=False)
     def my_function(*args, **kwargs):
         pass
