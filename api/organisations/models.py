@@ -48,6 +48,10 @@ from organisations.subscriptions.constants import (
 from organisations.subscriptions.exceptions import (
     SubscriptionDoesNotSupportSeatUpgrade,
 )
+from organisations.subscriptions.licensing.licensing import (
+    licence_file_exists,
+    read_license_file,
+)
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from users.utils.mailer_lite import MailerLite
@@ -388,10 +392,18 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         if not is_enterprise():
             return FREE_PLAN_SUBSCRIPTION_METADATA
 
+        if licence_file_exists():
+            licence_information = read_license_file()
+            return BaseSubscriptionMetadata(
+                seats=licence_information.get_remaining_seats(),
+                projects=licence_information.get_remaining_projects(),
+            )
+
         return BaseSubscriptionMetadata(
-            seats=self.max_seats,
-            api_calls=self.max_api_calls,
-            projects=None,
+            seats=MAX_SEATS_IN_FREE_PLAN,
+            # TODO: this should probably just be None, we don't restrict API calls on prem
+            api_calls=MAX_API_CALLS_IN_FREE_PLAN,
+            projects=settings.MAX_PROJECTS_IN_FREE_PLAN,
         )
 
     def add_single_seat(self):
