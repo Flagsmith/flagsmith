@@ -65,7 +65,10 @@ class HubspotLeadTracker(LeadTracker):
         if getattr(organisation, "hubspot_organisation", None):
             return organisation.hubspot_organisation.hubspot_id
 
-        response = self.client.create_company(name=organisation.name)
+        response = self.client.create_company(
+            name=organisation.name,
+            organisation_id=organisation.id,
+        )
         # Store the organisation data in the database since we are
         # unable to look them up via a unique identifier.
         HubspotOrganisation.objects.create(
