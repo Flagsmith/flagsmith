@@ -417,14 +417,12 @@ const controller = {
     const env = ProjectStore.getEnvironment(environmentId)
     let environment_feature_versions = null
     if (env.use_v2_feature_versioning) {
-      if (changeRequest.environment_feature_versions) {
-        debugger
-      }
       const featureStates = [
         Object.assign({}, environmentFlag, {
           enabled: flag.default_enabled,
           feature_state_value: flag.initial_value,
           hide_from_client: flag.hide_from_client,
+          live_from: flag.live_from,
         }),
       ]
       const version = await createAndSetFeatureVersion(getStore(), {
