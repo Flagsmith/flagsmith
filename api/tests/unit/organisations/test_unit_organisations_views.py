@@ -1679,3 +1679,32 @@ def test_user_from_another_organisation_cannot_list_group_summaries(
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_list_groups_only_returns_groups_that_user_is_admin_of(
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    user_permission_group: UserPermissionGroup,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-groups-list", args=[organisation.id]
+    )
+
+    assert staff_user.belongs_to(organisation.id)
+
+    group_2 = UserPermissionGroup.objects.create(
+        organisation=organisation, name="group 2"
+    )
+    staff_user.add_to_group(group_2, group_admin=True)
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["name"] == group_2.name

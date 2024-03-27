@@ -48,3 +48,7 @@ class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):
             live_from=live_from, published_by=self.context["request"].user
         )
         return self.instance
+
+
+class EnvironmentFeatureVersionQuerySerializer(serializers.Serializer):
+    is_live = serializers.BooleanField(allow_null=True)
