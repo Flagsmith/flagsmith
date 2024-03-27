@@ -226,6 +226,7 @@ export type Req = {
   getFeatureVersions: PagedRequest<{
     featureId: number
     environmentId: string
+    is_live?: boolean
   }>
   getUsers: { organisationId: number }
   getFeatureVersion: {
