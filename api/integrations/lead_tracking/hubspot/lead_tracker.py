@@ -3,7 +3,11 @@ import logging
 from django.conf import settings
 
 from integrations.lead_tracking.lead_tracking import LeadTracker
-from organisations.models import HubspotOrganisation, Organisation
+from organisations.models import (
+    HubspotOrganisation,
+    Organisation,
+    Subscription,
+)
 from users.models import FFAdminUser, HubspotLead
 
 from .client import HubspotClient
@@ -54,27 +58,59 @@ class HubspotLeadTracker(LeadTracker):
             # for an existing organisation, so return early.
             return
 
-        hubspot_id = self.get_or_create_organisation_hubspot_id(organisation)
+        hubspot_id = self.get_or_create_organisation_hubspot_id(organisation, user)
 
         response = self.client.create_contact(user, hubspot_id)
 
         HubspotLead.objects.create(user=user, hubspot_id=response["id"])
 
-    def get_or_create_organisation_hubspot_id(self, organisation: Organisation) -> str:
+    def get_or_create_organisation_hubspot_id(
+        self, organisation: Organisation, user: FFAdminUser
+    ) -> str:
         """
         Return the Hubspot API's id for an organisation.
         """
         if getattr(organisation, "hubspot_organisation", None):
             return organisation.hubspot_organisation.hubspot_id
 
-        response = self.client.create_company(name=organisation.name)
+        if user.email_domain in settings.HUBSPOT_IGNORE_ORGANISATION_DOMAINS:
+            domain = None
+        else:
+            domain = user.email_domain
+        response = self.client.create_company(
+            name=organisation.name,
+            active_subscription=organisation.subscription.plan,
+            organisation_id=organisation.id,
+            domain=domain,
+        )
+
         # Store the organisation data in the database since we are
         # unable to look them up via a unique identifier.
         HubspotOrganisation.objects.create(
             organisation=organisation,
             hubspot_id=response["id"],
         )
+
         return response["id"]
+
+    def update_company_active_subscription(
+        self, subscription: Subscription
+    ) -> dict | None:
+        if not subscription.plan:
+            return
+
+        organisation = subscription.organisation
+
+        # Check if we're missing the associated hubspot id.
+        if not getattr(organisation, "hubspot_organisation", None):
+            return
+
+        response = self.client.update_company(
+            active_subscription=subscription.plan,
+            hubspot_company_id=organisation.hubspot_organisation.hubspot_id,
+        )
+
+        return response
 
     def _get_client(self) -> HubspotClient:
         return HubspotClient()

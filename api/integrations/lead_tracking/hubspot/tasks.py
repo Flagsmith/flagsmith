@@ -22,3 +22,16 @@ def track_hubspot_lead(user_id: int, organisation_id: int) -> None:
 
     hubspot_lead_tracker = HubspotLeadTracker()
     hubspot_lead_tracker.create_lead(user=user, organisation=organisation)
+
+
+@register_task_handler()
+def update_hubspot_active_subscription(subscription_id: int) -> None:
+    assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
+
+    from organisations.models import Subscription
+
+    from .lead_tracker import HubspotLeadTracker
+
+    subscription = Subscription.objects.get(id=subscription_id)
+    hubspot_lead_tracker = HubspotLeadTracker()
+    hubspot_lead_tracker.update_company_active_subscription(subscription)
