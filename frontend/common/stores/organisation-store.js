@@ -8,11 +8,11 @@ const _ = require('lodash')
 const controller = {
   createProject: (name) => {
     store.saving()
+    const defaultEnvironmentNames = Utils.getFlagsmithValue('default_environment_names_for_new_project') ? JSON.parse(Utils.getFlagsmithValue('default_environment_names_for_new_project')) : ['Development', 'Production']
     const createSampleUser = (res, envName, project) =>
       data
         .post(
-          `${Project.api}environments/${
-            res.api_key
+          `${Project.api}environments/${res.api_key
           }/${Utils.getIdentitiesEndpoint(project)}/`,
           {
             environment: res.id,
@@ -30,20 +30,16 @@ const controller = {
     data
       .post(`${Project.api}projects/`, { name, organisation: store.id })
       .then((project) => {
-        Promise.all([
-          data
-            .post(`${Project.api}environments/`, {
-              name: 'Development',
-              project: project.id,
-            })
-            .then((res) => createSampleUser(res, 'development', project)),
-          data
-            .post(`${Project.api}environments/`, {
-              name: 'Production',
-              project: project.id,
-            })
-            .then((res) => createSampleUser(res, 'production', project)),
-        ]).then((res) => {
+        Promise.all(
+          defaultEnvironmentNames.map((v) => {
+            data
+              .post(`${Project.api}environments/`, {
+                name: v,
+                project: project.id,
+              })
+              .then((res) => createSampleUser(res, 'development', project))
+          })
+        ).then((res) => {
           project.environments = res
           store.model.projects = store.model.projects.concat(project)
           store.savedId = {
@@ -128,13 +124,13 @@ const controller = {
         ].concat(
           AccountStore.getOrganisationRole(id) === 'ADMIN'
             ? [
-                data.get(`${Project.api}organisations/${id}/invites/`),
-                data
-                  .get(
-                    `${Project.api}organisations/${id}/get-subscription-metadata/`,
-                  )
-                  .catch(() => null),
-              ]
+              data.get(`${Project.api}organisations/${id}/invites/`),
+              data
+                .get(
+                  `${Project.api}organisations/${id}/get-subscription-metadata/`,
+                )
+                .catch(() => null),
+            ]
             : [],
         ),
       ).then((res) => {
@@ -255,8 +251,7 @@ const controller = {
       .catch((e) => {
         store.saved()
         toast(
-          `Failed to send invite(s). ${
-            e && e.error ? e.error : 'Please try again later'
+          `Failed to send invite(s). ${e && e.error ? e.error : 'Please try again later'
           }`,
           'danger',
         )
@@ -271,8 +266,7 @@ const controller = {
       })
       .catch((e) => {
         toast(
-          `Failed to resend invite. ${
-            e && e.error ? e.error : 'Please try again later'
+          `Failed to resend invite. ${e && e.error ? e.error : 'Please try again later'
           }`,
           'danger',
         )
@@ -294,8 +288,7 @@ const controller = {
       })
       .catch((e) => {
         toast(
-          `Failed to update this user's role. ${
-            e && e.error ? e.error : 'Please try again later'
+          `Failed to update this user's role. ${e && e.error ? e.error : 'Please try again later'
           }`,
           'danger',
         )
