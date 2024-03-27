@@ -106,7 +106,7 @@ const OrganisationSettingsPage = class extends Component {
   onRemove = () => {
     toast('Your organisation has been removed')
     if (AccountStore.getOrganisation()) {
-      this.context.router.history.replace('/projects')
+      this.context.router.history.replace('/organisation-settings')
     } else {
       this.context.router.history.replace('/create')
     }
@@ -397,8 +397,6 @@ const OrganisationSettingsPage = class extends Component {
     const verifySeatsLimit = Utils.getFlagsmithHasFeature(
       'verify_seats_limit_for_invite_links',
     )
-    const canManageGroups =
-      this.state.permissions.includes('MANAGE_USER_GROUPS')
 
     return (
       <div className='app-container container'>
@@ -421,6 +419,7 @@ const OrganisationSettingsPage = class extends Component {
                   subscriptionMeta,
                   users,
                 }) => {
+                  const canManageGroups = !!groups?.length
                   const { max_seats } = subscriptionMeta ||
                     organisation.subscription || { max_seats: 1 }
                   const isAWS =
@@ -463,6 +462,7 @@ const OrganisationSettingsPage = class extends Component {
                       </div>
 
                       <Tabs
+                        hideNavOnSingleTab
                         value={this.state.tab || 0}
                         onChange={(tab) => this.setState({ tab })}
                         className='mt-0'

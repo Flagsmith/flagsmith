@@ -33,7 +33,7 @@ const PaymentButton = (props) => {
             success: (res) => {
               AppActions.updateSubscription(res)
               if (this.props.isDisableAccount) {
-                window.location.href = `/projects`
+                window.location.href = `/organisation-settings`
               }
             },
           })
