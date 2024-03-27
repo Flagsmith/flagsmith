@@ -51,4 +51,4 @@ class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):
 
 
 class EnvironmentFeatureVersionQuerySerializer(serializers.Serializer):
-    is_live = serializers.BooleanField(allow_null=True)
+    is_live = serializers.BooleanField(allow_null=True, required=False, default=None)
