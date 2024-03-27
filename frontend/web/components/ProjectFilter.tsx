@@ -6,11 +6,13 @@ export type ProjectFilterType = {
   value?: string
   onChange: (value: string) => void
   showAll?: boolean
+  projectComplete?: boolean
 }
 
 const ProjectFilter: FC<ProjectFilterType> = ({
   onChange,
   organisationId,
+  projectComplete,
   showAll,
   value,
 }) => {
@@ -30,7 +32,7 @@ const ProjectFilter: FC<ProjectFilterType> = ({
         (data || [])?.map((v) => ({ label: v.name, value: `${v.id}` })),
       )}
       onChange={(value: { value: string; label: string }) =>
-        onChange(value?.value || '')
+        onChange(projectComplete ? value : value?.value ? value.value : '')
       }
     />
   )

@@ -8,6 +8,12 @@ const OrganisationSelect = class extends Component {
     this.state = {}
   }
 
+  componentDidMount() {
+    if (this.props.firstOrganisation) {
+      this.props.onChange(AccountStore.getOrganisation().id)
+    }
+  }
+
   render() {
     return (
       <AccountProvider>
@@ -33,7 +39,6 @@ const OrganisationSelect = class extends Component {
                 className='select-lg react-select'
               />
             </div>
-
             {user &&
               user.organisations &&
               user.organisations.map((organisation) => (
