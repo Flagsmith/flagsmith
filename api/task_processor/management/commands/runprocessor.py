@@ -9,10 +9,7 @@ from django.core.management import BaseCommand
 from django.utils import timezone
 
 from task_processor.task_registry import registered_tasks
-from task_processor.thread_monitoring import (
-    clear_unhealthy_threads,
-    write_unhealthy_threads,
-)
+from task_processor.thread_monitoring import ThreadCounts, write_thread_counts
 from task_processor.threads import TaskRunner
 
 logger = logging.getLogger(__name__)
@@ -65,32 +62,34 @@ class Command(BaseCommand):
             ",".join([f"{k}={v}" for k, v in options.items()]),
         )
 
-        self._threads.extend(
-            [
-                TaskRunner(
-                    sleep_interval_millis=sleep_interval_ms,
-                    queue_pop_size=queue_pop_size,
-                )
-                for _ in range(num_threads)
-            ]
-        )
-
         logger.info(
             "Processor starting. Registered tasks are: %s",
             list(registered_tasks.keys()),
         )
 
-        for thread in self._threads:
-            thread.start()
+        self._spawn_threads(num_threads, sleep_interval_ms, queue_pop_size)
 
-        clear_unhealthy_threads()
         while self._monitor_threads:
             time.sleep(1)
-            unhealthy_threads = self._get_unhealthy_threads(
+            if unhealthy_threads := self._get_unhealthy_threads(
                 ms_before_unhealthy=grace_period_ms + sleep_interval_ms
+            ):
+                num_unhealthy_threads = len(unhealthy_threads)
+
+                # remove the unhealthy threads from the list and spawn new ones in their place
+                for t in unhealthy_threads:
+                    t.stop()
+                    self._threads.remove(t)
+
+                self._spawn_threads(
+                    num_unhealthy_threads, sleep_interval_ms, queue_pop_size
+                )
+
+                logger.debug("Now running %d threads", len(self._threads))
+
+            write_thread_counts(
+                ThreadCounts(running=len(self._threads), expected=num_threads)
             )
-            if unhealthy_threads:
-                write_unhealthy_threads(unhealthy_threads)
 
         [t.join() for t in self._threads]
 
@@ -111,5 +110,28 @@ class Command(BaseCommand):
                 or not thread.last_checked_for_tasks
                 or thread.last_checked_for_tasks < healthy_threshold
             ):
+                logger.debug(
+                    "Thread status report. is_alive: %r. last_checked_for_tasks: %s.",
+                    thread.is_alive(),
+                    thread.last_checked_for_tasks,
+                )
                 unhealthy_threads.append(thread)
         return unhealthy_threads
+
+    def _spawn_threads(
+        self, n: int, sleep_interval_ms: int, queue_pop_size: int
+    ) -> None:
+        logger.info("Starting %d worker threads.", n)
+
+        self._threads.extend(
+            [
+                TaskRunner(
+                    sleep_interval_millis=sleep_interval_ms,
+                    queue_pop_size=queue_pop_size,
+                )
+                for _ in range(n)
+            ]
+        )
+
+        for thread in self._threads:
+            thread.start()

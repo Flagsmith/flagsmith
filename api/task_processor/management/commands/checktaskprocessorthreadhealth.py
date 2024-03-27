@@ -3,15 +3,19 @@ import sys
 
 from django.core.management import BaseCommand
 
-from task_processor.thread_monitoring import get_unhealthy_thread_names
+from task_processor.thread_monitoring import get_thread_counts
 
 logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        if get_unhealthy_thread_names():
-            sys.exit("Task processor has unhealthy threads.")
+        thread_counts = get_thread_counts()
 
-        logger.info("Task processor has no unhealthy threads.")
+        if thread_counts.running != thread_counts.expected:
+            sys.exit(
+                "Processor is running %d threads, but expected %d"
+                % (thread_counts.running, thread_counts.expected)
+            )
+
         sys.exit(0)
