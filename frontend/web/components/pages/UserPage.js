@@ -26,6 +26,7 @@ import classNames from 'classnames'
 import IdentifierString from 'components/IdentifierString'
 import Button from 'components/base/forms/Button'
 import { removeUserOverride } from 'components/RemoveUserOverride'
+import TableValueFilter from 'components/tables/TableValueFilter'
 const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
@@ -46,20 +47,25 @@ const UserPage = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {
+      is_enabled: null,
       preselect: Utils.fromParam().flag,
       showArchived: false,
       tag_strategy: 'INTERSECTION',
       tags: [],
+      value_search: null,
     }
   }
 
   getFilter = () => ({
     is_archived: this.state.showArchived,
+    is_enabled:
+      this.state.is_enabled === null ? undefined : this.state.is_enabled,
     tag_strategy: this.state.tag_strategy,
     tags:
       !this.state.tags || !this.state.tags.length
         ? undefined
         : this.state.tags.join(','),
+    value_search: this.state.value_search ? this.state.value_search : undefined,
   })
 
   componentDidMount() {
@@ -262,6 +268,9 @@ const UserPage = class extends Component {
   render() {
     const { actualFlags } = this.state
     const { environmentId, projectId } = this.props.match.params
+    const enabledStateFilter = Utils.getFlagsmithHasFeature(
+      'feature_enabled_state_filter',
+    )
 
     const preventAddTrait = !AccountStore.getOrganisation().persist_trait_data
     return (
@@ -398,6 +407,29 @@ const UserPage = class extends Component {
                                           value={this.state.search}
                                         />
                                         <Row className='flex-fill justify-content-end'>
+                                          {enabledStateFilter && (
+                                            <TableValueFilter
+                                              className='me-4'
+                                              useLocalStorage
+                                              value={{
+                                                enabled: this.state.is_enabled,
+                                                valueSearch:
+                                                  this.state.value_search,
+                                              }}
+                                              onChange={({
+                                                enabled,
+                                                valueSearch,
+                                              }) => {
+                                                this.setState(
+                                                  {
+                                                    is_enabled: enabled,
+                                                    value_search: valueSearch,
+                                                  },
+                                                  this.filter,
+                                                )
+                                              }}
+                                            />
+                                          )}
                                           <TableTagFilter
                                             useLocalStorage
                                             projectId={projectId}
