@@ -8,6 +8,7 @@ from organisations.models import (
     Organisation,
     OrganisationRole,
 )
+from task_processor.task_run_method import TaskRunMethod
 from users.models import FFAdminUser
 
 
@@ -222,6 +223,8 @@ def test_update_company_active_subscription(
     mocker: MockerFixture,
 ) -> None:
     settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
+
     mock_update_company = mocker.patch(
         "integrations.lead_tracking.hubspot.client.HubspotClient.update_company"
     )
@@ -253,6 +256,8 @@ def test_update_company_active_subscription_not_called(
 ) -> None:
     # Set to False to ensure update doesn't happen.
     settings.ENABLE_HUBSPOT_LEAD_TRACKING = False
+    settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
+
     mock_update_company = mocker.patch(
         "integrations.lead_tracking.hubspot.client.HubspotClient.update_company"
     )
