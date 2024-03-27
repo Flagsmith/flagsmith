@@ -30,9 +30,9 @@ type repoType = {
   name?: string
 }
 
-const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
+const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
   const installationId =
-    new URLSearchParams(props.location.search).get('installation_id') || ''
+    new URLSearchParams(location.search).get('installation_id') || ''
   const [organisation, setOrganisation] = useState<string>('')
   const [project, setProject] = useState<any>({})
   const [projects, setProjects] = useState<projectType[]>([])
@@ -70,6 +70,13 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = (props) => {
       window.location.href = `${baseUrl}/`
     }
   }, [isSuccessCreatedGithubRepository])
+
+  useEffect(() => {
+    if (localStorage?.githubIntegrationTrigger) {
+      const dataToSend = { 'installationId': installationId }
+      window.opener.postMessage(dataToSend, '*')
+    }
+  }, [])
 
   useEffect(() => {
     const createRepositories = async () => {

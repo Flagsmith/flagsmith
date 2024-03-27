@@ -8,10 +8,12 @@ import { getGithubIntegration } from 'common/services/useGithubIntegration'
 const CreateEditIntegration = require('./modals/CreateEditIntegrationModal')
 
 class Integration extends Component {
+  state = {
+    windowInstallationId: '',
+  }
   add = () => {
     const isGithubIntegration =
       this.props.githubId && this.props.integration.isExternalInstallation
-    console.log('DEBUG: installationId:', this.props.installationId)
     if (isGithubIntegration) {
       this.props.addIntegration(
         this.props.integration,
@@ -22,6 +24,27 @@ class Integration extends Component {
     } else {
       this.props.addIntegration(this.props.integration, this.props.id)
     }
+  }
+
+  openChildWin = () => {
+    const childWindow = window.open(
+      'https://github.com/apps/flagsmith-github-integration/installations/select_target',
+      '_blank',
+      'height=600,width=600,status=yes,toolbar=no,menubar=no,addressbar=no,projectId=1',
+    )
+
+    childWindow.localStorage.setItem('githubIntegrationTrigger', true)
+    window.addEventListener('message', (event) => {
+      if (
+        event.source === childWindow &&
+        event.data?.hasOwnProperty('installationId')
+      ) {
+        console.log('DEBUG: addEventListener', event.data.installationId)
+        this.setState({ windowInstallationId: event.data.installationId })
+        localStorage.removeItem('githubIntegrationTrigger')
+        childWindow.close()
+      }
+    })
   }
 
   remove = (integration) => {
@@ -90,13 +113,9 @@ class Integration extends Component {
                 ))}
               {showAdd && (
                 <>
-                  {external && !this.props.hasIntegrationWithGithub ? (
+                  {external && !isExternalInstallation ? (
                     <a
-                      href={
-                        isExternalInstallation
-                          ? 'https://github.com/apps/flagsmith-github-integration/installations/select_target'
-                          : docs
-                      }
+                      href={docs}
                       target={'_blank'}
                       className='btn btn-primary btn-xsm ml-3'
                       id='show-create-segment-btn'
@@ -106,8 +125,9 @@ class Integration extends Component {
                       Add Integration
                     </a>
                   ) : external &&
-                    this.props.hasIntegrationWithGithub &&
-                    isExternalInstallation ? (
+                    isExternalInstallation &&
+                    (this.state.windowInstallationId ||
+                      this.props.hasIntegrationWithGithub) ? (
                     <Button
                       className='ml-3'
                       id='show-create-segment-btn'
@@ -116,6 +136,18 @@ class Integration extends Component {
                       size='xSmall'
                     >
                       Manage Integration
+                    </Button>
+                  ) : external &&
+                    !this.props.hasIntegrationWithGithub &&
+                    isExternalInstallation ? (
+                    <Button
+                      className='ml-3'
+                      id='show-create-segment-btn'
+                      data-test='show-create-segment-btn'
+                      onClick={this.openChildWin}
+                      size='xSmall'
+                    >
+                      Add Integration
                     </Button>
                   ) : (
                     <Button
@@ -176,9 +208,9 @@ class IntegrationList extends Component {
         organisation_id: AccountStore.getOrganisation().id,
       }).then((res) => {
         this.setState({
-          githubId: res?.data?.results[0].id,
+          githubId: res?.data?.results[0]?.id,
           hasIntegrationWithGithub: !!res?.data?.results?.length,
-          installationId: res?.data?.results[0].installation_id,
+          installationId: res?.data?.results[0]?.installation_id,
         })
       })
     }
