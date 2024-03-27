@@ -1,4 +1,10 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react'
+import React, {
+  useState,
+  forwardRef,
+  useImperativeHandle,
+  Ref,
+  FC,
+} from 'react'
 import Icon from './Icon'
 import { EditPermissionsModal } from './EditPermissions'
 import {
@@ -6,28 +12,41 @@ import {
   useGetRoleEnvironmentPermissionsQuery,
 } from 'common/services/useRolePermission'
 import Format from 'common/utils/format'
+import { PermissionLevel, Req } from 'common/types/requests'
+import { Role } from 'common/types/responses'
 
-type MainItem = {
+type NameAndId = {
   name: string
-  id: string
+  id: number | string
+  [key: string]: any
 }
 
-type CollapsibleNestedRolePermissionsListProps = {
-  mainItems: MainItem[]
+type RolePermissionsListProps = {
+  mainItems: NameAndId[]
   role: Role
+  ref?: Ref<any>
   level: string
   filter: string
 }
 
-const PermissionsSummary = ({ level, levelId, role }) => {
+export type PermissionsSummaryType = {
+  level: PermissionLevel
+  levelId: number
+  role: Role
+}
+const PermissionsSummary: FC<PermissionsSummaryType> = ({
+  level,
+  levelId,
+  role,
+}) => {
   const { data: projectPermissions, isLoading: projectIsLoading } =
     useGetRoleProjectPermissionsQuery(
       {
-        organisation_id: role?.organisation,
+        organisation_id: role.organisation,
         project_id: levelId,
-        role_id: role?.id,
+        role_id: role.id,
       },
-      { skip: !levelId || level !== 'project' },
+      { skip: !levelId || level == 'project' },
     )
 
   const { data: envPermissions, isLoading: envIsLoading } =
@@ -53,7 +72,9 @@ const PermissionsSummary = ({ level, levelId, role }) => {
   const permissionsSummary =
     (roleRermissions &&
       roleRermissions.length > 0 &&
-      roleRermissions.map((item) => Format.enumeration.get(item)).join(', ')) ||
+      roleRermissions
+        .map((item: string) => Format.enumeration.get(item))
+        .join(', ')) ||
     ''
 
   return projectIsLoading || envIsLoading ? (
@@ -65,8 +86,8 @@ const PermissionsSummary = ({ level, levelId, role }) => {
   )
 }
 
-const CollapsibleNestedRolePermissionsList: React.FC<CollapsibleNestedRolePermissionsListProps> =
-  forwardRef(({ filter, level, mainItems, role }, ref) => {
+const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
+  ({ filter, level, mainItems, role }, ref) => {
     const [expandedItems, setExpandedItems] = useState<string[]>([])
     const [unsavedProjects, setUnsavedProjects] = useState<string[]>([])
 
@@ -177,6 +198,7 @@ const CollapsibleNestedRolePermissionsList: React.FC<CollapsibleNestedRolePermis
         ))}
       </div>
     )
-  })
+  },
+)
 
-export default CollapsibleNestedRolePermissionsList
+export default RolePermissionsList

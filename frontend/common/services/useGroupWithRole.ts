@@ -19,9 +19,6 @@ export const groupWithRoleService = service
           method: 'DELETE',
           url: `organisations/${query.org_id}/groups/${query.group_id}/roles/${query.role_id}/`,
         }),
-        transformResponse: () => {
-          toast('Group role was removed')
-        },
       }),
       getGroupWithRole: builder.query<
         Res['groupWithRole'],

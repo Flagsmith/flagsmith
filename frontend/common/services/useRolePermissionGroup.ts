@@ -7,7 +7,7 @@ export const rolePermissionGroupService = service
   .injectEndpoints({
     endpoints: (builder) => ({
       createRolePermissionGroup: builder.mutation<
-        Res['rolePermissionGroup'],
+        Res['createRolePermissionGroup'],
         Req['createRolePermissionGroup']
       >({
         invalidatesTags: [
@@ -38,7 +38,6 @@ export const rolePermissionGroupService = service
         Res['rolePermissionGroup'],
         Req['getRolePermissionGroup']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'RolePermissionGroup' }],
         query: (query: Req['getRolePermissionGroup']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/groups/`,
         }),
@@ -47,10 +46,7 @@ export const rolePermissionGroupService = service
         Res['rolePermissionGroup'],
         Req['updateRolePermissionGroup']
       >({
-        invalidatesTags: (res) => [
-          { id: 'LIST', type: 'RolePermissionGroup' },
-          { id: res?.id, type: 'RolePermissionGroup' },
-        ],
+        invalidatesTags: (res) => [{ id: 'LIST', type: 'RolePermissionGroup' }],
         query: (query: Req['updateRolePermissionGroup']) => ({
           body: query,
           method: 'PUT',

@@ -10,8 +10,8 @@ import { sortBy } from 'lodash'
 import InfoMessage from './InfoMessage' // we need this to make JSX compile
 import Icon from './Icon'
 import { useGetGroupSummariesQuery } from 'common/services/useGroupSummary'
+import Panel from './base/grid/Panel'
 import PermissionsSummaryList from './PermissionsSummaryList'
-const Panel = require('components/base/grid/Panel')
 
 type UserGroupsListType = {
   noTitle?: boolean

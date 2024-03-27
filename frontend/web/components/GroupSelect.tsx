@@ -6,7 +6,7 @@ import Utils from 'common/utils/utils'
 import Icon from './Icon'
 
 export type GroupSelectType = {
-  disabled: boolean
+  disabled?: boolean
   groups: UserGroup[] | UserGroupSummary[] | undefined
   value: number[] | undefined
   isOpen: boolean

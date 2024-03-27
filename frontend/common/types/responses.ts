@@ -166,6 +166,7 @@ export type UserPermission = {
   permissions: string[]
   admin: boolean
   id: number
+  role?: number
 }
 export type GroupPermission = Omit<UserPermission, 'user'> & {
   group: UserGroup
@@ -382,6 +383,12 @@ export type RolePermissionUser = {
   id: number
   role_name: string
 }
+export type RolePermissionGroup = {
+  group: number
+  role: number
+  id: number
+  role_name: string
+}
 export type FeatureVersion = {
   created_at: string
   updated_at: string
@@ -454,13 +461,16 @@ export type Res = {
   }
   featureVersion: FeatureVersion
   versionFeatureState: FeatureState[]
-  roles: Role[]
-  rolePermission: { id: string }
+  role: Role
+  roles: PagedResponse<Role>
+  rolePermission: PagedResponse<UserPermission>
   projectFlags: PagedResponse<ProjectFlag>
   projectFlag: ProjectFlag
   identityFeatureStates: IdentityFeatureState[]
-  rolesPermissionUsers: RolePermissionUser
-  rolePermissionGroup: { id: string }
+  createRolesPermissionUsers: RolePermissionUser
+  rolesPermissionUsers: PagedResponse<RolePermissionUser>
+  createRolePermissionGroup: RolePermissionGroup
+  rolePermissionGroup: PagedResponse<RolePermissionGroup>
   getSubscriptionMetadata: { id: string }
   environment: Environment
   launchDarklyProjectImport: LaunchDarklyProjectImport
