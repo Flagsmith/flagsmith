@@ -72,6 +72,7 @@ class HubspotLeadTracker(LeadTracker):
         response = self.client.create_company(
             name=organisation.name,
             active_subscription=organisation.subscription.plan,
+            organisation_id=organisation.id,
         )
 
         # Store the organisation data in the database since we are

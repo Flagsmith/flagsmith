@@ -67,11 +67,15 @@ class HubspotClient:
         )
         return response.to_dict()
 
-    def create_company(self, name: str, active_subscription: str) -> dict:
+    def create_company(
+        self, name: str, active_subscription: str, organisation_id: int
+    ) -> dict:
         properties = {
             "name": name,
             "active_subscription": active_subscription,
+            "orgid": str(organisation_id),
         }
+
         simple_public_object_input_for_create = SimplePublicObjectInputForCreate(
             properties=properties,
         )
