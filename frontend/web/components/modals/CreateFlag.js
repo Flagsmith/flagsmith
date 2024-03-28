@@ -35,16 +35,13 @@ import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
 import Button from 'components/base/forms/Button'
 import { getGithubIntegration } from 'common/services/useGithubIntegration'
-// import {
-//   createExternalResource,
-//   getExternalResources,
-//   deleteExternalResource,
-// } from 'common/services/useExternalResource'
+import { createExternalResource } from 'common/services/useExternalResource'
 import { getStore } from 'common/store'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import MyIssueSelect from 'components/MyIssuesSelect'
 import MyPullRequestsSelect from 'components/MyPullRequestsSelect'
 import MyRepositoriesSelect from 'components/MyRepositoriesSelect'
+import ExternalResourcesTable from 'components/ExternalResourcesTable'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -83,6 +80,7 @@ const CreateFlag = class extends Component {
       environmentFlag: this.props.environmentFlag,
       externalResource: {},
       externalResources: [],
+      githubId: '',
       hasIntegrationWithGithub: false,
       hide_from_client,
       identityVariations:
@@ -102,6 +100,8 @@ const CreateFlag = class extends Component {
       multivariate_options: _.cloneDeep(multivariate_options),
       name,
       period: 30,
+      repoName: '',
+      repoOwner: '',
       selectedIdentity: null,
       tab: tab || 0,
       tags: tags || [],
@@ -201,16 +201,6 @@ const CreateFlag = class extends Component {
       this.getFeatureUsage()
     }
 
-    // if (
-    //   this.props.projectFlag &&
-    //   Utils.getFlagsmithHasFeature('github_integration')
-    // ) {
-    //   getExternalResources(getStore(), {
-    //     feature_id: this.props.projectFlag.id,
-    //   }).then((res) => {
-    //     this.setState({ externalResources: res.data.results })
-    //   })
-    // }
     if (Utils.getFlagsmithHasFeature('github_integration')) {
       getGithubIntegration(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,
@@ -535,14 +525,16 @@ const CreateFlag = class extends Component {
       enabledIndentity,
       enabledSegment,
       externalResourceType,
-      externalResources,
       featureExternalResource,
+      githubId,
       hasIntegrationWithGithub,
       hide_from_client,
       initial_value,
       isEdit,
       multivariate_options,
       name,
+      repoName,
+      repoOwner,
       status,
     } = this.state
     const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID
@@ -566,27 +558,17 @@ const CreateFlag = class extends Component {
     const existingChangeRequest = this.props.changeRequest
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
-    // const _createExternalResourse = () => {
-    //   createExternalResource(getStore(), {
-    //     body: {
-    //       feature: projectFlag.id,
-    //       status: status,
-    //       type: externalResourceType,
-    //       url: featureExternalResource,
-    //     },
-    //     feature_id: projectFlag.id,
-    //   }).then((res) => {
-    //     getExternalResources(
-    //       getStore(),
-    //       {
-    //         feature_id: projectFlag.id,
-    //       },
-    //       { forceRefetch: true },
-    //     ).then((res) => {
-    //       this.setState({ externalResources: res.data.results })
-    //     })
-    //   })
-    // }
+    const _createExternalResourse = () => {
+      createExternalResource(getStore(), {
+        body: {
+          feature: projectFlag.id,
+          status: status,
+          type: externalResourceType,
+          url: featureExternalResource,
+        },
+        feature_id: projectFlag.id,
+      })
+    }
     let regexValid = true
     try {
       if (!isEdit && name && regex) {
@@ -664,6 +646,17 @@ const CreateFlag = class extends Component {
         {Utils.getFlagsmithHasFeature('github_integration') &&
           hasIntegrationWithGithub && (
             <>
+              <MyRepositoriesSelect
+                githubId={githubId}
+                orgId={AccountStore.getOrganisation().id}
+                onChange={(v) => {
+                  const repoData = v.split('/')
+                  this.setState({
+                    repoName: repoData[1],
+                    repoOwner: repoData[0],
+                  })
+                }}
+              />
               <FormGroup className='mb-5 setting'>
                 <label className='cols-sm-2 control-label'>
                   {' '}
@@ -694,6 +687,8 @@ const CreateFlag = class extends Component {
                           status: 'open',
                         })
                       }
+                      repoOwner={repoOwner}
+                      repoName={repoName}
                     />
                   ) : externalResourceType == 'Github PR' ? (
                     <MyPullRequestsSelect
@@ -701,6 +696,8 @@ const CreateFlag = class extends Component {
                       onChange={(v) =>
                         this.setState({ featureExternalResource: v.value })
                       }
+                      repoOwner={repoOwner}
+                      repoName={repoName}
                     />
                   ) : (
                     <></>
@@ -711,8 +708,7 @@ const CreateFlag = class extends Component {
                       className='text-right'
                       theme='primary'
                       onClick={() => {
-                        // _createExternalResourse()
-                        console.log('DEBUG: _createExternalResourse:')
+                        _createExternalResourse()
                       }}
                     >
                       Link
@@ -720,7 +716,8 @@ const CreateFlag = class extends Component {
                   )}
                 </Row>
               </FormGroup>
-              <PanelSearch
+              <ExternalResourcesTable featureId={projectFlag.id} />
+              {/* <PanelSearch
                 className='no-pad'
                 title='Linked Issues and Pull Requests.'
                 items={externalResources}
@@ -781,22 +778,7 @@ const CreateFlag = class extends Component {
                               feature_id: projectFlag.id,
                             },
                             { forceRefetch: true },
-                          ).then((res) => {
-                            getExternalResources(
-                              getStore(),
-                              {
-                                feature_id: projectFlag.id,
-                              },
-                              { forceRefetch: true },
-                            ).then((res) => {
-                              toast(
-                                `The feature ${projectFlag.name} was unlinked from the GitHub Issue/PR`,
-                              )
-                              this.setState({
-                                externalResources: res.data.results,
-                              })
-                            })
-                          })
+                          )
                         }}
                         className='btn btn-with-icon'
                       >
@@ -805,7 +787,7 @@ const CreateFlag = class extends Component {
                     </div>
                   </Row>
                 )}
-              />
+              /> */}
             </>
           )}
 

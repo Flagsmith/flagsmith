@@ -11,19 +11,16 @@ import { GithubRepository } from 'common/types/responses'
 export type GithubRepositoriesTableType = {
   githubId: string
   organisationId: string
-  repositories?: GithubRepository[]
 }
 
 const GithubRepositoriesTable: FC<GithubRepositoriesTableType> = ({
   githubId,
   organisationId,
-  // repositories,
 }) => {
   const { data } = useGetGithubRepositoriesQuery({
-    github_id: githubId || `${16}`,
+    github_id: githubId,
     organisation_id: organisationId,
   })
-  console.log('DEBUG: data:', data)
 
   const [deleteGithubRepository, { isSuccess: isDeleted }] =
     useDeleteGithubRepositoryMutation()
