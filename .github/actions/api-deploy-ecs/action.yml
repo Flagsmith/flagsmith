@@ -158,8 +158,7 @@ runs:
       run: |
         echo "Building docker image with URL: "
         echo $ECR_REPOSITORY:$IMAGE_TAG
-        docker build --secret id=sse_pgp_pkey,src=./sse_pgp_pkey -t $ECR_REPOSITORY:$IMAGE_TAG -f api/Dockerfile --build-arg SAML_INSTALLED=1 --build-arg POETRY_OPTS="--with saml,auth-controller,workflows" --build-arg GH_TOKEN=${{ inputs.github_access_token }} .
-        docker push $ECR_REPOSITORY:$IMAGE_TAG
+        docker build --push --secret id=sse_pgp_pkey,src=./sse_pgp_pkey -t $ECR_REPOSITORY:$IMAGE_TAG -f api/Dockerfile --build-arg SAML_INSTALLED=1 --build-arg POETRY_OPTS="--with saml,auth-controller,workflows" --build-arg GH_TOKEN=${{ inputs.github_access_token }} .
         echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
       shell: bash
 
