@@ -86,54 +86,14 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
           installation_id: installationId,
         },
         organisation_id: JSON.parse(localStorage.lastEnv).orgId,
-      })
-    }
-  }, [])
-
-  useEffect(() => {
-    const createRepositories = async () => {
-      try {
-        if (
-          isSuccessCreateGithubIntegration &&
-          githubIntegrationSetupFromFlagsmithValue
-        ) {
+      }).then(async (res) => {
+        if (res?.data && githubIntegrationSetupFromFlagsmithValue) {
           const dataToSend = { 'installationId': installationId }
           window.opener.postMessage(dataToSend, '*')
         }
-        if (
-          data &&
-          isSuccessCreateGithubIntegration &&
-          !githubIntegrationSetupFromFlagsmithValue
-        ) {
-          await Promise.all(
-            projects.map(async (project) => {
-              await createGithubRepository({
-                body: {
-                  project: project.value,
-                  repository_name: repositoryName,
-                  repository_owner: repositoryOwner,
-                },
-                github_id: data.id,
-                organisation_id: organisation,
-              })
-            }),
-          )
-          toast('Integration Created')
-        }
-      } catch (error) {
-        console.error('Error creating:', error)
-      }
+      })
     }
-
-    createRepositories()
-  }, [
-    data,
-    isSuccessCreateGithubIntegration,
-    projects,
-    repositoryName,
-    repositoryOwner,
-    organisation,
-  ])
+  }, [])
 
   return (
     <div
@@ -271,6 +231,27 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
                   installation_id: installationId,
                 },
                 organisation_id: organisation,
+              }).then(async (res) => {
+                try {
+                  if (!githubIntegrationSetupFromFlagsmithValue) {
+                    await Promise.all(
+                      projects.map(async (project) => {
+                        await createGithubRepository({
+                          body: {
+                            project: project.value,
+                            repository_name: repositoryName,
+                            repository_owner: repositoryOwner,
+                          },
+                          github_id: res?.data?.id,
+                          organisation_id: organisation,
+                        })
+                      }),
+                    )
+                    toast('Integration Created')
+                  }
+                } catch (error) {
+                  console.error('Error creating:', error)
+                }
               })
             }}
           >

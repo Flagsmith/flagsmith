@@ -162,20 +162,20 @@ const App = class extends Component {
         this.context.router.history.replace(redirect)
       } else {
         AsyncStorage.getItem('lastEnv').then((res) => {
+          if (
+            this.props.location.search.includes('github-redirect') &&
+            Utils.getFlagsmithHasFeature('github_integration')
+          ) {
+            this.context.router.history.replace(
+              `/github-setup${this.props.location.search}`,
+            )
+            return
+          }
           if (res) {
             const lastEnv = JSON.parse(res)
             const lastOrg = _.find(AccountStore.getUser().organisations, {
               id: lastEnv.orgId,
             })
-            if (
-              this.props.location.search.includes('github-redirect') &&
-              Utils.getFlagsmithHasFeature('github_integration')
-            ) {
-              this.context.router.history.replace(
-                `/github-setup${this.props.location.search}`,
-              )
-              return
-            }
             if (!lastOrg) {
               this.context.router.history.replace('/projects')
               return
@@ -189,15 +189,6 @@ const App = class extends Component {
 
             this.context.router.history.replace(
               `/project/${lastEnv.projectId}/environment/${lastEnv.environmentId}/features`,
-            )
-            return
-          }
-          if (
-            this.props.location.search.includes('github-redirect') &&
-            Utils.getFlagsmithHasFeature('github_integration')
-          ) {
-            this.context.router.history.replace(
-              `/github-setup${this.props.location.search}`,
             )
             return
           }

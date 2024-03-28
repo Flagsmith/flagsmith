@@ -651,7 +651,7 @@ export type Res = {
   groupSummaries: UserGroupSummary[]
   externalResource: PagedResponse<ExternalResource>
   githubIntegrations: PagedResponse<githubIntegration>
-  githubRepository: PagedResponse<GithubRepository>
+  githubRepository: PagedResponse<GithubRepository> | { data: { id: string } }
   githubIssues: Issue[]
   githubPulls: PullRequest[]
   githubRepos: GithubPaginatedRepos<Repository>
