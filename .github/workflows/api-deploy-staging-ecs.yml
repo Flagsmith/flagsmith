@@ -16,6 +16,10 @@ jobs:
     name: API Deploy to Staging ECS
     environment: staging
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Cloning repo
         uses: actions/checkout@v4
