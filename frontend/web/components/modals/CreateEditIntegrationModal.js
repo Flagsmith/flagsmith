@@ -8,7 +8,7 @@ import Button from 'components/base/forms/Button'
 import GithubRepositoriesTable from 'components/GithubRepositoriesTable'
 import classNames from 'classnames'
 import { getStore } from 'common/store'
-import { getGithubIntegration } from 'common/services/useGithubIntegration'
+import { getGithubRepos } from 'common/services/useGithub'
 
 const GITHUB_INSTALLATION_UPDATE = 'update'
 
@@ -132,7 +132,7 @@ const CreateEditIntegration = class extends Component {
         )
         .then(this.onComplete)
         .catch(this.onError)
-    } else {
+    } else if (this.props.id !== 'github') {
       _data
         .post(
           `${Project.api}projects/${this.props.projectId}/integrations/${this.props.id}/`,
@@ -182,13 +182,13 @@ const CreateEditIntegration = class extends Component {
         event.source === childWindow &&
         !event.data?.hasOwnProperty('installationId')
       ) {
-        getGithubIntegration(
+        getGithubRepos(
           getStore(),
           {
-            organisation_id: AccountStore.getOrganisation().id,
+            installation_id: this.props.installationId,
           },
           { forceRefetch: true },
-        ).then((res) => {
+        ).then(() => {
           localStorage.removeItem('githubIntegrationSetupFromFlagsmith')
           childWindow.close()
         })
