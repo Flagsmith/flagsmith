@@ -122,7 +122,7 @@ You can integrate Flagsmith with Slack. Send flag change events from Flagsmith i
 
 ---
 
-<a href="/integrations/project-management/jira" alt="GitHub"><img width="30%" src="/img/integrations/github/github-logo.svg"/></a>
+<a href="/integrations/project-management/github" alt="GitHub"><img width="30%" src="/img/integrations/github/github-logo.svg"/></a>
 
 View your Flagsmith flags inside GitHub Issues and Pull Request. [Learn more](/integrations/project-management/github).
 

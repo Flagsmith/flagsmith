@@ -38,7 +38,7 @@ const GitHubRepositoriesSelect: FC<GitHubRepositoriesSelectType> = ({
         size='select-md'
         placeholder={'Select Your Repository'}
         disabled={disabled}
-        onChange={(r: any) => {
+        onChange={(r: string) => {
           const repoData = r.value.split('/')
           setRepositoryName(repoData[0])
           setRepositoryOwner(repoData[1])
