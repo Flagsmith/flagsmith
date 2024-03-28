@@ -17,6 +17,10 @@ jobs:
     name: API Deploy to Production ECS
     environment: production
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Cloning repo
         uses: actions/checkout@v4
