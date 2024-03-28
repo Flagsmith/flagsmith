@@ -140,6 +140,15 @@ runs:
         EOF
       shell: bash
 
+    - name: Set up Depot CLI
+      uses: depot/setup-action@v1
+      with:
+        oidc: true
+
+    - name: Switch Docker Runtime to Depot
+      run: depot configure-docker
+      shell: bash
+
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       env:
