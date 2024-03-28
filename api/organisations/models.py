@@ -424,7 +424,7 @@ class OrganisationWebhook(AbstractBaseExportableWebhookModel):
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
 
-class OrganisationSubscriptionInformationCache(models.Model):
+class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model):
     """
     Model to hold a cache of an organisation's API usage and their Chargebee plan limits.
     """
@@ -449,6 +449,10 @@ class OrganisationSubscriptionInformationCache(models.Model):
     allowed_projects = models.IntegerField(default=1, blank=True, null=True)
 
     chargebee_email = models.EmailField(blank=True, max_length=254, null=True)
+
+    @hook(AFTER_SAVE, when="allowed_30d_api_calls", has_changed=True)
+    def erase_api_notifications(self):
+        self.organisation.api_usage_notifications.all().delete()
 
 
 class OranisationAPIUsageNotification(models.Model):
