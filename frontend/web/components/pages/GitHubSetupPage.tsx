@@ -33,6 +33,8 @@ type repoType = {
 const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
   const installationId =
     new URLSearchParams(location.search).get('installation_id') || ''
+  const githubIntegrationSetupFromFlagsmithValue: string =
+    localStorage?.githubIntegrationSetupFromFlagsmith
   const [organisation, setOrganisation] = useState<string>('')
   const [project, setProject] = useState<any>({})
   const [projects, setProjects] = useState<projectType[]>([])
@@ -68,7 +70,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
   useEffect(() => {
     if (
       isSuccessCreatedGithubRepository &&
-      !localStorage?.githubIntegrationSetupFromFlagsmith
+      !githubIntegrationSetupFromFlagsmithValue
     ) {
       window.location.href = `${baseUrl}/`
     }
@@ -76,8 +78,8 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
 
   useEffect(() => {
     if (
-      localStorage?.githubIntegrationSetupFromFlagsmith &&
-      localStorage?.githubIntegrationSetupFromFlagsmith === 'install'
+      githubIntegrationSetupFromFlagsmithValue &&
+      githubIntegrationSetupFromFlagsmithValue === 'install'
     ) {
       createGithubIntegration({
         body: {
@@ -93,7 +95,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
       try {
         if (
           isSuccessCreateGithubIntegration &&
-          localStorage?.githubIntegrationSetupFromFlagsmith
+          githubIntegrationSetupFromFlagsmithValue
         ) {
           const dataToSend = { 'installationId': installationId }
           window.opener.postMessage(dataToSend, '*')
@@ -101,22 +103,21 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
         if (
           data &&
           isSuccessCreateGithubIntegration &&
-          !localStorage?.githubIntegrationSetupFromFlagsmith
+          !githubIntegrationSetupFromFlagsmithValue
         ) {
-          const promises = []
-          for (const project of projects) {
-            const promise = createGithubRepository({
-              body: {
-                project: project.value,
-                repository_name: repositoryName,
-                repository_owner: repositoryOwner,
-              },
-              github_id: data.id,
-              organisation_id: organisation,
-            })
-            promises.push(promise)
-          }
-          await Promise.all(promises)
+          await Promise.all(
+            projects.map(async (project) => {
+              await createGithubRepository({
+                body: {
+                  project: project.value,
+                  repository_name: repositoryName,
+                  repository_owner: repositoryOwner,
+                },
+                github_id: data.id,
+                organisation_id: organisation,
+              })
+            }),
+          )
           toast('Integration Created')
         }
       } catch (error) {
@@ -145,7 +146,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
       }}
       className='ml-4 bg-light200'
     >
-      {!localStorage?.githubIntegrationSetupFromFlagsmith ? (
+      {!githubIntegrationSetupFromFlagsmithValue ? (
         <>
           <h3 className='my-3'>Configure your integration with GitHub</h3>
           <InputGroup

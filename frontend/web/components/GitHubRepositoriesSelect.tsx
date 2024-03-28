@@ -11,6 +11,10 @@ export type GitHubRepositoriesSelectType = {
   githubId: string
 }
 
+type repoSelectValue = {
+  value: string
+}
+
 const GitHubRepositoriesSelect: FC<GitHubRepositoriesSelectType> = ({
   disabled,
   githubId,
@@ -38,7 +42,7 @@ const GitHubRepositoriesSelect: FC<GitHubRepositoriesSelectType> = ({
         size='select-md'
         placeholder={'Select Your Repository'}
         disabled={disabled}
-        onChange={(r: string) => {
+        onChange={(r: repoSelectValue) => {
           const repoData = r.value.split('/')
           setRepositoryName(repoData[0])
           setRepositoryOwner(repoData[1])
