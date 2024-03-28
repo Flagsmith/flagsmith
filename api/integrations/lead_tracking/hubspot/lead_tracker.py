@@ -8,7 +8,7 @@ from organisations.models import (
     Organisation,
     Subscription,
 )
-from users.models import FFAdminUser
+from users.models import FFAdminUser, HubspotLead
 
 from .client import HubspotClient
 
@@ -60,7 +60,9 @@ class HubspotLeadTracker(LeadTracker):
 
         hubspot_id = self.get_or_create_organisation_hubspot_id(organisation, user)
 
-        self.client.create_contact(user, hubspot_id)
+        response = self.client.create_contact(user, hubspot_id)
+
+        HubspotLead.objects.create(user=user, hubspot_id=response["id"])
 
     def get_or_create_organisation_hubspot_id(
         self, organisation: Organisation, user: FFAdminUser
