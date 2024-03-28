@@ -3,7 +3,7 @@ import { useGetGithubRepositoriesQuery } from 'common/services/useGithubReposito
 import RepositoriesSelect from './RepositoriesSelect'
 
 type MyRepositoriesSelectType = {
-  githubId?: string
+  githubId: string
   orgId: string
 }
 
@@ -12,7 +12,7 @@ const MyRepositoriesSelect: FC<MyRepositoriesSelectType> = ({
   orgId,
 }) => {
   const { data } = useGetGithubRepositoriesQuery({
-    github_id: githubId || `${16}`,
+    github_id: githubId,
     organisation_id: orgId,
   })
   return <RepositoriesSelect repositories={data?.results} />

@@ -35,11 +35,11 @@ import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
 import Button from 'components/base/forms/Button'
 import { getGithubIntegration } from 'common/services/useGithubIntegration'
-import {
-  createExternalResource,
-  getExternalResource,
-  deleteExternalResource,
-} from 'common/services/useExternalResource'
+// import {
+//   createExternalResource,
+//   getExternalResources,
+//   deleteExternalResource,
+// } from 'common/services/useExternalResource'
 import { getStore } from 'common/store'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import MyIssueSelect from 'components/MyIssuesSelect'
@@ -201,21 +201,22 @@ const CreateFlag = class extends Component {
       this.getFeatureUsage()
     }
 
-    if (
-      this.props.projectFlag &&
-      Utils.getFlagsmithHasFeature('github_integration')
-    ) {
-      getExternalResource(getStore(), {
-        feature_id: this.props.projectFlag.id,
-      }).then((res) => {
-        this.setState({ externalResources: res.data.results })
-      })
-    }
+    // if (
+    //   this.props.projectFlag &&
+    //   Utils.getFlagsmithHasFeature('github_integration')
+    // ) {
+    //   getExternalResources(getStore(), {
+    //     feature_id: this.props.projectFlag.id,
+    //   }).then((res) => {
+    //     this.setState({ externalResources: res.data.results })
+    //   })
+    // }
     if (Utils.getFlagsmithHasFeature('github_integration')) {
       getGithubIntegration(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,
       }).then((res) => {
         this.setState({
+          githubId: res?.data?.results[0]?.id,
           hasIntegrationWithGithub: !!res?.data?.results?.length,
         })
       })
@@ -565,27 +566,27 @@ const CreateFlag = class extends Component {
     const existingChangeRequest = this.props.changeRequest
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
-    const _createExternalResourse = () => {
-      createExternalResource(getStore(), {
-        body: {
-          feature: projectFlag.id,
-          status: status,
-          type: externalResourceType,
-          url: featureExternalResource,
-        },
-        feature_id: projectFlag.id,
-      }).then((res) => {
-        getExternalResource(
-          getStore(),
-          {
-            feature_id: projectFlag.id,
-          },
-          { forceRefetch: true },
-        ).then((res) => {
-          this.setState({ externalResources: res.data.results })
-        })
-      })
-    }
+    // const _createExternalResourse = () => {
+    //   createExternalResource(getStore(), {
+    //     body: {
+    //       feature: projectFlag.id,
+    //       status: status,
+    //       type: externalResourceType,
+    //       url: featureExternalResource,
+    //     },
+    //     feature_id: projectFlag.id,
+    //   }).then((res) => {
+    //     getExternalResources(
+    //       getStore(),
+    //       {
+    //         feature_id: projectFlag.id,
+    //       },
+    //       { forceRefetch: true },
+    //     ).then((res) => {
+    //       this.setState({ externalResources: res.data.results })
+    //     })
+    //   })
+    // }
     let regexValid = true
     try {
       if (!isEdit && name && regex) {
@@ -710,7 +711,8 @@ const CreateFlag = class extends Component {
                       className='text-right'
                       theme='primary'
                       onClick={() => {
-                        _createExternalResourse()
+                        // _createExternalResourse()
+                        console.log('DEBUG: _createExternalResourse:')
                       }}
                     >
                       Link
@@ -780,7 +782,7 @@ const CreateFlag = class extends Component {
                             },
                             { forceRefetch: true },
                           ).then((res) => {
-                            getExternalResource(
+                            getExternalResources(
                               getStore(),
                               {
                                 feature_id: projectFlag.id,

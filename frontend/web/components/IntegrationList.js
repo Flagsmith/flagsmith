@@ -6,6 +6,7 @@ import { getStore } from 'common/store'
 import { getGithubIntegration } from 'common/services/useGithubIntegration'
 
 const CreateEditIntegration = require('./modals/CreateEditIntegrationModal')
+const GITHUB_INSTALLATION_SETUP = 'install'
 
 class Integration extends Component {
   state = {
@@ -38,17 +39,20 @@ class Integration extends Component {
     const childWindow = window.open(
       'https://github.com/apps/flagsmith-github-integration/installations/select_target',
       '_blank',
-      'height=600,width=600,status=yes,toolbar=no,menubar=no,addressbar=no,projectId=1',
+      'height=600,width=600,status=yes,toolbar=no,menubar=no,addressbar=no',
     )
 
-    childWindow.localStorage.setItem('githubIntegrationTrigger', true)
+    childWindow.localStorage.setItem(
+      'githubIntegrationSetupFromFlagsmith',
+      GITHUB_INSTALLATION_SETUP,
+    )
     window.addEventListener('message', (event) => {
       if (
         event.source === childWindow &&
         event.data?.hasOwnProperty('installationId')
       ) {
         this.setState({ windowInstallationId: event.data.installationId })
-        localStorage.removeItem('githubIntegrationTrigger')
+        localStorage.removeItem('githubIntegrationSetupFromFlagsmith')
         childWindow.close()
         getGithubIntegration(
           getStore(),

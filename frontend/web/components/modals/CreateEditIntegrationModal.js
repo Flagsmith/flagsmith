@@ -7,6 +7,10 @@ import ModalHR from './ModalHR'
 import Button from 'components/base/forms/Button'
 import GithubRepositoriesTable from 'components/GithubRepositoriesTable'
 import classNames from 'classnames'
+import { getStore } from 'common/store'
+import { getGithubIntegration } from 'common/services/useGithubIntegration'
+
+const GITHUB_INSTALLATION_UPDATE = 'update'
 
 const CreateEditIntegration = class extends Component {
   static displayName = 'CreateEditIntegration'
@@ -162,6 +166,36 @@ const CreateEditIntegration = class extends Component {
       })
   }
 
+  openGitHubWinInstallations = () => {
+    const childWindow = window.open(
+      `https://github.com/settings/installations/${this.props.installationId}`,
+      '_blank',
+      'height=600,width=600,status=yes,toolbar=no,menubar=no,addressbar=no',
+    )
+
+    childWindow.localStorage.setItem(
+      'githubIntegrationSetupFromFlagsmith',
+      GITHUB_INSTALLATION_UPDATE,
+    )
+    window.addEventListener('message', (event) => {
+      if (
+        event.source === childWindow &&
+        !event.data?.hasOwnProperty('installationId')
+      ) {
+        getGithubIntegration(
+          getStore(),
+          {
+            organisation_id: AccountStore.getOrganisation().id,
+          },
+          { forceRefetch: true },
+        ).then((res) => {
+          localStorage.removeItem('githubIntegrationSetupFromFlagsmith')
+          childWindow.close()
+        })
+      }
+    })
+  }
+
   render() {
     return (
       <form
@@ -186,25 +220,36 @@ const CreateEditIntegration = class extends Component {
               />
             </div>
           )}
-          {this.props.integration.isExternalInstallation && (
-            <>
-              <div className='mb-3'>
-                <label className={!this.props.modal ? 'mb-1 fw-bold' : ''}>
-                  GitHub Repositories
-                </label>
-                <MyGitHubRepositoriesSelect
+          {Utils.getFlagsmithHasFeature('github_integration') &&
+            this.props.integration.isExternalInstallation && (
+              <>
+                <div className='mb-3'>
+                  <label className={!this.props.modal ? 'mb-1 fw-bold' : ''}>
+                    GitHub Repositories
+                  </label>
+                  <MyGitHubRepositoriesSelect
+                    githubId={this.props.githubId}
+                    installationId={this.props.installationId}
+                    organisationId={AccountStore.getOrganisation().id}
+                    projectId={this.props.projectId}
+                  />
+                </div>
+                <GithubRepositoriesTable
                   githubId={this.props.githubId}
-                  installationId={this.props.installationId}
                   organisationId={AccountStore.getOrganisation().id}
-                  projectId={this.props.projectId}
                 />
-              </div>
-              <GithubRepositoriesTable
-                githubId={this.props.githubId}
-                organisationId={AccountStore.getOrganisation().id}
-              />
-            </>
-          )}
+                <Button
+                  className='ml-3'
+                  type='text'
+                  id='open-github-win-installations-btn'
+                  data-test='open-github-win-installations-btn'
+                  onClick={this.openGitHubWinInstallations}
+                  size='xSmall'
+                >
+                  Manage available GitHub Repositories
+                </Button>
+              </>
+            )}
           {this.state.fields &&
             this.state.fields.map((field) => (
               <>

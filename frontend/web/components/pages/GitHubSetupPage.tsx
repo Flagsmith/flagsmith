@@ -68,14 +68,17 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
   useEffect(() => {
     if (
       isSuccessCreatedGithubRepository &&
-      !localStorage?.githubIntegrationTrigger
+      !localStorage?.githubIntegrationSetupFromFlagsmith
     ) {
       window.location.href = `${baseUrl}/`
     }
   }, [isSuccessCreatedGithubRepository])
 
   useEffect(() => {
-    if (localStorage?.githubIntegrationTrigger) {
+    if (
+      localStorage?.githubIntegrationSetupFromFlagsmith &&
+      localStorage?.githubIntegrationSetupFromFlagsmith === 'install'
+    ) {
       createGithubIntegration({
         body: {
           installation_id: installationId,
@@ -90,7 +93,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
       try {
         if (
           isSuccessCreateGithubIntegration &&
-          localStorage?.githubIntegrationTrigger
+          localStorage?.githubIntegrationSetupFromFlagsmith
         ) {
           const dataToSend = { 'installationId': installationId }
           window.opener.postMessage(dataToSend, '*')
@@ -98,7 +101,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
         if (
           data &&
           isSuccessCreateGithubIntegration &&
-          !localStorage?.githubIntegrationTrigger
+          !localStorage?.githubIntegrationSetupFromFlagsmith
         ) {
           const promises = []
           for (const project of projects) {
@@ -142,127 +145,140 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
       }}
       className='ml-4 bg-light200'
     >
-      <h3 className='my-3'>Configure your integration with GitHub</h3>
-      <InputGroup
-        value={installationId}
-        data-test='InstallationId'
-        inputProps={{
-          name: 'InstallationId',
-        }}
-        disabled
-        type='text'
-        className={{ width: '500px' }}
-        title={'GitHub App Installation Id'}
-      />
-      <div className='mr-4 mb-4'>
-        <label>Select your Flagsmith Organisation</label>
-        <OrganisationSelect
-          onChange={(organisationId: string) => {
-            setOrganisation(organisationId)
-          }}
-          showSettings={false}
-          firstOrganisation
-        />
-      </div>
-      <label>Select your Flagsmith Project and your Github Repository</label>
-      <Row className='mb-2'>
-        <div style={{ minWidth: '250px' }}>
-          <ProjectFilter
-            showAll
-            organisationId={organisation}
-            onChange={setProject}
-            value={project.value}
-            projectComplete={true}
+      {!localStorage?.githubIntegrationSetupFromFlagsmith ? (
+        <>
+          <h3 className='my-3'>Configure your integration with GitHub</h3>
+          <InputGroup
+            value={installationId}
+            data-test='InstallationId'
+            inputProps={{
+              name: 'InstallationId',
+            }}
+            disabled
+            type='text'
+            className={{ width: '500px' }}
+            title={'GitHub App Installation Id'}
           />
-        </div>
-        <Input
-          value={repositoryOwner}
-          data-test='repositoryOwner'
-          inputProps={{
-            name: 'repositoryOwner',
-          }}
-          onChange={(e: InputEvent) =>
-            setRepositoryOwner(Utils.safeParseEventValue(e))
-          }
-          disabled
-          type='text'
-          title={'Repository Owner'}
-          inputClassName='input--wide'
-          placeholder='repositoryOwner'
-        />
-        <div style={{ width: '250px' }}>
-          <Select
-            size='select-md'
-            placeholder={'Select your repository'}
-            onChange={(v: repoType) => setRepositoryName(v.label)}
-            options={repositories?.repositories?.map((r: repoType) => {
-              return { label: r.name, value: r.name }
-            })}
-          />
-        </div>
-        <Button
-          theme='primary'
-          disabled={!project || !installationId || !repositoryName}
-          onClick={() => {
-            {
-              const newProjects = [...projects]
-              newProjects.push(project)
-              setProjects(newProjects)
-            }
-          }}
-        >
-          Add Project
-        </Button>
-      </Row>
-      <PanelSearch
-        className='no-pad mb-4'
-        title='Projects'
-        items={projects}
-        header={
-          <Row className='table-header'>
-            <Flex className='table-column px-3'>Project</Flex>
-            <div className='table-column text-center' style={{ width: '80px' }}>
-              Remove
+          <div className='mr-4 mb-4'>
+            <label>Select your Flagsmith Organisation</label>
+            <OrganisationSelect
+              onChange={(organisationId: string) => {
+                setOrganisation(organisationId)
+              }}
+              showSettings={false}
+              firstOrganisation
+            />
+          </div>
+          <label>
+            Select your Flagsmith Project and your Github Repository
+          </label>
+          <Row className='mb-2'>
+            <div style={{ minWidth: '250px' }}>
+              <ProjectFilter
+                showAll
+                organisationId={organisation}
+                onChange={setProject}
+                value={project.value}
+                projectComplete={true}
+              />
             </div>
-          </Row>
-        }
-        renderRow={(v: projectType) => (
-          <Row className='list-item' key={v.value}>
-            <Flex className='table-column px-3'>
-              <div className='font-weight-medium mb-1'>{v.label}</div>
-            </Flex>
-            <div
-              className='table-column  text-center'
-              style={{ width: '80px' }}
+            <Input
+              value={repositoryOwner}
+              data-test='repositoryOwner'
+              inputProps={{
+                name: 'repositoryOwner',
+              }}
+              onChange={(e: InputEvent) =>
+                setRepositoryOwner(Utils.safeParseEventValue(e))
+              }
+              disabled
+              type='text'
+              title={'Repository Owner'}
+              inputClassName='input--wide'
+              placeholder='repositoryOwner'
+            />
+            <div style={{ width: '250px' }}>
+              <Select
+                size='select-md'
+                placeholder={'Select your repository'}
+                onChange={(v: repoType) => setRepositoryName(v.label)}
+                options={repositories?.repositories?.map((r: repoType) => {
+                  return { label: r.name, value: r.name }
+                })}
+              />
+            </div>
+            <Button
+              theme='primary'
+              disabled={!project || !installationId || !repositoryName}
+              onClick={() => {
+                {
+                  const newProjects = [...projects]
+                  newProjects.push(project)
+                  setProjects(newProjects)
+                }
+              }}
             >
-              <Button
-                onClick={() => {
-                  setProjects(
-                    projects.filter((p: projectType) => p.value !== v.value),
-                  )
-                }}
-                className='btn btn-with-icon'
-              >
-                <Icon name='trash-2' width={20} fill='#656D7B' />
-              </Button>
-            </div>
+              Add Project
+            </Button>
           </Row>
-        )}
-      />
-      <Button
-        theme='primary'
-        disabled={!projects.length || !installationId || !repositoryName}
-        onClick={() => {
-          createGithubIntegration({
-            body: {
-              installation_id: installationId,
-            },
-            organisation_id: organisation,
-          })
-        }}
-      >
-        Save Configuration
-      </Button>
+          <PanelSearch
+            className='no-pad mb-4'
+            title='Projects'
+            items={projects}
+            header={
+              <Row className='table-header'>
+                <Flex className='table-column px-3'>Project</Flex>
+                <div
+                  className='table-column text-center'
+                  style={{ width: '80px' }}
+                >
+                  Remove
+                </div>
+              </Row>
+            }
+            renderRow={(v: projectType) => (
+              <Row className='list-item' key={v.value}>
+                <Flex className='table-column px-3'>
+                  <div className='font-weight-medium mb-1'>{v.label}</div>
+                </Flex>
+                <div
+                  className='table-column  text-center'
+                  style={{ width: '80px' }}
+                >
+                  <Button
+                    onClick={() => {
+                      setProjects(
+                        projects.filter(
+                          (p: projectType) => p.value !== v.value,
+                        ),
+                      )
+                    }}
+                    className='btn btn-with-icon'
+                  >
+                    <Icon name='trash-2' width={20} fill='#656D7B' />
+                  </Button>
+                </div>
+              </Row>
+            )}
+          />
+          <Button
+            theme='primary'
+            disabled={!projects.length || !installationId || !repositoryName}
+            onClick={() => {
+              createGithubIntegration({
+                body: {
+                  installation_id: installationId,
+                },
+                organisation_id: organisation,
+              })
+            }}
+          >
+            Save Configuration
+          </Button>
+        </>
+      ) : (
+        <h1>Installation Completed</h1>
+      )}
     </div>
   )
 }
