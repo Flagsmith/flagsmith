@@ -60,7 +60,13 @@ def fetch_pull_requests(request, organisation_pk):
         GITHUB_APP_ID,
     )
 
-    url = f"{GITHUB_API_URL}repos/novakzaballa/novak-flagsmith-example/pulls"
+    repo_owner = request.query_params.get("repo_owner", "")
+    repo_name = request.query_params.get("repo_name", "")
+
+    if not repo_owner or not repo_name:
+        return JsonResponse({"error": "repo_owner or repo_name not found"}, status=400)
+
+    url = f"{GITHUB_API_URL}repos/{repo_owner}/{repo_name}/pulls"
 
     headers = {
         "X-GitHub-Api-Version": GITHUB_API_VERSION,
@@ -85,7 +91,13 @@ def fetch_issues(request, organisation_pk):
         organisation.github_config.installation_id,
         GITHUB_APP_ID,
     )
-    url = f"{GITHUB_API_URL}repos/novakzaballa/novak-flagsmith-example/issues"
+    repo_owner = request.query_params.get("repo_owner", "")
+    repo_name = request.query_params.get("repo_name", "")
+
+    if not repo_owner or not repo_name:
+        return JsonResponse({"error": "repo_owner or repo_name not found"}, status=400)
+
+    url = f"{GITHUB_API_URL}repos/{repo_owner}/{repo_name}/issues"
 
     headers = {
         "X-GitHub-Api-Version": GITHUB_API_VERSION,
