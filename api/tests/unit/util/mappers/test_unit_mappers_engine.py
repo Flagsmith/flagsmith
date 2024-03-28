@@ -16,7 +16,11 @@ from flag_engine.features.models import (
     MultivariateFeatureOptionModel,
     MultivariateFeatureStateValueModel,
 )
-from flag_engine.identities.models import IdentityModel, TraitModel
+from flag_engine.identities.models import (
+    IdentityFeaturesList,
+    IdentityModel,
+    TraitModel,
+)
 from flag_engine.organisations.models import OrganisationModel
 from flag_engine.projects.models import ProjectModel
 from flag_engine.segments.models import (
@@ -451,21 +455,23 @@ def test_map_identity_to_engine__return_expected(
         identifier=identity.identifier,
         environment_api_key=environment_api_key,
         created_date=identity.created_date,
-        identity_features=[
-            FeatureStateModel(
-                feature=FeatureModel(
-                    id=feature.pk,
-                    name=feature.name,
-                    type=feature.type,
-                ),
-                enabled=identity_featurestate.enabled,
-                django_id=identity_featurestate.pk,
-                feature_segment=identity_featurestate.feature_segment,
-                featurestate_uuid=identity_featurestate.uuid,
-                feature_state_value=identity_featurestate.get_feature_state_value(),
-                multivariate_feature_state_values=[],
-            )
-        ],
+        identity_features=IdentityFeaturesList(
+            [
+                FeatureStateModel(
+                    feature=FeatureModel(
+                        id=feature.pk,
+                        name=feature.name,
+                        type=feature.type,
+                    ),
+                    enabled=identity_featurestate.enabled,
+                    django_id=identity_featurestate.pk,
+                    feature_segment=identity_featurestate.feature_segment,
+                    featurestate_uuid=identity_featurestate.uuid,
+                    feature_state_value=identity_featurestate.get_feature_state_value(),
+                    multivariate_feature_state_values=[],
+                )
+            ]
+        ),
         identity_traits=[
             TraitModel(
                 trait_key=trait.trait_key,

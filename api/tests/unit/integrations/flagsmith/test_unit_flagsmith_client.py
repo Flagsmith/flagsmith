@@ -12,7 +12,7 @@ from integrations.flagsmith.flagsmith_service import ENVIRONMENT_JSON_PATH
 
 @pytest.fixture(autouse=True)
 def reset_globals(mocker: MockerFixture) -> None:
-    mocker.patch("integrations.flagsmith.client._flagsmith_client", None)
+    mocker.patch("integrations.flagsmith.client._flagsmith_clients", {})
     yield
 
 

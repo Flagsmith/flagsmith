@@ -6,8 +6,7 @@ from typing import Iterable
 from boto3.dynamodb.conditions import Key
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from flag_engine.environments.builders import build_environment_model
-from flag_engine.identities.builders import build_identity_model
+from flag_engine.environments.models import EnvironmentModel
 from flag_engine.identities.models import IdentityModel
 from flag_engine.segments.evaluator import get_identity_segments
 from rest_framework.exceptions import NotFound
@@ -153,11 +152,11 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
             raise ValueError("Must provide one of identity_pk or identity_model.")
 
         with suppress(ObjectDoesNotExist):
-            identity = identity_model or build_identity_model(
+            identity = identity_model or IdentityModel.model_validate(
                 self.get_item_from_uuid(identity_pk)
             )
             environment_wrapper = DynamoEnvironmentWrapper()
-            environment = build_environment_model(
+            environment = EnvironmentModel.model_validate(
                 environment_wrapper.get_item(identity.environment_api_key)
             )
             segments = get_identity_segments(environment, identity)

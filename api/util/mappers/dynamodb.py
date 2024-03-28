@@ -77,10 +77,12 @@ def map_environment_api_key_to_environment_api_key_document(
 def map_engine_identity_to_identity_document(
     engine_identity: "IdentityModel",
 ) -> Document:
-    return {
+    response = {
         field_name: _map_value_to_document_value(value)
         for field_name, value in engine_identity
     }
+    response["composite_key"] = engine_identity.composite_key
+    return response
 
 
 def map_identity_to_identity_document(
