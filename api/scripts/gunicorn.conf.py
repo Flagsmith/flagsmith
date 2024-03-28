@@ -6,7 +6,7 @@ access_log_format = os.getenv("ACCESS_LOG_FORMAT") or (
     r'"%(a)s" %({origin}i)s %({access-control-allow-origin}o)s'
 )
 keep_alive = os.getenv("GUNICORN_KEEP_ALIVE", 2)
-logger_class = "util.logging.GunicornJsonCapableLogger"
+# logger_class = "util.logging.GunicornJsonCapableLogger"
 threads = os.getenv("GUNICORN_THREADS", 2)
 timeout = os.getenv("GUNICORN_TIMEOUT", 30)
 workers = os.getenv("GUNICORN_WORKERS", 3)

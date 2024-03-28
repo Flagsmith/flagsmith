@@ -45,7 +45,7 @@ inputs:
   image_tag:
     description: The tag to use when registering the docker image in ECR
     required: false
-    default: ${GITHUB_REF#refs/*/}
+    default: ${GITHUB_SHA}
   flagsmith_saml_revision:
     description: The flagsmith-saml repo git revision to use when building deployment package.
     required: false

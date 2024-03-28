@@ -2,6 +2,8 @@ name: API Deploy to Production ECS
 
 on:
   push:
+    branches:
+      - test/gunicorn-json
     tags:
       - '*'
     paths:
