@@ -9,7 +9,7 @@ from organisations.models import (
     OrganisationRole,
 )
 from task_processor.task_run_method import TaskRunMethod
-from users.models import FFAdminUser
+from users.models import FFAdminUser, HubspotLead
 
 
 def test_hubspot_with_new_contact_and_new_organisation(
@@ -54,13 +54,14 @@ def test_hubspot_with_new_contact_and_new_organisation(
         return_value=None,
     )
 
+    hubspot_lead_id = "1000551"
     mock_create_contact = mocker.patch(
         "integrations.lead_tracking.hubspot.client.HubspotClient.create_contact",
         return_value={
             "archived": False,
             "archived_at": None,
             "created_at": datetime.datetime(2024, 2, 26, 20, 2, 50, 69000),
-            "id": "1000551",
+            "id": hubspot_lead_id,
             "properties": {
                 "createdate": "2024-02-26T20:02:50.069Z",
                 "email": user.email,
@@ -88,6 +89,7 @@ def test_hubspot_with_new_contact_and_new_organisation(
     user.add_organisation(organisation, role=OrganisationRole.ADMIN)
 
     # Then
+    assert HubspotLead.objects.filter(hubspot_id=hubspot_lead_id).exists() is True
     organisation.refresh_from_db()
     assert organisation.hubspot_organisation.hubspot_id == future_hubspot_id
 
@@ -221,13 +223,14 @@ def test_hubspot_with_new_contact_and_existing_organisation(
         return_value=None,
     )
 
+    hubspot_lead_id = "1000551"
     mock_create_contact = mocker.patch(
         "integrations.lead_tracking.hubspot.client.HubspotClient.create_contact",
         return_value={
             "archived": False,
             "archived_at": None,
             "created_at": datetime.datetime(2024, 2, 26, 20, 2, 50, 69000),
-            "id": "1000551",
+            "id": hubspot_lead_id,
             "properties": {
                 "createdate": "2024-02-26T20:02:50.069Z",
                 "email": user.email,
@@ -254,6 +257,7 @@ def test_hubspot_with_new_contact_and_existing_organisation(
     user.add_organisation(organisation, role=OrganisationRole.ADMIN)
 
     # Then
+    assert HubspotLead.objects.filter(hubspot_id=hubspot_lead_id).exists() is True
     mock_create_company.assert_not_called()
     mock_create_contact.assert_called_once_with(user, hubspot_id)
     mock_get_contact.assert_called_once_with(user)

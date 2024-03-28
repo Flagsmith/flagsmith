@@ -411,3 +411,14 @@ class UserPermissionGroup(models.Model):
 
     def remove_users_by_id(self, user_ids: list):
         self.users.remove(*user_ids)
+
+
+class HubspotLead(models.Model):
+    user = models.OneToOneField(
+        FFAdminUser,
+        related_name="hubspot_lead",
+        on_delete=models.CASCADE,
+    )
+    hubspot_id = models.CharField(unique=True, max_length=100, null=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
