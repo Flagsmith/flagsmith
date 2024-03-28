@@ -535,13 +535,13 @@ CHARGEBEE_API_KEY = env("CHARGEBEE_API_KEY", default=None)
 CHARGEBEE_SITE = env("CHARGEBEE_SITE", default=None)
 
 # Logging configuration
-LOG_FORMAT = env.str("LOG_FORMAT", default="generic")
-LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
 LOGGING_CONFIGURATION_FILE = env.str("LOGGING_CONFIGURATION_FILE", default=None)
 if LOGGING_CONFIGURATION_FILE:
     with open(LOGGING_CONFIGURATION_FILE, "r") as f:
         LOGGING = json.loads(f.read())
 else:
+    LOG_FORMAT = env.str("LOG_FORMAT", default="generic")
+    LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
