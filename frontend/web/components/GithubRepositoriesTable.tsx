@@ -56,10 +56,24 @@ const GithubRepositoriesTable: FC<GithubRepositoriesTableType> = ({
             >
               <Button
                 onClick={() => {
-                  deleteGithubRepository({
-                    github_id: githubId,
-                    id: `${repo.id}`,
-                    organisation_id: organisationId,
+                  openConfirm({
+                    body: (
+                      <div>
+                        {
+                          'Are you sure you want to unlink this Repository from this Project'
+                        }
+                      </div>
+                    ),
+                    destructive: true,
+                    onYes: () => {
+                      deleteGithubRepository({
+                        github_id: githubId,
+                        id: `${repo.id}`,
+                        organisation_id: organisationId,
+                      })
+                    },
+                    title: 'Unlink Repository',
+                    yesText: 'Confirm',
                   })
                 }}
                 className='btn btn-with-icon'
