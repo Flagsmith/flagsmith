@@ -52,7 +52,7 @@ jobs:
           api_ecr_image_url: ${{ steps.deploy-api.outputs.api_ecr_image_url }}
 
   run-tests:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-16
     name: Run E2E Tests
     environment: production
     needs: deploy-production-ecs

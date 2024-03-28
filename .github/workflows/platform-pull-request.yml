@@ -30,7 +30,7 @@ jobs:
             test
 
   run-e2e-tests-1:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-8
     name: E2E Local - Segments-1, Environment
 
     permissions:
@@ -59,7 +59,7 @@ jobs:
           concurrency: 1
 
   run-e2e-tests-2:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-8
     name: E2E Local - Segments-2
 
     permissions:
@@ -88,7 +88,7 @@ jobs:
           concurrency: 1
 
   run-e2e-tests-3:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-8
     name: E2E Local - Segments-3, Signup, Flag, Invite, Project
 
     permissions:
@@ -117,7 +117,7 @@ jobs:
           concurrency: 2
 
   run-e2e-tests-4:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-8
     name: E2E Local - Versioning
 
     permissions:
@@ -146,7 +146,7 @@ jobs:
           concurrency: 1
 
   run-e2e-versioning-tests-docker-unified:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-8
     name: E2E Unified - Versioning
 
     permissions:
@@ -172,7 +172,7 @@ jobs:
           docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=1 npm run test -- versioning
 
   run-e2e-segments-1-tests-docker-unified:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-8
     name: E2E Unified - Segments-1, Environment
 
     permissions:
@@ -198,7 +198,7 @@ jobs:
           docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=1 npm run test -- segment-part-1 environment
 
   run-e2e-segments-2-tests-docker-unified:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-8
     name: E2E Unified - Segments-2
 
     permissions:
@@ -224,7 +224,7 @@ jobs:
           docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=1 npm run test -- segment-part-2
 
   run-e2e-other-tests-docker-unified:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-8
     name: E2E Unified - Segments-3, Signup, Flag, Invite, Project
 
     permissions:
