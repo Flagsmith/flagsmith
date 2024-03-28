@@ -807,6 +807,47 @@ public class MyCustomOfflineHandler implements IOfflineHandler:
 ```
 
 </TabItem>
+<TabItem value="dotnet" label=".NET">
+
+```csharp
+// Using the built-in local file handler
+var localFileHandler = new LocalFileHandler("path_to_environment_file/environment_file.json");
+
+var flagsmithClient = new FlagsmithClient(
+    offlineMode: true,
+    offlineHandler: localFileHandler
+);
+
+// Defining a custom offline handler
+
+public class MyCustomOfflineHandler: BaseOfflineHandler
+{
+    public override EnvironmentModel GetEnvironment()
+    {
+        return someMethodToGetTheEnvironment();
+    }
+}
+```
+
+</TabItem>
+<TabItem value="nodejs" label="NodeJS">
+
+```javascript
+// Using the built-in local file handler
+
+const localFileHandler = new LocalFileHandler("path_to_environment_file/environment_file.json");
+const flagsmith = new Flagsmith({ offlineMode: true, offlineHandler: localFileHandler });
+
+// Defining a custom offline handler
+
+class CustomOfflineHandler extends BaseOfflineHandler {
+    getEnvironment(): EnvironmentModel {
+        return someMethodToGetTheEnvironment();
+    }
+}
+```
+
+</TabItem>
 <TabItem value="ruby" label="Ruby">
 
 ```ruby
