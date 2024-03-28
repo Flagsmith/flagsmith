@@ -14,9 +14,13 @@ class GithubRepositorySerializer(ModelSerializer):
     class Meta:
         model = GithubRepository
         fields = (
+            "id",
             "github_configuration",
             "project",
             "repository_owner",
             "repository_name",
         )
-        read_only_fields = ("github_configuration",)
+        read_only_fields = (
+            "id",
+            "github_configuration",
+        )

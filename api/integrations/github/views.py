@@ -104,7 +104,6 @@ def fetch_issues(request, organisation_pk):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
 def fetch_repositories(request):
     installation_id = request.GET.get("installation_id")
 
