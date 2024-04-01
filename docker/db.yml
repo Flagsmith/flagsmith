@@ -7,7 +7,7 @@ services:
     pull_policy: always
     restart: unless-stopped
     volumes:
-      - pg_11_data:/var/lib/postgresql/data:Z
+      - pg_11_data:/var/lib/postgresql/data
     ports:
       - 5432:5432
     environment:
