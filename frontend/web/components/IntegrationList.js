@@ -33,7 +33,6 @@ class Integration extends Component {
     )
     return (
       <div className='panel panel-integrations p-4 mb-3'>
-        <Flex>
           <img className='mb-2' src={image} />
           <Row space style={{ flexWrap: 'noWrap' }}>
             <div className='subtitle mt-2'>
@@ -96,7 +95,6 @@ class Integration extends Component {
               )}
             </Row>
           </Row>
-        </Flex>
 
         {activeIntegrations &&
           activeIntegrations.map((integration) => (
