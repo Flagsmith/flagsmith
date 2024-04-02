@@ -416,11 +416,11 @@ const FeaturesPage = class extends Component {
                                             }
                                             useLocalStorage
                                             value={this.state.group_owners}
-                                            onChange={(owners) => {
+                                            onChange={(group_owners) => {
                                               FeatureListStore.isLoading = true
                                               this.setState(
                                                 {
-                                                  group_owners: owners,
+                                                  group_owners: group_owners,
                                                 },
                                                 this.filter,
                                               )
