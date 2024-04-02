@@ -833,14 +833,14 @@ public class MyCustomOfflineHandler: BaseOfflineHandler
 
 ```javascript
 // Using the built-in local file handler
-const localFileHandler = new LocalFileHandler("path_to_environment_file/environment_file.json");
+const localFileHandler = new LocalFileHandler('path_to_environment_file/environment_file.json');
 const flagsmith = new Flagsmith({ offlineMode: true, offlineHandler: localFileHandler });
 
 // Defining a custom offline handler
 class CustomOfflineHandler extends BaseOfflineHandler {
-    getEnvironment(): EnvironmentModel {
-        return someMethodToGetTheEnvironment();
-    }
+ getEnvironment(): EnvironmentModel {
+  return someMethodToGetTheEnvironment();
+ }
 }
 ```
 
