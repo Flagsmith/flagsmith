@@ -7,7 +7,6 @@ import CreateGroupModal from 'components/modals/CreateGroup'
 import withAuditWebhooks from 'common/providers/withAuditWebhooks'
 import CreateAuditWebhookModal from 'components/modals/CreateAuditWebhook'
 import ConfirmRemoveAuditWebhook from 'components/modals/ConfirmRemoveAuditWebhook'
-import ConfirmDeleteRole from 'components/modals/ConfirmDeleteRole'
 import Button from 'components/base/forms/Button'
 import { EditPermissionsModal } from 'components/EditPermissions'
 import AdminAPIKeys from 'components/AdminAPIKeys'
@@ -27,6 +26,8 @@ import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 import _data from 'common/data/base/_data'
 import RolesTable from 'components/RolesTable'
+import classNames from 'classnames'
+import CreateGroup from 'components/modals/CreateGroup'
 
 const widths = [450, 255, 250, 235, 150, 100]
 
@@ -246,6 +247,19 @@ const OrganisationSettingsPage = class extends Component {
     )
   }
 
+  editGroup = (group) => {
+    openModal(
+      'Edit Group',
+      <CreateGroup
+        roles={this.state.roles}
+        isEdit
+        orgId={AccountStore.getOrganisation().id}
+        group={group}
+      />,
+      'side-modal',
+    )
+  }
+
   deleteWebhook = (webhook) => {
     openModal(
       'Remove Webhook',
@@ -274,27 +288,6 @@ const OrganisationSettingsPage = class extends Component {
       'p-0 side-modal',
     )
   }
-
-  editGroupPermissions = (group, roles) => {
-    openModal(
-      'Edit Organisation Permissions',
-      <EditPermissionsModal
-        name={`${group.name}`}
-        id={AccountStore.getOrganisation().id}
-        isGroup
-        onSave={() => {
-          AppActions.getOrganisation(AccountStore.getOrganisation().id)
-        }}
-        isEditGroupPermission
-        level='organisation'
-        group={group}
-        roles={roles}
-        push={this.context.router.history.push}
-      />,
-      'p-0 side-modal',
-    )
-  }
-
   formatLastLoggedIn = (last_login) => {
     if (!last_login) return 'Never'
 
@@ -447,8 +440,9 @@ const OrganisationSettingsPage = class extends Component {
                             </Flex>
 
                             <UserGroupList
-                              onEditPermissions={this.editGroupPermissions}
                               showRemove
+                              onClick={this.editGroup}
+                              roles={this.state.roles}
                               orgId={organisation && organisation.id}
                             />
                           </TabItem>
@@ -1431,13 +1425,8 @@ const OrganisationSettingsPage = class extends Component {
                                                 environments.
                                               </p>
                                               <UserGroupList
-                                                onEditPermissions={(group) =>
-                                                  this.editGroupPermissions(
-                                                    group,
-                                                    this.state.roles,
-                                                  )
-                                                }
                                                 showRemove
+                                                onClick={this.editGroup}
                                                 orgId={
                                                   organisation &&
                                                   organisation.id
