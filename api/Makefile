@@ -84,7 +84,7 @@ django-collect-static:
 .PHONY: serve
 serve:
 	poetry run gunicorn --bind 0.0.0.0:8000 \
-		--logger-class ${GUNICORN_LOGGER_CLASS:-'util.logging.GunicornJsonCapableLogger'} \
+		--logger-class ${GUNICORN_LOGGER_CLASS} \
 		--reload \
 		app.wsgi
 
