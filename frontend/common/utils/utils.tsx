@@ -496,6 +496,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
+  isValidNumber(value: any) {
+    return /^-?\d*\.?\d+$/.test(`${value}`)
+  },
   loadScriptPromise(url: string) {
     return new Promise((resolve) => {
       const cb = function () {
@@ -515,6 +518,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (typeof x !== 'number') return ''
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   },
+
   openChat() {
     // @ts-ignore
     if (typeof $crisp !== 'undefined') {
@@ -531,7 +535,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   removeElementFromArray(array: any[], index: number) {
     return array.slice(0, index).concat(array.slice(index + 1))
   },
-
   renderWithPermission(permission: boolean, name: string, el: ReactNode) {
     return permission ? (
       el
@@ -559,11 +562,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       : []
     const operatorObj = Utils.findOperator(rule.operator, rule.value, operators)
 
-    if (
-      operatorObj &&
-      operatorObj.value &&
-      operatorObj.value.toLowerCase().includes('semver')
-    ) {
+    if (operatorObj?.type === 'number') {
+      return Utils.isValidNumber(rule.value)
+    }
+
+    if (operatorObj?.value?.toLowerCase?.().includes('semver')) {
       return !!semver.valid(`${rule.value.split(':')[0]}`)
     }
 
