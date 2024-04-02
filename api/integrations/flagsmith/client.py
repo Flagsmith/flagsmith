@@ -8,10 +8,8 @@ Usage:
 environment_flags = get_client().get_environment_flags()
 identity_flags = get_client().get_identity_flags()
 ```
-
-Possible extensions:
- - Allow for multiple clients?
 """
+
 import typing
 
 from django.conf import settings
@@ -21,14 +19,19 @@ from flagsmith.offline_handlers import LocalFileHandler
 from integrations.flagsmith.exceptions import FlagsmithIntegrationError
 from integrations.flagsmith.flagsmith_service import ENVIRONMENT_JSON_PATH
 
-_flagsmith_client: typing.Optional[Flagsmith] = None
+_flagsmith_clients: dict[str, Flagsmith] = {}
 
 
-def get_client() -> Flagsmith:
-    global _flagsmith_client
+def get_client(name: str = "default", local_eval: bool = False) -> Flagsmith:
+    global _flagsmith_clients
 
-    if not _flagsmith_client:
-        _flagsmith_client = Flagsmith(**_get_client_kwargs())
+    try:
+        _flagsmith_client = _flagsmith_clients[name]
+    except (KeyError, TypeError):
+        kwargs = _get_client_kwargs()
+        kwargs["enable_local_evaluation"] = local_eval
+        _flagsmith_client = Flagsmith(**kwargs)
+        _flagsmith_clients[name] = _flagsmith_client
 
     return _flagsmith_client
 

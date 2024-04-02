@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
+
 import importlib
 import json
 import os
@@ -967,9 +968,11 @@ MAX_SELF_MIGRATABLE_IDENTITIES = env.int("MAX_SELF_MIGRATABLE_IDENTITIES", 10000
 TASK_RUN_METHOD = env.enum(
     "TASK_RUN_METHOD",
     type=TaskRunMethod,
-    default=TaskRunMethod.TASK_PROCESSOR.value
-    if env.bool("RUN_BY_PROCESSOR", False)
-    else TaskRunMethod.SEPARATE_THREAD.value,
+    default=(
+        TaskRunMethod.TASK_PROCESSOR.value
+        if env.bool("RUN_BY_PROCESSOR", False)
+        else TaskRunMethod.SEPARATE_THREAD.value
+    ),
 )
 ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
@@ -1033,7 +1036,31 @@ HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
 ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
 HUBSPOT_IGNORE_DOMAINS = env.list("HUBSPOT_IGNORE_DOMAINS", [])
 HUBSPOT_IGNORE_DOMAINS_REGEX = env("HUBSPOT_IGNORE_DOMAINS_REGEX", "")
-
+HUBSPOT_IGNORE_ORGANISATION_DOMAINS = env.list(
+    "HUBSPOT_IGNORE_ORGANISATION_DOMAINS",
+    [
+        "126.com",
+        "163.com",
+        "aol.com",
+        "att.net",
+        "comcast.net",
+        "gmail.com",
+        "gmx.com",
+        "hotmail.com",
+        "icloud.com",
+        "live.com",
+        "mail.com",
+        "mail.ru",
+        "outlook.co.uk",
+        "outlook.com",
+        "protonmail.com",
+        "qq.com",
+        "sina.com",
+        "yahoo.com",
+        "yandex.com",
+        "zoho.com",
+    ],
+)
 
 # List of plan ids that support seat upgrades
 AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])

@@ -157,7 +157,7 @@ export type Req = {
     role_id: number
   }
   updateRolePermission: Req['createRolePermission'] & { id: number }
-  deleteRolePermission: { organisation_id: string; role_id: number }
+  deleteRolePermission: { organisation_id: number; role_id: number }
 
   getIdentityFeatureStates: {
     environment: string
@@ -307,5 +307,6 @@ export type Req = {
     id: string
   }
   getProject: { id: string }
+  getUserGroupPermission: { project_id: string }
   // END OF TYPES
 }
