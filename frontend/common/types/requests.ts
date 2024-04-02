@@ -312,8 +312,14 @@ export type Req = {
   createGroup: {
     orgId: string
     data: Omit<UserGroup, 'id'>
-    usersToAddAdmin: GroupUser[] | null
+    usersToAddAdmin: number[] | null
   }
   getUserGroupPermission: { project_id: string }
+  updateGroup: Req['createGroup'] & {
+    orgId: string
+    data: UserGroup
+    usersToAddAdmin: number[] | null
+    usersToRemoveAdmin: number[] | null
+  }
   // END OF TYPES
 }

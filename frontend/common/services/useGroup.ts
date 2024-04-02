@@ -1,7 +1,6 @@
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
-import data from 'common/data/base/_data'
 import { getStore } from 'common/store'
 
 export const groupService = service
@@ -36,7 +35,7 @@ export const groupService = service
               createGroupAdmin(getStore(), {
                 group: data.id,
                 orgId: query.orgId,
-                user: v.id,
+                user: v,
               }),
             ),
           )
@@ -88,6 +87,51 @@ export const groupService = service
         query: (query) => ({
           url: `organisations/${query.orgId}/groups/?page=${query.page}`,
         }),
+      }),
+      updateGroup: builder.mutation<Res['group'], Req['updateGroup']>({
+        invalidatesTags: (res) => [
+          { id: 'LIST', type: 'Group' },
+          { id: res?.id, type: 'Group' },
+        ],
+        queryFn: async (query, { dispatch }, _, baseQuery) => {
+          //Create the group
+          const { data, error } = await baseQuery({
+            body: query.data,
+            method: 'PUT',
+            url: `organisations/${query.orgId}/groups/${query.data.id}`,
+          })
+          if (error) {
+            return { error }
+          }
+          //Add the members
+          if (query.data.users?.length) {
+            const { error } = await baseQuery({
+              body: { user_ids: query.data.users.map((u) => u.id) },
+              method: 'POST',
+              url: `organisations/${query.orgId}/groups/${data.id}/`,
+            })
+          }
+          // Make the admins
+          await Promise.all(
+            (query.usersToAddAdmin || []).map((v) =>
+              createGroupAdmin(getStore(), {
+                group: data.id,
+                orgId: query.orgId,
+                user: v,
+              }),
+            ),
+          )
+          await Promise.all(
+            (query.usersToRemoveAdmin || []).map((v) =>
+              deleteGroupAdmin(getStore(), {
+                group: data.id,
+                orgId: query.orgId,
+                user: v,
+              }),
+            ),
+          )
+          return { data }
+        },
       }),
       // END OF ENDPOINTS
     }),
@@ -150,16 +194,25 @@ export async function createGroup(
     groupService.endpoints.createGroup.initiate(data, options),
   )
 }
+export async function updateGroup(
+  store: any,
+  data: Req['updateGroup'],
+  options?: Parameters<typeof groupService.endpoints.updateGroup.initiate>[1],
+) {
+  return store.dispatch(
+    groupService.endpoints.updateGroup.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
   useCreateGroupAdminMutation,
   useCreateGroupMutation,
   useDeleteGroupAdminMutation,
-
   useDeleteGroupMutation,
   useGetGroupQuery,
   useGetGroupsQuery,
+  useUpdateGroupMutation,
   // END OF EXPORTS
 } = groupService
 

@@ -47,13 +47,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       segmentOverrides,
     })
   },
-  createGroup(orgId, data) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.CREATE_GROUP,
-      data,
-      orgId,
-    })
-  },
   createOrganisation(name) {
     Dispatcher.handleViewAction({
       actionType: Actions.CREATE_ORGANISATION,
@@ -263,12 +256,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       sort,
     })
   },
-  getGroups(orgId) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_GROUPS,
-      orgId,
-    })
-  },
   getIdentity(envId, id) {
     Dispatcher.handleViewAction({
       actionType: Actions.GET_IDENTITY,
@@ -422,13 +409,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     Dispatcher.handleViewAction({
       actionType: Actions.UPDATE_CHANGE_REQUEST,
       changeRequest,
-    })
-  },
-  updateGroup(orgId, data) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.UPDATE_GROUP,
-      data,
-      orgId,
     })
   },
   updateSubscription(hostedPageId) {
