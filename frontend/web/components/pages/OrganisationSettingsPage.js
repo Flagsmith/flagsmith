@@ -31,6 +31,7 @@ import RolesTable from 'components/RolesTable'
 const widths = [450, 255, 250, 235, 150, 100]
 
 const SettingsTab = {
+  'Billing': 'billing',
   'General': 'general',
   'Groups': 'groups',
   'Keys': 'keys',
@@ -334,28 +335,6 @@ const OrganisationSettingsPage = class extends Component {
     const canManageGroups =
       this.state.permissions.includes('MANAGE_USER_GROUPS')
 
-    const displayedTabs = [SettingsTab.Projects]
-
-    if (this.state.permissionsError) {
-      if (canManageGroups) {
-        displayedTabs.push(SettingsTab.Groups)
-      }
-    } else {
-      displayedTabs.push(
-        ...[
-          SettingsTab.General,
-          SettingsTab.Keys,
-          SettingsTab.Members,
-          SettingsTab.Webhooks,
-          SettingsTab.Usage,
-        ],
-      )
-
-      if (!Project.disableAnalytics) {
-        displayedTabs.push(SettingsTab.Usage)
-      }
-    }
-
     return (
       <div className='app-container container'>
         <AccountProvider
@@ -390,6 +369,27 @@ const OrganisationSettingsPage = class extends Component {
                   const needsUpgradeForAdditionalSeats =
                     (overSeats && (!verifySeatsLimit || !autoSeats)) ||
                     (!autoSeats && usedSeats)
+                  const displayedTabs = [SettingsTab.Projects]
+
+                  if (this.state.permissionsError) {
+                    if (canManageGroups) {
+                      displayedTabs.push(SettingsTab.Groups)
+                    }
+                  } else {
+                    displayedTabs.push(
+                      ...[
+                        SettingsTab.General,
+                        paymentsEnabled && !isAWS ? SettingsTab.Billing : null,
+                        SettingsTab.Keys,
+                        SettingsTab.Members,
+                        SettingsTab.Webhooks,
+                      ].filter((v) => !!v),
+                    )
+
+                    if (!Project.disableAnalytics) {
+                      displayedTabs.push(SettingsTab.Usage)
+                    }
+                  }
                   return (
                     <div>
                       <div className='py-4'>
@@ -557,114 +557,6 @@ const OrganisationSettingsPage = class extends Component {
                                     </Row>
                                   </FormGroup>
                                 )}
-                                {paymentsEnabled && !isAWS && (
-                                  <div>
-                                    <Row space className='plan p-4 mb-4'>
-                                      <div>
-                                        <div className='mb-4'>
-                                          <img
-                                            src='/static/images/nav-logo.svg'
-                                            alt='BT'
-                                            width={190}
-                                            height={40}
-                                          />
-                                        </div>
-                                        <Row>
-                                          <div>
-                                            <Row
-                                              className='mr-3'
-                                              style={{ width: '230px' }}
-                                            >
-                                              <div className='plan-icon'>
-                                                <Icon
-                                                  name='layers'
-                                                  width={32}
-                                                />
-                                              </div>
-                                              <div>
-                                                <p className='fs-small lh-sm mb-0'>
-                                                  Your plan
-                                                </p>
-                                                <h4 className='mb-0'>
-                                                  {Utils.getPlanName(
-                                                    _.get(
-                                                      organisation,
-                                                      'subscription.plan',
-                                                    ),
-                                                  )
-                                                    ? Utils.getPlanName(
-                                                        _.get(
-                                                          organisation,
-                                                          'subscription.plan',
-                                                        ),
-                                                      )
-                                                    : 'Free'}
-                                                </h4>
-                                              </div>
-                                            </Row>
-                                          </div>
-                                          <div>
-                                            <Row
-                                              style={{ width: '230px' }}
-                                              className='mr-3'
-                                            >
-                                              <div className='plan-icon'>
-                                                <h4
-                                                  className='mb-0 text-center'
-                                                  style={{ width: '32px' }}
-                                                >
-                                                  ID
-                                                </h4>
-                                              </div>
-                                              <div>
-                                                <p className='fs-small lh-sm mb-0'>
-                                                  Organisation ID
-                                                </p>
-                                                <h4 className='mb-0'>
-                                                  {organisation.id}
-                                                </h4>
-                                              </div>
-                                            </Row>
-                                          </div>
-                                          {!!chargebee_email && (
-                                            <div>
-                                              <Row style={{ width: '230px' }}>
-                                                <div className='plan-icon'>
-                                                  <Icon
-                                                    name='layers'
-                                                    width={32}
-                                                  />
-                                                </div>
-                                                <div>
-                                                  <p className='fs-small lh-sm mb-0'>
-                                                    Management Email
-                                                  </p>
-                                                  <h6 className='mb-0'>
-                                                    {chargebee_email}
-                                                  </h6>
-                                                </div>
-                                              </Row>
-                                            </div>
-                                          )}
-                                        </Row>
-                                      </div>
-                                      <div className='align-self-start'>
-                                        {organisation.subscription
-                                          ?.subscription_id && (
-                                          <Button
-                                            theme='secondary'
-                                            href='https://flagsmith.chargebeeportal.com/'
-                                            target='_blank'
-                                            className='btn'
-                                          >
-                                            Manage Invoices
-                                          </Button>
-                                        )}
-                                      </div>
-                                    </Row>
-                                    <Payment viewOnly={false} />
-                                  </div>
-                                )}
                               </div>
                             </FormGroup>
                             <hr className='my-4' />
@@ -695,6 +587,102 @@ const OrganisationSettingsPage = class extends Component {
                                 </Button>
                               </Row>
                             </FormGroup>
+                          </TabItem>
+                        )}
+                        {displayedTabs.includes(SettingsTab.Billing) && (
+                          <TabItem tabLabel='Billing'>
+                            <div className='mt-4'>
+                              <Row space className='plan p-4 mb-4'>
+                                <div>
+                                  <Row>
+                                    <div>
+                                      <Row
+                                        className='mr-3'
+                                        style={{ width: '230px' }}
+                                      >
+                                        <div className='plan-icon'>
+                                          <Icon name='layers' width={32} />
+                                        </div>
+                                        <div>
+                                          <p className='fs-small lh-sm mb-0'>
+                                            Your plan
+                                          </p>
+                                          <h4 className='mb-0'>
+                                            {Utils.getPlanName(
+                                              _.get(
+                                                organisation,
+                                                'subscription.plan',
+                                              ),
+                                            )
+                                              ? Utils.getPlanName(
+                                                  _.get(
+                                                    organisation,
+                                                    'subscription.plan',
+                                                  ),
+                                                )
+                                              : 'Free'}
+                                          </h4>
+                                        </div>
+                                      </Row>
+                                    </div>
+                                    <div>
+                                      <Row
+                                        style={{ width: '230px' }}
+                                        className='mr-3'
+                                      >
+                                        <div className='plan-icon'>
+                                          <h4
+                                            className='mb-0 text-center'
+                                            style={{ width: '32px' }}
+                                          >
+                                            ID
+                                          </h4>
+                                        </div>
+                                        <div>
+                                          <p className='fs-small lh-sm mb-0'>
+                                            Organisation ID
+                                          </p>
+                                          <h4 className='mb-0'>
+                                            {organisation.id}
+                                          </h4>
+                                        </div>
+                                      </Row>
+                                    </div>
+                                    {!!chargebee_email && (
+                                      <div>
+                                        <Row style={{ width: '230px' }}>
+                                          <div className='plan-icon'>
+                                            <Icon name='layers' width={32} />
+                                          </div>
+                                          <div>
+                                            <p className='fs-small lh-sm mb-0'>
+                                              Management Email
+                                            </p>
+                                            <h6 className='mb-0'>
+                                              {chargebee_email}
+                                            </h6>
+                                          </div>
+                                        </Row>
+                                      </div>
+                                    )}
+                                  </Row>
+                                </div>
+                                <div className='align-self-start'>
+                                  {organisation.subscription
+                                    ?.subscription_id && (
+                                    <Button
+                                      theme='secondary'
+                                      href='https://flagsmith.chargebeeportal.com/'
+                                      target='_blank'
+                                      className='btn'
+                                    >
+                                      Manage Invoices
+                                    </Button>
+                                  )}
+                                </div>
+                              </Row>
+                              <Payment viewOnly={false} />
+                            </div>
                           </TabItem>
                         )}
 

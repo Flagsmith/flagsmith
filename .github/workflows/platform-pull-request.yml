@@ -188,7 +188,6 @@ jobs:
         with:
           github_actor: ${{github.actor}}
           github_token: ${{secrets.GITHUB_TOKEN}}
-          e2e_test_token_staging: ${{ secrets.E2E_TEST_TOKEN }}
 
       - name: Run tests on unified docker image
         working-directory: frontend
@@ -215,7 +214,6 @@ jobs:
         with:
           github_actor: ${{github.actor}}
           github_token: ${{secrets.GITHUB_TOKEN}}
-          e2e_test_token_staging: ${{ secrets.E2E_TEST_TOKEN }}
 
       - name: Run tests on unified docker image
         working-directory: frontend
@@ -242,7 +240,6 @@ jobs:
         with:
           github_actor: ${{github.actor}}
           github_token: ${{secrets.GITHUB_TOKEN}}
-          e2e_test_token_staging: ${{ secrets.E2E_TEST_TOKEN }}
 
       - name: Run tests on unified docker image
         working-directory: frontend

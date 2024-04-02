@@ -33,70 +33,68 @@ class Integration extends Component {
     )
     return (
       <div className='panel panel-integrations p-4 mb-3'>
-        <Flex>
-          <img className='mb-2' src={image} />
-          <Row space style={{ flexWrap: 'noWrap' }}>
-            <div className='subtitle mt-2'>
-              {description}{' '}
-              {docs && (
+        <img className='mb-2' src={image} />
+        <Row space style={{ flexWrap: 'noWrap' }}>
+          <div className='subtitle mt-2'>
+            {description}{' '}
+            {docs && (
+              <Button
+                theme='text'
+                href={docs}
+                target='_blank'
+                className='fw-normal'
+              >
+                View docs
+              </Button>
+            )}
+          </div>
+          <Row style={{ flexWrap: 'noWrap' }}>
+            {activeIntegrations &&
+              activeIntegrations.map((integration) => (
                 <Button
-                  theme='text'
-                  href={docs}
-                  target='_blank'
-                  className='fw-normal'
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    this.remove(integration)
+                    return false
+                  }}
+                  className='ml-3'
+                  theme='secondary'
+                  type='submit'
+                  size='xSmall'
+                  key={integration.id}
                 >
-                  View docs
+                  Delete Integration
                 </Button>
-              )}
-            </div>
-            <Row style={{ flexWrap: 'noWrap' }}>
-              {activeIntegrations &&
-                activeIntegrations.map((integration) => (
-                  <Button
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      this.remove(integration)
-                      return false
-                    }}
-                    className='ml-3'
-                    theme='secondary'
-                    type='submit'
-                    size='xSmall'
-                    key={integration.id}
+              ))}
+            {showAdd && (
+              <>
+                {external ? (
+                  <a
+                    href={docs}
+                    target={'_blank'}
+                    className='btn btn-primary btn-xsm ml-3'
+                    id='show-create-segment-btn'
+                    data-test='show-create-segment-btn'
+                    rel='noreferrer'
                   >
-                    Delete Integration
+                    Add Integration
+                  </a>
+                ) : (
+                  <Button
+                    className='ml-3'
+                    id='show-create-segment-btn'
+                    data-test='show-create-segment-btn'
+                    onClick={this.add}
+                    size='xSmall'
+                  >
+                    Add Integration
                   </Button>
-                ))}
-              {showAdd && (
-                <>
-                  {external ? (
-                    <a
-                      href={docs}
-                      target={'_blank'}
-                      className='btn btn-primary btn-xsm ml-3'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      rel='noreferrer'
-                    >
-                      Add Integration
-                    </a>
-                  ) : (
-                    <Button
-                      className='ml-3'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      onClick={this.add}
-                      size='xSmall'
-                    >
-                      Add Integration
-                    </Button>
-                  )}
-                </>
-              )}
-            </Row>
+                )}
+              </>
+            )}
           </Row>
-        </Flex>
+        </Row>
 
         {activeIntegrations &&
           activeIntegrations.map((integration) => (

@@ -5,7 +5,9 @@ import data from 'common/data/base/_data'
 import { getStore } from 'common/store'
 
 export const groupService = service
-  .enhanceEndpoints({ addTagTypes: ['Group'] })
+  .enhanceEndpoints({
+    addTagTypes: ['Group', 'UserGroupPermission', 'GroupSummary'],
+  })
   .injectEndpoints({
     endpoints: (builder) => ({
       createGroup: builder.mutation<Res['group'], Req['createGroup']>({
@@ -53,7 +55,11 @@ export const groupService = service
         }),
       }),
       deleteGroup: builder.mutation<Res['groups'], Req['deleteGroup']>({
-        invalidatesTags: [{ id: 'LIST', type: 'Group' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'Group' },
+          { type: 'UserGroupPermission' },
+          { type: 'GroupSummary' },
+        ],
         query: (query: Req['deleteGroup']) => ({
           body: query,
           method: 'DELETE',

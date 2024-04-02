@@ -1,5 +1,56 @@
 # Changelog
 
+## [2.105.1](https://github.com/Flagsmith/flagsmith/compare/v2.105.0...v2.105.1) (2024-03-28)
+
+
+### Bug Fixes
+
+* rollback json access logging ([#3694](https://github.com/Flagsmith/flagsmith/issues/3694)) ([6f66e0f](https://github.com/Flagsmith/flagsmith/commit/6f66e0ff3d295e11e9ba699b92be2f53309d8459))
+
+## [2.105.0](https://github.com/Flagsmith/flagsmith/compare/v2.104.1...v2.105.0) (2024-03-27)
+
+
+### Features
+
+* Add domain to Hubspot company ([#3648](https://github.com/Flagsmith/flagsmith/issues/3648)) ([87d2d52](https://github.com/Flagsmith/flagsmith/commit/87d2d52b21f161352b9880aaae210853ceb9e321))
+* Add org id to hubspot company ([#3680](https://github.com/Flagsmith/flagsmith/issues/3680)) ([9952424](https://github.com/Flagsmith/flagsmith/commit/99524247399079f6d28491e6d66d3776f3abaf51))
+* Add subscription to Hubspot tracker ([#3676](https://github.com/Flagsmith/flagsmith/issues/3676)) ([44ed1bf](https://github.com/Flagsmith/flagsmith/commit/44ed1bfabebace7929d0b83f9a6d1508896d08e2))
+* JSON logging for Gunicorn ([#3672](https://github.com/Flagsmith/flagsmith/issues/3672)) ([3ce1754](https://github.com/Flagsmith/flagsmith/commit/3ce1754d9c45200ef4e4f464953d079d478f5dac))
+* Summary of group permissions in the Project settings page ([#3629](https://github.com/Flagsmith/flagsmith/issues/3629)) ([da12c93](https://github.com/Flagsmith/flagsmith/commit/da12c932c4b5a72084a0025c0c9bd8ef7daa1625))
+
+
+### Bug Fixes
+
+* Avoid loading Django settings in Gunicorn ([#3685](https://github.com/Flagsmith/flagsmith/issues/3685)) ([7c65445](https://github.com/Flagsmith/flagsmith/commit/7c654457c7eb673df61ee33295c55edff3cea172))
+* prevent tasks dying from temporary loss of db connection ([#3674](https://github.com/Flagsmith/flagsmith/issues/3674)) ([b872a6c](https://github.com/Flagsmith/flagsmith/commit/b872a6ca568b0541ca46c2f38135739d214b2f10))
+* Use dotenv in frontend/bin/env.js ([#3668](https://github.com/Flagsmith/flagsmith/issues/3668)) ([8c25cd6](https://github.com/Flagsmith/flagsmith/commit/8c25cd6199973cb60a70608737e3bd83631f06e9))
+
+## [2.104.1](https://github.com/Flagsmith/flagsmith/compare/v2.104.0...v2.104.1) (2024-03-26)
+
+
+### Bug Fixes
+
+* Create group should auto focus on the name input ([#3632](https://github.com/Flagsmith/flagsmith/issues/3632)) ([ddb0b7f](https://github.com/Flagsmith/flagsmith/commit/ddb0b7f35b5e414d8a2f6d01dc88f642b0514f92))
+* No pagination when querying `environments_v2` ([#3661](https://github.com/Flagsmith/flagsmith/issues/3661)) ([7e19f4f](https://github.com/Flagsmith/flagsmith/commit/7e19f4ff2b2f3941e55360936b816879af4d06b6))
+
+## [2.104.0](https://github.com/Flagsmith/flagsmith/compare/v2.103.4...v2.104.0) (2024-03-20)
+
+
+### Features
+
+* Add state feature filter ([#3541](https://github.com/Flagsmith/flagsmith/issues/3541)) ([2ffe8e9](https://github.com/Flagsmith/flagsmith/commit/2ffe8e9adf9006d4fe1d2a5efc3c5af94bde300a))
+* Filter features by owners and group owners ([#3579](https://github.com/Flagsmith/flagsmith/issues/3579)) ([79ad523](https://github.com/Flagsmith/flagsmith/commit/79ad5236e5277db4a42b53f0780640baa6499d27))
+* **tags:** prevent system tag modifications ([#3605](https://github.com/Flagsmith/flagsmith/issues/3605)) ([974dfc5](https://github.com/Flagsmith/flagsmith/commit/974dfc57537003626ba10cdab98f394dbdf69ab7))
+
+
+### Bug Fixes
+
+* Add stale_flags_limit_days to Project serializer ([#3607](https://github.com/Flagsmith/flagsmith/issues/3607)) ([99e0148](https://github.com/Flagsmith/flagsmith/commit/99e0148df93eac328f3f3779813db78f78c7f7e5))
+* **change-requests:** prevent incorrect scheduled changes warning ([#3593](https://github.com/Flagsmith/flagsmith/issues/3593)) ([165088b](https://github.com/Flagsmith/flagsmith/commit/165088b893910d1cfe451fc8ff5289af5fd8c3a1))
+* Freeze time for tests to ensure dependability ([#3627](https://github.com/Flagsmith/flagsmith/issues/3627)) ([2f647f2](https://github.com/Flagsmith/flagsmith/commit/2f647f250d299128e2d9432bbfc28f15d3637be0))
+* remove feature modal ([#3608](https://github.com/Flagsmith/flagsmith/issues/3608)) ([9d737ad](https://github.com/Flagsmith/flagsmith/commit/9d737ad456dbf07596cb0dd7b796a7e3175c1ab8))
+* startup plan does not allow correct permissions ([#3602](https://github.com/Flagsmith/flagsmith/issues/3602)) ([9642e2f](https://github.com/Flagsmith/flagsmith/commit/9642e2f3f23f00c586820b6b21a26280dd9689f2))
+
 ## [2.103.4](https://github.com/Flagsmith/flagsmith/compare/v2.103.3...v2.103.4) (2024-03-11)
 
 
