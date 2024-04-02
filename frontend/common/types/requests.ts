@@ -263,5 +263,6 @@ export type Req = {
     data: Omit<UserGroup, 'id'>
     usersToAddAdmin: GroupUser[] | null
   }
+  getUserGroupPermission: { project_id: string }
   // END OF TYPES
 }

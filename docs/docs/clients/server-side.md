@@ -14,8 +14,6 @@ Server Side SDKs can run in 2 different modes: `Local Evaluation` and `Remote Ev
 [reading up about the differences](/clients/overview#server-side-sdks) first before integrating the SDKS into your
 applications.
 
-Once you've got that understood, lets get the SDKs integrated!
-
 :::
 
 ## SDK Overview
@@ -98,11 +96,11 @@ pip install flagsmith
 <dependency>
   <groupId>com.flagsmith</groupId>
   <artifactId>flagsmith-java-client</artifactId>
-  <version>5.0.0</version>
+  <version>7.2.0</version>
 </dependency>
 
 # Gradle
-implementation 'com.flagsmith:flagsmith-java-client:5.0.0'
+implementation 'com.flagsmith:flagsmith-java-client:7.2.0'
 ```
 
 </TabItem>
@@ -112,16 +110,16 @@ implementation 'com.flagsmith:flagsmith-java-client:5.0.0'
 # Check https://www.nuget.org/packages/Flagsmith for the latest version!
 
 # Package Manager
-Install-Package Flagsmith -Version 5.1.0
+Install-Package Flagsmith -Version 5.2.2
 
 #.NET CLI
-dotnet add package Flagsmith --version 5.1.0
+dotnet add package Flagsmith --version 5.2.2
 
 # PackageReference
-<PackageReference Include="Flagsmith" Version="5.1.0" />
+<PackageReference Include="Flagsmith" Version="5.2.2" />
 
 # Paket CLI
-paket add Flagsmith --version 5.1.0
+paket add Flagsmith --version 5.2.2
 ```
 
 </TabItem>
@@ -806,6 +804,69 @@ public class MyCustomOfflineHandler implements IOfflineHandler:
     public EnvironmentModel getEnvironment() {
         return someMethodToGetTheEnvironment()
     }
+```
+
+</TabItem>
+<TabItem value="dotnet" label=".NET">
+
+```csharp
+// Using the built-in local file handler
+var localFileHandler = new LocalFileHandler("path_to_environment_file/environment_file.json");
+
+var flagsmithClient = new FlagsmithClient(
+    offlineMode: true,
+    offlineHandler: localFileHandler
+);
+
+// Defining a custom offline handler
+public class MyCustomOfflineHandler: BaseOfflineHandler
+{
+    public override EnvironmentModel GetEnvironment()
+    {
+        return someMethodToGetTheEnvironment();
+    }
+}
+```
+
+</TabItem>
+<TabItem value="nodejs" label="NodeJS">
+
+```javascript
+// Using the built-in local file handler
+const localFileHandler = new LocalFileHandler("path_to_environment_file/environment_file.json");
+const flagsmith = new Flagsmith({ offlineMode: true, offlineHandler: localFileHandler });
+
+// Defining a custom offline handler
+class CustomOfflineHandler extends BaseOfflineHandler {
+    getEnvironment(): EnvironmentModel {
+        return someMethodToGetTheEnvironment();
+    }
+}
+```
+
+</TabItem>
+<TabItem value="ruby" label="Ruby">
+
+```ruby
+# Using the built-in local file handler
+
+offline_handler = \
+Flagsmith::OfflineHandlers::LocalFileHandler.new("environment.json")
+
+# Instantiate the client with offline mode set to true
+
+flagsmith = Flagsmith::Client.new(
+  offline_mode: true,
+  offline_handler: offline_handler,
+)
+
+# Defining a custom offline handler
+
+class MyCustomOfflineHandler
+  def environment
+    # Some code providing the environment for the handler
+  end
+end
 ```
 
 </TabItem>

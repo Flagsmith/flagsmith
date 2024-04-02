@@ -171,7 +171,9 @@ def create_segment_priorities_changed_audit_log(
         related_object_id=feature.id,
         related_object_type=RelatedObjectType.FEATURE.name,
         master_api_key_id=master_api_key_id,
-        created_date=datetime.fromisoformat(changed_at)
-        if changed_at is not None
-        else timezone.now(),
+        created_date=(
+            datetime.fromisoformat(changed_at)
+            if changed_at is not None
+            else timezone.now()
+        ),
     )

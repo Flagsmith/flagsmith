@@ -1,15 +1,11 @@
 ---
-title: Importing and Exporting
+title: Data Migration
 sidebar_position: 110
 ---
 
-:::tip
-
-You need to be running Flagsmith version `2.28.4` or greater to be able to export and import your Flagsmith data.
-
-:::
-
-Flagsmith offers some helpful utilities if you want to migrate your application from one Flagsmith instance to another.
+The data migration option is useful when you want to migrate your Flagsmith application from one location to another.
+It's not a useful tool to merge Flagsmith data into another Flagsmith instance, for that use-case consider
+[feature flag importing](/system-administration/importing-and-exporting/features).
 
 If, for example, you wanted to move from self hosting Flagsmith to our SaaS version, the process looks something like
 this:
@@ -167,7 +163,7 @@ e.g.
 python manage.py import-organisation-from-s3 my-export-bucket exports/organisation-1.json
 ```
 
-#### Using localstack to achieve local/test imports with s3 can be done using
+#### Using localstack to achieve local/test imports with s3 can be done using
 
 [localstack](https://github.com/localstack/localstack) and the
 [service-specific endpoint](https://docs.aws.amazon.com/sdkref/latest/guide/feature-ss-endpoints.html) strategy.
