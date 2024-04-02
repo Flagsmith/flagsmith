@@ -10,6 +10,7 @@ import Icon from 'components/Icon'
 import Tooltip from 'components/Tooltip'
 import { IonIcon } from '@ionic/react'
 import { informationCircle } from 'ionicons/icons'
+import { createGroup } from 'common/services/useGroup'
 
 const widths = [80, 80]
 const CreateGroup = class extends Component {
@@ -144,10 +145,6 @@ const CreateGroup = class extends Component {
       is_default: !!this.state.is_default,
       name,
       users,
-      usersToAddAdmin: this.getUsersAdminChanged(
-        this.state.existingUsers,
-        true,
-      ),
     }
     if (this.props.group) {
       AppActions.updateGroup(this.props.orgId, {
@@ -160,7 +157,15 @@ const CreateGroup = class extends Component {
         ),
       })
     } else {
-      AppActions.createGroup(this.props.orgId, data)
+      const usersToAddAdmin = this.getUsersAdminChanged(
+        this.state.existingUsers,
+        true,
+      )
+      createGroup(getStore(), {
+        data,
+        orgId: this.props.orgId,
+        usersToAddAdmin,
+      })
     }
   }
 

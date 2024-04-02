@@ -72,7 +72,6 @@ const OrganisationSettingsPage = class extends Component {
     ).then((roles) => {
       this.setState({ roles: roles.data.results })
     })
-    AppActions.getGroups(AccountStore.getOrganisation().id)
     API.trackPage(Constants.pages.ORGANISATION_SETTINGS)
     $('body').trigger('click')
     if (
