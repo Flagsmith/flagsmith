@@ -1,6 +1,10 @@
 ---
-title: OpenFeature
+description: OpenFeature
+sidebar_label: OpenFeature
+sidebar_position: 2
 ---
+
+# OpenFeature
 
 [OpenFeature](https://openfeature.dev/) is an open standard for feature flag management, created to support a robust
 feature flag ecosystem using cloud native technologies. OpenFeature provides a unified API and SDK, and a
@@ -18,6 +22,7 @@ following languages:
 
 - [Go](https://github.com/open-feature/go-sdk-contrib/tree/main/providers/flagsmith)
 - [Java](https://github.com/open-feature/java-sdk-contrib/tree/main/providers/flagsmith)
+- [.Net](https://github.com/open-feature/dotnet-sdk-contrib/tree/main/src/OpenFeature.Contrib.Providers.Flagsmith)
 
 ### Beta Providers
 
@@ -30,7 +35,6 @@ The following OpenFeature Providers are currently being implemented:
 
 We plan on implementing providers for the following languages as soon as we can:
 
-- .Net
 - PHP
 - Kotlin
 - Swift
