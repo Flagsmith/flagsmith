@@ -168,7 +168,7 @@ const CreateEditIntegration = class extends Component {
 
   openGitHubWinInstallations = () => {
     const childWindow = window.open(
-      `https://github.com/settings/installations/${this.props.installationId}`,
+      `https://github.com/settings/installations/${this.props.githubMeta.installationId}`,
       '_blank',
       'height=600,width=600,status=yes,toolbar=no,menubar=no,addressbar=no',
     )
@@ -185,7 +185,7 @@ const CreateEditIntegration = class extends Component {
         getGithubRepos(
           getStore(),
           {
-            installation_id: this.props.installationId,
+            installation_id: this.props.githubMeta.installationId,
           },
           { forceRefetch: true },
         ).then(() => {
@@ -228,14 +228,14 @@ const CreateEditIntegration = class extends Component {
                     GitHub Repositories
                   </label>
                   <MyGitHubRepositoriesSelect
-                    githubId={this.props.githubId}
-                    installationId={this.props.installationId}
+                    githubId={this.props.githubMeta.githubId}
+                    installationId={this.props.githubMeta.installationId}
                     organisationId={AccountStore.getOrganisation().id}
                     projectId={this.props.projectId}
                   />
                 </div>
                 <GithubRepositoriesTable
-                  githubId={this.props.githubId}
+                  githubId={this.props.githubMeta.githubId}
                   organisationId={AccountStore.getOrganisation().id}
                 />
                 <Button

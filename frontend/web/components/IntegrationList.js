@@ -15,13 +15,14 @@ class Integration extends Component {
   }
   add = () => {
     const isGithubIntegration =
-      this.props.githubId && this.props.integration.isExternalInstallation
+      this.props.githubMeta.githubId &&
+      this.props.integration.isExternalInstallation
     if (isGithubIntegration) {
       this.props.addIntegration(
         this.props.integration,
         this.props.id,
-        this.props.installationId,
-        this.props.githubId,
+        this.props.githubMeta.installationId,
+        this.props.githubMeta.githubId,
       )
     } else if (this.state.windowInstallationId) {
       this.props.addIntegration(
@@ -149,7 +150,7 @@ class Integration extends Component {
                   ) : external &&
                     isExternalInstallation &&
                     (this.state.windowInstallationId ||
-                      this.props.hasIntegrationWithGithub) ? (
+                      this.props.githubMeta.hasIntegrationWithGithub) ? (
                     <Button
                       className='ml-3'
                       id='show-create-segment-btn'
@@ -160,7 +161,7 @@ class Integration extends Component {
                       Manage Integration
                     </Button>
                   ) : external &&
-                    !this.props.hasIntegrationWithGithub &&
+                    !this.props.githubMeta.hasIntegrationWithGithub &&
                     isExternalInstallation ? (
                     <Button
                       className='ml-3'
@@ -363,8 +364,7 @@ class IntegrationList extends Component {
               }
             : null
         }
-        githubId={githubId}
-        installationId={installationId}
+        githubMeta={{ githubId: githubId, installationId: installationId }}
         projectId={this.props.projectId}
         onComplete={this.fetch}
       />,
@@ -406,11 +406,13 @@ class IntegrationList extends Component {
                 projectId={this.props.projectId}
                 id={i}
                 key={i}
-                githubId={this.state.githubId}
-                installationId={this.state.installationId}
+                githubMeta={{
+                  githubId: this.state.githubId,
+                  hasIntegrationWithGithub: this.state.hasIntegrationWithGithub,
+                  installationId: this.state.installationId,
+                }}
                 activeIntegrations={this.state.activeIntegrations[index]}
                 integration={integrationList[i]}
-                hasIntegrationWithGithub={this.state.hasIntegrationWithGithub}
               />
             ))
           ) : (
