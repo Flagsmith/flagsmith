@@ -77,7 +77,9 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
         <ProjectFilter
           showAll
           organisationId={organisationId}
-          onChange={setProject}
+          onChange={(id: string) => {
+            setProject(id)
+          }}
           value={project}
         />
         {project && (

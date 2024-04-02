@@ -555,7 +555,9 @@ const CreateRole: FC<CreateRoleType> = ({
           </Row>
           <ProjectFilter
             organisationId={role.organisation}
-            onChange={setProject}
+            onChange={(id: string) => {
+              setProject(id)
+            }}
             value={project}
             className='mb-2'
           />

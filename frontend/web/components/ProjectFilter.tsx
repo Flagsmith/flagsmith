@@ -4,13 +4,11 @@ import { useGetProjectsQuery } from 'common/services/useProject'
 export type ProjectFilterType = {
   organisationId: string
   value?: string
-  onChange: (value: string) => void
+  onChange: (id: string, name: string) => void
   showAll?: boolean
-  gitHubProjectFilterValidator?: boolean
 }
 
 const ProjectFilter: FC<ProjectFilterType> = ({
-  gitHubProjectFilterValidator,
   onChange,
   organisationId,
   showAll,
@@ -32,13 +30,7 @@ const ProjectFilter: FC<ProjectFilterType> = ({
         (data || [])?.map((v) => ({ label: v.name, value: `${v.id}` })),
       )}
       onChange={(value: { value: string; label: string }) =>
-        onChange(
-          gitHubProjectFilterValidator
-            ? value
-            : value?.value
-            ? value.value
-            : '',
-        )
+        onChange(value.value || '', value.label || '')
       }
     />
   )

@@ -20,8 +20,8 @@ type GitHubSetupPageType = {
 }
 
 type projectType = {
-  value: string
-  label: string
+  id: string
+  name: string
 }
 
 type repoType = {
@@ -134,9 +134,10 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
             <div style={{ minWidth: '250px' }}>
               <ProjectFilter
                 organisationId={organisation}
-                onChange={setProject}
-                value={project.value}
-                gitHubProjectFilterValidator={true}
+                onChange={(id: string, name: string) => {
+                  setProject({ id, name })
+                }}
+                value={project.id}
               />
             </div>
             <Input
@@ -196,7 +197,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
             renderRow={(v: projectType) => (
               <Row className='list-item' key={v.value}>
                 <Flex className='table-column px-3'>
-                  <div className='font-weight-medium mb-1'>{v.label}</div>
+                  <div className='font-weight-medium mb-1'>{v.name}</div>
                 </Flex>
                 <div
                   className='table-column  text-center'
@@ -205,9 +206,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
                   <Button
                     onClick={() => {
                       setProjects(
-                        projects.filter(
-                          (p: projectType) => p.value !== v.value,
-                        ),
+                        projects.filter((p: projectType) => p.id !== v.id),
                       )
                     }}
                     className='btn btn-with-icon'
@@ -234,7 +233,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
                       projects.map(async (project) => {
                         await createGithubRepository({
                           body: {
-                            project: project.value,
+                            project: project.id,
                             repository_name: repositoryName,
                             repository_owner: repositoryOwner,
                           },
