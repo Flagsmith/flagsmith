@@ -412,20 +412,6 @@ const FeaturesPage = class extends Component {
                                                 this.filter,
                                               )
                                             }}
-                                            options={[
-                                              {
-                                                label: 'Any',
-                                                value: null,
-                                              },
-                                              {
-                                                label: 'Enabled',
-                                                value: true,
-                                              },
-                                              {
-                                                label: 'Disabled',
-                                                value: false,
-                                              },
-                                            ]}
                                           />
                                         )}
                                         <TableFilterOptions
