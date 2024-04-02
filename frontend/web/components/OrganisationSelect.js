@@ -9,8 +9,9 @@ const OrganisationSelect = class extends Component {
   }
 
   componentDidMount() {
-    if (this.props.firstOrganisation) {
-      this.props.onChange(AccountStore.getOrganisation().id)
+    const orgId = JSON.parse(localStorage.lastEnv).orgId
+    if (this.props.firstOrganisation && orgId) {
+      this.props.onChange(orgId)
     }
   }
 
