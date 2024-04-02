@@ -6,13 +6,13 @@ export type ProjectFilterType = {
   value?: string
   onChange: (value: string) => void
   showAll?: boolean
-  projectComplete?: boolean
+  gitHubProjectFilterValidator?: boolean
 }
 
 const ProjectFilter: FC<ProjectFilterType> = ({
+  gitHubProjectFilterValidator,
   onChange,
   organisationId,
-  projectComplete,
   showAll,
   value,
 }) => {
@@ -32,7 +32,13 @@ const ProjectFilter: FC<ProjectFilterType> = ({
         (data || [])?.map((v) => ({ label: v.name, value: `${v.id}` })),
       )}
       onChange={(value: { value: string; label: string }) =>
-        onChange(projectComplete ? value : value?.value ? value.value : '')
+        onChange(
+          gitHubProjectFilterValidator
+            ? value
+            : value?.value
+            ? value.value
+            : '',
+        )
       }
     />
   )

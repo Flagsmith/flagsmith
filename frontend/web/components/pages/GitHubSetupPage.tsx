@@ -49,10 +49,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
     { skip: !installationId },
   )
 
-  const [
-    createGithubIntegration,
-    { data, isSuccess: isSuccessCreateGithubIntegration },
-  ] = useCreateGithubIntegrationMutation()
+  const [createGithubIntegration] = useCreateGithubIntegrationMutation()
   const baseUrl = window.location.origin
 
   const [
@@ -136,11 +133,10 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
           <Row className='mb-2'>
             <div style={{ minWidth: '250px' }}>
               <ProjectFilter
-                showAll
                 organisationId={organisation}
                 onChange={setProject}
                 value={project.value}
-                projectComplete={true}
+                gitHubProjectFilterValidator={true}
               />
             </div>
             <Input
