@@ -580,86 +580,86 @@ The list of the flags and remote config we're currently using in production is b
 
 ```json
 [
-  {
-    "value": "EQUAL",
-    "label": "Exactly Matches (=)"
-  },
-  {
-    "value": "NOT_EQUAL",
-    "label": "Does not match (!=)"
-  },
-  {
-    "value": "PERCENTAGE_SPLIT",
-    "label": "% Split"
-  },
-  {
-    "value": "GREATER_THAN",
-    "label": ">",
-    "type": "number"
-  },
-  {
-    "value": "GREATER_THAN_INCLUSIVE",
-    "label": ">=",
-    "type": "number"
-  },
-  {
-    "value": "LESS_THAN",
-    "label": "<",
-    "type": "number"
-  },
-  {
-    "value": "LESS_THAN_INCLUSIVE",
-    "label": "<=",
-    "type": "number"
-  },
-  {
-    "value": "GREATER_THAN:semver",
-    "label": "SemVer >",
-    "append": ":semver"
-  },
-  {
-    "value": "GREATER_THAN_INCLUSIVE:semver",
-    "label": "SemVer >=",
-    "append": ":semver"
-  },
-  {
-    "value": "LESS_THAN:semver",
-    "label": "SemVer <",
-    "append": ":semver"
-  },
-  {
-    "value": "LESS_THAN_INCLUSIVE:semver",
-    "label": "SemVer <=",
-    "append": ":semver"
-  },
-  {
-    "value": "CONTAINS",
-    "label": "Contains"
-  },
-  {
-    "value": "NOT_CONTAINS",
-    "label": "Does not contain"
-  },
-  {
-    "value": "IN",
-    "label": "In",
-    "warning": "Check your SDK version supports the IN operator. <a href=\"https://docs.flagsmith.com/clients/overview#sdk-compatibility\">See SDK compatibility docs</a>.",
-    "valuePlaceholder": "Value1,Value2"
-  },
-  {
-    "value": "REGEX",
-    "label": "Matches regex"
-  },
-  {
-    "value": "IS_SET",
-    "label": "Is set",
-    "hideValue": true
-  },
-  {
-    "value": "IS_NOT_SET",
-    "label": "Is not set",
-    "hideValue": true
-  }
+ {
+  "value": "EQUAL",
+  "label": "Exactly Matches (=)"
+ },
+ {
+  "value": "NOT_EQUAL",
+  "label": "Does not match (!=)"
+ },
+ {
+  "value": "PERCENTAGE_SPLIT",
+  "label": "% Split"
+ },
+ {
+  "value": "GREATER_THAN",
+  "label": ">",
+  "type": "number"
+ },
+ {
+  "value": "GREATER_THAN_INCLUSIVE",
+  "label": ">=",
+  "type": "number"
+ },
+ {
+  "value": "LESS_THAN",
+  "label": "<",
+  "type": "number"
+ },
+ {
+  "value": "LESS_THAN_INCLUSIVE",
+  "label": "<=",
+  "type": "number"
+ },
+ {
+  "value": "GREATER_THAN:semver",
+  "label": "SemVer >",
+  "append": ":semver"
+ },
+ {
+  "value": "GREATER_THAN_INCLUSIVE:semver",
+  "label": "SemVer >=",
+  "append": ":semver"
+ },
+ {
+  "value": "LESS_THAN:semver",
+  "label": "SemVer <",
+  "append": ":semver"
+ },
+ {
+  "value": "LESS_THAN_INCLUSIVE:semver",
+  "label": "SemVer <=",
+  "append": ":semver"
+ },
+ {
+  "value": "CONTAINS",
+  "label": "Contains"
+ },
+ {
+  "value": "NOT_CONTAINS",
+  "label": "Does not contain"
+ },
+ {
+  "value": "IN",
+  "label": "In",
+  "warning": "Check your SDK version supports the IN operator. <a href=\"https://docs.flagsmith.com/clients/overview#sdk-compatibility\">See SDK compatibility docs</a>.",
+  "valuePlaceholder": "Value1,Value2"
+ },
+ {
+  "value": "REGEX",
+  "label": "Matches regex"
+ },
+ {
+  "value": "IS_SET",
+  "label": "Is set",
+  "hideValue": true
+ },
+ {
+  "value": "IS_NOT_SET",
+  "label": "Is not set",
+  "hideValue": true
+ }
 ]
 ```
 
