@@ -28,6 +28,7 @@ import Button from 'components/base/forms/Button'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import TableOwnerFilter from 'components/tables/TableOwnerFilter'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
+import TableValueFilter from 'components/tables/TableValueFilter'
 const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
@@ -49,11 +50,13 @@ const UserPage = class extends Component {
     super(props, context)
     this.state = {
       group_owners: [],
+      is_enabled: null,
       owners: [],
       preselect: Utils.fromParam().flag,
       showArchived: false,
       tag_strategy: 'INTERSECTION',
       tags: [],
+      value_search: null,
     }
   }
 
@@ -62,12 +65,15 @@ const UserPage = class extends Component {
       ? this.state.group_owners
       : undefined,
     is_archived: this.state.showArchived,
+    is_enabled:
+      this.state.is_enabled === null ? undefined : this.state.is_enabled,
     owners: this.state.owners?.length ? this.state.owners : undefined,
     tag_strategy: this.state.tag_strategy,
     tags:
       !this.state.tags || !this.state.tags.length
         ? undefined
         : this.state.tags.join(','),
+    value_search: this.state.value_search ? this.state.value_search : undefined,
   })
 
   componentDidMount() {
@@ -270,6 +276,9 @@ const UserPage = class extends Component {
   render() {
     const { actualFlags } = this.state
     const { environmentId, projectId } = this.props.match.params
+    const enabledStateFilter = Utils.getFlagsmithHasFeature(
+      'feature_enabled_state_filter',
+    )
     const ownersFilter = Utils.getFlagsmithHasFeature('owners_filter')
     const preventAddTrait = !AccountStore.getOrganisation().persist_trait_data
     return (
@@ -491,6 +500,29 @@ const UserPage = class extends Component {
                                               )
                                             }}
                                           />
+                                          {enabledStateFilter && (
+                                            <TableValueFilter
+                                              className='me-4'
+                                              useLocalStorage
+                                              value={{
+                                                enabled: this.state.is_enabled,
+                                                valueSearch:
+                                                  this.state.value_search,
+                                              }}
+                                              onChange={({
+                                                enabled,
+                                                valueSearch,
+                                              }) => {
+                                                this.setState(
+                                                  {
+                                                    is_enabled: enabled,
+                                                    value_search: valueSearch,
+                                                  },
+                                                  this.filter,
+                                                )
+                                              }}
+                                            />
+                                          )}
                                           {ownersFilter && (
                                             <TableOwnerFilter
                                               title={'Owners'}

@@ -108,7 +108,7 @@ const TableFilter: FC<TableFilterType> = ({
                     setOpen(false)
                   }
                   if (multiple) {
-                    if (value.includes(v.value)) {
+                    if ((value || []).includes(v.value)) {
                       onChange(
                         ((value as string[]) || []).filter(
                           (item) => item !== v.value,

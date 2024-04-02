@@ -18,9 +18,11 @@ import TableSearchFilter from 'components/tables/TableSearchFilter'
 import TableTagFilter from 'components/tables/TableTagFilter'
 import { getViewMode, setViewMode } from 'common/useViewMode'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
+import { getViewMode } from 'common/useViewMode'
 import EnvironmentDocumentCodeHelp from 'components/EnvironmentDocumentCodeHelp'
 import TableOwnerFilter from 'components/tables/TableOwnerFilter'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
+import TableValueFilter from 'components/tables/TableValueFilter'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -33,6 +35,7 @@ const FeaturesPage = class extends Component {
     super(props, context)
     this.state = {
       group_owners: [],
+      is_enabled: null,
       loadedOnce: false,
       owners: [],
       search: null,
@@ -40,6 +43,7 @@ const FeaturesPage = class extends Component {
       sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
       tag_strategy: 'INTERSECTION',
       tags: [],
+      value_search: null,
     }
     ES6Component(this)
     getTags(getStore(), {
@@ -111,12 +115,15 @@ const FeaturesPage = class extends Component {
       ? this.state.group_owners
       : undefined,
     is_archived: this.state.showArchived,
+    is_enabled:
+      this.state.is_enabled === null ? undefined : this.state.is_enabled,
     owners: this.state.owners?.length ? this.state.owners : undefined,
     tag_strategy: this.state.tag_strategy,
     tags:
       !this.state.tags || !this.state.tags.length
         ? undefined
         : this.state.tags.join(','),
+    value_search: this.state.value_search ? this.state.value_search : undefined,
   })
 
   onSave = (isCreate) => {
@@ -171,6 +178,9 @@ const FeaturesPage = class extends Component {
   render() {
     const { environmentId, projectId } = this.props.match.params
     const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
+    const enabledStateFilter = Utils.getFlagsmithHasFeature(
+      'feature_enabled_state_filter',
+    )
     const environment = ProjectStore.getEnvironment(environmentId)
     const ownersFilter = Utils.getFlagsmithHasFeature('owners_filter')
     return (
@@ -388,6 +398,31 @@ const FeaturesPage = class extends Component {
                                             )
                                           }}
                                         />
+                                        {enabledStateFilter && (
+                                          <TableValueFilter
+                                            title={'State'}
+                                            className={'me-4'}
+                                            projectId={projectId}
+                                            useLocalStorage
+                                            value={{
+                                              enabled: this.state.is_enabled,
+                                              valueSearch:
+                                                this.state.value_search,
+                                            }}
+                                            onChange={({
+                                              enabled,
+                                              valueSearch,
+                                            }) => {
+                                              this.setState(
+                                                {
+                                                  is_enabled: enabled,
+                                                  value_search: valueSearch,
+                                                },
+                                                this.filter,
+                                              )
+                                            }}
+                                          />
+                                        )}
                                         {ownersFilter && (
                                           <TableOwnerFilter
                                             title={'Owners'}
