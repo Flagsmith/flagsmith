@@ -5,17 +5,20 @@ from app_analytics.influxdb_wrapper import get_current_api_usage
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db.models import Max
 from django.template.loader import render_to_string
 from django.utils import timezone
 
 from integrations.flagsmith.client import get_client
 from organisations import subscription_info_cache
 from organisations.models import (
+    APILimitAccessBlock,
     OranisationAPIUsageNotification,
     Organisation,
     OrganisationRole,
     Subscription,
 )
+from organisations.subscriptions.constants import FREE_PLAN_ID
 from organisations.subscriptions.subscription_service import (
     get_subscription_metadata,
 )
@@ -29,6 +32,7 @@ from .constants import (
     ALERT_EMAIL_MESSAGE,
     ALERT_EMAIL_SUBJECT,
     API_USAGE_ALERT_THRESHOLDS,
+    API_USAGE_GRACE_PERIOD,
 )
 from .subscriptions.constants import SubscriptionCacheEntity
 
@@ -36,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 @register_task_handler()
-def send_org_over_limit_alert(organisation_id):
+def send_org_over_limit_alert(organisation_id) -> None:
     organisation = Organisation.objects.get(id=organisation_id)
 
     subscription_metadata = get_subscription_metadata(organisation)
@@ -56,7 +60,7 @@ def send_org_over_limit_alert(organisation_id):
 def send_org_subscription_cancelled_alert(
     organisation_name: str,
     formatted_cancellation_date: str,
-):
+) -> None:
     FFAdminUser.send_alert_to_admin_users(
         subject=f"Organisation {organisation_name} has cancelled their subscription",
         message=f"Organisation {organisation_name} has cancelled their subscription on {formatted_cancellation_date}",
@@ -69,7 +73,7 @@ def update_organisation_subscription_information_influx_cache():
 
 
 @register_task_handler()
-def update_organisation_subscription_information_cache():
+def update_organisation_subscription_information_cache() -> None:
     subscription_info_cache.update_caches(
         (SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.INFLUX)
     )
@@ -78,7 +82,7 @@ def update_organisation_subscription_information_cache():
 @register_recurring_task(
     run_every=timedelta(hours=12),
 )
-def finish_subscription_cancellation():
+def finish_subscription_cancellation() -> None:
     now = timezone.now()
     previously = now + timedelta(hours=-24)
     for subscription in Subscription.objects.filter(
@@ -133,7 +137,7 @@ def send_admin_api_usage_notification(
     )
 
 
-def _handle_api_usage_notifications(organisation: Organisation):
+def _handle_api_usage_notifications(organisation: Organisation) -> None:
     subscription_cache = organisation.subscription_information_cache
     billing_starts_at = subscription_cache.current_billing_term_starts_at
     now = timezone.now()
@@ -154,6 +158,10 @@ def _handle_api_usage_notifications(organisation: Organisation):
 
         matched_threshold = threshold
 
+    # Didn't match even the lowest threshold, so no notification.
+    if matched_threshold is None:
+        return
+
     if OranisationAPIUsageNotification.objects.filter(
         notified_at__gt=period_starts_at,
         percent_usage=matched_threshold,
@@ -164,7 +172,7 @@ def _handle_api_usage_notifications(organisation: Organisation):
     send_admin_api_usage_notification(organisation, matched_threshold)
 
 
-def handle_api_usage_notifications():
+def handle_api_usage_notifications() -> None:
     flagsmith_client = get_client("local", local_eval=True)
 
     for organisation in Organisation.objects.filter(
@@ -189,7 +197,81 @@ def handle_api_usage_notifications():
             )
 
 
+def restrict_use_due_to_api_limit_grace_period_over() -> None:
+    grace_period = timezone.now() - timedelta(days=API_USAGE_GRACE_PERIOD)
+    month_start = timezone.now() - timedelta(30)
+    queryset = (
+        OranisationAPIUsageNotification.objects.filter(
+            notified_at__gt=month_start,
+            notified_at__lt=grace_period,
+            percent_usage__gte=100,
+        )
+        .values("organisation")
+        .annotate(max_value=Max("percent_usage"))
+    )
+
+    organisation_ids = []
+    for result in queryset:
+        organisation_ids.append(result["organisation"])
+    organisations = Organisation.objects.filter(
+        id__in=organisation_ids,
+        subscription__plan=FREE_PLAN_ID,
+        api_limit_access_block__isnull=True,
+    ).exclude(
+        stop_serving_flags=True,
+        block_access_to_admin=True,
+    )
+
+    organisation_ids = []
+    api_limit_access_blocks = []
+    for organisation in organisations:
+        api_limit_access_blocks.append(APILimitAccessBlock(organisation=organisation))
+        organisation_ids.append(organisation.id)
+
+    APILimitAccessBlock.objects.bulk_create(api_limit_access_blocks)
+
+    # Due to a bug in Django, calling update on the organisations
+    # queryset after it has been iterated through fails to save.
+    # So to work around that, we reload the queryset from the ids.
+    Organisation.objects.filter(
+        id__in=organisation_ids,
+    ).update(stop_serving_flags=True, block_access_to_admin=True)
+
+
+def unrestrict_after_api_limit_grace_period_is_stale() -> None:
+    month_start = timezone.now() - timedelta(30)
+    queryset = (
+        OranisationAPIUsageNotification.objects.filter(
+            notified_at__gt=month_start,
+            percent_usage__gte=100,
+        )
+        .values("organisation")
+        .annotate(max_value=Max("percent_usage"))
+    )
+    still_restricted_organisation_ids = {q["organisation"] for q in queryset}
+    organisation_ids = set(
+        Organisation.objects.filter(
+            api_limit_access_block__isnull=False,
+        ).values_list("id", flat=True)
+    )
+
+    queryset = Organisation.objects.filter(
+        id__in=(organisation_ids - still_restricted_organisation_ids),
+    )
+
+    queryset.update(stop_serving_flags=False, block_access_to_admin=False)
+
+    for organisation in queryset:
+        organisation.api_limit_access_block.delete()
+
+
 if settings.ENABLE_API_USAGE_ALERTING:
     register_recurring_task(
         run_every=timedelta(hours=12),
     )(handle_api_usage_notifications)
+    register_recurring_task(
+        run_every=timedelta(hours=12),
+    )(restrict_use_due_to_api_limit_grace_period_over)
+    register_recurring_task(
+        run_every=timedelta(hours=12),
+    )(unrestrict_after_api_limit_grace_period_is_stale)
