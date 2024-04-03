@@ -8,7 +8,7 @@ import Button from './base/forms/Button'
 import ConfirmDeleteRole from './modals/ConfirmDeleteRole'
 import Icon from './Icon'
 import Panel from './base/grid/Panel'
-const rolesWidths = [250, 600, 100]
+const rolesWidths = [250, 100]
 
 type RolesTableType = {
   organisationId: number
@@ -83,27 +83,28 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
       </p>
       <PanelSearch
         id='org-members-list'
-        title={'Roles'}
         className='no-pad'
         items={roles?.results || []}
         itemHeight={65}
         header={
-          <Row className='table-header px-3'>
+          <Row className='table-header'>
             <div
+              className='table-column'
               style={{
                 width: rolesWidths[0],
               }}
             >
-              Roles
+              Name
             </div>
+            <div className='flex-fill table-column'>Description</div>
             <div
               style={{
                 width: rolesWidths[1],
               }}
+              className='table-column text-center'
             >
-              Description
+              Remove
             </div>
-            <div className='table-column text-center'>Remove</div>
           </Row>
         }
         renderRow={(role: Role) => (
@@ -112,7 +113,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
               onClick={() => {
                 editRole(role)
               }}
-              className='table-column px-3'
+              className='table-column'
               style={{
                 width: rolesWidths[0],
               }}
@@ -120,21 +121,18 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
               {role.name}
             </Row>
             <Row
-              className='table-column px-3'
+              className='table-column flex-fill'
               onClick={() => {
                 editRole(role)
-              }}
-              style={{
-                width: rolesWidths[1],
               }}
             >
               {role.description}
             </Row>
             <div
               style={{
-                width: rolesWidths[2],
+                width: rolesWidths[1],
               }}
-              className='table-column text-center px-3'
+              className='table-column text-center'
             >
               <Button
                 id='remove-role'

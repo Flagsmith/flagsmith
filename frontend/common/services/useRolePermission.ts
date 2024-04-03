@@ -10,10 +10,7 @@ export const rolePermissionService = service
         Res['rolePermission'],
         Req['createRolePermission']
       >({
-        invalidatesTags: (res) => [
-          { id: 'LIST', type: 'rolePermission' },
-          { type: 'rolePermission' },
-        ],
+        invalidatesTags: (res, req) => [{ type: 'rolePermission' }],
         query: (query: Req['updateRolePermission']) => ({
           body: query.body,
           method: 'POST',
@@ -25,6 +22,12 @@ export const rolePermissionService = service
         Res['rolePermission'],
         Req['getRolePermissionEnvironment']
       >({
+        providesTags: (res, _, req) => [
+          {
+            id: `LIST-${req.organisation_id}-${req.role_id}-${req.env_id}`,
+            type: 'rolePermission',
+          },
+        ],
         query: (query: Req['getRolePermissionEnvironment']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/environments-permissions/?environment=${query.env_id}`,
         }),
@@ -34,6 +37,12 @@ export const rolePermissionService = service
         Res['rolePermission'],
         Req['getRolePermissionOrganisation']
       >({
+        providesTags: (res, _, req) => [
+          {
+            id: `LIST-${req.organisation_id}-${req.role_id}`,
+            type: 'rolePermission',
+          },
+        ],
         query: (query: Req['getRolePermissionOrganisation']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/organisation-permissions/`,
         }),
@@ -43,6 +52,12 @@ export const rolePermissionService = service
         Res['rolePermission'],
         Req['getRolePermissionProject']
       >({
+        providesTags: (res, _, req) => [
+          {
+            id: `LIST-${req.organisation_id}-${req.role_id}-${req.project_id}`,
+            type: 'rolePermission',
+          },
+        ],
         query: (query: Req['getRolePermissionProject']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/projects-permissions/?project=${query.project_id}`,
         }),

@@ -267,8 +267,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   } {
     if (isAdmin) {
       return {
-        items: [],
-        truncatedItems: ['Project Administrator'],
+        items: ['Administrator'],
+        truncatedItems: [],
       }
     }
     if (!permissions) return { items: [], truncatedItems: [] }

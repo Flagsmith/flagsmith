@@ -49,7 +49,8 @@
     align-items: center;
     justify-content: space-between;
     text-transform: capitalize;
-    height: 56px;
+    padding-top: 2px;
+    padding-bottom: 2px;
 
     .title {
       color: $text-icon-dark;
