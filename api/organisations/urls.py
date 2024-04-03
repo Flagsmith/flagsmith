@@ -10,7 +10,10 @@ from rest_framework_nested import routers
 from api_keys.views import MasterAPIKeyViewSet
 from audit.views import OrganisationAuditLogViewSet
 from metadata.views import MetaDataModelFieldViewSet
-from organisations.views import OrganisationWebhookViewSet
+from organisations.views import (
+    OrganisationAPIUsageNotificationView,
+    OrganisationWebhookViewSet,
+)
 from users.views import (
     FFAdminUserViewSet,
     UserPermissionGroupViewSet,
@@ -92,6 +95,11 @@ urlpatterns = [
         "<int:organisation_pk>/groups/<int:group_pk>/users/<int:user_pk>/remove-admin",
         remove_user_as_group_admin,
         name="remove-user-group-admin",
+    ),
+    path(
+        "<int:organisation_pk>/api-usage-notification/",
+        OrganisationAPIUsageNotificationView.as_view(),
+        name="organisation-api-usage-notification",
     ),
 ]
 
