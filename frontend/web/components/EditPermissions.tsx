@@ -944,7 +944,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
       <Tabs value={tab} onChange={setTab} theme='pill'>
         <TabItem tabLabel='Users'>
           <OrganisationProvider>
-            {({ isLoading, users }: { isLoading: boolean; users?: User[] }) => (
+            {({ isLoading, users }) => (
               <div className='mt-4'>
                 {isLoading && !users?.length && (
                   <div className='centered-container'>

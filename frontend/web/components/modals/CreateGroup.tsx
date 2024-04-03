@@ -168,7 +168,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
   const isEdit = !!group
   const editGroup = (
     <OrganisationProvider>
-      {({ users: organisationUsers }: { users: User[] }) => {
+      {({ users: organisationUsers }) => {
         const activeUsers = intersectionBy(organisationUsers, users, 'id')
         const inactiveUsers = differenceBy(organisationUsers, users, 'id')
         const isAdmin = AccountStore.isAdmin()

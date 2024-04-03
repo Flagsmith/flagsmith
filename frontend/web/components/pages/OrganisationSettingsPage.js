@@ -67,6 +67,9 @@ const OrganisationSettingsPage = class extends Component {
   }
 
   componentDidMount = () => {
+    if (!AccountStore.getOrganisation()) {
+      return
+    }
     getRoles(
       getStore(),
       { organisation_id: AccountStore.getOrganisation().id },
@@ -438,12 +441,11 @@ const OrganisationSettingsPage = class extends Component {
                                 Create Group
                               </Button>
                             </Flex>
-
                             <UserGroupList
                               showRemove
                               onClick={this.editGroup}
                               roles={this.state.roles}
-                              orgId={organisation && organisation.id}
+                              orgId={organisation.id}
                             />
                           </TabItem>
                         )}
@@ -1427,10 +1429,7 @@ const OrganisationSettingsPage = class extends Component {
                                               <UserGroupList
                                                 showRemove
                                                 onClick={this.editGroup}
-                                                orgId={
-                                                  organisation &&
-                                                  organisation.id
-                                                }
+                                                orgId={organisation.id}
                                               />
                                             </div>
                                           </TabItem>
@@ -1442,8 +1441,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 <>
                                                   <RolesTable
                                                     organisationId={
-                                                      AccountStore.getOrganisation()
-                                                        .id
+                                                      organisation.id
                                                     }
                                                     users={users}
                                                   />
@@ -1598,9 +1596,7 @@ const OrganisationSettingsPage = class extends Component {
                             {this.state.tab ===
                               displayedTabs.indexOf(SettingsTab.Usage) && (
                               <OrganisationUsage
-                                organisationId={
-                                  AccountStore.getOrganisation().id
-                                }
+                                organisationId={organisation.id}
                               />
                             )}
                           </TabItem>

@@ -104,7 +104,7 @@ export type Req = {
     user: number | string
   }
   getGroups: PagedRequest<{
-    orgId: string
+    orgId: number
   }>
   deleteGroup: { id: number | string; orgId: number | string }
   getGroup: { id: string; orgId: string }

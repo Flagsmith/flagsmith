@@ -7,11 +7,11 @@ import { useDeleteGroupMutation } from 'common/services/useGroup'
 import { useGetUserGroupPermissionQuery } from 'common/services/useUserGroupPermission'
 import PanelSearch from './PanelSearch'
 import { sortBy } from 'lodash'
-import InfoMessage from './InfoMessage' // we need this to make JSX compile
+import InfoMessage from './InfoMessage'
 import Icon from './Icon'
 import { useGetGroupSummariesQuery } from 'common/services/useGroupSummary'
 import PermissionsSummaryList from './PermissionsSummaryList'
-const Panel = require('components/base/grid/Panel')
+import Panel from './base/grid/Panel'
 
 type UserGroupsListType = {
   noTitle?: boolean
@@ -152,7 +152,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
     ? [...userGroupsPermission]
     : []
 
-  if (userGroupsPermission?.length > 0) {
+  if (userGroupsPermission && userGroupsPermission?.length > 0) {
     userGroups?.forEach((group) => {
       const existingPermissionIndex =
         mergeduserGroupsPermissionWithUserGroups.findIndex(
