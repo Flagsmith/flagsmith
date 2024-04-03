@@ -15,6 +15,7 @@ import Format from 'common/utils/format'
 import { PermissionLevel, Req } from 'common/types/requests'
 import { Role } from 'common/types/responses'
 import PanelSearch from './PanelSearch'
+import PermissionsSummaryList from './PermissionsSummaryList'
 
 type NameAndId = {
   name: string
@@ -47,7 +48,7 @@ const PermissionsSummary: FC<PermissionsSummaryType> = ({
         project_id: levelId,
         role_id: role.id,
       },
-      { skip: !levelId || level == 'project' },
+      { skip: !levelId || level !== 'project' },
     )
 
   const { data: envPermissions, isLoading: envIsLoading } =
@@ -70,20 +71,12 @@ const PermissionsSummary: FC<PermissionsSummaryType> = ({
   const isAdmin =
     roleResult && roleResult.length > 0 ? roleResult[0].admin : false
 
-  const permissionsSummary =
-    (roleRermissions &&
-      roleRermissions.length > 0 &&
-      roleRermissions
-        .map((item: string) => Format.enumeration.get(item))
-        .join(', ')) ||
-    ''
-
   return projectIsLoading || envIsLoading ? (
     <div className='modal-body text-center'>
       <Loader />
     </div>
   ) : (
-    <div>{isAdmin ? 'Administrator' : permissionsSummary}</div>
+    <PermissionsSummaryList isAdmin={isAdmin} permissions={roleRermissions} />
   )
 }
 
@@ -153,7 +146,7 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
         }
         renderRow={(mainItem: NameAndId, index: number) => (
           <div
-            className='list-item mh-auto py-2 list-item-xs clickable'
+            className='list-item d-flex flex-column justify-content-center py-2 list-item-sm clickable'
             key={index}
           >
             <Row
