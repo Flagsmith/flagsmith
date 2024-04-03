@@ -37,7 +37,7 @@ first Flag. This flag will control whether a button shows on our web page.
 ![Flagsmith Overview](/img/quickstart/demo_create_3.png)
 
 Flags within Flagsmith are a combination of both: A Boolean value - the `Flag State` and then optionally: A
-String/Integer/Float value - the `Flag Value`. For now, we're only going to use the `Boolean` value of the flag to
+String/Integer/Boolean value - the `Flag Value`. For now, we're only going to use the `Boolean` value of the flag to
 control whether the button shows. Create a flag called `show_demo_button`, and leave it as Disabled by default:
 
 ![Flagsmith Overview](/img/quickstart/demo_create_4.png)
