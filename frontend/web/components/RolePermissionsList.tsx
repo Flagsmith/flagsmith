@@ -71,11 +71,7 @@ const PermissionsSummary: FC<PermissionsSummaryType> = ({
   const isAdmin =
     roleResult && roleResult.length > 0 ? roleResult[0].admin : false
 
-  return projectIsLoading || envIsLoading ? (
-    <div className='modal-body text-center'>
-      <Loader />
-    </div>
-  ) : (
+  return projectIsLoading || envIsLoading ? null : (
     <PermissionsSummaryList isAdmin={isAdmin} permissions={roleRermissions} />
   )
 }
