@@ -14,7 +14,7 @@ import { useGetGroupsQuery } from 'common/services/useGroup'
 type OrganisationProviderType = {
   onRemoveProject?: () => void
   onSave?: () => void
-  id: number
+  id?: number
   children: (props: {
     createProject: typeof AppActions.createProject
     invalidateInviteLink: typeof AppActions.invalidateInviteLink
@@ -38,7 +38,7 @@ const OrganisationProvider: FC<OrganisationProviderType> = ({
   onSave,
 }) => {
   const [_, setUpdate] = useState(Date.now())
-  const { data: groups } = useGetGroupsQuery({ orgId: id }, { skip: !id })
+  const { data: groups } = useGetGroupsQuery({ orgId: id! }, { skip: !id })
   useEffect(() => {
     const _onRemoveProject = () => onRemoveProject?.()
     OrganisationStore.on('removed', _onRemoveProject)

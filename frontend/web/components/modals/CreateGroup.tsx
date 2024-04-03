@@ -132,7 +132,6 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       external_id: externalId,
       is_default: isDefault,
       name,
-      users: users as any,
     }
     const usersToAddAdmin = getUsersAdminChanged(existingUsers, true)
     const usersToRemoveAdmin = getUsersAdminChanged(existingUsers, false)
@@ -150,6 +149,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       createGroup({
         data,
         orgId,
+        users: users as any,
         usersToAddAdmin: (usersToAddAdmin || []).map((user) => user.id),
       })
     }
