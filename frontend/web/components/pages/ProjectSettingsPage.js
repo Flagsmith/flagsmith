@@ -245,7 +245,6 @@ const ProjectSettingsPage = class extends Component {
         onComplete={this.metadataUpdated}
         projectId={this.props.match.params.projectId}
         organisationId={AccountStore.getOrganisation().id}
-        // supportedContentTypes={supportedContentTypes}
       />,
       'side-modal create-feature-modal',
     )
