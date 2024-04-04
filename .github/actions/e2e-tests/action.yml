@@ -7,7 +7,7 @@ inputs:
     required: true
   slack_token:
     description: The slack authentication token.
-    required: true
+    required: false
   environment:
     description: The value of the ENV environment variable to use for npm run env.
     required: true
