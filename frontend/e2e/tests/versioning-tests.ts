@@ -8,7 +8,7 @@ import {
     createRemoteConfig,
     editRemoteConfig,
     log,
-    login,
+    login, scrollIntoView,
     waitAndRefresh,
     waitForElementVisible,
 } from '../helpers.cafe';
@@ -33,6 +33,7 @@ export default async () => {
     await click(byId('enable-versioning'))
     await click('#confirm-toggle-feature-btn')
     await waitAndRefresh(30000)
+    await scrollIntoView(byId('enable-versioning'))
 
     log('Create feature 1')
     await createRemoteConfig(0, 'a', 'small')
