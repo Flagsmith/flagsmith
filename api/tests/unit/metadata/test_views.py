@@ -267,10 +267,11 @@ def test_can_not_update_model_metadata_field_from_other_organisation(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_create_model_metadata_field_for_environments(
+def test_create_model_metadata_field(
     admin_client,
     a_metadata_field,
     organisation,
+    environment,
     project_content_type,
     environment_content_type,
     project,
@@ -285,72 +286,6 @@ def test_create_model_metadata_field_for_environments(
             {"content_type": project_content_type.id, "object_id": project.id}
         ],
         "content_type": environment_content_type.id,
-    }
-
-    # When
-    response = admin_client.post(
-        url, data=json.dumps(data), content_type="application/json"
-    )
-    # Then
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.json()["field"] == a_metadata_field.id
-    assert response.json()["is_required_for"][0] == {
-        "content_type": project_content_type.id,
-        "object_id": project.id,
-    }
-
-
-def test_create_model_metadata_field_for_features(
-    admin_client,
-    a_metadata_field,
-    organisation,
-    project_content_type,
-    feature_content_type,
-    project,
-):
-    # Given
-    url = reverse(
-        "api-v1:organisations:metadata-model-fields-list", args=[organisation.id]
-    )
-    data = {
-        "field": a_metadata_field.id,
-        "is_required_for": [
-            {"content_type": project_content_type.id, "object_id": project.id}
-        ],
-        "content_type": feature_content_type.id,
-    }
-
-    # When
-    response = admin_client.post(
-        url, data=json.dumps(data), content_type="application/json"
-    )
-    # Then
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.json()["field"] == a_metadata_field.id
-    assert response.json()["is_required_for"][0] == {
-        "content_type": project_content_type.id,
-        "object_id": project.id,
-    }
-
-
-def test_create_model_metadata_field_for_segments(
-    admin_client,
-    a_metadata_field,
-    organisation,
-    project_content_type,
-    segment_content_type,
-    project,
-):
-    # Given
-    url = reverse(
-        "api-v1:organisations:metadata-model-fields-list", args=[organisation.id]
-    )
-    data = {
-        "field": a_metadata_field.id,
-        "is_required_for": [
-            {"content_type": project_content_type.id, "object_id": project.id}
-        ],
-        "content_type": segment_content_type.id,
     }
 
     # When

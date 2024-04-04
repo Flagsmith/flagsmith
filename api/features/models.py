@@ -11,7 +11,6 @@ from core.models import (
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
-from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
     ObjectDoesNotExist,
@@ -73,7 +72,6 @@ from features.value_types import (
     STRING,
 )
 from features.versioning.models import EnvironmentFeatureVersion
-from metadata.models import Metadata
 from projects.models import Project
 from projects.tags.models import Tag
 
@@ -127,8 +125,6 @@ class Feature(
     related_object_type = RelatedObjectType.FEATURE
 
     objects = FeatureManager()
-
-    metadata = GenericRelation(Metadata)
 
     class Meta:
         # Note: uniqueness index is added in explicit SQL in the migrations (See 0005, 0050)
