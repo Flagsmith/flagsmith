@@ -410,7 +410,8 @@ const EnvironmentSettingsPage = class extends Component {
 
                               <p className='fs-small lh-sm'>
                                 Allows you to attach versions to updating
-                                feature values and segment overrides.
+                                feature values and segment overrides. This
+                                setting may take up to a minute to take affect.
                                 <br />
                                 <strong>
                                   Warning! Enabling this is irreversable
