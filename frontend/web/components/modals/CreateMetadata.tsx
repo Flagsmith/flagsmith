@@ -17,11 +17,12 @@ import {
   useUpdateMetadataModelFieldMutation,
   useDeleteMetadataModelFieldMutation,
 } from 'common/services/useMetadataModelField'
+import { ContentType, MetadataModelField } from 'common/types/responses'
 
 type CreateMetadataType = {
   id: string
   isEdit?: boolean
-  metadataModelFieldList?: Array
+  metadataModelFieldList?: MetadataModelField[]
   onComplete?: () => void
   organisationId: string
   projectId?: string
@@ -31,6 +32,15 @@ type MetadataType = {
   id: number
   value: string
   label: string
+}
+
+type QueryBody = {
+  content_type: number
+  field: number
+  is_required_for: {
+    content_type: number
+    object_id: number
+  }[]
 }
 
 const CreateMetadata: FC<CreateMetadataType> = ({
@@ -87,48 +97,50 @@ const CreateMetadata: FC<CreateMetadataType> = ({
       setDescription(data.description)
       const _metadataType = metadataTypes.find(
         (m: MetadataType) => m.value === data.type,
-      )?.value
+      )
       if (_metadataType) {
         setTypeValue(_metadataType)
       }
-      setMetadataFieldsArray(metadataModelFieldList.map((m) => m.content_type))
+      setMetadataFieldsArray(
+        metadataModelFieldList?.map((m: MetadataModelField) => m.content_type),
+      )
       setRequiredMetadataModelFields(
         metadataModelFieldList
-          .filter((m) => m.is_required_for.length > 0)
-          .map((m) => m.content_type),
+          ?.filter((m: MetadataModelField) => m.is_required_for.length > 0)
+          .map((m: MetadataModelField) => m.content_type),
       )
       setFlagsEnabled(
-        !!metadataModelFieldList.find(
-          (i) => i.content_type == featureContentType,
+        !!metadataModelFieldList?.find(
+          (i: MetadataModelField) => i.content_type == featureContentType,
         ),
       )
       setSegmentsEnabled(
-        !!metadataModelFieldList.find(
-          (i) => i.content_type == segmentContentType,
+        !!metadataModelFieldList?.find(
+          (i: MetadataModelField) => i.content_type == segmentContentType,
         ),
       )
       setEnvironmentEnabled(
-        !!metadataModelFieldList.find(
-          (i) => i.content_type == environmentContentType,
+        !!metadataModelFieldList?.find(
+          (i: MetadataModelField) => i.content_type == environmentContentType,
         ),
       )
       setFlagRequired(
-        !!metadataModelFieldList.find(
-          (i) =>
+        !!metadataModelFieldList?.find(
+          (i: MetadataModelField) =>
             i.content_type == featureContentType &&
             i?.is_required_for.length > 0,
         ),
       )
       setSegmentRequired(
-        !!metadataModelFieldList.find(
-          (i) =>
+        !!metadataModelFieldList?.find(
+          (i: MetadataModelField) =>
             i.content_type == segmentContentType &&
             i?.is_required_for.length > 0,
         ),
       )
       setEnvironmentRequired(
-        !!metadataModelFieldList.find(
-          (i) =>
+        !!metadataModelFieldList?.find(
+          (i: MetadataModelField) =>
             i.content_type == environmentContentType &&
             i?.is_required_for.length > 0,
         ),
@@ -148,7 +160,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
     }
   }, [creating, created])
 
-  const [typeValue, setTypeValue] = useState<string>('')
+  const [typeValue, setTypeValue] = useState<MetadataType>()
   const [name, setName] = useState<string>('')
   const [description, setDescription] = useState<string>('')
   const [environmentEnabled, setEnvironmentEnabled] = useState<boolean>(false)
@@ -243,7 +255,9 @@ const CreateMetadata: FC<CreateMetadataType> = ({
         value={typeValue}
         placeholder='Select a metadata type'
         options={metadataTypes}
-        onChange={(label: string) => setTypeValue(label)}
+        onChange={(m: MetadataType) => {
+          setTypeValue(m)
+        }}
         className='mb-4 react-select'
       />
 
@@ -346,23 +360,23 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 description,
                 name,
                 organisation: organisationId,
-                type: typeValue,
+                type: `${typeValue?.value}`,
               },
               id,
             })
-            if (!metadataModelFieldList.length && id) {
-              metadataFieldsArray.map((m) => {
+            if (!metadataModelFieldList?.length && id) {
+              metadataFieldsArray.map((m: ContentType) => {
                 createMetadataField({
-                  body: { 'content_type': m, 'field': id },
+                  body: { 'content_type': m.id, 'field': id },
                   organisation_id: organisationId,
                 })
               })
-            } else if (metadataModelFieldList.length && id) {
+            } else if (metadataModelFieldList?.length && id) {
               const metadataToDelete = metadataModelFieldList.filter(
                 (m) => !metadataFieldsArray.includes(m.content_type),
               )
               const metadataToCreate = metadataFieldsArray.filter(
-                (id) =>
+                (id: number) =>
                   !metadataModelFieldList.some((m) => m.content_type === id),
               )
               const metadataToUpdate = metadataModelFieldList.filter((m) =>
@@ -377,10 +391,9 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 })
               }
               if (metadataToCreate.length) {
-                metadataToCreate.map((m) => {
+                metadataToCreate.map((m: ContentType) => {
                   createMetadataField({
-                    body: { 'content_type': m, 'field': id },
-                    id,
+                    body: { 'content_type': m.id, 'field': id },
                     organisation_id: organisationId,
                   })
                 })
@@ -388,7 +401,10 @@ const CreateMetadata: FC<CreateMetadataType> = ({
               if (metadataToUpdate.length) {
                 metadataToUpdate.map((m) => {
                   const query = {
-                    body: { 'content_type': m.content_type, 'field': m.field },
+                    body: {
+                      content_type: m.content_type,
+                      field: m.field,
+                    } as QueryBody,
                     id: m.id,
                     organisation_id: organisationId,
                   }
@@ -398,13 +414,19 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                       object_id: Number(projectId),
                     },
                   ]
-                  if (m.content_type === 30 && environmentRequired) {
+                  if (
+                    m.content_type === environmentContentType &&
+                    environmentRequired
+                  ) {
                     query.body.is_required_for = isRequiredFor
                   }
-                  if (m.content_type === 39 && flagRequired) {
+                  if (m.content_type === featureContentType && flagRequired) {
                     query.body.is_required_for = isRequiredFor
                   }
-                  if (m.content_type === 55 && segmentRequired) {
+                  if (
+                    m.content_type === segmentContentType &&
+                    segmentRequired
+                  ) {
                     query.body.is_required_for = isRequiredFor
                   }
                   updateMetadataField(query)
@@ -417,7 +439,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 description,
                 name,
                 organisation: organisationId,
-                type: typeValue,
+                type: `${typeValue?.value}`,
               },
             })
           }

@@ -402,7 +402,7 @@ export type FeatureVersion = {
   created_by: number | null
 }
 
-export type metadata = {
+export type Metadata = {
   id: number
   name: string
   type: string
@@ -414,6 +414,18 @@ export type ContentType = {
   id: number
   app_label: string
   model: string
+}
+
+export type MetadataModelField = {
+  id: string
+  field: number
+  content_type: number
+  is_required_for: [
+    {
+      content_type: number
+      object_id: number
+    },
+  ]
 }
 
 export type Res = {
@@ -501,8 +513,8 @@ export type Res = {
       },
     ]
   }
-  metadataList: PagedResponse<metadata[]>
-  metadata: metadata
+  metadataList: PagedResponse<Metadata>
+  metadata: Metadata
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   roleMasterApiKey: { id: number; master_api_key: string; role: number }

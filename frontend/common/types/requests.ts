@@ -212,7 +212,10 @@ export type Req = {
     body: {
       content_type: number
       field: number
-      is_required_for: number
+      is_required_for: {
+        content_type: number
+        object_id: number
+      }[]
     }
   }
   deleteMetadataModelField: { organisation_id: string; id: string }
@@ -220,7 +223,7 @@ export type Req = {
     organisation_id: string
     body: {
       content_type: number
-      field: number
+      field: string
     }
   }
   getMetadata: { organisation_id: string }
