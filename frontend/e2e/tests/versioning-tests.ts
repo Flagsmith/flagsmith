@@ -32,7 +32,7 @@ export default async () => {
     await click('#env-settings-link')
     await click(byId('enable-versioning'))
     await click('#confirm-toggle-feature-btn')
-    await waitAndRefresh(10000)
+    await waitAndRefresh(30000)
 
     log('Create feature 1')
     await createRemoteConfig(0, 'a', 'small')
