@@ -372,9 +372,6 @@ export const closeModal = async () => {
     offsetY: 50,
   })
 }
-export const scrollIntoView = async (selector:string) => {
-  await t.scrollIntoView(selector)
-}
 export const createFeature = async (
   index: number,
   name: string,
