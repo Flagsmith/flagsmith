@@ -10,9 +10,9 @@ export const supportedContentTypeService = service
         Res['supportedContentType'],
         Req['getSupportedContentType']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'SupportedContentType' }],
+        providesTags: [{ id: 'LIST', type: 'SupportedContentType' }],
         query: (query: Req['getSupportedContentType']) => ({
-          url: `organisations/${query.org_id}/metadata-model-fields/supported-content-types/`,
+          url: `organisations/${query.organisation_id}/metadata-model-fields/supported-content-types/`,
         }),
       }),
       // END OF ENDPOINTS

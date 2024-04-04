@@ -1,6 +1,7 @@
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
+import Utils from 'common/utils/utils'
 
 export const metadataService = service
   .enhanceEndpoints({ addTagTypes: ['Metadata'] })
@@ -21,8 +22,8 @@ export const metadataService = service
           url: `metadata/fields/${query.id}/`,
         }),
       }),
-      getListMetadata: builder.query<Res['metadata'], Req['getMetadata']>({
-        providesTags: (res) => [{ id: res?.id, type: 'Metadata' }],
+      getListMetadata: builder.query<Res['metadataList'], Req['getMetadata']>({
+        providesTags: [{ id: 'LIST', type: 'Metadata' }],
         query: (query: Req['getMetadata']) => ({
           url: `metadata/fields/?${Utils.toParam(query)}`,
         }),
@@ -83,7 +84,7 @@ export async function getMetadata(
 }
 export async function getListMetadata(
   store: any,
-  data: Req['getListMetadata'],
+  data: Req['getMetadata'],
   options?: Parameters<
     typeof metadataService.endpoints.getListMetadata.initiate
   >[1],

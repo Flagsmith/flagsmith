@@ -38,10 +38,10 @@ export const metadataModelFieldService = service
       }),
       getMetadataModelFieldList: builder.query<
         Res['metadataModelField'],
-        Req['getMetadataModelFieldList']
+        Req['getMetadataModelFields']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'MetadataModelField' }],
-        query: (query: Req['getMetadataModelFieldList']) => ({
+        providesTags: [{ id: 'LIST', type: 'MetadataModelField' }],
+        query: (query: Req['getMetadataModelFields']) => ({
           url: `organisations/${query.organisation_id}/metadata-model-fields/`,
         }),
       }),
@@ -107,7 +107,7 @@ export async function getMetadataModelField(
 }
 export async function getMetadataModelFieldList(
   store: any,
-  data: Req['getMetadataModelFieldList'],
+  data: Req['getMetadataModelFields'],
   options?: Parameters<
     typeof metadataModelFieldService.endpoints.getMetadataModelFieldList.initiate
   >[1],

@@ -6,10 +6,6 @@ import Utils from 'common/utils/utils'
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const OrganisationStore = require('./organisation-store')
-const {
-  getSupportedContentType,
-} = require('../services/useSupportedContentType')
-const { getStore } = require('../store')
 
 const data = require('../data/base/_data')
 
@@ -95,16 +91,14 @@ const controller = {
       return Promise.all([
         data.get(`${Project.api}projects/${id}/`),
         data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
-        getSupportedContentType(getStore(), { org_id: OrganisationStore.id }),
       ])
-        .then(([project, environments, supportedContentType]) => {
+        .then(([project, environments]) => {
           project.max_segments_allowed = project.max_segments_allowed
           project.max_features_allowed = project.max_features_allowed
           project.max_segment_overrides_allowed =
             project.max_segment_overrides_allowed
           project.total_features = project.total_features || 0
           project.total_segments = project.total_segments || 0
-          project.supportedContentTypes = supportedContentType.data
           store.model = Object.assign(project, {
             environments: _.sortBy(environments.results, 'name'),
           })
@@ -129,16 +123,14 @@ const controller = {
       Promise.all([
         data.get(`${Project.api}projects/${id}/`),
         data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
-        getSupportedContentType(getStore(), { org_id: OrganisationStore.id }),
       ])
-        .then(([project, environments, supportedContentType]) => {
+        .then(([project, environments]) => {
           project.max_segments_allowed = project.max_segments_allowed
           project.max_features_allowed = project.max_features_allowed
           project.max_segment_overrides_allowed =
             project.max_segment_overrides_allowed
           project.total_features = project.total_features || 0
           project.total_segments = project.total_segments || 0
-          project.supportedContentTypes = supportedContentType.data
           store.model = Object.assign(project, {
             environments: _.sortBy(environments.results, 'name'),
           })

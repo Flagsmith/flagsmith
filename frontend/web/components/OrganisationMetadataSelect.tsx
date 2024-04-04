@@ -15,7 +15,7 @@ const OrganisationMetadataSelect: FC<OrganisationMetadataSelectType> = ({
   ...props
 }) => {
   const [metadataList, setMetadataList] = useState()
-  const { data: metadata } = useGetListMetadataQuery({ organisation: orgId })
+  const { data: metadata } = useGetListMetadataQuery({ organisation_id: orgId })
   const { data: metadataModelField } = useGetMetadataModelFieldListQuery({
     organisation_id: orgId,
   })

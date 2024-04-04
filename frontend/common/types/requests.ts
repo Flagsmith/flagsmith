@@ -204,10 +204,25 @@ export type Req = {
   getGetSubscriptionMetadata: { id: string }
   getEnvironment: { id: string }
   getSubscriptionMetadata: { id: string }
+  getMetadataModelFields: { organisation_id: string }
   getMetadataModelField: { organisation_id: string; id: string }
-  updateMetadataModelField: { organisation_id: string; id: string }
+  updateMetadataModelField: {
+    organisation_id: string
+    id: string
+    body: {
+      content_type: number
+      field: number
+      is_required_for: number
+    }
+  }
   deleteMetadataModelField: { organisation_id: string; id: string }
-  createMetadataModelField: { organisation_id: string }
+  createMetadataModelField: {
+    organisation_id: string
+    body: {
+      content_type: number
+      field: number
+    }
+  }
   getMetadata: { id: string }
   updateMetadata: {
     id: string
@@ -215,16 +230,19 @@ export type Req = {
       name: string
       type: string
       description: string
-      organisation: number
+      organisation: string
     }
   }
   deleteMetadata: { id: string }
   createMetadata: {
-    name: string
-    type: string
-    description: string
-    organisation: number
+    body: {
+      description: string
+      name: string
+      organisation: string
+      type: string
+    }
   }
+
   getRoleMasterApiKey: { org_id: number; role_id: number; id: string }
   updateRoleMasterApiKey: { org_id: number; role_id: number; id: string }
   deleteRoleMasterApiKey: { org_id: number; role_id: number; id: string }
@@ -317,7 +335,7 @@ export type Req = {
   getGroupSummaries: {
     orgId: string
   }
-  getSupportedContentType: { org_id: string }
+  getSupportedContentType: { organisation_id: string }
   getServersideEnvironmentKeys: { environmentId: string }
   deleteServersideEnvironmentKeys: { environmentId: string; id: string }
   createServersideEnvironmentKeys: {

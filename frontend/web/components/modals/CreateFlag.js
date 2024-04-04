@@ -41,6 +41,7 @@ import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
 import Button from 'components/base/forms/Button'
 import { removeUserOverride } from 'components/RemoveUserOverride'
+import { getSupportedContentType } from 'common/services/useSupportedContentType'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -99,6 +100,7 @@ const CreateFlag = class extends Component {
       period: 30,
       selectedIdentity: null,
       showMetadataList: false,
+      supportedContentTypes: [],
       tab: tab || 0,
       tags: tags || [],
     }
@@ -196,22 +198,31 @@ const CreateFlag = class extends Component {
     ) {
       this.getFeatureUsage()
     }
-    getListMetadata(getStore(), {
-      organisation: AccountStore.getOrganisation().id,
-    }).then((metadata) => {
-      getMetadataModelFieldList(getStore(), {
-        organisation_id: AccountStore.getOrganisation().id,
-      }).then((metadataModelField) => {
-        const metadataForContentType = metadata.data.results.filter((meta) => {
-          return metadataModelField.data.results.some(
-            (item) =>
-              item.field === meta.id &&
-              item.content_type === Constants.contentTypes.flag,
+    if (Utils.getFlagsmithHasFeature('enable_metadata')) {
+      getListMetadata(getStore(), {
+        organisation: AccountStore.getOrganisation().id,
+      }).then((metadata) => {
+        getMetadataModelFieldList(getStore(), {
+          organisation_id: AccountStore.getOrganisation().id,
+        }).then((metadataModelField) => {
+          const metadataForContentType = metadata.data.results.filter(
+            (meta) => {
+              return metadataModelField.data.results.some(
+                (item) =>
+                  item.field === meta.id &&
+                  item.content_type === Constants.contentTypes.flag,
+              )
+            },
           )
+          this.setState({ metadataList: metadataForContentType })
         })
-        this.setState({ metadataList: metadataForContentType })
       })
-    })
+      getSupportedContentType(getStore(), {
+        organisation_id: AccountStore.getOrganisation().id,
+      }).then((res) => {
+        this.setState({ supportedContentTypes: res.data })
+      })
+    }
   }
 
   componentWillUnmount() {
@@ -543,11 +554,12 @@ const CreateFlag = class extends Component {
       enabledSegment,
       hide_from_client,
       initial_value,
+      isEdit,
       metadata,
       metadataList,
-      isEdit,
       multivariate_options,
       name,
+      supportedContentTypes,
     } = this.state
     const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID
     const metadataAdded = this.getMetadataList(metadataList, metadata)
@@ -938,11 +950,9 @@ const CreateFlag = class extends Component {
                 editFeatureValue,
               },
             ) => {
-              const featureContentType = Utils.getContentType(
-                project.supportedContentTypes,
-                'model',
-                'feature',
-              )
+              const featureContentType =
+                supportedContentTypes &&
+                Utils.getContentType(supportedContentTypes, 'model', 'feature')
               const saveFeatureValue = (schedule) => {
                 this.setState({ valueChanged: false })
                 if ((is4Eyes || schedule) && !identity) {

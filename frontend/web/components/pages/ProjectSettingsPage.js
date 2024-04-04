@@ -227,12 +227,15 @@ const ProjectSettingsPage = class extends Component {
   createMetadata = () => {
     openModal(
       `Create Metadata`,
-      <CreateMetadata onComplete={this.metadataCreated} />,
+      <CreateMetadata
+        onComplete={this.metadataCreated}
+        organisationId={AccountStore.getOrganisation().id}
+      />,
       'side-modal create-feature-modal',
     )
   }
 
-  editMetadata = (id, contentTypeList, supportedContentTypes) => {
+  editMetadata = (id, contentTypeList) => {
     openModal(
       `Edit Metadata`,
       <CreateMetadata
@@ -241,7 +244,8 @@ const ProjectSettingsPage = class extends Component {
         id={id}
         onComplete={this.metadataUpdated}
         projectId={this.props.match.params.projectId}
-        supportedContentTypes={supportedContentTypes}
+        organisationId={AccountStore.getOrganisation().id}
+        // supportedContentTypes={supportedContentTypes}
       />,
       'side-modal create-feature-modal',
     )

@@ -1,11 +1,16 @@
-import React, { useEffect, useState } from 'react'
-import AccountStore from 'common/stores/account-store'
+import React, { FC, useEffect, useState } from 'react'
+import Utils from 'common/utils/utils'
+import InputGroup from 'components/base/forms/InputGroup'
+import Switch from 'components/Switch'
+import Button from 'components/base/forms/Button'
 
 import {
   useCreateMetadataMutation,
   useGetMetadataQuery,
   useUpdateMetadataMutation,
 } from 'common/services/useMetadata'
+
+import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 
 import {
   useCreateMetadataModelFieldMutation,
@@ -14,18 +19,18 @@ import {
 } from 'common/services/useMetadataModelField'
 
 type CreateMetadataType = {
-  id?: string
+  id: string
   isEdit?: boolean
   metadataModelFieldList?: Array
+  onComplete?: () => void
+  organisationId: string
   projectId?: string
-  supportedContentTypes?: supportedContentTypes[]
 }
 
 type MetadataType = {
-  id: int
+  id: number
   value: string
   label: string
-  onComplete?: () => void
 }
 
 const CreateMetadata: FC<CreateMetadataType> = ({
@@ -33,19 +38,23 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   isEdit,
   metadataModelFieldList,
   onComplete,
+  organisationId,
   projectId,
-  supportedContentTypes,
 }) => {
-  const metadataTypes: MetadataType = [
+  const metadataTypes: MetadataType[] = [
     { id: 1, label: 'int', value: 'int' },
     { id: 2, label: 'string', value: 'str' },
     { id: 3, label: 'boolean', value: 'bool' },
     { id: 4, label: 'url', value: 'url' },
     { id: 5, label: 'multiline string', value: 'multiline_str' },
   ]
-  const orgId = AccountStore.getOrganisation().id
   const { data, isLoading } = useGetMetadataQuery({ id }, { skip: !id })
 
+  const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
+    organisation_id: `${organisationId}`,
+  })
+  console.log('DEBUG: data metadataModelFieldList:', metadataModelFieldList)
+  console.log('DEBUG: supportedContentTypes:', supportedContentTypes)
   const [createMetadata, { isLoading: creating, isSuccess: created }] =
     useCreateMetadataMutation()
   const [updateMetadata, { isLoading: updating, isSuccess: updated }] =
@@ -56,19 +65,31 @@ const CreateMetadata: FC<CreateMetadataType> = ({
 
   const [deleteMetadataModelField] = useDeleteMetadataModelFieldMutation()
   const featureContentType =
-    isEdit && Utils.getContentType(supportedContentTypes, 'model', 'feature')
+    isEdit &&
+    supportedContentTypes &&
+    Utils.getContentType(supportedContentTypes, 'model', 'feature')
   const segmentContentType =
-    isEdit && Utils.getContentType(supportedContentTypes, 'model', 'segment')
+    isEdit &&
+    supportedContentTypes &&
+    Utils.getContentType(supportedContentTypes, 'model', 'segment')
   const environmentContentType =
     isEdit &&
+    supportedContentTypes &&
     Utils.getContentType(supportedContentTypes, 'model', 'environment')
   const projectContentType =
-    isEdit && Utils.getContentType(supportedContentTypes, 'model', 'project')
+    isEdit &&
+    supportedContentTypes &&
+    Utils.getContentType(supportedContentTypes, 'model', 'project')
   useEffect(() => {
     if (data && !isLoading) {
       setName(data.name)
       setDescription(data.description)
-      setTypeValue(metadataTypes.find((m) => m.value === data.type))
+      const _metadataType = metadataTypes.find(
+        (m: MetadataType) => m.value === data.type,
+      )?.value
+      if (_metadataType) {
+        setTypeValue(_metadataType)
+      }
       setMetadataFieldsArray(metadataModelFieldList.map((m) => m.content_type))
       setRequiredMetadataModelFields(
         metadataModelFieldList
@@ -139,7 +160,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   const [requiredMetadataModelFields, setRequiredMetadataModelFields] =
     useState<array>([])
 
-  const handleMetadataModelField = (contentTypeId, enabled) => {
+  const handleMetadataModelField = (contentTypeId, enabled: boolean) => {
     if (enabled) {
       addMetadataField(contentTypeId)
     } else {
@@ -147,7 +168,10 @@ const CreateMetadata: FC<CreateMetadataType> = ({
     }
   }
 
-  const handleRequiredMetadataModelField = (contentTypeId, enabled) => {
+  const handleRequiredMetadataModelField = (
+    contentTypeId,
+    enabled: boolean,
+  ) => {
     if (enabled) {
       addRequiredMetadataModelFields(contentTypeId)
     } else {
@@ -218,7 +242,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
         value={typeValue}
         placeholder='Select a metadata type'
         options={metadataTypes}
-        onChange={(label) => setTypeValue(label)}
+        onChange={(label: string) => setTypeValue(label)}
         className='mb-4 react-select'
       />
 
@@ -320,8 +344,8 @@ const CreateMetadata: FC<CreateMetadataType> = ({
               body: {
                 description,
                 name,
-                organisation: orgId,
-                type: typeValue.value,
+                organisation: organisationId,
+                type: typeValue,
               },
               id,
             })
@@ -329,8 +353,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
               metadataFieldsArray.map((m) => {
                 createMetadataField({
                   body: { 'content_type': m, 'field': id },
-                  id,
-                  organisation_id: orgId,
+                  organisation_id: organisationId,
                 })
               })
             } else if (metadataModelFieldList.length && id) {
@@ -348,7 +371,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 metadataToDelete.map((m) => {
                   deleteMetadataModelField({
                     id: m.id,
-                    organisation_id: orgId,
+                    organisation_id: organisationId,
                   })
                 })
               }
@@ -357,7 +380,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                   createMetadataField({
                     body: { 'content_type': m, 'field': id },
                     id,
-                    organisation_id: orgId,
+                    organisation_id: organisationId,
                   })
                 })
               }
@@ -366,7 +389,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                   const query = {
                     body: { 'content_type': m.content_type, 'field': m.field },
                     id: m.id,
-                    organisation_id: orgId,
+                    organisation_id: organisationId,
                   }
                   const isRequiredFor = [
                     {
@@ -392,8 +415,8 @@ const CreateMetadata: FC<CreateMetadataType> = ({
               body: {
                 description,
                 name,
-                organisation: orgId,
-                type: typeValue.value,
+                organisation: organisationId,
+                type: typeValue,
               },
             })
           }

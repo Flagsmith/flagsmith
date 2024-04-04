@@ -405,8 +405,8 @@ export type FeatureVersion = {
 export type metadata = {
   id: number
   name: string
-  type: number
-  description?: string
+  type: string
+  description: string
   organisation: number
 }
 
@@ -501,7 +501,8 @@ export type Res = {
       },
     ]
   }
-  metadata: PagedResponse<metadata[]>
+  metadataList: PagedResponse<metadata[]>
+  metadata: metadata
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   roleMasterApiKey: { id: number; master_api_key: string; role: number }
