@@ -8,7 +8,6 @@ from django.conf import settings
 from django.core.cache import caches
 from django.db import models
 from django.db.models import Count
-from django.utils import timezone
 from django_lifecycle import (
     AFTER_DELETE,
     AFTER_SAVE,
@@ -27,6 +26,7 @@ from permissions.models import (
 )
 from projects.managers import ProjectManager
 from projects.tasks import (
+    handle_cascade_delete,
     migrate_project_environments_to_v2,
     write_environments_to_dynamodb,
 )
@@ -85,7 +85,13 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     identity_overrides_v2_migration_status = models.CharField(
         max_length=50,
         choices=IdentityOverridesV2MigrationStatus.choices,
+        # Note that the default is actually set dynamically by a lifecycle hook on create
+        # since we need to know whether edge is enabled or not.
         default=IdentityOverridesV2MigrationStatus.NOT_STARTED,
+    )
+    stale_flags_limit_days = models.IntegerField(
+        default=30,
+        help_text="Number of days without modification in any environment before a flag is considered stale.",
     )
 
     objects = ProjectManager()
@@ -130,10 +136,14 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @hook(BEFORE_CREATE)
     def set_enable_dynamo_db(self):
-        self.enable_dynamo_db = self.enable_dynamo_db or (
-            settings.EDGE_RELEASE_DATETIME is not None
-            and settings.EDGE_RELEASE_DATETIME < timezone.now()
-        )
+        self.enable_dynamo_db = self.enable_dynamo_db or settings.EDGE_ENABLED
+
+    @hook(BEFORE_CREATE)
+    def set_identity_overrides_v2_migration_status(self):
+        if settings.EDGE_ENABLED:
+            self.identity_overrides_v2_migration_status = (
+                IdentityOverridesV2MigrationStatus.COMPLETE
+            )
 
     @hook(AFTER_SAVE)
     def clear_environments_cache(self):
@@ -157,6 +167,10 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     @hook(AFTER_DELETE)
     def clean_up_dynamo(self):
         DynamoProjectMetadata(self.id).delete()
+
+    @hook(AFTER_DELETE)
+    def handle_cascade_delete(self) -> None:
+        handle_cascade_delete.delay(kwargs={"project_id": self.id})
 
     @property
     def is_edge_project_by_default(self) -> bool:

@@ -23,7 +23,8 @@ class Integration extends Component {
   }
 
   render() {
-    const { description, docs, image, perEnvironment } = this.props.integration
+    const { description, docs, external, image, perEnvironment } =
+      this.props.integration
     const activeIntegrations = this.props.activeIntegrations
     const showAdd = !(
       !perEnvironment &&
@@ -32,55 +33,68 @@ class Integration extends Component {
     )
     return (
       <div className='panel panel-integrations p-4 mb-3'>
-        <Flex>
-          <img className='mb-2' src={image} />
-          <Row space style={{ flexWrap: 'noWrap' }}>
-            <div className='subtitle mt-2'>
-              {description}{' '}
-              {docs && (
+        <img className='mb-2' src={image} />
+        <Row space style={{ flexWrap: 'noWrap' }}>
+          <div className='subtitle mt-2'>
+            {description}{' '}
+            {docs && (
+              <Button
+                theme='text'
+                href={docs}
+                target='_blank'
+                className='fw-normal'
+              >
+                View docs
+              </Button>
+            )}
+          </div>
+          <Row style={{ flexWrap: 'noWrap' }}>
+            {activeIntegrations &&
+              activeIntegrations.map((integration) => (
                 <Button
-                  theme='text'
-                  href={docs}
-                  target='_blank'
-                  className='fw-normal'
-                >
-                  View docs
-                </Button>
-              )}
-            </div>
-            <Row style={{ flexWrap: 'noWrap' }}>
-              {activeIntegrations &&
-                activeIntegrations.map((integration) => (
-                  <Button
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      this.remove(integration)
-                      return false
-                    }}
-                    className='ml-3'
-                    theme='secondary'
-                    type='submit'
-                    size='xSmall'
-                    key={integration.id}
-                  >
-                    Delete Integration
-                  </Button>
-                ))}
-              {showAdd && (
-                <Button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    this.remove(integration)
+                    return false
+                  }}
                   className='ml-3'
-                  id='show-create-segment-btn'
-                  data-test='show-create-segment-btn'
-                  onClick={this.add}
+                  theme='secondary'
+                  type='submit'
                   size='xSmall'
+                  key={integration.id}
                 >
-                  Add Integration
+                  Delete Integration
                 </Button>
-              )}
-            </Row>
+              ))}
+            {showAdd && (
+              <>
+                {external ? (
+                  <a
+                    href={docs}
+                    target={'_blank'}
+                    className='btn btn-primary btn-xsm ml-3'
+                    id='show-create-segment-btn'
+                    data-test='show-create-segment-btn'
+                    rel='noreferrer'
+                  >
+                    Add Integration
+                  </a>
+                ) : (
+                  <Button
+                    className='ml-3'
+                    id='show-create-segment-btn'
+                    data-test='show-create-segment-btn'
+                    onClick={this.add}
+                    size='xSmall'
+                  >
+                    Add Integration
+                  </Button>
+                )}
+              </>
+            )}
           </Row>
-        </Flex>
+        </Row>
 
         {activeIntegrations &&
           activeIntegrations.map((integration) => (
@@ -190,15 +204,17 @@ class IntegrationList extends Component {
       ? ProjectStore.getEnvironment(integration.flagsmithEnvironment)
       : ''
     const name = env && env.name
-    openConfirm(
-      'Confirm remove integration',
-      <span>
-        This will remove your integration from the{' '}
-        {integration.flagsmithEnvironment ? 'environment ' : 'project'}
-        {name ? <strong>{name}</strong> : ''}, it will no longer receive data.
-        Are you sure?
-      </span>,
-      () => {
+    openConfirm({
+      body: (
+        <span>
+          This will remove your integration from the{' '}
+          {integration.flagsmithEnvironment ? 'environment ' : 'project'}
+          {name ? <strong>{name}</strong> : ''}, it will no longer receive data.
+          Are you sure?
+        </span>
+      ),
+      destructive: true,
+      onYes: () => {
         if (integration.flagsmithEnvironment) {
           _data
             .delete(
@@ -215,7 +231,9 @@ class IntegrationList extends Component {
             .catch(this.onError)
         }
       },
-    )
+      title: 'Delete integration',
+      yesText: 'Confirm',
+    })
   }
 
   addIntegration = (integration, id) => {

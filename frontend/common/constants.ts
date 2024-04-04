@@ -10,7 +10,6 @@ const keywords = {
   LIB_NAME_JAVA: 'FlagsmithClient',
   NPM_CLIENT: 'flagsmith',
   NPM_NODE_CLIENT: 'flagsmith-nodejs',
-  NPM_RN_CLIENT: 'react-native-flagsmith',
   SEGMENT_NAME: 'superUsers',
   TRAIT_NAME: 'age',
   URL_CLIENT: 'https://cdn.jsdelivr.net/npm/flagsmith/index.js',
@@ -18,7 +17,10 @@ const keywords = {
   USER_FEATURE_NAME: 'my_even_cooler_feature',
   USER_ID: 'user_123456',
 }
-
+const keywordsReactNative = {
+  ...keywords,
+  NPM_CLIENT: 'react-native-flagsmith',
+}
 export default {
   archivedTag: { color: '#8f8f8f', label: 'Archived' },
   codeHelp: {
@@ -73,9 +75,9 @@ export default {
         keywords,
         userId,
       ),
-      'React Native': require('./code-help/create-user/create-user-rn')(
+      'React Native': require('./code-help/create-user/create-user-react')(
         envId,
-        keywords,
+        keywordsReactNative,
         userId,
       ),
       'Ruby': require('./code-help/create-user/create-user-ruby')(
@@ -111,7 +113,10 @@ export default {
       'PHP': require('./code-help/init/init-php')(envId, keywords),
       'Python': require('./code-help/init/init-python')(envId, keywords),
       'React': require('./code-help/init/init-react')(envId, keywords),
-      'React Native': require('./code-help/init/init-rn')(envId, keywords),
+      'React Native': require('./code-help/init/init-js')(
+        envId,
+        keywordsReactNative,
+      ),
       'Ruby': require('./code-help/init/init-ruby')(envId, keywords),
       'Rust': require('./code-help/init/init-rust')(envId, keywords),
       'curl': require('./code-help/init/init-curl')(envId, keywords),
@@ -129,12 +134,34 @@ export default {
       'PHP': require('./code-help/install/install-php')(keywords),
       'Python': require('./code-help/install/install-python')(keywords),
       'React': require('./code-help/install/install-js')(keywords),
-      'React Native': require('./code-help/install/install-rn')(keywords),
+      'React Native': require('./code-help/install/install-js')(
+        keywordsReactNative,
+      ),
       'Ruby': require('./code-help/install/install-ruby')(keywords),
       'Rust': require('./code-help/install/install-rust')(keywords),
       'curl': require('./code-help/install/install-curl')(keywords),
       'iOS': require('./code-help/install/install-ios')(keywords),
     },
+
+    'OFFLINE_LOCAL': (envId: string) => ({
+      'cli': require('common/code-help/offline_server/offline-server-cli')(
+        envId,
+      ),
+      'curl': require('common/code-help/offline_server/offline-server-curl')(
+        envId,
+      ),
+    }),
+
+    'OFFLINE_REMOTE': (envId: string) => ({
+      'cli': require('common/code-help/offline_client/offline-client-cli')(
+        envId,
+        keywords,
+      ),
+      'curl': require('common/code-help/offline_client/offline-client-curl')(
+        envId,
+        keywords,
+      ),
+    }),
 
     'USER_TRAITS': (envId: string, userId?: string) => ({
       '.NET': require('./code-help/traits/traits-dotnet')(
@@ -179,9 +206,9 @@ export default {
         keywords,
         userId,
       ),
-      'React Native': require('./code-help/traits/traits-rn')(
+      'React Native': require('./code-help/traits/traits-react')(
         envId,
-        keywords,
+        keywordsReactNative,
         userId,
       ),
       'Ruby': require('./code-help/traits/traits-ruby')(
@@ -464,7 +491,7 @@ export default {
     REMOTE_CONFIG_DESCRIPTION_VARIATION:
       'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.<br/>Variation values are set per project, the environment weight is per environment.',
     SEGMENT_OVERRIDES_DESCRIPTION:
-      'Set different values for your feature based on what segments users are in.',
+      'Set different values for your feature based on what segments users are in. Identity overrides will take priority over any segment override.',
     TAGS_DESCRIPTION:
       'Organise your flags with tags, tagging your features as "<strong>protected</strong>" will prevent them from accidentally being deleted.',
     TOOLTIP_METADATA_DESCRIPTION: 'Add metadata in your',
@@ -495,4 +522,5 @@ export default {
     '#AAC200',
     '#DE3163',
   ],
+  untaggedTag: { color: '#dedede', label: 'Untagged' },
 }

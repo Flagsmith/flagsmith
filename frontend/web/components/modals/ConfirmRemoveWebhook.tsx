@@ -36,7 +36,8 @@ const ConfirmRemoveWebhook: FC<ConfirmRemoveWebhookType> = ({
         <form id='confirm-remove-feature-modal' onSubmit={submit}>
           <div className='modal-body'>
             <p>
-              This will remove <strong>{url}</strong> for the environment{' '}
+              This will remove webhooks to <strong>{url}</strong> for the
+              environment{' '}
               <strong>
                 {
                   find(project.environments, {
@@ -44,8 +45,7 @@ const ConfirmRemoveWebhook: FC<ConfirmRemoveWebhookType> = ({
                   })?.name
                 }
               </strong>
-              . You should ensure that you do not contain any references to this
-              webhook in your applications before proceeding.
+              . This action cannot be undone.
             </p>
             <InputGroup
               className='mb-0'
@@ -67,10 +67,11 @@ const ConfirmRemoveWebhook: FC<ConfirmRemoveWebhookType> = ({
             </Button>
             <Button
               type='submit'
+              theme='danger'
               id='confirm-remove-feature-btn'
               disabled={challenge != url}
             >
-              Confirm changes
+              Confirm
             </Button>
           </div>
         </form>

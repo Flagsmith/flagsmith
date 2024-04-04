@@ -2,6 +2,8 @@
 description: Group your users based on a set of rules, then control Feature Flags and Remote Config for those groups.
 ---
 
+import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
+
 # Managing Segments
 
 Segments allow you to group your users based on a set of rules, and then control Feature Flags and Remote Config for
@@ -17,8 +19,13 @@ is no context to use.
 
 :::tip
 
-Segments are _not_ sent back to client SDKs. They are used to override flag values within the dashboard, but they are
-never sent back to our SDKs from the API. [Learn more about our architecture](/clients/overview#local-evaluation).
+Segments are _not_ sent back to [Client-Side SDKs](/clients/overview#client-side-sdks). They are used to override flag
+values within the dashboard, but they are never sent back to our
+[Client-Side SDKs](https://docs.flagsmith.com/clients/overview#client-side-sdks) from the API.
+
+They _are_ sent back to Server Side SDKs running in [Local Evaluation mode](/clients/overview#local-evaluation).
+
+[Learn more about our architecture](/clients/overview#local-evaluation).
 
 :::
 
@@ -74,38 +81,32 @@ individual value weightings as part of a Segment override.
 
 ## Rules Operators
 
-:::important
-
-Some of the operators in local evaluation mode are only supported in later SDK versions, see
-[SDK Compatibility](../clients/overview.md#sdk-compatibility).
-
-:::
-
 The full set of Flagsmith rule operators are as follows:
 
-| Name                   | Condition                                                                                                                                         |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Exactly Matches (==)` | Trait value is equal to segment value.                                                                                                            |
-| `Does Not Match (!=)`  | Trait value is not equal to segment value.                                                                                                        |
-| `% Split`              | Identity is in the percentage bucket. See [Percentage Split Operator](#percentage-split-operator).                                                |
-| `>`                    | Trait value is greater than segment value.                                                                                                        |
-| `>=`                   | Trait value is greater than or equal to segment value.                                                                                            |
-| `<`                    | Trait value is less than segment value.                                                                                                           |
-| `<=`                   | Trait value is less than or equal to segment value.                                                                                               |
-| `In`                   | Trait value is equal to one or more elements in a comma delimited list. See [The `In` operator](#the-in-operator).                                |
-| `Contains`             | Segment value is a substring of trait value.                                                                                                      |
-| `Does Not Contain`     | Segment value is not a substring of the trait value.                                                                                              |
-| `Matches Regex`        | Segment value, set to a valid Regex expression, is applied to trait value and matches it.                                                         |
-| `Is Set`               | Trait value is set for given identity and trait key.                                                                                              |
-| `Is Not Set`           | Trait value is not set for given identity and trait key.                                                                                          |
-| `SemVer >`             | Trait value is set to a newer SemVer-formatted version than segment value. See [SemVer-aware operators](#semver-aware-operators).                 |
-| `SemVer >=`            | Trait value is set a newer SemVer-formatted version than segment value or equal to it. See [SemVer-aware operators](#semver-aware-operators).     |
-| `SemVer <`             | Trait value is set to an older SemVer-formatted version than segment value. See [SemVer-aware operators](#semver-aware-operators).                |
-| `SemVer <=`            | Trait value is set to an older SemVer-formatted version than segment value or equal to it. See [SemVer-aware operators](#semver-aware-operators). |
+| Name                   | Condition                                                                                                                                                    |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Exactly Matches (==)` | Trait value is equal to segment value.                                                                                                                       |
+| `Does Not Match (!=)`  | Trait value is not equal to segment value.                                                                                                                   |
+| `% Split`              | Identity is in the percentage bucket. See [Percentage Split Operator](?operators=percent#operator-details).                                                  |
+| `>`                    | Trait value is greater than segment value.                                                                                                                   |
+| `>=`                   | Trait value is greater than or equal to segment value.                                                                                                       |
+| `<`                    | Trait value is less than segment value.                                                                                                                      |
+| `<=`                   | Trait value is less than or equal to segment value.                                                                                                          |
+| `In`                   | Trait value is equal to one or more elements in a comma delimited list. See [The `In` operator](?operators=in#operator-details).                             |
+| `Contains`             | Segment value is a substring of trait value.                                                                                                                 |
+| `Does Not Contain`     | Segment value is not a substring of the trait value.                                                                                                         |
+| `Matches Regex`        | Segment value, set to a valid Regex expression, is applied to trait value and matches it.                                                                    |
+| `Is Set`               | Trait value is set for given identity and trait key.                                                                                                         |
+| `Is Not Set`           | Trait value is not set for given identity and trait key.                                                                                                     |
+| `SemVer >`             | Trait value is set to a newer SemVer-formatted version than segment value. See [SemVer-aware operators](?operators=semver#operator-details).                 |
+| `SemVer >=`            | Trait value is set a newer SemVer-formatted version than segment value or equal to it. See [SemVer-aware operators](?operators=semver#operator-details).     |
+| `SemVer <`             | Trait value is set to an older SemVer-formatted version than segment value. See [SemVer-aware operators](?operators=semver#operator-details).                |
+| `SemVer <=`            | Trait value is set to an older SemVer-formatted version than segment value or equal to it. See [SemVer-aware operators](?operators=semver#operator-details). |
 
-Some of the operators also have special powers, described below.
+## Operator Details
 
-### The `In` operator
+<Tabs groupId="operators" queryString>
+<TabItem value="in" label="In">
 
 The `In` operator lets you match a Trait value against a comma-separated list of values. For example, the Segment rule
 value might read `21,682,8345`. This would then match against a Trait value of `682` but not against a Trait value of
@@ -118,7 +119,31 @@ contains the tenancy ID of that user.
 
 The `In` operator _is_ case sensitive when evaluating alphabetical characters.
 
-### SemVer-aware operators
+:::important
+
+Earlier SDK versions will not work in local evaluation mode if your environment has segments with the `In` operator
+defined.
+
+To keep local evaluation from breaking, please ensure you have your SDK versions updated before you add such segments to
+your environment.
+
+:::
+
+These minimum SDK versions support segments with the `In` operator in
+[local evaluation mode](/clients/overview#local-evaluation):
+
+- Python SDK: `3.3.0+`
+- Java SDK: `7.1.0+`
+- .NET SDK: `5.0.0+`
+- NodeJS SDK: `2.5.0+`
+- Ruby SDK: `3.2.0+`
+- PHP SDK: `4.1.0+`
+- Go SDK: `3.1.0+`
+- Rust SDK: `1.3.0+`
+- Elixir SDK: `2.0.0+`
+
+</TabItem>
+<TabItem value="semver" label="SemVer">
 
 The following [SemVer](https://semver.org/) operators are also available:
 
@@ -134,7 +159,65 @@ Flagsmith and then create a rule that looks like, for example:
 
 This Segment rule will include all users running version `4.2.52` or greater of your application.
 
-### Rule Typing
+</TabItem>
+<TabItem value="percent" label="Percentage Split">
+
+:::important
+
+The percentage split operator **_only_** comes into effect if you are getting the Flags for a particular Identity. If
+you are just retrieving the flags for an Environment without passing in an Identity, your user will **_never_** be
+included in the percentage split segment.
+
+:::
+
+This is the only operator that does not require a Trait. You can use the percentage split operator to drive
+[A/B tests](/advanced-use/ab-testing) and
+[staged feature rollouts](/guides-and-examples/staged-feature-rollouts#creating-staged-rollouts).
+
+When you use a percentage split operator in a segment that is overriding a feature, each user will be placed into the
+same 'bucket' whenever that feature is evaluated for that user, and hence they will always receive the same value.
+Different users will receive different values depending on your split percentage.
+
+</TabItem>
+<TabItem value="modulo" label="Modulo">
+
+:::important
+
+Earlier SDK versions will not work in local evaluation mode if your environment has segments with the `Modulo` operator
+defined.
+
+To keep local evaluation from breaking, please ensure you have your SDK versions updated before you add such segments to
+your environment.
+
+:::
+
+This operator performs [modulo operation](https://en.wikipedia.org/wiki/Modulo_operation). This operator accepts rule
+value in `divisor|remainder` format and is applicable for Traits having `integer` or `float` values. For example:
+
+`userId` `%` `2|0`
+
+This segment rule will include all identities having `int` or `float` `userId` trait and having a remainder equal to 0
+after being divided by 2.
+
+`userId % 2 == 0`
+
+These minimum SDK versions support segments with the `Modulo` operator in
+[local evaluation mode](/clients/overview#local-evaluation):
+
+- Python SDK: `2.3.0+`
+- Java SDK: `5.1.0+`
+- .NET SDK: `4.2.0+`
+- NodeJS SDK: `2.4.0+`
+- Ruby SDK: `3.1.0+`
+- PHP SDK: `3.1.0+`
+- Go SDK: `2.2.0+`
+- Rust SDK: `0.2.0+`
+- Elixir SDK: `1.1.0+`
+
+</TabItem>
+</Tabs>
+
+## Rule Typing
 
 When you store Trait values against an Identity, they are stored in our API with an associated type:
 
@@ -168,36 +251,6 @@ For evaluating booleans, we evaluate the following 'truthy' String values as `tr
 - `True`
 - `true`
 - `1`
-
-### Percentage Split Operator
-
-:::important
-
-The percentage split operator **_only_** comes into effect if you are getting the Flags for a particular Identity. If
-you are just retrieving the flags for an Environment without passing in an Identity, your user will **_never_** be
-included in the percentage split segment.
-
-:::
-
-This is the only operator that does not require a Trait. You can use the percentage split operator to drive
-[A/B tests](/advanced-use/ab-testing) and
-[staged feature rollouts](/guides-and-examples/staged-feature-rollouts#creating-staged-rollouts).
-
-When you use a percentage split operator in a segment that is overriding a feature, each user will be placed into the
-same 'bucket' whenever that feature is evaluated for that user, and hence they will always receive the same value.
-Different users will receive different values depending on your split percentage.
-
-### Modulo Operator
-
-This operator performs [modulo operation](https://en.wikipedia.org/wiki/Modulo_operation). This operator accepts rule
-value in `divisor|remainder` format and is applicable for Traits having `integer` or `float` values. For example:
-
-`userId` `%` `2|0`
-
-This segment rule will include all identities having `int` or `float` `userId` trait and having a remainder equal to 0
-after being divided by 2.
-
-`userId % 2 == 0`
 
 ## Segment Rule Ordering
 

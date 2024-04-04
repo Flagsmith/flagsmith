@@ -30,12 +30,13 @@ def ld_client_mock(mocker: MockerFixture) -> MagicMock:
         "get_project": "client_responses/get_project.json",
         "get_environments": "client_responses/get_environments.json",
         "get_flags": "client_responses/get_flags.json",
+        "get_segments": "client_responses/get_segments.json",
     }.items():
         getattr(ld_client_mock, method_name).return_value = json.load(
             open(join(dirname(abspath(__file__)), response_data_path))
         )
 
-    ld_client_mock.get_flag_count.return_value = 5
+    ld_client_mock.get_flag_count.return_value = 9
     ld_client_mock.get_flag_tags.return_value = ["testtag", "testtag2"]
 
     return ld_client_mock

@@ -16,8 +16,11 @@ import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 import { getRolesProjectPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
-import ImportPage from './ImportPage'
+import ImportPage from 'components/import-export/ImportPage'
 import CreateMetadata from 'components/modals/CreateMetadata'
+import FeatureExport from 'components/import-export/FeatureExport'
+import ProjectUsage from 'components/ProjectUsage'
+import ProjectStore from 'common/stores/project-store'
 import { getListMetadata, deleteMetadata } from 'common/services/useMetadata'
 import { getMetadataModelFieldList } from 'common/services/useMetadataModelField'
 
@@ -89,12 +92,6 @@ const ProjectSettingsPage = class extends Component {
       AppActions.getProject(this.props.match.params.projectId)
     }
   }
-
-  onRemove = () => {
-    toast('Your project has been removed')
-    this.context.router.history.replace('/projects')
-  }
-
   confirmRemove = (project, cb) => {
     openModal(
       'Delete Project',
@@ -269,7 +266,6 @@ const ProjectSettingsPage = class extends Component {
       <div className='app-container container'>
         <ProjectProvider
           id={this.props.match.params.projectId}
-          onRemove={this.onRemove}
           onSave={this.onSave}
         >
           {({ deleteProject, editProject, isLoading, isSaving, project }) => {
@@ -510,13 +506,13 @@ const ProjectSettingsPage = class extends Component {
                             <Button
                               disabled={isSaving || Utils.isMigrating()}
                               onClick={() =>
-                                openConfirm(
-                                  'Are you sure?',
-                                  'This will migrate your project to the Global Edge API.',
-                                  () => {
+                                openConfirm({
+                                  body: 'This will migrate your project to the Global Edge API.',
+                                  onYes: () => {
                                     this.migrate(project)
                                   },
-                                )
+                                  title: 'Migrate to Global Edge API',
+                                })
                               }
                               size='xSmall'
                               theme='outline'
@@ -557,6 +553,7 @@ const ProjectSettingsPage = class extends Component {
                           <Button
                             onClick={() =>
                               this.confirmRemove(project, () => {
+                                this.context.router.history.replace('/projects')
                                 deleteProject(this.props.match.params.projectId)
                               })
                             }
@@ -604,6 +601,11 @@ const ProjectSettingsPage = class extends Component {
                           </FormGroup>
                         </form>
                       </div>
+                    </TabItem>
+                    <TabItem tabLabel='Usage'>
+                      <ProjectUsage
+                        projectId={this.props.match.params.projectId}
+                      />
                     </TabItem>
                     <TabItem tabLabel='Permissions'>
                       <EditPermissions
@@ -931,6 +933,25 @@ const ProjectSettingsPage = class extends Component {
                         </div>
                       </TabItem>
                     )}
+                    {!!ProjectStore.getEnvs()?.length && (
+                      <TabItem data-test='js-import-page' tabLabel='Import'>
+                        <ImportPage
+                          environmentId={this.props.match.params.environmentId}
+                          projectId={this.props.match.params.projectId}
+                          projectName={project.name}
+                        />
+                      </TabItem>
+                    )}
+                    {!!ProjectStore.getEnvs()?.length &&
+                      Utils.getFlagsmithHasFeature(
+                        'flagsmith_import_export',
+                      ) && (
+                        <TabItem tabLabel='Export'>
+                          <FeatureExport
+                            projectId={this.props.match.params.projectId}
+                          />
+                        </TabItem>
+                      )}
                   </Tabs>
                 }
               </div>

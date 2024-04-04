@@ -19,6 +19,8 @@ import JSONReference from 'components/JSONReference' // we need this to make JSX
 import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
+import Format from 'common/utils/format'
+import IdentifierString from 'components/IdentifierString'
 
 const CodeHelp = require('../CodeHelp')
 
@@ -70,15 +72,20 @@ const UsersPage: FC<UsersPageType> = (props) => {
   })
 
   const removeIdentity = (id: string, identifier: string) => {
-    openConfirm(
-      'Delete User',
-      <div>
-        {'Are you sure you want to delete '}
-        <strong>{identifier}</strong>
-        {'?'}
-      </div>,
-      () => deleteIdentity({ environmentId, id, isEdge: Utils.getIsEdge() }),
-    )
+    openConfirm({
+      body: (
+        <div>
+          {'Are you sure you want to delete '}
+          <strong>{identifier}</strong>
+          {'? Identities can be re-added here or via one of our SDKs.'}
+        </div>
+      ),
+      destructive: true,
+      onYes: () =>
+        deleteIdentity({ environmentId, id, isEdge: Utils.getIsEdge() }),
+      title: 'Delete User',
+      yesText: 'Confirm',
+    })
   }
 
   const newUser = () => {
@@ -107,7 +114,6 @@ const UsersPage: FC<UsersPageType> = (props) => {
               </FormGroup>
             ) : (
               <Tooltip
-                html
                 title={
                   <Button
                     disabled
@@ -203,7 +209,9 @@ const UsersPage: FC<UsersPageType> = (props) => {
                     }/users/${encodeURIComponent(identifier)}/${id}`}
                     className='flex-row flex flex-1 table-column'
                   >
-                    <div className='font-weight-medium'>{identifier}</div>
+                    <div className='font-weight-medium'>
+                      <IdentifierString value={identifier} />
+                    </div>
                     <Icon
                       name='chevron-right'
                       width={22}

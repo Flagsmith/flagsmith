@@ -1,0 +1,82 @@
+@import "../variables";
+.react-diff-1n5o7vh-diff-container {
+  background-color: transparent !important;
+
+}
+.token.property {
+  color: $success;
+}
+.token.number,.token.boolean {
+  color: $info;
+}
+.react-diff-1igno8l-gutter,.react-diff-1wdmqof-code-fold {
+  background-color: $black-alpha-8 !important;
+}
+.react-diff-1989f1g-code-fold-gutter {
+  background-color: $black-alpha-8 !important;
+}
+.react-diff-marker {
+  background-color: $black-alpha-8;
+  width: 31px;
+  height: 31px;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  &.react-diff-marker--added {
+    background-color: $success-alfa-16 !important;
+
+  }
+  &.react-diff-marker--removed {
+    background-color: $danger-alfa-16 !important;
+  }
+}
+.react-diff-line {
+  line-height: 31px;
+  &.react-diff-line--added {
+    background-color: $success-alfa-16 !important;
+  }
+  &.react-diff-line--removed {
+    background-color: $danger-alfa-16 !important;
+  }
+  .rc-switch {
+    margin-bottom: 2px;
+  }
+}
+.react-diff-line pre {
+  background-color: $black-alpha-8;
+  display: flex;
+  flex:1;
+  line-height: 28px;
+}
+.react-diff-42iver-word-diff {
+  padding:0 !important;
+}
+.react-diff-1p2tkx4-marker.react-diff-1fxlvce-diff-removed {
+  background-color: $danger-alfa-16 !important;
+}
+.react-diff-1p2tkx4-marker.react-diff-1fqrsd-diff-added {
+  background-color: $success-alfa-16 !important;
+}
+.react-diff-hf3w1f-word-removed {
+  background-color: $danger-alfa-8 !important;
+}
+.react-diff-1u4zuq6-word-added {
+  background-color: $success-alfa-8 !important;
+}
+.react-diff-1n5o7vh-diff-container pre {
+  font-family: $font-family-monospace;
+  font-size: $font-caption !important;
+  color: $body-text !important;
+}
+.react-diff-1fxlvce-diff-removed {
+  background-color: $danger-alfa-8 !important;
+}
+.react-diff-1fqrsd-diff-added {
+  background-color: $success-alfa-8 !important;
+}
+
+.dark {
+  .react-diff-1n5o7vh-diff-container pre {
+    color: $body-text-dark !important;
+  }
+}

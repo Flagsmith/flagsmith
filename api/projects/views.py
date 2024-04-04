@@ -45,6 +45,7 @@ from projects.serializers import (
     ListUserProjectPermissionSerializer,
     ProjectListSerializer,
     ProjectRetrieveSerializer,
+    ProjectUpdateOrCreateSerializer,
 )
 
 
@@ -75,9 +76,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == "retrieve":
             return ProjectRetrieveSerializer
+        elif self.action in ("create", "update", "partial_update"):
+            return ProjectUpdateOrCreateSerializer
         return ProjectListSerializer
 
     pagination_class = None
+
+    def get_serializer_context(self):
+        return super().get_serializer_context()
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):

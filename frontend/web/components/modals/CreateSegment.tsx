@@ -111,7 +111,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     createSegment,
     {
       data: createSegmentData,
-      isError: createError,
+      error: createError,
       isLoading: creating,
       isSuccess: createSuccess,
     },
@@ -120,7 +120,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     editSegment,
     {
       data: updateSegmentData,
-      isError: updateError,
+      error: updateError,
       isLoading: updating,
       isSuccess: updateSuccess,
     },
@@ -135,7 +135,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [showMetadataList, setShowMetadataList] = useState<boolean>(false)
   const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
 
-  const isError = createError || updateError
+  const error = createError || updateError
   const isLimitReached =
     ProjectStore.getTotalSegments() >= ProjectStore.getMaxSegmentsAllowed()
 
@@ -262,6 +262,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
     }
     return warnings
   }, [operators, rules])
+  //Find any non-deleted rules
+  const hasNoRules = !rules[0]?.rules?.find((v) => !v.delete)
+
   const rulesEl = (
     <div className='overflow-visible'>
       <div>
@@ -299,6 +302,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
               )
             })}
         </div>
+        {hasNoRules && (
+          <InfoMessage>
+            Add at least one AND/NOT rule to create a segment.
+          </InfoMessage>
+        )}
         <Row className='justify-content-end'>
           {!readOnly && (
             <div onClick={() => addRule('ANY')} className='text-center'>
@@ -444,17 +452,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
         {rulesEl}
       </div>
 
-      {isError && (
-        <ErrorMessage
-          error='Error creating segment, please ensure you have entered a trait and
-          value for each rule.'
-        />
-      )}
+      <ErrorMessage error={error} />
       {isEdit && <JSONReference title={'Segment'} json={segment} />}
       {readOnly ? (
         <div className='text-right'>
           <Tooltip
-            html
             title={
               <Button
                 disabled

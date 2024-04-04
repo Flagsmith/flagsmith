@@ -8,7 +8,7 @@ from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
-from django.db.models import Q, QuerySet
+from django.db.models import Max, Q, QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg import openapi
@@ -33,6 +33,7 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
+from features.value_types import BOOLEAN, INTEGER, STRING
 from projects.models import Project
 from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser, UserPermissionGroup
@@ -118,8 +119,18 @@ class FeatureViewSet(viewsets.ModelViewSet):
         accessible_projects = self.request.user.get_permitted_projects(VIEW_PROJECT)
 
         project = get_object_or_404(accessible_projects, pk=self.kwargs["project_pk"])
-        queryset = project.features.all().prefetch_related(
-            "multivariate_options", "owners", "tags", "group_owners"
+
+        queryset = (
+            project.features.all()
+            .annotate(
+                last_modified_in_any_environment=Max(
+                    "feature_states__environment_feature_version__created_at",
+                    filter=Q(
+                        feature_states__environment_feature_version__published_at__isnull=False
+                    ),
+                ),
+            )
+            .prefetch_related("multivariate_options", "owners", "tags", "group_owners")
         )
 
         query_serializer = FeatureQuerySerializer(data=self.request.query_params)
@@ -128,6 +139,19 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         queryset = self._filter_queryset(queryset)
 
+        if environment_id := query_data.get("environment"):
+            queryset = queryset.annotate(
+                last_modified_in_current_environment=Max(
+                    "feature_states__environment_feature_version__created_at",
+                    filter=Q(
+                        feature_states__environment=environment_id,
+                        feature_states__environment_feature_version__published_at__isnull=False,
+                    ),
+                )
+            )
+
+        if query_data["value_search"] or query_data["is_enabled"] is not None:
+            queryset = self.apply_state_to_queryset(query_data, queryset)
         sort = "%s%s" % (
             "-" if query_data["sort_direction"] == "DESC" else "",
             query_data["sort_field"],
@@ -166,6 +190,56 @@ class FeatureViewSet(viewsets.ModelViewSet):
             context["overrides_data"] = get_overrides_data(environment)
 
         return context
+
+    def apply_state_to_queryset(
+        self, query_data: dict[str, typing.Any], queryset: QuerySet[Feature]
+    ) -> QuerySet[Feature]:
+        if not query_data.get("environment"):
+            raise serializers.ValidationError(
+                "Environment is required in order to filter by state search or by state enabled"
+            )
+        is_enabled = query_data["is_enabled"]
+        value_search = query_data["value_search"]
+        environment_id = query_data["environment"]
+
+        filter_search_q = Q()
+        if value_search is not None:
+            filter_search_q = filter_search_q | Q(
+                feature_state_value__string_value__icontains=value_search,
+                feature_state_value__type=STRING,
+            )
+
+            if value_search.lower() in {"true", "false"}:
+                boolean_search = value_search.lower() == "true"
+                filter_search_q = filter_search_q | Q(
+                    feature_state_value__boolean_value=boolean_search,
+                    feature_state_value__type=BOOLEAN,
+                )
+
+            if value_search.isdigit():
+                integer_search = int(value_search)
+                filter_search_q = filter_search_q | Q(
+                    feature_state_value__integer_value=integer_search,
+                    feature_state_value__type=INTEGER,
+                )
+        filter_enabled_q = Q()
+        if is_enabled is not None:
+            filter_enabled_q = filter_enabled_q | Q(enabled=is_enabled)
+
+        base_q = Q(
+            identity__isnull=True,
+            feature_segment__isnull=True,
+        )
+        if not getattr(self, "environment", None):
+            self.environment = Environment.objects.get(id=environment_id)
+
+        feature_states = FeatureState.objects.get_live_feature_states(
+            environment=self.environment,
+            additional_filters=base_q & filter_search_q & filter_enabled_q,
+        )
+
+        feature_ids = {fs.feature_id for fs in feature_states}
+        return queryset.filter(id__in=feature_ids)
 
     @swagger_auto_schema(
         request_body=FeatureGroupOwnerInputSerializer,
@@ -280,7 +354,26 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 feature_state, WebhookEventType.FLAG_DELETED
             )
 
-    def _filter_queryset(self, queryset: QuerySet) -> QuerySet:
+    def filter_owners_and_group_owners(
+        self,
+        queryset: QuerySet[Feature],
+        query_data: dict[str, typing.Any],
+    ) -> QuerySet[Feature]:
+        owners_q = Q()
+        if query_data.get("owners"):
+            owners_q = owners_q | Q(
+                owners__id__in=query_data["owners"],
+            )
+
+        group_owners_q = Q()
+        if query_data.get("group_owners"):
+            group_owners_q = group_owners_q | Q(
+                group_owners__id__in=query_data["group_owners"],
+            )
+
+        return queryset.filter(owners_q | group_owners_q)
+
+    def _filter_queryset(self, queryset: QuerySet[Feature]) -> QuerySet[Feature]:
         query_serializer = FeatureQuerySerializer(data=self.request.query_params)
         query_serializer.is_valid(raise_exception=True)
         query_data = query_serializer.validated_data
@@ -303,6 +396,8 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         if "is_archived" in query_serializer.initial_data:
             queryset = queryset.filter(is_archived=query_data["is_archived"])
+
+        queryset = self.filter_owners_and_group_owners(queryset, query_data)
 
         return queryset
 
@@ -603,8 +698,8 @@ class SDKFeatureStates(GenericAPIView):
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
     renderer_classes = [JSONRenderer]
-    throttle_classes = []
     pagination_class = None
+    throttle_classes = []
 
     @swagger_auto_schema(
         query_serializer=SDKFeatureStatesQuerySerializer(),
