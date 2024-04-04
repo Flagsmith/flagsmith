@@ -125,6 +125,29 @@ const EnvironmentSettingsPage = class extends Component {
       !env.use_v2_feature_versioning
     ) {
       enableFeatureVersioning(getStore(), { environmentId: env.api_key })
+    } else {
+      const { description, name } = this.state
+      if (ProjectStore.isSaving || !name) {
+        return
+      }
+      const has4EyesPermission = Utils.getPlansPermission('4_EYES')
+      AppActions.editEnv(
+        Object.assign({}, env, {
+          allow_client_traits: !!this.state.allow_client_traits,
+          banner_colour: this.state.banner_colour,
+          banner_text: this.state.banner_text,
+          description: description || env.description,
+          hide_disabled_flags: this.state.hide_disabled_flags,
+          hide_sensitive_data: !!this.state.hide_sensitive_data,
+          minimum_change_request_approvals: has4EyesPermission
+            ? this.state.minimum_change_request_approvals
+            : null,
+          name: name || env.name,
+          use_identity_composite_key_for_hashing:
+            !!this.state.use_identity_composite_key_for_hashing,
+          use_mv_v2_evaluation: !!this.state.use_mv_v2_evaluation,
+        }),
+      )
     }
   }
 
