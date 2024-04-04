@@ -223,7 +223,7 @@ export type Req = {
       field: number
     }
   }
-  getMetadata: { id: string }
+  getMetadata: { organisation_id: string }
   updateMetadata: {
     id: string
     body: {

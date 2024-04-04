@@ -31,7 +31,7 @@ export const metadataService = service
       getMetadata: builder.query<Res['metadata'], Req['getMetadata']>({
         providesTags: (res) => [{ id: res?.id, type: 'Metadata' }],
         query: (query: Req['getMetadata']) => ({
-          url: `metadata/fields/${query.id}/`,
+          url: `metadata/fields/${query.organisation_id}/`,
         }),
       }),
       updateMetadata: builder.mutation<Res['metadata'], Req['updateMetadata']>({

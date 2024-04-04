@@ -48,13 +48,14 @@ const CreateMetadata: FC<CreateMetadataType> = ({
     { id: 4, label: 'url', value: 'url' },
     { id: 5, label: 'multiline string', value: 'multiline_str' },
   ]
-  const { data, isLoading } = useGetMetadataQuery({ id }, { skip: !id })
+  const { data, isLoading } = useGetMetadataQuery(
+    { organisation_id: id },
+    { skip: !id },
+  )
 
   const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
     organisation_id: `${organisationId}`,
   })
-  console.log('DEBUG: data metadataModelFieldList:', metadataModelFieldList)
-  console.log('DEBUG: supportedContentTypes:', supportedContentTypes)
   const [createMetadata, { isLoading: creating, isSuccess: created }] =
     useCreateMetadataMutation()
   const [updateMetadata, { isLoading: updating, isSuccess: updated }] =

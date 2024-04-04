@@ -2,6 +2,7 @@ import React, { FC, FormEvent, useEffect, useMemo, useState } from 'react'
 
 import Constants from 'common/constants'
 import useSearchThrottle from 'common/useSearchThrottle'
+import AccountStore from 'common/stores/account-store'
 import {
   EdgePagedResponse,
   Identity,
@@ -136,13 +137,14 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
 
   const error = createError || updateError
-  const isLimitReached =
-    ProjectStore.getTotalSegments() >= ProjectStore.getMaxSegmentsAllowed()
+  const totalSegments = ProjectStore.getTotalSegments() ?? 0
+  const maxSegmentsAllowed = ProjectStore.getMaxSegmentsAllowed() ?? 0
+  const isLimitReached = totalSegments >= maxSegmentsAllowed
 
   const THRESHOLD = 90
   const segmentsLimitAlert = Utils.calculateRemainingLimitsPercentage(
-    ProjectStore.getTotalSegments(),
-    ProjectStore.getMaxSegmentsAllowed(),
+    totalSegments,
+    maxSegmentsAllowed,
     THRESHOLD,
   )
 
@@ -428,12 +430,13 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 </Button>
               }
             />
-            <OrganisationMetadataSelect
-              contentType={55}
-              isOpen={showMetadataList}
-              onToggle={() => setShowMetadataList(!showMetadataList)}
-              orgId={AccountStore.getOrganisation().id}
-            />
+            {metadataEnable && (
+              <OrganisationMetadataSelect
+                isOpen={showMetadataList}
+                onToggle={() => setShowMetadataList(!showMetadataList)}
+                orgId={AccountStore.getOrganisation().id}
+              />
+            )}
           </FormGroup>
         )}
         <Flex className='mb-3'>
