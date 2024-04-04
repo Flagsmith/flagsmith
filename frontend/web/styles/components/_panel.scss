@@ -49,7 +49,8 @@
     align-items: center;
     justify-content: space-between;
     text-transform: capitalize;
-    height: 56px;
+    padding-top: 2px;
+    padding-bottom: 2px;
 
     .title {
       color: $text-icon-dark;
@@ -89,9 +90,9 @@
       background-color: transparent;
       .search-list {
         background-color: $bg-dark400;
-        border: 1px solid $white-alpha-16;
+        border: 1px solid $white-alpha-8;
         .list-item {
-          border-top: 1px solid $white-alpha-16;
+          border-top: 1px solid $white-alpha-8;
           &:first-child {
             border-top: none;
           }
@@ -154,7 +155,7 @@
     }
     &.segment-overrides {
       background-color: $bg-dark400;
-      border: 1px solid $white-alpha-16;
+      border: 1px solid $white-alpha-8;
     }
     .panel-content {
       .search-list {
