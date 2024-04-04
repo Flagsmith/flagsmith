@@ -31,7 +31,7 @@ export default async () => {
     await waitForElementVisible(byId('features-page'))
     await click('#env-settings-link')
     await click(byId('enable-versioning'))
-    // Feature versioning is async on the API, we can assume it'll be done quick for this environment.
+    // Feature versioning is async on the API, we can assume it will not take long here.
     await waitAndRefresh(5000)
     await click('#confirm-toggle-feature-btn')
     await waitAndRefresh()
