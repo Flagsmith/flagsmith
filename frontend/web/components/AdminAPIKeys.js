@@ -406,7 +406,6 @@ export default class AdminAPIKeys extends PureComponent {
 
   render() {
     const apiKeys = this.state.apiKeys && this.state.apiKeys.results
-    console.log('DEBUG: apiKeys:', apiKeys)
     const showRoleManagementEnabled = Utils.getFlagsmithHasFeature(
       'show_role_management',
     )

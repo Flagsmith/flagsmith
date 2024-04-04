@@ -27,7 +27,7 @@ declare global {
   ) => void
   const openConfirm: (data: OpenConfirm) => void
   const Row: typeof Component
-  const toast: (value: string) => void
+  const toast: (value: string, theme?: string, expiry?: number) => void
   const Flex: typeof Component
   const isMobile: boolean
   const FormGroup: typeof Component
