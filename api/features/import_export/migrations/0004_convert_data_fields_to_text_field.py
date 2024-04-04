@@ -2,22 +2,29 @@
 
 from django.db import migrations, models
 
+from features.import_export.constants import (
+    MAX_FEATURE_EXPORT_SIZE,
+    MAX_FEATURE_IMPORT_SIZE,
+)
+
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('features_import_export', '0003_flagsmithonflagsmithfeatureexport'),
+        ("features_import_export", "0003_flagsmithonflagsmithfeatureexport"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='featureexport',
-            name='data',
-            field=models.TextField(blank=True, max_length=1000000, null=True),
+            model_name="featureexport",
+            name="data",
+            field=models.TextField(
+                blank=True, max_length=MAX_FEATURE_EXPORT_SIZE, null=True
+            ),
         ),
         migrations.AlterField(
-            model_name='featureimport',
-            name='data',
-            field=models.TextField(max_length=1000000),
+            model_name="featureimport",
+            name="data",
+            field=models.TextField(max_length=MAX_FEATURE_IMPORT_SIZE),
         ),
     ]
