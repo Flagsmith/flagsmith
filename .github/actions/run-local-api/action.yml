@@ -39,7 +39,6 @@ runs:
         E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e_test_token }}
         DATABASE_URL: ${{ inputs.database_url }}
         DISABLE_ANALYTICS_FEATURES: ${{ inputs.disable_analytics_features }}
-        TASK_RUN_METHOD: SYNCHRONOUSLY
       run: |
         CONTAINER_ID=$( docker run \
         -p 8000:8000 \
