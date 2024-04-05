@@ -280,16 +280,13 @@ class FeatureSerializerWithMetadata(
         fields = ListCreateFeatureSerializer.Meta.fields + ("metadata",)
 
     def get_project(self, validated_data: dict = None) -> Project:
-        try:
-            project = self.context.get("project")
-            if project:
-                return project
-            else:
-                raise serializers.ValidationError("Project not found.")
-        except Exception as exc:
+        project = self.context.get("project")
+        if project:
+            return project
+        else:
             raise serializers.ValidationError(
                 "Unable to retrieve project for metadata validation."
-            ) from exc
+            )
 
 
 class UpdateFeatureSerializerWithMetadata(FeatureSerializerWithMetadata):
