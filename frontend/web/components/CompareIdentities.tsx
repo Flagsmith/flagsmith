@@ -2,7 +2,7 @@ import React, { FC, useEffect, useMemo, useState } from 'react'
 import IdentitySelect, { IdentitySelectType } from './IdentitySelect'
 import Utils from 'common/utils/utils'
 import EnvironmentSelect from './EnvironmentSelect'
-import { useGetIdentityFeatureStatesQuery } from 'common/services/useIdentityFeatureState'
+import { useGetIdentityFeatureStatesAllQuery } from 'common/services/useIdentityFeatureState'
 import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import Tag from './tags/Tag'
 import PanelSearch from './PanelSearch'
@@ -17,6 +17,8 @@ import Button from './base/forms/Button'
 import ProjectStore from 'common/stores/project-store'
 import SegmentOverridesIcon from './SegmentOverridesIcon'
 import IdentityOverridesIcon from './IdentityOverridesIcon'
+import Tooltip from './Tooltip'
+import PageTitle from './PageTitle'
 
 type CompareIdentitiesType = {
   projectId: string
@@ -66,11 +68,11 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     permission: Utils.getViewIdentitiesPermission(),
   })
 
-  const { data: leftUser } = useGetIdentityFeatureStatesQuery(
+  const { data: leftUser } = useGetIdentityFeatureStatesAllQuery(
     { environment: environmentId, user: `${leftId?.value}` },
     { skip: !leftId },
   )
-  const { data: rightUser } = useGetIdentityFeatureStatesQuery(
+  const { data: rightUser } = useGetIdentityFeatureStatesAllQuery(
     { environment: environmentId, user: `${rightId?.value}` },
     { skip: !rightId },
   )
@@ -118,6 +120,30 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
       )}/${user!.value}?flag=${encodeURIComponent(feature)}`,
       '_blank',
     )
+  }
+
+  const copyIdentityValues = (
+    leftIdentityName: string,
+    rightIdentityName: string,
+    leftIdentityId: string,
+    rightIdentityId: string,
+  ) => {
+    return openConfirm({
+      body: (
+        <div>
+          {'Are you sure you want to copy all the feature states from '}
+          <strong>{leftIdentityName}</strong> {'to'}{' '}
+          <strong>{rightIdentityName}</strong>
+          {'?'}
+        </div>
+      ),
+      destructive: true,
+      onYes: () => {
+        console.log('DEBUG: onlcick')
+      },
+      title: 'Copy the values',
+      yesText: 'Confirm',
+    })
   }
 
   return (
@@ -179,9 +205,35 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
 
       {isReady && (
         <>
+          <PageTitle
+            title={'Changed Flags'}
+            className='mt-3'
+            cta={
+              <>
+                <Tooltip
+                  title={
+                    <Button
+                      onClick={() => {
+                        copyIdentityValues(
+                          leftId?.label,
+                          rightId?.label,
+                          leftId?.value,
+                          rightId?.value,
+                        )
+                      }}
+                      className='ms-2 me-2'
+                    >
+                      {'Clone features states'}
+                    </Button>
+                  }
+                >
+                  {`Clone the features states from ${leftId?.label} to ${rightId?.label}`}
+                </Tooltip>
+              </>
+            }
+          ></PageTitle>
           <PanelSearch
             className='no-pad mt-4'
-            title={'Changed Flags'}
             searchPanel={
               <Row className='mb-2'>
                 <Tag

@@ -458,7 +458,7 @@ export type Res = {
   rolePermission: { id: string }
   projectFlags: PagedResponse<ProjectFlag>
   projectFlag: ProjectFlag
-  identityFeatureStates: IdentityFeatureState[]
+  identityFeatureStatesAll: IdentityFeatureState[]
   rolesPermissionUsers: RolePermissionUser
   rolePermissionGroup: { id: string }
   getSubscriptionMetadata: { id: string }
@@ -487,5 +487,7 @@ export type Res = {
   featureImports: PagedResponse<FeatureImport>
   serversideEnvironmentKeys: APIKey[]
   userGroupPermissions: GroupPermission[]
+  identityFeatureState: FeatureState
+  identityFeatureStates: PagedResponse<FeatureState>
   // END OF TYPES
 }

@@ -7,6 +7,8 @@ import {
   Role,
   ImportStrategy,
   APIKey,
+  Project,
+  FlagsmithValue,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -127,7 +129,7 @@ export type Req = {
   updateRolePermission: { organisation_id: string; role_id: string }
   deleteRolePermission: { organisation_id: string; role_id: string }
   createRolePermission: { organisation_id: string; role_id: string }
-  getIdentityFeatureStates: {
+  getIdentityFeatureStatesAll: {
     environment: string
     user: string
   }
@@ -257,5 +259,9 @@ export type Req = {
   }
   getProject: { id: string }
   getUserGroupPermission: { project_id: string }
+  getIdentityFeatureStates: {
+    environment_id: string
+    identity_id: string
+  }
   // END OF TYPES
 }

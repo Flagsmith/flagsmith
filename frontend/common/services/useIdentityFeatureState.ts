@@ -11,10 +11,23 @@ export const identityFeatureStateService = service
         Res['identityFeatureStates'],
         Req['getIdentityFeatureStates']
       >({
+        providesTags: [{ id: 'LIST', type: 'IdentityFeatureState' }],
+        query: (query: Req['getIdentityFeatureStates']) => ({
+          url: `environments/${
+            query.environment_id
+          }/${Utils.getIdentitiesEndpoint()}/${
+            query.identity_id
+          }/${Utils.getFeatureStatesEndpoint()}/`,
+        }),
+      }),
+      getIdentityFeatureStatesAll: builder.query<
+        Res['identityFeatureStates'],
+        Req['getIdentityFeatureStatesAll']
+      >({
         providesTags: (res, _, req) => [
           { id: req.user, type: 'IdentityFeatureState' },
         ],
-        query: (query: Req['getIdentityFeatureStates']) => ({
+        query: (query: Req['getIdentityFeatureStatesAll']) => ({
           url: `environments/${
             query.environment
           }/${Utils.getIdentitiesEndpoint()}/${
@@ -40,9 +53,25 @@ export async function getIdentityFeatureStates(
     ),
   )
 }
+export async function getIdentityFeatureStateAll(
+  store: any,
+  data: Req['getIdentityFeatureStatesAll'],
+  options?: Parameters<
+    typeof identityFeatureStateService.endpoints.getIdentityFeatureStatesAll.initiate
+  >[1],
+) {
+  return store.dispatch(
+    identityFeatureStateService.endpoints.getIdentityFeatureStatesAll.initiate(
+      data,
+      options,
+    ),
+  )
+}
+
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useGetIdentityFeatureStatesAllQuery,
   useGetIdentityFeatureStatesQuery,
   // END OF EXPORTS
 } = identityFeatureStateService
@@ -50,5 +79,5 @@ export const {
 /* Usage examples:
 const { data, isLoading } = useGetIdentityFeatureStatesQuery({ id: 2 }, {}) //get hook
 const [createIdentityFeatureStates, { isLoading, data, isSuccess }] = useCreateIdentityFeatureStatesMutation() //create hook
-identityFeatureStateService.endpoints.getIdentityFeatureStates.select({id: 2})(store.getState()) //access data from any function
+identityFeatureStateService.endpoints.getIdentityFeatureStatesAll.select({id: 2})(store.getState()) //access data from any function
 */
