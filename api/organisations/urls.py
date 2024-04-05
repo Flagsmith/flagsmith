@@ -17,7 +17,10 @@ from integrations.github.views import (
     fetch_repositories,
 )
 from metadata.views import MetaDataModelFieldViewSet
-from organisations.views import OrganisationWebhookViewSet
+from organisations.views import (
+    OrganisationAPIUsageNotificationView,
+    OrganisationWebhookViewSet,
+)
 from users.views import (
     FFAdminUserViewSet,
     UserPermissionGroupViewSet,
@@ -131,6 +134,11 @@ urlpatterns = [
         "github/repositories/",
         fetch_repositories,
         name="get-github-installation-repos",
+    ),
+    path(
+        "<int:organisation_pk>/api-usage-notification/",
+        OrganisationAPIUsageNotificationView.as_view(),
+        name="organisation-api-usage-notification",
     ),
 ]
 

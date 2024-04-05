@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 from drf_yasg import openapi
 from drf_yasg.inspectors import PaginatorInspector
-from flag_engine.identities.builders import build_identity_model
+from flag_engine.identities.models import IdentityModel
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
@@ -75,7 +75,7 @@ class EdgeIdentityPagination(CustomPagination):
             )
 
         return [
-            build_identity_model(identity_document)
+            IdentityModel.model_validate(identity_document)
             for identity_document in dynamo_queryset["Items"]
         ]
 
@@ -94,9 +94,11 @@ class EdgeIdentityPagination(CustomPagination):
                     ("results", data),
                     (
                         "last_evaluated_key",
-                        self.last_evaluated_key
-                        if hasattr(self, "last_evaluated_key")
-                        else None,
+                        (
+                            self.last_evaluated_key
+                            if hasattr(self, "last_evaluated_key")
+                            else None
+                        ),
                     ),
                 ]
             )

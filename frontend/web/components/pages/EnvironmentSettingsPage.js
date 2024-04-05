@@ -115,38 +115,39 @@ const EnvironmentSettingsPage = class extends Component {
 
   saveEnv = (e) => {
     e && e.preventDefault()
-    const { description, name } = this.state
-    if (ProjectStore.isSaving || !name) {
-      return
-    }
-    const has4EyesPermission = Utils.getPlansPermission('4_EYES')
 
     const env = _.find(ProjectStore.getEnvs(), {
       api_key: this.props.match.params.environmentId,
     })
-    AppActions.editEnv(
-      Object.assign({}, env, {
-        allow_client_traits: !!this.state.allow_client_traits,
-        banner_colour: this.state.banner_colour,
-        banner_text: this.state.banner_text,
-        description: description || env.description,
-        hide_disabled_flags: this.state.hide_disabled_flags,
-        hide_sensitive_data: !!this.state.hide_sensitive_data,
-        minimum_change_request_approvals: has4EyesPermission
-          ? this.state.minimum_change_request_approvals
-          : null,
-        name: name || env.name,
-        use_identity_composite_key_for_hashing:
-          !!this.state.use_identity_composite_key_for_hashing,
-        use_mv_v2_evaluation: !!this.state.use_mv_v2_evaluation,
-      }),
-    )
 
     if (
       !!this.state.use_v2_feature_versioning &&
       !env.use_v2_feature_versioning
     ) {
       enableFeatureVersioning(getStore(), { environmentId: env.api_key })
+    } else {
+      const { description, name } = this.state
+      if (ProjectStore.isSaving || !name) {
+        return
+      }
+      const has4EyesPermission = Utils.getPlansPermission('4_EYES')
+      AppActions.editEnv(
+        Object.assign({}, env, {
+          allow_client_traits: !!this.state.allow_client_traits,
+          banner_colour: this.state.banner_colour,
+          banner_text: this.state.banner_text,
+          description: description || env.description,
+          hide_disabled_flags: this.state.hide_disabled_flags,
+          hide_sensitive_data: !!this.state.hide_sensitive_data,
+          minimum_change_request_approvals: has4EyesPermission
+            ? this.state.minimum_change_request_approvals
+            : null,
+          name: name || env.name,
+          use_identity_composite_key_for_hashing:
+            !!this.state.use_identity_composite_key_for_hashing,
+          use_mv_v2_evaluation: !!this.state.use_mv_v2_evaluation,
+        }),
+      )
     }
   }
 
@@ -410,7 +411,8 @@ const EnvironmentSettingsPage = class extends Component {
 
                               <p className='fs-small lh-sm'>
                                 Allows you to attach versions to updating
-                                feature values and segment overrides.
+                                feature values and segment overrides. This
+                                setting may take up to a minute to take affect.
                                 <br />
                                 <strong>
                                   Warning! Enabling this is irreversable
