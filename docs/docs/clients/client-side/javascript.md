@@ -83,6 +83,13 @@ flagsmith.init({
 });
 ```
 
+:::info
+
+As of flagsmith >4.0.0, `flagsmith.init` will return a promise resolving with either cache or the latest features or
+defaults. The promise will reject if there is no cache and an invalid or no API response was received.
+
+:::
+
 ### Providing Default Flags
 
 You can define default flag values when initialising the SDK. This ensures that your application works as intended in
@@ -522,12 +529,18 @@ On change calls back with information telling you what has changed, you can use 
 re-renders.
 
 ```javascript
-onChange(this.oldFlags, {
+onChange(oldFlags, {
  isFromServer: true, // flags have come from the server or local storage
- flagsChanged: deepEqualsCheck(oldFlags, newFlags),
- traitsChanged: deepEqualsCheck(oldFlags, newFlags),
-});
+ flagsChanged: string[] | null,
+ traitsChanged: string[] | null,
+}, loadingState)
 ```
+
+:::info
+
+Prior to `flagsmith 4.0.0`, flagsChanged and traitsChanged returned a boolean.
+
+:::
 
 **How does caching flags work?**
 
