@@ -66,9 +66,11 @@ def generate_body_comment(name, event_type, feature_states):
         feature_value = (
             v.get("integer_value", "")
             if is_integer(v.get("integer_value"))
-            else v.get("string_value", "")
-            if is_string(v.get("string_value"))
-            else v.get("boolean_value", "")
+            else (
+                v.get("string_value", "")
+                if is_string(v.get("string_value"))
+                else v.get("boolean_value", "")
+            )
         )
 
         has_feature_value = feature_value is not None and feature_value != ""

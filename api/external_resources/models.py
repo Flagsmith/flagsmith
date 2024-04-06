@@ -47,17 +47,17 @@ class ExternalResources(LifecycleModelMixin, models.Model):
             for feature_state in feature_states:
                 feature_env_data = {}
                 if feature_state.feature_state_value.string_value is not None:
-                    feature_env_data[
-                        "string_value"
-                    ] = feature_state.feature_state_value.string_value
+                    feature_env_data["string_value"] = (
+                        feature_state.feature_state_value.string_value
+                    )
                 if feature_state.feature_state_value.boolean_value is not None:
-                    feature_env_data[
-                        "boolean_value"
-                    ] = feature_state.feature_state_value.boolean_value
+                    feature_env_data["boolean_value"] = (
+                        feature_state.feature_state_value.boolean_value
+                    )
                 if feature_state.feature_state_value.integer_value is not None:
-                    feature_env_data[
-                        "integer_value"
-                    ] = feature_state.feature_state_value.integer_value
+                    feature_env_data["integer_value"] = (
+                        feature_state.feature_state_value.integer_value
+                    )
 
                 feature_env_data["environment_name"] = feature_state.environment.name
                 feature_env_data["feature_value"] = feature_state.enabled
@@ -65,9 +65,9 @@ class ExternalResources(LifecycleModelMixin, models.Model):
                     hasattr(feature_state, "feature_segment")
                     and feature_state.feature_segment is not None
                 ):
-                    feature_env_data[
-                        "segment_name"
-                    ] = feature_state.feature_segment.segment.name
+                    feature_env_data["segment_name"] = (
+                        feature_state.feature_segment.segment.name
+                    )
                 feature_data["feature_states"].append(feature_env_data)
 
             call_github_app_webhook_for_feature_state.delay(
