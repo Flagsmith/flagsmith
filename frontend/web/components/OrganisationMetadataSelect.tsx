@@ -1,6 +1,7 @@
 import { FC, useEffect, useState } from 'react'
-import { useGetListMetadataQuery } from 'common/services/useMetadata'
+import { useGetMetadataListQuery } from 'common/services/useMetadata'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
+import { Metadata } from 'common/types/responses'
 
 import MetadataSelect, { MetadataSelectType } from './MetadataSelect' // we need this to make JSX compile
 
@@ -14,8 +15,8 @@ const OrganisationMetadataSelect: FC<OrganisationMetadataSelectType> = ({
   orgId,
   ...props
 }) => {
-  const [metadataList, setMetadataList] = useState()
-  const { data: metadata } = useGetListMetadataQuery({ organisation_id: orgId })
+  const [metadataList, setMetadataList] = useState<Metadata[]>([])
+  const { data: metadata } = useGetMetadataListQuery({ organisation: orgId })
   const { data: metadataModelField } = useGetMetadataModelFieldListQuery({
     organisation_id: orgId,
   })
@@ -29,6 +30,7 @@ const OrganisationMetadataSelect: FC<OrganisationMetadataSelectType> = ({
       })
       setMetadataList(metadataForContentType)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metadata, metadataModelField])
 
   return <MetadataSelect {...props} metadata={metadataList} />

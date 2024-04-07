@@ -202,25 +202,30 @@ const CreateFlag = class extends Component {
       getMetadataList(getStore(), {
         organisation: AccountStore.getOrganisation().id,
       }).then((metadata) => {
-        getMetadataModelFieldList(getStore(), {
+        getSupportedContentType(getStore(), {
           organisation_id: AccountStore.getOrganisation().id,
-        }).then((metadataModelField) => {
-          const metadataForContentType = metadata.data.results.filter(
-            (meta) => {
-              return metadataModelField.data.results.some(
-                (item) =>
-                  item.field === meta.id &&
-                  item.content_type === Constants.contentTypes.flag,
-              )
-            },
-          )
-          this.setState({ metadataList: metadataForContentType })
+        }).then((res) => {
+          this.setState({ supportedContentTypes: res.data })
+          const featureContentTypeId = Utils.getContentType(
+            res.data,
+            'model',
+            'feature',
+          )?.id
+          getMetadataModelFieldList(getStore(), {
+            organisation_id: AccountStore.getOrganisation().id,
+          }).then((metadataModelField) => {
+            const metadataForContentType = metadata.data.results.filter(
+              (meta) => {
+                return metadataModelField.data.results.some(
+                  (item) =>
+                    item.field === meta.id &&
+                    item.content_type === featureContentTypeId,
+                )
+              },
+            )
+            this.setState({ metadataList: metadataForContentType })
+          })
         })
-      })
-      getSupportedContentType(getStore(), {
-        organisation_id: AccountStore.getOrganisation().id,
-      }).then((res) => {
-        this.setState({ supportedContentTypes: res.data })
       })
     }
   }
@@ -1746,7 +1751,7 @@ const CreateFlag = class extends Component {
                                     {Settings(
                                       projectAdmin,
                                       createFeature,
-                                      featureContentType,
+                                      featureContentType?.id,
                                     )}
                                     <JSONReference
                                       className='mb-3'
