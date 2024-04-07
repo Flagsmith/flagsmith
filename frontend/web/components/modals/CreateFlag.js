@@ -34,7 +34,7 @@ import FeatureValue from 'components/FeatureValue'
 import OrganisationMetadataSelect from 'components/OrganisationMetadataSelect'
 import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
-import { getListMetadata } from 'common/services/useMetadata'
+import { getMetadataList } from 'common/services/useMetadata'
 import { getMetadataModelFieldList } from 'common/services/useMetadataModelField'
 import { getStore } from 'common/store'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
@@ -199,7 +199,7 @@ const CreateFlag = class extends Component {
       this.getFeatureUsage()
     }
     if (Utils.getFlagsmithHasFeature('enable_metadata')) {
-      getListMetadata(getStore(), {
+      getMetadataList(getStore(), {
         organisation: AccountStore.getOrganisation().id,
       }).then((metadata) => {
         getMetadataModelFieldList(getStore(), {

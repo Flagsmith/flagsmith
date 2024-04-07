@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import ConfirmRemoveProject from 'components/modals/ConfirmRemoveProject'
 import ConfirmHideFlags from 'components/modals/ConfirmHideFlags'
+import MetadataPage from 'components/metadata/MetadataPage'
 import EditPermissions from 'components/EditPermissions'
 import Switch from 'components/Switch'
 import _data from 'common/data/base/_data'
@@ -17,14 +18,10 @@ import { getRoles } from 'common/services/useRole'
 import { getRolesProjectPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import ImportPage from 'components/import-export/ImportPage'
-import CreateMetadata from 'components/modals/CreateMetadata'
 import FeatureExport from 'components/import-export/FeatureExport'
 import ProjectUsage from 'components/ProjectUsage'
 import ProjectStore from 'common/stores/project-store'
-import { getListMetadata, deleteMetadata } from 'common/services/useMetadata'
-import { getMetadataModelFieldList } from 'common/services/useMetadataModelField'
 
-const metadataWidth = [200, 150, 150, 90]
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
 
@@ -35,8 +32,6 @@ const ProjectSettingsPage = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {
-      metadata: [],
-      metadataModelField: [],
       roles: [],
     }
     AppActions.getProject(this.props.match.params.projectId)
@@ -55,10 +50,6 @@ const ProjectSettingsPage = class extends Component {
 
   componentDidMount = () => {
     API.trackPage(Constants.pages.PROJECT_SETTINGS)
-    if (Utils.getFlagsmithHasFeature('enable_metadata')) {
-      this.getMetadata()
-      this.getMetadataModelField()
-    }
     if (Utils.getFlagsmithHasFeature('show_role_management')) {
       getRoles(
         getStore(),
@@ -165,105 +156,10 @@ const ProjectSettingsPage = class extends Component {
     }, 0)
   }
 
-  getMetadata = () => {
-    getListMetadata(
-      getStore(),
-      {
-        organisation: AccountStore.getOrganisation().id,
-      },
-      { forceRefetch: true },
-    ).then((res) => {
-      this.setState({
-        metadata: res.data.results,
-      })
-    })
-  }
-
-  getMetadataModelField = () => {
-    getMetadataModelFieldList(
-      getStore(),
-      {
-        organisation_id: AccountStore.getOrganisation().id,
-      },
-      { forceRefetch: true },
-    ).then((res) => {
-      this.setState({
-        metadataModelField: res.data.results,
-      })
-    })
-  }
-
-  metadataCreated = () => {
-    toast('Metadata created')
-    this.getMetadata()
-    closeModal()
-  }
-
-  metadataUpdated = () => {
-    toast('Metadata Updated')
-    this.getMetadata()
-    this.getMetadataModelField()
-    closeModal()
-  }
-
-  deleteMetadata = (id, name) => {
-    openConfirm(
-      'Delete Metadata',
-      <div>
-        {'Are you sure you want to delete '}
-        <strong>{name}</strong>
-        {' metadata?'}
-      </div>,
-      () =>
-        deleteMetadata(getStore(), {
-          id,
-        }).then(() => {
-          this.getMetadata()
-          toast('Metadata has been deleted')
-        }),
-    )
-  }
-
-  createMetadata = () => {
-    openModal(
-      `Create Metadata`,
-      <CreateMetadata
-        onComplete={this.metadataCreated}
-        organisationId={AccountStore.getOrganisation().id}
-      />,
-      'side-modal create-feature-modal',
-    )
-  }
-
-  editMetadata = (id, contentTypeList) => {
-    openModal(
-      `Edit Metadata`,
-      <CreateMetadata
-        isEdit={true}
-        metadataModelFieldList={contentTypeList}
-        id={id}
-        onComplete={this.metadataUpdated}
-        projectId={this.props.match.params.projectId}
-        organisationId={AccountStore.getOrganisation().id}
-      />,
-      'side-modal create-feature-modal',
-    )
-  }
-
   render() {
-    const { metadata, metadataModelField, name } = this.state
+    const { name } = this.state
 
     const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
-
-    const mergeMetadata = metadata.map((item1) => {
-      const matchingItems2 = metadataModelField.filter(
-        (item2) => item2.field === item1.id,
-      )
-      return {
-        ...item1,
-        content_type_fields: matchingItems2,
-      }
-    })
 
     return (
       <div className='app-container container'>
@@ -272,27 +168,6 @@ const ProjectSettingsPage = class extends Component {
           onSave={this.onSave}
         >
           {({ deleteProject, editProject, isLoading, isSaving, project }) => {
-            const featureContentType =
-              project.supportedContentTypes &&
-              Utils.getContentType(
-                project.supportedContentTypes,
-                'model',
-                'feature',
-              )
-            const segmentContentType =
-              project.supportedContentTypes &&
-              Utils.getContentType(
-                project.supportedContentTypes,
-                'model',
-                'feature',
-              )
-            const environmentContentType =
-              project.supportedContentTypes &&
-              Utils.getContentType(
-                project.supportedContentTypes,
-                'model',
-                'feature',
-              )
             if (
               !this.state.populatedProjectState &&
               project?.feature_name_regex
@@ -632,308 +507,10 @@ const ProjectSettingsPage = class extends Component {
                     </TabItem>
                     {metadataEnable && (
                       <TabItem tabLabel='Metadata'>
-                        <div>
-                          <Row space className='mt-4'>
-                            <h5 className='m-b-0'>Metadata</h5>
-                            <Button onClick={() => this.createMetadata()}>
-                              {'Create Metadata'}
-                            </Button>
-                          </Row>
-                          <p className='fs-small lh-sm'>
-                            Add metadata to your entities
-                          </p>
-                          <FormGroup className='mt-4'>
-                            <PanelSearch
-                              id='webhook-list'
-                              items={mergeMetadata}
-                              header={
-                                <Row className='table-header'>
-                                  <Flex className='table-column px-3'>
-                                    Name
-                                  </Flex>
-                                  <div
-                                    className='table-column'
-                                    style={{ width: metadataWidth[0] }}
-                                  >
-                                    Environment
-                                  </div>
-                                  <div
-                                    className='table-column'
-                                    style={{ width: metadataWidth[1] }}
-                                  >
-                                    Segment
-                                  </div>
-                                  <div
-                                    className='table-column'
-                                    style={{ width: metadataWidth[2] }}
-                                  >
-                                    Feature
-                                  </div>
-                                  <div
-                                    className='table-column'
-                                    style={{ width: metadataWidth[3] }}
-                                  >
-                                    Remove
-                                  </div>
-                                </Row>
-                              }
-                              renderRow={(metadata) => (
-                                <Row
-                                  space
-                                  className='list-item clickable cursor-pointer'
-                                  key={metadata.id}
-                                  onClick={() => {
-                                    this.editMetadata(
-                                      metadata.id,
-                                      metadata.content_type_fields,
-                                      project.supportedContentTypes,
-                                    )
-                                  }}
-                                >
-                                  <Flex className='table-column px-3'>
-                                    <div className='font-weight-medium mb-1'>
-                                      {metadata.name}
-                                    </div>
-                                  </Flex>
-                                  <div
-                                    className='table-column'
-                                    style={{
-                                      alignItems: 'center',
-                                      display: 'flex',
-                                      width: '185px',
-                                    }}
-                                  >
-                                    <div className='table-column d-flex text-center'>
-                                      {metadata.content_type_fields.find(
-                                        (m) =>
-                                          m.content_type ===
-                                          environmentContentType,
-                                      ) ? (
-                                        <>
-                                          {metadata.content_type_fields.some(
-                                            (field) =>
-                                              field.content_type ===
-                                              environmentContentType,
-                                          ) ? (
-                                            <>
-                                              {metadata.content_type_fields.some(
-                                                (field) =>
-                                                  field.content_type ===
-                                                    environmentContentType &&
-                                                  field.is_required_for &&
-                                                  field.is_required_for.length >
-                                                    0,
-                                              ) ? (
-                                                <>
-                                                  <Icon
-                                                    name='required'
-                                                    width={20}
-                                                  />
-                                                </>
-                                              ) : (
-                                                <>
-                                                  <Icon
-                                                    name='checkmark-circle'
-                                                    width={20}
-                                                    fill='#20c997'
-                                                  />
-                                                </>
-                                              )}
-                                            </>
-                                          ) : (
-                                            <>
-                                              <Icon
-                                                name='close-circle'
-                                                width={20}
-                                              />
-                                            </>
-                                          )}
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Icon
-                                            name='close-circle'
-                                            width={20}
-                                          />
-                                        </>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div
-                                    className='table-column'
-                                    style={{ width: '150px' }}
-                                  >
-                                    <div
-                                      className='table-column'
-                                      style={{ width: '150px' }}
-                                    >
-                                      {metadata.content_type_fields.find(
-                                        (m) =>
-                                          m.content_type === segmentContentType,
-                                      ) ? (
-                                        <>
-                                          {metadata.content_type_fields.some(
-                                            (field) =>
-                                              field.content_type ===
-                                              segmentContentType,
-                                          ) ? (
-                                            <>
-                                              {metadata.content_type_fields.some(
-                                                (field) =>
-                                                  field.content_type ===
-                                                    segmentContentType &&
-                                                  field.is_required_for &&
-                                                  field.is_required_for.length >
-                                                    0,
-                                              ) ? (
-                                                <>
-                                                  <Icon
-                                                    name='required'
-                                                    width={20}
-                                                  />
-                                                </>
-                                              ) : (
-                                                <>
-                                                  <Icon
-                                                    name='checkmark-circle'
-                                                    width={20}
-                                                    fill='#20c997'
-                                                  />
-                                                </>
-                                              )}
-                                            </>
-                                          ) : (
-                                            <>
-                                              <Icon
-                                                name='close-circle'
-                                                width={20}
-                                              />
-                                            </>
-                                          )}
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Icon
-                                            name='close-circle'
-                                            width={20}
-                                          />
-                                        </>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div
-                                    className='table-column'
-                                    style={{ width: metadataWidth[2] }}
-                                    onClick={() => {
-                                      this.editMetadata(
-                                        metadata.id,
-                                        metadata.content_type_fields,
-                                        project.supportedContentTypes,
-                                      )
-                                    }}
-                                  >
-                                    <div
-                                      className='table-column'
-                                      style={{ width: '150px' }}
-                                      onClick={() => {
-                                        this.editMetadata(
-                                          metadata.id,
-                                          metadata.content_type_fields,
-                                          project.supportedContentTypes,
-                                        )
-                                      }}
-                                    >
-                                      {metadata.content_type_fields.find(
-                                        (m) =>
-                                          m.content_type === featureContentType,
-                                      ) ? (
-                                        <>
-                                          {metadata.content_type_fields.some(
-                                            (field) =>
-                                              field.content_type ===
-                                              featureContentType,
-                                          ) ? (
-                                            <>
-                                              {metadata.content_type_fields.some(
-                                                (field) =>
-                                                  field.content_type ===
-                                                    featureContentType &&
-                                                  field.is_required_for &&
-                                                  field.is_required_for.length >
-                                                    0,
-                                              ) ? (
-                                                <>
-                                                  <Icon
-                                                    name='required'
-                                                    width={20}
-                                                  />
-                                                </>
-                                              ) : (
-                                                <>
-                                                  <Icon
-                                                    name='checkmark-circle'
-                                                    width={20}
-                                                    fill='#20c997'
-                                                  />
-                                                </>
-                                              )}
-                                            </>
-                                          ) : (
-                                            <>
-                                              <Icon
-                                                name='close-circle'
-                                                width={20}
-                                              />
-                                            </>
-                                          )}
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Icon
-                                            name='close-circle'
-                                            width={20}
-                                          />
-                                        </>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div
-                                    className='table-column'
-                                    style={{ width: '86px' }}
-                                  >
-                                    <Button
-                                      id='delete-invite'
-                                      type='button'
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        this.deleteMetadata(
-                                          metadata.id,
-                                          metadata.name,
-                                        )
-                                      }}
-                                      className='btn btn-with-icon'
-                                    >
-                                      <Icon
-                                        name='trash-2'
-                                        width={20}
-                                        fill='#656D7B'
-                                      />
-                                    </Button>
-                                  </div>
-                                </Row>
-                              )}
-                              renderNoResults={
-                                <Panel className='no-pad' title={'Metadata'}>
-                                  <div className='search-list'>
-                                    <Row className='list-item p-3 text-muted'>
-                                      You currently have no metadata configured.
-                                    </Row>
-                                  </div>
-                                </Panel>
-                              }
-                            />
-                          </FormGroup>
-                        </div>
+                        <MetadataPage
+                          organisationId={AccountStore.getOrganisation().id}
+                          projectId={this.props.match.params.projectId}
+                        />
                       </TabItem>
                     )}
                     {!!ProjectStore.getEnvs()?.length && (

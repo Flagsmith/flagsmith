@@ -37,7 +37,7 @@ export const metadataModelFieldService = service
         }),
       }),
       getMetadataModelFieldList: builder.query<
-        Res['metadataModelField'],
+        Res['metadataModelFieldList'],
         Req['getMetadataModelFields']
       >({
         providesTags: [{ id: 'LIST', type: 'MetadataModelField' }],

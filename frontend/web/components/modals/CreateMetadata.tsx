@@ -20,7 +20,7 @@ import {
 import { ContentType, MetadataModelField } from 'common/types/responses'
 
 type CreateMetadataType = {
-  id: string
+  id?: string
   isEdit?: boolean
   metadataModelFieldList?: MetadataModelField[]
   onComplete?: () => void
@@ -59,7 +59,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
     { id: 5, label: 'multiline string', value: 'multiline_str' },
   ]
   const { data, isLoading } = useGetMetadataQuery(
-    { organisation_id: id },
+    { organisation_id: id! },
     { skip: !id },
   )
 
@@ -146,18 +146,21 @@ const CreateMetadata: FC<CreateMetadataType> = ({
         ),
       )
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, isLoading])
 
   useEffect(() => {
     if (!updating && updated) {
       onComplete?.()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updating, updated])
 
   useEffect(() => {
     if (created && !creating) {
       onComplete?.()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [creating, created])
 
   const [typeValue, setTypeValue] = useState<MetadataType>()

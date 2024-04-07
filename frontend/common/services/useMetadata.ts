@@ -22,16 +22,19 @@ export const metadataService = service
           url: `metadata/fields/${query.id}/`,
         }),
       }),
-      getListMetadata: builder.query<Res['metadataList'], Req['getMetadata']>({
-        providesTags: [{ id: 'LIST', type: 'Metadata' }],
-        query: (query: Req['getMetadata']) => ({
-          url: `metadata/fields/?${Utils.toParam(query)}`,
-        }),
-      }),
       getMetadata: builder.query<Res['metadata'], Req['getMetadata']>({
         providesTags: (res) => [{ id: res?.id, type: 'Metadata' }],
         query: (query: Req['getMetadata']) => ({
           url: `metadata/fields/${query.organisation_id}/`,
+        }),
+      }),
+      getMetadataList: builder.query<
+        Res['metadataList'],
+        Req['getMetadataList']
+      >({
+        providesTags: [{ id: 'LIST', type: 'Metadata' }],
+        query: (query: Req['getMetadataList']) => ({
+          url: `metadata/fields/?${Utils.toParam(query)}`,
         }),
       }),
       updateMetadata: builder.mutation<Res['metadata'], Req['updateMetadata']>({
@@ -82,15 +85,15 @@ export async function getMetadata(
     metadataService.endpoints.getMetadata.initiate(data, options),
   )
 }
-export async function getListMetadata(
+export async function getMetadataList(
   store: any,
-  data: Req['getMetadata'],
+  data: Req['getMetadataList'],
   options?: Parameters<
-    typeof metadataService.endpoints.getListMetadata.initiate
+    typeof metadataService.endpoints.getMetadataList.initiate
   >[1],
 ) {
   return store.dispatch(
-    metadataService.endpoints.getListMetadata.initiate(data, options),
+    metadataService.endpoints.getMetadataList.initiate(data, options),
   )
 }
 export async function updateMetadata(
@@ -109,7 +112,7 @@ export async function updateMetadata(
 export const {
   useCreateMetadataMutation,
   useDeleteMetadataMutation,
-  useGetListMetadataQuery,
+  useGetMetadataListQuery,
   useGetMetadataQuery,
   useUpdateMetadataMutation,
   // END OF EXPORTS

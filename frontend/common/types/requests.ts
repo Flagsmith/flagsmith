@@ -227,6 +227,7 @@ export type Req = {
     }
   }
   getMetadata: { organisation_id: string }
+  getMetadataList: { organisation: string }
   updateMetadata: {
     id: string
     body: {

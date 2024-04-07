@@ -503,17 +503,8 @@ export type Res = {
   rolePermissionGroup: PagedResponse<RolePermissionGroup>
   getSubscriptionMetadata: { id: string }
   environment: Environment
-  metadataModelField: {
-    id: string
-    field: number
-    content_type: number
-    is_required_for?: [
-      {
-        content_type: number
-        object_id: number
-      },
-    ]
-  }
+  metadataModelFieldList: PagedResponse<MetadataModelField>
+  metadataModelField: MetadataModelField
   metadataList: PagedResponse<Metadata>
   metadata: Metadata
   launchDarklyProjectImport: LaunchDarklyProjectImport
