@@ -139,8 +139,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getApproveChangeRequestPermission() {
     return 'APPROVE_CHANGE_REQUEST'
   },
-  getContentType(contentTypes: ContentType, prop: number, type: string) {
-    return contentTypes.find((c) => c[prop] === type) || null
+  getContentType(contentTypes: ContentType[], model: string, type: string) {
+    return contentTypes.find((c: ContentType) => c[model] === type) || null
   },
   getCreateProjectPermission(organisation: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {

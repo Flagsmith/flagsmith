@@ -411,6 +411,7 @@ export type Metadata = {
 }
 
 export type ContentType = {
+  [key: string]: any
   id: number
   app_label: string
   model: string
