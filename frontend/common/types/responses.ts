@@ -11,6 +11,14 @@ export type PagedResponse<T> = {
   results: T[]
 }
 export type FlagsmithValue = string | number | boolean | null
+
+export type FeatureVersionState = {
+  enabled: boolean
+  feature: number
+  feature_state_value: FeatureStateValue
+  feature_segment: null | FeatureState['feature_segment']
+  multivariate_feature_state_values: Omit<MultivariateFeatureStateValue, 'id'>[]
+}
 export type Operator = {
   value: string | null
   label: string
@@ -58,11 +66,14 @@ export type Environment = {
   name: string
   api_key: string
   description?: string
+  banner_text?: string
+  banner_colour?: string
   project: number
   minimum_change_request_approvals?: number
   allow_client_traits: boolean
   hide_sensitive_data: boolean
   total_segment_overrides?: number
+  use_v2_feature_versioning: boolean
 }
 export type Project = {
   id: number
@@ -83,7 +94,34 @@ export type Project = {
   total_segments?: number
   environments: Environment[]
 }
+export type ImportStrategy = 'SKIP' | 'OVERWRITE_DESTRUCTIVE'
 
+export type ImportExportStatus = 'SUCCESS' | 'PROCESSING' | 'FAILED'
+
+export type FeatureImport = {
+  id: number
+  status: ImportExportStatus
+  strategy: string
+  environment_id: number
+  created_at: string
+}
+
+export type FeatureExport = {
+  id: string
+  name: string
+  environment_id: string
+  status: ImportExportStatus
+  created_at: string
+}
+export type FeatureImportItem = {
+  name: string
+  default_enabled: boolean
+  is_server_key_only: boolean
+  initial_value: FlagsmithValue
+  value: FlagsmithValue
+  enabled: false
+  multivariate: []
+}
 export type LaunchDarklyProjectImport = {
   id: number
   created_by: string
@@ -128,6 +166,7 @@ export type UserPermission = {
   permissions: string[]
   admin: boolean
   id: number
+  role?: number
 }
 export type GroupPermission = Omit<UserPermission, 'user'> & {
   group: UserGroup
@@ -151,6 +190,13 @@ export type AuditLogItem = {
   is_system_event: boolean
 }
 
+export type AuditLogDetail = AuditLogItem & {
+  change_details: {
+    field: string
+    old: FlagsmithValue
+    new: FlagsmithValue
+  }[]
+}
 export type Subscription = {
   id: number
   uuid: string
@@ -188,6 +234,15 @@ export type AvailablePermission = {
   description: string
 }
 
+export type APIKey = {
+  active: boolean
+  created_at: string
+  expires_at: string | null
+  id: number
+  key: string
+  name: string
+}
+
 export type Tag = {
   id: number
   color: string
@@ -221,6 +276,7 @@ export type MultivariateOption = {
 }
 
 export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
+export type TagStrategy = 'INTERSECTION' | 'UNION'
 
 export type IdentityFeatureState = {
   feature: {
@@ -241,28 +297,34 @@ export type IdentityFeatureState = {
 
 export type FeatureState = {
   id: number
-  feature_state_value: string
+  feature_state_value: FlagsmithValue
   multivariate_feature_state_values: MultivariateFeatureStateValue[]
   identity?: string
   uuid: string
   enabled: boolean
   created_at: string
   updated_at: string
+  environment_feature_version: string
   version?: number
   live_from?: string
   hide_from_client?: string
   feature: number
   environment: number
-  feature_segment?: number
+  feature_segment?: {
+    id: number
+    priority: number
+    segment: number
+    uuid: string
+  }
   change_request?: number
 }
 
 export type ProjectFlag = {
-  created_date: Date
+  created_date: string
   default_enabled: boolean
   description?: string
   id: number
-  initial_value: string
+  initial_value: FlagsmithValue
   is_archived: boolean
   is_server_key_only: boolean
   multivariate_options: MultivariateOption[]
@@ -308,7 +370,6 @@ export type Account = {
   auth_type: AuthType
   is_superuser: boolean
 }
-
 export type Role = {
   id: number
   name: string
@@ -320,14 +381,31 @@ export type RolePermissionUser = {
   user: number
   role: number
   id: number
+  role_name: string
 }
-
+export type RolePermissionGroup = {
+  group: number
+  role: number
+  id: number
+  role_name: string
+}
+export type FeatureVersion = {
+  created_at: string
+  updated_at: string
+  published: boolean
+  live_from: string
+  uuid: string
+  is_live: boolean
+  published_by: number | null
+  created_by: number | null
+}
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
   auditLogs: PagedResponse<AuditLogItem>
   organisations: PagedResponse<Organisation>
   projects: ProjectSummary[]
+  project: Project
   environments: PagedResponse<Environment>
   organisationUsage: {
     totals: {
@@ -381,21 +459,43 @@ export type Res = {
     }
     value: string
   }
-  roles: Role[]
-  rolePermission: { id: string }
-
+  featureVersion: FeatureVersion
+  versionFeatureState: FeatureState[]
+  role: Role
+  roles: PagedResponse<Role>
+  rolePermission: PagedResponse<UserPermission>
   projectFlags: PagedResponse<ProjectFlag>
   projectFlag: ProjectFlag
   identityFeatureStates: IdentityFeatureState[]
-  rolesPermissionUsers: RolePermissionUser
-  rolePermissionGroup: { id: string }
+  createRolesPermissionUsers: RolePermissionUser
+  rolesPermissionUsers: PagedResponse<RolePermissionUser>
+  createRolePermissionGroup: RolePermissionGroup
+  rolePermissionGroup: PagedResponse<RolePermissionGroup>
   getSubscriptionMetadata: { id: string }
   environment: Environment
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
-  userWithRoles: PagedResponse<Roles>
-  groupWithRole: PagedResponse<Roles>
+  roleMasterApiKey: { id: number; master_api_key: string; role: number }
+  masterAPIKeyWithMasterAPIKeyRoles: {
+    id: string
+    prefix: string
+    roles: RolePermissionUser[]
+  }
+  userWithRoles: PagedResponse<Role>
+  groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
   groupSummaries: UserGroupSummary[]
+  segmentPriorities: {}
+  featureSegment: { id: string }
+  featureVersions: PagedResponse<FeatureVersion>
+  users: User[]
+  enableFeatureVersioning: { id: string }
+  auditLogItem: AuditLogDetail
+  featureExport: { id: string }
+  featureExports: PagedResponse<FeatureExport>
+  flagsmithProjectImport: { id: string }
+  featureImports: PagedResponse<FeatureImport>
+  serversideEnvironmentKeys: APIKey[]
+  userGroupPermissions: GroupPermission[]
   // END OF TYPES
 }

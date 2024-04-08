@@ -1,12 +1,15 @@
 import uuid
 from datetime import timedelta
+from unittest.mock import MagicMock
 
 import pytest
+from django.core.mail.message import EmailMultiAlternatives
 from django.utils import timezone
 from pytest_mock import MockerFixture
 
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
+    OranisationAPIUsageNotification,
     Organisation,
     OrganisationRole,
     OrganisationSubscriptionInformationCache,
@@ -22,6 +25,7 @@ from organisations.tasks import (
     ALERT_EMAIL_MESSAGE,
     ALERT_EMAIL_SUBJECT,
     finish_subscription_cancellation,
+    handle_api_usage_notifications,
     send_org_over_limit_alert,
     send_org_subscription_cancelled_alert,
 )
@@ -222,3 +226,229 @@ def test_send_org_subscription_cancelled_alert(db: None, mocker: MockerFixture) 
         recipient_list=[],
         fail_silently=True,
     )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_handle_api_usage_notifications_when_feature_flag_is_off(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    mailoutbox: list[EmailMultiAlternatives],
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+    )
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = False
+
+    # When
+    handle_api_usage_notifications()
+
+    # Then
+    mock_api_usage.assert_not_called()
+
+    assert len(mailoutbox) == 0
+    assert (
+        OranisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 0
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_handle_api_usage_notifications_below_100(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    mailoutbox: list[EmailMultiAlternatives],
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+    )
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 91
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
+    assert not OranisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+    ).exists()
+
+    # When
+    handle_api_usage_notifications()
+
+    # Then
+    mock_api_usage.assert_called_once_with(organisation.id, "14d")
+
+    assert len(mailoutbox) == 1
+    email = mailoutbox[0]
+    assert email.subject == "Flagsmith API use has reached 90%"
+    assert email.body == (
+        "Hi there,\n\nThe API usage for Test Org has reached "
+        "90% within the current subscription period. Please "
+        "consider upgrading your organisations account limits.\n\n"
+        "Thank you!\n\nThe Flagsmith Team\n"
+    )
+
+    assert len(email.alternatives) == 1
+    assert len(email.alternatives[0]) == 2
+    assert email.alternatives[0][1] == "text/html"
+
+    assert email.alternatives[0][0] == (
+        "<table>\n\n        <tr>\n\n               "
+        "<td>Hi there,</td>\n\n        </tr>\n\n        "
+        "<tr>\n\n               <td>\n                 "
+        "The API usage for Test Org has reached\n                 "
+        "90% within the current subscription period.\n                 "
+        "Please consider upgrading your organisations account limits.\n"
+        "               </td>\n\n\n        </tr>\n\n        "
+        "<tr>\n\n               <td>Thank you!</td>\n\n      "
+        "  </tr>\n\n        <tr>\n\n               "
+        "<td>The Flagsmith Team</td>\n\n        "
+        "</tr>\n\n</table>\n"
+    )
+
+    assert email.from_email == "noreply@flagsmith.com"
+    # Only admin because threshold is under 100.
+    assert email.to == ["admin@example.com"]
+
+    assert (
+        OranisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 1
+    )
+    api_usage_notification = OranisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+    ).first()
+
+    assert api_usage_notification.percent_usage == 90
+
+    # Now re-run the usage to make sure the notification isn't resent.
+    handle_api_usage_notifications()
+
+    assert (
+        OranisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 1
+    )
+    assert OranisationAPIUsageNotification.objects.first() == api_usage_notification
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_handle_api_usage_notifications_above_100(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    mailoutbox: list[EmailMultiAlternatives],
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+    )
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 105
+
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
+    assert not OranisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+    ).exists()
+
+    # When
+    handle_api_usage_notifications()
+
+    # Then
+    mock_api_usage.assert_called_once_with(organisation.id, "14d")
+
+    assert len(mailoutbox) == 1
+    email = mailoutbox[0]
+    assert email.subject == "Flagsmith API use has reached 100%"
+    assert email.body == (
+        "Hi there,\n\nThe API usage for Test Org has breached "
+        "100% within the current subscription period. Please "
+        "upgrade your organisations account to ensure "
+        "continued service.\n\nThank you!\n\n"
+        "The Flagsmith Team\n"
+    )
+
+    assert len(email.alternatives) == 1
+    assert len(email.alternatives[0]) == 2
+    assert email.alternatives[0][1] == "text/html"
+
+    assert email.alternatives[0][0] == (
+        "<table>\n\n        <tr>\n\n               <td>Hi "
+        "there,</td>\n\n        </tr>\n\n        <tr>\n\n    "
+        "           <td>\n                 The API usage for Test Org "
+        "has breached\n                 100% within the "
+        "current subscription period.\n                 "
+        "Please upgrade your organisations account to ensure "
+        "continued service.\n               </td>\n\n\n      "
+        "  </tr>\n\n        <tr>\n\n               <td>"
+        "Thank you!</td>\n\n        </tr>\n\n        <tr>\n\n"
+        "               <td>The Flagsmith Team</td>\n\n        "
+        "</tr>\n\n</table>\n"
+    )
+
+    assert email.from_email == "noreply@flagsmith.com"
+    # Extra staff included because threshold is over 100.
+    assert email.to == ["admin@example.com", "staff@example.com"]
+
+    assert (
+        OranisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 1
+    )
+    api_usage_notification = OranisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+    ).first()
+
+    assert api_usage_notification.percent_usage == 100
+
+    # Now re-run the usage to make sure the notification isn't resent.
+    handle_api_usage_notifications()
+
+    assert (
+        OranisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 1
+    )
+    assert OranisationAPIUsageNotification.objects.first() == api_usage_notification

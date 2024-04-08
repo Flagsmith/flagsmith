@@ -68,22 +68,26 @@ class TheComponent extends Component {
   }
 
   invalidateToken = () => {
-    openConfirm(
-      'Invalidate Token',
-      <div>
-        Invalidating your token will generate a new token to use with our API,{' '}
-        <span className='text-dark font-weight-medium'>
-          your current token will no longer work
-        </span>
-        . Performing this action will also log you out, are you sure you wish to
-        do this?
-      </div>,
-      () => {
+    openConfirm({
+      body: (
+        <div>
+          Invalidating your token will generate a new token to use with our API,{' '}
+          <span className='text-dark font-weight-medium'>
+            your current token will no longer work
+          </span>
+          . Performing this action will also log you out, are you sure you wish
+          to do this?
+        </div>
+      ),
+      destructive: true,
+      onYes: () => {
         _data.delete(`${Project.api}auth/token/`).then(() => {
           AppActions.logout()
         })
       },
-    )
+      title: 'Invalidate Token',
+      yesText: 'Confirm',
+    })
   }
 
   savePassword = (e) => {
@@ -311,31 +315,32 @@ class TheComponent extends Component {
                     </div>
                   </div>
                 </TabItem>
-                <TabItem tabLabel='Keys'>
+                <TabItem tabLabel='API Keys'>
                   <div className='mt-6'>
                     <div className='col-md-6'>
-                      <h5>API Token</h5>
+                      <h5>Manage API Keys</h5>
                       <InfoMessage>
                         <p>
-                      You can use this token to securely integrate with the private endpoints of our {' '}
-                        <Button
-                          theme='text'
-                          href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'
-                          target='_blank'
-                          className='fw-normal'
-                        >
-                          RESTful API
-                        </Button>
-                        .
+                          You can use this token to securely integrate with the
+                          private endpoints of our{' '}
+                          <Button
+                            theme='text'
+                            href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'
+                            target='_blank'
+                            className='fw-normal'
+                          >
+                            RESTful API
+                          </Button>
+                          .
                         </p>
                         <p>
-                        This key should <strong>not</strong> be used directly with our SDKs.
-                        To configure the Flagsmith SDK, go to the Environment settings page and
-                        copy the Environment key from there.
+                          This key should <strong>not</strong> be used directly
+                          with our SDKs. To configure the Flagsmith SDK, go to
+                          the Environment settings page and copy the Environment
+                          key from there.
                         </p>
                       </InfoMessage>
-                      <p className='fs-small lh-sm'>
-                      </p>
+                      <p className='fs-small lh-sm'></p>
                     </div>
                     <div className='col-md-6'>
                       <Token className='full-width' token={_data.token} />

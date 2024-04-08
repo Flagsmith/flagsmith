@@ -1,15 +1,15 @@
-version: '3'
+name: flagsmith
 
 volumes:
   pg_11_data:
 
 services:
   db:
-    image: postgres:11.12-alpine
+    image: postgres:15.5-alpine
     pull_policy: always
     restart: unless-stopped
     volumes:
-      - pg_11_data:/var/lib/postgresql/data:Z
+      - pg_11_data:/var/lib/postgresql/data
     ports:
       - 5432:5432
     environment:

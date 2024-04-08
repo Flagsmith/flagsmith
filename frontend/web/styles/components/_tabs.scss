@@ -19,6 +19,17 @@
   .tab-line {
     display: none;
   }
+  .hljs-container {
+    code {
+
+      padding-top: 80px;
+    }
+    .react-select {
+      position: absolute;
+      top:16px;
+      left:16px;
+    }
+  }
 }
 .dark {
   .tabs {
@@ -34,7 +45,7 @@
       }
     }
     hr {
-      border-color: $white-alpha-16;
+      border-color: $white-alpha-8;
     }
     & .pill {
       background: $bg-dark300;
@@ -133,5 +144,10 @@
     padding-right: 0 !important;
     width: 16px;
     height: 16px;
+    line-height: 15px;
   }
+}
+.pill .btn-tab .unread {
+  margin-left: $spacer/2;
+  position: static;
 }

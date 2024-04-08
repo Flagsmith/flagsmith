@@ -8,13 +8,11 @@ import data from 'common/data/base/_data'
 import GoogleButton from 'components/GoogleButton'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
-import Icon from 'components/Icon'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
 import { informationCircleOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
-
-let controller = new AbortController()
+import Checkbox from 'components/base/forms/Checkbox'
 
 const HomePage = class extends React.Component {
   static contextTypes = {
@@ -25,15 +23,20 @@ const HomePage = class extends React.Component {
 
   constructor(props, context) {
     super(props, context)
+
+    // Note that we are explicitly setting marketing consent to true
+    // here to reduce the complexity of the change. This is due to
+    // the addition of wording in our ToS and the move from Pipedrive
+    // to Hubspot.
+    // TODO: this can probably all be removed from the FE and the BE
+    // can handle always setting the marketing consent.
+    API.setCookie('marketing_consent_given', 'true')
     this.state = {
-      marketing_consent_given:
-        API.getCookie('marketing_consent_given') === 'true',
+      marketing_consent_given: true,
     }
   }
 
   addAlbacross() {
-    EventTarget.prototype.oldAddEventListener =
-      EventTarget.prototype.addEventListener
     window._nQc = Project.albacross
     const script = document.createElement('script')
     script.type = 'text/javascript'
@@ -41,30 +44,7 @@ const HomePage = class extends React.Component {
     script.src = 'https://serve.albacross.com/track.js'
     script.id = 'albacross'
 
-    EventTarget.prototype.addEventListener = function (
-      type,
-      listener,
-      options = false,
-    ) {
-      const parsedOptions =
-        typeof options == 'boolean' ? { capture: options } : options
-
-      EventTarget.prototype.oldAddEventListener.call(this, type, listener, {
-        signal: controller.signal,
-        ...parsedOptions,
-      })
-    }
-
     document.body.appendChild(script)
-  }
-
-  removeAlbacross() {
-    controller.abort()
-    controller = new AbortController()
-    EventTarget.prototype.addEventListener =
-      EventTarget.prototype.oldAddEventListener
-    document.body.removeChild(document.getElementById('albacross'))
-    delete window._nQc
   }
 
   componentDidUpdate(prevProps) {
@@ -80,15 +60,7 @@ const HomePage = class extends React.Component {
         this.props.location.pathname.indexOf('signup') !== -1
       ) {
         this.addAlbacross()
-      } else if (document.getElementById('albacross')) {
-        this.removeAlbacross()
       }
-    }
-  }
-
-  componentWillUnmount() {
-    if (document.getElementById('albacross')) {
-      this.removeAlbacross()
     }
   }
 
@@ -472,29 +444,6 @@ const HomePage = class extends React.Component {
                                     </Link>
                                   </Row>
                                 )}
-
-                                <div className='mt-4 text-center text-small text-muted'>
-                                  By signing up you agree to our{' '}
-                                  <a
-                                    style={{ opacity: 0.8 }}
-                                    target='_blank'
-                                    className='text-small'
-                                    href='https://flagsmith.com/terms-of-service/'
-                                    rel='noreferrer'
-                                  >
-                                    Terms of Service
-                                  </a>{' '}
-                                  and{' '}
-                                  <a
-                                    style={{ opacity: 0.8 }}
-                                    target='_blank'
-                                    className='text-small'
-                                    href='https://flagsmith.com/privacy-policy/'
-                                    rel='noreferrer'
-                                  >
-                                    Privacy Policy
-                                  </a>
-                                </div>
                               </div>
                             )}
                           </React.Fragment>
@@ -633,43 +582,6 @@ const HomePage = class extends React.Component {
                                       name='password'
                                       id='password'
                                     />
-                                    {Utils.getFlagsmithHasFeature(
-                                      'mailing_list',
-                                    ) && (
-                                      <div>
-                                        <input
-                                          onChange={(e) => {
-                                            API.setCookie(
-                                              'marketing_consent_given',
-                                              `${e.target.checked}`,
-                                            )
-                                            this.setState({
-                                              marketing_consent_given:
-                                                e.target.checked,
-                                            })
-                                          }}
-                                          id='mailinglist'
-                                          type='checkbox'
-                                          checked={
-                                            this.state.marketing_consent_given
-                                          }
-                                        />
-                                        <label
-                                          className='mb-0'
-                                          htmlFor='mailinglist'
-                                          style={{ display: 'inline' }}
-                                        >
-                                          <span className='checkbox mr-2'>
-                                            {this.state
-                                              .marketing_consent_given && (
-                                              <Icon name='checkmark-square' />
-                                            )}
-                                          </span>
-                                          Yes, I would like to signup for the
-                                          twice monthly newsletter (optional)
-                                        </label>
-                                      </div>
-                                    )}
                                     <div className='form-cta'>
                                       <Button
                                         data-test='signup-btn'
@@ -701,6 +613,28 @@ const HomePage = class extends React.Component {
                         )}
                       </div>
                     )}
+                  </div>
+                  <div className='mt-4 text-center text-small text-muted'>
+                    By signing up you agree to our{' '}
+                    <a
+                      style={{ opacity: 0.8 }}
+                      target='_blank'
+                      className='text-small'
+                      href='https://flagsmith.com/terms-of-service/'
+                      rel='noreferrer'
+                    >
+                      Terms of Service
+                    </a>{' '}
+                    and{' '}
+                    <a
+                      style={{ opacity: 0.8 }}
+                      target='_blank'
+                      className='text-small'
+                      href='https://flagsmith.com/privacy-policy/'
+                      rel='noreferrer'
+                    >
+                      Privacy Policy
+                    </a>
                   </div>
                 </div>
               </div>

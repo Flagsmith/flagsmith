@@ -138,6 +138,10 @@
                 {
                     "name": "AWS_SSE_LOGS_BUCKET_NAME",
                     "value": "flagsmith-fastly-logs-staging"
+                },
+                {
+                    "name": "ENABLE_API_USAGE_ALERTING",
+                    "value": "True"
                 }
             ],
             "secrets": [

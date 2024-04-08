@@ -49,8 +49,8 @@ Read more about our Client-side SDKs for your language/platform:
 ## Server-side SDKs
 
 [Server-side SDKs](/clients/server-side.md) run within _trusted environments_ - typically the server infrastructure that
-you have control over. Because of this you need to should not share your Server-side Environment keys publicly - they
-should be treated as secrets.
+you have control over. Because of this, you should not share your Server-side Environment keys publicly; they should be
+treated as secret.
 
 :::tip
 
@@ -222,29 +222,3 @@ are all computed locally.
   [SDK setup](/clients/server-side#configuring-the-sdk).
 - In circumstances where you need to target a specific identity, you can do this by creating a segment to target that
   specific user and subsequently adding a segment override for that segment.
-
-## SDK Compatibility
-
-### `In` Segment operator
-
-:::important
-
-Earlier SDK versions will not work in local evaluation mode if your environment has segments with the `In` operator
-defined.
-
-To keep local evaluation from breaking, please ensure you have your SDK versions updated before you add such segments to
-your environment.
-
-:::
-
-These minimum SDK versions support segments with the `In` operator in [local evaluation mode](#2---local-evaluation):
-
-- Python SDK: `3.3.0+`
-- Java SDK: `7.1.0+`
-- .NET SDK: `5.0.0+`
-- NodeJS SDK: `2.5.0+`
-- Ruby SDK: `3.2.0+`
-- PHP SDK: `4.1.0+`
-- Go SDK: `3.1.0+`
-- Rust SDK: `1.3.0+`
-- Elixir SDK: `2.0.0+`

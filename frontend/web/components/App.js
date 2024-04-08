@@ -17,13 +17,15 @@ import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Permission from 'common/providers/Permission'
 import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
 import Button from './base/forms/Button'
 import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 import InfoMessage from './InfoMessage'
 import OrganisationLimit from './OrganisationLimit'
+import OrganisationLink from './OrganisationLink'
+import GithubStar from './GithubStar'
+import Tooltip from './Tooltip'
 
 const App = class extends Component {
   static propTypes = {
@@ -347,29 +349,14 @@ const App = class extends Component {
                             <React.Fragment>
                               <nav className='my-3 my-md-0 hidden-xs-down flex-row navbar-right space'>
                                 <Row>
-                                  {!!AccountStore.getOrganisation() && (
-                                    <NavLink
-                                      id='projects-link'
-                                      data-test='projects-link'
-                                      activeClassName='active'
-                                      className='nav-link'
-                                      to={'/projects'}
-                                    >
-                                      <span className='mr-1'>
-                                        <Icon
-                                          name='layout'
-                                          width={20}
-                                          fill='#9DA4AE'
-                                        />
-                                      </span>
-                                      Projects
-                                    </NavLink>
-                                  )}
+                                  <OrganisationLink />
+                                </Row>
+                                <Row>
                                   <NavLink
                                     id='account-settings-link'
                                     data-test='account-settings-link'
                                     activeClassName='active'
-                                    className='nav-link'
+                                    className='nav-link mr-4'
                                     to={
                                       projectId
                                         ? `/project/${projectId}/environment/${environmentId}/account`
@@ -385,76 +372,44 @@ const App = class extends Component {
                                     </span>
                                     Account
                                   </NavLink>
-                                  {AccountStore.getOrganisationRole() ===
-                                  'ADMIN' ? (
-                                    <NavLink
-                                      id='org-settings-link'
-                                      activeClassName='active'
-                                      className='nav-link'
-                                      to='/organisation-settings'
-                                    >
-                                      <span className='mr-1'>
+                                  <GithubStar />
+                                  <Tooltip
+                                    place='bottom'
+                                    title={
+                                      <Button
+                                        href='https://docs.flagsmith.com'
+                                        target='_blank'
+                                        className='btn btn-with-icon mr-2'
+                                        size='small'
+                                      >
                                         <Icon
-                                          name='setting'
+                                          name='file-text'
                                           width={20}
                                           fill='#9DA4AE'
                                         />
-                                      </span>
-                                      {'Manage'}
-                                    </NavLink>
-                                  ) : (
-                                    !!AccountStore.getOrganisation() && (
-                                      <Permission
-                                        level='organisation'
-                                        permission='MANAGE_USER_GROUPS'
-                                        id={AccountStore.getOrganisation().id}
-                                      >
-                                        {({ permission }) => (
-                                          <>
-                                            {!!permission && (
-                                              <NavLink
-                                                id='org-settings-link'
-                                                activeClassName='active'
-                                                className='nav-link'
-                                                to='/organisation-groups'
-                                              >
-                                                <span
-                                                  style={{ marginRight: 4 }}
-                                                >
-                                                  <Icon name='setting' />
-                                                </span>
-                                                {'Manage'}
-                                              </NavLink>
-                                            )}
-                                          </>
-                                        )}
-                                      </Permission>
-                                    )
-                                  )}
-                                </Row>
-                                <Row>
-                                  <Button
-                                    href='https://docs.flagsmith.com'
-                                    target='_blank'
-                                    className='btn btn-with-icon mr-2'
-                                    size='small'
+                                      </Button>
+                                    }
                                   >
-                                    <Icon
-                                      name='file-text'
-                                      width={20}
-                                      fill='#9DA4AE'
-                                    />
-                                  </Button>
+                                    Docs
+                                  </Tooltip>
+
                                   <Headway className='cursor-pointer mr-2' />
-                                  <div className='dark-mode mt-0'>
-                                    <Switch
-                                      checked={Utils.getFlagsmithHasFeature(
-                                        'dark_mode',
-                                      )}
-                                      onChange={this.toggleDarkMode}
-                                      darkMode
-                                    />
-                                  </div>
+                                  <Tooltip
+                                    place='bottom'
+                                    title={
+                                      <div className='dark-mode mt-0'>
+                                        <Switch
+                                          checked={Utils.getFlagsmithHasFeature(
+                                            'dark_mode',
+                                          )}
+                                          onChange={this.toggleDarkMode}
+                                          darkMode
+                                        />
+                                      </div>
+                                    }
+                                  >
+                                    Dark Mode
+                                  </Tooltip>
                                 </Row>
                               </nav>
                             </React.Fragment>
@@ -476,6 +431,7 @@ const App = class extends Component {
                   {isMobile && pageHasAside && asideIsVisible ? null : (
                     <div>
                       <ButterBar
+                        projectId={projectId}
                         billingStatus={
                           AccountStore.getOrganisation()?.subscription
                             .billing_status
@@ -493,7 +449,7 @@ const App = class extends Component {
                             />
                           )}
                           {user && showBanner && (
-                            <Row>
+                            <Row className={'px-3'}>
                               <InfoMessage
                                 title={announcementValue.title}
                                 infoMessageClass={'announcement'}

@@ -1,4 +1,5 @@
 import typing
+from datetime import datetime
 
 import django.core.exceptions
 from drf_writable_nested import WritableNestedModelSerializer
@@ -97,8 +98,43 @@ class FeatureQuerySerializer(serializers.Serializer):
         required=False,
         help_text="Integer ID of the environment to view features in the context of.",
     )
+    is_enabled = serializers.BooleanField(
+        allow_null=True,
+        required=False,
+        default=None,
+        help_text="Boolean value to filter features as enabled or disabled.",
+    )
+    value_search = serializers.CharField(
+        required=False,
+        default=None,
+        help_text="Value of type int, string, or boolean to filter features based on their values",
+    )
 
-    def validate_tags(self, tags):
+    owners = serializers.CharField(
+        required=False,
+        help_text="Comma separated list of owner ids to filter on",
+    )
+    group_owners = serializers.CharField(
+        required=False,
+        help_text="Comma separated list of group owner ids to filter on",
+    )
+
+    def validate_owners(self, owners: str) -> list[int]:
+        try:
+            return [int(owner_id.strip()) for owner_id in owners.split(",")]
+        except ValueError:
+            raise serializers.ValidationError("Owner IDs must be integers.")
+
+    def validate_group_owners(self, group_owners: str) -> list[int]:
+        try:
+            return [
+                int(group_owner_id.strip())
+                for group_owner_id in group_owners.split(",")
+            ]
+        except ValueError:
+            raise serializers.ValidationError("Group owner IDs must be integers.")
+
+    def validate_tags(self, tags: str) -> list[int]:
         try:
             return [int(tag_id.strip()) for tag_id in tags.split(",")]
         except ValueError:
@@ -121,6 +157,18 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         "Note: will return null for Edge enabled projects."
     )
 
+    last_modified_in_any_environment = serializers.SerializerMethodField(
+        help_text="Datetime representing the last time that the feature was modified "
+        "in any environment in the given project. Note: requires feature "
+        "versioning v2 enabled on the environment."
+    )
+    last_modified_in_current_environment = serializers.SerializerMethodField(
+        help_text="Datetime representing the last time that the feature was modified "
+        "in any environment in the current environment. Note: requires that "
+        "the environment query parameter is passed and feature versioning v2 "
+        "enabled on the environment."
+    )
+
     class Meta:
         model = Feature
         fields = (
@@ -141,6 +189,8 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             "num_segment_overrides",
             "num_identity_overrides",
             "is_server_key_only",
+            "last_modified_in_any_environment",
+            "last_modified_in_current_environment",
         )
         read_only_fields = ("feature_segments", "created_date", "uuid", "project")
 
@@ -243,6 +293,16 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             return self.context["overrides_data"][instance.id].num_identity_overrides
         except (KeyError, AttributeError):
             return None
+
+    def get_last_modified_in_any_environment(
+        self, instance: Feature
+    ) -> datetime | None:
+        return getattr(instance, "last_modified_in_any_environment", None)
+
+    def get_last_modified_in_current_environment(
+        self, instance: Feature
+    ) -> datetime | None:
+        return getattr(instance, "last_modified_in_current_environment", None)
 
 
 class UpdateFeatureSerializer(ListCreateFeatureSerializer):

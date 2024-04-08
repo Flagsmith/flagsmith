@@ -4,7 +4,7 @@ import typing
 import boto3
 import pytest
 from django.contrib.contenttypes.models import ContentType
-from django.core.cache import cache
+from django.core.cache import caches
 from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
@@ -165,13 +165,29 @@ def chargebee_subscription(organisation: Organisation) -> Subscription:
 
 
 @pytest.fixture()
-def project(organisation):
-    return Project.objects.create(name="Test Project", organisation=organisation)
+def tag(project):
+    return Tag.objects.create(label="tag", project=project, color="#000000")
 
 
 @pytest.fixture()
-def tag(project):
-    return Tag.objects.create(label="tag", project=project, color="#000000")
+def system_tag(project: Project) -> Tag:
+    return Tag.objects.create(
+        label="system-tag", project=project, color="#FFFFFF", is_system_tag=True
+    )
+
+
+@pytest.fixture()
+def enterprise_subscription(organisation: Organisation) -> Subscription:
+    Subscription.objects.filter(organisation=organisation).update(
+        plan="enterprise", subscription_id="subscription-id"
+    )
+    organisation.refresh_from_db()
+    return organisation.subscription
+
+
+@pytest.fixture()
+def project(organisation):
+    return Project.objects.create(name="Test Project", organisation=organisation)
 
 
 @pytest.fixture()
@@ -182,6 +198,13 @@ def segment(project):
 @pytest.fixture()
 def segment_rule(segment):
     return SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+
+
+@pytest.fixture()
+def feature_specific_segment(feature: Feature) -> Segment:
+    return Segment.objects.create(
+        feature=feature, name="feature specific segment", project=feature.project
+    )
 
 
 @pytest.fixture()
@@ -222,13 +245,17 @@ def with_project_permissions(
     """
 
     def _with_project_permissions(
-        permission_keys: list[str], project_id: typing.Optional[int] = None
+        permission_keys: list[str] = None,
+        project_id: typing.Optional[int] = None,
+        admin: bool = False,
     ) -> UserProjectPermission:
         project_id = project_id or project.id
         upp, __ = UserProjectPermission.objects.get_or_create(
-            project_id=project_id, user=staff_user
+            project_id=project_id, user=staff_user, admin=admin
         )
-        upp.permissions.add(*permission_keys)
+
+        if permission_keys:
+            upp.permissions.add(*permission_keys)
 
         return upp
 
@@ -350,9 +377,15 @@ def reset_cache():
     # https://groups.google.com/g/django-developers/c/zlaPsP13dUY
     # TL;DR: Use this if your test interacts with cache since django
     # does not clear cache after every test
-    cache.clear()
+    # Clear all caches before the test
+    for cache in caches.all():
+        cache.clear()
+
     yield
-    cache.clear()
+
+    # Clear all caches after the test
+    for cache in caches.all():
+        cache.clear()
 
 
 @pytest.fixture()

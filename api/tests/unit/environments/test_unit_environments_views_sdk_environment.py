@@ -5,7 +5,9 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from environments.models import Environment, EnvironmentAPIKey
-from features.models import Feature
+from features.feature_types import MULTIVARIATE
+from features.models import Feature, FeatureSegment, FeatureState
+from features.multivariate.models import MultivariateFeatureOption
 from segments.models import Condition, Segment, SegmentRule
 
 
@@ -22,7 +24,7 @@ def test_get_environment_document(
     client.credentials(HTTP_X_ENVIRONMENT_KEY=api_key.key)
 
     # and some other sample data to make sure we're testing all of the document
-    Feature.objects.create(name="test_feature", project=project)
+    feature = Feature.objects.create(name="test_feature", project=project)
     for i in range(10):
         segment = Segment.objects.create(project=project)
         segment_rule = SegmentRule.objects.create(
@@ -44,11 +46,37 @@ def test_get_environment_document(
             rule=nested_rule,
         )
 
+        # Let's create segment override for each segment too
+        feature_segment = FeatureSegment.objects.create(
+            segment=segment, feature=feature, environment=environment
+        )
+        FeatureState.objects.create(
+            feature=feature,
+            environment=environment,
+            feature_segment=feature_segment,
+            enabled=True,
+        )
+
+    for i in range(10):
+        mv_feature = Feature.objects.create(
+            name=f"mv_feature_{i}", project=project, type=MULTIVARIATE
+        )
+        MultivariateFeatureOption.objects.create(
+            feature=mv_feature,
+            default_percentage_allocation=10,
+            string_value="option-1",
+        )
+        MultivariateFeatureOption.objects.create(
+            feature=mv_feature,
+            default_percentage_allocation=10,
+            string_value="option-2",
+        )
+
     # and the relevant URL to get an environment document
     url = reverse("api-v1:environment-document")
 
     # When
-    with django_assert_num_queries(11):
+    with django_assert_num_queries(13):
         response = client.get(url)
 
     # Then
@@ -82,22 +110,3 @@ def test_get_environment_document_fails_with_invalid_key(
     # We get a 403 since only the server side API keys are able to access the
     # environment document
     assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-def test_get_environment_document_is_not_throttled_by_user_throttle(
-    environment, feature, settings, environment_api_key
-):
-    # Given
-    settings.REST_FRAMEWORK = {"DEFAULT_THROTTLE_RATES": {"user": "1/minute"}}
-
-    client = APIClient()
-    client.credentials(HTTP_X_ENVIRONMENT_KEY=environment_api_key.key)
-
-    url = reverse("api-v1:environment-document")
-
-    # When
-    for _ in range(10):
-        response = client.get(url)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK

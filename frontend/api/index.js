@@ -113,6 +113,8 @@ app.get('/config/project-overrides', (req, res) => {
       value: envToBool('DISABLE_INVITE_LINKS', false),
     },
     { name: 'albacross', value: process.env.ALBACROSS_CLIENT_ID },
+    {name: 'useSecureCookies', value: envToBool('USE_SECURE_COOKIES', true)},
+    {name: 'cookieSameSite', value: process.env.USE_SECURE_COOKIES}
   ]
   let output = values.map(getVariable).join('')
   let dynatrace = ''
@@ -324,19 +326,6 @@ app.post('/api/event', (req, res) => {
 
 app.post('/api/webflow/webhook', (req, res) => {
   if (req.body.name === 'Contact Form') {
-    // Post to Slack
-    if (process.env.SLACK_TOKEN && postToSlack) {
-      formMessage = 'New Contact Us form!\r\n\r\n'
-      formMessage += 'Name: ' + req.body.data.name + '\r\n'
-      formMessage += 'Email: ' + req.body.data.email + '\r\n'
-      formMessage += 'Phone: ' + req.body.data.phone + '\r\n'
-      formMessage += 'Message: ' + req.body.data.message + '\r\n'
-
-      slackClient(formMessage, 'contact-sales').finally(() => {
-        console.log('Contact us form sent to Slack:\r\n' + formMessage)
-      })
-    }
-
     // Post to Pipedrive
     if (postToSlack) {
       console.log('Contact Us Form - Creating Pipedrive Lead')

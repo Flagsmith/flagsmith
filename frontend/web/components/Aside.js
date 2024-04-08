@@ -154,10 +154,6 @@ const Aside = class extends Component {
                             disabled ? 'disabled' : ''
                           }`}
                         >
-                          <a href={'/projects'} className='nav-logo'>
-                            <Icon name='nav-logo' />
-                          </a>
-                          <hr className='my-0 py-0' />
                           <Collapsible
                             data-test={
                               project?.name
@@ -258,6 +254,7 @@ const Aside = class extends Component {
                               }}
                             />
                           </Collapsible>
+                          <hr className='my-0 py-0' />
                           <Permission
                             level='project'
                             permission='ADMIN'
@@ -447,7 +444,7 @@ const Aside = class extends Component {
                                                 </NavLink>
                                                 <NavLink
                                                   activeClassName='active'
-                                                  className='aside__environment-list-item mt-1'
+                                                  className='aside__environment-list-item'
                                                   id='change-requests-link'
                                                   to={`/project/${project.id}/environment/${environment.api_key}/scheduled-changes/`}
                                                 >
@@ -466,7 +463,7 @@ const Aside = class extends Component {
                                                 </NavLink>
                                                 <NavLink
                                                   activeClassName='active'
-                                                  className='aside__environment-list-item mt-1'
+                                                  className='aside__environment-list-item'
                                                   id='change-requests-link'
                                                   to={`/project/${project.id}/environment/${environment.api_key}/change-requests/`}
                                                 >
@@ -483,6 +480,22 @@ const Aside = class extends Component {
                                                     </span>
                                                   ) : null}
                                                 </NavLink>
+                                                {environment.use_v2_feature_versioning && (
+                                                  <NavLink
+                                                    activeClassName='active'
+                                                    className='aside__environment-list-item'
+                                                    id='history-link'
+                                                    to={`/project/${project.id}/environment/${environment.api_key}/history/`}
+                                                  >
+                                                    <span className='mr-2'>
+                                                      <Icon
+                                                        name='clock'
+                                                        fill='#9DA4AE'
+                                                      />
+                                                    </span>
+                                                    History
+                                                  </NavLink>
+                                                )}
                                                 {Utils.renderWithPermission(
                                                   manageIdentityPermission,
                                                   Constants.environmentPermissions(
@@ -514,7 +527,7 @@ const Aside = class extends Component {
                                                 {environmentAdmin && (
                                                   <NavLink
                                                     id='env-settings-link'
-                                                    className='aside__environment-list-item mt-1'
+                                                    className='aside__environment-list-item'
                                                     to={`/project/${project.id}/environment/${environment.api_key}/settings`}
                                                   >
                                                     <span className='mr-2'>

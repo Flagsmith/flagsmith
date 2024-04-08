@@ -16,7 +16,7 @@ body:
           required: false
         - label: Self Hosted with Kubernetes
           required: false
-        - label: Self Hosted at flagsmith.com
+        - label: SaaS at flagsmith.com
           required: false
         - label: Some other way (add details in description below)
           required: false

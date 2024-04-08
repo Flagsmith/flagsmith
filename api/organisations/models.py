@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from core.models import SoftDeleteExportableModel
 from django.conf import settings
 from django.core.cache import caches
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 from django_lifecycle import (
@@ -16,6 +17,10 @@ from django_lifecycle import (
 from simple_history.models import HistoricalRecords
 
 from app.utils import is_enterprise, is_saas
+from integrations.lead_tracking.hubspot.tasks import (
+    track_hubspot_lead,
+    update_hubspot_active_subscription,
+)
 from organisations.chargebee import (
     get_customer_id_from_subscription_id,
     get_max_api_calls_for_plan,
@@ -178,7 +183,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
         ).exclude(id=remaining_seat_holder.id).delete()
 
 
-class UserOrganisation(models.Model):
+class UserOrganisation(LifecycleModelMixin, models.Model):
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     date_joined = models.DateTimeField(auto_now_add=True)
@@ -189,6 +194,16 @@ class UserOrganisation(models.Model):
             "user",
             "organisation",
         )
+
+    @hook(AFTER_CREATE)
+    def register_hubspot_lead_tracking(self):
+        if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
+            track_hubspot_lead.delay(
+                args=(
+                    self.user.id,
+                    self.organisation.id,
+                )
+            )
 
 
 class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
@@ -239,6 +254,13 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
     def is_free_plan(self) -> bool:
         return self.plan == FREE_PLAN_ID
 
+    @hook(AFTER_SAVE, when="plan", has_changed=True)
+    def update_hubspot_active_subscription(self):
+        if not settings.ENABLE_HUBSPOT_LEAD_TRACKING:
+            return
+
+        update_hubspot_active_subscription.delay(args=(self.id,))
+
     @hook(AFTER_SAVE, when="cancellation_date", has_changed=True)
     @hook(AFTER_SAVE, when="subscription_id", has_changed=True)
     def update_mailer_lite_subscribers(self):
@@ -265,6 +287,11 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         self.save()
 
         if not getattr(self.organisation, "subscription_information_cache", None):
+            return
+
+        # There is a weird bug where the cache is present, but the id is unset.
+        # See here for more: https://flagsmith.sentry.io/issues/4945988284/
+        if not self.organisation.subscription_information_cache.id:
             return
 
         self.organisation.subscription_information_cache.delete()
@@ -397,7 +424,7 @@ class OrganisationWebhook(AbstractBaseExportableWebhookModel):
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
 
-class OrganisationSubscriptionInformationCache(models.Model):
+class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model):
     """
     Model to hold a cache of an organisation's API usage and their Chargebee plan limits.
     """
@@ -410,6 +437,8 @@ class OrganisationSubscriptionInformationCache(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     chargebee_updated_at = models.DateTimeField(auto_now=False, null=True)
     influx_updated_at = models.DateTimeField(auto_now=False, null=True)
+    current_billing_term_starts_at = models.DateTimeField(auto_now=False, null=True)
+    current_billing_term_ends_at = models.DateTimeField(auto_now=False, null=True)
 
     api_calls_24h = models.IntegerField(default=0)
     api_calls_7d = models.IntegerField(default=0)
@@ -420,3 +449,32 @@ class OrganisationSubscriptionInformationCache(models.Model):
     allowed_projects = models.IntegerField(default=1, blank=True, null=True)
 
     chargebee_email = models.EmailField(blank=True, max_length=254, null=True)
+
+    @hook(AFTER_SAVE, when="allowed_30d_api_calls", has_changed=True)
+    def erase_api_notifications(self):
+        self.organisation.api_usage_notifications.all().delete()
+
+
+class OranisationAPIUsageNotification(models.Model):
+    organisation = models.ForeignKey(
+        Organisation, on_delete=models.CASCADE, related_name="api_usage_notifications"
+    )
+    percent_usage = models.IntegerField(
+        null=False,
+        validators=[MinValueValidator(75), MaxValueValidator(120)],
+    )
+    notified_at = models.DateTimeField(null=True)
+
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)
+
+
+class HubspotOrganisation(models.Model):
+    organisation = models.OneToOneField(
+        Organisation,
+        related_name="hubspot_organisation",
+        on_delete=models.CASCADE,
+    )
+    hubspot_id = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

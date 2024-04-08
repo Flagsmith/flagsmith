@@ -8,7 +8,6 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import Button from 'components/base/forms/Button'
 import UserSelect from 'components/UserSelect'
-import ValueEditor from 'components/ValueEditor'
 import CreateFlagModal from 'components/modals/CreateFlag'
 import InfoMessage from 'components/InfoMessage'
 import Permission from 'common/providers/Permission'
@@ -20,7 +19,10 @@ import PageTitle from 'components/PageTitle'
 import Icon from 'components/Icon'
 import { close } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
-import classnames from 'classnames'
+import { useGetSegmentsQuery } from 'common/services/useSegment'
+import DiffFeature from 'components/diff/DiffFeature'
+import Breadcrumb from 'components/Breadcrumb'
+import SettingsButton from 'components/SettingsButton'
 
 const labelWidth = 120
 
@@ -98,17 +100,24 @@ const ChangeRequestsPage = class extends Component {
   componentDidMount = () => {}
 
   deleteChangeRequest = () => {
-    openConfirm(
-      'Delete Change Request',
-      <div>Are you sure you want to delete this change request?</div>,
-      () => {
+    openConfirm({
+      body: (
+        <div>
+          Are you sure you want to delete this change request? This action
+          cannot be undone.
+        </div>
+      ),
+      destructive: true,
+      onYes: () => {
         AppActions.deleteChangeRequest(this.props.match.params.id, () => {
           this.context.router.history.replace(
             `/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/change-requests`,
           )
         })
       },
-    )
+      title: 'Delete Change Request',
+      yesText: 'Confirm',
+    })
   }
 
   editChangeRequest = (projectFlag, environmentFlag) => {
@@ -118,7 +127,6 @@ const ChangeRequestsPage = class extends Component {
     openModal(
       'Edit Change Request',
       <CreateFlagModal
-        isEdit
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
         changeRequest={ChangeRequestStore.model[id]}
@@ -151,17 +159,18 @@ const ChangeRequestsPage = class extends Component {
       new Date().valueOf()
     const scheduledDate = moment(changeRequest.feature_states[0].live_from)
 
-    openConfirm(
-      `${isScheduled ? 'Schedule' : 'Publish'} Change Request`,
-      <div>
-        Are you sure you want to {isScheduled ? 'schedule' : 'publish'} this
-        change request
-        {isScheduled
-          ? ` for ${scheduledDate.format('Do MMM YYYY hh:mma')}`
-          : ''}
-        ? This will adjust the feature for your environment.
-      </div>,
-      () => {
+    openConfirm({
+      body: (
+        <div>
+          Are you sure you want to {isScheduled ? 'schedule' : 'publish'} this
+          change request
+          {isScheduled
+            ? ` for ${scheduledDate.format('Do MMM YYYY hh:mma')}`
+            : ''}
+          ? This will adjust the feature for your environment.
+        </div>
+      ),
+      onYes: () => {
         AppActions.actionChangeRequest(
           this.props.match.params.id,
           'commit',
@@ -174,7 +183,8 @@ const ChangeRequestsPage = class extends Component {
           },
         )
       },
-    )
+      title: `${isScheduled ? 'Schedule' : 'Publish'} Change Request`,
+    })
   }
 
   fetchFeature = (featureId) => {
@@ -237,7 +247,9 @@ const ChangeRequestsPage = class extends Component {
       this.fetchFeature(featureId)
     }
     const user =
-      changeRequest && orgUsers.find((v) => v.id === changeRequest.user)
+      changeRequest &&
+      changeRequest.user &&
+      orgUsers.find((v) => v.id === changeRequest.user)
     const committedBy =
       (changeRequest.committed_by &&
         orgUsers &&
@@ -246,11 +258,8 @@ const ChangeRequestsPage = class extends Component {
     const isScheduled =
       new Date(changeRequest.feature_states[0].live_from).valueOf() >
       new Date().valueOf()
+
     const scheduledDate = moment(changeRequest.feature_states[0].live_from)
-    const isMv =
-      projectFlag &&
-      projectFlag.multivariate_options &&
-      !!projectFlag.multivariate_options.length
 
     const approval =
       changeRequest &&
@@ -267,44 +276,8 @@ const ChangeRequestsPage = class extends Component {
     )
 
     const minApprovals = environment.minimum_change_request_approvals || 0
-    const newValue =
-      changeRequest.feature_states[0] &&
-      Utils.featureStateToValue(
-        changeRequest.feature_states[0].feature_state_value,
-      )
-    const oldValue = environmentFlag && environmentFlag.feature_state_value
-    const newEnabled =
-      changeRequest.feature_states[0] && changeRequest.feature_states[0].enabled
-    const oldEnabled = environmentFlag && environmentFlag.enabled
-    let mvData = []
-    let mvChanged = false
-    if (isMv) {
-      mvData = projectFlag.multivariate_options.map((v) => {
-        const matchingOldValue =
-          environmentFlag.multivariate_feature_state_values.find(
-            (e) => e.multivariate_feature_option === v.id,
-          )
-        const matchingNewValue =
-          changeRequest.feature_states[0].multivariate_feature_state_values.find(
-            (e) => e.multivariate_feature_option === v.id,
-          )
-        if (
-          matchingOldValue.percentage_allocation !==
-          matchingNewValue.percentage_allocation
-        ) {
-          mvChanged = true
-        }
-        return {
-          changed:
-            matchingOldValue.percentage_allocation !==
-            matchingNewValue.percentage_allocation,
-          newValue: matchingNewValue.percentage_allocation,
-          oldValue: matchingOldValue.percentage_allocation,
-          value: Utils.featureStateToValue(v),
-        }
-      })
-    }
     const isYourChangeRequest = changeRequest.user === AccountStore.getUser().id
+
     return (
       <Permission
         level='environment'
@@ -324,31 +297,19 @@ const ChangeRequestsPage = class extends Component {
                 id='change-requests-page'
                 className='app-container container-fluid mt-1'
               >
-                <nav aria-label='breadcrumb'>
-                  <ol className='breadcrumb mb-2 py-1"'>
-                    <li className='breadcrumb-item fs-small lh-sm'>
-                      <Link
-                        className='fw-normal'
-                        to={`/project/${
-                          this.props.match.params.projectId
-                        }/environment/${
-                          this.props.match.params.environmentId
-                        }/${
-                          isScheduled ? 'scheduled-changes' : 'change-requests'
-                        }`}
-                      >
-                        {isScheduled ? 'Scheduling' : 'Change request'}
-                      </Link>
-                    </li>
-                    <li
-                      className='breadcrumb-item active fs-small lh-sm text-muted'
-                      aria-current='page'
-                      style={{ opacity: 0.6 }}
-                    >
-                      {changeRequest.title}
-                    </li>
-                  </ol>
-                </nav>
+                <Breadcrumb
+                  items={[
+                    {
+                      title: isScheduled ? 'Scheduling' : 'Change requests',
+                      url: `/project/${
+                        this.props.match.params.projectId
+                      }/environment/${this.props.match.params.environmentId}/${
+                        isScheduled ? 'scheduled-changes' : 'change-requests'
+                      }`,
+                    },
+                  ]}
+                  currentPage={changeRequest.title}
+                />
                 <PageTitle
                   cta={
                     (!changeRequest?.committed_at ||
@@ -412,19 +373,13 @@ const ChangeRequestsPage = class extends Component {
                             'disable_users_as_reviewers',
                           ) && (
                             <div className='mb-4'>
-                              <Row
+                              <SettingsButton
                                 onClick={() =>
                                   this.setState({ showUsers: true })
                                 }
-                                className='font-weight-medium clickable'
                               >
-                                <div className='mr-2'>Assigned users</div>
-                                <Icon
-                                  name='setting'
-                                  width={20}
-                                  fill='#656D7B'
-                                />
-                              </Row>
+                                Assigned users
+                              </SettingsButton>
                               <Row className='mt-2'>
                                 {ownerUsers.length !== 0 &&
                                   ownerUsers.map((u) => (
@@ -463,15 +418,13 @@ const ChangeRequestsPage = class extends Component {
                             </div>
                           )}
                           <div className='mb-4'>
-                            <Row
+                            <SettingsButton
                               onClick={() =>
                                 this.setState({ showGroups: true })
                               }
-                              className='font-weight-medium clickable'
                             >
-                              <div className='mr-2'>Assigned groups</div>
-                              <Icon name='setting' width={20} fill='#656D7B' />
-                            </Row>
+                              Assigned groups
+                            </SettingsButton>
                             <Row className='mt-2'>
                               {!!ownerGroups?.length &&
                                 ownerGroups.map((g) => (
@@ -548,193 +501,29 @@ const ChangeRequestsPage = class extends Component {
                           </Row>
                         </div>
                       </Panel>
-
-                      <Flex className='gap-3 flex-row'>
-                        <Flex>
-                          <Panel className='no-pad'>
-                            <div className='search-list'>
-                              <Row className='table-header px-4'>
-                                Live Version
-                              </Row>
-                              <Row className='list-item change-request-item px-4'>
-                                <div
-                                  className='font-weight-medium mr-3'
-                                  style={{ width: labelWidth }}
-                                >
-                                  Enabled:
-                                </div>
-                                <Switch
-                                  checked={oldEnabled}
-                                  disabled
-                                  style={{
-                                    opacity:
-                                      newEnabled === oldEnabled &&
-                                      !changeRequest.committed_at
-                                        ? 0.25
-                                        : 1,
-                                  }}
-                                />
-                              </Row>
-                              <Row className='list-item change-request-item px-4 align-items-start'>
-                                <div
-                                  className='font-weight-medium mr-3'
-                                  style={{ width: labelWidth }}
-                                >
-                                  Value:
-                                </div>
-                                <Flex
-                                  style={{
-                                    opacity:
-                                      oldValue === newValue &&
-                                      !changeRequest.committed_at
-                                        ? 0.25
-                                        : 1,
-                                  }}
-                                >
-                                  <label>Value</label>
-                                  <ValueEditor
-                                    value={Utils.getTypedValue(oldValue)}
-                                    className='code-medium'
-                                  />
-                                </Flex>
-                              </Row>
-
-                              {isMv &&
-                                mvData.map((v, i) => (
-                                  <Row
-                                    key={i}
-                                    className='list-item px-4 align-start change-request-item'
-                                  >
-                                    <div
-                                      style={{ width: labelWidth }}
-                                      className='font-weight-medium flex flex-row align-items-start mr-3'
-                                    >
-                                      <div className='flex flex-row align-items-center align-self-start'>
-                                        <span className='mr-1'>
-                                          Variation {i + 1}
-                                        </span>
-                                        <Tooltip
-                                          place='bottom'
-                                          title={<Icon name='info-outlined' />}
-                                          className='ml-1'
-                                          noIcon
-                                        >
-                                          {Utils.getTypedValue(v.value)}
-                                        </Tooltip>
-                                      </div>
-                                    </div>
-                                    <Flex
-                                      style={{
-                                        opacity:
-                                          !changeRequest.committed_at &&
-                                          !v.changed
-                                            ? 0.25
-                                            : 1,
-                                      }}
-                                    >
-                                      <label>Environment Weight %</label>
-                                      <Input
-                                        value={v.oldValue}
-                                        style={{ pointerEvents: 'none' }}
-                                      />
-                                    </Flex>
-                                  </Row>
-                                ))}
-                            </div>
-                          </Panel>
-                        </Flex>
-                        <Flex>
-                          <Panel className='no-pad panel-change-request'>
-                            <div className='search-list'>
-                              <Row className='table-header px-4'>
-                                {isScheduled
-                                  ? 'Scheduled Change'
-                                  : 'Change Request'}
-                              </Row>
-                              <Row className='list-item change-request-item px-4'>
-                                <div
-                                  className='font-weight-medium mr-3'
-                                  style={{ width: labelWidth }}
-                                >
-                                  Enabled:
-                                </div>
-                                <Switch
-                                  checked={newEnabled}
-                                  disabled
-                                  style={{
-                                    opacity:
-                                      newEnabled === oldEnabled ? 0.25 : 1,
-                                  }}
-                                />
-                              </Row>
-                              <Row className='list-item change-request-item px-4 align-items-start'>
-                                <div
-                                  className='font-weight-medium mr-3'
-                                  style={{ width: labelWidth }}
-                                >
-                                  Value:
-                                </div>
-                                <Flex
-                                  style={{
-                                    opacity: oldValue === newValue ? 0.25 : 1,
-                                  }}
-                                >
-                                  <label>Value</label>
-                                  <ValueEditor
-                                    value={newValue}
-                                    className={classnames('code-medium', {
-                                      'change-request-updated-value':
-                                        oldValue !== newValue,
-                                    })}
-                                  />
-                                </Flex>
-                              </Row>
-
-                              {isMv &&
-                                mvData.map((v, i) => (
-                                  <Row
-                                    key={i}
-                                    className='list-item px-4 align-start change-request-item'
-                                  >
-                                    <div
-                                      style={{ width: labelWidth }}
-                                      className='font-weight-medium flex flex-row align-items-center mr-3'
-                                    >
-                                      <div className='flex flex-row align-items-center align-self-start'>
-                                        <span className='mr-1'>
-                                          Variation {i + 1}
-                                        </span>
-                                        <Tooltip
-                                          place='bottom'
-                                          title={<Icon name='info-outlined' />}
-                                          className='ml-1'
-                                          noIcon
-                                        >
-                                          {Utils.getTypedValue(v.value)}
-                                        </Tooltip>
-                                      </div>
-                                    </div>
-                                    <Flex
-                                      style={{
-                                        opacity: !v.changed ? 0.25 : 1,
-                                      }}
-                                    >
-                                      <label>Environment Weight %</label>
-                                      <Input
-                                        value={v.newValue}
-                                        className={classnames('code-medium', {
-                                          'change-request-updated-value':
-                                            v.changed,
-                                        })}
-                                        style={{ pointerEvents: 'none' }}
-                                      />
-                                    </Flex>
-                                  </Row>
-                                ))}
-                            </div>
-                          </Panel>
-                        </Flex>
-                      </Flex>
+                      {environmentFlag && changeRequest ? (
+                        <DiffFeature
+                          noChangesMessage={
+                            'This change request contains no changes.'
+                          }
+                          tabTheme={'pill'}
+                          oldState={[
+                            {
+                              ...environmentFlag,
+                              feature_state_value: Utils.valueToFeatureState(
+                                environmentFlag.feature_state_value,
+                              ),
+                            },
+                          ]}
+                          newState={[changeRequest.feature_states[0]]}
+                          featureId={projectFlag.id}
+                          projectId={this.props.match.params.projectId}
+                        />
+                      ) : (
+                        <div className='text-center'>
+                          <Loader />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

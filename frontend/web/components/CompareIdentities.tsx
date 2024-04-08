@@ -13,6 +13,10 @@ import FeatureValue from './FeatureValue'
 import { sortBy } from 'lodash'
 import { useHasPermission } from 'common/providers/Permission'
 import Constants from 'common/constants'
+import Button from './base/forms/Button'
+import ProjectStore from 'common/stores/project-store'
+import SegmentOverridesIcon from './SegmentOverridesIcon'
+import IdentityOverridesIcon from './IdentityOverridesIcon'
 
 type CompareIdentitiesType = {
   projectId: string
@@ -49,7 +53,10 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
 }) => {
   const [leftId, setLeftId] = useState<IdentitySelectType['value']>()
   const [rightId, setRightId] = useState<IdentitySelectType['value']>()
-  const { data: projectFlags } = useGetProjectFlagsQuery({ project: projectId })
+  const { data: projectFlags } = useGetProjectFlagsQuery({
+    environment: ProjectStore.getEnvironmentIdFromKey(_environmentId),
+    project: projectId,
+  })
   const [environmentId, setEnvironmentId] = useState(_environmentId)
   const [showArchived, setShowArchived] = useState(false)
 
@@ -211,23 +218,26 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                       !enabledDifferent && !valueDifferent && 'faded'
                     }`}
                   >
-                    <span className='font-weight-medium'>
-                      {description ? (
-                        <Tooltip
-                          title={
-                            <span>
-                              {name}
-                              <span className={'ms-1'}></span>
-                              <Icon name='info-outlined' />
-                            </span>
-                          }
-                        >
+                    <Row>
+                      <span className='font-weight-medium'>
+                        <Tooltip title={<span>{name}</span>}>
                           {description}
                         </Tooltip>
-                      ) : (
-                        name
-                      )}
-                    </span>
+                      </span>
+                      <Button
+                        onClick={() => Utils.copyFeatureName(name)}
+                        theme='icon'
+                        className='ms-2 me-2'
+                      >
+                        <Icon name='copy' />
+                      </Button>
+                      <SegmentOverridesIcon
+                        count={data.num_segment_overrides}
+                      />
+                      <IdentityOverridesIcon
+                        count={data.num_identity_overrides}
+                      />
+                    </Row>
                   </div>
                   <div
                     onClick={goUserLeft}

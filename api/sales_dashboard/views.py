@@ -61,11 +61,16 @@ class OrganisationList(ListView):
 
         if self.request.GET.get("search"):
             search_term = self.request.GET["search"]
-            queryset = queryset.filter(
-                Q(name__icontains=search_term)
-                | Q(users__email__icontains=search_term)
-                | Q(subscription__subscription_id=search_term)
-            )
+            criteria = Q()
+            terms = search_term.split(",")
+            for t in terms:
+                term = t.strip()
+                criteria |= (
+                    Q(name__icontains=term)
+                    | Q(users__email__icontains=term)
+                    | Q(subscription__subscription_id=term)
+                )
+            queryset = queryset.filter(criteria)
 
         if self.request.GET.get("filter_plan"):
             filter_plan = self.request.GET["filter_plan"]
@@ -107,9 +112,9 @@ class OrganisationList(ListView):
         except AttributeError:
             subscription_information_caches_influx_updated_at = None
 
-        data[
-            "subscription_information_caches_influx_updated_at"
-        ] = subscription_information_caches_influx_updated_at
+        data["subscription_information_caches_influx_updated_at"] = (
+            subscription_information_caches_influx_updated_at
+        )
 
         return data
 
@@ -145,7 +150,7 @@ def organisation_info(request, organisation_id):
 
     # If self-hosted and running without an Influx DB data store, we don't want to/cant show usage
     if settings.INFLUXDB_TOKEN:
-        date_range = request.GET.get("date_range", "30d")
+        date_range = request.GET.get("date_range", "180d")
         context["date_range"] = date_range
 
         event_list, labels = get_event_list_for_organisation(

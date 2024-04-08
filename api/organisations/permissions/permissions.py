@@ -6,7 +6,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Model
 from django.views import View
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, IsAuthenticated
+from rest_framework.request import Request
 
 from organisations.models import Organisation
 
@@ -173,3 +174,12 @@ class NestedIsOrganisationAdminPermission(BasePermission):
         return request.user.is_organisation_admin(
             self.get_organisation_from_object_callable(obj)
         )
+
+
+class OrganisationAPIUsageNotificationPermission(IsAuthenticated):
+    def has_permission(self, request: Request, view: View) -> bool:
+        if not super().has_permission(request, view):
+            return False
+
+        # All organisation users can see api usage notifications.
+        return request.user.belongs_to(view.kwargs.get("organisation_pk"))

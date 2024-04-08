@@ -3,15 +3,19 @@ import typing
 from copy import deepcopy
 
 from core.models import (
-    AbstractBaseExportableModel,
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from flag_engine.segments import constants
 
-from audit.constants import SEGMENT_CREATED_MESSAGE, SEGMENT_UPDATED_MESSAGE
+from audit.constants import (
+    SEGMENT_CREATED_MESSAGE,
+    SEGMENT_DELETED_MESSAGE,
+    SEGMENT_UPDATED_MESSAGE,
+)
 from audit.related_object_type import RelatedObjectType
 from features.models import Feature
 from projects.models import Project
@@ -29,7 +33,11 @@ class Segment(
     name = models.CharField(max_length=2000)
     description = models.TextField(null=True, blank=True)
     project = models.ForeignKey(
-        Project, on_delete=models.CASCADE, related_name="segments"
+        Project,
+        # Cascade deletes are decouple from the Django ORM. See this PR for details.
+        # https://github.com/Flagsmith/flagsmith/pull/3360/
+        on_delete=models.DO_NOTHING,
+        related_name="segments",
     )
     feature = models.ForeignKey(
         Feature, on_delete=models.CASCADE, related_name="segments", null=True
@@ -78,11 +86,14 @@ class Segment(
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         return SEGMENT_UPDATED_MESSAGE % self.name
 
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+        return SEGMENT_DELETED_MESSAGE % self.name
+
     def _get_project(self):
         return self.project
 
 
-class SegmentRule(AbstractBaseExportableModel):
+class SegmentRule(SoftDeleteExportableModel):
     ALL_RULE = "ALL"
     ANY_RULE = "ANY"
     NONE_RULE = "NONE"
@@ -127,7 +138,7 @@ class SegmentRule(AbstractBaseExportableModel):
 
 
 class Condition(
-    AbstractBaseExportableModel, abstract_base_auditable_model_factory(["uuid"])
+    SoftDeleteExportableModel, abstract_base_auditable_model_factory(["uuid"])
 ):
     history_record_class_path = "segments.models.HistoricalCondition"
     related_object_type = RelatedObjectType.SEGMENT
@@ -151,7 +162,9 @@ class Condition(
 
     operator = models.CharField(choices=CONDITION_TYPES, max_length=500)
     property = models.CharField(blank=True, null=True, max_length=1000)
-    value = models.CharField(max_length=1000, blank=True, null=True)
+    value = models.CharField(
+        max_length=settings.SEGMENT_CONDITION_VALUE_LIMIT, blank=True, null=True
+    )
     description = models.TextField(blank=True, null=True)
 
     created_with_segment = models.BooleanField(
@@ -195,3 +208,19 @@ class Condition(
 
     def _get_project(self) -> typing.Optional[Project]:
         return self.rule.get_segment().project
+
+
+class WhitelistedSegment(models.Model):
+    """
+    In order to grandfather in existing segments, these models represent segments
+    that do not conform to the SEGMENT_RULES_CONDITIONS_LIMIT and may have
+    more than the typically allowed number of segment rules and conditions.
+    """
+
+    segment = models.OneToOneField(
+        Segment,
+        on_delete=models.CASCADE,
+        related_name="whitelisted_segment",
+    )
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)

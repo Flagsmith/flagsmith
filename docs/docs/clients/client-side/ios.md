@@ -74,7 +74,6 @@ Note that you can use:
 
 - `flag.value?.stringValue`
 - `flag.value?.intValue`
-- `flag.value?.floatValue`
 
 Based on your desired type.
 

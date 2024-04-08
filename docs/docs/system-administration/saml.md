@@ -34,7 +34,7 @@ The steps we need to go through are something like:
 1. You contact us to enable SAML for your organisation.
 2. We create an XML file and provide it to you along with your SAML organisation name.
 3. You supply the XML to your SAML IDP and receive some XML in return. You might need to apply some
-   [attribute mappings](#attribute-mapping-information).
+   [attribute mappings](/deployment/configuration/authentication/SAML#attribute-mapping-information).
 4. You send us this XML and we add it to Flagsmith.
 5. You log in by visiting https://app.flagsmith.com/login clicking on "Single Sign On" and entering your SAML
    organisation name from step 2.
@@ -76,3 +76,18 @@ ID. e.g: if your SAML attribute looks like the below xml snippet (and you want t
 Then you need to create an equivalent group in the Flagsmith that will look like this:
 
 <div style={{textAlign: 'center'}}><img width="75%" src="/img/saml-group-sync-external-id.png"/></div>
+
+## Additional Settings
+
+### Canonicalization Method
+
+Some older IdPs require the service provider to support specific Canonicalization methods that are not supported by
+default. You can see the default supported methods
+[here](https://github.com/IdentityPython/pysaml2/blob/88feeba03c2f891a31a86cbb24b210070aab1fdc/src/saml2/xmldsig/__init__.py#L67-L70).
+To add support for other canonicalization methods, set the `EXTRA_ALLOWED_CANONICALIZATIONS` environment variable.
+
+Example:
+
+```
+EXTRA_ALLOWED_CANONICALIZATIONS: http://www.w3.org/TR/2001/REC-xml-c14n-20010315#,http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments
+```
