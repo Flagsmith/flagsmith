@@ -16,7 +16,8 @@ from webhooks.webhooks import WebhookEventType
 logger = logging.getLogger(__name__)
 
 RESOURCE_TYPES = [
-    ("1", "github"),
+    ("1", "Github PR"),
+    ("2", "Github Issue"),
 ]
 
 STATUS = [
@@ -87,4 +88,6 @@ class ExternalResources(LifecycleModelMixin, models.Model):
 
     class Meta:
         ordering = ("id",)
-        unique_together = ("url",)
+        constraints = [
+            models.UniqueConstraint(fields=["url"], name="unique_url_constraint")
+        ]
