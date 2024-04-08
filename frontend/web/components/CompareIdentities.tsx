@@ -2,7 +2,10 @@ import React, { FC, useEffect, useMemo, useState } from 'react'
 import IdentitySelect, { IdentitySelectType } from './IdentitySelect'
 import Utils from 'common/utils/utils'
 import EnvironmentSelect from './EnvironmentSelect'
-import { useGetIdentityFeatureStatesAllQuery } from 'common/services/useIdentityFeatureState'
+import {
+  useGetIdentityFeatureStatesAllQuery,
+  useCreateCloneIdentityFeatureStatesMutation,
+} from 'common/services/useIdentityFeatureState'
 import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import Tag from './tags/Tag'
 import PanelSearch from './PanelSearch'
@@ -76,6 +79,8 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     { environment: environmentId, user: `${rightId?.value}` },
     { skip: !rightId },
   )
+  const [createCloneIdentityFeatureStates] =
+    useCreateCloneIdentityFeatureStatesMutation()
 
   useEffect(() => {
     // Clear users whenever environment or project is changed
@@ -122,16 +127,17 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     )
   }
 
-  const copyIdentityValues = (
+  const clonedentityValues = (
     leftIdentityName: string,
     rightIdentityName: string,
     leftIdentityId: string,
     rightIdentityId: string,
+    environmentId: string,
   ) => {
     return openConfirm({
       body: (
         <div>
-          {'Are you sure you want to copy all the feature states from '}
+          {'Are you sure you want to clone all the feature states from '}
           <strong>{leftIdentityName}</strong> {'to'}{' '}
           <strong>{rightIdentityName}</strong>
           {'?'}
@@ -139,9 +145,17 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
       ),
       destructive: true,
       onYes: () => {
-        console.log('DEBUG: onlcick')
+        createCloneIdentityFeatureStates({
+          body: {
+            identity_id: leftIdentityId,
+          },
+          environment_id: environmentId,
+          identity_id: rightIdentityId,
+        }).then(() => {
+          toast('Clonation Completed!')
+        })
       },
-      title: 'Copy the values',
+      title: 'Clone the values',
       yesText: 'Confirm',
     })
   }
@@ -214,11 +228,12 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                   title={
                     <Button
                       onClick={() => {
-                        copyIdentityValues(
+                        clonedentityValues(
                           leftId?.label,
                           rightId?.label,
                           leftId?.value,
                           rightId?.value,
+                          environmentId,
                         )
                       }}
                       className='ms-2 me-2'

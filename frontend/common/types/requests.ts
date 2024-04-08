@@ -307,9 +307,12 @@ export type Req = {
   }
   getProject: { id: string }
   getUserGroupPermission: { project_id: string }
-  getIdentityFeatureStates: {
+  createCloneIdentityFeatureStates: {
     environment_id: string
     identity_id: string
+    body: {
+      identity_id: string
+    }
   }
   // END OF TYPES
 }

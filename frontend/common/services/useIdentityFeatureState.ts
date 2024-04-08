@@ -7,17 +7,15 @@ export const identityFeatureStateService = service
   .enhanceEndpoints({ addTagTypes: ['IdentityFeatureState'] })
   .injectEndpoints({
     endpoints: (builder) => ({
-      getIdentityFeatureStates: builder.query<
-        Res['identityFeatureStates'],
-        Req['getIdentityFeatureStates']
+      createCloneIdentityFeatureStates: builder.mutation<
+        Res['cloneidentityFeatureStates'],
+        Req['createCloneIdentityFeatureStates']
       >({
-        providesTags: [{ id: 'LIST', type: 'IdentityFeatureState' }],
-        query: (query: Req['getIdentityFeatureStates']) => ({
-          url: `environments/${
-            query.environment_id
-          }/${Utils.getIdentitiesEndpoint()}/${
-            query.identity_id
-          }/${Utils.getFeatureStatesEndpoint()}/`,
+        invalidatesTags: [{ type: 'IdentityFeatureState' }],
+        query: (query: Req['createCloneIdentityFeatureStates']) => ({
+          body: query.body,
+          method: 'POST',
+          url: `environments/${query.environment_id}/identities/${query.identity_id}/featurestates/clone-flag-states-from/`,
         }),
       }),
       getIdentityFeatureStatesAll: builder.query<
@@ -39,20 +37,6 @@ export const identityFeatureStateService = service
     }),
   })
 
-export async function getIdentityFeatureStates(
-  store: any,
-  data: Req['getIdentityFeatureStates'],
-  options?: Parameters<
-    typeof identityFeatureStateService.endpoints.getIdentityFeatureStates.initiate
-  >[1],
-) {
-  return store.dispatch(
-    identityFeatureStateService.endpoints.getIdentityFeatureStates.initiate(
-      data,
-      options,
-    ),
-  )
-}
 export async function getIdentityFeatureStateAll(
   store: any,
   data: Req['getIdentityFeatureStatesAll'],
@@ -68,11 +52,25 @@ export async function getIdentityFeatureStateAll(
   )
 }
 
+export async function createIdentityFeatureStates(
+  store: any,
+  data: Req['createCloneIdentityFeatureStates'],
+  options?: Parameters<
+    typeof identityFeatureStateService.endpoints.createCloneIdentityFeatureStates.initiate
+  >[1],
+) {
+  return store.dispatch(
+    identityFeatureStateService.endpoints.createCloneIdentityFeatureStates.initiate(
+      data,
+      options,
+    ),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useCreateCloneIdentityFeatureStatesMutation,
   useGetIdentityFeatureStatesAllQuery,
-  useGetIdentityFeatureStatesQuery,
   // END OF EXPORTS
 } = identityFeatureStateService
 

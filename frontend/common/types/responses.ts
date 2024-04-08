@@ -287,6 +287,7 @@ export type IdentityFeatureState = {
   enabled: boolean
   feature_state_value: FlagsmithValue
   segment: null
+  overridden_by: string
   multivariate_feature_state_values?: {
     multivariate_feature_option: {
       value: number
@@ -497,7 +498,7 @@ export type Res = {
   featureImports: PagedResponse<FeatureImport>
   serversideEnvironmentKeys: APIKey[]
   userGroupPermissions: GroupPermission[]
-  identityFeatureState: FeatureState
   identityFeatureStates: PagedResponse<FeatureState>
+  cloneidentityFeatureStates: IdentityFeatureState
   // END OF TYPES
 }
