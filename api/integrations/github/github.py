@@ -3,8 +3,10 @@ import logging
 
 import requests
 
+from features.models import FeatureState
 from integrations.github.client import generate_token
 from integrations.github.constants import GITHUB_API_URL, GITHUB_APP_ID
+from integrations.github.models import GithubConfiguration
 from webhooks.webhooks import WebhookEventType
 
 logger = logging.getLogger(__name__)
@@ -86,3 +88,57 @@ def generate_body_comment(name, event_type, feature_states):
 
     result += last_updated_string
     return result
+
+
+def check_not_none(value) -> bool:
+    return value is not None
+
+
+def generate_data(
+    github_configuration: GithubConfiguration,
+    feature_id: int,
+    feature_name: str,
+    type: str,
+    feature_states: list[FeatureState] = None,
+    url: str = None,
+):
+
+    feature_data = {
+        "id": feature_id,
+        "name": feature_name,
+    }
+
+    feature_data["installation_id"] = github_configuration.installation_id
+    feature_data["organisation_id"] = github_configuration.organisation.id
+
+    if type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
+        feature_data["url"] = url
+    else:
+        feature_data["feature_states"] = []
+        for feature_state in feature_states:
+            feature_env_data = {}
+            if check_not_none(feature_state.feature_state_value.string_value):
+                feature_env_data["string_value"] = (
+                    feature_state.feature_state_value.string_value
+                )
+            if check_not_none(feature_state.feature_state_value.boolean_value):
+                feature_env_data["boolean_value"] = (
+                    feature_state.feature_state_value.boolean_value
+                )
+            if check_not_none(feature_state.feature_state_value.integer_value):
+                feature_env_data["integer_value"] = (
+                    feature_state.feature_state_value.integer_value
+                )
+            if type is not WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
+                feature_env_data["environment_name"] = feature_state.environment.name
+                feature_env_data["feature_value"] = feature_state.enabled
+            if (
+                hasattr(feature_state, "feature_segment")
+                and feature_state.feature_segment is not None
+            ):
+                feature_env_data["segment_name"] = (
+                    feature_state.feature_segment.segment.name
+                )
+            feature_data["feature_states"].append(feature_env_data)
+
+    return feature_data

@@ -1,3 +1,5 @@
+import logging
+
 from django.db import models
 from django_lifecycle import (
     AFTER_SAVE,
@@ -7,8 +9,11 @@ from django_lifecycle import (
 )
 
 from features.models import Feature, FeatureState
+from integrations.github.github import generate_data
 from integrations.github.tasks import call_github_app_webhook_for_feature_state
 from webhooks.webhooks import WebhookEventType
+
+logger = logging.getLogger(__name__)
 
 RESOURCE_TYPES = [
     ("1", "github"),
@@ -36,39 +41,13 @@ class ExternalResources(LifecycleModelMixin, models.Model):
             github_configuration = self.feature.project.organisation.github_config
 
             feature_states = FeatureState.objects.filter(feature_id=self.feature_id)
-            feature_data = {
-                "id": self.feature_id,
-                "name": self.feature.name,
-                "feature_states": [],
-            }
-            feature_data["installation_id"] = github_configuration.installation_id
-            feature_data["organisation_id"] = github_configuration.organisation.id
-
-            for feature_state in feature_states:
-                feature_env_data = {}
-                if feature_state.feature_state_value.string_value is not None:
-                    feature_env_data["string_value"] = (
-                        feature_state.feature_state_value.string_value
-                    )
-                if feature_state.feature_state_value.boolean_value is not None:
-                    feature_env_data["boolean_value"] = (
-                        feature_state.feature_state_value.boolean_value
-                    )
-                if feature_state.feature_state_value.integer_value is not None:
-                    feature_env_data["integer_value"] = (
-                        feature_state.feature_state_value.integer_value
-                    )
-
-                feature_env_data["environment_name"] = feature_state.environment.name
-                feature_env_data["feature_value"] = feature_state.enabled
-                if (
-                    hasattr(feature_state, "feature_segment")
-                    and feature_state.feature_segment is not None
-                ):
-                    feature_env_data["segment_name"] = (
-                        feature_state.feature_segment.segment.name
-                    )
-                feature_data["feature_states"].append(feature_env_data)
+            feature_data = generate_data(
+                github_configuration,
+                self.feature_id,
+                self.feature.name,
+                WebhookEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
+                feature_states,
+            )
 
             call_github_app_webhook_for_feature_state.delay(
                 args=(
@@ -78,7 +57,7 @@ class ExternalResources(LifecycleModelMixin, models.Model):
             )
         else:
             organisation_id = self.feature.project.organisation.id
-            print(
+            logger.warning(
                 f"No GitHub integration exists for organisation {organisation_id}. Not calling webhooks."
             )
 
@@ -86,13 +65,13 @@ class ExternalResources(LifecycleModelMixin, models.Model):
     def create_feature_external_resource_removed_comment(self):
         if hasattr(self.feature.project.organisation, "github_config"):
             github_configuration = self.feature.project.organisation.github_config
-            feature_data = {
-                "id": self.feature_id,
-                "name": self.feature.name,
-                "url": self.url,
-            }
-            feature_data["installation_id"] = github_configuration.installation_id
-            feature_data["organisation_id"] = github_configuration.organisation.id
+            feature_data = generate_data(
+                github_configuration,
+                self.feature_id,
+                self.feature.name,
+                WebhookEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
+                self.url,
+            )
 
             call_github_app_webhook_for_feature_state.delay(
                 args=(
@@ -102,7 +81,7 @@ class ExternalResources(LifecycleModelMixin, models.Model):
             )
         else:
             organisation_id = self.feature.project.organisation.id
-            print(
+            logger.warning(
                 f"No GitHub integration exists for organisation {organisation_id}. Not calling webhooks."
             )
 
