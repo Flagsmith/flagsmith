@@ -652,8 +652,8 @@ const CreateFlag = class extends Component {
                 onChange={(v) => {
                   const repoData = v.split('/')
                   this.setState({
-                    repoName: repoData[1],
-                    repoOwner: repoData[0],
+                    repoName: repoData[0],
+                    repoOwner: repoData[1],
                   })
                 }}
               />
