@@ -38,7 +38,10 @@ const OrganisationProvider: FC<OrganisationProviderType> = ({
   onSave,
 }) => {
   const [_, setUpdate] = useState(Date.now())
-  const { data: groups } = useGetGroupsQuery({ orgId: id! }, { skip: !id })
+  const { data: groups } = useGetGroupsQuery(
+    { orgId: id!, page: 1 },
+    { skip: !id },
+  )
   useEffect(() => {
     const _onRemoveProject = () => onRemoveProject?.()
     OrganisationStore.on('removed', _onRemoveProject)

@@ -17,7 +17,7 @@ type RolesTableType = {
 
 const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
   const { data: groups } = useGetGroupsQuery(
-    { orgId: organisationId },
+    { orgId: organisationId, page: 1 },
     { skip: !organisationId },
   )
   const { data: roles } = useGetRolesQuery(

@@ -2,6 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import { getStore } from 'common/store'
+import Utils from 'common/utils/utils'
 
 export const groupService = service
   .enhanceEndpoints({
@@ -84,8 +85,8 @@ export const groupService = service
       }),
       getGroups: builder.query<Res['groups'], Req['getGroups']>({
         providesTags: [{ id: 'LIST', type: 'Group' }],
-        query: (query) => ({
-          url: `organisations/${query.orgId}/groups/?page=${query.page}`,
+        query: ({ orgId, ...rest }) => ({
+          url: `organisations/${orgId}/groups/?${Utils.toParam({ ...rest })}`,
         }),
       }),
       updateGroup: builder.mutation<Res['group'], Req['updateGroup']>({

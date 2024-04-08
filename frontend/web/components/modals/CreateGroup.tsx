@@ -26,6 +26,7 @@ import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import { EditPermissionsModal } from 'components/EditPermissions'
 import { Req } from 'common/types/requests'
+import PermissionsTabs from 'components/PermissionsTabs'
 
 const widths = [80, 80]
 
@@ -431,6 +432,8 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       }}
     </OrganisationProvider>
   )
+  const [subTab, setSubTab] = useState(0)
+
   return isEdit ? (
     <Tabs uncontrolled tabClassName='px-0'>
       <TabItem
@@ -444,20 +447,17 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
         {editGroup}
       </TabItem>
       <TabItem tabLabel={<div>Permissions</div>}>
-        {!!groupData && (
-          <EditPermissionsModal
-            name={`${group.name}`}
-            id={AccountStore.getOrganisation().id}
-            isGroup
-            onSave={() => {
-              AppActions.getOrganisation(AccountStore.getOrganisation().id)
-            }}
-            isEditGroupPermission
-            level='organisation'
-            group={groupData}
-            roles={roles}
-          />
-        )}
+        <div className='mt-4'>
+          {!!groupData && (
+            <PermissionsTabs
+              value={subTab}
+              onChange={setSubTab}
+              orgId={AccountStore.getOrganisation()?.id}
+              roles={roles}
+              group={groupData}
+            />
+          )}
+        </div>
       </TabItem>
     </Tabs>
   ) : (

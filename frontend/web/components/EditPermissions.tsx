@@ -68,12 +68,12 @@ type EditPermissionModalType = {
   isGroup?: boolean
   level: PermissionLevel
   name: string
-  onSave: () => void
+  onSave?: () => void
   envId?: number
   parentId?: string
   parentLevel?: string
   parentSettingsLink?: string
-  roleTabTitle: string
+  roleTabTitle?: string
   permissions?: UserPermission[]
   push: (route: string) => void
   user?: User
@@ -167,6 +167,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         }))
         setRolesSelected(resultArray)
       }
+      //eslint-disable-next-line
     }, [userWithRolesDataSuccesfull])
 
     useEffect(() => {
@@ -177,6 +178,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         }))
         setRolesSelected(resultArray)
       }
+      //eslint-disable-next-line
     }, [groupWithRolesDataSuccesfull])
 
     const processResults = (results: (UserPermission | GroupPermission)[]) => {
@@ -259,6 +261,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       if (errorUpdating || errorCreating) {
         setSaving(false)
       }
+
+      //eslint-disable-next-line
     }, [
       errorUpdating,
       errorCreating,
@@ -323,6 +327,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         )
         setEntityPermissions(entityPermissions)
       }
+      //eslint-disable-next-line
     }, [organisationPermissions, organisationIsLoading])
 
     useEffect(() => {
@@ -330,6 +335,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         const entityPermissions = processResults(projectPermissions?.results)
         setEntityPermissions(entityPermissions)
       }
+      //eslint-disable-next-line
     }, [projectPermissions, projectIsLoading])
 
     useEffect(() => {
@@ -337,6 +343,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         const entityPermissions = processResults(envPermissions?.results)
         setEntityPermissions(entityPermissions)
       }
+      //eslint-disable-next-line
     }, [envPermissions, envIsLoading])
 
     useEffect(() => {
@@ -404,7 +411,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           `${Project.api}${url}${entityId && '/'}`,
           entityPermissions,
         )
-          .then(() => {
+          .then((res: EntityPermissions) => {
+            setEntityPermissions(res)
             toast(
               `${
                 level.charAt(0).toUpperCase() + level.slice(1)
@@ -470,6 +478,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       if (valueChanged) {
         save()
       }
+      //eslint-disable-next-line
     }, [valueChanged])
     const togglePermission = (key: string) => {
       if (role) {
@@ -570,7 +579,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               org_id: id,
               role_id: roleId,
             }).then(onRoleRemoved as any)
-          } else {
+          } else if (roleSelected) {
             deleteRolePermissionGroup({
               group_id: roleSelected.group_role_id,
               organisation_id: id,
@@ -602,6 +611,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         }
         toast('Role assigned')
       }
+      //eslint-disable-next-line
     }, [userAdded, usersData, groupsData, groupAdded])
 
     const getRoles = (
@@ -824,7 +834,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
   },
 )
 
-export const EditPermissionsModal = ConfigProvider(_EditPermissionsModal)
+export const EditPermissionsModal = ConfigProvider(
+  _EditPermissionsModal,
+) as FC<EditPermissionModalType>
 
 const rolesWidths = [250, 600, 100]
 const EditPermissions: FC<EditPermissionsType> = (props) => {
