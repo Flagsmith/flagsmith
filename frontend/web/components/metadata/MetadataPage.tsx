@@ -13,6 +13,9 @@ import {
 } from 'common/services/useMetadata'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
 
+import { IonIcon } from '@ionic/react'
+import { informationCircle } from 'ionicons/icons'
+
 const metadataWidth = [200, 150, 150, 90]
 type MetadataPageType = {
   organisationId: string
@@ -132,7 +135,18 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
   return (
     <div>
       <Row space className='mt-4'>
-        <h5 className='m-b-0'>Metadata</h5>
+        <Tooltip
+          title={
+            <Row>
+              <h5>Metadata</h5>
+              <div>
+                <IonIcon icon={informationCircle} />
+              </div>
+            </Row>
+          }
+        >
+          {'Select the environment to use for the export.'}
+        </Tooltip>
         <Button onClick={() => createMetadata()}>{'Create Metadata'}</Button>
       </Row>
       <p className='fs-small lh-sm'>Add metadata to your entities</p>

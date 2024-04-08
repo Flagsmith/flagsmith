@@ -254,14 +254,19 @@ const CreateMetadata: FC<CreateMetadataType> = ({
         title={'Description (optional)'}
         placeholder={"e.g. 'The JIRA Ticket Number associated with this flag'"}
       />
-      <Select
-        value={typeValue}
-        placeholder='Select a metadata type'
-        options={metadataTypes}
-        onChange={(m: MetadataType) => {
-          setTypeValue(m)
-        }}
-        className='mb-4 react-select'
+      <InputGroup
+        title={'Type'}
+        component={
+          <Select
+            value={typeValue}
+            placeholder='Select a metadata type'
+            options={metadataTypes}
+            onChange={(m: MetadataType) => {
+              setTypeValue(m)
+            }}
+            className='mb-4 react-select'
+          />
+        }
       />
 
       {isEdit && (

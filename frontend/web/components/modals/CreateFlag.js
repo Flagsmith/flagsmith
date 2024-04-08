@@ -630,8 +630,7 @@ const CreateFlag = class extends Component {
                       <Row
                         key={m.id}
                         onClick={() => this.removeMetadata(m.id)}
-                        className='chip'
-                        style={{ marginBottom: 4, marginTop: 4 }}
+                        className='chip gap-1'
                       >
                         <Tooltip
                           title={
@@ -640,7 +639,7 @@ const CreateFlag = class extends Component {
                               <span className='fs-caption'>
                                 <IonIcon
                                   icon={closeIcon}
-                                  style={{ fontSize: '13px' }}
+                                  className='fs-sm mt-2 ml-1'
                                 />
                               </span>
                             </Row>
