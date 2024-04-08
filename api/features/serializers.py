@@ -98,8 +98,43 @@ class FeatureQuerySerializer(serializers.Serializer):
         required=False,
         help_text="Integer ID of the environment to view features in the context of.",
     )
+    is_enabled = serializers.BooleanField(
+        allow_null=True,
+        required=False,
+        default=None,
+        help_text="Boolean value to filter features as enabled or disabled.",
+    )
+    value_search = serializers.CharField(
+        required=False,
+        default=None,
+        help_text="Value of type int, string, or boolean to filter features based on their values",
+    )
 
-    def validate_tags(self, tags):
+    owners = serializers.CharField(
+        required=False,
+        help_text="Comma separated list of owner ids to filter on",
+    )
+    group_owners = serializers.CharField(
+        required=False,
+        help_text="Comma separated list of group owner ids to filter on",
+    )
+
+    def validate_owners(self, owners: str) -> list[int]:
+        try:
+            return [int(owner_id.strip()) for owner_id in owners.split(",")]
+        except ValueError:
+            raise serializers.ValidationError("Owner IDs must be integers.")
+
+    def validate_group_owners(self, group_owners: str) -> list[int]:
+        try:
+            return [
+                int(group_owner_id.strip())
+                for group_owner_id in group_owners.split(",")
+            ]
+        except ValueError:
+            raise serializers.ValidationError("Group owner IDs must be integers.")
+
+    def validate_tags(self, tags: str) -> list[int]:
         try:
             return [int(tag_id.strip()) for tag_id in tags.split(",")]
         except ValueError:

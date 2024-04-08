@@ -8,11 +8,14 @@ from app_analytics.influxdb_wrapper import (
     get_multiple_event_list_for_organisation,
 )
 from core.helpers import get_current_site_url
+from dateutil.relativedelta import relativedelta
+from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import action, api_view, authentication_classes
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -21,6 +24,7 @@ from rest_framework.throttling import ScopedRateThrottle
 from organisations.chargebee import webhook_event_types, webhook_handlers
 from organisations.exceptions import OrganisationHasNoPaidSubscription
 from organisations.models import (
+    OranisationAPIUsageNotification,
     Organisation,
     OrganisationRole,
     OrganisationWebhook,
@@ -28,6 +32,7 @@ from organisations.models import (
 from organisations.permissions.models import OrganisationPermissionModel
 from organisations.permissions.permissions import (
     NestedOrganisationEntityPermission,
+    OrganisationAPIUsageNotificationPermission,
     OrganisationPermission,
 )
 from organisations.serializers import (
@@ -50,6 +55,8 @@ from projects.serializers import ProjectListSerializer
 from users.serializers import UserIdSerializer
 from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
+
+from .serializers import OrganisationAPIUsageNotificationSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -303,3 +310,26 @@ class OrganisationWebhookViewSet(viewsets.ModelViewSet, TriggerSampleWebhookMixi
     def perform_create(self, serializer):
         organisation_id = self.kwargs["organisation_pk"]
         serializer.save(organisation_id=organisation_id)
+
+
+class OrganisationAPIUsageNotificationView(ListAPIView):
+    serializer_class = OrganisationAPIUsageNotificationSerializer
+    permission_classes = [OrganisationAPIUsageNotificationPermission]
+
+    def get_queryset(self):
+        organisation = Organisation.objects.get(id=self.kwargs["organisation_pk"])
+        if not hasattr(organisation, "subscription_information_cache"):
+            return OranisationAPIUsageNotification.objects.none()
+        subscription_cache = organisation.subscription_information_cache
+        billing_starts_at = subscription_cache.current_billing_term_starts_at
+        now = timezone.now()
+
+        month_delta = relativedelta(now, billing_starts_at).months
+        period_starts_at = relativedelta(months=month_delta) + billing_starts_at
+
+        queryset = OranisationAPIUsageNotification.objects.filter(
+            organisation_id=organisation.id,
+            notified_at__gt=period_starts_at,
+        )
+
+        return queryset.order_by("-percent_usage")[:1]

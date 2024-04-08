@@ -17,7 +17,10 @@ from django_lifecycle import (
 from simple_history.models import HistoricalRecords
 
 from app.utils import is_enterprise, is_saas
-from integrations.lead_tracking.hubspot.tasks import track_hubspot_lead
+from integrations.lead_tracking.hubspot.tasks import (
+    track_hubspot_lead,
+    update_hubspot_active_subscription,
+)
 from organisations.chargebee import (
     get_customer_id_from_subscription_id,
     get_max_api_calls_for_plan,
@@ -251,6 +254,13 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
     def is_free_plan(self) -> bool:
         return self.plan == FREE_PLAN_ID
 
+    @hook(AFTER_SAVE, when="plan", has_changed=True)
+    def update_hubspot_active_subscription(self):
+        if not settings.ENABLE_HUBSPOT_LEAD_TRACKING:
+            return
+
+        update_hubspot_active_subscription.delay(args=(self.id,))
+
     @hook(AFTER_SAVE, when="cancellation_date", has_changed=True)
     @hook(AFTER_SAVE, when="subscription_id", has_changed=True)
     def update_mailer_lite_subscribers(self):
@@ -414,7 +424,7 @@ class OrganisationWebhook(AbstractBaseExportableWebhookModel):
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
 
-class OrganisationSubscriptionInformationCache(models.Model):
+class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model):
     """
     Model to hold a cache of an organisation's API usage and their Chargebee plan limits.
     """
@@ -439,6 +449,10 @@ class OrganisationSubscriptionInformationCache(models.Model):
     allowed_projects = models.IntegerField(default=1, blank=True, null=True)
 
     chargebee_email = models.EmailField(blank=True, max_length=254, null=True)
+
+    @hook(AFTER_SAVE, when="allowed_30d_api_calls", has_changed=True)
+    def erase_api_notifications(self):
+        self.organisation.api_usage_notifications.all().delete()
 
 
 class OranisationAPIUsageNotification(models.Model):

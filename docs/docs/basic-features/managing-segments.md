@@ -19,8 +19,13 @@ is no context to use.
 
 :::tip
 
-Segments are _not_ sent back to client SDKs. They are used to override flag values within the dashboard, but they are
-never sent back to our SDKs from the API. [Learn more about our architecture](/clients/overview#local-evaluation).
+Segments are _not_ sent back to [Client-Side SDKs](/clients/overview#client-side-sdks). They are used to override flag
+values within the dashboard, but they are never sent back to our
+[Client-Side SDKs](https://docs.flagsmith.com/clients/overview#client-side-sdks) from the API.
+
+They _are_ sent back to Server Side SDKs running in [Local Evaluation mode](/clients/overview#local-evaluation).
+
+[Learn more about our architecture](/clients/overview#local-evaluation).
 
 :::
 

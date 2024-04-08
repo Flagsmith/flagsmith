@@ -1,4 +1,5 @@
-static/
+static/*
+!static/.gitkeep
 **/staticfiles/*
 
 # SaaS only modules

@@ -383,13 +383,14 @@ export default class AdminAPIKeys extends PureComponent {
   }
 
   remove = (v) => {
-    openConfirm(
-      'Are you sure?',
-      <div>
-        This will revoke the API key <strong>{v.name}</strong> ({v.prefix}
-        *****************). This change cannot be reversed.
-      </div>,
-      () => {
+    openConfirm({
+      body: (
+        <div>
+          This will revoke the API key <strong>{v.name}</strong> ({v.prefix}
+          *****************). This change cannot be undone.
+        </div>
+      ),
+      onYes: () => {
         data
           .delete(
             `${Project.api}organisations/${this.props.organisationId}/master-api-keys/${v.prefix}/`,
@@ -398,12 +399,13 @@ export default class AdminAPIKeys extends PureComponent {
             this.fetch()
           })
       },
-    )
+      title: 'Revoke the API key',
+      yesText: 'Confirm',
+    })
   }
 
   render() {
     const apiKeys = this.state.apiKeys && this.state.apiKeys.results
-    console.log('DEBUG: apiKeys:', apiKeys)
     const showRoleManagementEnabled = Utils.getFlagsmithHasFeature(
       'show_role_management',
     )

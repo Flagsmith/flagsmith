@@ -8,6 +8,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils import timezone
 
+from integrations.flagsmith.client import get_client
 from organisations import subscription_info_cache
 from organisations.models import (
     OranisationAPIUsageNotification,
@@ -164,12 +165,21 @@ def _handle_api_usage_notifications(organisation: Organisation):
 
 
 def handle_api_usage_notifications():
+    flagsmith_client = get_client("local", local_eval=True)
+
     for organisation in Organisation.objects.filter(
         subscription_information_cache__current_billing_term_starts_at__isnull=False,
         subscription_information_cache__current_billing_term_ends_at__isnull=False,
     ).select_related(
         "subscription_information_cache",
     ):
+        feature_enabled = flagsmith_client.get_identity_flags(
+            f"org.{organisation.id}.{organisation.name}",
+            traits={"organisation_id": organisation.id},
+        ).is_feature_enabled("api_usage_alerting")
+        if not feature_enabled:
+            continue
+
         try:
             _handle_api_usage_notifications(organisation)
         except RuntimeError:
