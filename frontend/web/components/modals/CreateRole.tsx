@@ -26,7 +26,6 @@ import {
   Role,
   User,
   UserGroup,
-  UserGroupSummary,
 } from 'common/types/responses'
 import { setInterceptClose } from './base/ModalDefault'
 import UserSelect from 'components/UserSelect'
@@ -53,7 +52,7 @@ type TabRef = {
   tabChanged: () => boolean
 }
 type CreateRoleType = {
-  groups?: UserGroupSummary[]
+  groups?: UserGroup[]
   isEdit?: boolean
   onComplete: () => void
   organisationId?: number

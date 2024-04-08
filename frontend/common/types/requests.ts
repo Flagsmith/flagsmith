@@ -1,14 +1,11 @@
 import {
   Account,
+  FeatureState,
+  FeatureStateValue,
+  ImportStrategy,
   Segment,
   Tag,
-  FeatureStateValue,
-  FeatureState,
-  Role,
-  ImportStrategy,
-  APIKey,
   UserGroup,
-  GroupUser,
 } from './responses'
 
 export type PagedRequest<T> = T & {

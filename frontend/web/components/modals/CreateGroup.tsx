@@ -128,24 +128,34 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
 
   const save = () => {
     setInterceptClose(null)
-    const data: Req['createGroup']['data'] = {
-      external_id: externalId,
-      is_default: isDefault,
-      name,
-    }
     const usersToAddAdmin = getUsersAdminChanged(existingUsers, true)
     const usersToRemoveAdmin = getUsersAdminChanged(existingUsers, false)
     if (group) {
+      const data: Req['updateGroup']['data'] = {
+        ...group,
+        external_id: externalId,
+        is_default: isDefault,
+        name,
+        users: users as any,
+      }
       updateGroup({
-        data: {
-          id: group.id,
-          ...data,
-        },
+        data,
         orgId,
+        users: users as any,
         usersToAddAdmin: (usersToAddAdmin || []).map((user) => user.id),
         usersToRemoveAdmin: (usersToRemoveAdmin || []).map((user) => user.id),
+      }).then((data) => {
+        if (!data.error) {
+          toast('Updated Group')
+          closeModal()
+        }
       })
     } else {
+      const data: Req['createGroup']['data'] = {
+        external_id: externalId,
+        is_default: isDefault,
+        name,
+      }
       createGroup({
         data,
         orgId,

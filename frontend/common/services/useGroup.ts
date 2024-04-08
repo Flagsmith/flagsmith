@@ -22,7 +22,7 @@ export const groupService = service
             return { error }
           }
           //Add the members
-          if (query.data.users?.length) {
+          if (query.users?.length) {
             const { error } = await baseQuery({
               body: { user_ids: query.users.map((u) => u.id) },
               method: 'POST',

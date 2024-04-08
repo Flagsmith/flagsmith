@@ -11,7 +11,7 @@ import {
   useGetRoleProjectPermissionsQuery,
   useGetRoleEnvironmentPermissionsQuery,
 } from 'common/services/useRolePermission'
-import { PermissionLevel, Req } from 'common/types/requests'
+import { PermissionLevel } from 'common/types/requests'
 import { Role } from 'common/types/responses'
 import PanelSearch from './PanelSearch'
 import PermissionsSummaryList from './PermissionsSummaryList'

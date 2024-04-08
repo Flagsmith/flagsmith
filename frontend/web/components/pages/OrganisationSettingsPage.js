@@ -341,6 +341,7 @@ const OrganisationSettingsPage = class extends Component {
               <OrganisationProvider>
                 {({
                   error,
+                  groups,
                   invalidateInviteLink,
                   inviteLinks,
                   invites,

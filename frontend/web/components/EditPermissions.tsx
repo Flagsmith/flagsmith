@@ -1,4 +1,4 @@
-import React, { FC, forwardRef, useEffect, useState } from 'react'
+import React, { FC, forwardRef, useCallback, useEffect, useState } from 'react'
 import { find } from 'lodash'
 import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
@@ -55,11 +55,9 @@ import {
 } from 'common/services/useGroupWithRole'
 
 import MyRoleSelect from './MyRoleSelect'
-import { setInterceptClose } from './modals/base/ModalDefault'
 import Panel from './base/grid/Panel'
 import InputGroup from './base/forms/InputGroup'
 import classNames from 'classnames'
-
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 const Project = require('common/project')
 
@@ -82,7 +80,6 @@ type EditPermissionModalType = {
   role?: Role
   roles?: Role[]
   permissionChanged: () => void
-  editPermissionsFromSettings?: boolean
   isEditUserPermission?: boolean
   isEditGroupPermission?: boolean
 }
@@ -120,30 +117,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       }[]
     >([])
 
-    useEffect(() => {
-      setInterceptClose(() => {
-        if (valueChanged) {
-          return new Promise((resolve) => {
-            openConfirm({
-              body: 'Closing this will discard your unsaved changes.',
-              noText: 'Cancel',
-              onNo: () => resolve(false),
-              onYes: () => resolve(true),
-              title: 'Discard changes',
-              yesText: 'Ok',
-            })
-          })
-        } else {
-          return Promise.resolve(true)
-        }
-      })
-      return () => {
-        setInterceptClose(null)
-      }
-    }, [valueChanged])
     const {
       className,
-      editPermissionsFromSettings,
       envId,
       group,
       id,
@@ -278,12 +253,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           `${level.charAt(0).toUpperCase() + level.slice(1)} permissions Saved`,
         )
         permissionChanged?.()
-        setInterceptClose(null)
         onSave?.()
         setSaving(false)
-        if (editPermissionsFromSettings) {
-          close()
-        }
       }
       if (errorUpdating || errorCreating) {
         setSaving(false)
@@ -419,13 +390,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       return entityPermissions.permissions.includes(key)
     }
 
-    const close = () => {
-      closeModal()
-    }
-
-    const save = () => {
+    const save = useCallback(() => {
       const entityId =
         typeof entityPermissions.id === 'undefined' ? '' : entityPermissions.id
+      setValueChanged(false)
       if (!role) {
         const url = isGroup
           ? `${level}s/${id}/user-group-permissions/${entityId}`
@@ -437,16 +405,17 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           entityPermissions,
         )
           .then(() => {
-            setInterceptClose(null)
             toast(
               `${
                 level.charAt(0).toUpperCase() + level.slice(1)
               } Permissions Saved`,
             )
             onSave && onSave()
-            close()
           })
           .catch(() => {
+            toast(`Error Saving Permissions`, 'danger')
+          })
+          .finally(() => {
             setSaving(false)
           })
       } else {
@@ -484,8 +453,24 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           }).then(onRoleSaved as any)
         }
       }
-    }
+    }, [
+      createRolePermissions,
+      entityPermissions,
+      envId,
+      id,
+      isGroup,
+      level,
+      onSave,
+      permissionWasCreated,
+      role,
+      updateRolePermissions,
+    ])
 
+    useEffect(() => {
+      if (valueChanged) {
+        save()
+      }
+    }, [valueChanged])
     const togglePermission = (key: string) => {
       if (role) {
         permissionChanged?.()
@@ -687,7 +672,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                   </div>
                 </Flex>
                 <Switch
-                  disabled={!hasRbacPermission}
+                  disabled={!hasRbacPermission || saving}
                   onChange={() => {
                     toggleAdmin()
                     setValueChanged(true)
@@ -727,7 +712,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                         setValueChanged(true)
                         togglePermission(p.key)
                       }}
-                      disabled={disabled || admin() || !hasRbacPermission}
+                      disabled={
+                        disabled || admin() || !hasRbacPermission || saving
+                      }
                       checked={!disabled && hasPermission(p.key)}
                     />
                   </Row>
@@ -832,21 +819,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               />
             </div>
           )}
-        <div className='modal-footer'>
-          {!role && (
-            <Button className='mr-2' onClick={closeModal} theme='secondary'>
-              Cancel
-            </Button>
-          )}
-          <Button
-            onClick={save}
-            data-test='update-feature-btn'
-            id='update-feature-btn'
-            disabled={saving || !hasRbacPermission}
-          >
-            {saving ? 'Saving' : 'Save Permissions'}
-          </Button>
-        </div>
       </div>
     )
   },
@@ -914,7 +886,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
       <EditPermissionsModal
         name={`${role.name}`}
         id={id}
-        editPermissionsFromSettings
         envId={envId}
         level={level}
         role={role}
