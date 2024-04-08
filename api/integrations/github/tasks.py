@@ -1,5 +1,4 @@
 import logging
-from enum import Enum
 from typing import Any
 from urllib.parse import urlparse
 
@@ -12,11 +11,6 @@ from task_processor.decorators import register_task_handler
 from webhooks.webhooks import WebhookEventType
 
 logger = logging.getLogger(__name__)
-
-
-class GithubResourceType(Enum):
-    GITHUB_ISSUE = "Github Issue"
-    GITHUB_PR = "Github PR"
 
 
 def send_post_request(data: dict[str, Any]) -> None:
