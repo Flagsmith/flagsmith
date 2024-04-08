@@ -11,10 +11,10 @@ import {
   useGetRoleProjectPermissionsQuery,
   useGetRoleEnvironmentPermissionsQuery,
 } from 'common/services/useRolePermission'
-import Format from 'common/utils/format'
 import { PermissionLevel, Req } from 'common/types/requests'
 import { Role } from 'common/types/responses'
 import PanelSearch from './PanelSearch'
+import PermissionsSummaryList from './PermissionsSummaryList'
 
 type NameAndId = {
   name: string
@@ -70,20 +70,8 @@ const PermissionsSummary: FC<PermissionsSummaryType> = ({
   const isAdmin =
     roleResult && roleResult.length > 0 ? roleResult[0].admin : false
 
-  const permissionsSummary =
-    (roleRermissions &&
-      roleRermissions.length > 0 &&
-      roleRermissions
-        .map((item: string) => Format.enumeration.get(item))
-        .join(', ')) ||
-    ''
-
-  return projectIsLoading || envIsLoading ? (
-    <div className='modal-body text-center'>
-      <Loader />
-    </div>
-  ) : (
-    <div>{isAdmin ? 'Administrator' : permissionsSummary}</div>
+  return projectIsLoading || envIsLoading ? null : (
+    <PermissionsSummaryList isAdmin={isAdmin} permissions={roleRermissions} />
   )
 }
 
@@ -102,7 +90,14 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
         return `${v.name}`.toLowerCase().includes(search)
       })
 
-    const toggleExpand = (id: string | number) => {
+    const toggleExpand = async (id: string | number) => {
+      if (unsavedProjects.includes(id)) {
+        await checkClose().then((res) => {
+          if (res) {
+            removeUnsavedProject(id)
+          }
+        })
+      }
       setExpandedItems((prevExpanded) =>
         prevExpanded.includes(id)
           ? prevExpanded.filter((item) => item !== id)
@@ -110,31 +105,34 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
       )
     }
 
-    const removeUnsavedProject = (projectId: number) => {
+    const removeUnsavedProject = (projectId: string | number) => {
       setUnsavedProjects((prevUnsavedProjects) =>
         prevUnsavedProjects.filter((id) => id !== projectId),
       )
     }
 
+    const checkClose = () => {
+      if (unsavedProjects.length > 0) {
+        return new Promise((resolve) => {
+          openConfirm({
+            body: 'Closing this will discard your unsaved changes.',
+            noText: 'Cancel',
+            onNo: () => resolve(false),
+            onYes: () => resolve(true),
+            title: 'Discard changes',
+            yesText: 'Ok',
+          })
+        })
+      } else {
+        return Promise.resolve(true)
+      }
+    }
     useImperativeHandle(
       ref,
       () => {
         return {
           onClosing() {
-            if (unsavedProjects.length > 0) {
-              return new Promise((resolve) => {
-                openConfirm({
-                  body: 'Closing this will discard your unsaved changes.',
-                  noText: 'Cancel',
-                  onNo: () => resolve(false),
-                  onYes: () => resolve(true),
-                  title: 'Discard changes',
-                  yesText: 'Ok',
-                })
-              })
-            } else {
-              return Promise.resolve(true)
-            }
+            return checkClose()
           },
           tabChanged() {
             return unsavedProjects.length > 0
@@ -153,7 +151,7 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
         }
         renderRow={(mainItem: NameAndId, index: number) => (
           <div
-            className='list-item mh-auto py-2 list-item-xs clickable'
+            className='list-item d-flex flex-column justify-content-center py-2 list-item-sm clickable'
             key={index}
           >
             <Row

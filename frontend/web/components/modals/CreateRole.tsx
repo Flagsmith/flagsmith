@@ -333,8 +333,8 @@ const CreateRole: FC<CreateRoleType> = ({
     }, [createSuccess, updateSuccess])
 
     const save = () => {
-      if (!organisationId || !role) return
-      if (isEdit) {
+      if (!organisationId) return
+      if (isEdit && role) {
         editRole({
           body: { description: roleDesc, name: roleName },
           organisation_id: role.organisation,

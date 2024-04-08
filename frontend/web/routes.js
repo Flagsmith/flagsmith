@@ -27,7 +27,6 @@ import AuditLogPage from './components/pages/AuditLogPage'
 import ComparePage from './components/pages/ComparePage'
 import WidgetPage from './components/pages/WidgetPage'
 import BrokenPage from './components/pages/BrokenPage'
-import ProjectsPage from './components/pages/ProjectsPage'
 import AuditLogItemPage from './components/pages/AuditLogItemPage'
 import FeatureHistoryPage from './components/pages/FeatureHistoryPage'
 
@@ -40,7 +39,6 @@ export default (
       <Route path='/signup' exact component={HomePage} />
       <Route path='/signup' exact component={HomePage} />
       <Route path='/home' exact component={HomePage} />
-      <Route path='/projects' exact component={ProjectsPage} />
       <Route path='/maintenance' exact component={Maintenance} />
       <Route
         path='/password-reset/confirm/:uid/:token/'

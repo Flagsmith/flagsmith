@@ -170,7 +170,7 @@ get_feature_states_response = session.get(
 feature_state_id = get_feature_states_response.json()["results"][0]["id"]
 
 # update the feature state
-data = {"enabled": True, "feature_state_value": "new value"}  # `feature_state_value` can be str, int, bool or float
+data = {"enabled": True, "feature_state_value": "new value"}  # `feature_state_value` can be str, int or bool
 update_feature_state_response = session.patch(
     f"{FEATURE_STATES_URL}/{feature_state_id}/", data=json.dumps(data)
 )
