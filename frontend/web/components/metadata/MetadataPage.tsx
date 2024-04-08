@@ -94,6 +94,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
       <CreateMetadata
         onComplete={metadataCreatedToast}
         organisationId={organisationId}
+        isEdit={false}
       />,
       'side-modal create-feature-modal',
     )
@@ -145,11 +146,21 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
             </Row>
           }
         >
-          {'Select the environment to use for the export.'}
+          {'Create or Update the Metadata Project'}
         </Tooltip>
         <Button onClick={() => createMetadata()}>{'Create Metadata'}</Button>
       </Row>
-      <p className='fs-small lh-sm'>Add metadata to your entities</p>
+      <p className='fs-small lh-sm'>
+        Add metadata to your chore entities{' '}
+        <Button
+          theme='text'
+          target='_blank'
+          href='https://docs.flagsmith.com/basic-features/managing-segments'
+          className='fw-normal'
+        >
+          Learn more.
+        </Button>
+      </p>
       <FormGroup className='mt-4'>
         <PanelSearch
           id='webhook-list'

@@ -4,9 +4,7 @@ import {
   Tag,
   FeatureStateValue,
   FeatureState,
-  Role,
   ImportStrategy,
-  APIKey,
 } from './responses'
 
 export type PagedRequest<T> = T & {

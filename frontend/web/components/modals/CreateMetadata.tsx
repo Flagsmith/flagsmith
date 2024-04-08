@@ -1,8 +1,9 @@
 import React, { FC, useEffect, useState } from 'react'
 import Utils from 'common/utils/utils'
 import InputGroup from 'components/base/forms/InputGroup'
-import Switch from 'components/Switch'
+// import Switch from 'components/Switch'
 import Button from 'components/base/forms/Button'
+import SupportedContentTypesSelect from 'components/metadata/supportedContentTypesSelect'
 
 import {
   useCreateMetadataMutation,
@@ -21,7 +22,7 @@ import { ContentType, MetadataModelField } from 'common/types/responses'
 
 type CreateMetadataType = {
   id?: string
-  isEdit?: boolean
+  isEdit: boolean
   metadataModelFieldList?: MetadataModelField[]
   onComplete?: () => void
   organisationId: string
@@ -268,8 +269,12 @@ const CreateMetadata: FC<CreateMetadataType> = ({
           />
         }
       />
+      <SupportedContentTypesSelect
+        organisationId={organisationId}
+        isEdit={isEdit}
+      />
 
-      {isEdit && (
+      {/* {isEdit && (
         <div className='entities-table mb-3'>
           <div className='entities-row'>
             <div className='entities-cell entities-header'>Entities</div>
@@ -358,7 +363,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
             </div>
           </div>
         </div>
-      )}
+      )} */}
       <Button
         disabled={!name || !typeValue}
         onClick={() => {
@@ -449,7 +454,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 organisation: organisationId,
                 type: `${typeValue?.value}`,
               },
-            })
+            }).then((res) => {})
           }
         }}
         className='float-right'
