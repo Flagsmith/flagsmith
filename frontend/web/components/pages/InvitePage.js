@@ -20,7 +20,7 @@ const InvitePage = class extends Component {
 
   onSave = (id) => {
     AppActions.selectOrganisation(id)
-    this.context.router.history.replace('/projects?new=1')
+    this.context.router.history.replace('/organisation-settings')
   }
 
   render() {

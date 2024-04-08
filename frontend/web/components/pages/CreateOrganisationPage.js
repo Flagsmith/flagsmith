@@ -33,7 +33,7 @@ class CreateOrganisationPage extends Component {
   onSave = (id) => {
     AppActions.selectOrganisation(id)
     API.setCookie('organisation', `${id}`)
-    this.context.router.history.push('/projects')
+    this.context.router.history.push('/organisation-settings')
   }
 
   render() {
