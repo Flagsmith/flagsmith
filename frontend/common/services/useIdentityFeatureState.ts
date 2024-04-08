@@ -15,7 +15,11 @@ export const identityFeatureStateService = service
         query: (query: Req['createCloneIdentityFeatureStates']) => ({
           body: query.body,
           method: 'POST',
-          url: `environments/${query.environment_id}/identities/${query.identity_id}/featurestates/clone-flag-states-from/`,
+          url: `environments/${
+            query.environment_id
+          }/${Utils.getIdentitiesEndpoint()}/${
+            query.identity_id
+          }/${Utils.getFeatureStatesEndpoint()}/clone-flag-states-from/`,
         }),
       }),
       getIdentityFeatureStatesAll: builder.query<
