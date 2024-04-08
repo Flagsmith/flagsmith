@@ -157,7 +157,7 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
             )
             environment_wrapper = DynamoEnvironmentWrapper()
             environment = EnvironmentModel.model_validate(
-                environment_wrapper.get_item(identity.environment_api_key)
+                environment_wrapper.get_environment(identity.environment_api_key)
             )
             segments = get_identity_segments(environment, identity)
             return [segment.id for segment in segments]

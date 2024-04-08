@@ -47,7 +47,7 @@ class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
         ]
         super().batch_write(environment_documents)
 
-    def get_item(self, api_key: str) -> dict:
+    def get_environment(self, api_key: str) -> dict:
         try:
             return super().get_item({"api_key": api_key})["Item"]
         except KeyError as e:

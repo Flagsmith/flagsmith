@@ -278,7 +278,9 @@ def test_get_segment_ids_returns_correct_segment_ids(
     mocked_environment_wrapper = mocker.patch(
         "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper"
     )
-    mocked_environment_wrapper.return_value.get_item.return_value = environment_document
+    mocked_environment_wrapper.return_value.get_environment.return_value = (
+        environment_document
+    )
 
     # When
     segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)
@@ -286,7 +288,7 @@ def test_get_segment_ids_returns_correct_segment_ids(
     # Then
     assert segment_ids == [identity_matching_segment.id]
     mocked_get_item_from_uuid.assert_called_with(identity_uuid)
-    mocked_environment_wrapper.return_value.get_item.assert_called_with(
+    mocked_environment_wrapper.return_value.get_environment.assert_called_with(
         environment.api_key
     )
 
@@ -323,7 +325,9 @@ def test_get_segment_ids_returns_segment_using_in_operator_for_integer_traits(
     mocked_environment_wrapper = mocker.patch(
         "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper"
     )
-    mocked_environment_wrapper.return_value.get_item.return_value = environment_document
+    mocked_environment_wrapper.return_value.get_environment.return_value = (
+        environment_document
+    )
 
     # When
     segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)
@@ -388,7 +392,9 @@ def test_get_segment_ids_with_identity_model(identity, environment, mocker):
     mocked_environment_wrapper = mocker.patch(
         "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper"
     )
-    mocked_environment_wrapper.return_value.get_item.return_value = environment_document
+    mocked_environment_wrapper.return_value.get_environment.return_value = (
+        environment_document
+    )
 
     # When
     segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_model=identity_model)
@@ -415,7 +421,9 @@ def test_identity_wrapper__iter_all_items_paginated__returns_expected(
         "environments.dynamodb.wrappers.environment_wrapper.DynamoEnvironmentWrapper",
         autospec=True,
     )
-    mocked_environment_wrapper.return_value.get_item.return_value = environment_document
+    mocked_environment_wrapper.return_value.get_environment.return_value = (
+        environment_document
+    )
 
     mocked_get_all_items = mocker.patch.object(
         dynamo_identity_wrapper,

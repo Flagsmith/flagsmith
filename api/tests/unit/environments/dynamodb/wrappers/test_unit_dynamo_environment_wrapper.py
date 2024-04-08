@@ -34,7 +34,9 @@ def test_write_environments_calls_internal_methods_with_correct_arguments(
     assert actual_environment_document == expected_environment_document
 
 
-def test_get_item_uses_dax_if_enabled(mocker: MockerFixture, settings: SettingsWrapper):
+def test_get_environment_uses_dax_if_enabled(
+    mocker: MockerFixture, settings: SettingsWrapper
+):
     # Given
     settings.DAX_ENDPOINT = "dax://test"
     dynamo_environment_wrapper = DynamoEnvironmentWrapper()
@@ -46,7 +48,7 @@ def test_get_item_uses_dax_if_enabled(mocker: MockerFixture, settings: SettingsW
     api_key = "test_key"
 
     # When
-    returned_item = dynamo_environment_wrapper.get_item(api_key)
+    returned_item = dynamo_environment_wrapper.get_environment(api_key)
 
     # Then
     mocked_dax_table.get_item.assert_called_with(Key={"api_key": api_key})
@@ -54,7 +56,7 @@ def test_get_item_uses_dax_if_enabled(mocker: MockerFixture, settings: SettingsW
     mocked_dynamo_table.get_item.assert_not_called()
 
 
-def test_get_item_calls_dynamo_get_item_with_correct_arguments(mocker):
+def test_get_environment_calls_dynamo_get_item_with_correct_arguments(mocker):
     # Given
     dynamo_environment_wrapper = DynamoEnvironmentWrapper()
     expected_document = {"key": "value"}
@@ -63,14 +65,14 @@ def test_get_item_calls_dynamo_get_item_with_correct_arguments(mocker):
     mocked_dynamo_table.get_item.return_value = {"Item": expected_document}
 
     # When
-    returned_item = dynamo_environment_wrapper.get_item(api_key)
+    returned_item = dynamo_environment_wrapper.get_environment(api_key)
 
     # Then
     mocked_dynamo_table.get_item.assert_called_with(Key={"api_key": api_key})
     assert returned_item == expected_document
 
 
-def test_get_item_raises_object_does_not_exists_if_get_item_does_not_return_any_item(
+def test_get_environment_raises_object_does_not_exists_if_get_item_does_not_return_any_item(
     mocker,
 ):
     # Given
@@ -81,7 +83,7 @@ def test_get_item_raises_object_does_not_exists_if_get_item_does_not_return_any_
 
     # Then
     with pytest.raises(ObjectDoesNotExist):
-        dynamo_environment_wrapper.get_item(api_key)
+        dynamo_environment_wrapper.get_environment(api_key)
 
 
 def test_delete_environment__removes_environment_document_from_dynamodb(
