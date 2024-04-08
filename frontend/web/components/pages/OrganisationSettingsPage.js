@@ -8,7 +8,6 @@ import withAuditWebhooks from 'common/providers/withAuditWebhooks'
 import CreateAuditWebhookModal from 'components/modals/CreateAuditWebhook'
 import ConfirmRemoveAuditWebhook from 'components/modals/ConfirmRemoveAuditWebhook'
 import Button from 'components/base/forms/Button'
-import { EditPermissionsModal } from 'components/EditPermissions'
 import AdminAPIKeys from 'components/AdminAPIKeys'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
@@ -26,10 +25,12 @@ import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 import _data from 'common/data/base/_data'
 import RolesTable from 'components/RolesTable'
-import classNames from 'classnames'
 import CreateGroup from 'components/modals/CreateGroup'
+import PermissionsTabs from 'components/PermissionsTabs'
+import UserAction from 'components/UserAction'
+import classNames from 'classnames'
 
-const widths = [450, 255, 250, 235, 150, 100]
+const widths = [300, 200, 80]
 
 const SettingsTab = {
   'Billing': 'billing',
@@ -274,20 +275,12 @@ const OrganisationSettingsPage = class extends Component {
     )
   }
 
-  editUserPermissions = (user, roles) => {
+  editUserPermissions = (user, organisationId) => {
     openModal(
       'Edit Organisation Permissions',
-      <EditPermissionsModal
-        name={`${user.first_name} ${user.last_name}`}
-        id={AccountStore.getOrganisation().id}
-        onSave={() => {
-          AppActions.getOrganisation(AccountStore.getOrganisation().id)
-        }}
-        isEditUserPermission
-        level='organisation'
-        roles={roles}
-        user={user}
-      />,
+      <div className='p-4'>
+        <PermissionsTabs uncontrolled user={user} orgId={organisationId} />
+      </div>,
       'p-0 side-modal',
     )
   }
@@ -1023,25 +1016,17 @@ const OrganisationSettingsPage = class extends Component {
                                                     <Flex className='table-column px-3'>
                                                       User
                                                     </Flex>
-                                                    <Flex
+                                                    <div
                                                       className='table-column'
                                                       style={{
-                                                        minWidth: widths[1],
+                                                        minWidth: widths[0],
                                                       }}
                                                     >
                                                       Role
-                                                    </Flex>
-                                                    <div
-                                                      style={{
-                                                        width: widths[2],
-                                                      }}
-                                                      className='table-column'
-                                                    >
-                                                      Action
                                                     </div>
                                                     <div
                                                       style={{
-                                                        width: widths[4],
+                                                        width: widths[1],
                                                       }}
                                                       className='table-column'
                                                     >
@@ -1049,11 +1034,11 @@ const OrganisationSettingsPage = class extends Component {
                                                     </div>
                                                     <div
                                                       style={{
-                                                        width: widths[5],
+                                                        width: widths[2],
                                                       }}
                                                       className='table-column text-center'
                                                     >
-                                                      Remove
+                                                      Actions
                                                     </div>
                                                   </Row>
                                                 }
@@ -1071,11 +1056,23 @@ const OrganisationSettingsPage = class extends Component {
                                                     last_name,
                                                     role,
                                                   } = user
+
+                                                  const onRemoveClick = () => {
+                                                    this.deleteUser(
+                                                      id,
+                                                      Format.userDisplayName({
+                                                        email,
+                                                        firstName: first_name,
+                                                        lastName: last_name,
+                                                      }),
+                                                      email,
+                                                    )
+                                                  }
                                                   const onEditClick = () => {
                                                     if (role !== 'ADMIN') {
                                                       this.editUserPermissions(
                                                         user,
-                                                        this.state.roles,
+                                                        organisation.id,
                                                       )
                                                     }
                                                   }
@@ -1083,13 +1080,17 @@ const OrganisationSettingsPage = class extends Component {
                                                     <Row
                                                       data-test={`user-${i}`}
                                                       space
-                                                      className='list-item clickable'
+                                                      className={classNames(
+                                                        'list-item',
+                                                        {
+                                                          clickable:
+                                                            role !== 'ADMIN',
+                                                        },
+                                                      )}
+                                                      onClick={onEditClick}
                                                       key={id}
                                                     >
-                                                      <Flex
-                                                        onClick={onEditClick}
-                                                        className='table-column px-3 font-weight-medium'
-                                                      >
+                                                      <Flex className='table-column px-3 font-weight-medium'>
                                                         {`${first_name} ${last_name}`}{' '}
                                                         {id ===
                                                           AccountStore.getUserId() &&
@@ -1099,12 +1100,13 @@ const OrganisationSettingsPage = class extends Component {
                                                         </div>
                                                       </Flex>
 
-                                                      <Flex className='table-column'>
-                                                        <div
-                                                          style={{
-                                                            minWidth: widths[3],
-                                                          }}
-                                                        >
+                                                      <div
+                                                        style={{
+                                                          width: widths[0],
+                                                        }}
+                                                        className='table-column'
+                                                      >
+                                                        <div>
                                                           {organisation.role ===
                                                             'ADMIN' &&
                                                           id !==
@@ -1113,14 +1115,6 @@ const OrganisationSettingsPage = class extends Component {
                                                               <Select
                                                                 data-test='select-role'
                                                                 placeholder='Select a role'
-                                                                styles={{
-                                                                  menuPortal: (
-                                                                    base,
-                                                                  ) => ({
-                                                                    ...base,
-                                                                    zIndex: 9999,
-                                                                  }),
-                                                                }}
                                                                 value={
                                                                   role && {
                                                                     label:
@@ -1167,44 +1161,17 @@ const OrganisationSettingsPage = class extends Component {
                                                               />
                                                             </div>
                                                           ) : (
-                                                            <div className='mr-2 fs-small lh-sm'>
+                                                            <div className='px-3 fs-small lh-sm'>
                                                               {Constants.roles[
                                                                 role
                                                               ] || ''}
                                                             </div>
                                                           )}
                                                         </div>
-                                                      </Flex>
-                                                      {role !== 'ADMIN' ? (
-                                                        <div
-                                                          style={{
-                                                            width: widths[2],
-                                                          }}
-                                                          onClick={onEditClick}
-                                                          className='table-column'
-                                                        >
-                                                          <Button
-                                                            theme='text'
-                                                            size='small'
-                                                          >
-                                                            <Icon
-                                                              name='edit'
-                                                              width={18}
-                                                              fill='#6837FC'
-                                                            />{' '}
-                                                            Edit Permissions
-                                                          </Button>
-                                                        </div>
-                                                      ) : (
-                                                        <div
-                                                          style={{
-                                                            width: widths[2],
-                                                          }}
-                                                        ></div>
-                                                      )}
+                                                      </div>
                                                       <div
                                                         style={{
-                                                          width: widths[4],
+                                                          width: widths[1],
                                                         }}
                                                         className='table-column'
                                                       >
@@ -1216,36 +1183,20 @@ const OrganisationSettingsPage = class extends Component {
                                                       </div>
                                                       <div
                                                         style={{
-                                                          width: widths[5],
+                                                          width: widths[2],
                                                         }}
-                                                        className='table-column text-center'
+                                                        className='table-column text-end'
                                                       >
-                                                        <Button
-                                                          id='delete-invite'
-                                                          type='button'
-                                                          onClick={() =>
-                                                            this.deleteUser(
-                                                              id,
-                                                              Format.userDisplayName(
-                                                                {
-                                                                  email,
-                                                                  firstName:
-                                                                    first_name,
-                                                                  lastName:
-                                                                    last_name,
-                                                                },
-                                                              ),
-                                                              email,
-                                                            )
+                                                        <UserAction
+                                                          canRemove
+                                                          onRemove={
+                                                            onRemoveClick
                                                           }
-                                                          className='btn btn-with-icon'
-                                                        >
-                                                          <Icon
-                                                            name='trash-2'
-                                                            width={20}
-                                                            fill='#656D7B'
-                                                          />
-                                                        </Button>
+                                                          onEdit={onEditClick}
+                                                          canEdit={
+                                                            role !== 'ADMIN'
+                                                          }
+                                                        />
                                                       </div>
                                                     </Row>
                                                   )
@@ -1292,15 +1243,15 @@ const OrganisationSettingsPage = class extends Component {
                                                         }}
                                                         className='table-column'
                                                       >
-                                                        Action
+                                                        Role
                                                       </div>
                                                       <div
                                                         style={{
-                                                          width: widths[5],
+                                                          width: widths[1],
                                                         }}
-                                                        className='table-column text-center'
+                                                        className='table-column'
                                                       >
-                                                        Remove
+                                                        Action
                                                       </div>
                                                     </Row>
                                                   }

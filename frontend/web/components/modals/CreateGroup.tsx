@@ -432,7 +432,6 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       }}
     </OrganisationProvider>
   )
-  const [subTab, setSubTab] = useState(0)
 
   return isEdit ? (
     <Tabs uncontrolled tabClassName='px-0'>
@@ -450,8 +449,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
         <div className='mt-4'>
           {!!groupData && (
             <PermissionsTabs
-              value={subTab}
-              onChange={setSubTab}
+              uncontrolled
               orgId={AccountStore.getOrganisation()?.id}
               roles={roles}
               group={groupData}

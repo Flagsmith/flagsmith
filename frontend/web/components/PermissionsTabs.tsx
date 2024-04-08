@@ -20,8 +20,9 @@ type PermissionsTabsType = {
   group?: UserGroup
   user?: User
   role?: Role | undefined
-  value: number
-  onChange: (v: number) => void
+  value?: number
+  onChange?: (v: number) => void
+  uncontrolled?: boolean
   tabRef?: Ref<any>
 }
 
@@ -31,6 +32,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
   orgId,
   role,
   tabRef,
+  uncontrolled,
   user,
   value,
 }) => {
@@ -54,7 +56,13 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
   }
 
   return (
-    <Tabs value={value} onChange={onChange} theme='pill m-0' isRoles={true}>
+    <Tabs
+      uncontrolled={uncontrolled}
+      value={value}
+      onChange={onChange}
+      theme='pill m-0'
+      isRoles={true}
+    >
       <TabItem
         tabLabel={<Row className='justify-content-center'>Organisation</Row>}
       >

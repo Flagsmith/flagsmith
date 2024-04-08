@@ -736,11 +736,17 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           <p className='text-right mt-5 text-dark'>
             This will edit the permissions for{' '}
             <strong>
-              {isGroup
-                ? `the ${name} group`
-                : role
-                ? ` ${role.name}`
-                : ` ${name}`}
+              {isGroup ? (
+                `the ${name} group`
+              ) : user ? (
+                <>
+                  {user.first_name || ''} {user.last_name || ''}
+                </>
+              ) : role ? (
+                ` ${role.name}`
+              ) : (
+                ` ${name}`
+              )}
             </strong>
             .
           </p>

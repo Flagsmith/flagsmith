@@ -78,11 +78,12 @@ const UserGroupsRow: FC<UserGroupsRowType> = ({
   return (
     <Row
       space
+      onClick={_onClick}
       className='list-item list-item-sm clickable'
       key={id}
       data-test={`user-item-${index}`}
     >
-      <Flex onClick={_onClick} className=' table-column px-3'>
+      <Flex className=' table-column px-3'>
         <div className='font-weight-medium'>{name}</div>
       </Flex>
       {permissionSummary && <Flex>{permissionSummary}</Flex>}
