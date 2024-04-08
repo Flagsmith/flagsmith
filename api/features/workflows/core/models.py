@@ -1,6 +1,7 @@
 import importlib
 import logging
 import typing
+from datetime import datetime
 
 from core.helpers import get_current_site_url
 from core.models import (
@@ -239,10 +240,30 @@ class ChangeRequest(
         # In the workflows-logic module, we prevent change requests from being
         # deleted but, since this can have unexpected effects on published
         # feature states, we also want to prevent it at the ORM level.
-        if self.committed_at and not self.environment.deleted_at:
+        if self.committed_at and not (
+            self.environment.deleted_at
+            or (self._live_from and self._live_from > timezone.now())
+        ):
             raise ChangeRequestDeletionError(
                 "Cannot delete a Change Request that has been committed."
             )
+
+    @property
+    def _live_from(self) -> datetime | None:
+        # First we check if there are feature states associated with the change request
+        # and, if so, we return the live_from of the feature state with the earliest
+        # live_from.
+        if first_feature_state := self.feature_states.order_by("live_from").first():
+            return first_feature_state.live_from
+
+        # Then we do the same for environment feature versions. Note that a change request
+        # can not have feature states and environment feature versions.
+        elif first_environment_feature_version := self.environment_feature_versions.order_by(
+            "live_from"
+        ).first():
+            return first_environment_feature_version.live_from
+
+        return None
 
 
 class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factory()):
