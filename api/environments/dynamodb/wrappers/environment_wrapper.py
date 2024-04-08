@@ -21,7 +21,7 @@ from util.mappers import (
 )
 from util.util import iter_paired_chunks
 
-from .base import BaseDAXWrapper
+from .base import DAXWrapper
 
 if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.type_defs import QueryInputRequestTypeDef
@@ -29,7 +29,7 @@ if typing.TYPE_CHECKING:
     from environments.models import Environment
 
 
-class BaseDynamoEnvironmentWrapper(BaseDAXWrapper):
+class BaseDynamoEnvironmentWrapper(DAXWrapper):
     def write_environment(self, environment: "Environment") -> None:
         self.write_environments([environment])
 

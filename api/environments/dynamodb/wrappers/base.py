@@ -72,7 +72,7 @@ class BaseDynamoWrapper:
                 batch.put_item(Item=item)
 
 
-class BaseDAXWrapper(BaseDynamoWrapper):
+class DAXWrapper(BaseDynamoWrapper):
     def __init__(self) -> None:
         super().__init__()
         self._dax_table: typing.Optional["Table"] = None
