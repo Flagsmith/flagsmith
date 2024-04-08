@@ -455,7 +455,7 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
         self.organisation.api_usage_notifications.all().delete()
 
 
-class OranisationAPIUsageNotification(models.Model):
+class OrganisationAPIUsageNotification(models.Model):
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="api_usage_notifications"
     )
@@ -478,3 +478,15 @@ class HubspotOrganisation(models.Model):
     hubspot_id = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class OrganisationAPIBilling(models.Model):
+    organisation = models.ForeignKey(
+        Organisation, on_delete=models.CASCADE, related_name="api_billing"
+    )
+    api_overage = models.IntegerField(null=False)
+    immediate_invoice = models.BooleanField(null=False, default=False)
+    billed_at = models.DateTimeField(null=False)
+
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)

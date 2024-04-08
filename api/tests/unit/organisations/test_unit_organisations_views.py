@@ -25,8 +25,8 @@ from features.models import Feature
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.invites.models import Invite
 from organisations.models import (
-    OranisationAPIUsageNotification,
     Organisation,
+    OrganisationAPIUsageNotification,
     OrganisationRole,
     OrganisationSubscriptionInformationCache,
     OrganisationWebhook,
@@ -1693,7 +1693,7 @@ def test_defaults_to_empty_api_notifications_when_no_subscription_information_ca
     )
 
     now = timezone.now()
-    OranisationAPIUsageNotification.objects.create(
+    OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,
         percent_usage=90,
         notified_at=now,
@@ -1734,17 +1734,17 @@ def test_retrieves_api_usage_notifications(
     )
 
     # Add three notifications, but we only get the 100% one.
-    OranisationAPIUsageNotification.objects.create(
+    OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,
         percent_usage=90,
         notified_at=now,
     )
-    OranisationAPIUsageNotification.objects.create(
+    OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,
         percent_usage=75,
         notified_at=now,
     )
-    OranisationAPIUsageNotification.objects.create(
+    OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,
         percent_usage=100,
         notified_at=now,
@@ -1785,7 +1785,7 @@ def test_doesnt_retrieve_stale_api_usage_notifications(
     )
 
     # Create a notification in the past which should not be shown.
-    OranisationAPIUsageNotification.objects.create(
+    OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,
         percent_usage=90,
         notified_at=now - timedelta(20),
