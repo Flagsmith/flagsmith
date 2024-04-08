@@ -5,14 +5,20 @@ from app_analytics.influxdb_wrapper import get_current_api_usage
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db.models import F
 from django.template.loader import render_to_string
 from django.utils import timezone
 
 from integrations.flagsmith.client import get_client
 from organisations import subscription_info_cache
+from organisations.chargebee import (
+    add_1000_api_calls_scale_up,
+    add_1000_api_calls_start_up,
+)
 from organisations.models import (
-    OranisationAPIUsageNotification,
     Organisation,
+    OrganisationAPIBilling,
+    OrganisationAPIUsageNotification,
     OrganisationRole,
     Subscription,
 )
@@ -30,7 +36,13 @@ from .constants import (
     ALERT_EMAIL_SUBJECT,
     API_USAGE_ALERT_THRESHOLDS,
 )
-from .subscriptions.constants import SubscriptionCacheEntity
+from .subscriptions.constants import (
+    SCALE_UP,
+    SCALE_UP_V2,
+    STARTUP,
+    STARTUP_V2,
+    SubscriptionCacheEntity,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +138,7 @@ def send_admin_api_usage_notification(
         fail_silently=True,
     )
 
-    OranisationAPIUsageNotification.objects.create(
+    OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,
         percent_usage=matched_threshold,
         notified_at=timezone.now(),
@@ -154,7 +166,7 @@ def _handle_api_usage_notifications(organisation: Organisation):
 
         matched_threshold = threshold
 
-    if OranisationAPIUsageNotification.objects.filter(
+    if OrganisationAPIUsageNotification.objects.filter(
         notified_at__gt=period_starts_at,
         percent_usage=matched_threshold,
     ).exists():
@@ -189,7 +201,76 @@ def handle_api_usage_notifications():
             )
 
 
+def charge_for_api_call_count_overages():
+    now = timezone.now()
+    api_usage_notified_at = now - timedelta(days=30)
+    month_window_start = timedelta(days=25)
+    month_window_end = timedelta(days=35)
+    closing_billing_term = now + timedelta(hours=12)
+    organisation_ids = set(
+        OrganisationAPIUsageNotification.objects.filter(
+            notified_at__gte=api_usage_notified_at,
+            percent_usage__gte=100,
+        )
+        .exclude(
+            organisation__api_billing__billed_at__gt=api_usage_notified_at,
+        )
+        .values_list("organisation_id", flat=True)
+    )
+
+    for organisation in Organisation.objects.filter(
+        id__in=organisation_ids,
+        subscription_information_cache__current_billing_term_ends_at__lte=closing_billing_term,
+        subscription_information_cache__current_billing_term_ends_at__gte=now,
+        subscription_information_cache__current_billing_term_starts_at__lte=F(
+            "subscription_information_cache__current_billing_term_ends_at"
+        )
+        - month_window_start,
+        subscription_information_cache__current_billing_term_starts_at__gte=F(
+            "subscription_information_cache__current_billing_term_ends_at"
+        )
+        - month_window_end,
+    ).select_related(
+        "subscription_information_cache",
+    ):
+        subscription_cache = organisation.subscription_information_cache
+        api_usage = get_current_api_usage(organisation.id, "30d")
+        api_usage_ratio = api_usage / subscription_cache.allowed_30d_api_calls
+
+        if api_usage_ratio < 1.0:
+            logger.warning("API Usage does not match API Notification")
+            continue
+
+        api_overage = api_usage - subscription_cache.allowed_30d_api_calls
+
+        if organisation.subscription.plan in {SCALE_UP, SCALE_UP_V2}:
+            add_1000_api_calls_scale_up(
+                organisation.subscription.subscription_id, api_overage // 1000
+            )
+        elif organisation.subscription.plan in {STARTUP, STARTUP_V2}:
+            add_1000_api_calls_start_up(
+                organisation.subscription.subscription_id, api_overage // 1000
+            )
+        else:
+            logger.error(
+                f"Unable to bill for API overages for plan `{organisation.subscription.plan}`"
+            )
+            continue
+
+        # Save a copy of what was just billed in order to avoid
+        # double billing on a subsequent task run.
+        OrganisationAPIBilling.objects.create(
+            organisation=organisation,
+            api_overage=(1000 * (api_overage // 1000)),
+            immediate_invoice=False,
+            billed_at=now,
+        )
+
+
 if settings.ENABLE_API_USAGE_ALERTING:
     register_recurring_task(
         run_every=timedelta(hours=12),
     )(handle_api_usage_notifications)
+    register_recurring_task(
+        run_every=timedelta(hours=12),
+    )(charge_for_api_call_count_overages)
