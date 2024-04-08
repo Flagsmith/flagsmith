@@ -224,26 +224,30 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
             className='mt-3'
             cta={
               <>
-                <Tooltip
-                  title={
-                    <Button
-                      onClick={() => {
-                        clonedentityValues(
-                          leftId?.label,
-                          rightId?.label,
-                          leftId?.value,
-                          rightId?.value,
-                          environmentId,
-                        )
-                      }}
-                      className='ms-2 me-2'
+                {Utils.getFlagsmithHasFeature('clone_identities') && (
+                  <>
+                    <Tooltip
+                      title={
+                        <Button
+                          onClick={() => {
+                            clonedentityValues(
+                              leftId?.label,
+                              rightId?.label,
+                              leftId?.value,
+                              rightId?.value,
+                              environmentId,
+                            )
+                          }}
+                          className='ms-2 me-2'
+                        >
+                          {'Clone features states'}
+                        </Button>
+                      }
                     >
-                      {'Clone features states'}
-                    </Button>
-                  }
-                >
-                  {`Clone the features states from ${leftId?.label} to ${rightId?.label}`}
-                </Tooltip>
+                      {`Clone the features states from ${leftId?.label} to ${rightId?.label}`}
+                    </Tooltip>
+                  </>
+                )}
               </>
             }
           ></PageTitle>
