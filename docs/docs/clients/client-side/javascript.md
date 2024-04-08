@@ -85,7 +85,7 @@ flagsmith.init({
 
 :::info
 
-As of flagsmith >4.0.0, `flagsmith.init` will return a promise resolving with either cache or the latest features or
+As of flagsmith 4.0.0, `flagsmith.init` will return a promise resolving with either cache or the latest features or
 defaults. The promise will reject if there is no cache and an invalid or no API response was received.
 
 :::
