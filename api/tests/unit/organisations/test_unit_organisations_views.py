@@ -25,6 +25,7 @@ from features.models import Feature
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.invites.models import Invite
 from organisations.models import (
+    OranisationAPIUsageNotification,
     Organisation,
     OrganisationRole,
     OrganisationSubscriptionInformationCache,
@@ -1679,3 +1680,120 @@ def test_user_from_another_organisation_cannot_list_group_summaries(
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_defaults_to_empty_api_notifications_when_no_subscription_information_cache(
+    staff_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-api-usage-notification",
+        args=[organisation.id],
+    )
+
+    now = timezone.now()
+    OranisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=90,
+        notified_at=now,
+    )
+
+    assert hasattr(organisation, "subscription_information_cache") is False
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    # There are no results even if there is a notification because
+    # the information cache can't provide an estimate as to API usage.
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["results"] == []
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_retrieves_api_usage_notifications(
+    staff_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-api-usage-notification",
+        args=[organisation.id],
+    )
+
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+    )
+
+    # Add three notifications, but we only get the 100% one.
+    OranisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=90,
+        notified_at=now,
+    )
+    OranisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=75,
+        notified_at=now,
+    )
+    OranisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert len(response.data["results"]) == 1
+    assert response.data["results"][0]["notified_at"] == "2023-01-19T09:09:47.325132Z"
+    assert response.data["results"][0]["organisation_id"] == organisation.id
+    assert response.data["results"][0]["percent_usage"] == 100
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_doesnt_retrieve_stale_api_usage_notifications(
+    staff_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-api-usage-notification",
+        args=[organisation.id],
+    )
+
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+    )
+
+    # Create a notification in the past which should not be shown.
+    OranisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=90,
+        notified_at=now - timedelta(20),
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data["results"]) == 0

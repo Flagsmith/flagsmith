@@ -16,13 +16,14 @@ export type Rule = {
 export const setText = async (selector: string, text: string) => {
   logUsingLastSection(`Set text ${selector} : ${text}`)
   if (text) {
-     return t
+    return t
       .selectText(selector)
       .pressKey('delete')
       .selectText(selector) // Prevents issue where input tabs out of focus
       .typeText(selector, `${text}`)
   } else {
-    return t.selectText(selector) // Prevents issue where input tabs out of focus
+    return t
+      .selectText(selector) // Prevents issue where input tabs out of focus
       .pressKey('delete')
   }
 }
@@ -80,6 +81,7 @@ export const gotoFeatures = async () => {
 export const click = async (selector: string) => {
   await waitForElementVisible(selector)
   await t
+    .scrollIntoView(selector)
     .expect(Selector(selector).hasAttribute('disabled'))
     .notOk('ready for testing', { timeout: 5000 })
     .hover(selector)
