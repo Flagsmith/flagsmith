@@ -23,12 +23,12 @@ following languages:
 - [Go](https://github.com/open-feature/go-sdk-contrib/tree/main/providers/flagsmith)
 - [Java](https://github.com/open-feature/java-sdk-contrib/tree/main/providers/flagsmith)
 - [.Net](https://github.com/open-feature/dotnet-sdk-contrib/tree/main/src/OpenFeature.Contrib.Providers.Flagsmith)
+- [Javascript/Web](https://github.com/Flagsmith/js-sdk-contrib)
 
 ### Beta Providers
 
 The following OpenFeature Providers are currently being implemented:
 
-- [Javascript/Web](https://github.com/Flagsmith/js-sdk-contrib)
 - [Python](https://github.com/Flagsmith/flagsmith-openfeature-provider-python)
 
 ### Planned Providers
