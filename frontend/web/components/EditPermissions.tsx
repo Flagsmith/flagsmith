@@ -59,6 +59,7 @@ import Panel from './base/grid/Panel'
 import InputGroup from './base/forms/InputGroup'
 import classNames from 'classnames'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
+import { useGetPermissionQuery } from 'common/services/usePermission'
 const Project = require('common/project')
 
 type EditPermissionModalType = {
@@ -97,9 +98,34 @@ type EntityPermissions = Omit<
   id?: number
   user?: number
 }
+const withAdminPermissions = (InnerComponent: any) => {
+  const WrappedComponent: FC<EditPermissionModalType> = (props) => {
+    const { id, level } = props
+    const notReady = !id || !level
+    const { data: adminPermissions, isLoading: permissionsLoading } =
+      useGetPermissionQuery({ id: parseInt(id), level }, { skip: notReady })
 
-const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
-  (props) => {
+    if (permissionsLoading || notReady) {
+      return (
+        <div className='my-4 text-center'>
+          <Loader />
+        </div>
+      )
+    }
+    if (!adminPermissions?.ADMIN) {
+      return (
+        <div className='my-4 text-center text-muted'>
+          To manage permissions you need to be admin of this {level}.
+        </div>
+      )
+    }
+
+    return <InnerComponent {...props} />
+  }
+  return WrappedComponent
+}
+const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
+  forwardRef((props) => {
     const [entityPermissions, setEntityPermissions] =
       useState<EntityPermissions>({ admin: false, permissions: [] })
     const [parentError, setParentError] = useState(false)
@@ -837,7 +863,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           )}
       </div>
     )
-  },
+  }),
 )
 
 export const EditPermissionsModal = ConfigProvider(
@@ -912,7 +938,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
     )
   }
   const hasRbacPermission = Utils.getPlansPermission('RBAC')
-
   return (
     <div className='mt-4'>
       <Row>

@@ -11,9 +11,10 @@ import {
   UserGroupSummary,
 } from 'common/types/responses'
 import { useGetGroupsQuery } from 'common/services/useGroup'
+
 type OrganisationProviderType = {
   onRemoveProject?: () => void
-  onSave?: () => void
+  onSave?: (data: { environmentId: number; projectId: number }) => void
   id?: number
   children: (props: {
     createProject: typeof AppActions.createProject
@@ -52,7 +53,7 @@ const OrganisationProvider: FC<OrganisationProviderType> = ({
   }, [])
 
   useEffect(() => {
-    const _onSave = () => onSave?.()
+    const _onSave = () => onSave?.(OrganisationStore.savedId)
     OrganisationStore.on('saved', _onSave)
     return () => {
       OrganisationStore.off('saved', _onSave)
