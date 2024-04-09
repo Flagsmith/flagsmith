@@ -90,7 +90,6 @@ global.API = {
       return
     }
 
-    debugger
     flagsmith
       .identify(user.email, {
         email: user.email,
