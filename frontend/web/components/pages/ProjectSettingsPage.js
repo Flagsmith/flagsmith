@@ -379,13 +379,13 @@ const ProjectSettingsPage = class extends Component {
                             <Button
                               disabled={isSaving || Utils.isMigrating()}
                               onClick={() =>
-                                openConfirm(
-                                  'Are you sure?',
-                                  'This will migrate your project to the Global Edge API.',
-                                  () => {
+                                openConfirm({
+                                  body: 'This will migrate your project to the Global Edge API.',
+                                  onYes: () => {
                                     this.migrate(project)
                                   },
-                                )
+                                  title: 'Migrate to Global Edge API',
+                                })
                               }
                               size='xSmall'
                               theme='outline'
@@ -426,7 +426,9 @@ const ProjectSettingsPage = class extends Component {
                           <Button
                             onClick={() =>
                               this.confirmRemove(project, () => {
-                                this.context.router.history.replace('/projects')
+                                this.context.router.history.replace(
+                                  '/organisation-settings',
+                                )
                                 deleteProject(this.props.match.params.projectId)
                               })
                             }

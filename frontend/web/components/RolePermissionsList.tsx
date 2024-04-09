@@ -1,4 +1,10 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react'
+import React, {
+  useState,
+  forwardRef,
+  useImperativeHandle,
+  Ref,
+  FC,
+} from 'react'
 import Icon from './Icon'
 import { EditPermissionsModal } from './EditPermissions'
 import {
@@ -6,26 +12,41 @@ import {
   useGetRoleEnvironmentPermissionsQuery,
 } from 'common/services/useRolePermission'
 import Format from 'common/utils/format'
+import { PermissionLevel, Req } from 'common/types/requests'
+import { Role } from 'common/types/responses'
+import PanelSearch from './PanelSearch'
+import PermissionsSummaryList from './PermissionsSummaryList'
 
-type MainItem = {
+type NameAndId = {
   name: string
-  id: string
+  id: number | string
+  [key: string]: any
 }
 
-type CollapsibleNestedRolePermissionsListProps = {
-  mainItems: MainItem[]
+type RolePermissionsListProps = {
+  mainItems: NameAndId[]
   role: Role
-  level: string
+  ref?: Ref<any>
+  level: PermissionLevel
   filter: string
 }
 
-const PermissionsSummary = ({ level, levelId, role }) => {
+export type PermissionsSummaryType = {
+  level: PermissionLevel
+  levelId: number
+  role: Role
+}
+const PermissionsSummary: FC<PermissionsSummaryType> = ({
+  level,
+  levelId,
+  role,
+}) => {
   const { data: projectPermissions, isLoading: projectIsLoading } =
     useGetRoleProjectPermissionsQuery(
       {
-        organisation_id: role?.organisation,
+        organisation_id: role.organisation,
         project_id: levelId,
-        role_id: role?.id,
+        role_id: role.id,
       },
       { skip: !levelId || level !== 'project' },
     )
@@ -50,25 +71,17 @@ const PermissionsSummary = ({ level, levelId, role }) => {
   const isAdmin =
     roleResult && roleResult.length > 0 ? roleResult[0].admin : false
 
-  const permissionsSummary =
-    (roleRermissions &&
-      roleRermissions.length > 0 &&
-      roleRermissions.map((item) => Format.enumeration.get(item)).join(', ')) ||
-    ''
-
-  return projectIsLoading || envIsLoading ? (
-    <div className='modal-body text-center'>
-      <Loader />
-    </div>
-  ) : (
-    <div>{isAdmin ? 'Administrator' : permissionsSummary}</div>
+  return projectIsLoading || envIsLoading ? null : (
+    <PermissionsSummaryList isAdmin={isAdmin} permissions={roleRermissions} />
   )
 }
 
-const CollapsibleNestedRolePermissionsList: React.FC<CollapsibleNestedRolePermissionsListProps> =
-  forwardRef(({ filter, level, mainItems, role }, ref) => {
-    const [expandedItems, setExpandedItems] = useState<string[]>([])
-    const [unsavedProjects, setUnsavedProjects] = useState<string[]>([])
+const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
+  ({ filter, level, mainItems, role }, ref) => {
+    const [expandedItems, setExpandedItems] = useState<(string | number)[]>([])
+    const [unsavedProjects, setUnsavedProjects] = useState<(string | number)[]>(
+      [],
+    )
 
     const mainItemsFiltered =
       mainItems &&
@@ -78,7 +91,14 @@ const CollapsibleNestedRolePermissionsList: React.FC<CollapsibleNestedRolePermis
         return `${v.name}`.toLowerCase().includes(search)
       })
 
-    const toggleExpand = (id: string) => {
+    const toggleExpand = async (id: string | number) => {
+      if (unsavedProjects.includes(id)) {
+        await checkClose().then((res) => {
+          if (res) {
+            removeUnsavedProject(id)
+          }
+        })
+      }
       setExpandedItems((prevExpanded) =>
         prevExpanded.includes(id)
           ? prevExpanded.filter((item) => item !== id)
@@ -86,31 +106,34 @@ const CollapsibleNestedRolePermissionsList: React.FC<CollapsibleNestedRolePermis
       )
     }
 
-    const removeUnsavedProject = (projectId) => {
+    const removeUnsavedProject = (projectId: string | number) => {
       setUnsavedProjects((prevUnsavedProjects) =>
         prevUnsavedProjects.filter((id) => id !== projectId),
       )
     }
 
+    const checkClose = () => {
+      if (unsavedProjects.length > 0) {
+        return new Promise((resolve) => {
+          openConfirm({
+            body: 'Closing this will discard your unsaved changes.',
+            noText: 'Cancel',
+            onNo: () => resolve(false),
+            onYes: () => resolve(true),
+            title: 'Discard changes',
+            yesText: 'Ok',
+          })
+        })
+      } else {
+        return Promise.resolve(true)
+      }
+    }
     useImperativeHandle(
       ref,
       () => {
         return {
           onClosing() {
-            if (unsavedProjects.length > 0) {
-              return new Promise((resolve) => {
-                openConfirm(
-                  'Are you sure?',
-                  'Closing this will discard your unsaved changes.',
-                  () => resolve(true),
-                  () => resolve(false),
-                  'Ok',
-                  'Cancel',
-                )
-              })
-            } else {
-              return Promise.resolve(true)
-            }
+            return checkClose()
           },
           tabChanged() {
             return unsavedProjects.length > 0
@@ -121,13 +144,21 @@ const CollapsibleNestedRolePermissionsList: React.FC<CollapsibleNestedRolePermis
     )
 
     return (
-      <div className='collapsible-nested-list list-container'>
-        {mainItemsFiltered?.map((mainItem, index) => (
-          <div key={index}>
+      <PanelSearch
+        header={
+          <Row className='table-header'>
+            <Flex className='px-3'>Name</Flex>
+          </Row>
+        }
+        renderRow={(mainItem: NameAndId, index: number) => (
+          <div
+            className='list-item d-flex flex-column justify-content-center py-2 list-item-sm clickable'
+            key={index}
+          >
             <Row
+              className='px-3 flex-fill align-items-center user-select-none'
               key={index}
               onClick={() => toggleExpand(mainItem.id)}
-              className='clickable cursor-pointer list-item-sm px-3 list-row'
             >
               <Flex>
                 <div className={'list-item-subtitle'}>
@@ -146,14 +177,16 @@ const CollapsibleNestedRolePermissionsList: React.FC<CollapsibleNestedRolePermis
                   />
                 </div>
               </Flex>
-              <Icon
-                name={
-                  expandedItems.includes(mainItem.id)
-                    ? 'chevron-down'
-                    : 'chevron-right'
-                }
-                width={25}
-              />
+              <div>
+                <Icon
+                  fill={'#9DA4AE'}
+                  name={
+                    expandedItems.includes(mainItem.id)
+                      ? 'chevron-down'
+                      : 'chevron-right'
+                  }
+                />
+              </div>
             </Row>
             <div>
               {expandedItems.includes(mainItem.id) && (
@@ -161,6 +194,7 @@ const CollapsibleNestedRolePermissionsList: React.FC<CollapsibleNestedRolePermis
                   id={mainItem.id}
                   level={level}
                   role={role}
+                  className='mt-2 px-3'
                   permissionChanged={() => {
                     if (!unsavedProjects.includes(mainItem.id)) {
                       setUnsavedProjects((prevUnsavedProjects) => [
@@ -174,9 +208,12 @@ const CollapsibleNestedRolePermissionsList: React.FC<CollapsibleNestedRolePermis
               )}
             </div>
           </div>
-        ))}
-      </div>
+        )}
+        items={mainItemsFiltered || []}
+        className='no-pad'
+      />
     )
-  })
+  },
+)
 
-export default CollapsibleNestedRolePermissionsList
+export default RolePermissionsList

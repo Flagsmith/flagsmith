@@ -49,8 +49,8 @@ Read more about our Client-side SDKs for your language/platform:
 ## Server-side SDKs
 
 [Server-side SDKs](/clients/server-side.md) run within _trusted environments_ - typically the server infrastructure that
-you have control over. Because of this you need to should not share your Server-side Environment keys publicly - they
-should be treated as secrets.
+you have control over. Because of this, you should not share your Server-side Environment keys publicly; they should be
+treated as secret.
 
 :::tip
 
