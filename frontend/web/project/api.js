@@ -216,6 +216,7 @@ global.API = {
 
         amplitude.getInstance().identify(identify)
       }
+      API.flagsmithIdentify()
     } catch (e) {
       console.error('Error identifying', e)
     }
