@@ -90,6 +90,7 @@ global.API = {
       return
     }
 
+    debugger
     flagsmith
       .identify(user.email, {
         email: user.email,
@@ -110,14 +111,10 @@ global.API = {
           API.getFlagsmithHasFeature('delighted')
         ) {
           delighted.survey({
-            // customer name (optional)
-            createdAt: organisation?.created_date || new Date().toISOString(),
-
+            createdAt: user.date_joined || new Date().toISOString(),
             email: user.email,
-            // customer email (optional)
             name: `${user.first_name || ''} ${user.last_name || ''}`, // time subscribed (optional)
             properties: {
-              // extra context (optional)
               company: organisation?.name,
             },
           })
