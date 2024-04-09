@@ -107,7 +107,7 @@ global.API = {
         const organisation = AccountStore.getOrganisation()
         if (
           typeof delighted !== 'undefined' &&
-          API.getFlagsmithHasFeature('delighted')
+          flagsmith.hasFeature('delighted')
         ) {
           delighted.survey({
             createdAt: user.date_joined || new Date().toISOString(),
