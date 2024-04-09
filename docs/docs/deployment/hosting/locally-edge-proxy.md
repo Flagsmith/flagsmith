@@ -10,14 +10,129 @@ The Edge Proxy can be configured using a json configuration file (named `config.
 
 You can set the following configuration in `config.json` to control the behaviour of the Edge Proxy:
 
-- **environment_key_pairs**: An array of environment key pair objects, e.g:
-  `"environment_key_pairs":[{"server_side_key":"your_server_side_key", "client_side_key":"your_client_side_environment_key"}]`
-- **[optional] api_poll_frequency(seconds)**: Control how often the Edge Proxy is going to ping the server for changes,
-  e.g: `"api_poll_frequency":10`
-- **[optional] api_url**: If you are running a self hosted version of flagsmith you can set the self hosted url here for
-  edge-proxy in order to connect to your server, e.g: `"api_url":"https://self.hosted.flagsmith.domain/api/v1"`
+### `environment_key_pairs`
 
-After setting up the above configuration the `config.json` is going to look something like this:
+An array of environment key pair objects:
+
+```json
+"environment_key_pairs": [{
+  "server_side_key": "your_server_side_key",
+  "client_side_key": "your_client_side_environment_key"
+}]
+```
+
+### `api_poll_frequency`
+
+:::note
+
+This setting is optional.
+
+:::
+
+Control how often the Edge Proxy is going to ping the server for changes, in seconds:
+
+```json
+"api_poll_frequency": 10
+```
+
+### `api_url`
+
+:::note
+
+This setting is optional.
+
+:::
+
+Set if you are running a self hosted version of Flagsmith:
+
+```json
+"api_url": "https://my-flagsmith.domain.com/api/v1"
+```
+
+If not set, defaults to Flagsmith's Edge API.
+
+### `allow_origins`
+
+:::note
+
+This setting is optional.
+
+:::
+
+Set a value for the `Access-Control-Allow-Origin` header.
+
+```json
+"allow_origins": "https://my-flagsmith.domain.com"
+```
+
+If not set, defaults to `*`.
+
+### `endpoint_caches`
+
+:::note
+
+This setting is optional.
+
+:::
+
+Enable a LRU cache per endpoint:
+
+```json
+"endpoint_caches": {
+  "flags": {
+    "use_cache": false
+  },
+  "identities": {
+    "use_cache": false
+  }
+}
+```
+
+### `logging.log_level`
+
+:::note
+
+This setting is optional.
+
+:::
+
+Choose a logging level from `"CRITICAL"`, `"ERROR"`, `"WARNING"`, `"INFO"`, `"DEBUG"`. Defaults to `"INFO"`.
+
+```json
+"logging": {"log_level": "DEBUG"}
+```
+
+### `logging.log_format`
+
+:::note
+
+This setting is optional.
+
+:::
+
+Choose a logging forman between `"generic"` and `"json"`. Defaults to `"generic"`.
+
+```json
+"logging": {"log_format": "json"}
+```
+
+### `logging.log_event_field_name`
+
+:::note
+
+This setting is optional.
+
+:::
+
+Set a name used for human-readable log entry field when logging events in JSON. Defaults to `"message"`.
+
+```json
+"logging": {"log_event_field_name": "event"}
+```
+
+### `config.json` example
+
+Here's an example of a minimal working Edge Proxy configuration:
 
 ```json
 {
