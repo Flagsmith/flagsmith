@@ -82,8 +82,47 @@ global.API = {
       const identify = new amplitude.Identify().set('email', id)
       amplitude.getInstance().identify(identify)
     }
-    flagsmith.identify(id)
-    flagsmith.setTrait('email', id)
+    API.flagsmithIdentify()
+  },
+  flagsmithIdentify() {
+    const user = AccountStore.model
+    if (!user) {
+      return
+    }
+
+    flagsmith
+      .identify(user.email, {
+        email: user.email,
+        organisations: user.organisations
+          ? user.organisations.map((o) => `"${o.id}"`).join(',')
+          : '',
+      })
+      .then(() => {
+        return flagsmith.setTrait(
+          'logins',
+          (flagsmith.getTrait('logins') || 0) + 1,
+        )
+      })
+      .then(() => {
+        const organisation = AccountStore.getOrganisation()
+        if (
+          typeof delighted !== 'undefined' &&
+          API.getFlagsmithHasFeature('delighted')
+        ) {
+          delighted.survey({
+            // customer name (optional)
+            createdAt: organisation?.created_date || new Date().toISOString(),
+
+            email: user.email,
+            // customer email (optional)
+            name: `${user.first_name || ''} ${user.last_name || ''}`, // time subscribed (optional)
+            properties: {
+              // extra context (optional)
+              company: organisation?.name,
+            },
+          })
+        }
+      })
   },
   getCookie(key) {
     const res = require('js-cookie').get(key)
@@ -177,14 +216,6 @@ global.API = {
 
         amplitude.getInstance().identify(identify)
       }
-      flagsmith.identify(id)
-      flagsmith.setTrait(
-        'organisations',
-        user.organisations
-          ? user.organisations.map((o) => `"${o.id}"`).join(',')
-          : '',
-      )
-      flagsmith.setTrait('email', id)
     } catch (e) {
       console.error('Error identifying', e)
     }
