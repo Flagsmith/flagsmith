@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.107.2](https://github.com/Flagsmith/flagsmith/compare/v2.107.1...v2.107.2) (2024-04-09)
+
+
+### Bug Fixes
+
+* Revert "feat: Support multiple OR'd search terms in sales-dashboard" ([#3739](https://github.com/Flagsmith/flagsmith/issues/3739)) ([7dd0c82](https://github.com/Flagsmith/flagsmith/commit/7dd0c8296859717f9723047605dac9ed44ae77b0))
+
 ## [2.107.1](https://github.com/Flagsmith/flagsmith/compare/v2.107.0...v2.107.1) (2024-04-09)
 
 
