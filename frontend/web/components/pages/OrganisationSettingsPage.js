@@ -331,7 +331,7 @@ const OrganisationSettingsPage = class extends Component {
         >
           {({ isSaving, organisation }, { deleteOrganisation }) =>
             !!organisation && (
-              <OrganisationProvider>
+              <OrganisationProvider id={AccountStore.getOrganisation()?.id}>
                 {({
                   error,
                   groups,

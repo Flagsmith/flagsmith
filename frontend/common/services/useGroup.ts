@@ -106,10 +106,10 @@ export const groupService = service
           }
           //Add the members
           if (query.users?.length) {
-            const { error } = await baseQuery({
+            await baseQuery({
               body: { user_ids: query.data.users.map((u) => u.id) },
               method: 'POST',
-              url: `organisations/${query.orgId}/groups/${data.id}/`,
+              url: `organisations/${query.orgId}/groups/${data.id}/add-users/`,
             })
           }
           // Make the admins

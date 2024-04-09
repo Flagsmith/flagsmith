@@ -737,7 +737,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
             This will edit the permissions for{' '}
             <strong>
               {isGroup ? (
-                `the ${name} group`
+                `the ${group?.name || ''} group`
               ) : user ? (
                 <>
                   {user.first_name || ''} {user.last_name || ''}
