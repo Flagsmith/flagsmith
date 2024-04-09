@@ -273,8 +273,8 @@
             "destination": "/integrations/project-management/slack"
         },
         {
-            "source": "/clients/openfeature",
-            "destination": "/advanced-use/openfeature"
+            "source": "/advanced-use/openfeature",
+            "destination": "/clients/openfeature"
         }
     ]
 }
