@@ -103,7 +103,7 @@ const withAdminPermissions = (InnerComponent: any) => {
     const { id, level } = props
     const notReady = !id || !level
     const { data: adminPermissions, isLoading: permissionsLoading } =
-      useGetPermissionQuery({ id: parseInt(id), level }, { skip: notReady })
+      useGetPermissionQuery({ id: `${id}`, level }, { skip: notReady })
 
     if (permissionsLoading || notReady) {
       return (
