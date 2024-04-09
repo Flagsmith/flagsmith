@@ -5,6 +5,11 @@ import { oneOf } from 'prop-types'
  */
 const Tabs = class extends React.Component {
   static displayName = 'Tabs'
+
+  static contextTypes = {
+    router: propTypes.object.isRequired,
+  }
+
   constructor() {
     super()
     this.state = {
@@ -15,7 +20,21 @@ const Tabs = class extends React.Component {
     const children = (
       this.props.children?.length ? this.props.children : [this.props.children]
     ).filter((c) => !!c)
-    const value = this.props.uncontrolled ? this.state.value : this.props.value
+    let value = this.props.uncontrolled ? this.state.value : this.props.value
+    if (this.props.urlParam) {
+      const tabParam = Utils.fromParam()[this.props.urlParam]
+      if (tabParam) {
+        const tab = children.findIndex((v) => {
+          return (
+            v?.props?.tabLabel?.toLowerCase().replace(/ /g, '-') === tabParam
+          )
+        })
+        if (tab !== -1) {
+          value = tab
+        }
+      }
+    }
+
     const hideNav = children.length === 1 && this.props.hideNavOnSingleTab
     return (
       <div className={`tabs ${this.props.className || ''}`}>
@@ -39,6 +58,17 @@ const Tabs = class extends React.Component {
                   onClick={(e) => {
                     e.stopPropagation()
                     e.preventDefault()
+                    if (this.props.urlParam) {
+                      const currentParams = Utils.fromParam()
+                      this.context.router.history.replace(
+                        `${document.location.pathname}?${Utils.toParam({
+                          ...currentParams,
+                          [this.props.urlParam]: child.props.tabLabel
+                            .toLowerCase()
+                            .replace(/ /g, '-'),
+                        })}`,
+                      )
+                    }
                     if (this.props.uncontrolled) {
                       this.setState({ value: i })
                     } else {

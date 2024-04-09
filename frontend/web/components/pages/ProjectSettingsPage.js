@@ -19,7 +19,6 @@ import AccountStore from 'common/stores/account-store'
 import ImportPage from 'components/import-export/ImportPage'
 import FeatureExport from 'components/import-export/FeatureExport'
 import ProjectUsage from 'components/ProjectUsage'
-import ProjectStore from 'common/stores/project-store'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -190,7 +189,7 @@ const ProjectSettingsPage = class extends Component {
               <div>
                 <PageTitle title={'Project Settings'} />
                 {
-                  <Tabs className='mt-0' uncontrolled>
+                  <Tabs urlParam='tab' className='mt-0' uncontrolled>
                     <TabItem tabLabel='General'>
                       <div className='mt-4'>
                         <JSONReference
