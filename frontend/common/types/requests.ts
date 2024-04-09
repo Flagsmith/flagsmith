@@ -1,12 +1,11 @@
 import {
   Account,
+  FeatureState,
+  FeatureStateValue,
+  ImportStrategy,
   Segment,
   Tag,
-  FeatureStateValue,
-  FeatureState,
-  Role,
-  ImportStrategy,
-  APIKey,
+  UserGroup,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -102,7 +101,7 @@ export type Req = {
     user: number | string
   }
   getGroups: PagedRequest<{
-    orgId: string
+    orgId: number
   }>
   deleteGroup: { id: number | string; orgId: number | string }
   getGroup: { id: string; orgId: string }
@@ -307,6 +306,20 @@ export type Req = {
     id: string
   }
   getProject: { id: string }
+  createGroup: {
+    orgId: string
+    data: Omit<UserGroup, 'id' | 'users'>
+    users: UserGroup['users']
+    usersToAddAdmin: number[] | null
+  }
   getUserGroupPermission: { project_id: string }
+  updateGroup: Req['createGroup'] & {
+    orgId: string
+    data: UserGroup
+    users: UserGroup['users']
+
+    usersToAddAdmin: number[] | null
+    usersToRemoveAdmin: number[] | null
+  }
   // END OF TYPES
 }

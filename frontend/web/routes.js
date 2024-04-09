@@ -13,7 +13,6 @@ import IntegrationsPage from './components/pages/IntegrationsPage'
 import FlagsPage from './components/pages/FeaturesPage'
 import SegmentsPage from './components/pages/SegmentsPage'
 import OrganisationSettingsPage from './components/pages/OrganisationSettingsPage'
-import OrganisationGroupsPage from './components/pages/OrganisationGroupsPage'
 import AccountSettingsPage from './components/pages/AccountSettingsPage'
 import NotFoundErrorPage from './components/pages/NotFoundErrorPage'
 import ProjectSettingsPage from './components/pages/ProjectSettingsPage'
@@ -141,11 +140,6 @@ export default (
         path='/organisation-settings'
         exact
         component={OrganisationSettingsPage}
-      />
-      <Route
-        path='/organisation-groups'
-        exact
-        component={OrganisationGroupsPage}
       />
       <Route
         path='/project/:projectId/environment/:environmentId/account'

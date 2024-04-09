@@ -10,10 +10,10 @@ import {
 import { useGetUserGroupPermissionQuery } from 'common/services/useUserGroupPermission'
 import PanelSearch from './PanelSearch'
 import { sortBy } from 'lodash'
-import InfoMessage from './InfoMessage' // we need this to make JSX compile
+import InfoMessage from './InfoMessage'
 import Icon from './Icon'
-import Panel from './base/grid/Panel'
 import PermissionsSummaryList from './PermissionsSummaryList'
+import Panel from './base/grid/Panel'
 
 type UserGroupsListType = {
   noTitle?: boolean
@@ -78,11 +78,12 @@ const UserGroupsRow: FC<UserGroupsRowType> = ({
   return (
     <Row
       space
+      onClick={_onClick}
       className='list-item list-item-sm clickable'
       key={id}
       data-test={`user-item-${index}`}
     >
-      <Flex onClick={_onClick} className=' table-column px-3'>
+      <Flex className=' table-column px-3'>
         <div className='font-weight-medium'>{name}</div>
       </Flex>
       {permissionSummary && <Flex>{permissionSummary}</Flex>}
@@ -137,10 +138,15 @@ const UserGroupsList: FC<UserGroupsListType> = ({
   showRemove,
 }) => {
   const [page, setPage] = useState(1)
-  const { data: userGroups, isLoading } = useGetGroupsQuery({
-    orgId: `${orgId}`,
-    page,
-  })
+  const { data: userGroups, isLoading } = useGetGroupsQuery(
+    {
+      orgId: parseInt(`${orgId}`),
+      page,
+    },
+    {
+      skip: !orgId,
+    },
+  )
   const { data: userGroupsPermission, isLoading: userGroupPermissionLoading } =
     useGetUserGroupPermissionQuery(
       {
@@ -155,7 +161,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
     ? [...userGroupsPermission]
     : []
 
-  if (userGroupsPermission?.length > 0) {
+  if (userGroupsPermission && userGroupsPermission?.length > 0) {
     userGroups?.results.forEach((group) => {
       const existingPermissionIndex =
         mergeduserGroupsPermissionWithUserGroups.findIndex(

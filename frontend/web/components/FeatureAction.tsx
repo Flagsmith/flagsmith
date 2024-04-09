@@ -7,6 +7,7 @@ import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
 import Button from './base/forms/Button'
 import Icon from './Icon'
+import ActionButton from './ActionButton'
 
 interface FeatureActionProps {
   projectId: string
@@ -93,23 +94,10 @@ export const FeatureAction: FC<FeatureActionProps> = ({
   return (
     <div className='feature-action'>
       <div ref={btnRef}>
-        <Button
-          style={{
-            lineHeight: 0,
-            padding: isCompact ? '0.625rem' : '0.875rem',
-          }}
-          className={classNames('btn btn-with-icon', {
-            'btn-sm': isCompact,
-          })}
-          data-test={`feature-action-${featureIndex}`}
+        <ActionButton
           onClick={() => setIsOpen(true)}
-        >
-          <Icon
-            name='more-vertical'
-            width={isCompact ? 16 : 18}
-            fill='#6837FC'
-          />
-        </Button>
+          data-test={`feature-action-${featureIndex}`}
+        />
       </div>
 
       {isOpen && (
