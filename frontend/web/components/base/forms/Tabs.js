@@ -62,7 +62,9 @@ const Tabs = class extends React.Component {
                     e.preventDefault()
                     if (this.props.urlParam) {
                       const currentParams = Utils.fromParam()
-                      this.context.router.history.replace(
+                      const history =
+                        this.props.history || this.context.router.history
+                      history.replace(
                         `${document.location.pathname}?${Utils.toParam({
                           ...currentParams,
                           [this.props.urlParam]: (
@@ -72,12 +74,10 @@ const Tabs = class extends React.Component {
                             .replace(/ /g, '-'),
                         })}`,
                       )
-                    }
-                    if (this.props.uncontrolled) {
+                    } else if (this.props.uncontrolled) {
                       this.setState({ value: i })
-                    } else {
-                      this.props.onChange(i)
                     }
+                    this.props.onChange?.(i)
                   }}
                   className={`btn-tab ${isSelected ? ' tab-active' : ''}`}
                 >
