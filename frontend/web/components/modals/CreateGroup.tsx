@@ -134,7 +134,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
     if (group) {
       const data: Req['updateGroup']['data'] = {
         ...group,
-        external_id: externalId,
+        external_id: externalId || null,
         is_default: isDefault,
         name,
         users: users as any,
@@ -153,7 +153,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       })
     } else {
       const data: Req['createGroup']['data'] = {
-        external_id: externalId,
+        external_id: externalId || null,
         is_default: isDefault,
         name,
       }
@@ -162,6 +162,11 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
         orgId,
         users: users as any,
         usersToAddAdmin: (usersToAddAdmin || []).map((user) => user.id),
+      }).then((data) => {
+        if (!data.error) {
+          toast('Created Group')
+          closeModal()
+        }
       })
     }
   }
