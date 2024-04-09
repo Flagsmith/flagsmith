@@ -44,6 +44,8 @@ type QueryBody = {
   }[]
 }
 
+type metadataListType = { label: string; value: string; isRequired?: boolean }
+
 const CreateMetadata: FC<CreateMetadataType> = ({
   id,
   isEdit,
@@ -110,21 +112,21 @@ const CreateMetadata: FC<CreateMetadataType> = ({
           ?.filter((m: MetadataModelField) => m.is_required_for.length > 0)
           .map((m: MetadataModelField) => m.content_type),
       )
-      setFlagsEnabled(
-        !!metadataModelFieldList?.find(
-          (i: MetadataModelField) => i.content_type == featureContentType,
-        ),
-      )
-      setSegmentsEnabled(
-        !!metadataModelFieldList?.find(
-          (i: MetadataModelField) => i.content_type == segmentContentType,
-        ),
-      )
-      setEnvironmentEnabled(
-        !!metadataModelFieldList?.find(
-          (i: MetadataModelField) => i.content_type == environmentContentType,
-        ),
-      )
+      // setFlagsEnabled(
+      //   !!metadataModelFieldList?.find(
+      //     (i: MetadataModelField) => i.content_type == featureContentType,
+      //   ),
+      // )
+      // setSegmentsEnabled(
+      //   !!metadataModelFieldList?.find(
+      //     (i: MetadataModelField) => i.content_type == segmentContentType,
+      //   ),
+      // )
+      // setEnvironmentEnabled(
+      //   !!metadataModelFieldList?.find(
+      //     (i: MetadataModelField) => i.content_type == environmentContentType,
+      //   ),
+      // )
       setFlagRequired(
         !!metadataModelFieldList?.find(
           (i: MetadataModelField) =>
@@ -167,61 +169,61 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   const [typeValue, setTypeValue] = useState<MetadataType>()
   const [name, setName] = useState<string>('')
   const [description, setDescription] = useState<string>('')
-  const [environmentEnabled, setEnvironmentEnabled] = useState<boolean>(false)
-  const [segmentEnabled, setSegmentsEnabled] = useState<boolean>(false)
-  const [flagEnabled, setFlagsEnabled] = useState<boolean>(false)
   const [environmentRequired, setEnvironmentRequired] = useState<boolean>(false)
   const [segmentRequired, setSegmentRequired] = useState<boolean>(false)
   const [flagRequired, setFlagRequired] = useState<boolean>(false)
   const [metadataFieldsArray, setMetadataFieldsArray] = useState<array>([])
   const [requiredMetadataModelFields, setRequiredMetadataModelFields] =
     useState<array>([])
+  const [metadataSelectList, setMetadataSelectList] = useState<
+    metadataListType[]
+  >([])
 
-  const handleMetadataModelField = (contentTypeId, enabled: boolean) => {
-    if (enabled) {
-      addMetadataField(contentTypeId)
-    } else {
-      removeMetadataField(contentTypeId)
-    }
-  }
+  // const handleMetadataModelField = (contentTypeId, enabled: boolean) => {
+  //   if (enabled) {
+  //     addMetadataField(contentTypeId)
+  //   } else {
+  //     removeMetadataField(contentTypeId)
+  //   }
+  // }
 
-  const handleRequiredMetadataModelField = (
-    contentTypeId,
-    enabled: boolean,
-  ) => {
-    if (enabled) {
-      addRequiredMetadataModelFields(contentTypeId)
-    } else {
-      removeRequiredMetadataModelField(contentTypeId)
-    }
-  }
+  // const handleRequiredMetadataModelField = (
+  //   contentTypeId,
+  //   enabled: boolean,
+  // ) => {
+  //   if (enabled) {
+  //     addRequiredMetadataModelFields(contentTypeId)
+  //   } else {
+  //     removeRequiredMetadataModelField(contentTypeId)
+  //   }
+  // }
 
-  const addMetadataField = (newMetadataField) => {
-    setMetadataFieldsArray([...metadataFieldsArray, newMetadataField])
-  }
+  // const addMetadataField = (newMetadataField) => {
+  //   setMetadataFieldsArray([...metadataFieldsArray, newMetadataField])
+  // }
 
-  const addRequiredMetadataModelFields = (newRequiredMetadataField) => {
-    setRequiredMetadataModelFields([
-      ...requiredMetadataModelFields,
-      newRequiredMetadataField,
-    ])
-  }
+  // const addRequiredMetadataModelFields = (newRequiredMetadataField) => {
+  //   setRequiredMetadataModelFields([
+  //     ...requiredMetadataModelFields,
+  //     newRequiredMetadataField,
+  //   ])
+  // }
 
-  const removeMetadataField = (metadataFieldToRemove) => {
-    const updatedMetadataFields = metadataFieldsArray.filter(
-      (m) => m !== metadataFieldToRemove,
-    )
-    setMetadataFieldsArray(updatedMetadataFields)
-  }
+  // const removeMetadataField = (metadataFieldToRemove) => {
+  //   const updatedMetadataFields = metadataFieldsArray.filter(
+  //     (m) => m !== metadataFieldToRemove,
+  //   )
+  //   setMetadataFieldsArray(updatedMetadataFields)
+  // }
 
-  const removeRequiredMetadataModelField = (requiredMetadataFieldToRemove) => {
-    const requiredMetadataModelFieldsToRemove =
-      requiredMetadataModelFields.filter(
-        (m) => m !== requiredMetadataFieldToRemove,
-      )
+  // const removeRequiredMetadataModelField = (requiredMetadataFieldToRemove) => {
+  //   const requiredMetadataModelFieldsToRemove =
+  //     requiredMetadataModelFields.filter(
+  //       (m) => m !== requiredMetadataFieldToRemove,
+  //     )
 
-    setRequiredMetadataModelFields(requiredMetadataModelFieldsToRemove)
-  }
+  //   setRequiredMetadataModelFields(requiredMetadataModelFieldsToRemove)
+  // }
 
   return (
     <div className='create-feature-tab px-3'>
@@ -272,6 +274,9 @@ const CreateMetadata: FC<CreateMetadataType> = ({
       <SupportedContentTypesSelect
         organisationId={organisationId}
         isEdit={isEdit}
+        getMetadataContentTypes={(m: metadataListType[]) => {
+          setMetadataSelectList(m)
+        }}
       />
 
       {/* {isEdit && (
@@ -365,7 +370,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
         </div>
       )} */}
       <Button
-        disabled={!name || !typeValue}
+        disabled={!name || !typeValue || !metadataSelectList}
         onClick={() => {
           if (isEdit) {
             updateMetadata({
@@ -454,7 +459,19 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 organisation: organisationId,
                 type: `${typeValue?.value}`,
               },
-            }).then((res) => {})
+            }).then((res) => {
+              Promise.all(
+                metadataSelectList.map(async (m) => {
+                  await createMetadataField({
+                    body: {
+                      content_type: m.value,
+                      field: `${res?.data?.id}`,
+                    },
+                    organisation_id: organisationId,
+                  })
+                }),
+              )
+            })
           }
         }}
         className='float-right'

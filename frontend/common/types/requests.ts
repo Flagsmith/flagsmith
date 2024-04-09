@@ -220,7 +220,7 @@ export type Req = {
   createMetadataModelField: {
     organisation_id: string
     body: {
-      content_type: number
+      content_type: number | string
       field: string
     }
   }
