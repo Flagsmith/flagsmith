@@ -26,7 +26,9 @@ const Tabs = class extends React.Component {
       if (tabParam) {
         const tab = children.findIndex((v) => {
           return (
-            v?.props?.tabLabel?.toLowerCase().replace(/ /g, '-') === tabParam
+            (v?.props?.tabLabelString || v?.props?.tabLabel)
+              ?.toLowerCase()
+              .replace(/ /g, '-') === tabParam
           )
         })
         if (tab !== -1) {
@@ -63,7 +65,9 @@ const Tabs = class extends React.Component {
                       this.context.router.history.replace(
                         `${document.location.pathname}?${Utils.toParam({
                           ...currentParams,
-                          [this.props.urlParam]: child.props.tabLabel
+                          [this.props.urlParam]: (
+                            child.props.tabLabelString || child.props.tabLabel
+                          )
                             .toLowerCase()
                             .replace(/ /g, '-'),
                         })}`,

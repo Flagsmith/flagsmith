@@ -29,7 +29,6 @@ const ImportPage: FC<ImportPageType> = ({
   projectId,
   projectName,
 }) => {
-  const [tab, setTab] = useState(0)
   const [LDKey, setLDKey] = useState<string>('')
   const [importId, setImportId] = useState<number>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -233,7 +232,7 @@ const ImportPage: FC<ImportPageType> = ({
       )}
       <div className='mt-4'>
         {Utils.getFlagsmithHasFeature('flagsmith_import_export') ? (
-          <Tabs value={tab} onChange={setTab} theme='pill'>
+          <Tabs urlParam={'import'} theme='pill'>
             <TabItem tabLabel={'Flagsmith'}>
               <div className='mt-4'>
                 <FeatureImport projectId={projectId} />

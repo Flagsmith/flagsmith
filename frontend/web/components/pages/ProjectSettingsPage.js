@@ -19,6 +19,7 @@ import AccountStore from 'common/stores/account-store'
 import ImportPage from 'components/import-export/ImportPage'
 import FeatureExport from 'components/import-export/FeatureExport'
 import ProjectUsage from 'components/ProjectUsage'
+import ProjectStore from 'common/stores/project-store'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'

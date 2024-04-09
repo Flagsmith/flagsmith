@@ -385,12 +385,7 @@ const OrganisationSettingsPage = class extends Component {
                         <OrganisationManageWidget />
                       </div>
 
-                      <Tabs
-                        hideNavOnSingleTab
-                        value={this.state.tab || 0}
-                        onChange={(tab) => this.setState({ tab })}
-                        className='mt-0'
-                      >
+                      <Tabs hideNavOnSingleTab urlParam='tab' className='mt-0'>
                         {displayedTabs.includes(SettingsTab.Projects) && (
                           <TabItem tabLabel='Projects'>
                             <h5 className='mt-4 mb-2'>Projects</h5>
@@ -729,7 +724,11 @@ const OrganisationSettingsPage = class extends Component {
                                     )}
                                     {!isLoading && (
                                       <div>
-                                        <Tabs theme='pill' uncontrolled>
+                                        <Tabs
+                                          urlParam={'type'}
+                                          theme='pill'
+                                          uncontrolled
+                                        >
                                           <TabItem tabLabel='Members'>
                                             <Row space className='mt-4'>
                                               <h5 className='mb-0'>
@@ -808,13 +807,26 @@ const OrganisationSettingsPage = class extends Component {
                                                               {
                                                                 <a
                                                                   href='#'
-                                                                  onClick={() =>
-                                                                    this.setState(
-                                                                      {
-                                                                        tab: 0,
-                                                                      },
+                                                                  onClick={() => {
+                                                                    const params =
+                                                                      Utils.fromParam()
+                                                                    this.props.router.history.replace(
+                                                                      `${
+                                                                        document
+                                                                          .location
+                                                                          .pathname
+                                                                      }?${Utils.toParam(
+                                                                        {
+                                                                          ...Utils.fromParam(),
+                                                                          tab: this
+                                                                            .state
+                                                                            .tab
+                                                                            ? 'closed'
+                                                                            : 'open',
+                                                                        },
+                                                                      )}`,
                                                                     )
-                                                                  }
+                                                                  }}
                                                                 >
                                                                   Upgrade your
                                                                   plan
@@ -1545,8 +1557,7 @@ const OrganisationSettingsPage = class extends Component {
 
                         {displayedTabs.includes(SettingsTab.Usage) && (
                           <TabItem tabLabel='Usage'>
-                            {this.state.tab ===
-                              displayedTabs.indexOf(SettingsTab.Usage) && (
+                            {Utils.fromParam().tab === 'usage' && (
                               <OrganisationUsage
                                 organisationId={organisation.id}
                               />
