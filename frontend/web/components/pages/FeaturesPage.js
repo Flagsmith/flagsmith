@@ -35,11 +35,22 @@ const FeaturesPage = class extends Component {
     super(props, context)
     const params = Utils.fromParam()
     this.state = {
-      group_owners: [],
-      is_enabled: null,
+      group_owners:
+        typeof params.group_owners === 'string'
+          ? params.group_owners.split(',').map((v) => parseInt(v))
+          : [],
+      is_enabled:
+        params.is_enabled === 'true'
+          ? true
+          : params.is_enabled === 'false'
+          ? false
+          : null,
       loadedOnce: false,
-      owners: typeof params.owners === 'string' ? params.owners.split(',') : [],
-      page: params.page ? parseInt(params.page) : 1,
+      owners:
+        typeof params.owners === 'string'
+          ? params.owners.split(',').map((v) => parseInt(v))
+          : [],
+      page: params.page ? parseInt(params.page) - 1 : 1,
       search: params.search || null,
       showArchived: !!params.is_archived,
       sort: {
@@ -48,7 +59,10 @@ const FeaturesPage = class extends Component {
         sortOrder: params.sortOrder || 'asc',
       },
       tag_strategy: params.tag_strategy || 'INTERSECTION',
-      tags: typeof params.tags === 'string' ? params.tags.split(',') : [],
+      tags:
+        typeof params.tags === 'string'
+          ? params.tags.split(',').map((v) => parseInt(v))
+          : [],
       value_search:
         typeof params.value_search === 'string' ? params.value_search : '',
     }
@@ -111,11 +125,13 @@ const FeaturesPage = class extends Component {
 
   getURLParams = () => ({
     ...this.getFilter(),
+    group_owners: (this.state.group_owners || [])?.join(',') || undefined,
+    owners: (this.state.owners || [])?.join(',') || undefined,
     page: this.state.page || 1,
     search: this.state.search || '',
     sortBy: this.state.sort.sortBy,
     sortOrder: this.state.sort.sortOrder,
-    tags: (this.state.tags || [])?.join(','),
+    tags: (this.state.tags || [])?.join(',') || undefined,
   })
 
   getFilter = () => ({
@@ -151,11 +167,12 @@ const FeaturesPage = class extends Component {
     }
   }
 
-  filter = (skipRouting, page) => {
+  filter = (page) => {
     const currentParams = Utils.fromParam()
     // this.props.router.push()
     this.setState({ page }, () => {
-      if (!currentParams.feature && !skipRouting) {
+      if (!currentParams.feature) {
+        // don't replace page if we are currently viewing a feature
         this.props.router.history.replace(
           `${document.location.pathname}?${Utils.toParam(this.getURLParams())}`,
         )
@@ -357,7 +374,7 @@ const FeaturesPage = class extends Component {
                                               {
                                                 tag_strategy,
                                               },
-                                              () => this.filter(isAutomated),
+                                              this.filter,
                                             )
                                           }}
                                           value={this.state.tags}
@@ -394,8 +411,7 @@ const FeaturesPage = class extends Component {
                                               ) {
                                                 this.setState(
                                                   { tags: [''] },
-                                                  () =>
-                                                    this.filter(isAutomated),
+                                                  this.filter,
                                                 )
                                               } else {
                                                 this.setState(
@@ -404,13 +420,13 @@ const FeaturesPage = class extends Component {
                                                       (v) => !!v,
                                                     ),
                                                   },
-                                                  () =>
-                                                    this.filter(isAutomated),
+                                                  this.filter,
                                                 )
                                               }
                                             } else {
-                                              this.setState({ tags }, () =>
-                                                this.filter(isAutomated),
+                                              this.setState(
+                                                { tags },
+                                                this.filter,
                                               )
                                             }
                                           }}
@@ -521,18 +537,12 @@ const FeaturesPage = class extends Component {
                                   </Row>
                                 }
                                 nextPage={() =>
-                                  this.filter(
-                                    false,
-                                    FeatureListStore.paging.next,
-                                  )
+                                  this.filter(FeatureListStore.paging.next)
                                 }
                                 prevPage={() =>
-                                  this.filter(
-                                    false,
-                                    FeatureListStore.paging.previous,
-                                  )
+                                  this.filter(FeatureListStore.paging.previous)
                                 }
-                                goToPage={(page) => this.filter(false, page)}
+                                goToPage={(page) => this.filter(page)}
                                 items={projectFlags?.filter((v) => !v.ignore)}
                                 renderFooter={() => (
                                   <>

@@ -12,7 +12,7 @@ const { createSegmentOverride } = require('../services/useSegmentOverride')
 const { getStore } = require('../store')
 
 let createdFirstFeature = false
-const PAGE_SIZE = 1
+const PAGE_SIZE = 200
 function recursivePageGet(url, parentRes) {
   return data.get(url).then((res) => {
     let response
