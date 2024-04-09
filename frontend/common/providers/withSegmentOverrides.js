@@ -60,7 +60,7 @@ export default (WrappedComponent) => {
                 const multiVariates =
                   res2 &&
                   res2.results.find(
-                    (mv) => (mv.feature_segment = f.feature_segment),
+                    (mv) => mv.feature_segment === f.feature_segment,
                   )
                 results[index].multivariate_feature_state_values =
                   (multiVariates &&
