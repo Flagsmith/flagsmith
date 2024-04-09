@@ -32,8 +32,26 @@ This setting is optional.
 Control how often the Edge Proxy is going to ping the server for changes, in seconds:
 
 ```json
-"api_poll_frequency": 10
+"api_poll_frequency": 30
 ```
+
+Defaults to `10`.
+
+### `api_poll_timeout`
+
+:::note
+
+This setting is optional.
+
+:::
+
+Specify the request timeout when trying to retrieve new changes, in seconds:
+
+```json
+"api_poll_timeout": 1
+```
+
+Defaults to `5`.
 
 ### `api_url`
 
@@ -75,7 +93,9 @@ This setting is optional.
 
 :::
 
-Enable a LRU cache per endpoint:
+Enable a LRU cache per endpoint.
+
+Optionally, specify the LRU cache size with `cache_max_size` (defaults to 128):
 
 ```json
 "endpoint_caches": {
@@ -83,7 +103,8 @@ Enable a LRU cache per endpoint:
     "use_cache": false
   },
   "identities": {
-    "use_cache": false
+    "use_cache": true,
+    "cache_max_size": 1000,
   }
 }
 ```
