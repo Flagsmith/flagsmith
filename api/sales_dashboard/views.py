@@ -61,16 +61,11 @@ class OrganisationList(ListView):
 
         if self.request.GET.get("search"):
             search_term = self.request.GET["search"]
-            criteria = Q()
-            terms = search_term.split(",")
-            for t in terms:
-                term = t.strip()
-                criteria |= (
-                    Q(name__icontains=term)
-                    | Q(users__email__icontains=term)
-                    | Q(subscription__subscription_id=term)
-                )
-            queryset = queryset.filter(criteria)
+            queryset = queryset.filter(
+                Q(name__icontains=search_term)
+                | Q(users__email__icontains=search_term)
+                | Q(subscription__subscription_id=search_term)
+            )
 
         if self.request.GET.get("filter_plan"):
             filter_plan = self.request.GET["filter_plan"]
