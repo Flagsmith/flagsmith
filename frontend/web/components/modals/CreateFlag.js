@@ -535,11 +535,6 @@ const CreateFlag = class extends Component {
     this.state.valueChanged = true
     this.forceUpdate()
   }
-  addMetadata = (id) => {
-    this.setState({
-      metadata: (this.state.metadata || []).concat({ metadata: id }),
-    })
-  }
 
   removeMetadata = (id) => {
     this.setState({
@@ -669,7 +664,13 @@ const CreateFlag = class extends Component {
               contentType={featureContentType}
               isOpen={this.state.showMetadataList}
               value={metadataAdded && metadataAdded.map((v) => v.id)}
-              onAdd={this.addMetadata}
+              onAdd={(id) => {
+                this.setState({
+                  metadata: (this.state.metadata || []).concat({
+                    metadata: id,
+                  }),
+                })
+              }}
               onRemove={this.removeMetadata}
               setMetadataList={(ml) => {
                 this.setState({ metadataList: ml })
