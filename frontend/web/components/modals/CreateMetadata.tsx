@@ -37,9 +37,10 @@ type MetadataType = {
 type metadataUpdatedSelectListType = {
   id: number
   field: number
-  content_type: number
+  content_type: number | string
   is_required_for: boolean
   removed: boolean
+  new: boolean
 }
 
 type metadataListType = { label: string; value: string; isRequired?: boolean }
@@ -108,6 +109,16 @@ const CreateMetadata: FC<CreateMetadataType> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [creating, created])
 
+  const [typeValue, setTypeValue] = useState<MetadataType>()
+  const [name, setName] = useState<string>('')
+  const [description, setDescription] = useState<string>('')
+  const [metadataSelectList, setMetadataSelectList] = useState<
+    metadataListType[]
+  >([])
+  const [metadataUpdatedSelectList, setMetadataUpdatedSelectList] = useState<
+    metadataUpdatedSelectListType[]
+  >([])
+
   const save = () => {
     if (isEdit) {
       updateMetadata({
@@ -137,13 +148,17 @@ const CreateMetadata: FC<CreateMetadataType> = ({
               id: m.id,
               organisation_id: organisationId,
             }
-            if (!('removed' in m)) {
+            if (!('removed' in m) && !('new' in m)) {
               await updateMetadataField(query)
-            } else if (m.removed) {
+            } else if ('removed' in m) {
               await deleteMetadataModelField({
                 id: m.id,
                 organisation_id: organisationId,
               })
+            } else if ('new' in m) {
+              const newQuery = { ...query }
+              delete newQuery.id
+              await createMetadataField(newQuery)
             }
           }),
         )
@@ -172,16 +187,6 @@ const CreateMetadata: FC<CreateMetadataType> = ({
       })
     }
   }
-
-  const [typeValue, setTypeValue] = useState<MetadataType>()
-  const [name, setName] = useState<string>('')
-  const [description, setDescription] = useState<string>('')
-  const [metadataSelectList, setMetadataSelectList] = useState<
-    metadataListType[]
-  >([])
-  const [metadataUpdatedSelectList, setMetadataUpdatedSelectList] = useState<
-    metadataUpdatedSelectListType[]
-  >([])
 
   return (
     <div className='create-feature-tab px-3'>
@@ -256,6 +261,19 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                   removed: true,
                 })
               }
+              m.forEach((item) => {
+                const match = metadataModelFieldList.find(
+                  (item2) => item2.content_type.toString() === item.value,
+                )
+                if (!match) {
+                  newMetadataArray.push({
+                    ...item1,
+                    content_type: item.value,
+                    is_required_for: m?.isRequired,
+                    new: true,
+                  })
+                }
+              })
             })
             setMetadataUpdatedSelectList(newMetadataArray)
           } else {
