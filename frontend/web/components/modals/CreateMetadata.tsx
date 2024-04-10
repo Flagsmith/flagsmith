@@ -179,13 +179,28 @@ const CreateMetadata: FC<CreateMetadataType> = ({
               if (match) {
                 const isRequiredLength = !!item1.is_required_for.length
                 const isRequired = match.isRequired
+                // console.log(
+                //   'DEBUG: isRequiredLength:',
+                //   isRequiredLength,
+                //   'isRequired:',
+                //   isRequired,
+                // )
+                // console.log(
+                //   'DEBUG: newMetadataArray: if (match):',
+                //   newMetadataArray,
+                // )
                 if (isRequiredLength !== isRequired) {
                   newMetadataArray.push({
                     ...item1,
                     is_required_for: isRequired,
                   })
+                  // console.log(
+                  //   'DEBUG: newMetadataArray: if (isRequiredLength !== isRequired):',
+                  //   newMetadataArray,
+                  // )
                 }
               } else {
+                // console.log('DEBUG: else:', newMetadataArray)
                 newMetadataArray.push({
                   ...item1,
                   removed: true,
@@ -197,7 +212,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
             setMetadataSelectList(m)
           }
         }}
-        metadataModelFieldList={metadataModelFieldList}
+        metadataModelFieldList={metadataModelFieldList!}
       />
       <Button
         disabled={!name || !typeValue || !metadataSelectList}
@@ -214,19 +229,10 @@ const CreateMetadata: FC<CreateMetadataType> = ({
             }).then(() => {
               Promise.all(
                 metadataUpdatedSelectList?.map(async (m) => {
-                  const isRequiredForData = m.is_required_for && [
-                    {
-                      content_type: projectContentType.id,
-                      object_id: projectId,
-                    },
-                  ]
                   const query = {
                     body: {
                       content_type: m.content_type,
                       field: m.field,
-                      ...(isRequiredForData && {
-                        is_required_for: isRequiredForData,
-                      }),
                     },
                     id: m.id,
                     organisation_id: organisationId,
