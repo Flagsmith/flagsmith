@@ -179,28 +179,13 @@ const CreateMetadata: FC<CreateMetadataType> = ({
               if (match) {
                 const isRequiredLength = !!item1.is_required_for.length
                 const isRequired = match.isRequired
-                // console.log(
-                //   'DEBUG: isRequiredLength:',
-                //   isRequiredLength,
-                //   'isRequired:',
-                //   isRequired,
-                // )
-                // console.log(
-                //   'DEBUG: newMetadataArray: if (match):',
-                //   newMetadataArray,
-                // )
                 if (isRequiredLength !== isRequired) {
                   newMetadataArray.push({
                     ...item1,
                     is_required_for: isRequired,
                   })
-                  // console.log(
-                  //   'DEBUG: newMetadataArray: if (isRequiredLength !== isRequired):',
-                  //   newMetadataArray,
-                  // )
                 }
               } else {
-                // console.log('DEBUG: else:', newMetadataArray)
                 newMetadataArray.push({
                   ...item1,
                   removed: true,
