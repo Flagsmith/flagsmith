@@ -106,7 +106,6 @@ global.API = {
       .then(() => {
         const organisation = AccountStore.getOrganisation()
         const emailDomain = `${user?.email}`?.split('@')[1] || ''
-        console.log(freeEmailDomains)
         const freeDomain = freeEmailDomains.includes(emailDomain)
         if (
           !freeDomain &&
