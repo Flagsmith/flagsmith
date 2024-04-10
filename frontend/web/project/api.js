@@ -1,7 +1,7 @@
 import amplitude from 'amplitude-js'
 import data from 'common/data/base/_data'
 const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
-
+import freeEmailDomains from 'free-email-domains'
 global.API = {
   ajaxHandler(store, res) {
     switch (res.status) {
@@ -105,7 +105,11 @@ global.API = {
       })
       .then(() => {
         const organisation = AccountStore.getOrganisation()
+        const emailDomain = `${user?.email}`?.split('@')[1] || ''
+        console.log(freeEmailDomains)
+        const freeDomain = freeEmailDomains.includes(emailDomain)
         if (
+          !freeDomain &&
           typeof delighted !== 'undefined' &&
           flagsmith.hasFeature('delighted')
         ) {
