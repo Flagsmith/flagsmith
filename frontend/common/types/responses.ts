@@ -1,7 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 
-import { number } from 'prop-types'
-
 export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
