@@ -2,7 +2,7 @@ import React, { FC, useEffect, useState } from 'react'
 import Utils from 'common/utils/utils'
 import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
-import SupportedContentTypesSelect from 'components/metadata/supportedContentTypesSelect'
+import SupportedContentTypesSelect from 'components/metadata/SupportedContentTypesSelect'
 
 import {
   useCreateMetadataMutation,
