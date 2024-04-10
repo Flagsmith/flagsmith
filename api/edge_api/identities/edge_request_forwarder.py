@@ -81,9 +81,6 @@ def _get_headers(request_method: str, headers: dict, payload: str = "") -> dict:
     # ref: https://groups.google.com/g/django-developers/c/xjYVJN-RguA/m/G9krDqawchQJ
     if request_method == "GET":
         headers.pop("Content-Length", None)
-
-    # signPayload of frontend/web/components/TestWebHook on the frontend replicates this
-    # exact function, change the function there if this changes.
     signature = sign_payload(payload, settings.EDGE_REQUEST_SIGNING_KEY)
     headers[FLAGSMITH_SIGNATURE_HEADER] = signature
     return headers
