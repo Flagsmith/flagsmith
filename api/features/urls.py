@@ -3,7 +3,9 @@ from django.conf.urls import include
 from django.urls import path
 from rest_framework_nested import routers
 
-from external_resources.views import ExternalResourcesViewSet
+from features.feature_external_resources.views import (
+    FeatureExternalResourceViewSet,
+)
 from features.feature_segments.views import FeatureSegmentViewSet
 from features.import_export.views import (
     create_feature_export,
@@ -28,7 +30,7 @@ feature_external_resource_router = routers.NestedSimpleRouter(
     features_router, r"", lookup="feature"
 )
 feature_external_resource_router.register(
-    r"external-resources", ExternalResourcesViewSet, basename="external-resources"
+    r"external-resources", FeatureExternalResourceViewSet, basename="external-resources"
 )
 
 app_name = "features"

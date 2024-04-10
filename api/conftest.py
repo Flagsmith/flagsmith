@@ -24,7 +24,7 @@ from environments.permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
 )
-from external_resources.models import ExternalResources
+from features.feature_external_resources.models import FeatureExternalResource
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
@@ -655,8 +655,8 @@ def flagsmith_environments_v2_table(dynamodb: DynamoDBServiceResource) -> Table:
 
 
 @pytest.fixture()
-def external_resource(feature: Feature) -> ExternalResources:
-    return ExternalResources.objects.create(
+def external_resource(feature: Feature) -> FeatureExternalResource:
+    return FeatureExternalResource.objects.create(
         url="https://github.com/userexample/example-project-repo/issues/11",
         type="GitHub Issue",
         feature=feature,

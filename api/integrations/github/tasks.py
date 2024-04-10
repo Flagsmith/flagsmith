@@ -25,7 +25,7 @@ def send_post_request(data: dict[str, Any]) -> None:
     body = generate_body_comment(feature_name, event_type, feature_states)
 
     if event_type == WebhookEventType.FLAG_UPDATED.value:
-        for resource in data.get("external_resources", []):
+        for resource in data.get("feature_external_resources", []):
             url = resource.get("url")
             pathname = urlparse(url).path
             split_url = pathname.split("/")
@@ -41,8 +41,8 @@ def send_post_request(data: dict[str, Any]) -> None:
             installation_id, split_url[1], split_url[2], split_url[4], body
         )
     else:
-        url = data.get("external_resources", [])[
-            len(data.get("external_resources", [])) - 1
+        url = data.get("feature_external_resources", [])[
+            len(data.get("feature_external_resources", [])) - 1
         ].get("url")
         pathname = urlparse(url).path
         split_url = pathname.split("/")
@@ -65,7 +65,7 @@ def call_github_app_webhook_for_feature_state(
 
     feature = Feature.objects.get(id=event_data["id"])
     feature_external_resources = feature.features.all()
-    external_resources = [
+    feature_external_resources = [
         {
             "type": resource.type,
             "url": resource.url,
@@ -75,7 +75,7 @@ def call_github_app_webhook_for_feature_state(
     data = {
         "event_type": event_type,
         "data": event_data,
-        "external_resources": external_resources,
+        "feature_external_resources": feature_external_resources,
     }
 
     if not feature_external_resources:

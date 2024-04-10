@@ -1,6 +1,7 @@
 import logging
 
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 from django_lifecycle import (
     AFTER_SAVE,
     BEFORE_DELETE,
@@ -15,29 +16,33 @@ from webhooks.webhooks import WebhookEventType
 
 logger = logging.getLogger(__name__)
 
-RESOURCE_TYPES = [
-    ("1", "Github PR"),
-    ("2", "Github Issue"),
-]
 
-STATUS = [
-    ("1", "open"),
-    ("2", "closed"),
-]
+class FeatureExternalResource(LifecycleModelMixin, models.Model):
+    class ResourceType(models.TextChoices):
+        # GitHub external resource types
+        GITHUB_ISSUE = "GITHUB_ISSUE", _("GitHub Issue")
+        GITHUB_PR = "GITHUB_PR", _("GitHub PR")
 
-
-class ExternalResources(LifecycleModelMixin, models.Model):
     url = models.URLField()
-    type = models.CharField(max_length=20, choices=RESOURCE_TYPES)
-    status = models.CharField(max_length=20, choices=STATUS, null=True)
+    type = models.CharField(max_length=20, choices=ResourceType.choices)
+
+    # JSON filed containing any metadata related to the external resource
+    metadata = models.TextField(null=True)
     feature = models.ForeignKey(
         Feature,
         related_name="features",
         on_delete=models.CASCADE,
     )
 
+    class Meta:
+        ordering = ("id",)
+        constraints = [
+            models.UniqueConstraint(fields=["url"], name="unique_url_constraint")
+        ]
+
     @hook(AFTER_SAVE)
-    def create_feature_external_resource_added_comment(self):
+    def exectute_after_save_actions(self):
+        # Add a comment to GitHub Issue/PR when feature is linked to the GH external resource
         if hasattr(self.feature.project.organisation, "github_config"):
             github_configuration = self.feature.project.organisation.github_config
 
@@ -63,7 +68,8 @@ class ExternalResources(LifecycleModelMixin, models.Model):
             )
 
     @hook(BEFORE_DELETE)
-    def create_feature_external_resource_removed_comment(self):
+    def execute_before_save_actions(self):
+        # Add a comment to GitHub Issue/PR when feature is unlinked to the GH external resource
         if hasattr(self.feature.project.organisation, "github_config"):
             github_configuration = self.feature.project.organisation.github_config
             feature_data = generate_data(
@@ -85,9 +91,3 @@ class ExternalResources(LifecycleModelMixin, models.Model):
             logger.warning(
                 f"No GitHub integration exists for organisation {organisation_id}. Not calling webhooks."
             )
-
-    class Meta:
-        ordering = ("id",)
-        constraints = [
-            models.UniqueConstraint(fields=["url"], name="unique_url_constraint")
-        ]
