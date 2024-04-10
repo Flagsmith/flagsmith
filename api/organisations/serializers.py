@@ -246,3 +246,9 @@ class SubscriptionDetailsSerializer(serializers.Serializer):
     payment_source = serializers.ChoiceField(choices=[None, CHARGEBEE], allow_null=True)
 
     chargebee_email = serializers.EmailField()
+
+
+class OrganisationAPIUsageNotificationSerializer(serializers.Serializer):
+    organisation_id = serializers.IntegerField()
+    percent_usage = serializers.IntegerField()
+    notified_at = serializers.DateTimeField()

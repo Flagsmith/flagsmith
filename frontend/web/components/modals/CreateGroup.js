@@ -228,7 +228,6 @@ const CreateGroup = class extends Component {
                       tooltip={
                         'The external ID of the group in your SSO provider, used for synchronising users.'
                       }
-                      ref={(e) => (this.input = e)}
                       data-test='groupName'
                       inputProps={{
                         className: 'full-width',

@@ -18,6 +18,7 @@ import _ from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
+import Format from './format'
 
 const semver = require('semver')
 
@@ -95,6 +96,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       />
     ) : null
   },
+
   escapeHtml(html: string) {
     const text = document.createTextNode(html)
     const p = document.createElement('p')
@@ -254,6 +256,36 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getManageUserPermissionDescription() {
     return 'Manage Identities'
+  },
+  getPermissionList(
+    isAdmin: boolean,
+    permissions: string[] | undefined | null,
+    numberToTruncate = 3,
+  ): {
+    items: string[]
+    truncatedItems: string[]
+  } {
+    if (isAdmin) {
+      return {
+        items: ['Administrator'],
+        truncatedItems: [],
+      }
+    }
+    if (!permissions) return { items: [], truncatedItems: [] }
+
+    const items =
+      permissions && permissions.length
+        ? permissions
+            .slice(0, numberToTruncate)
+            .map((item) => `${Format.enumeration.get(item)}`)
+        : []
+
+    return {
+      items,
+      truncatedItems: (permissions || [])
+        .slice(numberToTruncate)
+        .map((item) => `${Format.enumeration.get(item)}`),
+    }
   },
   getPlanName: (plan: string) => {
     if (plan && plan.includes('scale-up')) {
@@ -464,6 +496,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
+  isValidNumber(value: any) {
+    return /^-?\d*\.?\d+$/.test(`${value}`)
+  },
   loadScriptPromise(url: string) {
     return new Promise((resolve) => {
       const cb = function () {
@@ -483,6 +518,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (typeof x !== 'number') return ''
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   },
+
   openChat() {
     // @ts-ignore
     if (typeof $crisp !== 'undefined') {
@@ -499,7 +535,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   removeElementFromArray(array: any[], index: number) {
     return array.slice(0, index).concat(array.slice(index + 1))
   },
-
   renderWithPermission(permission: boolean, name: string, el: ReactNode) {
     return permission ? (
       el
@@ -527,11 +562,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       : []
     const operatorObj = Utils.findOperator(rule.operator, rule.value, operators)
 
-    if (
-      operatorObj &&
-      operatorObj.value &&
-      operatorObj.value.toLowerCase().includes('semver')
-    ) {
+    if (operatorObj?.type === 'number') {
+      return Utils.isValidNumber(rule.value)
+    }
+
+    if (operatorObj?.value?.toLowerCase?.().includes('semver')) {
       return !!semver.valid(`${rule.value.split(':')[0]}`)
     }
 

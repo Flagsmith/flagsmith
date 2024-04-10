@@ -2,7 +2,10 @@ import logging
 
 import hubspot
 from django.conf import settings
-from hubspot.crm.companies import SimplePublicObjectInputForCreate
+from hubspot.crm.companies import (
+    SimplePublicObjectInput,
+    SimplePublicObjectInputForCreate,
+)
 from hubspot.crm.contacts import BatchReadInputSimplePublicObjectId
 
 from users.models import FFAdminUser
@@ -64,14 +67,40 @@ class HubspotClient:
         )
         return response.to_dict()
 
-    def create_company(self, name: str) -> dict:
-        properties = {"name": name}
+    def create_company(
+        self,
+        name: str,
+        active_subscription: str,
+        organisation_id: int,
+        domain: str | None,
+    ) -> dict:
+        properties = {
+            "name": name,
+            "active_subscription": active_subscription,
+            "orgid": str(organisation_id),
+        }
+        if domain:
+            properties["domain"] = domain
+
         simple_public_object_input_for_create = SimplePublicObjectInputForCreate(
             properties=properties,
         )
 
         response = self.client.crm.companies.basic_api.create(
             simple_public_object_input_for_create=simple_public_object_input_for_create,
+        )
+
+        return response.to_dict()
+
+    def update_company(self, active_subscription: str, hubspot_company_id: str) -> dict:
+        properties = {
+            "active_subscription": active_subscription,
+        }
+        simple_public_object_input = SimplePublicObjectInput(properties=properties)
+
+        response = self.client.crm.companies.basic_api.update(
+            company_id=hubspot_company_id,
+            simple_public_object_input=simple_public_object_input,
         )
 
         return response.to_dict()

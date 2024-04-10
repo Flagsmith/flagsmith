@@ -1,18 +1,12 @@
-import React, {
-  FC,
-  useEffect,
-  useState,
-  forwardRef,
-  useImperativeHandle,
-} from 'react'
+import React, { FC, forwardRef, useEffect, useState } from 'react'
 import { find } from 'lodash'
 import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
-
 import _data from 'common/data/base/_data'
 import {
   AvailablePermission,
   GroupPermission,
+  Role,
   User,
   UserGroup,
   UserPermission,
@@ -27,16 +21,16 @@ import Switch from './Switch'
 import TabItem from './base/forms/TabItem'
 import Tabs from './base/forms/Tabs'
 import UserGroupList from './UserGroupList'
-import { PermissionLevel } from 'common/types/requests'
+import { PermissionLevel, Req } from 'common/types/requests'
 import { RouterChildContext } from 'react-router'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from './Icon'
 import {
+  useCreateRolePermissionsMutation,
   useGetRoleEnvironmentPermissionsQuery,
   useGetRoleOrganisationPermissionsQuery,
   useGetRoleProjectPermissionsQuery,
-  useCreateRolePermissionsMutation,
   useUpdateRolePermissionsMutation,
 } from 'common/services/useRolePermission'
 
@@ -51,34 +45,42 @@ import {
 } from 'common/services/useRolePermissionGroup'
 
 import {
-  useGetUserWithRolesQuery,
   useDeleteUserWithRolesMutation,
+  useGetUserWithRolesQuery,
 } from 'common/services/useUserWithRole'
 
 import {
-  useGetGroupWithRoleQuery,
   useDeleteGroupWithRoleMutation,
+  useGetGroupWithRoleQuery,
 } from 'common/services/useGroupWithRole'
 
 import MyRoleSelect from './MyRoleSelect'
 import { setInterceptClose } from './modals/base/ModalDefault'
+import Panel from './base/grid/Panel'
+import InputGroup from './base/forms/InputGroup'
+import classNames from 'classnames'
+
 const OrganisationProvider = require('common/providers/OrganisationProvider')
 const Project = require('common/project')
 
 type EditPermissionModalType = {
   group?: UserGroup
-  id: string
+  id: number
+  className?: string
   isGroup?: boolean
   level: PermissionLevel
   name: string
   onSave: () => void
+  envId?: number
   parentId?: string
   parentLevel?: string
   parentSettingsLink?: string
+  roleTabTitle: string
   permissions?: UserPermission[]
   push: (route: string) => void
   user?: User
   role?: Role
+  roles?: Role[]
   permissionChanged: () => void
   editPermissionsFromSettings?: boolean
   isEditUserPermission?: boolean
@@ -100,7 +102,7 @@ type EntityPermissions = Omit<
 }
 
 const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
-  (props, ref) => {
+  (props) => {
     const [entityPermissions, setEntityPermissions] =
       useState<EntityPermissions>({ admin: false, permissions: [] })
     const [parentError, setParentError] = useState(false)
@@ -110,7 +112,13 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
 
     const [permissionWasCreated, setPermissionWasCreated] =
       useState<boolean>(false)
-    const [rolesSelected, setRolesSelected] = useState<Array>([])
+    const [rolesSelected, setRolesSelected] = useState<
+      {
+        role: number
+        user_role_id?: number
+        group_role_id?: number
+      }[]
+    >([])
 
     useEffect(() => {
       setInterceptClose(() => {
@@ -134,6 +142,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       }
     }, [valueChanged])
     const {
+      className,
       editPermissionsFromSettings,
       envId,
       group,
@@ -159,7 +168,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       useGetUserWithRolesQuery(
         {
           org_id: id,
-          user_id: user?.id,
+          user_id: parseInt(`${user?.id}`),
         },
         { skip: level !== 'organisation' || !user?.id },
       )
@@ -169,7 +178,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       isSuccess: groupWithRolesDataSuccesfull,
     } = useGetGroupWithRoleQuery(
       {
-        group_id: group?.id,
+        group_id: parseInt(`${group?.id}`),
         org_id: id,
       },
       { skip: level !== 'organisation' || !group?.id },
@@ -195,7 +204,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       }
     }, [groupWithRolesDataSuccesfull])
 
-    const processResults = (results: (UserPermission & GroupPermission)[]) => {
+    const processResults = (results: (UserPermission | GroupPermission)[]) => {
       let entityPermissions:
         | (Omit<EntityPermissions, 'user' | 'group' | 'role'> & {
             user?: any
@@ -203,10 +212,16 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
             role?: any
           })
         | undefined = isGroup
-        ? find(results || [], (r) => r.group.id === group?.id)
+        ? find(
+            results || [],
+            (r) => (r as GroupPermission).group.id === group?.id,
+          )
         : role
-        ? find(results || [], (r) => r.role === role?.id)
-        : find(results || [], (r) => r.user?.id === user?.id)
+        ? find(results || [], (r) => (r as GroupPermission).role === role?.id)
+        : find(
+            results || [],
+            (r) => (r as UserPermission).user?.id === user?.id,
+          )
 
       if (!entityPermissions) {
         entityPermissions = { admin: false, permissions: [] }
@@ -285,8 +300,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     const { data: organisationPermissions, isLoading: organisationIsLoading } =
       useGetRoleOrganisationPermissionsQuery(
         {
-          organisation_id: role?.organisation,
-          role_id: role?.id,
+          organisation_id: parseInt(`${role?.organisation}`),
+          role_id: parseInt(`${role?.id}`),
         },
         { skip: !role || level !== 'organisation' },
       )
@@ -294,14 +309,14 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     const { data: projectPermissions, isLoading: projectIsLoading } =
       useGetRoleProjectPermissionsQuery(
         {
-          organisation_id: role?.organisation,
-          project_id: id,
-          role_id: role?.id,
+          organisation_id: parseInt(`${role?.organisation}`),
+          project_id: parseInt(`${id}`),
+          role_id: parseInt(`${role?.id}`),
         },
         {
           skip:
             !id ||
-            envId ||
+            !!envId ||
             // TODO: https://github.com/Flagsmith/flagsmith/issues/3020
             !role?.organisation ||
             !Utils.getFlagsmithHasFeature('show_role_management') ||
@@ -312,9 +327,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     const { data: envPermissions, isLoading: envIsLoading } =
       useGetRoleEnvironmentPermissionsQuery(
         {
-          env_id: envId || id,
-          organisation_id: role?.organisation,
-          role_id: role?.id,
+          env_id: parseInt(`${envId || id}`),
+          organisation_id: parseInt(`${role?.organisation}`),
+          role_id: parseInt(`${role?.id}`),
         },
         {
           skip:
@@ -436,7 +451,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       } else {
         const body = {
           permissions: entityPermissions.permissions,
-        }
+        } as Partial<Req['createRolePermission']['body']>
         if (level === 'project') {
           body.admin = entityPermissions.admin
           body.project = id
@@ -447,20 +462,25 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         }
         if (entityId || permissionWasCreated) {
           updateRolePermissions({
-            body,
-            id: entityId,
-            level: level === 'organisation' ? level : `${level}s`,
+            body: body as Req['createRolePermission']['body'],
+            id: entityId as number,
+            level:
+              level === 'organisation'
+                ? level
+                : (`${level}s` as PermissionLevel),
             organisation_id: role.organisation,
             role_id: role.id,
-          })
+          }).then(onRoleSaved as any)
         } else {
           createRolePermissions({
-            body,
-            id: entityId,
-            level: level === 'organisation' ? level : `${level}s`,
+            body: body as Req['createRolePermission']['body'],
+            level:
+              level === 'organisation'
+                ? level
+                : (`${level}s` as PermissionLevel),
             organisation_id: role.organisation,
             role_id: role.id,
-          })
+          }).then(onRoleSaved as any)
         }
       }
     }
@@ -501,7 +521,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         admin: !entityPermissions.admin,
       })
     }
-    const addRole = (roleId: string) => {
+    const addRole = (roleId: number) => {
       if (level === 'organisation') {
         if (user) {
           createRolePermissionUser({
@@ -524,7 +544,22 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       }
     }
 
-    const removeOwner = (roleId: string) => {
+    const onRoleRemoved = (res: { error?: any }) => {
+      if (!res?.error) {
+        toast('User role removed')
+      } else {
+        toast('Error removing role', 'danger')
+      }
+    }
+
+    const onRoleSaved = (res: { error?: any }) => {
+      // @ts-ignore rtk incorrect types
+      if (res.error) {
+        toast('Failed to Save', 'danger')
+      }
+    }
+
+    const removeOwner = (roleId: number) => {
       const roleSelected = rolesAdded.find((item) => item.id === roleId)
       if (level === 'organisation') {
         if (user) {
@@ -533,13 +568,13 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               org_id: id,
               role_id: roleId,
               user_id: user?.id,
-            })
+            }).then(onRoleRemoved as any)
           } else {
             deleteRolePermissionUser({
               organisation_id: id,
               role_id: roleId,
-              user_id: roleSelected.user_role_id,
-            })
+              user_id: roleSelected?.user_role_id,
+            }).then(onRoleRemoved as any)
           }
         }
         if (group) {
@@ -548,13 +583,13 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               group_id: group?.id,
               org_id: id,
               role_id: roleId,
-            })
+            }).then(onRoleRemoved as any)
           } else {
             deleteRolePermissionGroup({
               group_id: roleSelected.group_role_id,
               organisation_id: id,
               role_id: roleId,
-            })
+            }).then(onRoleRemoved as any)
           }
         }
       }
@@ -583,7 +618,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       }
     }, [userAdded, usersData, groupsData, groupAdded])
 
-    const getRoles = (roles = [], selectedRoles) => {
+    const getRoles = (
+      roles: Role[] = [],
+      selectedRoles: typeof rolesSelected,
+    ) => {
       return roles
         .filter((v) => selectedRoles.find((a) => a.role === v.id))
         .map((role) => {
@@ -611,16 +649,18 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     const isAdmin = admin()
     const hasRbacPermission = Utils.getPlansPermission('RBAC')
 
+    const [search, setSearch] = useState()
+
     return !permissions || !entityPermissions ? (
       <div className='modal-body text-center'>
         <Loader />
       </div>
     ) : (
       <div>
-        <div className='modal-body px-4'>
-          <div className='mb-2 mt-4'>
-            {level !== 'organisation' && (
-              <Row className={role ? 'px-3 py-2' : ''}>
+        <div className={classNames('modal-body', className || 'px-4 mt-4')}>
+          {level !== 'organisation' && (
+            <div className='mb-2'>
+              <Row className={role ? 'py-2' : ''}>
                 <Flex>
                   <div className='font-weight-medium text-dark mb-1'>
                     Administrator
@@ -654,9 +694,13 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                   checked={isAdmin}
                 />
               </Row>
-            )}
-          </div>
+            </div>
+          )}
           <PanelSearch
+            filterRow={(item: AvailablePermission, search) => {
+              const name = Format.enumeration.get(item.key).toLowerCase()
+              return name.includes(search?.toLowerCase() || '')
+            }}
             title='Permissions'
             className='no-pad mb-2'
             items={permissions}
@@ -863,7 +907,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
       'p-0 side-modal',
     )
   }
-  const editRolePermissions = (role) => {
+  const editRolePermissions = (role: Role) => {
     openModal(
       `Edit ${Format.camelCase(level)} Role Permissions`,
       <EditPermissionsModal
@@ -881,7 +925,9 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
 
   return (
     <div className='mt-4'>
-      <h5>Manage Permissions</h5>
+      <Row>
+        <h5>Manage Permissions</h5>
+      </Row>
       <p className='fs-small lh-sm col-md-8 mb-4'>
         Flagsmith lets you manage fine-grained permissions for your projects and
         environments.{' '}
@@ -1032,6 +1078,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
               <UserGroupList
                 noTitle
                 orgId={AccountStore.getOrganisation().id}
+                projectId={level === 'project' && id}
                 onClick={(group: UserGroup) => editGroupPermissions(group)}
               />
             </div>
@@ -1068,7 +1115,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                       </div>
                     </Row>
                   }
-                  renderRow={(role) => (
+                  renderRow={(role: Role) => (
                     <Row
                       className='list-item clickable cursor-pointer'
                       key={role.id}

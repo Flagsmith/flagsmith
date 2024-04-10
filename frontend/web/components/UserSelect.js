@@ -74,5 +74,4 @@ class TheComponent extends Component {
     )
   }
 }
-
-module.exports = TheComponent
+export default TheComponent

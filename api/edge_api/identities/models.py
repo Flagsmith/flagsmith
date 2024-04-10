@@ -4,7 +4,6 @@ from contextlib import suppress
 
 from django.db.models import Prefetch, Q
 from flag_engine.features.models import FeatureStateModel
-from flag_engine.identities.builders import build_identity_model
 from flag_engine.identities.models import IdentityFeaturesList, IdentityModel
 
 from api_keys.models import MasterAPIKey
@@ -32,7 +31,7 @@ class EdgeIdentity:
 
     @classmethod
     def from_identity_document(cls, identity_document: dict) -> "EdgeIdentity":
-        return EdgeIdentity(build_identity_model(identity_document))
+        return EdgeIdentity(IdentityModel.model_validate(identity_document))
 
     @property
     def django_id(self) -> int:
