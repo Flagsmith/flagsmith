@@ -108,6 +108,71 @@ const CreateMetadata: FC<CreateMetadataType> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [creating, created])
 
+  const save = () => {
+    if (isEdit) {
+      updateMetadata({
+        body: {
+          description,
+          name,
+          organisation: organisationId,
+          type: `${typeValue?.value}`,
+        },
+        id: id!,
+      }).then(() => {
+        Promise.all(
+          metadataUpdatedSelectList?.map(async (m) => {
+            const query = {
+              body: {
+                content_type: m.content_type,
+                field: m.field,
+                is_required_for: m.is_required_for
+                  ? [
+                      {
+                        content_type: projectContentType.id,
+                        object_id: projectId,
+                      },
+                    ]
+                  : [],
+              },
+              id: m.id,
+              organisation_id: organisationId,
+            }
+            if (!('removed' in m)) {
+              await updateMetadataField(query)
+            } else if (m.removed) {
+              await deleteMetadataModelField({
+                id: m.id,
+                organisation_id: organisationId,
+              })
+            }
+          }),
+        )
+        closeModal()
+      })
+    } else {
+      createMetadata({
+        body: {
+          description,
+          name,
+          organisation: organisationId,
+          type: `${typeValue?.value}`,
+        },
+      }).then((res) => {
+        Promise.all(
+          metadataSelectList.map(async (m) => {
+            await createMetadataField({
+              body: {
+                content_type: m.value,
+                field: `${res?.data.id}`,
+              },
+              organisation_id: organisationId,
+            })
+          }),
+        )
+      })
+    }
+  }
+
   const [typeValue, setTypeValue] = useState<MetadataType>()
   const [name, setName] = useState<string>('')
   const [description, setDescription] = useState<string>('')
@@ -201,62 +266,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
       />
       <Button
         disabled={!name || !typeValue || !metadataSelectList}
-        onClick={() => {
-          if (isEdit) {
-            updateMetadata({
-              body: {
-                description,
-                name,
-                organisation: organisationId,
-                type: `${typeValue?.value}`,
-              },
-              id,
-            }).then(() => {
-              Promise.all(
-                metadataUpdatedSelectList?.map(async (m) => {
-                  const query = {
-                    body: {
-                      content_type: m.content_type,
-                      field: m.field,
-                    },
-                    id: m.id,
-                    organisation_id: organisationId,
-                  }
-                  if (!('removed' in m)) {
-                    await updateMetadataField(query)
-                  } else if (m.removed) {
-                    await deleteMetadataModelField({
-                      id: m.id,
-                      organisation_id: organisationId,
-                    })
-                  }
-                }),
-              )
-              closeModal()
-            })
-          } else {
-            createMetadata({
-              body: {
-                description,
-                name,
-                organisation: organisationId,
-                type: `${typeValue?.value}`,
-              },
-            }).then((res) => {
-              Promise.all(
-                metadataSelectList.map(async (m) => {
-                  await createMetadataField({
-                    body: {
-                      content_type: m.value,
-                      field: `${res?.data?.id}`,
-                    },
-                    organisation_id: organisationId,
-                  })
-                }),
-              )
-            })
-          }
-        }}
+        onClick={save}
         className='float-right'
       >
         {isEdit ? 'Update Metadata' : 'Create Metadata'}

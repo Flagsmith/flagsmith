@@ -216,7 +216,7 @@ export type Req = {
       }[]
     }
   }
-  deleteMetadataModelField: { organisation_id: string; id: string }
+  deleteMetadataModelField: { organisation_id: string; id: string | number }
   createMetadataModelField: {
     organisation_id: string
     body: {

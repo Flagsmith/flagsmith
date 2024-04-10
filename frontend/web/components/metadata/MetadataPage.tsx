@@ -155,7 +155,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         <Button
           theme='text'
           target='_blank'
-          href='https://docs.flagsmith.com/basic-features/managing-segments'
+          href='https://docs.flagsmith.com/system-administration/metadata/'
           className='fw-normal'
         >
           Learn more.
