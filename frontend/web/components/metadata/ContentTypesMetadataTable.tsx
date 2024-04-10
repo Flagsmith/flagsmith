@@ -5,8 +5,12 @@ import Button from 'components/base/forms/Button'
 import Switch from 'components/Switch'
 import Icon from 'components/Icon'
 
-import { useDeleteMetadataModelFieldMutation } from 'common/services/useMetadataModelField'
-type selectedContentType = { label: string; value: string }
+import { MetadataModelField } from 'common/types/responses'
+type selectedContentType = {
+  label: string
+  value: string
+  isRequired: boolean
+}
 
 type ContentTypesMetadataTableType = {
   organisationId: string
@@ -14,42 +18,34 @@ type ContentTypesMetadataTableType = {
   onDelete: (removed: selectedContentType) => void
   isEdit: boolean
   changeMetadataRequired: (value: string, isRequired: boolean) => void
+  metadataModelFieldList: MetadataModelField[]
 }
 
 type ContentTypesMetadataRowBase = Omit<
-  ContentTypesMetadataTableType,
+  Omit<ContentTypesMetadataTableType, 'metadataModelFieldList'>,
   'selectedContentTypes'
 >
 
 type ContentTypesMetadataRowType = ContentTypesMetadataRowBase & {
   item: selectedContentType
+  isEnabled: boolean
 }
 
 const ContentTypesMetadataRow: FC<ContentTypesMetadataRowType> = ({
   changeMetadataRequired,
-  isEdit,
+  isEnabled,
   item,
   onDelete,
-  organisationId,
 }) => {
-  const [deleteMetadataModelField] = useDeleteMetadataModelFieldMutation()
-  const [isMetadataRequired, setIsMetadataRequired] = useState<boolean>(false)
+  const [isMetadataRequired, setIsMetadataRequired] =
+    useState<boolean>(isEnabled)
 
   const deleteRequied = (removed: selectedContentType) => {
-    if (!isEdit) {
-      onDelete?.(removed)
-    } else {
-      deleteMetadataModelField({
-        id: '',
-        organisation_id: organisationId,
-      })
-    }
+    onDelete?.(removed)
   }
   const isRequired = (value: string, isRequired: boolean) => {
-    if (!isEdit) {
-      changeMetadataRequired(value, isRequired)
-      setIsMetadataRequired(!isMetadataRequired)
-    }
+    changeMetadataRequired(value, isRequired)
+    setIsMetadataRequired(!isMetadataRequired)
   }
 
   return (
@@ -57,6 +53,7 @@ const ContentTypesMetadataRow: FC<ContentTypesMetadataRowType> = ({
       <Flex className='table-column px-3'>{item.label}</Flex>
       <div className='table-column text-center' style={{ width: '80px' }}>
         <Switch
+          checked={isMetadataRequired}
           onChange={() => {
             isRequired(item.value, !isMetadataRequired)
           }}
@@ -109,6 +106,7 @@ const ContentTypesMetadataTable: FC<ContentTypesMetadataTableType> = ({
           organisationId={organisationId}
           onDelete={onDelete}
           changeMetadataRequired={changeMetadataRequired}
+          isEnabled={s.isRequired}
         />
       )}
     />

@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useState } from 'react'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
-import { ContentType } from 'common/types/responses'
+import { ContentType, MetadataModelField } from 'common/types/responses'
 import InputGroup from 'components/base/forms/InputGroup'
 import ContentTypesMetadataTable from './ContentTypesMetadataTable'
 
@@ -8,6 +8,7 @@ type SupportedContentTypesSelectType = {
   organisationId: string
   isEdit: boolean
   getMetadataContentTypes: (m: SelectContentTypes[]) => void
+  metadataModelFieldList: MetadataModelField[]
 }
 
 type SelectContentTypes = {
@@ -18,6 +19,7 @@ type SelectContentTypes = {
 const SupportedContentTypesSelect: FC<SupportedContentTypesSelectType> = ({
   getMetadataContentTypes,
   isEdit,
+  metadataModelFieldList,
   organisationId,
 }) => {
   const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
@@ -28,7 +30,34 @@ const SupportedContentTypesSelect: FC<SupportedContentTypesSelectType> = ({
   >([])
 
   useEffect(() => {
-    console.log('DEBUG: selectedContentTypes:', selectedContentTypes)
+    if (isEdit && !!supportedContentTypes?.length) {
+      const excludedModels = ['project', 'organisation']
+      const newArray = supportedContentTypes
+        .filter((item) => !excludedModels.includes(item.model))
+        .filter((item) =>
+          metadataModelFieldList.some(
+            (entry) => entry.content_type === item.id,
+          ),
+        )
+        .map((item) => {
+          const match = metadataModelFieldList.find(
+            (entry) => entry.content_type === item.id,
+          )
+          const isRequired = match && !!match.is_required_for.length
+
+          return {
+            isRequired: isRequired,
+            label: item.model,
+            value: item.id.toString(),
+          }
+        })
+
+      setSelectedContentTypes(newArray)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supportedContentTypes])
+
+  useEffect(() => {
     getMetadataContentTypes(selectedContentTypes)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedContentTypes])
@@ -60,6 +89,7 @@ const SupportedContentTypesSelect: FC<SupportedContentTypesSelectType> = ({
       />
       {!!selectedContentTypes.length && (
         <ContentTypesMetadataTable
+          metadataModelFieldList={metadataModelFieldList}
           selectedContentTypes={selectedContentTypes}
           onDelete={(v: SelectContentTypes) => {
             setSelectedContentTypes((prevState) =>
