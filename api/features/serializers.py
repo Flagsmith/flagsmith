@@ -262,8 +262,12 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
 
         return attrs
 
-    @swagger_serializer_method(serializer_or_field=FeatureStateSerializerSmall())
-    def get_environment_feature_state(self, instance: Feature) -> FeatureState | None:
+    @swagger_serializer_method(
+        serializer_or_field=FeatureStateSerializerSmall(allow_null=True)
+    )
+    def get_environment_feature_state(
+        self, instance: Feature
+    ) -> dict[str, typing.Any] | None:
         if (feature_states := self.context.get("feature_states")) and (
             feature_state := feature_states.get(instance.id)
         ):
