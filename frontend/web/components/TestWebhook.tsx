@@ -23,6 +23,9 @@ const stringifyWithSpaces = (str: string) => {
 }
 
 const signPayload = async (body: string, secret: string): Promise<string> => {
+  if(!secret) {
+    return ''
+  }
   const enc = new TextEncoder()
 
   const key = await window.crypto.subtle.importKey(
