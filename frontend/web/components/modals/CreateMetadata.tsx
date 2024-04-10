@@ -169,7 +169,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
         isEdit={isEdit}
         getMetadataContentTypes={(m: metadataListType[]) => {
           if (isEdit) {
-            const newArray: metadataUpdatedSelectListType[] = []
+            const newMetadataArray: metadataUpdatedSelectListType[] = []
 
             metadataModelFieldList?.forEach((item1) => {
               const match = m.find(
@@ -180,19 +180,19 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 const isRequiredLength = !!item1.is_required_for.length
                 const isRequired = match.isRequired
                 if (isRequiredLength !== isRequired) {
-                  newArray.push({
+                  newMetadataArray.push({
                     ...item1,
                     is_required_for: isRequired,
                   })
                 }
               } else {
-                newArray.push({
+                newMetadataArray.push({
                   ...item1,
                   removed: true,
                 })
               }
             })
-            setMetadataUpdatedSelectList(newArray)
+            setMetadataUpdatedSelectList(newMetadataArray)
           } else {
             setMetadataSelectList(m)
           }
@@ -216,7 +216,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 metadataUpdatedSelectList?.map(async (m) => {
                   const isRequiredForData = m.is_required_for && [
                     {
-                      content_type: projectContentType,
+                      content_type: projectContentType.id,
                       object_id: projectId,
                     },
                   ]
@@ -225,13 +225,13 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                       content_type: m.content_type,
                       field: m.field,
                       ...(isRequiredForData && {
-                        is_required_for: isRequiredForData.id,
+                        is_required_for: isRequiredForData,
                       }),
                     },
                     id: m.id,
                     organisation_id: organisationId,
                   }
-                  if (m.is_required_for && !m?.removed) {
+                  if (!('removed' in m)) {
                     await updateMetadataField(query)
                   } else if (m.removed) {
                     await deleteMetadataModelField({
@@ -241,6 +241,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                   }
                 }),
               )
+              closeModal()
             })
           } else {
             createMetadata({
