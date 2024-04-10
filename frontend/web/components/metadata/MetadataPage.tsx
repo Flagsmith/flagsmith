@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useMemo } from 'react'
 import Button from 'components/base/forms/Button'
 import PanelSearch from 'components/PanelSearch'
 import Icon from 'components/Icon'
@@ -31,7 +31,6 @@ type MergeMetadata = {
 }
 
 const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
-  const [mergeMetadata, setMergeMetadata] = useState<MergeMetadata[]>([])
   const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
     organisation_id: `${organisationId}`,
   })
@@ -68,10 +67,10 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
     )
   }
 
-  useEffect(() => {
+  const mergeMetadata = useMemo(() => {
     if (metadataList && MetadataModelFieldList) {
-      const mergeMetadataResult = metadataList?.results.map((item1) => {
-        const matchingItems2 = MetadataModelFieldList?.results.filter(
+      return metadataList.results.map((item1) => {
+        const matchingItems2 = MetadataModelFieldList.results.filter(
           (item2) => item2.field === item1.id,
         )
         return {
@@ -79,9 +78,8 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
           content_type_fields: matchingItems2,
         }
       })
-
-      setMergeMetadata(mergeMetadataResult)
     }
+    return null
   }, [metadataList, MetadataModelFieldList])
 
   const metadataCreatedToast = () => {
