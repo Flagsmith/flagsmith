@@ -33,7 +33,6 @@ export default (WrappedComponent) => {
 
       return (
         <WrappedComponent
-          ref='wrappedComponent'
           isLoading={isLoading}
           error={error}
           router={this.context.router}

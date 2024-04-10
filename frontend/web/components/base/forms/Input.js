@@ -80,6 +80,7 @@ const Input = class extends React.Component {
       isValid,
       mask,
       placeholderChar,
+      search,
       showSuccess,
       size,
       ...rest
@@ -220,7 +221,7 @@ Input.propTypes = {
   onKeyDown: OptionalFunc,
   onSearchChange: OptionalFunc,
   placeholderChar: OptionalString,
-  search: propTypes.Boolean,
+  search: OptionalBool,
   size: OptionalString,
 }
 

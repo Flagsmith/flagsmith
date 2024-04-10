@@ -610,7 +610,7 @@ const FeaturesPage = class extends Component {
                               icon='ion-ios-settings'
                               title='1. configuring features per environment'
                             >
-                              <p>
+                              <div className='mb-2'>
                                 We've created 2 Environments for you:{' '}
                                 <strong>Development</strong> and{' '}
                                 <strong>Production</strong>. When you create a
@@ -618,7 +618,7 @@ const FeaturesPage = class extends Component {
                                 Environment, allowing you to edit the values
                                 separately. You can create more Environments too
                                 if you need to.
-                              </p>
+                              </div>
                             </Panel>
                           </FormGroup>
                           <FormGroup>
@@ -626,30 +626,30 @@ const FeaturesPage = class extends Component {
                               icon='ion-ios-rocket'
                               title='2. creating a feature'
                             >
-                              <p>
+                              <div className='mb-2'>
                                 Features in Flagsmith are made up of two
                                 different data types:
                                 <ul>
                                   <li>
                                     <strong>Booleans</strong>: These allows you
                                     to toggle features on and off:
-                                    <p className='faint'>
+                                    <div className='faint mb-2'>
                                       EXAMPLE: You're working on a new messaging
                                       feature for your app but only want to show
                                       it in your Development Environment.
-                                    </p>
+                                    </div>
                                   </li>
                                   <li>
                                     <strong>String Values</strong>:
                                     configuration for a particular feature
-                                    <p className='faint'>
+                                    <div className='faint mb-2'>
                                       EXAMPLE: This could be absolutely anything
                                       from a font size for a website/mobile app
                                       or an environment variable for a server
-                                    </p>
+                                    </div>
                                   </li>
                                 </ul>
-                              </p>
+                              </div>
                             </Panel>
                           </FormGroup>
                           <FormGroup>
@@ -657,7 +657,7 @@ const FeaturesPage = class extends Component {
                               icon='ion-ios-person'
                               title='3. configuring features per user'
                             >
-                              <p>
+                              <div className='mb-2'>
                                 When users login to your application, you can{' '}
                                 <strong>Identify</strong> them using one of our
                                 SDKs, this will add them to the Identities page.
@@ -671,12 +671,12 @@ const FeaturesPage = class extends Component {
                                   Identities page
                                 </Link>
                                 .
-                                <p className='faint'>
+                                <div className='faint mb-2'>
                                   EXAMPLE: You're working on a new messaging
                                   feature for your app but only want to show it
                                   for that Identity.
-                                </p>
-                              </p>
+                                </div>
+                              </div>
                             </Panel>
                           </FormGroup>
                           {this.createFeaturePermission((perm) => (

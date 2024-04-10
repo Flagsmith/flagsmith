@@ -393,6 +393,7 @@ const Aside = class extends Component {
                               <EnvironmentDropdown
                                 renderRow={(environment, onClick) => (
                                   <Collapsible
+                                    key={environment.api_key}
                                     data-test={`switch-environment-${environment.name.toLowerCase()}${
                                       environmentId === `${environment.api_key}`
                                         ? '-active'

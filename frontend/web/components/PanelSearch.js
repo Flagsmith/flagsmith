@@ -20,7 +20,7 @@ const PanelSearch = class extends Component {
     paging: OptionalObject,
     renderNoResults: propTypes.any,
     renderRow: RequiredFunc,
-    search: OptionalString,
+    search: OptionalBool,
     searchPanel: OptionalNode,
     sorting: OptionalArray,
     title: propTypes.node,

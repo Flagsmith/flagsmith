@@ -36,10 +36,10 @@ export const waitForElementVisible = async (selector: string) => {
 }
 
 export const logResults = async (requests: LoggedRequest[], t) => {
-  if (!t.testRun?.errs?.length) {
-    log('Finished without errors')
-    return // do not log anything for passed tests
-  }
+  // if (!t.testRun?.errs?.length) {
+  //   log('Finished without errors')
+  //   return // do not log anything for passed tests
+  // }
   log('Start of Requests')
   log(
     undefined,

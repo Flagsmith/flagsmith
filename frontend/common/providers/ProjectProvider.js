@@ -32,10 +32,10 @@ const ProjectProvider = class extends React.Component {
       )
     })
     this.listenTo(ProjectStore, 'removed', () => {
-      this.props.onRemoveEnvironment && this.props.onRemoveEnvironment()
+      this.props.onRemoveEnvironment?.()
     })
     this.listenTo(OrganisationStore, 'removed', () => {
-      this.props.onRemove && this.props.onRemove()
+      this.props.onRemove?.()
     })
   }
 
@@ -74,8 +74,8 @@ const ProjectProvider = class extends React.Component {
 ProjectProvider.propTypes = {
   children: OptionalFunc,
   id: RequiredString,
-  onRemove: RequiredFunc,
-  onRemoveEnvironment: RequiredFunc,
+  onRemove: OptionalFunc,
+  onRemoveEnvironment: OptionalFunc,
   onSave: OptionalFunc,
 }
 

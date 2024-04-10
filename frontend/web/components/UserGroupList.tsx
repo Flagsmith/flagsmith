@@ -191,7 +191,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
             ? sortBy(mergeduserGroupsPermissionWithUserGroups, 'group.name')
             : sortBy(userGroups?.results, 'name')
         }
-        paging={mergeduserGroupsPermissionWithUserGroups || userGroups}
+        paging={userGroups ? userGroups : undefined}
         nextPage={() => setPage(page + 1)}
         prevPage={() => setPage(page - 1)}
         goToPage={setPage}
@@ -241,6 +241,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
             const { id, name } = group as UserGroup
             return (
               <UserGroupsRow
+                key={id}
                 group={group}
                 id={id}
                 index={index}

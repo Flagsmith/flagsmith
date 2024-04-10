@@ -11,10 +11,18 @@ type OrganisationLimitType = {
 }
 
 const OrganisationLimit: FC<OrganisationLimitType> = ({ id }) => {
-  const { data: totalApiCalls } = useGetOrganisationUsageQuery({
-    organisationId: id,
-  })
-  const { data: maxApiCalls } = useGetSubscriptionMetadataQuery({ id })
+  const { data: totalApiCalls } = useGetOrganisationUsageQuery(
+    {
+      organisationId: id,
+    },
+    { skip: !id },
+  )
+  const { data: maxApiCalls } = useGetSubscriptionMetadataQuery(
+    { id },
+    {
+      skip: !id,
+    },
+  )
   const maxApiCallsPercentage = Utils.calculateRemainingLimitsPercentage(
     totalApiCalls?.totals.total,
     maxApiCalls?.max_api_calls,

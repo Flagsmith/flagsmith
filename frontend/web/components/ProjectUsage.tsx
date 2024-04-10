@@ -19,7 +19,7 @@ const ProjectUsage: FC<ProjectUsageType> = ({ projectId }) => {
   const getSegmentOverridesUsage = (apiKeys: string[]) => {
     apiKeys.forEach((apiKey) => {
       _data
-        .get(`${Project.api}environments/${apiKey}`)
+        .get(`${Project.api}environments/${apiKey}/`)
         .then((res: Environment) => {
           setSegmentOverridesUsage(
             (prev) => prev + (res.total_segment_overrides || 0),

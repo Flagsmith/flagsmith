@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo } from 'react'
+import { FC, Fragment, useCallback, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { RouterChildContext } from 'react-router'
 
@@ -127,7 +127,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                       i: number,
                     ) => {
                       return (
-                        <>
+                        <Fragment key={id}>
                           {i === 0 && (
                             <div className='col-md-6 col-xl-3'>
                               {Utils.renderWithPermission(
@@ -185,7 +185,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                               </Row>
                             </Button>
                           </Link>
-                        </>
+                        </Fragment>
                       )
                     }}
                     renderNoResults={

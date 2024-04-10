@@ -9,7 +9,8 @@ export default class Switch extends PureComponent {
   static propTypes = {}
 
   render() {
-    const { checked, darkMode, offMarkup, onChange, onMarkup } = this.props
+    const { checked, darkMode, offMarkup, onChange, onMarkup, ...rest } =
+      this.props
     if (E2E) {
       return (
         <div style={{ display: 'inline-block', height: '28px' }}>
@@ -22,7 +23,7 @@ export default class Switch extends PureComponent {
               position: 'relative',
             }}
             className={checked ? 'switch-checked' : 'switch-unchecked'}
-            {...this.props}
+            {...rest}
             onClick={() => {
               onChange(!this.props.checked)
             }}
@@ -40,7 +41,7 @@ export default class Switch extends PureComponent {
           className={`rc-switch flex-row justify-content-center gap-3 ${
             checked ? 'rc-switch-checked' : 'rc-switch-unchecked'
           }`}
-          {...this.props}
+          {...rest}
           onClick={() => {
             onChange(!checked)
           }}
@@ -50,6 +51,6 @@ export default class Switch extends PureComponent {
         </button>
       )
     }
-    return <RCSwitch {...this.props} />
+    return <RCSwitch {...this.rest} />
   }
 }

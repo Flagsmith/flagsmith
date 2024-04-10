@@ -18,9 +18,12 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
   const matches = document.location.href.match(/\/environment\/([^/]*)/)
   const environment = matches && matches[1]
   const timerRef = useRef<NodeJS.Timer>()
-  const { data: featureImports, refetch } = useGetFeatureImportsQuery({
-    projectId,
-  })
+  const { data: featureImports, refetch } = useGetFeatureImportsQuery(
+    {
+      projectId,
+    },
+    { skip: !projectId },
+  )
   const processingRef = useRef(false)
   const checkProcessing = useCallback(
     (processing: FeatureImport | undefined) => {
