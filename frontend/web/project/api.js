@@ -1,7 +1,7 @@
 import amplitude from 'amplitude-js'
 import data from 'common/data/base/_data'
 const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
-
+import freeEmailDomains from 'free-email-domains'
 global.API = {
   ajaxHandler(store, res) {
     switch (res.status) {
@@ -82,8 +82,46 @@ global.API = {
       const identify = new amplitude.Identify().set('email', id)
       amplitude.getInstance().identify(identify)
     }
-    flagsmith.identify(id)
-    flagsmith.setTrait('email', id)
+    API.flagsmithIdentify()
+  },
+  flagsmithIdentify() {
+    const user = AccountStore.model
+    if (!user) {
+      return
+    }
+
+    flagsmith
+      .identify(user.email, {
+        email: user.email,
+        organisations: user.organisations
+          ? user.organisations.map((o) => `"${o.id}"`).join(',')
+          : '',
+      })
+      .then(() => {
+        return flagsmith.setTrait(
+          'logins',
+          (flagsmith.getTrait('logins') || 0) + 1,
+        )
+      })
+      .then(() => {
+        const organisation = AccountStore.getOrganisation()
+        const emailDomain = `${user?.email}`?.split('@')[1] || ''
+        const freeDomain = freeEmailDomains.includes(emailDomain)
+        if (
+          !freeDomain &&
+          typeof delighted !== 'undefined' &&
+          flagsmith.hasFeature('delighted')
+        ) {
+          delighted.survey({
+            createdAt: user.date_joined || new Date().toISOString(),
+            email: user.email,
+            name: `${user.first_name || ''} ${user.last_name || ''}`, // time subscribed (optional)
+            properties: {
+              company: organisation?.name,
+            },
+          })
+        }
+      })
   },
   getCookie(key) {
     const res = require('js-cookie').get(key)
@@ -177,14 +215,7 @@ global.API = {
 
         amplitude.getInstance().identify(identify)
       }
-      flagsmith.identify(id)
-      flagsmith.setTrait(
-        'organisations',
-        user.organisations
-          ? user.organisations.map((o) => `"${o.id}"`).join(',')
-          : '',
-      )
-      flagsmith.setTrait('email', id)
+      API.flagsmithIdentify()
     } catch (e) {
       console.error('Error identifying', e)
     }
