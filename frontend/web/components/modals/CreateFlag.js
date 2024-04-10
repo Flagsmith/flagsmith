@@ -83,12 +83,12 @@ const CreateFlag = class extends Component {
         typeof feature_state_value === 'undefined'
           ? undefined
           : Utils.getTypedValue(feature_state_value),
-      isEdit: !!this.props.projectFlag,
       is_archived,
       is_server_key_only,
       multivariate_options: _.cloneDeep(multivariate_options),
       name,
       period: 30,
+      projectFlag: props.projectFlag,
       selectedIdentity: null,
       tab: tab || 0,
       tags: tags || [],
@@ -104,20 +104,6 @@ const CreateFlag = class extends Component {
 
   componentDidUpdate(prevProps) {
     ES6Component(this)
-    this.listenTo(FeatureListStore, 'saved', () => {
-      if (this.props.projectFlag) {
-        //update the active environment flag as the ID would have changed
-        const envFlags = FeatureListStore.getEnvironmentFlags()
-        const projectFlag = this.props.projectFlag
-        const newEnvironmentFlag = envFlags?.[projectFlag.id] || {}
-        this.setState({
-          environmentFlag: {
-            ...this.state.environmentFlag,
-            ...(newEnvironmentFlag || {}),
-          },
-        })
-      }
-    })
     if (
       !this.props.identity &&
       this.props.environmentVariations !== prevProps.environmentVariations
@@ -173,6 +159,20 @@ const CreateFlag = class extends Component {
   }
 
   componentDidMount = () => {
+    this.listenTo(FeatureListStore, 'saved', () => {
+      if (this.state.projectFlag) {
+        //update the active environment flag as the ID would have changed
+        const envFlags = FeatureListStore.getEnvironmentFlags()
+        const projectFlag = this.state.projectFlag
+        const newEnvironmentFlag = envFlags?.[projectFlag.id] || {}
+        this.setState({
+          environmentFlag: {
+            ...this.state.environmentFlag,
+            ...(newEnvironmentFlag || {}),
+          },
+        })
+      }
+    })
     setInterceptClose(this.onClosing)
     if (!this.state.isEdit && !E2E) {
       this.focusTimeout = setTimeout(() => {
@@ -182,7 +182,7 @@ const CreateFlag = class extends Component {
     }
     if (
       !Project.disableAnalytics &&
-      this.props.projectFlag &&
+      this.state.projectFlag &&
       this.state.environmentFlag
     ) {
       this.getFeatureUsage()
@@ -200,7 +200,7 @@ const CreateFlag = class extends Component {
       if (!Utils.getShouldHideIdentityOverridesTab(ProjectStore.model)) {
         data
           .get(
-            `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides?feature=${this.props.projectFlag.id}&page=${page}`,
+            `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides?feature=${this.state.projectFlag.id}&page=${page}`,
           )
           .then((userOverrides) => {
             this.setState({
@@ -227,7 +227,7 @@ const CreateFlag = class extends Component {
         `${Project.api}environments/${
           this.props.environmentId
         }/${Utils.getFeatureStatesEndpoint()}/?anyIdentity=1&feature=${
-          this.props.projectFlag.id
+          this.state.projectFlag.id
         }&page=${page}`,
       )
       .then((userOverrides) => {
@@ -247,7 +247,7 @@ const CreateFlag = class extends Component {
       AppActions.getFeatureUsage(
         this.props.projectId,
         this.state.environmentFlag.environment,
-        this.props.projectFlag.id,
+        this.state.projectFlag.id,
         this.state.period,
       )
     }
