@@ -431,7 +431,9 @@ const ProjectSettingsPage = class extends Component {
                           <Button
                             onClick={() =>
                               this.confirmRemove(project, () => {
-                                this.context.router.history.replace('/projects')
+                                this.context.router.history.replace(
+                                  '/organisation-settings',
+                                )
                                 deleteProject(this.props.match.params.projectId)
                               })
                             }

@@ -89,7 +89,7 @@ const EnvironmentSettingsPage = class extends Component {
 
   onRemove = () => {
     toast('Your project has been removed')
-    this.context.router.history.replace('/projects')
+    this.context.router.history.replace('/organisation-settings')
   }
 
   confirmRemove = (environment, cb) => {

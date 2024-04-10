@@ -1,25 +1,32 @@
 import logging
+from typing import Type
 
+import pytest
 from django.db import DatabaseError
-from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from task_processor.threads import TaskRunner
 from tests.unit.task_processor.conftest import GetTaskProcessorCaplog
 
 
-def test_task_runner_is_resilient_to_database_errors(
+@pytest.mark.parametrize(
+    "exception_class, exception_message",
+    [(DatabaseError, "Database error"), (Exception, "Generic error")],
+)
+def test_task_runner_is_resilient_to_errors(
     db: None,
     mocker: MockerFixture,
     get_task_processor_caplog: GetTaskProcessorCaplog,
-    settings: SettingsWrapper,
+    exception_class: Type[Exception],
+    exception_message: str,
 ) -> None:
     # Given
     caplog = get_task_processor_caplog(logging.DEBUG)
 
     task_runner = TaskRunner()
     mocker.patch(
-        "task_processor.threads.run_tasks", side_effect=DatabaseError("Database error")
+        "task_processor.threads.run_tasks",
+        side_effect=exception_class(exception_message),
     )
 
     # When
@@ -31,7 +38,7 @@ def test_task_runner_is_resilient_to_database_errors(
     assert caplog.records[0].levelno == logging.ERROR
     assert (
         caplog.records[0].message
-        == "Received database error retrieving tasks: Database error."
+        == f"Received error retrieving tasks: {exception_message}."
     )
 
     assert caplog.records[1].levelno == logging.DEBUG
