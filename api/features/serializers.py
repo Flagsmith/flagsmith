@@ -306,6 +306,8 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
 
 
 class ListFeatureSerializer(CreateFeatureSerializer):
+    # This exists purely to reduce the conflicts for the EE repository
+    # which has some extra behaviour here to support Oracle DB.
     pass
 
 
