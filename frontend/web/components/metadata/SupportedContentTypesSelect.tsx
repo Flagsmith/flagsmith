@@ -7,11 +7,11 @@ import ContentTypesMetadataTable from './ContentTypesMetadataTable'
 type SupportedContentTypesSelectType = {
   organisationId: string
   isEdit: boolean
-  getMetadataContentTypes: (m: SelectContentTypes[]) => void
+  getMetadataContentTypes: (m: SelectContentTypesType[]) => void
   metadataModelFieldList: MetadataModelField[]
 }
 
-type SelectContentTypes = {
+type SelectContentTypesType = {
   label: string
   value: string
   isRequired?: boolean
@@ -26,7 +26,7 @@ const SupportedContentTypesSelect: FC<SupportedContentTypesSelectType> = ({
     organisation_id: organisationId,
   })
   const [selectedContentTypes, setSelectedContentTypes] = useState<
-    SelectContentTypes[]
+    SelectContentTypesType[]
   >([])
 
   useEffect(() => {
@@ -80,7 +80,7 @@ const SupportedContentTypesSelect: FC<SupportedContentTypesSelectType> = ({
                 label: v.model,
                 value: `${v.id}`,
               }))}
-            onChange={(v: SelectContentTypes) => {
+            onChange={(v: SelectContentTypesType) => {
               setSelectedContentTypes((prevState) => [...prevState, v])
             }}
             className='mb-4 react-select'
@@ -91,7 +91,7 @@ const SupportedContentTypesSelect: FC<SupportedContentTypesSelectType> = ({
         <ContentTypesMetadataTable
           metadataModelFieldList={metadataModelFieldList}
           selectedContentTypes={selectedContentTypes}
-          onDelete={(v: SelectContentTypes) => {
+          onDelete={(v: SelectContentTypesType) => {
             setSelectedContentTypes((prevState) =>
               prevState.filter((item) => item.value !== v.value),
             )
@@ -100,8 +100,8 @@ const SupportedContentTypesSelect: FC<SupportedContentTypesSelectType> = ({
           isEdit={isEdit}
           changeMetadataRequired={(v: string, r: boolean) => {
             setSelectedContentTypes((prevState) =>
-              prevState.map((item): SelectContentTypes => {
-                const updatedItem: SelectContentTypes = {
+              prevState.map((item): SelectContentTypesType => {
+                const updatedItem: SelectContentTypesType = {
                   ...item,
                   isRequired: item.value === v ? r : item.isRequired,
                 }
