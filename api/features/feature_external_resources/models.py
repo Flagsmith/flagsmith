@@ -37,7 +37,9 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
     class Meta:
         ordering = ("id",)
         constraints = [
-            models.UniqueConstraint(fields=["url"], name="unique_url_constraint")
+            models.UniqueConstraint(
+                fields=["feature", "url"], name="unique_feature_url_constraint"
+            )
         ]
 
     @hook(AFTER_SAVE)
