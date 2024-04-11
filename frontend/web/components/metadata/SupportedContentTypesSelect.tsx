@@ -2,7 +2,7 @@ import React, { FC, useEffect, useState } from 'react'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 import { ContentType, MetadataModelField } from 'common/types/responses'
 import InputGroup from 'components/base/forms/InputGroup'
-import ContentTypesMetadataTable from './ContentTypesMetadataTable'
+import ContentTypesMetadataFieldTable from './ContentTypesMetadataFieldTable'
 
 type SupportedContentTypesSelectType = {
   organisationId: string
@@ -88,7 +88,7 @@ const SupportedContentTypesSelect: FC<SupportedContentTypesSelectType> = ({
         }
       />
       {!!selectedContentTypes.length && (
-        <ContentTypesMetadataTable
+        <ContentTypesMetadataFieldTable
           metadataModelFieldList={metadataModelFieldList}
           selectedContentTypes={selectedContentTypes}
           onDelete={(v: SelectContentTypesType) => {

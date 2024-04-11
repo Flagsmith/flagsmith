@@ -12,7 +12,7 @@ type selectedContentType = {
   isRequired: boolean
 }
 
-type ContentTypesMetadataTableType = {
+type ContentTypesMetadataFieldTableType = {
   organisationId: string
   selectedContentTypes: selectedContentType[]
   onDelete: (removed: selectedContentType) => void
@@ -22,7 +22,7 @@ type ContentTypesMetadataTableType = {
 }
 
 type ContentTypesMetadataRowBase = Omit<
-  Omit<ContentTypesMetadataTableType, 'metadataModelFieldList'>,
+  Omit<ContentTypesMetadataFieldTableType, 'metadataModelFieldList'>,
   'selectedContentTypes'
 >
 
@@ -74,7 +74,9 @@ const ContentTypesMetadataRow: FC<ContentTypesMetadataRowType> = ({
   )
 }
 
-const ContentTypesMetadataTable: FC<ContentTypesMetadataTableType> = ({
+const ContentTypesMetadataFieldTable: FC<
+  ContentTypesMetadataFieldTableType
+> = ({
   changeMetadataRequired,
   isEdit,
   onDelete,
@@ -113,4 +115,4 @@ const ContentTypesMetadataTable: FC<ContentTypesMetadataTableType> = ({
   )
 }
 
-export default ContentTypesMetadataTable
+export default ContentTypesMetadataFieldTable

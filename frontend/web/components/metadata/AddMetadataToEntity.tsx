@@ -2,7 +2,7 @@ import React, { FC, useEffect, useState } from 'react'
 import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
-import { useGetMetadataListQuery } from 'common/services/useMetadata'
+import { useGetMetadataFieldListQuery } from 'common/services/useMetadataField'
 import {} from 'common/services/useFeatureSegment'
 import InputGroup from 'components/base/forms/InputGroup'
 import { MetadataField, Metadata } from 'common/types/responses'
@@ -23,7 +23,7 @@ type AddMetadataToEntityType = {
   entityContentType: number
   entityId: string
   entity: number | string
-  createMetadata: () => void
+  createMetadataField: () => void
   updateMetadata: () => void
 }
 
@@ -40,7 +40,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
   projectId,
 }) => {
   const { data: metadataFieldList, isSuccess: metadataFieldListLoaded } =
-    useGetMetadataListQuery({
+    useGetMetadataFieldListQuery({
       organisation: organisationId,
     })
   const {

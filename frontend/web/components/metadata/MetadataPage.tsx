@@ -7,9 +7,9 @@ import CreateMetadata from 'components/modals/CreateMetadata'
 import ContentTypesValues from './ContentTypesValues'
 import { MetadataModelField } from 'common/types/responses'
 import {
-  useGetMetadataListQuery,
-  useDeleteMetadataMutation,
-} from 'common/services/useMetadata'
+  useGetMetadataFieldListQuery,
+  useDeleteMetadataFieldMutation,
+} from 'common/services/useMetadataField'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
 
 import { IonIcon } from '@ionic/react'
@@ -30,7 +30,7 @@ type MergeMetadata = {
 }
 
 const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
-  const { data: metadataList } = useGetMetadataListQuery({
+  const { data: metadataFieldList } = useGetMetadataFieldListQuery({
     organisation: organisationId,
   })
 
@@ -38,11 +38,11 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
     organisation_id: organisationId,
   })
 
-  const [deleteMetadata] = useDeleteMetadataMutation()
+  const [deleteMetadata] = useDeleteMetadataFieldMutation()
 
   const mergeMetadata = useMemo(() => {
-    if (metadataList && MetadataModelFieldList) {
-      return metadataList.results.map((item1) => {
+    if (metadataFieldList && MetadataModelFieldList) {
+      return metadataFieldList.results.map((item1) => {
         const matchingItems2 = MetadataModelFieldList.results.filter(
           (item2) => item2.field === item1.id,
         )
@@ -53,13 +53,13 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
       })
     }
     return null
-  }, [metadataList, MetadataModelFieldList])
+  }, [metadataFieldList, MetadataModelFieldList])
 
   const metadataCreatedToast = () => {
-    toast('Metadata created')
+    toast('Metadata Field Created')
     closeModal()
   }
-  const createMetadata = () => {
+  const createMetadataField = () => {
     openModal(
       `Create Metadata`,
       <CreateMetadata
@@ -73,13 +73,13 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
 
   const editMetadata = (id: string, contentTypeList: MetadataModelField[]) => {
     openModal(
-      `Edit Metadata`,
+      `Edit Metadata Field`,
       <CreateMetadata
         isEdit={true}
         metadataModelFieldList={contentTypeList}
         id={id}
         onComplete={() => {
-          toast('Metadata Updated')
+          toast('Metadata Field Updated')
         }}
         projectId={projectId}
         organisationId={organisationId}
@@ -94,12 +94,12 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         <div>
           {'Are you sure you want to delete '}
           <strong>{name}</strong>
-          {' metadata?'}
+          {' metadata field?'}
         </div>
       ),
       destructive: true,
       onYes: () => deleteMetadata({ id }),
-      title: 'Delete Metadata',
+      title: 'Delete Metadata Field',
       yesText: 'Confirm',
     })
   }
@@ -110,19 +110,21 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         <Tooltip
           title={
             <Row>
-              <h5>Metadata</h5>
+              <h5>Metadata Fields</h5>
               <div>
                 <IonIcon icon={informationCircle} />
               </div>
             </Row>
           }
         >
-          {'Create or Update the Metadata Project'}
+          {'Create or Update the Metadata Fields Project'}
         </Tooltip>
-        <Button onClick={() => createMetadata()}>{'Create Metadata'}</Button>
+        <Button onClick={() => createMetadataField()}>
+          {'Create Metadata Field'}
+        </Button>
       </Row>
       <p className='fs-small lh-sm'>
-        Add metadata to your chore entities{' '}
+        Create Metadata Fields your core entities{' '}
         <Button
           theme='text'
           target='_blank'

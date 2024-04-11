@@ -225,9 +225,9 @@ export type Req = {
       field: string | number
     }
   }
-  getMetadata: { organisation_id: string }
+  getMetadataField: { organisation_id: string }
   getMetadataList: { organisation: string }
-  updateMetadata: {
+  updateMetadataField: {
     id: string
     body: {
       name: string
@@ -236,8 +236,8 @@ export type Req = {
       organisation: string
     }
   }
-  deleteMetadata: { id: string }
-  createMetadata: {
+  deleteMetadataField: { id: string }
+  createMetadataField: {
     body: {
       description: string
       name: string

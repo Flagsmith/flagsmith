@@ -5,10 +5,10 @@ import Button from 'components/base/forms/Button'
 import SupportedContentTypesSelect from 'components/metadata/SupportedContentTypesSelect'
 
 import {
-  useCreateMetadataMutation,
-  useGetMetadataQuery,
-  useUpdateMetadataMutation,
-} from 'common/services/useMetadata'
+  useCreateMetadataFieldMutation,
+  useGetMetadataFieldQuery,
+  useUpdateMetadataFieldMutation,
+} from 'common/services/useMetadataField'
 
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 
@@ -60,7 +60,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
     { id: 4, label: 'url', value: 'url' },
     { id: 5, label: 'multiline string', value: 'multiline_str' },
   ]
-  const { data, isLoading } = useGetMetadataQuery(
+  const { data, isLoading } = useGetMetadataFieldQuery(
     { organisation_id: id! },
     { skip: !id },
   )
@@ -68,13 +68,13 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
     organisation_id: `${organisationId}`,
   })
-  const [createMetadata, { isLoading: creating, isSuccess: created }] =
-    useCreateMetadataMutation()
+  const [createMetadataField, { isLoading: creating, isSuccess: created }] =
+    useCreateMetadataFieldMutation()
   const [updateMetadata, { isLoading: updating, isSuccess: updated }] =
-    useUpdateMetadataMutation()
+    useUpdateMetadataFieldMutation()
 
-  const [createMetadataField] = useCreateMetadataModelFieldMutation()
-  const [updateMetadataField] = useUpdateMetadataModelFieldMutation()
+  const [createMetadataModelField] = useCreateMetadataModelFieldMutation()
+  const [updateMetadataModelField] = useUpdateMetadataModelFieldMutation()
 
   const [deleteMetadataModelField] = useDeleteMetadataModelFieldMutation()
   const projectContentType =
@@ -149,7 +149,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
               organisation_id: organisationId,
             }
             if (!('removed' in m) && !('new' in m)) {
-              await updateMetadataField(query)
+              await updateMetadataModelField(query)
             } else if ('removed' in m) {
               await deleteMetadataModelField({
                 id: m.id,
@@ -158,14 +158,14 @@ const CreateMetadata: FC<CreateMetadataType> = ({
             } else if ('new' in m) {
               const newQuery = { ...query }
               delete newQuery.id
-              await createMetadataField(newQuery)
+              await createMetadataModelField(newQuery)
             }
           }),
         )
         closeModal()
       })
     } else {
-      createMetadata({
+      createMetadataField({
         body: {
           description,
           name,
@@ -175,7 +175,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
       }).then((res) => {
         Promise.all(
           metadataSelectList.map(async (m) => {
-            await createMetadataField({
+            await createMetadataModelField({
               body: {
                 content_type: m.value,
                 field: `${res?.data.id}`,

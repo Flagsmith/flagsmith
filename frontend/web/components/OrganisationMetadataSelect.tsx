@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react'
-import { useGetMetadataListQuery } from 'common/services/useMetadata'
+import { useGetMetadataFieldListQuery } from 'common/services/useMetadataField'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
 import { MetadataField } from 'common/types/responses'
 
@@ -16,7 +16,9 @@ const OrganisationMetadataSelect: FC<OrganisationMetadataSelectType> = ({
   ...props
 }) => {
   const [metadataList, setMetadataList] = useState<MetadataField[]>([])
-  const { data: metadata } = useGetMetadataListQuery({ organisation: orgId })
+  const { data: metadata } = useGetMetadataFieldListQuery({
+    organisation: orgId,
+  })
   const { data: metadataModelField } = useGetMetadataModelFieldListQuery({
     organisation_id: orgId,
   })

@@ -511,7 +511,7 @@ export type Res = {
   metadataModelFieldList: PagedResponse<MetadataModelField>
   metadataModelField: MetadataModelField
   metadataList: PagedResponse<MetadataField>
-  metadata: MetadataField
+  metadataField: MetadataField
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   roleMasterApiKey: { id: number; master_api_key: string; role: number }
