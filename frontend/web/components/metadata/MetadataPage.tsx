@@ -124,7 +124,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         </Button>
       </Row>
       <p className='fs-small lh-sm'>
-        Create Metadata Fields your core entities{' '}
+        Manage metadata fields for selected core identities in your project{' '}
         <Button
           theme='text'
           target='_blank'

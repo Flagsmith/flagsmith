@@ -9,7 +9,7 @@ import { MetadataModelField } from 'common/types/responses'
 type selectedContentType = {
   label: string
   value: string
-  isRequired: boolean
+  isRequired?: boolean
 }
 
 type ContentTypesMetadataFieldTableType = {
@@ -108,7 +108,7 @@ const ContentTypesMetadataFieldTable: FC<
           organisationId={organisationId}
           onDelete={onDelete}
           changeMetadataRequired={changeMetadataRequired}
-          isEnabled={s.isRequired}
+          isEnabled={s.isRequired!}
         />
       )}
     />

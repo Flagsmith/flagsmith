@@ -32,7 +32,7 @@ const SupportedContentTypesSelect: FC<SupportedContentTypesSelectType> = ({
   useEffect(() => {
     if (isEdit && !!supportedContentTypes?.length) {
       const excludedModels = ['project', 'organisation']
-      const newArray = supportedContentTypes
+      const newSelectedContentTypes = supportedContentTypes
         .filter((item) => !excludedModels.includes(item.model))
         .filter((item) =>
           metadataModelFieldList.some(
@@ -52,7 +52,7 @@ const SupportedContentTypesSelect: FC<SupportedContentTypesSelectType> = ({
           }
         })
 
-      setSelectedContentTypes(newArray)
+      setSelectedContentTypes(newSelectedContentTypes)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supportedContentTypes])
