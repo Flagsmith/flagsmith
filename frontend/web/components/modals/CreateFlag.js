@@ -31,15 +31,11 @@ import { setInterceptClose } from './base/ModalDefault'
 import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
 import FeatureValue from 'components/FeatureValue'
-import OrganisationMetadataSelect from 'components/OrganisationMetadataSelect'
-import { close as closeIcon } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
-import { getMetadataList } from 'common/services/useMetadata'
-import { getMetadataModelFieldList } from 'common/services/useMetadataModelField'
 import { getStore } from 'common/store'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
 import Button from 'components/base/forms/Button'
+import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
 
@@ -78,6 +74,7 @@ const CreateFlag = class extends Component {
       enabledIndentity: false,
       enabledSegment: false,
       environmentFlag: this.props.environmentFlag,
+      featureContentType: {},
       hide_from_client,
       identityVariations:
         this.props.identityFlag &&
@@ -94,12 +91,10 @@ const CreateFlag = class extends Component {
       is_archived,
       is_server_key_only,
       metadata: [],
-      metadataList: [],
       multivariate_options: _.cloneDeep(multivariate_options),
       name,
       period: 30,
       selectedIdentity: null,
-      showMetadataList: false,
       supportedContentTypes: [],
       tab: tab || 0,
       tags: tags || [],
@@ -199,33 +194,15 @@ const CreateFlag = class extends Component {
       this.getFeatureUsage()
     }
     if (Utils.getFlagsmithHasFeature('enable_metadata')) {
-      getMetadataList(getStore(), {
-        organisation: AccountStore.getOrganisation().id,
-      }).then((metadata) => {
-        getSupportedContentType(getStore(), {
-          organisation_id: AccountStore.getOrganisation().id,
-        }).then((res) => {
-          this.setState({ supportedContentTypes: res.data })
-          const featureContentTypeId = Utils.getContentType(
-            res.data,
-            'model',
-            'feature',
-          )?.id
-          getMetadataModelFieldList(getStore(), {
-            organisation_id: AccountStore.getOrganisation().id,
-          }).then((metadataModelField) => {
-            const metadataForContentType = metadata.data.results.filter(
-              (meta) => {
-                return metadataModelField.data.results.some(
-                  (item) =>
-                    item.field === meta.id &&
-                    item.content_type === featureContentTypeId,
-                )
-              },
-            )
-            this.setState({ metadataList: metadataForContentType })
-          })
-        })
+      getSupportedContentType(getStore(), {
+        organisation_id: AccountStore.getOrganisation().id,
+      }).then((res) => {
+        const featureContentType = Utils.getContentType(
+          res.data,
+          'model',
+          'feature',
+        )
+        this.setState({ featureContentType: featureContentType })
       })
     }
   }
@@ -536,15 +513,15 @@ const CreateFlag = class extends Component {
     this.forceUpdate()
   }
 
-  removeMetadata = (id) => {
-    this.setState({
-      metadata: (this.state.metadata || []).filter((v) => v.metadata !== id),
-    })
-  }
+  // removeMetadata = (id) => {
+  //   this.setState({
+  //     metadata: (this.state.metadata || []).filter((v) => v.metadata !== id),
+  //   })
+  // }
 
-  getMetadataList = (metadataList, metadata) => {
-    return metadataList.filter((v) => metadata.find((a) => a.metadata === v.id))
-  }
+  // getMetadataList = (metadataList, metadata) => {
+  //   return metadataList.filter((v) => metadata.find((a) => a.metadata === v.id))
+  // }
 
   render() {
     const {
@@ -552,17 +529,18 @@ const CreateFlag = class extends Component {
       description,
       enabledIndentity,
       enabledSegment,
+      featureContentType,
       hide_from_client,
       initial_value,
       isEdit,
-      metadata,
-      metadataList,
+      // metadata,
+      // metadataList,
       multivariate_options,
       name,
-      supportedContentTypes,
+      // supportedContentTypes,
     } = this.state
     const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID
-    const metadataAdded = this.getMetadataList(metadataList, metadata)
+    // const metadataAdded = this.getMetadataList(metadataList, metadata)
 
     const { identity, identityName, projectFlag } = this.props
     const Provider = identity ? IdentityProvider : FeatureListProvider
@@ -612,75 +590,14 @@ const CreateFlag = class extends Component {
             />
           </FormGroup>
         )}
-        {metadataEnable && (
+        {metadataEnable && isEdit && (
           <FormGroup className='mb-5 setting'>
-            <InputGroup
-              title={'Metadata'}
-              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} flags`}
-              tooltipPlace='left'
-              component={
-                <div>
-                  <Row>
-                    {metadataAdded?.map((m) => (
-                      <Row
-                        key={m.id}
-                        onClick={() => this.removeMetadata(m.id)}
-                        className='chip gap-1'
-                      >
-                        <Tooltip
-                          title={
-                            <Row>
-                              <span className='font-weight-bold'>{m.name}</span>
-                              <span className='fs-caption'>
-                                <IonIcon
-                                  icon={closeIcon}
-                                  className='fs-sm mt-2 ml-1'
-                                />
-                              </span>
-                            </Row>
-                          }
-                        >
-                          {m.description}
-                        </Tooltip>
-                      </Row>
-                    ))}
-                    <Button
-                      size='xSmall'
-                      type='button'
-                      theme='outline'
-                      onClick={() =>
-                        this.setState({
-                          showMetadataList: !this.state.showMetadataList,
-                        })
-                      }
-                    >
-                      Add Metadata
-                    </Button>
-                  </Row>
-                </div>
-              }
-            />
-            <OrganisationMetadataSelect
-              contentType={featureContentType}
-              isOpen={this.state.showMetadataList}
-              value={metadataAdded && metadataAdded.map((v) => v.id)}
-              onAdd={(id) => {
-                this.setState({
-                  metadata: (this.state.metadata || []).concat({
-                    metadata: id,
-                  }),
-                })
-              }}
-              onRemove={this.removeMetadata}
-              setMetadataList={(ml) => {
-                this.setState({ metadataList: ml })
-              }}
-              onToggle={() =>
-                this.setState({
-                  showMetadataList: !this.state.showMetadataList,
-                })
-              }
-              orgId={AccountStore.getOrganisation().id}
+            <AddMetadataToEntity
+              organisationId={AccountStore.getOrganisation().id}
+              projectId={this.props.projectId}
+              entityId={projectFlag.id}
+              entityContentType={featureContentType?.id}
+              entity={featureContentType?.model}
             />
           </FormGroup>
         )}
@@ -955,9 +872,6 @@ const CreateFlag = class extends Component {
                 editFeatureValue,
               },
             ) => {
-              const featureContentType =
-                supportedContentTypes &&
-                Utils.getContentType(supportedContentTypes, 'model', 'feature')
               const saveFeatureValue = (schedule) => {
                 this.setState({ valueChanged: false })
                 if ((is4Eyes || schedule) && !identity) {
@@ -1057,7 +971,8 @@ const CreateFlag = class extends Component {
               }
 
               const onCreateFeature = () => {
-                this.save(createFlag, isSaving, metadataAdded)
+                this.save(createFlag, isSaving)
+                // this.save(createFlag, isSaving, metadataAdded)
               }
 
               const featureLimitAlert =
@@ -1751,7 +1666,7 @@ const CreateFlag = class extends Component {
                                     {Settings(
                                       projectAdmin,
                                       createFeature,
-                                      featureContentType?.id,
+                                      featureContentType,
                                     )}
                                     <JSONReference
                                       className='mb-3'

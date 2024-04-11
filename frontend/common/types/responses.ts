@@ -333,6 +333,7 @@ export type ProjectFlag = {
   num_segment_overrides: number | null
   owners: User[]
   owner_groups: UserGroupSummary[]
+  metadata: Metadata[]
   project: number
   tags: number[]
   type: string
@@ -398,6 +399,12 @@ export type FeatureVersion = {
   is_live: boolean
   published_by: number | null
   created_by: number | null
+}
+
+export type Metadata = {
+  id?: number
+  model_field: number
+  field_value: string
 }
 
 export type MetadataField = {

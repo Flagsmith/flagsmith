@@ -1,8 +1,6 @@
 import { PagedResponse, ProjectFlag, Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
-import data from 'common/data/base/_data'
-import { BaseQueryFn } from '@reduxjs/toolkit/query'
 import Utils from 'common/utils/utils'
 
 function recursivePageGet(
@@ -57,6 +55,20 @@ export const projectFlagService = service
           )
         },
       }),
+      updateProjectFlag: builder.mutation<
+        Res['projectFlag'],
+        Req['updateProjectFlag']
+      >({
+        invalidatesTags: (res) => [
+          { id: 'LIST', type: 'ProjectFlag' },
+          { id: res?.id, type: 'ProjectFlag' },
+        ],
+        query: (query: Req['updateProjectFlag']) => ({
+          body: query.body,
+          method: 'PUT',
+          url: `projects/${query.project_id}/features/${query.feature_id}/`,
+        }),
+      }),
       // END OF ENDPOINTS
     }),
   })
@@ -83,11 +95,23 @@ export async function getProjectFlag(
     projectFlagService.endpoints.getProjectFlag.initiate(data, options),
   )
 }
+export async function updateProjectFlag(
+  store: any,
+  data: Req['updateProjectFlag'],
+  options?: Parameters<
+    typeof projectFlagService.endpoints.updateProjectFlag.initiate
+  >[1],
+) {
+  return store.dispatch(
+    projectFlagService.endpoints.updateProjectFlag.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
   useGetProjectFlagQuery,
   useGetProjectFlagsQuery,
+  useUpdateProjectFlagMutation,
   // END OF EXPORTS
 } = projectFlagService
 

@@ -5,6 +5,7 @@ import {
   FeatureStateValue,
   FeatureState,
   ImportStrategy,
+  Metadata,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -350,5 +351,10 @@ export type Req = {
   }
   getProject: { id: string }
   getUserGroupPermission: { project_id: string }
+  updateProjectFlag: {
+    project_id: string | number
+    feature_id: string | number
+    body: { metadata: Metadata[] }
+  }
   // END OF TYPES
 }
