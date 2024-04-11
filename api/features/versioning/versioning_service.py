@@ -3,15 +3,35 @@ import typing
 from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
 
+from environments.models import Environment
 from features.models import FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 
-if typing.TYPE_CHECKING:
-    from environments.models import Environment
+
+def get_environment_flags_latest(
+    environment: Environment,
+    additional_filters: None | Q = None,
+) -> list[FeatureState]:
+    feature_states = FeatureState.objects.get_live_feature_states(
+        environment=environment, additional_filters=additional_filters
+    )
+
+    # Build up a dictionary in the form
+    # {feature_id: feature_state}
+    # and only keep the latest version for each feature.
+    feature_states_dict = {}
+
+    for feature_state in feature_states:
+        key = feature_state.feature_id
+        current_feature_state = feature_states_dict.get(key)
+        if not current_feature_state or feature_state > current_feature_state:
+            feature_states_dict[key] = feature_state
+
+    return list(feature_states_dict.values())
 
 
 def get_environment_flags_queryset(
-    environment: "Environment", feature_name: str = None
+    environment: Environment, feature_name: str = None
 ) -> QuerySet[FeatureState]:
     """
     Get a queryset of the latest live versions of an environments' feature states
@@ -21,14 +41,14 @@ def get_environment_flags_queryset(
 
 
 def get_environment_flags_list(
-    environment: "Environment",
+    environment: Environment,
     feature_name: str = None,
     additional_filters: Q = None,
     additional_select_related_args: typing.Iterable[str] = None,
     additional_prefetch_related_args: typing.Iterable[
         typing.Union[str, Prefetch]
     ] = None,
-) -> typing.List["FeatureState"]:
+) -> list[FeatureState]:
     """
     Get a list of the latest committed versions of FeatureState objects that are
     associated with the given environment. Can be filtered to remove segment /
