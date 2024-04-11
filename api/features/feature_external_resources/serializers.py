@@ -1,11 +1,8 @@
-import logging
+import json
 
-import simplejson as json
 from rest_framework import serializers
 
 from .models import FeatureExternalResource
-
-logger = logging.getLogger(__name__)
 
 
 class FeatureExternalResourceSerializer(serializers.ModelSerializer):
@@ -21,6 +18,10 @@ class FeatureExternalResourceSerializer(serializers.ModelSerializer):
             "metadata",
             "feature",
         )
+
+    def validate_metadata(self, value) -> str:
+        metadata_json = json.dumps(value)
+        return metadata_json
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
