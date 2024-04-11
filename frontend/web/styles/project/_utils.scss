@@ -20,6 +20,10 @@
 .bg-secondary {
     background-color: $bt-brand-secondary;
 }
+.bg-required {
+    background-color: $bt-brand-red;
+    color: $bt-brand-faint;
+}
 .clearfix { display: inline-block; }
 /* start commented backslash hack \*/
 * html .clearfix { height: 1%; }

@@ -221,7 +221,7 @@ export type Req = {
     organisation_id: string
     body: {
       content_type: number | string
-      field: string
+      field: string | number
     }
   }
   getMetadata: { organisation_id: string }

@@ -4,9 +4,8 @@ import PanelSearch from 'components/PanelSearch'
 import Icon from 'components/Icon'
 import Panel from 'components/base/grid/Panel'
 import CreateMetadata from 'components/modals/CreateMetadata'
-import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
-import Utils from 'common/utils/utils'
-import { ContentType, MetadataModelField } from 'common/types/responses'
+import ContentTypesValues from './ContentTypesValues'
+import { MetadataModelField } from 'common/types/responses'
 import {
   useGetMetadataListQuery,
   useDeleteMetadataMutation,
@@ -31,10 +30,6 @@ type MergeMetadata = {
 }
 
 const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
-  const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
-    organisation_id: `${organisationId}`,
-  })
-
   const { data: metadataList } = useGetMetadataListQuery({
     organisation: organisationId,
   })
@@ -44,28 +39,6 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
   })
 
   const [deleteMetadata] = useDeleteMetadataMutation()
-
-  let featureContentType: ContentType,
-    segmentContentType: ContentType,
-    environmentContentType: ContentType
-
-  if (supportedContentTypes) {
-    featureContentType = Utils.getContentType(
-      supportedContentTypes,
-      'model',
-      'feature',
-    )
-    segmentContentType = Utils.getContentType(
-      supportedContentTypes,
-      'model',
-      'segment',
-    )
-    environmentContentType = Utils.getContentType(
-      supportedContentTypes,
-      'model',
-      'environment',
-    )
-  }
 
   const mergeMetadata = useMemo(() => {
     if (metadataList && MetadataModelFieldList) {
@@ -182,6 +155,10 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
             >
               <Flex className='table-column px-3'>
                 <div className='font-weight-medium mb-1'>{metadata.name}</div>
+                <ContentTypesValues
+                  contentTypes={metadata.content_type_fields}
+                  organisationId={organisationId}
+                />
               </Flex>
               <div className='table-column' style={{ width: '86px' }}>
                 <Button
