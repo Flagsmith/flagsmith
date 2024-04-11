@@ -400,7 +400,7 @@ export type FeatureVersion = {
   created_by: number | null
 }
 
-export type Metadata = {
+export type MetadataField = {
   id: number
   name: string
   type: string
@@ -503,8 +503,8 @@ export type Res = {
   environment: Environment
   metadataModelFieldList: PagedResponse<MetadataModelField>
   metadataModelField: MetadataModelField
-  metadataList: PagedResponse<Metadata>
-  metadata: Metadata
+  metadataList: PagedResponse<MetadataField>
+  metadata: MetadataField
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   roleMasterApiKey: { id: number; master_api_key: string; role: number }

@@ -3,12 +3,12 @@ import InlineModal from './InlineModal'
 import Input from './base/forms/Input'
 import Utils from 'common/utils/utils'
 import Icon from './Icon'
-import { Metadata } from 'common/types/responses'
+import { MetadataField } from 'common/types/responses'
 
 export type MetadataSelectType = {
   disabled: boolean
   contentType?: number
-  metadata: Metadata[]
+  metadata: MetadataField[]
   value: number[] | undefined
   isOpen: boolean
   onAdd: (id: number) => void
@@ -48,7 +48,7 @@ const MetadataSelect: FC<MetadataSelectType> = ({
       />
       <div className='inline-modal__list'>
         {metadataList?.length
-          ? metadataList.map((v: Metadata) => (
+          ? metadataList.map((v: MetadataField) => (
               <div className='assignees-list-item clickable' key={v.id}>
                 <Row
                   onClick={() => {
