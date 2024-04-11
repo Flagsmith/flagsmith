@@ -50,6 +50,7 @@ from .permissions import (
     IdentityFeatureStatePermissions,
 )
 from .serializers import (
+    CreateFeatureSerializer,
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureEvaluationDataSerializer,
     FeatureGroupOwnerInputSerializer,
@@ -63,7 +64,7 @@ from .serializers import (
     FeatureStateValueSerializer,
     GetInfluxDataQuerySerializer,
     GetUsageDataQuerySerializer,
-    ListCreateFeatureSerializer,
+    ListFeatureSerializer,
     ProjectFeatureSerializer,
     SDKFeatureStateSerializer,
     SDKFeatureStatesQuerySerializer,
@@ -83,7 +84,7 @@ logger.setLevel(logging.INFO)
 flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 
 
-@swagger_auto_schema(responses={200: ListCreateFeatureSerializer()}, method="get")
+@swagger_auto_schema(responses={200: CreateFeatureSerializer()}, method="get")
 @api_view(["GET"])
 def get_feature_by_uuid(request, uuid):
     accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
@@ -91,7 +92,7 @@ def get_feature_by_uuid(request, uuid):
         "multivariate_options", "owners", "tags"
     )
     feature = get_object_or_404(qs, uuid=uuid)
-    serializer = ListCreateFeatureSerializer(instance=feature)
+    serializer = CreateFeatureSerializer(instance=feature)
     return Response(serializer.data)
 
 
@@ -105,9 +106,9 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         return {
-            "list": ListCreateFeatureSerializer,
-            "retrieve": ListCreateFeatureSerializer,
-            "create": ListCreateFeatureSerializer,
+            "list": ListFeatureSerializer,
+            "retrieve": CreateFeatureSerializer,
+            "create": CreateFeatureSerializer,
             "update": UpdateFeatureSerializer,
             "partial_update": UpdateFeatureSerializer,
         }.get(self.action, ProjectFeatureSerializer)
@@ -177,12 +178,10 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context.update(
-            project=get_object_or_404(
-                Project.objects.all(), pk=self.kwargs["project_pk"]
-            ),
-            user=self.request.user,
-        )
+
+        project = get_object_or_404(Project.objects.all(), pk=self.kwargs["project_pk"])
+        context.update(project=project, user=self.request.user)
+
         if self.action == "list" and "environment" in self.request.query_params:
             environment = get_object_or_404(
                 Environment, id=self.request.query_params["environment"]
