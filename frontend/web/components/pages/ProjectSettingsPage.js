@@ -271,9 +271,7 @@ const ProjectSettingsPage = class extends Component {
                               <Button
                                 type='submit'
                                 id='save-proj-btn'
-                                disabled={
-                                  isSaving || !name || !hasStaleFlagsPermission
-                                }
+                                disabled={isSaving || !name}
                                 className='ml-3'
                               >
                                 {isSaving ? 'Updating' : 'Update'}
