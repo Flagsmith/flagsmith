@@ -1,4 +1,4 @@
-import { FC, useRef } from 'react';
+import { FC, useRef } from 'react'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
 import WarningMessage from './WarningMessage'
 import moment from 'moment'

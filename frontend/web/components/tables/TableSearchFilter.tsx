@@ -1,8 +1,6 @@
 import React, { FC, useCallback, useEffect, useState } from 'react'
-import TableFilter from './TableFilter'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
-import { exact } from 'prop-types'
 import useThrottle from 'common/useThrottle'
 
 type TableFilterType = {

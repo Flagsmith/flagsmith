@@ -20,7 +20,6 @@ type TableFilterType = {
   isLoading: boolean
   onChange: (value: TableFilterType['value']) => void
   className?: string
-  useLocalStorage?: boolean
   projectId: string
 }
 
@@ -42,11 +41,8 @@ const TableTagFilter: FC<TableFilterType> = ({
   className,
   isLoading,
   onChange,
-  projectId,
-  useLocalStorage,
   value,
 }) => {
-  const checkedLocalStorage = useRef(false)
   const { searchInput, setSearchInput } = useSearchThrottle(
     value.valueSearch || '',
     () => {
@@ -56,26 +52,7 @@ const TableTagFilter: FC<TableFilterType> = ({
       })
     },
   )
-  useEffect(() => {
-    if (checkedLocalStorage.current && useLocalStorage) {
-      AsyncStorage.setItem(`${projectId}-value`, JSON.stringify(value))
-    }
-  }, [value, projectId, useLocalStorage])
-  useEffect(() => {
-    const checkLocalStorage = async function () {
-      if (useLocalStorage && !checkedLocalStorage.current) {
-        checkedLocalStorage.current = true
-        const storedValue = await AsyncStorage.getItem(`${projectId}-value`)
-        if (storedValue) {
-          try {
-            const storedValueObject = JSON.parse(storedValue)
-            onChange(storedValueObject)
-          } catch (e) {}
-        }
-      }
-    }
-    checkLocalStorage()
-  }, [useLocalStorage, projectId])
+
   return (
     <div className={isLoading ? 'disabled' : ''}>
       <TableFilter
