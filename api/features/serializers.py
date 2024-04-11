@@ -117,7 +117,7 @@ class FeatureQuerySerializer(serializers.Serializer):
             raise serializers.ValidationError("Tag IDs must be integers.")
 
 
-class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
+class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
     multivariate_options = NestedMultivariateFeatureOptionSerializer(
         many=True, required=False
     )
@@ -177,7 +177,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
     def to_internal_value(self, data):
         if data.get("initial_value") and not isinstance(data["initial_value"], str):
             data["initial_value"] = str(data["initial_value"])
-        return super(ListCreateFeatureSerializer, self).to_internal_value(data)
+        return super(CreateFeatureSerializer, self).to_internal_value(data)
 
     def create(self, validated_data: dict) -> Feature:
         project = self.context["project"]
@@ -186,7 +186,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         # Add the default(User creating the feature) owner of the feature
         # NOTE: pop the user before passing the data to create
         user = validated_data.pop("user", None)
-        instance = super(ListCreateFeatureSerializer, self).create(validated_data)
+        instance = super(CreateFeatureSerializer, self).create(validated_data)
         if user and getattr(user, "is_master_api_key_user", False) is False:
             instance.owners.add(user)
         return instance
@@ -296,11 +296,17 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         return getattr(instance, "last_modified_in_current_environment", None)
 
 
-class UpdateFeatureSerializer(ListCreateFeatureSerializer):
+class ListFeatureSerializer(CreateFeatureSerializer):
+    # This exists purely to reduce the conflicts for the EE repository
+    # which has some extra behaviour here to support Oracle DB.
+    pass
+
+
+class UpdateFeatureSerializer(CreateFeatureSerializer):
     """prevent users from changing certain values after creation"""
 
-    class Meta(ListCreateFeatureSerializer.Meta):
-        read_only_fields = ListCreateFeatureSerializer.Meta.read_only_fields + (
+    class Meta(CreateFeatureSerializer.Meta):
+        read_only_fields = CreateFeatureSerializer.Meta.read_only_fields + (
             "default_enabled",
             "initial_value",
             "name",

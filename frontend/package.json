@@ -71,6 +71,7 @@
     "file-loader": "6.2.0",
     "flagsmith": "3.18.0",
     "flux-react-dispatcher": "1.2.5",
+    "free-email-domains": "^1.2.13",
     "fs-extra": "2.0.0",
     "history": "4.10.1",
     "html-loader": "1.3.2",
