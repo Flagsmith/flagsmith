@@ -31,7 +31,7 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
   return (
     <PanelSearch
       className='no-pad'
-      title='Linked Issues and Pull Requests.'
+      title='Linked Issues and Pull Requests'
       items={data?.results}
       header={
         <Row className='table-header'>

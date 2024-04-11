@@ -649,75 +649,83 @@ const CreateFlag = class extends Component {
         {Utils.getFlagsmithHasFeature('github_integration') &&
           hasIntegrationWithGithub && (
             <>
-              <MyRepositoriesSelect
-                githubId={githubId}
-                orgId={AccountStore.getOrganisation().id}
-                onChange={(v) => {
-                  const repoData = v.split('/')
-                  this.setState({
-                    repoName: repoData[0],
-                    repoOwner: repoData[1],
-                  })
-                }}
-              />
-              <FormGroup className='mb-5 setting'>
+              <FormGroup className='mt-4 setting'>
                 <label className='cols-sm-2 control-label'>
                   {' '}
-                  Link GitHub Issue Pull-Request
+                  GitHub Repositories
                 </label>
-                <Row className='cols-md-2 role-list'>
-                  <div style={{ width: '200px' }}>
-                    <Select
-                      size='select-md'
-                      placeholder={'Select Type'}
-                      onChange={(v) =>
-                        this.setState({ externalResourceType: v.label })
-                      }
-                      options={[
-                        { id: 1, type: 'Github Issue' },
-                        { id: 2, type: 'Github PR' },
-                      ].map((e) => {
-                        return { label: e.type, value: e.id }
-                      })}
-                    />
-                  </div>
-                  {externalResourceType == 'Github Issue' ? (
-                    <MyIssueSelect
-                      orgId={AccountStore.getOrganisation().id}
-                      onChange={(v) =>
-                        this.setState({
-                          featureExternalResource: v,
-                          status: 'open',
-                        })
-                      }
-                      repoOwner={repoOwner}
-                      repoName={repoName}
-                    />
-                  ) : externalResourceType == 'Github PR' ? (
-                    <MyPullRequestsSelect
-                      orgId={AccountStore.getOrganisation().id}
-                      onChange={(v) =>
-                        this.setState({ featureExternalResource: v.value })
-                      }
-                      repoOwner={repoOwner}
-                      repoName={repoName}
-                    />
-                  ) : (
-                    <></>
-                  )}
-                  {(externalResourceType == 'Github Issue' ||
-                    externalResourceType == 'Github PR') && (
-                    <Button
-                      className='text-right'
-                      theme='primary'
-                      onClick={() => {
-                        _createExternalResourse()
-                      }}
-                    >
-                      Link
-                    </Button>
-                  )}
-                </Row>
+                <MyRepositoriesSelect
+                  githubId={githubId}
+                  orgId={AccountStore.getOrganisation().id}
+                  onChange={(v) => {
+                    const repoData = v.split('/')
+                    this.setState({
+                      repoName: repoData[0],
+                      repoOwner: repoData[1],
+                    })
+                  }}
+                />
+                {repoName && repoOwner && (
+                  <>
+                    <label className='cols-sm-2 control-label mt-4'>
+                      {' '}
+                      Link GitHub Issue Pull-Request
+                    </label>
+                    <Row className='cols-md-2 role-list'>
+                      <div style={{ width: '200px' }}>
+                        <Select
+                          size='select-md'
+                          placeholder={'Select Type'}
+                          onChange={(v) =>
+                            this.setState({ externalResourceType: v.label })
+                          }
+                          options={[
+                            { id: 1, type: 'Github Issue' },
+                            { id: 2, type: 'Github PR' },
+                          ].map((e) => {
+                            return { label: e.type, value: e.id }
+                          })}
+                        />
+                      </div>
+                      {externalResourceType == 'Github Issue' ? (
+                        <MyIssueSelect
+                          orgId={AccountStore.getOrganisation().id}
+                          onChange={(v) =>
+                            this.setState({
+                              featureExternalResource: v,
+                              status: 'open',
+                            })
+                          }
+                          repoOwner={repoOwner}
+                          repoName={repoName}
+                        />
+                      ) : externalResourceType == 'Github PR' ? (
+                        <MyPullRequestsSelect
+                          orgId={AccountStore.getOrganisation().id}
+                          onChange={(v) =>
+                            this.setState({ featureExternalResource: v.value })
+                          }
+                          repoOwner={repoOwner}
+                          repoName={repoName}
+                        />
+                      ) : (
+                        <></>
+                      )}
+                      {(externalResourceType == 'Github Issue' ||
+                        externalResourceType == 'Github PR') && (
+                        <Button
+                          className='text-right'
+                          theme='primary'
+                          onClick={() => {
+                            _createExternalResourse()
+                          }}
+                        >
+                          Link
+                        </Button>
+                      )}
+                    </Row>
+                  </>
+                )}
               </FormGroup>
               <ExternalResourcesTable featureId={projectFlag.id} />
             </>
