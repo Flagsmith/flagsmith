@@ -72,6 +72,7 @@ from .serializers import (
 )
 from .tasks import trigger_feature_state_change_webhooks
 from .versioning.versioning_service import (
+    get_environment_flags_latest,
     get_environment_flags_list,
     get_environment_flags_queryset,
 )
@@ -232,12 +233,16 @@ class FeatureViewSet(viewsets.ModelViewSet):
         if not getattr(self, "environment", None):
             self.environment = Environment.objects.get(id=environment_id)
 
-        feature_states = FeatureState.objects.get_live_feature_states(
+        feature_states = get_environment_flags_latest(
             environment=self.environment,
-            additional_filters=base_q & filter_search_q & filter_enabled_q,
+            additional_filters=base_q,
         )
 
-        feature_ids = {fs.feature_id for fs in feature_states}
+        feature_ids = FeatureState.objects.filter(
+            filter_search_q & filter_enabled_q,
+            id__in=[fs.id for fs in feature_states],
+        ).values_list("feature_id", flat=True)
+
         return queryset.filter(id__in=feature_ids)
 
     @swagger_auto_schema(
