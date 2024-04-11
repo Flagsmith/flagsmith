@@ -156,6 +156,7 @@ const ProjectSettingsPage = class extends Component {
 
   render() {
     const { name, stale_flags_limit_days } = this.state
+    const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
 
     return (
       <div className='app-container container'>
@@ -234,37 +235,45 @@ const ProjectSettingsPage = class extends Component {
                             </Row>
                             <Tooltip
                               title={
-                                <label className='mt-4'>
-                                  Days before a feature is marked as stale{' '}
-                                  <Icon name='info-outlined' />
-                                </label>
+                                <div>
+                                  <label className='mt-4'>
+                                    Days before a feature is marked as stale{' '}
+                                    <Icon name='info-outlined' />
+                                  </label>
+                                  <div style={{ width: 80 }} className='ml-0'>
+                                    <Input
+                                      disabled={!hasStaleFlagsPermission}
+                                      ref={(e) => (this.input = e)}
+                                      value={this.state.stale_flags_limit_days}
+                                      onChange={(e) =>
+                                        this.setState({
+                                          stale_flags_limit_days: parseInt(
+                                            Utils.safeParseEventValue(e),
+                                          ),
+                                        })
+                                      }
+                                      isValid={!!stale_flags_limit_days}
+                                      type='number'
+                                      placeholder='Number of Days'
+                                    />
+                                  </div>
+                                </div>
                               }
                             >
-                              {
-                                'If no changes have been made to a feature in any environment within this threshold the feature will be tagged as stale.'
-                              }
+                              {`${
+                                !hasStaleFlagsPermission
+                                  ? 'This feature is available with our enterprise plan. '
+                                  : ''
+                              }If no changes have been made to a feature in any environment within this threshold the feature will be tagged as stale.`}
                             </Tooltip>
-                            <div style={{ width: 200 }} className='ml-0'>
-                              <Input
-                                ref={(e) => (this.input = e)}
-                                value={this.state.stale_flags_limit_days}
-                                onChange={(e) =>
-                                  this.setState({
-                                    stale_flags_limit_days: parseInt(
-                                      Utils.safeParseEventValue(e),
-                                    ),
-                                  })
-                                }
-                                isValid={!!stale_flags_limit_days}
-                                type='number'
-                                placeholder='Number of Days'
-                              />
-                            </div>
+
                             <div className='text-right'>
                               <Button
                                 type='submit'
                                 id='save-proj-btn'
-                                disabled={isSaving || !name}
+                                disabled={
+                                  isSaving || !name || !hasStaleFlagsPermission
+                                }
                                 className='ml-3'
                               >
                                 {isSaving ? 'Updating' : 'Update'}
