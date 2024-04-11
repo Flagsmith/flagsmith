@@ -3,10 +3,11 @@ import logging
 import typing
 
 import requests
+from django.conf import settings
 
 from features.models import FeatureState, FeatureStateValue
 from integrations.github.client import generate_token
-from integrations.github.constants import GITHUB_API_URL, GITHUB_APP_ID
+from integrations.github.constants import GITHUB_API_URL
 from integrations.github.models import GithubConfiguration
 from webhooks.webhooks import WebhookEventType
 
@@ -17,7 +18,7 @@ def post_comment_to_github(installation_id, owner, repo, issue, body):
     try:
         token = generate_token(
             installation_id,
-            GITHUB_APP_ID,
+            settings.GITHUB_APP_ID,
         )
 
         url = f"{GITHUB_API_URL}repos/{owner}/{repo}/issues/{issue}/comments"
