@@ -35,7 +35,7 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
       items={data?.results}
       header={
         <Row className='table-header'>
-          <Flex className='table-column px-3' style={{ 'minWidth': '340px' }}>
+          <Flex className='table-column px-3' style={{ 'minWidth': '280px' }}>
             URL
           </Flex>
           <Flex className='table-column pl-1'>Type</Flex>
@@ -56,7 +56,7 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
               target='_blank'
               className='fw-normal'
             >
-              {v.url}
+              <p className='fs-small'>{v.url}</p>
             </Button>
           </Flex>
           <Flex className='table-column px-3'>

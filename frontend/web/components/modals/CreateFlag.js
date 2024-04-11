@@ -562,8 +562,11 @@ const CreateFlag = class extends Component {
       createExternalResource(getStore(), {
         body: {
           feature: projectFlag.id,
-          status: status,
-          type: externalResourceType,
+          metadata: { status: status },
+          type:
+            externalResourceType === 'Github Issue'
+              ? 'GITHUB_ISSUE'
+              : 'GITHUB_PR',
           url: featureExternalResource,
         },
         feature_id: projectFlag.id,
