@@ -1,9 +1,10 @@
 import datetime
 import logging
+import typing
 
 import requests
 
-from features.models import FeatureState
+from features.models import FeatureState, FeatureStateValue
 from integrations.github.client import generate_token
 from integrations.github.constants import GITHUB_API_URL, GITHUB_APP_ID
 from integrations.github.models import GithubConfiguration
@@ -99,7 +100,7 @@ def generate_data(
     feature_id: int,
     feature_name: str,
     type: str,
-    feature_states: list[FeatureState] = None,
+    feature_states: typing.Union[list[FeatureState], list[FeatureStateValue]] = None,
     url: str = None,
 ):
 

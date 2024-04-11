@@ -65,14 +65,14 @@ def trigger_feature_state_change_webhooks(
             "feature_value": new_state["enabled"],
         }
         feature_states = []
-        feature_states.extend(instance.feature_state_value)
+        feature_states.append(instance)
 
         feature_data = generate_data(
-            github_configuration,
-            history_instance.feature.id,
-            history_instance.feature.name,
-            WebhookEventType.FLAG_UPDATED,
-            feature_states,
+            github_configuration=github_configuration,
+            feature_id=history_instance.feature.id,
+            feature_name=history_instance.feature.name,
+            type=WebhookEventType.FLAG_UPDATED,
+            feature_states=feature_states,
         )
 
         feature_data["feature_states"].append(feature_state)

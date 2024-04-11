@@ -54,7 +54,7 @@ def send_post_request(data: dict[str, Any]) -> None:
 @register_task_handler()
 def call_github_app_webhook_for_feature_state(
     event_data: dict[str, Any], event_type: str
-):
+) -> None:
     if event_type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
         data = {
             "event_type": event_type,

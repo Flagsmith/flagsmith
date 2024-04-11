@@ -68,16 +68,16 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
             )
 
     @hook(BEFORE_DELETE)
-    def execute_before_save_actions(self):
+    def execute_before_save_actions(self) -> None:
         # Add a comment to GitHub Issue/PR when feature is unlinked to the GH external resource
         if hasattr(self.feature.project.organisation, "github_config"):
             github_configuration = self.feature.project.organisation.github_config
             feature_data = generate_data(
-                github_configuration,
-                self.feature_id,
-                self.feature.name,
-                WebhookEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
-                self.url,
+                github_configuration=github_configuration,
+                feature_id=self.feature_id,
+                feature_name=self.feature.name,
+                type=WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
+                url=self.url,
             )
 
             call_github_app_webhook_for_feature_state.delay(
