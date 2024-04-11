@@ -136,7 +136,11 @@ class CustomCurrentUserSerializer(DjoserUserSerializer):
     is_superuser = serializers.BooleanField(read_only=True)
 
     class Meta(DjoserUserSerializer.Meta):
-        fields = DjoserUserSerializer.Meta.fields + ("auth_type", "is_superuser")
+        fields = DjoserUserSerializer.Meta.fields + (
+            "auth_type",
+            "is_superuser",
+            "date_joined",
+        )
 
 
 class ListUsersQuerySerializer(serializers.Serializer):
