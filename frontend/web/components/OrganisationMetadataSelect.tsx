@@ -3,9 +3,9 @@ import { useGetMetadataFieldListQuery } from 'common/services/useMetadataField'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
 import { MetadataField } from 'common/types/responses'
 
-import MetadataSelect, { MetadataSelectType } from './MetadataSelect' // we need this to make JSX compile
+import MetadataSelect, { MetadataFieldSelectType } from './MetadataSelect' // we need this to make JSX compile
 
-type OrganisationMetadataSelectType = MetadataSelectType & {
+type OrganisationMetadataSelectType = MetadataFieldSelectType & {
   orgId: string
   contentType: number
 }

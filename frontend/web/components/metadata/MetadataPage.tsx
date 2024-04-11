@@ -3,7 +3,7 @@ import Button from 'components/base/forms/Button'
 import PanelSearch from 'components/PanelSearch'
 import Icon from 'components/Icon'
 import Panel from 'components/base/grid/Panel'
-import CreateMetadata from 'components/modals/CreateMetadata'
+import CreateMetadataField from 'components/modals/CreateMetadataField'
 import ContentTypesValues from './ContentTypesValues'
 import { MetadataModelField } from 'common/types/responses'
 import {
@@ -61,10 +61,11 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
   }
   const createMetadataField = () => {
     openModal(
-      `Create Metadata`,
-      <CreateMetadata
+      `Create Metadata Field`,
+      <CreateMetadataField
         onComplete={metadataCreatedToast}
         organisationId={organisationId}
+        projectId={projectId}
         isEdit={false}
       />,
       'side-modal create-feature-modal',
@@ -74,7 +75,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
   const editMetadata = (id: string, contentTypeList: MetadataModelField[]) => {
     openModal(
       `Edit Metadata Field`,
-      <CreateMetadata
+      <CreateMetadataField
         isEdit={true}
         metadataModelFieldList={contentTypeList}
         id={id}

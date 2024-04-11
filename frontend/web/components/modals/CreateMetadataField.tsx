@@ -19,13 +19,29 @@ import {
 } from 'common/services/useMetadataModelField'
 import { MetadataModelField } from 'common/types/responses'
 
-type CreateMetadataType = {
+type CreateMetadataFieldType = {
   id?: string
   isEdit: boolean
   metadataModelFieldList?: MetadataModelField[]
   onComplete?: () => void
   organisationId: string
   projectId?: string
+}
+type IsRequiredForType = {
+  content_type: number
+  object_id: string
+}
+
+type QueryBody = {
+  content_type: string | number
+  field: number
+  is_required_for: boolean | IsRequiredForType[]
+}
+
+type Query = {
+  body: QueryBody
+  id?: number
+  organisation_id: string
 }
 
 type MetadataType = {
@@ -34,7 +50,7 @@ type MetadataType = {
   label: string
 }
 
-type metadataUpdatedSelectListType = {
+type metadataFieldUpdatedSelectListType = {
   id: number
   field: number
   content_type: number | string
@@ -43,9 +59,13 @@ type metadataUpdatedSelectListType = {
   new: boolean
 }
 
-type metadataListType = { label: string; value: string; isRequired?: boolean }
+type metadataFieldListType = {
+  label: string
+  value: string
+  isRequired: boolean
+}
 
-const CreateMetadata: FC<CreateMetadataType> = ({
+const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   id,
   isEdit,
   metadataModelFieldList,
@@ -70,7 +90,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   })
   const [createMetadataField, { isLoading: creating, isSuccess: created }] =
     useCreateMetadataFieldMutation()
-  const [updateMetadata, { isLoading: updating, isSuccess: updated }] =
+  const [updateMetadataField, { isLoading: updating, isSuccess: updated }] =
     useUpdateMetadataFieldMutation()
 
   const [createMetadataModelField] = useCreateMetadataModelFieldMutation()
@@ -78,7 +98,6 @@ const CreateMetadata: FC<CreateMetadataType> = ({
 
   const [deleteMetadataModelField] = useDeleteMetadataModelFieldMutation()
   const projectContentType =
-    isEdit &&
     supportedContentTypes &&
     Utils.getContentType(supportedContentTypes, 'model', 'project')
   useEffect(() => {
@@ -112,16 +131,46 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   const [typeValue, setTypeValue] = useState<MetadataType>()
   const [name, setName] = useState<string>('')
   const [description, setDescription] = useState<string>('')
-  const [metadataSelectList, setMetadataSelectList] = useState<
-    metadataListType[]
+  const [metadataFieldSelectList, setMetadataFieldSelectList] = useState<
+    metadataFieldListType[]
   >([])
-  const [metadataUpdatedSelectList, setMetadataUpdatedSelectList] = useState<
-    metadataUpdatedSelectListType[]
-  >([])
+  const [metadataUpdatedSelectList, setMetadataFieldUpdatedSelectList] =
+    useState<metadataFieldUpdatedSelectListType[]>([])
+
+  const generateDataQuery = (
+    contentType: string | number,
+    field: number,
+    isRequiredFor: boolean,
+    id: number,
+    isNew = false,
+  ) => {
+    const query: Query = {
+      body: {
+        content_type: contentType,
+        field: field,
+        is_required_for: isRequiredFor
+          ? ([
+              {
+                content_type: projectContentType.id,
+                object_id: projectId,
+              },
+            ] as IsRequiredForType[])
+          : [],
+      },
+      id: id,
+      organisation_id: organisationId,
+    }
+    if (isNew) {
+      const newQuery = { ...query }
+      delete newQuery.id
+      return newQuery
+    }
+    return query
+  }
 
   const save = () => {
     if (isEdit) {
-      updateMetadata({
+      updateMetadataField({
         body: {
           description,
           name,
@@ -132,30 +181,21 @@ const CreateMetadata: FC<CreateMetadataType> = ({
       }).then(() => {
         Promise.all(
           metadataUpdatedSelectList?.map(async (m) => {
-            const query = {
-              body: {
-                content_type: m.content_type,
-                field: m.field,
-                is_required_for: m.is_required_for
-                  ? [
-                      {
-                        content_type: projectContentType.id,
-                        object_id: projectId,
-                      },
-                    ]
-                  : [],
-              },
-              id: m.id,
-              organisation_id: organisationId,
-            }
+            const query = generateDataQuery(
+              m.content_type,
+              m.field,
+              m.is_required_for,
+              m.id,
+              m?.new,
+            )
             if (!('removed' in m) && !('new' in m)) {
               await updateMetadataModelField(query)
-            } else if ('removed' in m) {
+            } else if ('removed' in m && m.removed) {
               await deleteMetadataModelField({
                 id: m.id,
                 organisation_id: organisationId,
               })
-            } else if ('new' in m) {
+            } else if ('new' in m && m.new) {
               const newQuery = { ...query }
               delete newQuery.id
               await createMetadataModelField(newQuery)
@@ -174,14 +214,15 @@ const CreateMetadata: FC<CreateMetadataType> = ({
         },
       }).then((res) => {
         Promise.all(
-          metadataSelectList.map(async (m) => {
-            await createMetadataModelField({
-              body: {
-                content_type: m.value,
-                field: `${res?.data.id}`,
-              },
-              organisation_id: organisationId,
-            })
+          metadataFieldSelectList.map(async (m) => {
+            const query = generateDataQuery(
+              m.value,
+              res?.data.id,
+              m?.isRequired,
+              0,
+              true,
+            )
+            await createMetadataModelField(query)
           }),
         )
       })
@@ -237,9 +278,10 @@ const CreateMetadata: FC<CreateMetadataType> = ({
       <SupportedContentTypesSelect
         organisationId={organisationId}
         isEdit={isEdit}
-        getMetadataContentTypes={(m: metadataListType[]) => {
+        getMetadataContentTypes={(m: metadataFieldListType[]) => {
           if (isEdit) {
-            const newMetadataArray: metadataUpdatedSelectListType[] = []
+            const newMetadataFieldArray: metadataFieldUpdatedSelectListType[] =
+              []
 
             metadataModelFieldList?.forEach((item1) => {
               const match = m.find(
@@ -250,13 +292,13 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 const isRequiredLength = !!item1.is_required_for.length
                 const isRequired = match.isRequired
                 if (isRequiredLength !== isRequired) {
-                  newMetadataArray.push({
+                  newMetadataFieldArray.push({
                     ...item1,
                     is_required_for: isRequired,
                   })
                 }
               } else {
-                newMetadataArray.push({
+                newMetadataFieldArray.push({
                   ...item1,
                   removed: true,
                 })
@@ -266,7 +308,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                   (item2) => item2.content_type.toString() === item.value,
                 )
                 if (!match) {
-                  newMetadataArray.push({
+                  newMetadataFieldArray.push({
                     ...item1,
                     content_type: item.value,
                     is_required_for: m?.isRequired,
@@ -275,22 +317,22 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 }
               })
             })
-            setMetadataUpdatedSelectList(newMetadataArray)
+            setMetadataFieldUpdatedSelectList(newMetadataFieldArray)
           } else {
-            setMetadataSelectList(m)
+            setMetadataFieldSelectList(m)
           }
         }}
         metadataModelFieldList={metadataModelFieldList!}
       />
       <Button
-        disabled={!name || !typeValue || !metadataSelectList}
+        disabled={!name || !typeValue || !metadataFieldSelectList}
         onClick={save}
         className='float-right'
       >
-        {isEdit ? 'Update Metadata' : 'Create Metadata'}
+        {isEdit ? 'Update Metadata Field' : 'Create Metadata Field'}
       </Button>
     </div>
   )
 }
 
-export default CreateMetadata
+export default CreateMetadataField

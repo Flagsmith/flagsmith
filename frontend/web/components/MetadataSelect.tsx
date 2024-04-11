@@ -5,7 +5,7 @@ import Utils from 'common/utils/utils'
 import Icon from './Icon'
 import { MetadataField } from 'common/types/responses'
 
-export type MetadataSelectType = {
+export type MetadataFieldSelectType = {
   disabled: boolean
   contentType?: number
   metadata: MetadataField[]
@@ -15,7 +15,7 @@ export type MetadataSelectType = {
   onRemove: (id: number) => void
   onToggle: () => void
 }
-const MetadataSelect: FC<MetadataSelectType> = ({
+const MetadataSelect: FC<MetadataFieldSelectType> = ({
   disabled,
   isOpen,
   metadata,
