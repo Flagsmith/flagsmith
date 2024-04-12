@@ -172,7 +172,7 @@ if settings.IS_RBAC_INSTALLED:
     )
 
     nested_roles_router = routers.NestedSimpleRouter(
-        organisations_router, parent_prefix=r"roles", lookup="role"
+        organisations_router, r"roles", lookup="role"
     )
     nested_user_roles_routes.register(
         prefix="roles",
