@@ -119,6 +119,63 @@ const config = {
                             },
                         ],
                     },
+                    {
+                        title: 'How-to guides',
+                        items: [
+                            {
+                                label: 'Angular Feature Flags',
+                                href: 'https://www.flagsmith.com/blog/angular-feature-flag',
+                            },
+                            {
+                                label: 'Python Feature Flags',
+                                href: 'https://www.flagsmith.com/blog/python-feature-flag',
+                            },
+                            {
+                                label: 'Java Feature Flags',
+                                href: 'https://www.flagsmith.com/blog/java-feature-toggle',
+                            },
+                            {
+                                label: 'Ruby Feature Flags',
+                                href: 'https://www.flagsmith.com/blog/ruby-feature-flags',
+                            },
+                            {
+                                label: 'Javascript Feature Flags',
+                                href: 'https://www.flagsmith.com/blog/javascript-feature-flags',
+                            },
+                            {
+                                label: 'Flutter Feature Flags',
+                                href: 'https://www.flagsmith.com/blog/flutter-feature-flags',
+                            },
+                            {
+                                label: 'Node.js Feature Flags',
+                                href: 'https://www.flagsmith.com/blog/nodejs-feature-flags',
+                            },
+                            {
+                                label: 'Spring Boot Feature Flags',
+                                href: 'https://www.flagsmith.com/blog/spring-boot-feature-flags',
+                            },
+                            {
+                                label: 'PHP Feature Flags',
+                                href: 'https://www.flagsmith.com/blog/php-feature-flags',
+                            },
+                            {
+                                label: 'Golang Feature Flags',
+                                href: 'https://www.flagsmith.com/blog/golang-feature-flag',
+                            },
+                            {
+                                label: 'Kotlin/Android Feature Flags',
+                                href: 'https://www.flagsmith.com/blog/feature-flags-android',
+                            },
+                            {
+                                label: 'React Native Feature Flags',
+                                href: 'https://www.flagsmith.com/blog/update-your-react-native-app-using-remote-config',
+                            },
+                            {
+                                label: 'Swift/iOS Feature Flags',
+                                href: 'https://www.flagsmith.com/blog/swift-ios-feature-flags',
+                            },
+                        ],
+                    },
                 ],
                 copyright: `Copyright © ${new Date().getFullYear()} Bullet Train Ltd. Built with Docusaurus.`,
             },
