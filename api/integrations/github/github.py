@@ -14,7 +14,9 @@ from webhooks.webhooks import WebhookEventType
 logger = logging.getLogger(__name__)
 
 
-def post_comment_to_github(installation_id, owner, repo, issue, body):
+def post_comment_to_github(
+    installation_id: str, owner: str, repo: str, issue: str, body: str
+) -> typing.Optional[typing.Dict[str, typing.Any]]:
     try:
         token = generate_token(
             installation_id,
@@ -36,7 +38,11 @@ def post_comment_to_github(installation_id, owner, repo, issue, body):
         return None
 
 
-def generate_body_comment(name, event_type, feature_states):
+def generate_body_comment(
+    name: str,
+    event_type: str,
+    feature_states: typing.List[typing.Dict[str, typing.Any]],
+) -> str:
     def is_integer(value):
         return isinstance(value, int)
 
@@ -92,7 +98,7 @@ def generate_body_comment(name, event_type, feature_states):
     return result
 
 
-def check_not_none(value) -> bool:
+def check_not_none(value: any) -> bool:
     return value is not None
 
 
