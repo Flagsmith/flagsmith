@@ -3,10 +3,10 @@ import { getIsWidget } from 'components/pages/WidgetPage'
 import ProjectStore from './project-store'
 import { createAndSetFeatureVersion } from 'common/services/useFeatureVersion'
 import { updateSegmentPriorities } from 'common/services/useSegmentPriority'
+import OrganisationStore from './organisation-store'
 
 const Dispatcher = require('common/dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
-const OrganisationStore = require('./organisation-store')
 const data = require('../data/base/_data')
 const { createSegmentOverride } = require('../services/useSegmentOverride')
 const { getStore } = require('../store')

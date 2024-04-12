@@ -22,11 +22,9 @@ import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import Switch from 'components/Switch'
-import { globeOutline } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
+import Panel from 'components/base/grid/Panel'
 
 const CodeHelp = require('../../components/CodeHelp')
-const Panel = require('../../components/base/grid/Panel')
 type SegmentsPageType = {
   router: RouterChildContext['router']
   match: {
@@ -84,7 +82,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   useEffect(() => {
     if (error) {
       // Kick user back out to projects
-      props.router.history.replace('/projects')
+      props.router.history.replace('/organisation-settings')
     }
   }, [error, props.router.history])
   const newSegment = () => {

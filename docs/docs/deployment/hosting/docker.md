@@ -30,8 +30,7 @@ As well as the Environment Variables specified in the [API](/deployment/hosting/
   [Gunicorn times out](https://docs.gunicorn.org/en/stable/settings.html#timeout)
 - `ACCESS_LOG_FORMAT`: Message format for Gunicorn's access log. See
   [variable details](https://docs.gunicorn.org/en/stable/settings.html#access-log-format) to define your own format.
-- `ACCESS_LOG_LOCATION`: The location to write access logs to. If not set, or set to `-`, the logs will be sent to
-  `stdout`
+- `ACCESS_LOG_LOCATION`: The location to write access logs to. If set to `-`, the logs will be sent to `stdout`
 
 ## Platform Architectures
 

@@ -26,6 +26,10 @@ import classNames from 'classnames'
 import IdentifierString from 'components/IdentifierString'
 import Button from 'components/base/forms/Button'
 import { removeUserOverride } from 'components/RemoveUserOverride'
+import TableOwnerFilter from 'components/tables/TableOwnerFilter'
+import TableGroupsFilter from 'components/tables/TableGroupsFilter'
+import TableValueFilter from 'components/tables/TableValueFilter'
+import Format from 'common/utils/format'
 const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
@@ -45,21 +49,57 @@ const UserPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
+
+    const params = Utils.fromParam()
     this.state = {
+      group_owners:
+        typeof params.group_owners === 'string'
+          ? params.group_owners.split(',').map((v) => parseInt(v))
+          : [],
+      is_enabled:
+        params.is_enabled === 'true'
+          ? true
+          : params.is_enabled === 'false'
+          ? false
+          : null,
+      loadedOnce: false,
+      owners:
+        typeof params.owners === 'string'
+          ? params.owners.split(',').map((v) => parseInt(v))
+          : [],
+      page: params.page ? parseInt(params.page) - 1 : 1,
       preselect: Utils.fromParam().flag,
-      showArchived: false,
-      tag_strategy: 'INTERSECTION',
-      tags: [],
+      search: params.search || null,
+      showArchived: !!params.is_archived,
+      sort: {
+        label: Format.camelCase(params.sortBy || 'Name'),
+        sortBy: params.sortBy || 'name',
+        sortOrder: params.sortOrder || 'asc',
+      },
+      tag_strategy: params.tag_strategy || 'INTERSECTION',
+      tags:
+        typeof params.tags === 'string'
+          ? params.tags.split(',').map((v) => parseInt(v))
+          : [],
+      value_search:
+        typeof params.value_search === 'string' ? params.value_search : '',
     }
   }
 
   getFilter = () => ({
+    group_owners: this.state.group_owners?.length
+      ? this.state.group_owners
+      : undefined,
     is_archived: this.state.showArchived,
+    is_enabled:
+      this.state.is_enabled === null ? undefined : this.state.is_enabled,
+    owners: this.state.owners?.length ? this.state.owners : undefined,
     tag_strategy: this.state.tag_strategy,
     tags:
       !this.state.tags || !this.state.tags.length
         ? undefined
         : this.state.tags.join(','),
+    value_search: this.state.value_search ? this.state.value_search : undefined,
   })
 
   componentDidMount() {
@@ -246,15 +286,31 @@ const UserPage = class extends Component {
       yesText: 'Confirm',
     })
   }
+  getURLParams = () => ({
+    ...this.getFilter(),
+    group_owners: (this.state.group_owners || [])?.join(',') || undefined,
+    owners: (this.state.owners || [])?.join(',') || undefined,
+    page: this.state.page || 1,
+    search: this.state.search || '',
+    sortBy: this.state.sort.sortBy,
+    sortOrder: this.state.sort.sortOrder,
+    tags: (this.state.tags || [])?.join(',') || undefined,
+  })
 
   filter = () => {
+    const currentParams = Utils.fromParam()
+    if (!currentParams.flag) {
+      // don't replace page if we are currently viewing a feature
+      this.props.router.history.replace(
+        `${document.location.pathname}?${Utils.toParam(this.getURLParams())}`,
+      )
+    }
     AppActions.searchFeatures(
       this.props.match.params.projectId,
       this.props.match.params.environmentId,
       true,
       this.state.search,
       this.state.sort,
-      0,
       this.getFilter(),
     )
   }
@@ -262,7 +318,10 @@ const UserPage = class extends Component {
   render() {
     const { actualFlags } = this.state
     const { environmentId, projectId } = this.props.match.params
-
+    const enabledStateFilter = Utils.getFlagsmithHasFeature(
+      'feature_enabled_state_filter',
+    )
+    const ownersFilter = Utils.getFlagsmithHasFeature('owners_filter')
     const preventAddTrait = !AccountStore.getOrganisation().persist_trait_data
     return (
       <Permission
@@ -483,6 +542,69 @@ const UserPage = class extends Component {
                                               )
                                             }}
                                           />
+                                          {enabledStateFilter && (
+                                            <TableValueFilter
+                                              className='me-4'
+                                              useLocalStorage
+                                              value={{
+                                                enabled: this.state.is_enabled,
+                                                valueSearch:
+                                                  this.state.value_search,
+                                              }}
+                                              onChange={({
+                                                enabled,
+                                                valueSearch,
+                                              }) => {
+                                                this.setState(
+                                                  {
+                                                    is_enabled: enabled,
+                                                    value_search: valueSearch,
+                                                  },
+                                                  this.filter,
+                                                )
+                                              }}
+                                            />
+                                          )}
+                                          {ownersFilter && (
+                                            <TableOwnerFilter
+                                              title={'Owners'}
+                                              className={'me-4'}
+                                              projectId={projectId}
+                                              useLocalStorage
+                                              value={this.state.owners}
+                                              onChange={(owners) => {
+                                                FeatureListStore.isLoading = true
+                                                this.setState(
+                                                  {
+                                                    owners: owners,
+                                                  },
+                                                  this.filter,
+                                                )
+                                              }}
+                                            />
+                                          )}
+                                          {ownersFilter && (
+                                            <TableGroupsFilter
+                                              title={'Groups'}
+                                              className={'me-4'}
+                                              projectId={projectId}
+                                              orgId={
+                                                AccountStore.getOrganisation()
+                                                  ?.id
+                                              }
+                                              useLocalStorage
+                                              value={this.state.group_owners}
+                                              onChange={(group_owners) => {
+                                                FeatureListStore.isLoading = true
+                                                this.setState(
+                                                  {
+                                                    group_owners: group_owners,
+                                                  },
+                                                  this.filter,
+                                                )
+                                              }}
+                                            />
+                                          )}
                                           <TableFilterOptions
                                             title={'View'}
                                             className={'me-4'}
@@ -877,25 +999,6 @@ const UserPage = class extends Component {
                                     )
                                   }}
                                   renderSearchWithNoResults
-                                  renderNoResults={
-                                    this.state.tags?.length ||
-                                    this.state.showArchived ? (
-                                      <div>No results</div>
-                                    ) : (
-                                      <div className='text-center m-2'>
-                                        This user has no features yet. <br />
-                                        When you start{' '}
-                                        <Link
-                                          className='dark'
-                                          to={`project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/features`}
-                                        >
-                                          creating features
-                                        </Link>{' '}
-                                        for your project you will set them per
-                                        user here.
-                                      </div>
-                                    )
-                                  }
                                   paging={FeatureListStore.paging}
                                   search={this.state.search}
                                   nextPage={() =>
