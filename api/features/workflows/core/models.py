@@ -35,11 +35,11 @@ from audit.tasks import (
     create_feature_state_updated_by_change_request_audit_log,
     create_feature_state_went_live_audit_log,
 )
+from environments.tasks import rebuild_environment_document
 from features.models import FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import trigger_update_version_webhooks
-
-from ...versioning.models import EnvironmentFeatureVersion
-from .exceptions import (
+from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
     ChangeRequestDeletionError,
     ChangeRequestNotApprovedError,
@@ -163,6 +163,10 @@ class ChangeRequest(
                             environment_feature_version.uuid
                         )
                     },
+                    delay_until=environment_feature_version.live_from,
+                )
+                rebuild_environment_document.delay(
+                    kwargs={"environment_id": self.environment_id},
                     delay_until=environment_feature_version.live_from,
                 )
 
