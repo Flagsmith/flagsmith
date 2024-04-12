@@ -29,7 +29,7 @@ type CreateFlagValueType = {
   project: Project
   environmentApiKey: string
   projectFlag: CreateProjectFlagType
-  setProjectflag: (projectFlag: CreateProjectFlagType) => void
+  setProjectFlag: (projectFlag: CreateProjectFlagType) => void
 }
 
 const CreateFlagValue: FC<CreateFlagValueType> = ({
@@ -37,18 +37,10 @@ const CreateFlagValue: FC<CreateFlagValueType> = ({
   error,
   project,
   projectFlag,
-  setProjectflag,
+  setProjectFlag,
 }) => {
   const caseSensitive = project?.only_allow_lower_case_feature_names
-
   const regexValid = useRegexValid(projectFlag.name, project.feature_name_regex)
-  const onInputRef = (e: HTMLInputElement | null) => {
-    if (!isEdit) {
-      setTimeout(() => {
-        e?.focus()
-      }, 500)
-    }
-  }
   const environment = project?.environments?.find(
     (environment) => environment.api_key === environmentApiKey,
   )
@@ -56,7 +48,20 @@ const CreateFlagValue: FC<CreateFlagValueType> = ({
   if (!environment) return null
 
   const isEdit = !!projectFlag?.id
-
+  const onRef = (e: InstanceType<typeof InputGroup>) => {
+    if (!isEdit) {
+      setTimeout(() => {
+        e?.focus()
+      }, 500)
+    }
+  }
+  const onNameChange = (e: InputEvent) => {
+    const newName = Utils.safeParseEventValue(e).replace(/ /g, '_')
+    setProjectFlag({
+      ...projectFlag,
+      name: caseSensitive ? newName.toLowerCase() : newName,
+    })
+  }
   return (
     <>
       {isEdit && (
@@ -81,7 +86,7 @@ const CreateFlagValue: FC<CreateFlagValueType> = ({
       {!isEdit && (
         <FormGroup className='mb-4 mt-2'>
           <InputGroup
-            ref={onInputRef}
+            ref={onRef}
             data-test='featureID'
             inputProps={{
               className: 'full-width',
@@ -90,13 +95,7 @@ const CreateFlagValue: FC<CreateFlagValueType> = ({
               readOnly: isEdit,
             }}
             value={projectFlag?.name}
-            onChange={(e: InputEvent) => {
-              const newName = Utils.safeParseEventValue(e).replace(/ /g, '_')
-              setProjectflag({
-                ...projectFlag,
-                name: caseSensitive ? newName.toLowerCase() : newName,
-              })
-            }}
+            onChange={onNameChange}
             isValid={!!projectFlag.name && regexValid}
             type='text'
             title={

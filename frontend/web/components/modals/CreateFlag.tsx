@@ -268,7 +268,7 @@ const _CreateFlag: FC<CreateFlagType> = ({
                   project={project}
                   environmentApiKey={environmentApiKey}
                   projectFlag={projectFlag}
-                  setProjectflag={setProjectFlag}
+                  setProjectFlag={setProjectFlag}
                 />
               </TabItem>
               {!changeRequest && (
@@ -408,7 +408,7 @@ const _CreateFlag: FC<CreateFlagType> = ({
               project={project}
               environmentApiKey={environmentApiKey}
               projectFlag={projectFlag}
-              setProjectflag={setProjectFlag}
+              setProjectFlag={setProjectFlag}
             />
           </div>
         )
