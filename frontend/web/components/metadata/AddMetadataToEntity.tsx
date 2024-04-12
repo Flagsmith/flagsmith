@@ -1,6 +1,7 @@
 import React, { FC, useEffect, useState } from 'react'
 import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button'
+import Icon from 'components/Icon'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
 import { useGetMetadataFieldListQuery } from 'common/services/useMetadataField'
 import {} from 'common/services/useFeatureSegment'
@@ -180,7 +181,6 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
                 className='mr-2'
                 style={{ width: '420px' }}
                 placeholder='Metadata Value'
-                // search
               />
             )}
             {!!metadataFieldsSelected && (
@@ -211,19 +211,56 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
           }
           items={metadataWithMetadataField}
           renderRow={(m: CustomMetadata) => {
-            return (
-              <Row className='space list-item clickable py-2'>
-                <Flex className='table-column px-3'>{m?.description}</Flex>
-                <Flex className='flex-row'>
-                  <Flex className='table-column'>{m?.field_value}</Flex>
-                </Flex>
-                <Flex className='table-column'>Delete</Flex>
-              </Row>
-            )
+            return <MetadataRow metadata={m} isEdit={true} />
           }}
         />
       </FormGroup>
     </>
+  )
+}
+
+type MetadataRowType = {
+  metadata: CustomMetadata
+  onDelete?: () => void
+  isEdit: boolean
+}
+const MetadataRow: FC<MetadataRowType> = ({ isEdit, metadata, onDelete }) => {
+  const [metadataValue, setMetadataValue] = useState<string>(
+    metadata?.field_value || '',
+  )
+  return (
+    <Row className='space list-item clickable py-2'>
+      <Flex className='table-column px-3'>{metadata?.description}</Flex>
+      {isEdit ? (
+        <Flex className='flex-row'>
+          <Input
+            value={metadataValue}
+            onChange={(e: InputEvent) =>
+              setMetadataValue(Utils.safeParseEventValue(e))
+            }
+            className='mr-2'
+            style={{ width: '250px' }}
+            placeholder='Metadata Value'
+            // search
+          />
+        </Flex>
+      ) : (
+        <Flex className='flex-row'>
+          <Flex className='table-column'>{metadata?.field_value}</Flex>
+        </Flex>
+      )}
+
+      <div className='table-column text-center' style={{ width: '80px' }}>
+        <Button
+          onClick={() => {
+            console.log('DEBUG: delete')
+          }}
+          className='btn btn-with-icon'
+        >
+          <Icon name='trash-2' width={20} fill='#656D7B' />
+        </Button>
+      </div>
+    </Row>
   )
 }
 
