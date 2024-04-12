@@ -288,4 +288,4 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   }
 })
 controller.store = store
-module.exports = controller.store
+export default controller.store

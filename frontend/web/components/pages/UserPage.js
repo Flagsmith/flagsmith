@@ -30,6 +30,7 @@ import TableOwnerFilter from 'components/tables/TableOwnerFilter'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableValueFilter from 'components/tables/TableValueFilter'
 import Format from 'common/utils/format'
+import IdentityProvider from 'common/providers/IdentityProvider'
 const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
@@ -216,7 +217,7 @@ const UserPage = class extends Component {
         history={this.props.router.history}
         identity={this.props.match.params.id}
         identityName={decodeURIComponent(this.props.match.params.identity)}
-        environmentId={this.props.match.params.environmentId}
+        environmentApiKey={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
         projectFlag={projectFlag}
         identityFlag={{

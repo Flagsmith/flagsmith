@@ -12,6 +12,7 @@ import EnvironmentSelect from 'components/EnvironmentSelect'
 import SegmentOverrideLimit from 'components/SegmentOverrideLimit'
 import { getStore } from 'common/store'
 import { getEnvironment } from 'common/services/useEnvironment'
+import FeatureListProvider from "common/providers/FeatureListProvider";
 
 class TheComponent extends Component {
   state = {

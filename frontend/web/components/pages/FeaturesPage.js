@@ -23,6 +23,7 @@ import EnvironmentDocumentCodeHelp from 'components/EnvironmentDocumentCodeHelp'
 import TableOwnerFilter from 'components/tables/TableOwnerFilter'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableValueFilter from 'components/tables/TableValueFilter'
+import FeatureListProvider from 'common/providers/FeatureListProvider'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -117,7 +118,7 @@ const FeaturesPage = class extends Component {
       'New Feature',
       <CreateFlagModal
         history={this.props.router.history}
-        environmentId={this.props.match.params.environmentId}
+        environmentApiKey={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
       'side-modal create-feature-modal',

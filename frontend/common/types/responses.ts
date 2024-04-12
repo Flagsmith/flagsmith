@@ -4,6 +4,13 @@ export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
 }
+export type Approval =
+  | {
+      user: number
+    }
+  | {
+      group: number
+    }
 export type PagedResponse<T> = {
   count?: number
   next?: string
@@ -76,23 +83,25 @@ export type Environment = {
   use_v2_feature_versioning: boolean
 }
 export type Project = {
-  id: number
-  uuid: string
-  name: string
-  organisation: number
-  hide_disabled_flags: boolean
   enable_dynamo_db: boolean
-  migration_status: string
-  use_edge_identities: boolean
-  show_edge_identity_overrides_for_feature: boolean
-  prevent_flag_defaults: boolean
   enable_realtime_updates: boolean
-  max_segments_allowed?: number | null
+  environments: Environment[]
+  feature_name_regex: string | null
+  hide_disabled_flags: boolean
+  id: number
   max_features_allowed?: number | null
   max_segment_overrides_allowed?: number | null
+  max_segments_allowed?: number | null
+  migration_status: string
+  name: string
+  only_allow_lower_case_feature_names: boolean | null
+  organisation: number
+  prevent_flag_defaults: boolean
+  show_edge_identity_overrides_for_feature: boolean
   total_features?: number
   total_segments?: number
-  environments: Environment[]
+  use_edge_identities: boolean
+  uuid: string
 }
 export type ImportStrategy = 'SKIP' | 'OVERWRITE_DESTRUCTIVE'
 
@@ -191,6 +200,20 @@ export type AuditLogItem = {
   is_system_event: boolean
 }
 
+export type SegmentOverride = {
+  id: number
+  uuid: string
+  segment: number
+  segment_name: string
+  is_feature_specific: boolean
+  priority: number
+  environment: number
+  feature: number
+  enabled: boolean
+  feature_segment_value: FeatureState
+  value: string
+}
+
 export type AuditLogDetail = AuditLogItem & {
   change_details: {
     field: string
@@ -258,6 +281,13 @@ export type MultivariateFeatureStateValue = {
   percentage_allocation: number
 }
 
+export type IdentityStoreModel = {
+  // adds types to identity-store.js
+  features: Record<string, FeatureState> // identity overrides
+  identity: Identity
+  traits: { trait_key: string; trait_value: FlagsmithValue }[]
+}
+
 export type FeatureStateValue = {
   boolean_value: boolean | null
   float_value?: number | null
@@ -297,27 +327,27 @@ export type IdentityFeatureState = {
 }
 
 export type FeatureState = {
-  id: number
-  feature_state_value: FlagsmithValue
-  multivariate_feature_state_values: MultivariateFeatureStateValue[]
-  identity?: string
-  uuid: string
-  enabled: boolean
+  change_request?: number
   created_at: string
-  updated_at: string
-  environment_feature_version: string
-  version?: number
-  live_from?: string
-  hide_from_client?: string
-  feature: number
+  enabled: boolean
   environment: number
+  environment_feature_version: string
+  feature: number
   feature_segment?: {
     id: number
     priority: number
     segment: number
     uuid: string
   }
-  change_request?: number
+  feature_state_value: FlagsmithValue
+  hide_from_client?: string
+  id: number
+  identity?: string
+  live_from?: string
+  multivariate_feature_state_values: MultivariateFeatureStateValue[]
+  updated_at: string
+  uuid: string
+  version?: number
 }
 
 export type ProjectFlag = {
@@ -338,24 +368,6 @@ export type ProjectFlag = {
   tags: number[]
   type: string
   uuid: string
-}
-
-export type FeatureListProviderData = {
-  projectFlags: ProjectFlag[] | null
-  environmentFlags: FeatureState[] | null
-  error: boolean
-  isLoading: boolean
-}
-
-export type FeatureListProviderActions = {
-  toggleFlag: (
-    index: number,
-    environments: Environment[],
-    comment: string | null,
-    environmentFlags: FeatureState[],
-    projectFlags: ProjectFlag[],
-  ) => void
-  removeFlag: (projectId: string, projectFlag: ProjectFlag) => void
 }
 
 export type AuthType = 'EMAIL' | 'GITHUB' | 'GOOGLE'
@@ -460,30 +472,7 @@ export type Res = {
   groups: PagedResponse<UserGroupSummary>
   group: UserGroup
   myGroups: PagedResponse<UserGroupSummary>
-  createSegmentOverride: {
-    id: number
-    segment: number
-    priority: number
-    uuid: string
-    environment: number
-    feature: number
-    feature_segment_value: {
-      id: number
-      environment: number
-      enabled: boolean
-      feature: number
-      feature_state_value: FeatureStateValue
-      deleted_at: string
-      uuid: string
-      created_at: string
-      updated_at: string
-      version: number
-      live_from: string
-      identity: string
-      change_request: string
-    }
-    value: string
-  }
+  createSegmentOverride: SegmentOverride
   featureVersion: FeatureVersion
   versionFeatureState: FeatureState[]
   role: Role

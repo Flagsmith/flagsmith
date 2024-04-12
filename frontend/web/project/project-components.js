@@ -13,16 +13,14 @@ import ProjectProvider from 'common/providers/ProjectProvider'
 import AccountProvider from 'common/providers/AccountProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Panel from 'components/base/grid/Panel'
+import AppActions from 'common/dispatcher/app-actions'
 
-window.AppActions = require('../../common/dispatcher/app-actions')
+window.AppActions = AppActions
 window.Actions = require('../../common/dispatcher/action-constants')
 window.ES6Component = require('../../common/ES6Component')
 
-window.IdentityProvider = require('../../common/providers/IdentityProvider')
-window.IdentityProvider = require('../../common/providers/IdentityProvider')
 window.AccountProvider = AccountProvider
 window.AccountStore = AccountStore
-window.FeatureListProvider = require('../../common/providers/FeatureListProvider')
 window.OrganisationProvider = OrganisationProvider
 window.ProjectProvider = ProjectProvider
 

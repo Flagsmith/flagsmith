@@ -4,7 +4,7 @@ import Constants from 'common/constants'
 import Format from 'common/utils/format'
 import ErrorMessage from 'components/ErrorMessage'
 import ModalHR from './ModalHR'
-
+import IdentityProvider from 'common/providers/IdentityProvider'
 const CreateTrait = class extends Component {
   static displayName = 'CreateTrait'
 

@@ -6,6 +6,7 @@ import data from 'common/data/base/_data'
 import FeatureRow from './FeatureRow'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
+import FeatureListProvider from 'common/providers/FeatureListProvider'
 
 const featureNameWidth = 300
 
@@ -91,7 +92,7 @@ class CompareEnvironments extends Component {
         </Row>
         {this.state.flagId && (
           <div>
-            <FeatureListProvider onSave={this.onSave} onError={this.onError}>
+            <FeatureListProvider onSave={this.onSave}>
               {({}, { removeFlag, toggleFlag }) => {
                 const renderRow = (data, i) => {
                   const flagValues = this.state.environmentResults[i]

@@ -34,7 +34,6 @@ module.exports = {
     'E2E': true,
     'ES6Component': true,
     'FB': true,
-    'FeatureListProvider': true,
     'FeatureValue': true,
     'Flex': true,
     'FormGroup': true,

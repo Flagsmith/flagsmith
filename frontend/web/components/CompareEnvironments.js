@@ -12,6 +12,7 @@ import Icon from './Icon'
 import Constants from 'common/constants'
 import Button from './base/forms/Button'
 import Tooltip from './Tooltip'
+import FeatureListProvider from 'common/providers/FeatureListProvider'
 
 const featureNameWidth = 300
 
@@ -201,7 +202,7 @@ class CompareEnvironments extends Component {
         </Row>
 
         {this.state.environmentLeft && this.state.environmentRight ? (
-          <FeatureListProvider onSave={this.onSave} onError={this.onError}>
+          <FeatureListProvider onSave={this.onSave}>
             {({}, { removeFlag, toggleFlag }) => {
               const renderRow = (p, i, fadeEnabled, fadeValue) => {
                 const environmentLeft = ProjectStore.getEnvironment(

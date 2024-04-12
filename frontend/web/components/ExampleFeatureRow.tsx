@@ -49,6 +49,7 @@ const ExampleFeatureRow: FC<ExampleFeatureRowType> = ({}) => {
     created_at: '',
     enabled: false,
     environment: 1,
+    environment_feature_version: '',
     feature: flag.id,
     feature_state_value: flag.initial_value,
     id: 1,

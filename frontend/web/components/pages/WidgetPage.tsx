@@ -18,8 +18,6 @@ import PanelSearch from 'components/PanelSearch'
 import { AsyncStorage } from 'polyfill-react-native'
 import {
   Environment,
-  FeatureListProviderActions,
-  FeatureListProviderData,
   Organisation,
   PagedResponse,
   Project,
@@ -32,9 +30,9 @@ import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import AuditLog from 'components/AuditLog'
 import OrgEnvironmentSelect from 'components/OrgEnvironmentSelect'
 import AccountStore from 'common/stores/account-store'
+import FeatureListProvider from 'common/providers/FeatureListProvider'
+import AppActions from 'common/dispatcher/app-actions'
 
-const FeatureListProvider = require('common/providers/FeatureListProvider')
-const AppActions = require('common/dispatcher/app-actions')
 const ES6Component = require('common/ES6Component')
 let isWidget = false
 export const getIsWidget = () => {
@@ -199,13 +197,8 @@ const FeatureList = class extends Component<FeatureListType> {
         >
           <FeatureListProvider onSave={this.onSave}>
             {(
-              {
-                environmentFlags,
-                error,
-                isLoading,
-                projectFlags,
-              }: FeatureListProviderData,
-              { removeFlag, toggleFlag }: FeatureListProviderActions,
+              { environmentFlags, error, isLoading, projectFlags },
+              { removeFlag, toggleFlag },
             ) => {
               if (error) {
                 return <PermissionError />

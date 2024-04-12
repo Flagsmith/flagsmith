@@ -121,13 +121,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
         onChange={setTags}
       />
       <FeatureListProvider>
-        {({
-          environmentFlags,
-          projectFlags,
-        }: {
-          environmentFlags?: FeatureState[]
-          projectFlags: ProjectFlag[]
-        }) => {
+        {({ environmentFlags, projectFlags }) => {
           const isLoading = !FeatureListStore.hasLoaded
 
           if (isLoading) {

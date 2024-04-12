@@ -53,6 +53,7 @@ const OrganisationProvider: FC<OrganisationProviderType> = ({
   }, [])
 
   useEffect(() => {
+    //@ts-expect-error savedId is defined
     const _onSave = () => onSave?.(OrganisationStore.savedId)
     OrganisationStore.on('saved', _onSave)
     return () => {

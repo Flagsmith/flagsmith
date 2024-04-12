@@ -1,8 +1,10 @@
 import {
   Account,
+  Approval,
   FeatureState,
   FeatureStateValue,
   ImportStrategy,
+  MultivariateOption,
   Segment,
   Tag,
   UserGroup,
@@ -320,6 +322,13 @@ export type Req = {
 
     usersToAddAdmin: number[] | null
     usersToRemoveAdmin: number[] | null
+  }
+  createChangeRequest: {
+    approvals: Approval[]
+    live_from: string | undefined
+    description: string
+    multivariate_options: MultivariateOption[]
+    title: string
   }
   // END OF TYPES
 }

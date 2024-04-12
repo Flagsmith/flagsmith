@@ -2,6 +2,7 @@ import { FC, ReactNode } from 'react' // we need this to make JSX compile
 
 type TabItemType = {
   tabLabel: ReactNode
+  tabLabelString?: string
   children: ReactNode
 }
 
