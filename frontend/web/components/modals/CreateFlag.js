@@ -1328,6 +1328,8 @@ const CreateFlag = class extends Component {
                                                           >
                                                             {isSaving
                                                               ? 'Updating'
+                                                              : is4Eyes
+                                                              ? 'Create Change Request'
                                                               : 'Update Segment Overrides'}
                                                           </Button>,
                                                         )
