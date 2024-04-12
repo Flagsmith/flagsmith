@@ -1,8 +1,22 @@
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
+const { flatten } = require('lodash')
 
 const PAGE_SIZE = 20
+const transformChangeRequest = (changeRequest) => {
+  if (changeRequest?.environment_feature_versions?.length) {
+    return {
+      ...changeRequest,
+      feature_states: flatten(
+        changeRequest.environment_feature_versions.map(
+          (featureVersion) => featureVersion.feature_states,
+        ),
+      ),
+    }
+  }
+  return changeRequest
+}
 const controller = {
   actionChangeRequest: (id, action, cb) => {
     store.loading()
@@ -12,7 +26,7 @@ const controller = {
         data
           .get(`${Project.api}features/workflows/change-requests/${id}/`)
           .then((res) => {
-            store.model[id] = res
+            store.model[id] = transformChangeRequest(res)
             cb && cb()
             store.loaded()
           })
@@ -33,8 +47,9 @@ const controller = {
     store.loading()
     data
       .get(`${Project.api}features/workflows/change-requests/${id}/`)
-      .then((res) =>
-        Promise.all([
+      .then((apiResponse) => {
+        const res = transformChangeRequest(apiResponse)
+        return Promise.all([
           data.get(
             `${Project.api}environments/${environmentId}/featurestates/?feature=${res.feature_states[0].feature}`,
           ),
@@ -48,8 +63,8 @@ const controller = {
             projectFlag,
           }
           store.loaded()
-        }),
-      )
+        })
+      })
       .catch((e) => API.ajaxHandler(store, e))
   },
   getChangeRequests: (envId, { committed, live_from_after }, page) => {
@@ -104,7 +119,7 @@ const controller = {
         changeRequest,
       )
       .then((res) => {
-        store.model[changeRequest.id] = res
+        store.model[changeRequest.id] = transformChangeRequest(res)
         store.loaded()
       })
       .catch((e) => API.ajaxHandler(store, e))

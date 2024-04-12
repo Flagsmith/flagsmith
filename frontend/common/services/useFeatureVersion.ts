@@ -15,12 +15,12 @@ export const featureVersionService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureVersion'] })
   .injectEndpoints({
     endpoints: (builder) => ({
-      createAndPublishFeatureVersion: builder.mutation<
+      createAndSetFeatureVersion: builder.mutation<
         Res['featureVersion'],
-        Req['createAndPublishFeatureVersion']
+        Req['createAndSetFeatureVersion']
       >({
         invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
-        queryFn: async (query: Req['createAndPublishFeatureVersion']) => {
+        queryFn: async (query: Req['createAndSetFeatureVersion']) => {
           // Step 1: Create a new feature version
           const versionRes: { data: FeatureVersion } =
             await createFeatureVersion(getStore(), {
@@ -110,13 +110,21 @@ export const featureVersionService = service
               }
             }),
           )
-          const ret = { data: res, error: res.find((v) => !!v.error)?.error }
+          const ret = {
+            data: res.map((item) => ({
+              ...item,
+              version_sha: versionRes.data.uuid,
+            })),
+            error: res.find((v) => !!v.error)?.error,
+          }
           // Step 4: Publish the feature version
-          await publishFeatureVersion(getStore(), {
-            environmentId: query.environmentId,
-            featureId: query.featureId,
-            sha: versionRes.data.uuid,
-          })
+          if (!query.skipPublish) {
+            await publishFeatureVersion(getStore(), {
+              environmentId: query.environmentId,
+              featureId: query.featureId,
+              sha: versionRes.data.uuid,
+            })
+          }
 
           return ret as any
         },
@@ -202,15 +210,15 @@ export async function publishFeatureVersion(
     ),
   )
 }
-export async function createAndPublishFeatureVersion(
+export async function createAndSetFeatureVersion(
   store: any,
-  data: Req['createAndPublishFeatureVersion'],
+  data: Req['createAndSetFeatureVersion'],
   options?: Parameters<
-    typeof featureVersionService.endpoints.createAndPublishFeatureVersion.initiate
+    typeof featureVersionService.endpoints.createAndSetFeatureVersion.initiate
   >[1],
 ) {
   return store.dispatch(
-    featureVersionService.endpoints.createAndPublishFeatureVersion.initiate(
+    featureVersionService.endpoints.createAndSetFeatureVersion.initiate(
       data,
       options,
     ),
@@ -241,7 +249,7 @@ export async function getFeatureVersion(
 // END OF FUNCTION_EXPORTS
 
 export const {
-  useCreateAndPublishFeatureVersionMutation,
+  useCreateAndSetFeatureVersionMutation,
   useCreateFeatureVersionMutation,
   useGetFeatureVersionQuery,
   useGetFeatureVersionsQuery,
