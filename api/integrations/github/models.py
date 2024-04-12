@@ -30,10 +30,14 @@ class GithubRepository(SoftDeleteExportableModel):
     )
 
     class Meta:
-        unique_together = (
-            "github_configuration",
-            "project",
-            "repository_owner",
-            "repository_name",
-            "deleted_at",
-        )
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "github_configuration",
+                    "project",
+                    "repository_owner",
+                    "repository_name",
+                ],
+                name="unique_repository_data",
+            )
+        ]

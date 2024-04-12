@@ -655,10 +655,10 @@ def flagsmith_environments_v2_table(dynamodb: DynamoDBServiceResource) -> Table:
 
 
 @pytest.fixture()
-def external_resource(feature: Feature) -> FeatureExternalResource:
+def feature_external_resource(feature: Feature) -> FeatureExternalResource:
     return FeatureExternalResource.objects.create(
         url="https://github.com/userexample/example-project-repo/issues/11",
-        type="GitHub Issue",
+        type="GITHUB_ISSUE",
         feature=feature,
     )
 

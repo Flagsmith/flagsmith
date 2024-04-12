@@ -1,3 +1,5 @@
+import pytest
+from django.db import IntegrityError
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -98,6 +100,38 @@ def test_create_github_repository(
 
     assert response.status_code == status.HTTP_201_CREATED
     assert GithubRepository.objects.filter(repository_owner="repositoryowner").exists()
+
+
+def test_cannot_create_github_repository_due_to_unique_constraint(
+    admin_client: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    project: Project,
+    github_repository: GithubRepository,
+) -> None:
+    # Given
+    data = {
+        "github_configuration": github_configuration.id,
+        "repository_owner": "repositoryownertest",
+        "repository_name": "repositorynametest",
+        "project": project.id,
+    }
+
+    url = reverse(
+        "api-v1:organisations:repositories-list",
+        args=[organisation.id, github_configuration.id],
+    )
+
+    # When
+    with pytest.raises(IntegrityError) as exc_info:
+        response = admin_client.post(url, data)
+
+        # Then
+        assert "duplicate key value violates unique constraint" in str(exc_info.value)
+        assert "(5, 3, repositoryownertest, repositorynametest) already exists." in str(
+            exc_info.value
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 def test_github_delete_repository(
