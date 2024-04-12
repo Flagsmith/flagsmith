@@ -415,7 +415,7 @@ const controller = {
     store.saving()
     API.trackEvent(Constants.events.EDIT_FEATURE)
     const env = ProjectStore.getEnvironment(environmentId)
-    let environment_feature_versions = null
+    let environment_feature_versions = []
     if (env.use_v2_feature_versioning) {
       const featureStates = [
         Object.assign({}, environmentFlag, {
