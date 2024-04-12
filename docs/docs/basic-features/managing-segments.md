@@ -296,8 +296,13 @@ More simply, the order of precedence is:
 
 ## Use Metadata
 
-When creating or updating a segment, you can enhance its information by adding previously created and enabled metadata
-fields. To create and enable this you can do it in the metadata tab on the project settings page.
+When creating or updating a feature, you can add Metadata if you was created Metadata Fields in Project Settings ->
+Metadata.
+
+You can add the Metadata value in the Feature Setting Tab.
+
+When creating or updating a segment, you can add Metadata if you was created Metadata Fields in Project Settings ->
+Metadata. fields. You can add the Metadata value in the Settings Setting Tab.
 
 Then, add it using the "Add Metadata" button within the segment.
 

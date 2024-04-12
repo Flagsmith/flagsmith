@@ -3,18 +3,27 @@ title: Metadata
 sidebar_position: 110
 ---
 
-Flagsmith allows certain Entities within a Project to have Metadata of different types. You can create the metadata
-fields in the project settings pages -> metadata.
+Flagsmith allows certain Entities within a Project to have Metadata of different types.
 
-### Core Entities that support Metadata
+## Core Entities that support Metadata
 
 - **[Features](/basic-features/managing-features#use-metadata)**.
 - **[Environment](/system-administration/environment-settings#use-metadata)**.
 - **[Segments](/basic-features/managing-features#use-metadata)**.
 
-### Types of Metadata
+## Metadata Fields
 
-Metadata supports five primary types of metadata, each serving distinct purposes:
+To be able to add Metadata to your Entities, you first need to create Metadata fields within Project Settings ->
+Metadata.
+
+Here you'll also need to define whether it's optional or required.
+
+- **Optional**: You may or may not add Metadata to your Entities.
+- **Required**: You won't be able to update or create an Entity within your Project unless you include this Metadata.
+
+### Types of Metadata Field
+
+Metadata Field supports five primary types of metadata values, each serving distinct purposes:
 
 **String**: A basic data type representing text or alphanumeric characters. Strings are versatile and can describe a
 wide range of attributes or characteristics.

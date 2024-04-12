@@ -17,6 +17,8 @@ type CustomMetadataField = MetadataField & {
   metadataModelFieldId: number | string | null
 }
 
+type CustomMetadata = (Metadata & CustomMetadataField) | null
+
 type AddMetadataToEntityType = {
   organisationId: string
   projectId: string
@@ -50,13 +52,14 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
     organisation_id: organisationId,
   })
 
-  const { data: projectFeatureData } = useGetProjectFlagQuery(
-    {
-      id: entityId,
-      project: projectId,
-    },
-    { skip: entity !== 'feature' },
-  )
+  const { data: projectFeatureData, isSuccess: projectFeatureDataLoaded } =
+    useGetProjectFlagQuery(
+      {
+        id: entityId,
+        project: projectId,
+      },
+      { skip: entity !== 'feature' },
+    )
 
   const [updateMetadataProjectFeature] = useUpdateProjectFlagMutation()
 
@@ -64,6 +67,9 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
     metadataFieldsAssociatedtoEntity,
     setMetadataFieldsAssociatedtoEntity,
   ] = useState<CustomMetadataField[]>()
+
+  const [metadataWithMetadataField, setMergeMetadataWithMetadataField] =
+    useState<CustomMetadata[]>()
 
   const [metadataFieldsSelected, setMetadataFieldsSelected] =
     useState<MetadataFieldSelectType>()
@@ -89,7 +95,9 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
       metadataModelFieldList &&
       metadataModelFieldListLoaded
     ) {
+      // Filter metadata fields based on the provided content type
       const metadataForContentType = metadataFieldList.results
+        // Filter metadata fields that have corresponding entries in the metadata model field list
         .filter((meta) => {
           return metadataModelFieldList.results.some((item) => {
             return (
@@ -97,18 +105,34 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
             )
           })
         })
+        // Map each filtered metadata field to include additional information from the metadata model field list
         .map((meta) => {
+          // Find the matching item in the metadata model field list
           const matchingItem = metadataModelFieldList.results.find((item) => {
             return (
               item.field === meta.id && item.content_type === entityContentType
             )
           })
+          // Return the metadata field with additional metadata model field information
           return {
             ...meta,
             metadataModelFieldId: matchingItem ? matchingItem.id : null,
           }
         })
-      console.log('DEBUG: metadataForContentType:', metadataForContentType)
+      if (projectFeatureData && projectFeatureDataLoaded) {
+        const mergeMetadataWithMetadataField: CustomMetadata[] =
+          projectFeatureData?.metadata
+            .map((item1) => {
+              const matchingItem = metadataForContentType.find(
+                (item2) => item1.model_field === item2.metadataModelFieldId,
+              )
+              return matchingItem ? { ...item1, ...matchingItem } : null
+            })
+            .filter((item) => item !== null)
+
+        setMergeMetadataWithMetadataField(mergeMetadataWithMetadataField)
+      }
+
       setMetadataFieldsAssociatedtoEntity(metadataForContentType)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,6 +141,8 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
     metadataFieldListLoaded,
     metadataModelFieldList,
     metadataModelFieldListLoaded,
+    projectFeatureDataLoaded,
+    projectFeatureData,
   ])
   return (
     <>
@@ -172,31 +198,31 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
             )}
           </Row>
         </Row>
-      </FormGroup>
-      <PanelSearch
-        className='mt-1 no-pad'
-        header={
-          <Row className='table-header'>
-            <Flex className='table-column px-3'>Metadata</Flex>
-            <Flex className='flex-row'>
-              <Flex className='table-column'>Value</Flex>
-            </Flex>
-            <Flex className='table-column'>Delete</Flex>
-          </Row>
-        }
-        items={projectFeatureData?.metadata}
-        renderRow={(m: Metadata) => {
-          return (
-            <Row className='space list-item clickable py-2'>
-              <Flex className='table-column px-3'>{'test'}</Flex>
+        <PanelSearch
+          className='mt-1 no-pad'
+          header={
+            <Row className='table-header'>
+              <Flex className='table-column px-3'>Metadata</Flex>
               <Flex className='flex-row'>
-                <Flex className='table-column'>{m.field_value}</Flex>
+                <Flex className='table-column'>Value</Flex>
               </Flex>
               <Flex className='table-column'>Delete</Flex>
             </Row>
-          )
-        }}
-      />
+          }
+          items={metadataWithMetadataField}
+          renderRow={(m: CustomMetadata) => {
+            return (
+              <Row className='space list-item clickable py-2'>
+                <Flex className='table-column px-3'>{m?.description}</Flex>
+                <Flex className='flex-row'>
+                  <Flex className='table-column'>{m?.field_value}</Flex>
+                </Flex>
+                <Flex className='table-column'>Delete</Flex>
+              </Row>
+            )
+          }}
+        />
+      </FormGroup>
     </>
   )
 }

@@ -403,7 +403,7 @@ export type FeatureVersion = {
 
 export type Metadata = {
   id?: number
-  model_field: number
+  model_field: number | string
   field_value: string
 }
 

@@ -129,7 +129,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         <Button
           theme='text'
           target='_blank'
-          href='https://docs.flagsmith.com/system-administration/metadata/'
+          href='http://localhost:3000/system-administration/metadata/#metadata-fields'
           className='fw-normal'
         >
           Learn more.
