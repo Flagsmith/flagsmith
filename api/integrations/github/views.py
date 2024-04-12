@@ -72,7 +72,7 @@ def fetch_pull_requests(request, organisation_pk):
     }
 
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         data = response.json()
         return Response(data)
@@ -103,7 +103,7 @@ def fetch_issues(request, organisation_pk):
     }
 
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         data = response.json()
         filtered_data = [issue for issue in data if "pull_request" not in issue]
@@ -130,7 +130,7 @@ def fetch_repositories(request):
     }
 
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         data = response.json()
         return Response(data)

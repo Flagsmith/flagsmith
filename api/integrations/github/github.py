@@ -30,7 +30,9 @@ def post_comment_to_github(
         }
 
         payload = {"body": body}
-        response = requests.post(url, json=payload, headers=headers)
+        response = response = requests.post(
+            url, json=payload, headers=headers, timeout=10
+        )
 
         return response.json() if response.status_code == 200 else None
     except requests.RequestException as e:
