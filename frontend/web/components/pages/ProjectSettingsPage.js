@@ -199,6 +199,9 @@ const ProjectSettingsPage = class extends Component {
 
             const featureRegexEnabled =
               typeof this.state.feature_name_regex === 'string'
+
+            const hasVersioning =
+              Utils.getFlagsmithHasFeature('feature_versioning')
             return (
               <div>
                 <PageTitle title={'Project Settings'} />
@@ -233,40 +236,43 @@ const ProjectSettingsPage = class extends Component {
                                 />
                               </Flex>
                             </Row>
-                            <Tooltip
-                              title={
-                                <div>
-                                  <label className='mt-4'>
-                                    Days before a feature is marked as stale{' '}
-                                    <Icon name='info-outlined' />
-                                  </label>
-                                  <div style={{ width: 80 }} className='ml-0'>
-                                    <Input
-                                      disabled={!hasStaleFlagsPermission}
-                                      ref={(e) => (this.input = e)}
-                                      value={this.state.stale_flags_limit_days}
-                                      onChange={(e) =>
-                                        this.setState({
-                                          stale_flags_limit_days: parseInt(
-                                            Utils.safeParseEventValue(e),
-                                          ),
-                                        })
-                                      }
-                                      isValid={!!stale_flags_limit_days}
-                                      type='number'
-                                      placeholder='Number of Days'
-                                    />
+                            {!!hasVersioning && (
+                              <Tooltip
+                                title={
+                                  <div>
+                                    <label className='mt-4'>
+                                      Days before a feature is marked as stale{' '}
+                                      <Icon name='info-outlined' />
+                                    </label>
+                                    <div style={{ width: 80 }} className='ml-0'>
+                                      <Input
+                                        disabled={!hasStaleFlagsPermission}
+                                        ref={(e) => (this.input = e)}
+                                        value={
+                                          this.state.stale_flags_limit_days
+                                        }
+                                        onChange={(e) =>
+                                          this.setState({
+                                            stale_flags_limit_days: parseInt(
+                                              Utils.safeParseEventValue(e),
+                                            ),
+                                          })
+                                        }
+                                        isValid={!!stale_flags_limit_days}
+                                        type='number'
+                                        placeholder='Number of Days'
+                                      />
+                                    </div>
                                   </div>
-                                </div>
-                              }
-                            >
-                              {`${
-                                !hasStaleFlagsPermission
-                                  ? 'This feature is available with our enterprise plan. '
-                                  : ''
-                              }If no changes have been made to a feature in any environment within this threshold the feature will be tagged as stale.`}
-                            </Tooltip>
-
+                                }
+                              >
+                                {`${
+                                  !hasStaleFlagsPermission
+                                    ? 'This feature is available with our enterprise plan. '
+                                    : ''
+                                }If no changes have been made to a feature in any environment within this threshold the feature will be tagged as stale. You will need to enable feature versioning in your environments for stale features to be detected.`}
+                              </Tooltip>
+                            )}
                             <div className='text-right'>
                               <Button
                                 type='submit'
