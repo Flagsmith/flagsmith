@@ -691,8 +691,7 @@ Create an OAuth application in the Google Developer Console and then provide the
 
 ```json
 {
- "clientId": "<Your Google oAuth Client ID>",
- "apiKey": "<Your Google oAuth Client secret>"
+ "clientId": "<Your Google oAuth Client ID>"
 }
 ```
 
