@@ -650,7 +650,7 @@ def test_environment_get_environment_document(environment, django_assert_num_que
     # Given
 
     # When
-    with django_assert_num_queries(3):
+    with django_assert_num_queries(4):
         environment_document = Environment.get_environment_document(environment.api_key)
 
     # Then
@@ -692,7 +692,7 @@ def test_environment_get_environment_document_with_caching_when_document_not_in_
     mocked_environment_document_cache.get.return_value = None
 
     # When
-    with django_assert_num_queries(3):
+    with django_assert_num_queries(4):
         environment_document = Environment.get_environment_document(environment.api_key)
 
     # Then

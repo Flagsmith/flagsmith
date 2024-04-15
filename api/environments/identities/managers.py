@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Iterable
 
-from django.db.models import Manager
+from django.db.models import Count, Manager, QuerySet
 
 if TYPE_CHECKING:
     from environments.identities.models import Identity
@@ -29,4 +29,12 @@ class IdentityManager(Manager["Identity"]):
             )
             .prefetch_related("identity_traits")
             .get_or_create(identifier=identifier, environment=environment)
+        )
+
+    def with_overrides(self) -> QuerySet["Identity"]:
+        """
+        Only include identities with overridden features.
+        """
+        return self.annotate(overridden_count=Count("identity_features")).filter(
+            overridden_count__gt=0
         )
