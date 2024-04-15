@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -9,6 +10,7 @@ from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
 from integrations.slack.slack import SlackWrapper
+from organisations.models import OrganisationWebhook
 from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
 
 logger = logging.getLogger(__name__)
@@ -16,15 +18,20 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=AuditLog)
 def call_webhooks(sender, instance: AuditLog, **kwargs):
-    data = AuditLogListSerializer(instance=instance).data
+    if settings.DISABLE_WEBHOOKS:
+        return
 
     if not (organisation := instance.organisation):
         logger.warning("Audit log without organisation. Not sending webhook.")
         return
 
-    call_organisation_webhooks.delay(
-        args=(organisation.id, data, WebhookEventType.AUDIT_LOG_CREATED.value)
-    )
+    if OrganisationWebhook.objects.filter(
+        organisation=organisation, enabled=True
+    ).exists():
+        data = AuditLogListSerializer(instance=instance).data
+        call_organisation_webhooks.delay(
+            args=(organisation.id, data, WebhookEventType.AUDIT_LOG_CREATED.value)
+        )
 
 
 def _get_integration_config(instance, integration_name):

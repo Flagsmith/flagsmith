@@ -5,6 +5,8 @@ import Constants from 'common/constants'
 import VariationOptions from './mv/VariationOptions'
 import AddVariationButton from './mv/AddVariationButton'
 import ErrorMessage from './ErrorMessage'
+import Tooltip from './Tooltip'
+import Icon from './Icon'
 
 export default class Feature extends PureComponent {
   static displayName = 'Feature'
@@ -13,13 +15,15 @@ export default class Feature extends PureComponent {
     const idToRemove = this.props.multivariate_options[i].id
 
     if (idToRemove) {
-      openConfirm(
-        'Please confirm',
-        'This will remove the variation on your feature for all environments, if you wish to turn it off just for this environment you can set the % value to 0.',
-        () => {
+      openConfirm({
+        body: 'This will remove the variation on your feature for all environments, if you wish to turn it off just for this environment you can set the % value to 0.',
+        destructive: true,
+        onYes: () => {
           this.props.removeVariation(i)
         },
-      )
+        title: 'Delete variation',
+        yesText: 'Confirm',
+      })
     } else {
       this.props.removeVariation(i)
     }
@@ -44,12 +48,12 @@ export default class Feature extends PureComponent {
 
     const enabledString = isEdit ? 'Enabled' : 'Enabled by default'
     const disabled = hide_from_client
-    const controlValue = Utils.calculateControl(multivariate_options)
+    const controlPercentage = Utils.calculateControl(multivariate_options)
     const valueString = identity
       ? 'User override'
       : !!multivariate_options && multivariate_options.length
-      ? `Control Value - ${controlValue}%`
-      : `Value (optional)${' - these can be set per environment'}`
+      ? `Control Value - ${controlPercentage}%`
+      : `Value (optional)`
 
     const showValue = !(
       !!identity &&
@@ -58,16 +62,28 @@ export default class Feature extends PureComponent {
     )
     return (
       <div>
-        <FormGroup className='mb-4 flex-row'>
-          <Switch
-            data-test='toggle-feature-button'
-            defaultChecked={checked}
-            disabled={disabled || readOnly}
-            checked={!disabled && checked}
-            onChange={onCheckedChange}
-            className='ml-0'
-          />
-          <div className='label-switch ml-3'>{enabledString || 'Enabled'}</div>
+        <FormGroup className='mb-4'>
+          <Tooltip
+            title={
+              <div className='flex-row'>
+                <Switch
+                  data-test='toggle-feature-button'
+                  defaultChecked={checked}
+                  disabled={disabled || readOnly}
+                  checked={!disabled && checked}
+                  onChange={onCheckedChange}
+                  className='ml-0'
+                />
+                <div className='label-switch ml-3 mr-1'>
+                  {enabledString || 'Enabled'}
+                </div>
+                {!isEdit && <Icon name='info-outlined' />}
+              </div>
+            }
+          >
+            {!isEdit &&
+              'This will determine the initial enabled state for all environments. You can edit the this individually for each environment once the feature is created.'}
+          </Tooltip>
         </FormGroup>
 
         {showValue && (
@@ -86,7 +102,11 @@ export default class Feature extends PureComponent {
                   placeholder="e.g. 'big' "
                 />
               }
-              tooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION}
+              tooltip={`${Constants.strings.REMOTE_CONFIG_DESCRIPTION}${
+                !isEdit
+                  ? '<br/>Setting this when creating a feature will set the value for all environments. You can edit the this individually for each environment once the feature is created.'
+                  : ''
+              }`}
               title={`${valueString}`}
             />
           </FormGroup>
@@ -103,7 +123,8 @@ export default class Feature extends PureComponent {
               <VariationOptions
                 disabled
                 select
-                controlValue={environmentFlag.feature_state_value}
+                controlValue={environmentFlag?.feature_state_value}
+                controlPercentage={controlPercentage}
                 variationOverrides={this.props.identityVariations}
                 setVariations={this.props.onChangeIdentityVariations}
                 updateVariation={() => {}}
@@ -121,7 +142,8 @@ export default class Feature extends PureComponent {
               {(!!environmentVariations || !isEdit) && (
                 <VariationOptions
                   disabled={!!identity || readOnly}
-                  controlValue={controlValue}
+                  controlValue={environmentFlag?.feature_state_value}
+                  controlPercentage={controlPercentage}
                   variationOverrides={environmentVariations}
                   updateVariation={this.props.updateVariation}
                   weightTitle={
@@ -137,6 +159,7 @@ export default class Feature extends PureComponent {
                 this.props.canCreateFeature,
                 Constants.projectPermissions('Create Feature'),
                 <AddVariationButton
+                  multivariateOptions={multivariate_options}
                   disabled={!this.props.canCreateFeature || readOnly}
                   onClick={this.props.addVariation}
                 />,

@@ -12,11 +12,16 @@ from rest_framework.response import Response
 
 from environments.models import Environment
 
-from .models import FeatureExport, FlagsmithOnFlagsmithFeatureExport
+from .models import (
+    FeatureExport,
+    FeatureImport,
+    FlagsmithOnFlagsmithFeatureExport,
+)
 from .permissions import (
     CreateFeatureExportPermissions,
     DownloadFeatureExportPermissions,
     FeatureExportListPermissions,
+    FeatureImportListPermissions,
     FeatureImportPermissions,
 )
 from .serializers import (
@@ -71,9 +76,9 @@ def download_feature_export(request: Request, feature_export_id: int) -> Respons
     response = Response(
         json.loads(feature_export.data), content_type="application/json"
     )
-    response.headers[
-        "Content-Disposition"
-    ] = f"attachment; filename=feature_export.{feature_export_id}.json"
+    response.headers["Content-Disposition"] = (
+        f"attachment; filename=feature_export.{feature_export_id}.json"
+    )
     return response
 
 
@@ -100,9 +105,9 @@ def download_flagsmith_on_flagsmith(request: Request) -> Response:
     response = Response(
         json.loads(fof.feature_export.data), content_type="application/json"
     )
-    response.headers[
-        "Content-Disposition"
-    ] = f"attachment; filename=flagsmith_on_flagsmith.{fof.id}.json"
+    response.headers["Content-Disposition"] = (
+        f"attachment; filename=flagsmith_on_flagsmith.{fof.id}.json"
+    )
     return response
 
 
@@ -115,11 +120,30 @@ class FeatureExportListView(ListAPIView):
         user = self.request.user
 
         for environment in Environment.objects.filter(
-            project_id=self.kwargs["project_id"],
+            project_id=self.kwargs["project_pk"],
         ):
             if user.is_environment_admin(environment):
                 environment_ids.append(environment.id)
 
         return FeatureExport.objects.filter(environment__in=environment_ids).order_by(
+            "-created_at"
+        )
+
+
+class FeatureImportListView(ListAPIView):
+    serializer_class = FeatureImportSerializer
+    permission_classes = [FeatureImportListPermissions]
+
+    def get_queryset(self) -> QuerySet[FeatureImport]:
+        environment_ids = []
+        user = self.request.user
+
+        for environment in Environment.objects.filter(
+            project_id=self.kwargs["project_pk"],
+        ):
+            if user.is_environment_admin(environment):
+                environment_ids.append(environment.id)
+
+        return FeatureImport.objects.filter(environment__in=environment_ids).order_by(
             "-created_at"
         )

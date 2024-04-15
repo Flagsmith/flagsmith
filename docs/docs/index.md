@@ -6,7 +6,8 @@ sidebar_position: 1
 sidebar_label: Overview
 ---
 
-[Flagsmith](https://flagsmith.com/) lets you manage features across web, mobile and server side applications.
+[Flagsmith](https://flagsmith.com/) is a feature flag tool that lets you manage features across web, mobile and server
+side applications.
 
 [Flagsmith is Open Source](https://github.com/Flagsmith). Host yourself or let us take care of the hosting.
 
@@ -42,15 +43,15 @@ If you're new to Flagsmith or Feature Flags in general we would recommend:
 
 Check out our [Server Side SDK architecture first!](clients/overview.md)
 
-- [Node.js](/clients/server-side)
-- [Java](/clients/server-side)
-- [.Net](/clients/server-side)
-- [Python](/clients/server-side)
-- [PHP](/clients/server-side)
-- [Ruby](/clients/server-side)
-- [Rust](/clients/server-side)
-- [Go](/clients/server-side)
-- [Elixir](/clients/server-side)
+- [Node.js](/clients/server-side?language=nodejs)
+- [Java](/clients/server-side?language=java)
+- [.Net](/clients/server-side?language=dotnet)
+- [Python](/clients/server-side?language=python)
+- [PHP](/clients/server-side?language=php)
+- [Ruby](/clients/server-side?language=ruby)
+- [Rust](/clients/server-side?language=rust)
+- [Go](/clients/server-side?language=go)
+- [Elixir](/clients/server-side?language=elixir)
 
 ## Open Source vs SaaS vs Enterprise
 

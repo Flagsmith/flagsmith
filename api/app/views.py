@@ -53,6 +53,8 @@ def project_overrides(request):
         "preventEmailPassword": "PREVENT_EMAIL_PASSWORD",
         "preventSignup": "PREVENT_SIGNUP",
         "sentry": "SENTRY_API_KEY",
+        "useSecureCookies": "USE_SECURE_COOKIES",
+        "cookieSameSite": "COOKIE_SAME_SITE",
     }
 
     override_data = {

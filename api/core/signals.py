@@ -31,6 +31,14 @@ def create_audit_log_from_historical_record(
         else None
     )
 
+    environment, project = history_instance.instance.get_environment_and_project()
+    if project != history_instance.instance and (
+        (project and project.deleted_at)
+        or (environment and environment.project.deleted_at)
+    ):
+        # don't trigger audit log records in deleted projects
+        return
+
     history_record_class_path = (
         f"{history_instance.__class__.__module__}.{history_instance.__class__.__name__}"
     )

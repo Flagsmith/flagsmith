@@ -1,0 +1,63 @@
+name: Flagsmith Bug Report 🐛
+description: Report a bug or unexpected behavior in Flagsmith
+labels: [bug]
+
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for contributing to Flagsmith! ✊
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: How are you running Flagsmith
+      options:
+        - label: Self Hosted with Docker
+          required: false
+        - label: Self Hosted with Kubernetes
+          required: false
+        - label: SaaS at flagsmith.com
+          required: false
+        - label: Some other way (add details in description below)
+          required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: |
+        A clear and concise description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps To Reproduce
+      description: |
+        Steps to reproduce the behavior.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behaviour
+    attributes:
+      label: Expected behavior
+      description: |
+        A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: |
+        If applicable, add screenshots to help explain your problem.
+    validations:
+      required: false

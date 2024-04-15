@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import logging
 import typing
+from datetime import datetime
 
 from core.helpers import get_current_site_url
 from core.models import (
@@ -19,6 +20,7 @@ from django_lifecycle import (
     AFTER_CREATE,
     AFTER_SAVE,
     AFTER_UPDATE,
+    BEFORE_DELETE,
     LifecycleModel,
     LifecycleModelMixin,
     hook,
@@ -41,6 +43,7 @@ from features.versioning.tasks import trigger_update_version_webhooks
 from ...versioning.models import EnvironmentFeatureVersion
 from .exceptions import (
     CannotApproveOwnChangeRequest,
+    ChangeRequestDeletionError,
     ChangeRequestNotApprovedError,
 )
 
@@ -61,10 +64,14 @@ class ChangeRequest(
 
     title = models.CharField(max_length=500)
     description = models.TextField(blank=True, null=True)
+
+    # We allow null here so that deleting users does not cascade to deleting change
+    # requests which can be used for historical purposes.
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="change_requests",
+        null=True,
     )
 
     environment = models.ForeignKey(
@@ -223,6 +230,36 @@ class ChangeRequest(
                     args=(feature_state.id,)
                 )
 
+    @hook(BEFORE_DELETE)
+    def prevent_change_request_delete_if_committed(self) -> None:
+        # In the workflows-logic module, we prevent change requests from being
+        # deleted but, since this can have unexpected effects on published
+        # feature states, we also want to prevent it at the ORM level.
+        if self.committed_at and not (
+            self.environment.deleted_at
+            or (self._live_from and self._live_from > timezone.now())
+        ):
+            raise ChangeRequestDeletionError(
+                "Cannot delete a Change Request that has been committed."
+            )
+
+    @property
+    def _live_from(self) -> datetime | None:
+        # First we check if there are feature states associated with the change request
+        # and, if so, we return the live_from of the feature state with the earliest
+        # live_from.
+        if first_feature_state := self.feature_states.order_by("live_from").first():
+            return first_feature_state.live_from
+
+        # Then we do the same for environment feature versions. Note that a change request
+        # can not have feature states and environment feature versions.
+        elif first_environment_feature_version := self.environment_feature_versions.order_by(
+            "live_from"
+        ).first():
+            return first_environment_feature_version.live_from
+
+        return None
+
 
 class ChangeRequestApproval(
     LifecycleModel,
@@ -313,9 +350,7 @@ class ChangeRequestGroupAssignment(AbstractBaseExportableModel, LifecycleModel):
     @hook(AFTER_SAVE)
     def notify_group(self):
         if settings.WORKFLOWS_LOGIC_INSTALLED:
-            workflows_tasks = importlib.import_module(
-                f"{settings.WORKFLOWS_LOGIC_MODULE_PATH}.tasks"
-            )
+            workflows_tasks = importlib.import_module("workflows_logic.tasks")
             workflows_tasks.notify_group_of_change_request_assignment.delay(
                 kwargs={"change_request_group_assignment_id": self.id}
             )

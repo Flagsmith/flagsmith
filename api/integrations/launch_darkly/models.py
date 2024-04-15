@@ -17,7 +17,7 @@ class LaunchDarklyImportStatus(TypedDict):
     requested_environment_count: int
     requested_flag_count: int
     result: NotRequired[Literal["success", "failure"]]
-    error_message: NotRequired[str]
+    error_messages: list[str]
 
 
 class LaunchDarklyImportRequest(
@@ -43,8 +43,11 @@ class LaunchDarklyImportRequest(
             return None
         if self.status.get("result") == "success":
             return "LaunchDarkly import completed successfully"
-        if error_message := self.status.get("error_message"):
-            return f"LaunchDarkly import failed with error: {error_message}"
+        if error_messages := self.status.get("error_messages"):
+            if len(error_messages) > 0:
+                return "LaunchDarkly import failed with errors:\n" + "\n".join(
+                    "- " + error_message for error_message in error_messages
+                )
         return "LaunchDarkly import failed"
 
     def get_audit_log_author(self) -> FFAdminUser:

@@ -149,10 +149,13 @@ const SegmentOverrideInner = class Override extends React.Component {
             <Row className='gap-3'>
               <Tooltip
                 title={
-                  <label className='cols-sm-2 control-label mb-0 ml-3'><Icon name='info-outlined' /></label>
+                  <label className='cols-sm-2 control-label mb-0 ml-3'>
+                    <Icon name='info-outlined' />
+                  </label>
                 }
               >
-                Set the Feature state to On or Off for Identities in this Segment
+                Set the Feature state to On or Off for Identities in this
+                Segment
               </Tooltip>
               <Switch
                 data-test={`segment-override-toggle-${index}`}
@@ -239,7 +242,7 @@ const SegmentOverrideInner = class Override extends React.Component {
           </div>
         </Row>
 
-        <div className='text-left pb-2 mt-4'>
+        <div className='text-left mt-2'>
           {showValue ? (
             <>
               <label>Value (optional)</label>
@@ -284,7 +287,7 @@ const SegmentOverrideInner = class Override extends React.Component {
           )}
           {!!controlValue &&
             (!multivariateOptions || !multivariateOptions.length) && (
-              <div className='mt-2 mb-3 text-right'>
+              <div className='mt-2 text-right'>
                 <Button
                   theme='text'
                   className='text-primary'
@@ -304,7 +307,7 @@ const SegmentOverrideInner = class Override extends React.Component {
               </div>
             )}
 
-          {
+          {!!multivariateOptions?.length && (
             <div>
               <FormGroup className='mb-4'>
                 <VariationOptions
@@ -312,6 +315,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                   readOnlyValue
                   disabled={readOnly}
                   controlValue={controlValue}
+                  controlPercentage={controlPercent}
                   variationOverrides={mvOptions}
                   multivariateOptions={multivariateOptions.map((mv) => {
                     const foundMv =
@@ -347,7 +351,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                 />
               </FormGroup>
             </div>
-          }
+          )}
         </div>
       </div>
     )
@@ -495,22 +499,22 @@ class TheComponent extends Component {
       }
       return
     }
-    this.setState({ isLoading: true })
-    openConfirm(
-      'Delete Segment Override',
-      <div>
-        {
-          'Are you sure you want to delete this segment override? This will be applied when you click Update Segment Overrides.'
-        }
-      </div>,
-      () => {
+    openConfirm({
+      body: (
+        <div>
+          {
+            'Are you sure you want to delete this segment override? This will be applied when you click Update Segment Overrides and cannot be undone.'
+          }
+        </div>
+      ),
+      destructive: true,
+      onYes: () => {
         this.props.value[i].toRemove = true
         this.setState({ isLoading: false })
       },
-      () => {
-        this.setState({ isLoading: false })
-      },
-    )
+      title: 'Delete Segment Override',
+      yesText: 'Confirm',
+    })
   }
 
   setValue = (i, value) => {
@@ -544,7 +548,6 @@ class TheComponent extends Component {
   render() {
     const {
       props: { multivariateOptions, value },
-      state: { isLoading },
     } = this
     const filter = (segment) => {
       if (segment.feature && segment.feature !== this.props.feature)
@@ -663,18 +666,15 @@ class TheComponent extends Component {
                 {visibleValues &&
                   !!visibleValues.length &&
                   !this.props.showCreateSegment && (
-                    <div
-                      style={isLoading ? { opacity: 0.5 } : null}
-                      className='overflow-visible'
-                    >
+                    <div className='overflow-visible'>
                       {!this.props.id && (
                         <div className='my-4'>
                           <InfoMessage className='mb-4 text-left faint'>
-                            Prioritise a segment override by dragging it to the
-                            top of the list.
-                            <br />
-                            Segment overrides will only apply when you identify
-                            via the SDK.{' '}
+                            Segment overrides override the environment defaults,
+                            prioritise them by dragging it to the top of the
+                            list. Segment overrides will only apply when you
+                            identify via the SDK, any identity overrides will
+                            take priority.{' '}
                             <a
                               target='_blank'
                               href='https://docs.flagsmith.com/basic-features/managing-segments'
@@ -694,7 +694,7 @@ class TheComponent extends Component {
                       {value && (
                         <>
                           <InnerComponent
-                            disabled={isLoading || this.props.readOnly}
+                            disabled={this.props.readOnly}
                             id={this.props.id}
                             name={this.props.name}
                             controlValue={this.props.controlValue}

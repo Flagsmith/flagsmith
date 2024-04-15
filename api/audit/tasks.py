@@ -176,15 +176,22 @@ def create_segment_priorities_changed_audit_log(
     feature = feature_segment.feature
 
     AuditLog.objects.create(
-        created_date=datetime.fromisoformat(changed_at)
-        if changed_at is not None
-        else timezone.now(),
+        created_date=(
+            datetime.fromisoformat(changed_at)
+            if changed_at is not None
+            else timezone.now()
+        ),
         environment=environment,
         log=f"Segment overrides re-ordered for feature '{feature.name}'.",
         author_id=user_id,
         master_api_key_id=master_api_key_id,
         related_object_id=feature.pk,
         related_object_type=RelatedObjectType.FEATURE.name,
+        created_date=(
+            datetime.fromisoformat(changed_at)
+            if changed_at is not None
+            else timezone.now()
+        ),
     )
 
 

@@ -8,6 +8,7 @@ import uuid
 from django.conf import settings
 from django.db import models
 from django.db.models import Manager
+from django.forms import model_to_dict
 from django.http import HttpRequest
 from django.utils import timezone
 from simple_history import register
@@ -70,6 +71,7 @@ class SoftDeleteExportableModel(SoftDeleteObject, AbstractBaseExportableModel):
 
 class _BaseHistoricalModel(models.Model):
     include_in_audit = True
+    _show_change_details_for_create = False
 
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     master_api_key = models.ForeignKey(
@@ -80,22 +82,32 @@ class _BaseHistoricalModel(models.Model):
         abstract = True
 
     def get_change_details(self) -> typing.Optional[typing.List[ModelChange]]:
-        if not self.history_type == "~":
-            # we only return the change details for updates
-            return
-
-        return [
-            change
-            for change in self.diff_against(self.prev_record).changes
-            if change.field not in self._change_details_excluded_fields
-        ]
+        if self.history_type == "~":
+            return [
+                change
+                for change in self.diff_against(self.prev_record).changes
+                if change.field not in self._change_details_excluded_fields
+            ]
+        elif self.history_type == "+" and self._show_change_details_for_create:
+            return [
+                ModelChange(field_name=key, old_value=None, new_value=value)
+                for key, value in self.instance.to_dict().items()
+                if key not in self._change_details_excluded_fields
+            ]
+        elif self.history_type == "-":
+            # Ignore deletes because they get painful due to cascade deletes
+            # Maybe we can resolve this in the future but for now it's not
+            # critical.
+            return []
 
 
 def base_historical_model_factory(
     change_details_excluded_fields: typing.Sequence[str],
+    show_change_details_for_create: bool = False,
 ) -> typing.Type[_BaseHistoricalModel]:
     class BaseHistoricalModel(_BaseHistoricalModel):
         _change_details_excluded_fields = set(change_details_excluded_fields)
+        _show_change_details_for_create = show_change_details_for_create
 
         class Meta:
             abstract = True
@@ -115,6 +127,9 @@ class _AbstractBaseAuditableModel(models.Model):
     """
 
     related_object_type: RelatedObjectType
+
+    to_dict_excluded_fields: typing.Sequence[str] = None
+    to_dict_included_fields: typing.Sequence[str] = None
 
     class Meta:
         abstract = True
@@ -176,6 +191,17 @@ class _AbstractBaseAuditableModel(models.Model):
         when certain events happen on this model.
         """
         return self.related_object_type
+
+    def to_dict(self) -> dict[str, typing.Any]:
+        # by default, we exclude the id and any foreign key fields from the response
+        return model_to_dict(
+            instance=self,
+            fields=[
+                f.name
+                for f in self._meta.fields
+                if f.name != "id" and not f.related_model
+            ],
+        )
 
     def get_audit_log_identity(self) -> str:
         """Override the human-readable identity for the related object"""
@@ -480,6 +506,7 @@ def abstract_base_auditable_model_factory(
     *,
     default_messages: bool = False,
     change_details_excluded_fields: typing.Sequence[str] = None,
+    show_change_details_for_create: bool = False,
 ) -> typing.Type[_AbstractBaseAuditableModel]:
     """Create abstract base for model with history and audit methods"""
 
@@ -489,7 +516,12 @@ def abstract_base_auditable_model_factory(
     # type ignored due to https://github.com/microsoft/pyright/issues/5326
     class AuditableBaseWithHistory(AuditableBase):  # type: ignore
         history = HistoricalRecords(
-            bases=[base_historical_model_factory(change_details_excluded_fields or [])],
+            bases=[
+                base_historical_model_factory(
+                    change_details_excluded_fields or [],
+                    show_change_details_for_create,
+                )
+            ],
             excluded_fields=unaudited_fields or (),
             m2m_fields=audited_m2m_fields or (),
             get_user=_get_history_user,

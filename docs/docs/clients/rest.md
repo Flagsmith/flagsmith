@@ -13,8 +13,27 @@ settings page which will help you access these variables.
 
 :::
 
-Flagsmith is built around a client/server architecture. The REST API server is accessible from SDK clients as well as
-the administration front end. This decoupling means that you can programmatically access the entire API if you wish.
+:::info
+
+Our Admin API has a [Rate Limit](/system-administration/system-limits#admin-api-rate-limit) that you need to be aware
+of.
+
+:::
+
+## Overview
+
+Our API is split in two :
+
+1. The `Public SDK API` that serves Flags to your client applications. This API does not require secret keys and is open
+   by design.
+2. The `Private Admin API` that allows you to do things like programatically create and toggle flags. Interacting with
+   this API requires a [secret key](#private-admin-api-endpoints).
+
+## API Explorer
+
+You can view the API via Swagger at [https://api.flagsmith.com/api/v1/docs/](https://api.flagsmith.com/api/v1/docs/) or
+get OpenAPI as [JSON](https://api.flagsmith.com/api/v1/docs/?format=.json) or
+[YAML](https://api.flagsmith.com/api/v1/docs/?format=.yaml).
 
 We have a [Postman Collection](https://www.postman.com/flagsmith/workspace/flagsmith/overview) that you can use to play
 around with the API and get a feel for how it works.
@@ -24,30 +43,26 @@ around with the API and get a feel for how it works.
 You can also access the API directly with tools like [curl](https://curl.haxx.se/) or [httpie](https://httpie.org/), or
 with clients for languages that we do not currently have SDKs for.
 
-## API Explorer
-
-You can view the API via Swagger at [https://api.flagsmith.com/api/v1/docs/](https://api.flagsmith.com/api/v1/docs/) or
-get OpenAPI as [JSON](https://api.flagsmith.com/api/v1/docs/?format=.json) or
-[YAML](https://api.flagsmith.com/api/v1/docs/?format=.yaml).
-
 ## API Keys
 
-### Public API Endpoints
+### Public SDK API Endpoints
 
 Publicly accessible API calls need to have an environment key supplied with each request. This is provided as an HTTP
 header, with the name `X-Environment-Key` and the value of the Environment Key that you can find within the Flagsmith
 administrative area.
 
-### Private API Endpoints
+For SaaS customers, the URL to hit for this API is [`https://edge.api.flagsmith.com/`](/advanced-use/edge-api).
+
+### Private Admin API Endpoints
 
 You can also do things like create new flags, environments, toggle flags or indeed anything that is possible from the
 administrative front end via the API.
 
-To authenticate, you can use the API Token associated with your account. This can be found in the "Account" page from
-the top navigation panel. You need to provide the token as an HTTP header of the form:
+To authenticate, you can use the API Token associated with your Organisation. This can be found in the `Organisation`
+page from the top navigation panel. You need to create a token and then provide it as an HTTP header:
 
 ```bash
-authorization: Token <API TOKEN FROM ACCOUNT PAGE>
+Authorization: Api-Key <API TOKEN FROM ORGANISATION PAGE>
 ```
 
 For example, to create a new Environment:
@@ -55,12 +70,14 @@ For example, to create a new Environment:
 ```bash
 curl 'https://api.flagsmith.com/api/v1/environments/' \
     -H 'content-type: application/json' \
-    -H 'authorization: Token <API TOKEN FROM ACCOUNT PAGE>' \
+    -H 'authorization: Api-Key <API TOKEN FROM ORGANISATION PAGE>' \
     --data-binary '{"name":"New Environment","project":"<Project ID>"}'
 ```
 
 You can find a complete list of endpoints via the Swagger REST API at
 [https://api.flagsmith.com/api/v1/docs/](https://api.flagsmith.com/api/v1/docs/).
+
+For SaaS customers, the URL to hit for this API is `https://api.flagsmith.com/`.
 
 ## Curl Examples
 
@@ -154,7 +171,7 @@ get_feature_states_response = session.get(
 feature_state_id = get_feature_states_response.json()["results"][0]["id"]
 
 # update the feature state
-data = {"enabled": True, "feature_state_value": "new value"}  # `feature_state_value` can be str, int, bool or float
+data = {"enabled": True, "feature_state_value": "new value"}  # `feature_state_value` can be str, int or bool
 update_feature_state_response = session.patch(
     f"{FEATURE_STATES_URL}/{feature_state_id}/", data=json.dumps(data)
 )

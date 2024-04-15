@@ -21,7 +21,7 @@ const ConfirmRemoveFeature: FC<ConfirmRemoveFeatureType> = ({
   const submit = (e: FormEvent) => {
     e.preventDefault()
     if (challenge == projectFlag.name) {
-      closeModal()
+      closeModal2()
       cb()
     }
   }
@@ -35,14 +35,15 @@ const ConfirmRemoveFeature: FC<ConfirmRemoveFeatureType> = ({
               {identity ? (
                 <p>
                   This will reset <strong>{projectFlag.name}</strong> for to the
-                  environment defaults for the user <strong>{identity}</strong>
+                  environment defaults for the user <strong>{identity}</strong>.
+                  This action cannot be undone.
                 </p>
               ) : (
                 <p>
                   This will remove <strong>{projectFlag.name}</strong> for{' '}
                   <strong>all environments</strong>. You should ensure that you
                   do not contain any references to this feature in your
-                  applications before proceeding.
+                  applications before proceeding. This action cannot be undone.
                 </p>
               )}
               <InputGroup
@@ -62,16 +63,16 @@ const ConfirmRemoveFeature: FC<ConfirmRemoveFeatureType> = ({
 
           <ModalHR />
           <div className='modal-footer'>
-            <Button className='mr-2' theme='secondary' onClick={closeModal}>
+            <Button className='mr-2' theme='secondary' onClick={closeModal2}>
               Cancel
             </Button>
             <Button
               id='confirm-remove-feature-btn'
               type='submit'
               disabled={challenge != projectFlag.name}
-              theme='primary'
+              theme='danger'
             >
-              Confirm changes
+              Confirm
             </Button>
           </div>
         </form>

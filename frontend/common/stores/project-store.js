@@ -1,11 +1,11 @@
 import { getIsWidget } from 'components/pages/WidgetPage'
+import OrganisationStore from './organisation-store'
 
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
-const OrganisationStore = require('./organisation-store')
 
 const data = require('../data/base/_data')
 
@@ -163,6 +163,8 @@ const controller = {
 const store = Object.assign({}, BaseStore, {
   getEnvironment: (api_key) =>
     store.model && _.find(store.model.environments, { api_key }),
+  getEnvironmentById: (id) =>
+    store.model && _.find(store.model.environments, { id }),
   getEnvironmentIdFromKey: (api_key) => {
     const env = _.find(store.model.environments, { api_key })
     return env && env.id
@@ -176,6 +178,10 @@ const store = Object.assign({}, BaseStore, {
     })
   },
   getEnvs: () => store.model && store.model.environments,
+  getIsVersioned: (api_key) => {
+    const env = _.find(store.model.environments, { api_key })
+    return env && env.use_v2_feature_versioning
+  },
   getMaxFeaturesAllowed: () => {
     return store.model && store.model.max_features_allowed
   },

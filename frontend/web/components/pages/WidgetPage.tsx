@@ -24,6 +24,7 @@ import {
   PagedResponse,
   Project,
   ProjectFlag,
+  TagStrategy,
 } from 'common/types/responses'
 import { useCustomWidgetOptionString } from '@datadog/ui-extensions-react'
 import client from 'components/datadog-client'
@@ -118,6 +119,7 @@ const FeatureList = class extends Component<FeatureListType> {
     search: null as null | string,
     showArchived: false,
     sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
+    tag_strategy: 'INTERSECTION' as TagStrategy,
     tags: [] as string[],
   }
   constructor(props: any, context: any) {
@@ -160,6 +162,7 @@ const FeatureList = class extends Component<FeatureListType> {
 
   getFilter = () => ({
     is_archived: this.state.showArchived,
+    tag_strategy: this.state.tag_strategy,
     tags:
       !this.state.tags || !this.state.tags.length
         ? undefined
@@ -177,7 +180,6 @@ const FeatureList = class extends Component<FeatureListType> {
       true,
       this.state.search,
       this.state.sort,
-      0,
       this.getFilter(),
       this.props.pageSize,
     )
@@ -258,7 +260,6 @@ const FeatureList = class extends Component<FeatureListType> {
                                           true,
                                           this.state.search,
                                           this.state.sort,
-                                          0,
                                           this.getFilter(),
                                           this.props.pageSize,
                                         )
@@ -351,6 +352,13 @@ const FeatureList = class extends Component<FeatureListType> {
                                           }
                                           projectId={projectId}
                                           value={this.state.tags}
+                                          tagStrategy={this.state.tag_strategy}
+                                          onChangeStrategy={(tag_strategy) => {
+                                            this.setState(
+                                              { tag_strategy },
+                                              this.filter,
+                                            )
+                                          }}
                                           onChange={(tags) => {
                                             FeatureListStore.isLoading = true
                                             if (
@@ -418,6 +426,7 @@ const FeatureList = class extends Component<FeatureListType> {
                                     <FeatureRow
                                       hideRemove
                                       hideAudit
+                                      hideHistory
                                       widget
                                       readOnly
                                       environmentFlags={environmentFlags}

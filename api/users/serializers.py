@@ -58,7 +58,10 @@ class UserListSerializer(serializers.ModelSerializer):
     join_date = serializers.SerializerMethodField(read_only=True)
 
     default_fields = ("id", "email", "first_name", "last_name", "last_login")
-    organisation_users_fields = ("role", "date_joined")
+    organisation_users_fields = (
+        "role",
+        "date_joined",
+    )
 
     class Meta:
         model = FFAdminUser
@@ -133,7 +136,11 @@ class CustomCurrentUserSerializer(DjoserUserSerializer):
     is_superuser = serializers.BooleanField(read_only=True)
 
     class Meta(DjoserUserSerializer.Meta):
-        fields = DjoserUserSerializer.Meta.fields + ("auth_type", "is_superuser")
+        fields = DjoserUserSerializer.Meta.fields + (
+            "auth_type",
+            "is_superuser",
+            "date_joined",
+        )
 
 
 class ListUsersQuerySerializer(serializers.Serializer):

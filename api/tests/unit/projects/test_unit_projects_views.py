@@ -5,7 +5,9 @@ from unittest import TestCase
 import pytest
 from django.urls import reverse
 from django.utils import timezone
+from pytest_django.fixtures import SettingsWrapper
 from pytest_lazyfixture import lazy_fixture
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -13,7 +15,7 @@ from audit.models import AuditLog, RelatedObjectType
 from environments.dynamodb.types import ProjectIdentityMigrationStatus
 from environments.identities.models import Identity
 from features.models import Feature, FeatureSegment
-from organisations.models import Organisation, OrganisationRole
+from organisations.models import Organisation, OrganisationRole, Subscription
 from organisations.permissions.models import (
     OrganisationPermissionModel,
     UserOrganisationPermission,
@@ -31,17 +33,31 @@ from projects.permissions import (
     VIEW_PROJECT,
 )
 from segments.models import Segment
+from task_processor.task_run_method import TaskRunMethod
 from users.models import FFAdminUser, UserPermissionGroup
 
 now = timezone.now()
 yesterday = now - timedelta(days=1)
 
 
-def test_should_create_a_project(settings, admin_user, admin_client, organisation):
+def test_should_create_a_project(
+    settings: SettingsWrapper,
+    admin_user: FFAdminUser,
+    admin_client: APIClient,
+    organisation: Organisation,
+    enterprise_subscription: Subscription,
+) -> None:
     # Given
-    project_name = "project1"
     settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = None
-    data = {"name": project_name, "organisation": organisation.id}
+
+    project_name = "project1"
+    stale_flags_limit_days = 15
+
+    data = {
+        "name": project_name,
+        "organisation": organisation.id,
+        "stale_flags_limit_days": stale_flags_limit_days,
+    }
     url = reverse("api-v1:projects:project-list")
 
     # When
@@ -50,6 +66,10 @@ def test_should_create_a_project(settings, admin_user, admin_client, organisatio
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert Project.objects.filter(name=project_name).count() == 1
+
+    project = Project.objects.get(name=project_name)
+    assert project.stale_flags_limit_days == stale_flags_limit_days
+
     assert (
         response.json()["migration_status"]
         == ProjectIdentityMigrationStatus.NOT_APPLICABLE.value
@@ -146,11 +166,22 @@ def test_should_create_a_project_with_admin_master_api_key_client(
     ],
 )
 def test_can_update_project(
-    client, project, organisation, admin_user, is_admin_master_api_key_client
-):
+    client: APIClient,
+    project: Project,
+    organisation: Organisation,
+    enterprise_subscription: Subscription,
+    admin_user: FFAdminUser,
+    is_admin_master_api_key_client: bool,
+) -> None:
     # Given
     new_name = "New project name"
-    data = {"name": new_name, "organisation": organisation.id}
+    new_stale_flags_limit_days = 15
+
+    data = {
+        "name": new_name,
+        "organisation": organisation.id,
+        "stale_flags_limit_days": new_stale_flags_limit_days,
+    }
     url = reverse("api-v1:projects:project-detail", args=[project.id])
 
     # When
@@ -159,6 +190,7 @@ def test_can_update_project(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["name"] == new_name
+    assert response.json()["stale_flags_limit_days"] == new_stale_flags_limit_days
 
     # and project update is audited (with no author if master API key)
     assert (
@@ -993,3 +1025,25 @@ def test_get_project_data_by_id(
     assert response_json["total_features"] == num_features
     assert response_json["total_segments"] == num_segments
     assert response_json["show_edge_identity_overrides_for_feature"] is False
+
+
+def test_delete_project_delete_handles_cascade_delete(
+    admin_client: APIClient,
+    project: Project,
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
+
+    url = reverse("api-v1:projects:project-detail", args=[project.id])
+    mocked_handle_cascade_delete = mocker.patch("projects.models.handle_cascade_delete")
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    mocked_handle_cascade_delete.delay.assert_called_once_with(
+        kwargs={"project_id": project.id}
+    )

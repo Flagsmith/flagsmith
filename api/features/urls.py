@@ -19,6 +19,7 @@ from features.views import (
 router = routers.DefaultRouter()
 router.register(r"featurestates", SimpleFeatureStateViewSet, basename="featurestates")
 router.register(r"feature-segments", FeatureSegmentViewSet, basename="feature-segment")
+
 app_name = "features"
 
 urlpatterns = [
@@ -51,8 +52,6 @@ if settings.WORKFLOWS_LOGIC_INSTALLED:
     urlpatterns.append(
         path(
             "workflows/",
-            include(
-                f"{settings.WORKFLOWS_LOGIC_MODULE_PATH}.urls", namespace="workflows"
-            ),
+            include("workflows_logic.urls", namespace="workflows"),
         )
     )

@@ -1,0 +1,17 @@
+name: flagsmith
+
+volumes:
+  pg_11_data:
+
+services:
+  db:
+    image: postgres:15.5-alpine
+    pull_policy: always
+    restart: unless-stopped
+    volumes:
+      - pg_11_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: flagsmith
+      POSTGRES_PASSWORD: password

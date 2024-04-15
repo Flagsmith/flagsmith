@@ -9,3 +9,4 @@ class FeaturesConfig(BaseAppConfig):
         super().ready()
         # noinspection PyUnresolvedReferences
         import features.signals  # noqa
+        import features.tasks  # noqa

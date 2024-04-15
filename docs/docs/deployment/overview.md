@@ -594,19 +594,23 @@ The list of the flags and remote config we're currently using in production is b
  },
  {
   "value": "GREATER_THAN",
-  "label": ">"
+  "label": ">",
+  "type": "number"
  },
  {
   "value": "GREATER_THAN_INCLUSIVE",
-  "label": ">="
+  "label": ">=",
+  "type": "number"
  },
  {
   "value": "LESS_THAN",
-  "label": "<"
+  "label": "<",
+  "type": "number"
  },
  {
   "value": "LESS_THAN_INCLUSIVE",
-  "label": "<="
+  "label": "<=",
+  "type": "number"
  },
  {
   "value": "GREATER_THAN:semver",
@@ -628,7 +632,6 @@ The list of the flags and remote config we're currently using in production is b
   "label": "SemVer <=",
   "append": ":semver"
  },
-
  {
   "value": "CONTAINS",
   "label": "Contains"
@@ -638,12 +641,14 @@ The list of the flags and remote config we're currently using in production is b
   "label": "Does not contain"
  },
  {
-  "value": "REGEX",
-  "label": "Matches regex"
+  "value": "IN",
+  "label": "In",
+  "warning": "Check your SDK version supports the IN operator. <a href=\"https://docs.flagsmith.com/clients/overview#sdk-compatibility\">See SDK compatibility docs</a>.",
+  "valuePlaceholder": "Value1,Value2"
  },
  {
-  "value": "MODULO",
-  "label": "Modulo operation"
+  "value": "REGEX",
+  "label": "Matches regex"
  },
  {
   "value": "IS_SET",
@@ -686,8 +691,7 @@ Create an OAuth application in the Google Developer Console and then provide the
 
 ```json
 {
- "clientId": "<Your Google oAuth Client ID>",
- "apiKey": "<Your Google oAuth Client secret>"
+ "clientId": "<Your Google oAuth Client ID>"
 }
 ```
 

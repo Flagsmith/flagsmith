@@ -19,16 +19,33 @@
 	}
 	justify-content: center;
 	.page {
-		display: inline-block;
-		border-radius:34px;
-		margin-left: 10px;
-		margin-right: 10px;
+		>div {
+			height: 100%;
+			justify-content: center;
+			display: flex;
+			align-items: center;
+		}
+		border-radius: $border-radius;
+		margin-left: 4px;
+		margin-right: 4px;
+		min-width: 32px;
+		height: 32px;
+		line-height: 1;
 		font-weight: 500;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		border: 1px solid $hr-border-color;
+		text-align: center;
+		padding: 0;
+		background: transparent;
+		color: $text-icon-grey;
 		&:hover {
-			color: $bt-brand-primary;
+			color: $primary;
 		}
 		&.active {
-			color: $bt-brand-primary;
+			background-color: $primary-alfa-8;
+			color: $primary;
 		}
 	}
 }
@@ -36,6 +53,6 @@
 .dark{
 	.paging{
 		background-color: $bg-dark400;
-		border-top: 1px solid $white-alpha-16;
+		border-top: 1px solid $white-alpha-8;
 	}
 }

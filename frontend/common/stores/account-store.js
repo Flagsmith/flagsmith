@@ -52,7 +52,7 @@ const controller = {
 
         store.saved()
         if (isLoginPage) {
-          window.location.href = `/projects`
+          window.location.href = `/organisation-settings`
         }
       })
       .catch((e) => {
@@ -309,21 +309,6 @@ const controller = {
         }
       }
 
-      if (Project.delighted) {
-        delighted.survey({
-          // customer name (optional)
-          createdAt: store.organisation && store.organisation.created_date,
-
-          email: store.model.email,
-          // customer email (optional)
-          name: `${store.model.first_name} ${store.model.last_name}`, // time subscribed (optional)
-          properties: {
-            // extra context (optional)
-            company: store.organisation && store.organisation.name,
-          },
-        })
-      }
-
       AsyncStorage.setItem('user', JSON.stringify(store.model))
       API.alias(user.email, user)
       API.identify(user && user.email, user)
@@ -466,6 +451,9 @@ const store = Object.assign({}, BaseStore, {
   isAdmin() {
     const id = store.organisation && store.organisation.id
     return id && store.getOrganisationRole(id) === 'ADMIN'
+  },
+  isSuper() {
+    return store.model && store.model.is_superuser
   },
   setToken(token) {
     data.token = token

@@ -340,9 +340,10 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       projectId,
     })
   },
-  removeUserFlag({ environmentId, identity, identityFlag }) {
+  removeUserFlag({ cb, environmentId, identity, identityFlag }) {
     Dispatcher.handleViewAction({
       actionType: Actions.REMOVE_USER_FLAG,
+      cb,
       environmentId,
       identity,
       identityFlag,
@@ -372,7 +373,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     force,
     search,
     sort,
-    page,
     filter,
     pageSize,
   ) {
@@ -381,7 +381,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       environmentId,
       filter,
       force,
-      page,
       pageSize,
       projectId,
       search,

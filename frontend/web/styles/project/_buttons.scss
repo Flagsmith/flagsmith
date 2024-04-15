@@ -129,7 +129,28 @@ button.btn {
       box-shadow: none;
     }
   }
-
+  &.btn-icon {
+    padding:0;
+    height: 32px;
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $body-color;
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+    path {
+      fill: $text-muted;
+    }
+    &:hover,&:focus {
+      background-color: $bg-light300;
+      path {
+        fill: $body-text;
+      }
+    }
+  }
   &--remove:hover {
     svg path {
       fill: #d93939;
@@ -371,7 +392,18 @@ $add-btn-size: 34px;
     &:active {
       background-color: $primary;
     }
-
+    &.btn-icon {
+      color: $body-text-dark;
+      path {
+        fill: $text-muted;
+      }
+      &:hover,&:focus {
+        background-color: $bg-dark300;
+        path {
+          fill: $body-text-dark;
+        }
+      }
+    }
     &.btn-secondary {
       color: white;
       background-color: $btn-secondary-bg-dark;
@@ -479,7 +511,6 @@ $add-btn-size: 34px;
       }
     }
   }
-
   .btn-link {
     color: $primary;
   }

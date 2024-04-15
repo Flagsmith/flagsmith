@@ -2,12 +2,12 @@
 
 DOCKER_TAG ?= flagsmith/flagsmith-api:local
 
-COMPOSE_FILE ?= ../docker/db.yaml
+COMPOSE_FILE ?= ../docker/db.yml
 COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
 
-POETRY_VERSION ?= 1.5.1
+POETRY_VERSION ?= 1.8.2
 
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
@@ -22,7 +22,7 @@ install-poetry:
 
 .PHONY: install-packages
 install-packages:
-	poetry install $(opts)
+	poetry install --no-root $(opts)
 
 .PHONY: install
 install: install-pip install-poetry install-packages
@@ -83,7 +83,10 @@ django-collect-static:
 
 .PHONY: serve
 serve:
-	poetry run gunicorn --bind 0.0.0.0:8000 app.wsgi --reload
+	poetry run gunicorn --bind 0.0.0.0:8000 \
+		--logger-class ${GUNICORN_LOGGER_CLASS} \
+		--reload \
+		app.wsgi
 
 .PHONY: generate-ld-client-types
 generate-ld-client-types:

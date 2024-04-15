@@ -83,7 +83,9 @@ class Environment(
             " Environment. New default Feature States will be created for the new"
             " selected projects Features for this Environment."
         ),
-        on_delete=models.CASCADE,
+        # Cascade deletes are decouple from the Django ORM. See this PR for details.
+        # https://github.com/Flagsmith/flagsmith/pull/3360/
+        on_delete=models.DO_NOTHING,
     )
 
     api_key = models.CharField(
