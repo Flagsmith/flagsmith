@@ -42,6 +42,7 @@ version = "2.68.0"
 description = "The API component for the Flagsmith application."
 authors = ["Flagsmith <support@flagsmith.com>"]
 readme = "readme.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
