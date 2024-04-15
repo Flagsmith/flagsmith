@@ -1,3 +1,4 @@
+from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
 from .models import GithubConfiguration, GithubRepository
@@ -24,3 +25,8 @@ class GithubRepositorySerializer(ModelSerializer):
             "id",
             "github_configuration",
         )
+
+
+class RepoQuerySerializer(serializers.Serializer):
+    repo_owner = serializers.CharField(required=True)
+    repo_name = serializers.CharField(required=True)

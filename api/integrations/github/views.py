@@ -13,6 +13,7 @@ from integrations.github.permissions import HasPermissionToGithubConfiguration
 from integrations.github.serializers import (
     GithubConfigurationSerializer,
     GithubRepositorySerializer,
+    RepoQuerySerializer,
 )
 from organisations.models import Organisation
 
@@ -57,11 +58,12 @@ def fetch_pull_requests(request, organisation_pk):
         settings.GITHUB_APP_ID,
     )
 
-    repo_owner = request.query_params.get("repo_owner", "")
-    repo_name = request.query_params.get("repo_name", "")
+    query_serializer = RepoQuerySerializer(data=request.query_params)
+    if not query_serializer.is_valid():
+        return JsonResponse({"error": query_serializer.errors}, status=400)
 
-    if not repo_owner or not repo_name:
-        return JsonResponse({"error": "repo_owner or repo_name not found"}, status=400)
+    repo_owner = query_serializer.validated_data.get("repo_owner")
+    repo_name = query_serializer.validated_data.get("repo_name")
 
     url = f"{GITHUB_API_URL}repos/{repo_owner}/{repo_name}/pulls"
 
@@ -88,11 +90,13 @@ def fetch_issues(request, organisation_pk):
         organisation.github_config.installation_id,
         settings.GITHUB_APP_ID,
     )
-    repo_owner = request.query_params.get("repo_owner", "")
-    repo_name = request.query_params.get("repo_name", "")
 
-    if not repo_owner or not repo_name:
-        return JsonResponse({"error": "repo_owner or repo_name not found"}, status=400)
+    query_serializer = RepoQuerySerializer(data=request.query_params)
+    if not query_serializer.is_valid():
+        return JsonResponse({"error": query_serializer.errors}, status=400)
+
+    repo_owner = query_serializer.validated_data.get("repo_owner")
+    repo_name = query_serializer.validated_data.get("repo_name")
 
     url = f"{GITHUB_API_URL}repos/{repo_owner}/{repo_name}/issues"
 
