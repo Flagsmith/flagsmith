@@ -139,7 +139,7 @@ const config = {
                                 href: 'https://www.flagsmith.com/blog/ruby-feature-flags',
                             },
                             {
-                                label: 'Javascript Feature Flags',
+                                label: 'JavaScript Feature Flags',
                                 href: 'https://www.flagsmith.com/blog/javascript-feature-flags',
                             },
                             {
