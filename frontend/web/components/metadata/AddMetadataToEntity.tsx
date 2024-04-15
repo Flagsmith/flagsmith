@@ -5,17 +5,19 @@ import Icon from 'components/Icon'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
 import { useGetMetadataFieldListQuery } from 'common/services/useMetadataField'
 import {} from 'common/services/useFeatureSegment'
-import InputGroup from 'components/base/forms/InputGroup'
 import { MetadataField, Metadata } from 'common/types/responses'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
 import {
-  useUpdateProjectFlagMutation,
+  // useUpdateProjectFlagMutation,
   useGetProjectFlagQuery,
 } from 'common/services/useProjectFlag'
+import Tooltip from 'components/Tooltip'
+import { sortBy } from 'lodash'
 
 type CustomMetadataField = MetadataField & {
   metadataModelFieldId: number | string | null
+  isRequiredFor: boolean
 }
 
 type CustomMetadata = (Metadata & CustomMetadataField) | null
@@ -30,11 +32,11 @@ type AddMetadataToEntityType = {
   updateMetadata: () => void
 }
 
-type MetadataFieldSelectType = {
-  label: string
-  modelFieldId: number
-  value: string
-}
+// type MetadataFieldSelectType = {
+//   label: string
+//   modelFieldId: number
+//   value: string
+// }
 const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
   entity,
   entityContentType,
@@ -62,32 +64,24 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
       { skip: entity !== 'feature' },
     )
 
-  const [updateMetadataProjectFeature] = useUpdateProjectFlagMutation()
+  // const [updateMetadataProjectFeature] = useUpdateProjectFlagMutation()
 
   const [
     metadataFieldsAssociatedtoEntity,
     setMetadataFieldsAssociatedtoEntity,
   ] = useState<CustomMetadataField[]>()
 
-  const [metadataWithMetadataField, setMergeMetadataWithMetadataField] =
-    useState<CustomMetadata[]>()
-
-  const [metadataFieldsSelected, setMetadataFieldsSelected] =
-    useState<MetadataFieldSelectType>()
-
-  const [fieldValue, setFieldValue] = useState<string>('')
-
-  const updateEntityMetadata = (modelFieldId: number, fieldValue: string) => {
-    if (entity === 'feature') {
-      updateMetadataProjectFeature({
-        body: {
-          metadata: [{ field_value: fieldValue, model_field: modelFieldId }],
-        },
-        feature_id: entityId,
-        project_id: projectId,
-      })
-    }
-  }
+  // const updateEntityMetadata = (modelFieldId: number, fieldValue: string) => {
+  //   if (entity === 'feature') {
+  //     updateMetadataProjectFeature({
+  //       body: {
+  //         metadata: [{ field_value: fieldValue, model_field: modelFieldId }],
+  //       },
+  //       feature_id: entityId,
+  //       project_id: projectId,
+  //     })
+  //   }
+  // }
 
   useEffect(() => {
     if (
@@ -114,27 +108,36 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
               item.field === meta.id && item.content_type === entityContentType
             )
           })
-          // Return the metadata field with additional metadata model field information
+          // Determine if isRequiredFor should be true or false based on is_required_for array
+          const isRequiredFor =
+            matchingItem &&
+            matchingItem.is_required_for &&
+            matchingItem.is_required_for.length > 0
+
+          // Return the metadata field with additional metadata model field information including isRequiredFor
           return {
             ...meta,
+            isRequiredFor: isRequiredFor || false,
             metadataModelFieldId: matchingItem ? matchingItem.id : null,
           }
         })
-      if (projectFeatureData && projectFeatureDataLoaded) {
-        const mergeMetadataWithMetadataField: CustomMetadata[] =
-          projectFeatureData?.metadata
-            .map((item1) => {
-              const matchingItem = metadataForContentType.find(
-                (item2) => item1.model_field === item2.metadataModelFieldId,
-              )
-              return matchingItem ? { ...item1, ...matchingItem } : null
-            })
-            .filter((item) => item !== null)
+      // if (projectFeatureData && projectFeatureDataLoaded) {
+      //   const mergeMetadataWithMetadataField: CustomMetadata[] =
+      //     projectFeatureData?.metadata
+      //       .map((item1) => {
+      //         const matchingItem = metadataForContentType.find(
+      //           (item2) => item1.model_field === item2.metadataModelFieldId,
+      //         )
+      //         return matchingItem ? { ...item1, ...matchingItem } : null
+      //       })
+      //       .filter((item) => item !== null)
+      //   // setMergeMetadataWithMetadataField(mergeMetadataWithMetadataField)
+      // }
+      const sortedArray = sortBy(metadataForContentType, (m) =>
+        m.isRequiredFor ? -1 : 1,
+      )
 
-        setMergeMetadataWithMetadataField(mergeMetadataWithMetadataField)
-      }
-
-      setMetadataFieldsAssociatedtoEntity(metadataForContentType)
+      setMetadataFieldsAssociatedtoEntity(sortedArray)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -148,68 +151,18 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
   return (
     <>
       <FormGroup className='mt-4 setting'>
-        <Row className='cols-md-2'>
-          <div style={{ width: '250px' }}>
-            <InputGroup
-              title={'Metadata Field'}
-              component={
-                <Select
-                  placeholder='Select the Metadata Field'
-                  options={(metadataFieldsAssociatedtoEntity || []).map(
-                    (v: CustomMetadataField) =>
-                      ({
-                        label: v.name,
-                        modelFieldId: v.metadataModelFieldId,
-                        value: `${v.id}`,
-                      } as MetadataFieldSelectType),
-                  )}
-                  onChange={(v: MetadataFieldSelectType) => {
-                    setMetadataFieldsSelected(v)
-                  }}
-                  className='mb-4 react-select'
-                />
-              }
-            />
-          </div>
-          <Row className='flex-wrap'>
-            {!!metadataFieldsSelected && (
-              <Input
-                value={fieldValue}
-                onChange={(e: InputEvent) =>
-                  setFieldValue(Utils.safeParseEventValue(e))
-                }
-                className='mr-2'
-                style={{ width: '420px' }}
-                placeholder='Metadata Value'
-              />
-            )}
-            {!!metadataFieldsSelected && (
-              <Button
-                theme='primary'
-                onClick={() => {
-                  updateEntityMetadata(
-                    metadataFieldsSelected.modelFieldId,
-                    fieldValue,
-                  )
-                }}
-              >
-                Create Metadata
-              </Button>
-            )}
-          </Row>
-        </Row>
         <PanelSearch
           className='mt-1 no-pad'
           header={
             <Row className='table-header'>
-              <Flex className='table-column px-3'>Metadata</Flex>
+              <Flex className='table-column mr-5'>Metadata</Flex>
               <Flex className='flex-row'>
-                <Flex className='table-column'>Value</Flex>
+                <Flex className='table-column ml-4'>Value</Flex>
               </Flex>
               <Flex className='table-column'>Delete</Flex>
             </Row>
           }
-          items={metadataWithMetadataField}
+          items={metadataFieldsAssociatedtoEntity}
           renderRow={(m: CustomMetadata) => {
             return <MetadataRow metadata={m} isEdit={true} />
           }}
@@ -224,25 +177,37 @@ type MetadataRowType = {
   onDelete?: () => void
   isEdit: boolean
 }
-const MetadataRow: FC<MetadataRowType> = ({ isEdit, metadata, onDelete }) => {
+const MetadataRow: FC<MetadataRowType> = ({ isEdit, metadata }) => {
   const [metadataValue, setMetadataValue] = useState<string>(
     metadata?.field_value || '',
   )
   return (
     <Row className='space list-item clickable py-2'>
-      <Flex className='table-column px-3'>{metadata?.description}</Flex>
+      <Flex className='table-column'>{`${metadata?.name} ${
+        metadata?.isRequiredFor ? '*' : ''
+      }`}</Flex>
       {isEdit ? (
         <Flex className='flex-row'>
-          <Input
-            value={metadataValue}
-            onChange={(e: InputEvent) =>
-              setMetadataValue(Utils.safeParseEventValue(e))
+          <Tooltip
+            title={
+              <Input
+                value={metadataValue}
+                onChange={(e: InputEvent) =>
+                  setMetadataValue(Utils.safeParseEventValue(e))
+                }
+                className='mr-2'
+                style={{ width: '250px' }}
+                placeholder='Metadata Value'
+                isValid={Utils.validateMetadataType(
+                  metadata?.type,
+                  metadataValue,
+                )}
+              />
             }
-            className='mr-2'
-            style={{ width: '250px' }}
-            placeholder='Metadata Value'
-            // search
-          />
+            place='right'
+          >
+            {`This value has to be of type ${metadata?.type}`}
+          </Tooltip>
         </Flex>
       ) : (
         <Flex className='flex-row'>

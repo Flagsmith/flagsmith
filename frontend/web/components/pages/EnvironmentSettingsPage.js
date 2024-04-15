@@ -909,7 +909,7 @@ const EnvironmentSettingsPage = class extends Component {
                             }
                           />
                         </FormGroup>
-                        <OrganisationMetadataSelect
+                        {/* <OrganisationMetadataSelect
                           contentType={30}
                           isOpen={this.state.showMetadataList}
                           onToggle={() =>
@@ -918,7 +918,7 @@ const EnvironmentSettingsPage = class extends Component {
                             })
                           }
                           orgId={AccountStore.getOrganisation().id}
-                        />
+                        /> */}
                       </TabItem>
                     )}
                   </Tabs>

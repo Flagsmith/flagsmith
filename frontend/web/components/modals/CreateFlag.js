@@ -598,6 +598,9 @@ const CreateFlag = class extends Component {
               entityId={projectFlag.id}
               entityContentType={featureContentType?.id}
               entity={featureContentType?.model}
+              getMetadata={(m) => {
+                console.log('DEBUG: m:', m)
+              }}
             />
           </FormGroup>
         )}

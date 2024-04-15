@@ -503,6 +503,18 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },
+  isValidURL(value: any) {
+    const pattern = new RegExp(
+      '^(https?:\\/\\/)?' + // protocol
+        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+        '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+        '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+        '(\\#[-a-z\\d_]*)?$',
+      'i',
+    )
+    return !!pattern.test(value)
+  },
   loadScriptPromise(url: string) {
     return new Promise((resolve) => {
       const cb = function () {
@@ -554,9 +566,26 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return `${value}`
   },
+
+  validateMetadataType(type: string, value: any) {
+    switch (type) {
+      case 'int': {
+        return Utils.isValidNumber(value)
+      }
+      case 'url': {
+        return Utils.isValidURL(value)
+      }
+      case 'bool': {
+        return value === 'true' || value === 'false'
+      }
+      default:
+        return true
+    }
+
+    Utils.isValidNumber
+  },
   validateRule(rule: SegmentCondition) {
     if (!rule) return false
-
     if (rule.delete) {
       return true
     }

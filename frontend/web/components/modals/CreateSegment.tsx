@@ -38,7 +38,7 @@ import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
-import OrganisationMetadataSelect from 'components/OrganisationMetadataSelect'
+// import OrganisationMetadataSelect from 'components/OrganisationMetadataSelect'
 import Permission from 'common/providers/Permission'
 import classNames from 'classnames'
 
@@ -133,7 +133,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [name, setName] = useState<Segment['name']>(segment.name)
   const [rules, setRules] = useState<Segment['rules']>(segment.rules)
   const [tab, setTab] = useState(0)
-  const [showMetadataList, setShowMetadataList] = useState<boolean>(false)
+  // const [showMetadataList, setShowMetadataList] = useState<boolean>(false)
   const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
 
   const error = createError || updateError
@@ -431,11 +431,12 @@ const CreateSegment: FC<CreateSegmentType> = ({
               }
             />
             {metadataEnable && (
-              <OrganisationMetadataSelect
-                isOpen={showMetadataList}
-                onToggle={() => setShowMetadataList(!showMetadataList)}
-                orgId={AccountStore.getOrganisation().id}
-              />
+              <div></div>
+              // <OrganisationMetadataSelect
+              //   isOpen={showMetadataList}
+              //   onToggle={() => setShowMetadataList(!showMetadataList)}
+              //   orgId={AccountStore.getOrganisation().id}
+              // />
             )}
           </FormGroup>
         )}
