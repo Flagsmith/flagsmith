@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing
 import uuid
 
@@ -29,7 +31,7 @@ class MultivariateFeatureOption(
     LifecycleModelMixin,
     AbstractBaseFeatureValueModel,
     AbstractBaseExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(RelatedObjectType.FEATURE, ["uuid"]),
 ):
     """
     This class holds the *value* for a given multivariate feature
@@ -37,11 +39,6 @@ class MultivariateFeatureOption(
     percent allocation is set in MultivariateFeatureStateValue
     which varies per-environment.
     """
-
-    history_record_class_path = (
-        "features.multivariate.models.HistoricalMultivariateFeatureOption"
-    )
-    related_object_type = RelatedObjectType.FEATURE
 
     feature = models.ForeignKey(
         "features.Feature",
@@ -83,30 +80,25 @@ class MultivariateFeatureOption(
             self.feature.type = STANDARD
             self.feature.save()
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         return f"Multivariate option added to feature '{self.feature.name}'."
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> str | None:
         if not self.feature.deleted_at:
             return f"Multivariate option removed from feature '{self.feature.name}'."
 
     def get_audit_log_related_object_id(self, history_instance) -> int:
         return self.feature_id
 
-    def _get_project(self) -> typing.Optional["Project"]:
+    def get_project(self, delta=None) -> Project | None:
         return self.feature.project
 
 
 class MultivariateFeatureStateValue(
     LifecycleModelMixin,
     AbstractBaseExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(RelatedObjectType.FEATURE_STATE, ["uuid"]),
 ):
-    history_record_class_path = (
-        "features.multivariate.models.HistoricalMultivariateFeatureStateValue"
-    )
-    related_object_type = RelatedObjectType.FEATURE_STATE
-
     feature_state = models.ForeignKey(
         "features.FeatureState",
         on_delete=models.CASCADE,
@@ -143,7 +135,7 @@ class MultivariateFeatureStateValue(
 
         return clone
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         feature_state = self.feature_state
         feature = feature_state.feature
 
@@ -162,5 +154,5 @@ class MultivariateFeatureStateValue(
 
         return self.feature_state.feature_id
 
-    def _get_environment(self) -> typing.Optional["Environment"]:
+    def get_environment(self, delta=None) -> Environment | None:
         return self.feature_state.environment

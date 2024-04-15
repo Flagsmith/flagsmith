@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import importlib
 import logging
 import typing
@@ -47,7 +49,6 @@ from .exceptions import (
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
-    from projects.models import Project
     from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
@@ -56,11 +57,8 @@ logger = logging.getLogger(__name__)
 class ChangeRequest(
     LifecycleModelMixin,
     SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(RelatedObjectType.CHANGE_REQUEST, ["uuid"]),
 ):
-    related_object_type = RelatedObjectType.CHANGE_REQUEST
-    history_record_class_path = "features.workflows.core.models.HistoricalChangeRequest"
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -166,13 +164,13 @@ class ChangeRequest(
                     delay_until=environment_feature_version.live_from,
                 )
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> str | None:
         return CHANGE_REQUEST_DELETED_MESSAGE % self.title
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         if (
             history_instance.prev_record
             and history_instance.prev_record.committed_at is None
@@ -190,11 +188,8 @@ class ChangeRequest(
         ):
             return self.committed_by
 
-    def _get_environment(self) -> typing.Optional["Environment"]:
+    def get_environment(self, delta=None) -> Environment | None:
         return self.environment
-
-    def _get_project(self) -> typing.Optional["Project"]:
-        return self.environment.project
 
     def is_approved(self):
         return self.environment.minimum_change_request_approvals is None or (
@@ -266,12 +261,10 @@ class ChangeRequest(
         return None
 
 
-class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factory()):
-    related_object_type = RelatedObjectType.CHANGE_REQUEST
-    history_record_class_path = (
-        "features.workflows.core.models.HistoricalChangeRequestApproval"
-    )
-
+class ChangeRequestApproval(
+    LifecycleModel,
+    abstract_base_auditable_model_factory(RelatedObjectType.CHANGE_REQUEST),
+):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     change_request = models.ForeignKey(
         ChangeRequest, on_delete=models.CASCADE, related_name="approvals"
@@ -327,11 +320,11 @@ class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factor
             fail_silently=True,
         )
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         if self.approved_at is not None:
             return CHANGE_REQUEST_APPROVED_MESSAGE % self.change_request.title
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         if (
             history_instance.prev_record.approved_at is None
             and self.approved_at is not None
@@ -344,7 +337,7 @@ class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factor
     def get_audit_log_author(self, history_instance) -> "FFAdminUser":
         return self.user
 
-    def _get_environment(self):
+    def get_environment(self, delta=None) -> Environment | None:
         return self.change_request.environment
 
 

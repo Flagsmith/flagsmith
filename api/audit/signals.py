@@ -17,26 +17,20 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=AuditLog)
-def call_webhooks(sender, instance, **kwargs):
+def call_webhooks(sender, instance: AuditLog, **kwargs):
     if settings.DISABLE_WEBHOOKS:
         return
 
-    if not (instance.project_id or instance.environment_id):
-        logger.warning("Audit log without project or environment. Not sending webhook.")
+    if not (organisation := instance.organisation):
+        logger.warning("Audit log without organisation. Not sending webhook.")
         return
 
-    organisation_id = (
-        instance.project.organisation_id
-        if instance.project
-        else instance.environment.project.organisation_id
-    )
-
     if OrganisationWebhook.objects.filter(
-        organisation_id=organisation_id, enabled=True
+        organisation=organisation, enabled=True
     ).exists():
         data = AuditLogListSerializer(instance=instance).data
         call_organisation_webhooks.delay(
-            args=(organisation_id, data, WebhookEventType.AUDIT_LOG_CREATED.value)
+            args=(organisation.id, data, WebhookEventType.AUDIT_LOG_CREATED.value)
         )
 
 

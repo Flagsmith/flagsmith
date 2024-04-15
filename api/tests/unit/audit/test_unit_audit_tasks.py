@@ -62,11 +62,17 @@ def test_create_audit_log_from_historical_record_does_nothing_if_no_log_message(
 ):
     # Given
     mock_environment = mocker.MagicMock()
+    mock_project = mocker.MagicMock()
+    mock_organisation = mocker.MagicMock()
 
     instance = mocker.MagicMock()
     instance.get_audit_log_author.return_value = None
     instance.get_create_log_message.return_value = None
-    instance.get_environment_and_project.return_value = (mock_environment, None)
+    instance.get_organisations_project_environment.return_value = (
+        [mock_organisation],
+        mock_project,
+        mock_environment,
+    )
     history_instance = mocker.MagicMock(
         history_id=1, instance=instance, master_api_key=None, history_type="+"
     )
@@ -156,12 +162,18 @@ def test_create_audit_log_from_historical_record_creates_audit_log_with_correct_
     related_object_type = RelatedObjectType.ENVIRONMENT
 
     mock_environment = mocker.MagicMock(spec=Environment)
+    mock_project = mocker.MagicMock()
+    mock_organisation = mocker.MagicMock()
 
     instance = mocker.MagicMock()
     instance.get_skip_create_audit_log.return_value = False
     instance.get_audit_log_author.return_value = None
     instance.get_create_log_message.return_value = log_message
-    instance.get_environment_and_project.return_value = mock_environment, None
+    instance.get_organisations_project_environment.return_value = (
+        [mock_organisation],
+        mock_project,
+        mock_environment,
+    )
     instance.get_audit_log_related_object_id.return_value = related_object_id
     instance.get_audit_log_related_object_type.return_value = related_object_type
     instance.get_extra_audit_log_kwargs.return_value = {}
@@ -171,6 +183,7 @@ def test_create_audit_log_from_historical_record_creates_audit_log_with_correct_
         master_api_key=None,
         history_type="+",
         history_date=timezone.now(),
+        ip_address="127.0.0.1",
     )
 
     history_user = mocker.MagicMock()
@@ -202,17 +215,23 @@ def test_create_audit_log_from_historical_record_creates_audit_log_with_correct_
     )
 
     # Then
-    mocked_audit_log_model_class.objects.create.assert_called_once_with(
-        history_record_id=history_instance.history_id,
-        history_record_class_path=history_record_class_path,
-        environment=mock_environment,
-        project=None,
-        author=history_user,
-        related_object_id=related_object_id,
-        related_object_type=related_object_type.name,
-        log=log_message,
-        master_api_key=None,
-        created_date=history_instance.history_date,
+    mocked_audit_log_model_class.objects.bulk_create.assert_called_once_with(
+        [
+            mocked_audit_log_model_class(
+                created_date=history_instance.history_date,
+                organisation=mock_organisation,
+                project=mock_project,
+                environment=mock_environment,
+                related_object_id=related_object_id,
+                related_object_type=related_object_type.name,
+                log=log_message,
+                author=history_user,
+                ip_address=history_instance.ip_address,
+                master_api_key=None,
+                history_record_id=history_instance.history_id,
+                history_record_class_path=history_record_class_path,
+            )
+        ]
     )
 
 

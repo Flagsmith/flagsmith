@@ -35,6 +35,14 @@ class UserEnvironmentPermission(AbstractBasePermissionModel):
             )
         ]
 
+    grant_type = "User Environment"
+
+    def get_audit_log_identity(self) -> str:
+        return f"{self.user.email} / {self.environment.name}"
+
+    def get_environment(self, delta=None) -> Environment | None:
+        return self.environment
+
 
 class UserPermissionGroupEnvironmentPermission(AbstractBasePermissionModel):
     group = models.ForeignKey("users.UserPermissionGroup", on_delete=models.CASCADE)
@@ -54,3 +62,11 @@ class UserPermissionGroupEnvironmentPermission(AbstractBasePermissionModel):
                 name="unique_group_environment_permission",
             )
         ]
+
+    grant_type = "Group Environment"
+
+    def get_audit_log_identity(self) -> str:
+        return f"{self.group.name} / {self.environment.name}"
+
+    def get_environment(self, delta=None) -> Environment | None:
+        return self.environment

@@ -1,3 +1,4 @@
+from core.helpers import get_ip_address_from_request
 from core.models import _AbstractBaseAuditableModel
 from django.conf import settings
 from django.utils import timezone
@@ -38,20 +39,26 @@ def create_audit_log_from_historical_record(
         # don't trigger audit log records in deleted projects
         return
 
+    history_record_class_path = (
+        f"{history_instance.__class__.__module__}.{history_instance.__class__.__name__}"
+    )
+
     tasks.create_audit_log_from_historical_record.delay(
         kwargs={
             "history_instance_id": history_instance.history_id,
             "history_user_id": getattr(history_user, "id", None),
-            "history_record_class_path": instance.history_record_class_path,
+            "history_record_class_path": history_record_class_path,
         },
         delay_until=delay_until,
     )
 
 
-def add_master_api_key(sender, **kwargs):
+def add_ip_address_and_master_api_key(sender, **kwargs):
     try:
         history_instance = kwargs["history_instance"]
-        master_api_key = HistoricalRecords.thread.request.user.key
-        history_instance.master_api_key = master_api_key
+        history_instance.ip_address = get_ip_address_from_request(
+            HistoricalRecords.thread.request
+        )
+        history_instance.master_api_key = HistoricalRecords.thread.request.user.key
     except (KeyError, AttributeError):
         pass

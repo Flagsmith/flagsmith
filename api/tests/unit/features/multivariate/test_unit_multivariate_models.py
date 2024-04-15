@@ -59,14 +59,15 @@ def test_multivariate_feature_state_value_get_update_log_message_environment_def
     multivariate_feature, environment
 ):
     # Given
-    history_instance = MagicMock()
+    mock_history_instance = MagicMock()
+    mock_delta = MagicMock()
 
     mvfsv = MultivariateFeatureStateValue.objects.filter(
         feature_state__environment=environment
     ).first()
 
     # When
-    msg = mvfsv.get_update_log_message(history_instance)
+    msg = mvfsv.get_update_log_message(mock_history_instance, mock_delta)
 
     # Then
     assert (
@@ -78,7 +79,8 @@ def test_multivariate_feature_state_value_get_update_log_message_identity_overri
     multivariate_feature, environment, identity
 ):
     # Given
-    history_instance = MagicMock()
+    mock_history_instance = MagicMock()
+    mock_delta = MagicMock()
 
     identity_override = FeatureState.objects.create(
         feature=multivariate_feature, identity=identity, environment=environment
@@ -89,7 +91,7 @@ def test_multivariate_feature_state_value_get_update_log_message_identity_overri
     )
 
     # When
-    msg = mvfsv.get_update_log_message(history_instance)
+    msg = mvfsv.get_update_log_message(mock_history_instance, mock_delta)
 
     # Then
     assert (
@@ -102,7 +104,8 @@ def test_multivariate_feature_state_value_get_update_log_message_segment_overrid
     multivariate_feature, environment, segment
 ):
     # Given
-    history_instance = MagicMock()
+    mock_history_instance = MagicMock()
+    mock_delta = MagicMock()
 
     feature_segment = FeatureSegment.objects.create(
         segment=segment, feature=multivariate_feature, environment=environment
@@ -118,7 +121,7 @@ def test_multivariate_feature_state_value_get_update_log_message_segment_overrid
     )
 
     # When
-    msg = mvfsv.get_update_log_message(history_instance)
+    msg = mvfsv.get_update_log_message(mock_history_instance, mock_delta)
 
     # Then
     assert (

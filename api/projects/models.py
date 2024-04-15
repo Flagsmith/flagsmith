@@ -1,13 +1,15 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import annotations
 
 import re
+import typing
 
-from core.models import SoftDeleteExportableModel
+from core.models import (
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory,
+)
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
-from django.db.models import Count
 from django_lifecycle import (
     AFTER_DELETE,
     AFTER_SAVE,
@@ -17,6 +19,7 @@ from django_lifecycle import (
     hook,
 )
 
+from audit.related_object_type import RelatedObjectType
 from environments.dynamodb import DynamoProjectMetadata
 from organisations.models import Organisation
 from permissions.models import (
@@ -31,6 +34,12 @@ from projects.tasks import (
     write_environments_to_dynamodb,
 )
 
+if typing.TYPE_CHECKING:
+    from environments.models import Environment
+    from features.models import Feature
+    from segments.models import Segment
+
+
 project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
@@ -41,12 +50,35 @@ class IdentityOverridesV2MigrationStatus(models.TextChoices):
     COMPLETE = "COMPLETE", "Complete"
 
 
-class Project(LifecycleModelMixin, SoftDeleteExportableModel):
+UNAUDITED_PROJECT_FIELDS = (
+    "hide_disabled_flags",
+    "enable_dynamo_db",
+    "prevent_flag_defaults",
+    "enable_realtime_updates",
+    "only_allow_lower_case_feature_names",
+    "feature_name_regex",
+    "max_segments_allowed",
+    "max_features_allowed",
+    "max_segment_overrides_allowed",
+    "identity_overrides_v2_migration_status",
+)
+
+
+class Project(
+    LifecycleModelMixin,
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory(
+        RelatedObjectType.PROJECT,
+        UNAUDITED_PROJECT_FIELDS,
+        default_messages=True,
+    ),
+):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     organisation = models.ForeignKey(
         Organisation, related_name="projects", on_delete=models.CASCADE
     )
+    organisation_id: int
     hide_disabled_flags = models.BooleanField(
         default=False,
         help_text="If true will exclude flags from SDK which are " "disabled",
@@ -96,6 +128,10 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
 
     objects = ProjectManager()
 
+    environments: models.QuerySet[Environment]
+    features: models.QuerySet[Feature]
+    segments: models.QuerySet[Segment]
+
     class Meta:
         ordering = ["id"]
 
@@ -108,7 +144,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
             self.features.count() > self.max_features_allowed
             or self.segments.count() > self.max_segments_allowed
             or self.environments.annotate(
-                segment_override_count=Count("feature_segments")
+                segment_override_count=models.Count("feature_segments")
             )
             .filter(segment_override_count__gt=self.max_segment_overrides_allowed)
             .exists()
@@ -199,6 +235,12 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
             == IdentityOverridesV2MigrationStatus.COMPLETE
         )
 
+    def get_audit_log_identity(self) -> str:
+        return self.name
+
+    def get_project(self, delta=None) -> Project | None:
+        return self
+
 
 class ProjectPermissionManager(models.Manager):
     def get_queryset(self):
@@ -230,6 +272,14 @@ class UserPermissionGroupProjectPermission(AbstractBasePermissionModel):
             )
         ]
 
+    grant_type = "Group Project"
+
+    def get_audit_log_identity(self) -> str:
+        return f"{self.group.name} / {self.project.name}"
+
+    def get_project(self, delta=None) -> Project | None:
+        return self.project
+
 
 class UserProjectPermission(AbstractBasePermissionModel):
     user = models.ForeignKey(
@@ -248,3 +298,11 @@ class UserProjectPermission(AbstractBasePermissionModel):
                 fields=["user", "project"], name="unique_user_project_permission"
             )
         ]
+
+    grant_type = "User Project"
+
+    def get_audit_log_identity(self) -> str:
+        return f"{self.user.email} / {self.project.name}"
+
+    def get_project(self, delta=None) -> Project | None:
+        return self.project

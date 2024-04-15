@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import annotations
 
 import logging
 import typing
@@ -67,13 +66,11 @@ environment_api_key_wrapper = DynamoEnvironmentAPIKeyWrapper()
 class Environment(
     LifecycleModel,
     abstract_base_auditable_model_factory(
-        change_details_excluded_fields=["updated_at"]
+        related_object_type=RelatedObjectType.ENVIRONMENT,
+        change_details_excluded_fields=["updated_at"],
     ),
     SoftDeleteObject,
 ):
-    history_record_class_path = "environments.models.HistoricalEnvironment"
-    related_object_type = RelatedObjectType.ENVIRONMENT
-
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     description = models.TextField(null=True, blank=True, max_length=20000)
@@ -341,10 +338,10 @@ class Environment(
             return cls._get_environment_document_from_cache(api_key)
         return cls._get_environment_document_from_db(api_key)
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         return ENVIRONMENT_CREATED_MESSAGE % self.name
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         return ENVIRONMENT_UPDATED_MESSAGE % self.name
 
     def get_hide_disabled_flags(self) -> bool:
@@ -372,11 +369,8 @@ class Environment(
         environment = cls.objects.filter_for_document_builder(api_key=api_key).get()
         return map_environment_to_environment_document(environment)
 
-    def _get_environment(self):
+    def get_environment(self, delta=None) -> Environment | None:
         return self
-
-    def _get_project(self):
-        return self.project
 
 
 class Webhook(AbstractBaseExportableWebhookModel):

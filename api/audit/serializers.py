@@ -5,12 +5,14 @@ from rest_framework import serializers
 
 from audit.models import AuditLog
 from environments.serializers import EnvironmentSerializerLight
+from organisations.serializers import OrganisationSerializerBasic
 from projects.serializers import ProjectListSerializer
 from users.serializers import UserListSerializer
 
 
 class AuditLogListSerializer(serializers.ModelSerializer):
     author = UserListSerializer()
+    organisation = OrganisationSerializerBasic()
     environment = EnvironmentSerializerLight()
     project = ProjectListSerializer()
 
@@ -21,6 +23,7 @@ class AuditLogListSerializer(serializers.ModelSerializer):
             "created_date",
             "log",
             "author",
+            "organisation",
             "environment",
             "project",
             "related_object_id",
@@ -83,6 +86,7 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):
 
 
 class AuditLogsQueryParamSerializer(serializers.Serializer):
+    organisation = serializers.IntegerField(required=False)
     project = serializers.IntegerField(required=False)
     environments = serializers.ListField(
         child=serializers.IntegerField(min_value=0), required=False

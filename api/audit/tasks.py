@@ -1,7 +1,9 @@
+import functools
 import logging
 import typing
 from datetime import datetime
 
+from core.models import ModelDelta, _AbstractBaseAuditableModel
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
@@ -51,11 +53,11 @@ def _create_feature_state_audit_log_for_change_request(
         feature_state.change_request.title,
     )
     AuditLog.objects.create(
-        related_object_id=feature_state.id,
-        related_object_type=RelatedObjectType.FEATURE_STATE.name,
-        environment=feature_state.environment,
-        project=feature_state.environment.project,
+        environment=feature_state.get_environment(),
+        project=feature_state.get_project(),
         log=log,
+        related_object_id=feature_state.pk,
+        related_object_type=RelatedObjectType.FEATURE_STATE.name,
         is_system_event=True,
         created_date=feature_state.live_from,
     )
@@ -70,55 +72,64 @@ def create_audit_log_from_historical_record(
     model_class = AuditLog.get_history_record_model_class(history_record_class_path)
     history_instance = model_class.objects.get(history_id=history_instance_id)
 
-    if (
-        history_instance.history_type == "~"
-        and history_instance.prev_record
-        and not history_instance.diff_against(history_instance.prev_record).changes
-    ):
-        return
+    delta: ModelDelta | None = None
+    if history_instance.history_type == "~" and history_instance.prev_record:
+        delta = history_instance.diff_against(history_instance.prev_record)
+        if delta is not None and not delta.changes:
+            # no auditable data changed in this change/event
+            return
 
-    user_model = get_user_model()
-
-    instance = history_instance.instance
+    instance: _AbstractBaseAuditableModel = history_instance.instance
     if instance.get_skip_create_audit_log():
+        # do not create audit log from this historical record
         return
 
-    history_user = user_model.objects.filter(id=history_user_id).first()
-
+    history_user = get_user_model().objects.filter(id=history_user_id).first()
     override_author = instance.get_audit_log_author(history_instance)
     if not (history_user or override_author or history_instance.master_api_key):
+        # no known author for this change/event
         return
 
-    environment, project = instance.get_environment_and_project()
+    (
+        organisations,
+        project,
+        environment,
+    ) = instance.get_organisations_project_environment(delta)
 
     related_object_id = instance.get_audit_log_related_object_id(history_instance)
     related_object_type = instance.get_audit_log_related_object_type(history_instance)
-
     if not related_object_id:
+        # no related object for this change/event
         return
 
     log_message = {
         "+": instance.get_create_log_message,
         "-": instance.get_delete_log_message,
-        "~": instance.get_update_log_message,
+        "~": functools.partial(instance.get_update_log_message, delta=delta),
     }[history_instance.history_type](history_instance)
-
     if not log_message:
+        # no log to record for this change/event
         return
 
-    AuditLog.objects.create(
-        history_record_id=history_instance.history_id,
-        history_record_class_path=history_record_class_path,
-        environment=environment,
-        project=project,
-        author=override_author or history_user,
-        related_object_id=related_object_id,
-        related_object_type=related_object_type.name,
-        log=log_message,
-        master_api_key=history_instance.master_api_key,
-        created_date=history_instance.history_date,
-        **instance.get_extra_audit_log_kwargs(history_instance),
-    )
+    audit_logs = [
+        AuditLog(
+            created_date=history_instance.history_date,
+            organisation=organisation,
+            project=project,
+            environment=environment,
+            related_object_id=related_object_id,
+            related_object_type=related_object_type.name,
+            log=log_message,
+            author=override_author or history_user,
+            ip_address=history_instance.ip_address,
+            master_api_key=history_instance.master_api_key,
+            history_record_id=history_instance.history_id,
+            history_record_class_path=history_record_class_path,
+            **instance.get_extra_audit_log_kwargs(history_instance),
+        )
+        for organisation in organisations
+    ]
+    AuditLog.objects.bulk_create(audit_logs)
 
 
 @register_task_handler()
@@ -159,21 +170,126 @@ def create_segment_priorities_changed_audit_log(
     if not feature_segments:
         return
 
-    # all feature segments should have the same value for feature and environment
-    environment = feature_segments[0].environment
-    feature = feature_segments[0].feature
+    # all feature segments should have the same value for environment and feature
+    feature_segment = feature_segments[0]
+    environment = feature_segment.get_environment()
+    feature = feature_segment.feature
 
     AuditLog.objects.create(
-        log=f"Segment overrides re-ordered for feature '{feature.name}'.",
+        created_date=(
+            datetime.fromisoformat(changed_at)
+            if changed_at is not None
+            else timezone.now()
+        ),
         environment=environment,
-        project_id=environment.project_id,
+        log=f"Segment overrides re-ordered for feature '{feature.name}'.",
         author_id=user_id,
-        related_object_id=feature.id,
-        related_object_type=RelatedObjectType.FEATURE.name,
         master_api_key_id=master_api_key_id,
+        related_object_id=feature.pk,
+        related_object_type=RelatedObjectType.FEATURE.name,
         created_date=(
             datetime.fromisoformat(changed_at)
             if changed_at is not None
             else timezone.now()
         ),
     )
+
+
+@register_task_handler()
+def create_audit_log_user_logged_in(
+    user_id: int,
+    ip_address: str | None = None,
+):
+    if not (user := get_user_model().objects.filter(id=user_id).first()):
+        logger.warning(
+            f"User with id {user_id} not found. Audit log for user logged in not created."
+        )
+        return
+
+    user = typing.cast(_AbstractBaseAuditableModel, user)
+    log_message = (
+        f"{RelatedObjectType.USER.value} logged in: {user.get_audit_log_identity()}"
+    )
+
+    audit_logs = [
+        AuditLog(
+            created_date=timezone.now(),
+            organisation=organisation,
+            related_object_id=user.pk,
+            related_object_type=RelatedObjectType.USER.name,
+            log=log_message,
+            author=user,
+            ip_address=ip_address,
+            is_system_event=True,
+        )
+        for organisation in user.get_organisations() or []
+    ]
+    AuditLog.objects.bulk_create(audit_logs)
+
+
+@register_task_handler()
+def create_audit_log_user_logged_out(
+    user_id: int,
+    ip_address: str | None = None,
+):
+    if not (user := get_user_model().objects.filter(id=user_id).first()):
+        logger.warning(
+            f"User with id {user_id} not found. Audit log for user logged out not created."
+        )
+        return
+
+    user = typing.cast(_AbstractBaseAuditableModel, user)
+    log_message = (
+        f"{RelatedObjectType.USER.value} logged out: {user.get_audit_log_identity()}"
+    )
+
+    audit_logs = [
+        AuditLog(
+            created_date=timezone.now(),
+            organisation=organisation,
+            related_object_id=user.pk,
+            related_object_type=RelatedObjectType.USER.name,
+            log=log_message,
+            author=user,
+            ip_address=ip_address,
+            is_system_event=True,
+        )
+        for organisation in user.get_organisations() or []
+    ]
+    AuditLog.objects.bulk_create(audit_logs)
+
+
+@register_task_handler()
+def create_audit_log_user_login_failed(
+    credentials: dict,
+    ip_address: str | None = None,
+    codes: list[str] | None = None,
+):
+    if not (username := credentials.get("username")):
+        return
+    UserModel = get_user_model()
+    try:
+        # ModelBackend looks up user this way, so we will do the same
+        user = UserModel._default_manager.get_by_natural_key(username)
+    except UserModel.DoesNotExist:
+        return
+    if not isinstance(user, _AbstractBaseAuditableModel):
+        return
+
+    reason = ",".join(codes) if codes else "password"
+    log_message = f"{RelatedObjectType.USER.value} login failed ({reason}): {user.get_audit_log_identity()}"
+
+    audit_logs = [
+        AuditLog(
+            created_date=timezone.now(),
+            organisation=organisation,
+            related_object_id=user.pk,
+            related_object_type=RelatedObjectType.USER.name,
+            log=log_message,
+            author=user,
+            ip_address=ip_address,
+            is_system_event=True,
+        )
+        for organisation in user.get_organisations() or []
+    ]
+    AuditLog.objects.bulk_create(audit_logs)

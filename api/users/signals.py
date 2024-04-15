@@ -1,10 +1,21 @@
 import warnings
 
+from core.helpers import get_ip_address_from_request
 from django.conf import settings
+from django.contrib.auth.signals import (
+    user_logged_in,
+    user_logged_out,
+    user_login_failed,
+)
 from django.db.models.signals import post_migrate, post_save
 from django.dispatch import receiver
 from django.urls import reverse
 
+from audit.tasks import (
+    create_audit_log_user_logged_in,
+    create_audit_log_user_logged_out,
+    create_audit_log_user_login_failed,
+)
 from integrations.lead_tracking.pipedrive.lead_tracker import (
     PipedriveLeadTracker,
 )
@@ -49,3 +60,26 @@ def send_warning_email(sender, instance, created, **kwargs):
                 instance._initial_state["email"],
             )
         )
+
+
+@receiver(user_logged_in, sender=FFAdminUser)
+def signal_audit_log_user_logged_in(sender, request, user, **kwargs):
+    ip_address = None if request is None else get_ip_address_from_request(request)
+    create_audit_log_user_logged_in.delay(args=(user.pk, ip_address))
+
+
+@receiver(user_logged_out, sender=FFAdminUser)
+def signal_audit_log_user_logged_out(sender, request, user, **kwargs):
+    ip_address = None if request is None else get_ip_address_from_request(request)
+    create_audit_log_user_logged_out.delay(args=(user.pk, ip_address))
+
+
+@receiver(user_login_failed)
+def signal_audit_log_user_login_failed(sender, credentials, request, **kwargs):
+    ip_address = None if request is None else get_ip_address_from_request(request)
+    # get codes passed by auth serializers that catch APIException and send user_login_failed
+    codes = kwargs.get("codes", None)
+    # unfortunately DRF's get_codes() is inconsistent betweeen APIException and ValidationError,
+    # and sometimes returns str, so coerce that to list[str]
+    codes = [codes] if type(codes) is str else codes
+    create_audit_log_user_login_failed.delay(args=(credentials, ip_address, codes))

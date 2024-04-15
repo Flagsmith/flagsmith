@@ -19,6 +19,7 @@ from pytz import UTC
 from rest_framework import status
 from rest_framework.test import APIClient, override_settings
 
+from audit.models import AuditLog, RelatedObjectType
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature
@@ -1161,7 +1162,8 @@ def test_make_user_group_admin_success(
     # Given
     another_user = FFAdminUser.objects.create(email="another_user@example.com")
     another_user.add_organisation(organisation)
-    another_user.permission_groups.add(user_permission_group)
+    # cannot use User.permission_groups reverse accessor
+    user_permission_group.users.add(another_user)
     url = reverse(
         "api-v1:organisations:make-user-group-admin",
         args=[organisation.id, user_permission_group.id, another_user.id],
@@ -1180,6 +1182,24 @@ def test_make_user_group_admin_success(
         is True
     )
 
+    # and
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GROUP.name
+        ).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GROUP.name
+    assert audit_log.related_object_id == user_permission_group.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert (
+        audit_log.log
+        == f"Group users updated: {user_permission_group.name}; group_admin changed: {another_user.email}"
+    )
+
 
 def test_make_user_group_admin_forbidden(
     staff_client: APIClient,
@@ -1189,7 +1209,8 @@ def test_make_user_group_admin_forbidden(
     # Given
     another_user = FFAdminUser.objects.create(email="another_user@example.com")
     another_user.add_organisation(organisation)
-    another_user.permission_groups.add(user_permission_group)
+    # cannot use User.permission_groups reverse accessor
+    user_permission_group.users.add(another_user)
     url = reverse(
         "api-v1:organisations:make-user-group-admin",
         args=[organisation.id, user_permission_group.id, another_user.id],
@@ -1226,7 +1247,8 @@ def test_remove_user_as_group_admin_success(
     # Given
     another_user = FFAdminUser.objects.create(email="another_user@example.com")
     another_user.add_organisation(organisation)
-    another_user.permission_groups.add(user_permission_group)
+    # cannot use User.permission_groups reverse accessor
+    user_permission_group.users.add(another_user)
     another_user.make_group_admin(user_permission_group.id)
     url = reverse(
         "api-v1:organisations:remove-user-group-admin",
@@ -1246,6 +1268,24 @@ def test_remove_user_as_group_admin_success(
         is False
     )
 
+    # and
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GROUP.name
+        ).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GROUP.name
+    assert audit_log.related_object_id == user_permission_group.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert (
+        audit_log.log
+        == f"Group users updated: {user_permission_group.name}; group_admin changed: {another_user.email}"
+    )
+
 
 def test_remove_user_as_group_admin_forbidden(
     staff_client: APIClient,
@@ -1255,7 +1295,8 @@ def test_remove_user_as_group_admin_forbidden(
     # Given
     another_user = FFAdminUser.objects.create(email="another_user@example.com")
     another_user.add_organisation(organisation)
-    another_user.permission_groups.add(user_permission_group)
+    # cannot use User.permission_groups reverse accessor
+    user_permission_group.users.add(another_user)
     another_user.make_group_admin(user_permission_group.id)
     url = reverse(
         "api-v1:organisations:remove-user-group-admin",

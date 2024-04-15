@@ -1,3 +1,11 @@
+# generic/default audit messages
+
+CREATED_MESSAGE = "New {model_name} created: {identity}"
+DELETED_MESSAGE = "{model_name} deleted: {identity}"
+UPDATED_MESSAGE = "{model_name} {field} {action}: {identity}"
+
+# specific audit messages
+
 FEATURE_CREATED_MESSAGE = "New Flag / Remote Config created: %s"
 FEATURE_DELETED_MESSAGE = "Flag / Remote Config Deleted: %s"
 FEATURE_UPDATED_MESSAGE = "Flag / Remote Config updated: %s"

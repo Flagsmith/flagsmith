@@ -16,6 +16,7 @@ from pytest_django import DjangoAssertNumQueries
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from audit.models import AuditLog, RelatedObjectType
 from organisations.invites.models import Invite, InviteLink
 from organisations.models import Organisation, OrganisationRole
 from users.models import FFAdminUser, UserPermissionGroup
@@ -38,6 +39,22 @@ def test_join_organisation(
     assert response.status_code == status.HTTP_200_OK
     assert organisation in staff_user.organisations.all()
 
+    # and
+    assert (
+        AuditLog.objects.filter(related_object_type=RelatedObjectType.USER.name).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == staff_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.USER.name
+    assert audit_log.related_object_id == staff_user.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert (
+        audit_log.log
+        == f"User organisations updated: {staff_user.email}; added: test org"
+    )
+
 
 def test_join_organisation_via_link(
     staff_user: FFAdminUser,
@@ -55,6 +72,22 @@ def test_join_organisation_via_link(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert organisation in staff_user.organisations.all()
+
+    # and
+    assert (
+        AuditLog.objects.filter(related_object_type=RelatedObjectType.USER.name).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == staff_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.USER.name
+    assert audit_log.related_object_id == staff_user.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert (
+        audit_log.log
+        == f"User organisations updated: {staff_user.email}; added: test org"
+    )
 
 
 def test_cannot_join_organisation_via_expired_link(
@@ -101,6 +134,22 @@ def test_user_can_join_second_organisation(
         and organisation in staff_user.organisations.all()
     )
 
+    # and
+    assert (
+        AuditLog.objects.filter(related_object_type=RelatedObjectType.USER.name).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == staff_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.USER.name
+    assert audit_log.related_object_id == staff_user.pk
+    assert audit_log.organisation_id == new_organisation.pk
+    assert (
+        audit_log.log
+        == f"User organisations updated: {staff_user.email}; added: New org"
+    )
+
 
 def test_cannot_join_organisation_with_different_email_address_than_invite(
     staff_user: FFAdminUser,
@@ -140,6 +189,22 @@ def test_can_join_organisation_as_admin_if_invite_role_is_admin(
     # Then
     assert staff_user.is_organisation_admin(organisation)
 
+    # and
+    assert (
+        AuditLog.objects.filter(related_object_type=RelatedObjectType.USER.name).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == staff_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.USER.name
+    assert audit_log.related_object_id == staff_user.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert (
+        audit_log.log
+        == f"User organisations updated: {staff_user.email}; added: test org"
+    )
+
 
 def test_admin_can_update_role_for_a_user_in_organisation(
     admin_user: FFAdminUser,
@@ -165,6 +230,61 @@ def test_admin_can_update_role_for_a_user_in_organisation(
     assert (
         organisation_user.get_organisation_role(organisation)
         == OrganisationRole.ADMIN.name
+    )
+
+    # and
+    assert (
+        AuditLog.objects.filter(related_object_type=RelatedObjectType.USER.name).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.USER.name
+    assert audit_log.related_object_id == organisation_user.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert (
+        audit_log.log
+        == f"User organisations updated: {organisation_user.email}; role changed: test org"
+    )
+
+
+def test_admin_can_remove_user_from_organisation(
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+    admin_client: APIClient,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-remove-users",
+        args=[organisation.pk],
+    )
+    data = [{"id": staff_user.id}]
+
+    # When
+    res = admin_client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert res.status_code == status.HTTP_200_OK
+
+    # and
+    assert staff_user.get_organisation_role(organisation) is None
+
+    # and
+    assert (
+        AuditLog.objects.filter(related_object_type=RelatedObjectType.USER.name).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.USER.name
+    assert audit_log.related_object_id == staff_user.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert (
+        audit_log.log
+        == f"User organisations updated: {staff_user.email}; removed: test org"
     )
 
 
@@ -383,6 +503,27 @@ def test_can_add_multiple_users_including_current_user(
     assert response.status_code == status.HTTP_200_OK
     assert all(user in group.users.all() for user in [admin_user, staff_user])
 
+    # and
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GROUP.name
+        ).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GROUP.name
+    assert audit_log.related_object_id == group.pk
+    assert audit_log.organisation_id == organisation.pk
+    expected_logs = [
+        f"Group users updated: {group.name}",
+        # updates may appear in any order
+        f"added: {admin_user.email}",
+        f"added: {staff_user.email}",
+    ]
+    assert all(expected_log in audit_log.log for expected_log in expected_logs)
+
 
 def test_cannot_add_user_from_another_organisation(
     admin_client: APIClient,
@@ -460,6 +601,24 @@ def test_remove_users_from_group(
 
     # but admin user still remains
     assert admin_user in group.users.all()
+
+    # and
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GROUP.name
+        ).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GROUP.name
+    assert audit_log.related_object_id == group.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert (
+        audit_log.log
+        == f"Group users updated: {group.name}; removed: {staff_user.email}"
+    )
 
 
 def test_remove_users_silently_fails_if_user_not_in_group(
@@ -556,7 +715,8 @@ def test_retrieve_user_permission_group_includes_group_admin(
 ):
     # Given
     group_admin_user = FFAdminUser.objects.create(email="groupadminuser@example.com")
-    group_admin_user.permission_groups.add(user_permission_group)
+    # cannot use User.permission_groups reverse accessor
+    user_permission_group.users.add(group_admin_user)
     group_admin_user.make_group_admin(user_permission_group.id)
 
     url = reverse(
@@ -633,19 +793,17 @@ def test_delete_user():
     user2 = FFAdminUser.objects.create_user(email=email2, password=password)
     user3 = FFAdminUser.objects.create_user(email=email3, password=password)
 
-    # crete some organizations
+    # create some organisations
     org1 = Organisation.objects.create(name="org1")
     org2 = Organisation.objects.create(name="org2")
     org3 = Organisation.objects.create(name="org3")
 
-    # add the test user 1 to all the organizations
-    org1.users.add(user1)
-    org2.users.add(user1)
-    org3.users.add(user1)
+    # add the test user 1 to all the organizations (cannot use Organisation.users reverse accessor)
+    user1.organisations.add(org1, org2, org3)
 
     # add test user 2 to org2 and user 3 to to org1
-    org2.users.add(user2)
-    org1.users.add(user3)
+    user2.organisations.add(org2)
+    user3.organisations.add(org1)
 
     # Configuration: org1: [user1, user3], org2: [user1, user2], org3: [user1]
 

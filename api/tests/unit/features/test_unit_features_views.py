@@ -543,25 +543,28 @@ class ProjectFeatureTestCase(TestCase):
         feature.refresh_from_db()
         assert feature.description == data["description"]
 
-    @mock.patch("environments.models.environment_wrapper")
-    def test_create_feature_only_triggers_write_to_dynamodb_once_per_environment(
-        self, mock_dynamo_environment_wrapper
-    ):
+    def test_create_feature_only_triggers_write_to_dynamodb_once_per_environment(self):
         # Given
-        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
-        data = {"name": "Test feature flag", "type": "FLAG", "project": self.project.id}
+        with mock.patch(
+            "environments.models.environment_wrapper"
+        ) as mock_dynamo_environment_wrapper:
+            self.project.enable_dynamo_db = True
+            self.project.save()
 
-        self.project.enable_dynamo_db = True
-        self.project.save()
+            url = reverse(
+                "api-v1:projects:project-features-list", args=[self.project.id]
+            )
+            data = {
+                "name": "Test feature flag",
+                "type": "FLAG",
+                "project": self.project.id,
+            }
 
-        mock_dynamo_environment_wrapper.is_enabled = True
-        mock_dynamo_environment_wrapper.reset_mock()
+            # When
+            self.client.post(url, data=data)
 
-        # When
-        self.client.post(url, data=data)
-
-        # Then
-        mock_dynamo_environment_wrapper.write_environments.assert_called_once()
+            # Then
+            mock_dynamo_environment_wrapper.write_environments.assert_called_once()
 
 
 @pytest.mark.django_db
@@ -1798,15 +1801,16 @@ def test_update_feature_state_value_triggers_dynamo_rebuild(
     client, project, environment, feature, feature_state, settings, mocker
 ):
     # Given
+    mock_dynamo_environment_wrapper = mocker.patch(
+        "environments.models.environment_wrapper"
+    )
+
     project.enable_dynamo_db = True
     project.save()
 
     url = reverse(
         "api-v1:environments:environment-featurestates-detail",
         args=[environment.api_key, feature_state.id],
-    )
-    mock_dynamo_environment_wrapper = mocker.patch(
-        "environments.models.environment_wrapper"
     )
 
     # When

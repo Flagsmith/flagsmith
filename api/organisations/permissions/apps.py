@@ -1,6 +1,7 @@
-from django.apps import AppConfig
+from core.apps import BaseAppConfig
 
 
-class OrganisationPermissionsConfig(AppConfig):
+class OrganisationPermissionsConfig(BaseAppConfig):
+    default = True
     name = "organisations.permissions"
     label = "organisation_permissions"

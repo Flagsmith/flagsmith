@@ -1,6 +1,11 @@
 import logging
 import typing
 
+from core.models import (
+    ModelDelta,
+    abstract_base_auditable_model_factory,
+    register_auditable_model,
+)
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -10,12 +15,17 @@ from django.db.models import Count, QuerySet
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
+from trench.models import MFAMethod
 
+from audit.models import AuditLog, RelatedObjectType
+from environments.models import Environment
+from environments.permissions.models import UserEnvironmentPermission
 from organisations.models import (
     Organisation,
     OrganisationRole,
     UserOrganisation,
 )
+from organisations.permissions.models import UserOrganisationPermission
 from organisations.subscriptions.exceptions import (
     SubscriptionDoesNotSupportSeatUpgrade,
 )
@@ -27,7 +37,7 @@ from permissions.permission_service import (
     is_user_project_admin,
     user_has_organisation_permission,
 )
-from projects.models import Project
+from projects.models import Project, UserProjectPermission
 from users.abc import UserABC
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
@@ -35,7 +45,6 @@ from users.exceptions import InvalidInviteError
 from users.utils.mailer_lite import MailerLite
 
 if typing.TYPE_CHECKING:
-    from environments.models import Environment
     from organisations.invites.models import (
         AbstractBaseInviteModel,
         Invite,
@@ -90,12 +99,31 @@ class UserManager(BaseUserManager):
         return self.get(email__iexact=email)
 
 
-class FFAdminUser(LifecycleModel, AbstractUser):
+# NOTE date_joined cannot be excluded because there is also a date_joined field on
+# the organisations through model, and currently simple history would create a
+# historical through model without the field but try to store the value anyway
+UNAUDITED_USER_FIELDS = (
+    # "date_joined",
+    "marketing_consent_given",
+    "sign_up_type",
+    "last_login",
+)
+
+
+class FFAdminUser(
+    LifecycleModel,
+    abstract_base_auditable_model_factory(
+        RelatedObjectType.USER,
+        UNAUDITED_USER_FIELDS,
+        ["organisations"],
+        default_messages=True,
+    ),
+    AbstractUser,
+):
     organisations = models.ManyToManyField(
         Organisation, related_name="users", blank=True, through=UserOrganisation
     )
     email = models.EmailField(unique=True, null=False)
-    objects = UserManager()
     username = models.CharField(unique=True, max_length=150, null=True, blank=True)
     first_name = models.CharField(_("first name"), max_length=30)
     last_name = models.CharField(_("last name"), max_length=150)
@@ -108,6 +136,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     sign_up_type = models.CharField(
         choices=SignUpType.choices, max_length=100, blank=True, null=True
     )
+
+    objects = UserManager()
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "sign_up_type"]
@@ -134,7 +164,13 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     ):
         if delete_orphan_organisations:
             self.delete_orphan_organisations()
+        deleted_user_id = self.pk
         super().delete()
+        # avoid "insert or update ... violates foreign key constraint" when user self-deletes
+        self.__class__.history.filter(history_user_id=deleted_user_id).update(
+            history_user_id=None
+        )
+        AuditLog.objects.filter(author_id=deleted_user_id).update(author_id=None)
 
     def set_password(self, raw_password):
         super().set_password(raw_password)
@@ -176,7 +212,9 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if invite_email.email.lower() != self.email.lower():
             raise InvalidInviteError("Registered email does not match invited email")
         self.join_organisation_from_invite(invite_email)
-        self.permission_groups.add(*invite_email.permission_groups.all())
+        # cannot use User.permission_groups reverse accessor
+        for group in invite_email.permission_groups.all():
+            group.users.add(self)
         invite_email.delete()
 
     def join_organisation_from_invite_link(self, invite_link: "InviteLink"):
@@ -208,19 +246,31 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if organisation.is_paid:
             mailer_lite.subscribe(self)
 
+        # add to organisation - raises integrity error if already added
         UserOrganisation.objects.create(
             user=self, organisation=organisation, role=role.name
         )
-        default_groups = organisation.permission_groups.filter(is_default=True)
-        self.permission_groups.add(*default_groups)
+        # add to default groups - cannot use User.permission_groups reverse accessor
+        for group in organisation.permission_groups.filter(is_default=True):
+            group.users.add(self)
 
     def remove_organisation(self, organisation):
-        UserOrganisation.objects.filter(user=self, organisation=organisation).delete()
-        self.project_permissions.filter(project__organisation=organisation).delete()
-        self.environment_permissions.filter(
-            environment__project__organisation=organisation
+        # remove from organisation using m2m field to ensure audit log is created
+        self.organisations.remove(organisation)
+        # remove from groups - cannot use User.permission_groups reverse accessor
+        for group in organisation.permission_groups.filter(users=self):
+            group.users.remove(self)
+
+        # delete permissions without creating audit log
+        UserOrganisationPermission.objects.filter(
+            user=self, organisation=organisation
         ).delete()
-        self.permission_groups.remove(*organisation.permission_groups.all())
+        UserProjectPermission.objects.filter(
+            user=self, project__organisation=organisation
+        ).delete()
+        UserEnvironmentPermission.objects.filter(
+            user=self, environment__project__organisation=organisation
+        ).delete()
 
     def get_organisation_role(self, organisation):
         user_organisation = self.get_user_organisation(organisation)
@@ -337,14 +387,46 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         ).exists()
 
     def make_group_admin(self, group_id: int):
-        UserPermissionGroupMembership.objects.filter(
-            ffadminuser=self, userpermissiongroup__id=group_id
-        ).update(group_admin=True)
+        try:
+            membership = UserPermissionGroupMembership.objects.get(
+                ffadminuser=self, userpermissiongroup__id=group_id
+            )
+        except UserPermissionGroupMembership.DoesNotExist:
+            pass
+        else:
+            # update using model to ensure audit log is created
+            membership.group_admin = True
+            membership.save(update_fields=["group_admin"])
 
     def remove_as_group_admin(self, group_id: int):
-        UserPermissionGroupMembership.objects.filter(
-            ffadminuser=self, userpermissiongroup__id=group_id
-        ).update(group_admin=False)
+        try:
+            membership = UserPermissionGroupMembership.objects.get(
+                ffadminuser=self, userpermissiongroup__id=group_id
+            )
+        except UserPermissionGroupMembership.DoesNotExist:
+            pass
+        else:
+            # update using model to ensure audit log is created
+            membership.group_admin = False
+            membership.save(update_fields=["group_admin"])
+
+    def get_organisations(
+        self, delta: ModelDelta | None = None
+    ) -> typing.Iterable[Organisation] | None:
+        for change in delta.changes if delta else []:
+            if change.field == "organisations":
+                # look for organisation membership changes
+                changes = set(tuple(uo.items()) for uo in change.new) ^ set(
+                    tuple(uo.items()) for uo in change.old
+                )
+                # if organisation membership has changed, log only against those affected
+                if changes:
+                    return Organisation.objects.filter(
+                        pk__in=set(dict(uo)["organisation"] for uo in changes)
+                    )
+
+        # otherwise return user's current organisations
+        return self.organisations.all()
 
 
 # Since we can't enforce FFAdminUser to implement the  UserABC interface using inheritance
@@ -358,25 +440,31 @@ class UserPermissionGroupMembership(models.Model):
         "users.UserPermissionGroup",
         on_delete=models.CASCADE,
     )
-    ffadminuser = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
+    ffadminuser = models.ForeignKey(FFAdminUser, on_delete=models.CASCADE)
     group_admin = models.BooleanField(default=False)
 
     class Meta:
         db_table = "users_userpermissiongroup_users"
 
 
-class UserPermissionGroup(models.Model):
+class UserPermissionGroup(
+    abstract_base_auditable_model_factory(
+        RelatedObjectType.GROUP,
+        audited_m2m_fields=["users"],
+        default_messages=True,
+    )
+):
     """
     Model to group users within an organisation for the purposes of permissioning.
     """
 
     name = models.CharField(max_length=200)
     users = models.ManyToManyField(
-        "users.FFAdminUser",
+        FFAdminUser,
         blank=True,
         related_name="permission_groups",
         through=UserPermissionGroupMembership,
-        through_fields=["userpermissiongroup", "ffadminuser"],
+        through_fields=("userpermissiongroup", "ffadminuser"),
     )
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="permission_groups"
@@ -386,7 +474,6 @@ class UserPermissionGroup(models.Model):
         default=False,
         help_text="If set to true, all new users will be added to this group",
     )
-
     external_id = models.CharField(
         blank=True,
         null=True,
@@ -412,6 +499,12 @@ class UserPermissionGroup(models.Model):
     def remove_users_by_id(self, user_ids: list):
         self.users.remove(*user_ids)
 
+    def get_audit_log_identity(self) -> str:
+        return self.name
+
+    def get_organisations(self, delta=None) -> typing.Iterable[Organisation] | None:
+        return [self.organisation]
+
 
 class HubspotLead(models.Model):
     user = models.OneToOneField(
@@ -422,3 +515,28 @@ class HubspotLead(models.Model):
     hubspot_id = models.CharField(unique=True, max_length=100, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+# methods to graft onto MFAMethod
+
+
+def _mfa_method_get_audit_log_identity(self: MFAMethod) -> str:
+    return f"{self.user.email} / {self.name}"
+
+
+def _mfa_method_get_organisations(
+    self: MFAMethod, delta=None
+) -> typing.Iterable[Organisation] | None:
+    return self.user.get_organisations()
+
+
+# audit user MFA method create/update/delete
+register_auditable_model(
+    MFAMethod,
+    __package__,
+    RelatedObjectType.USER_MFA_METHOD,
+    ["_backup_codes"],
+    default_messages=True,
+)
+MFAMethod.get_audit_log_identity = _mfa_method_get_audit_log_identity
+MFAMethod.get_organisations = _mfa_method_get_organisations

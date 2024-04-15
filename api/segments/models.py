@@ -25,11 +25,8 @@ logger = logging.getLogger(__name__)
 
 class Segment(
     SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(RelatedObjectType.SEGMENT, ["uuid"]),
 ):
-    history_record_class_path = "segments.models.HistoricalSegment"
-    related_object_type = RelatedObjectType.SEGMENT
-
     name = models.CharField(max_length=2000)
     description = models.TextField(null=True, blank=True)
     project = models.ForeignKey(
@@ -80,16 +77,16 @@ class Segment(
 
         return False
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         return SEGMENT_CREATED_MESSAGE % self.name
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         return SEGMENT_UPDATED_MESSAGE % self.name
 
     def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
         return SEGMENT_DELETED_MESSAGE % self.name
 
-    def _get_project(self):
+    def get_project(self, delta=None) -> Project | None:
         return self.project
 
 
@@ -138,11 +135,9 @@ class SegmentRule(SoftDeleteExportableModel):
 
 
 class Condition(
-    SoftDeleteExportableModel, abstract_base_auditable_model_factory(["uuid"])
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory(RelatedObjectType.SEGMENT, ["uuid"]),
 ):
-    history_record_class_path = "segments.models.HistoricalCondition"
-    related_object_type = RelatedObjectType.SEGMENT
-
     CONDITION_TYPES = (
         (constants.EQUAL, "Exactly Matches"),
         (constants.GREATER_THAN, "Greater than"),
@@ -184,14 +179,14 @@ class Condition(
             self.value,
         )
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         return f"Condition updated on segment '{self._get_segment().name}'."
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         if not self.created_with_segment:
             return f"Condition added to segment '{self._get_segment().name}'."
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> str | None:
         if not self._get_segment().deleted_at:
             return f"Condition removed from segment '{self._get_segment().name}'."
 
@@ -206,7 +201,7 @@ class Condition(
             setattr(self, "segment", self.rule.get_segment())
         return self.segment
 
-    def _get_project(self) -> typing.Optional[Project]:
+    def get_project(self, delta=None) -> Project | None:
         return self.rule.get_segment().project
 
 
