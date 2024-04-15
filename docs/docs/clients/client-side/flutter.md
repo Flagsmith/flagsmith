@@ -6,7 +6,7 @@ slug: /clients/flutter
 ---
 
 This SDK can be used for Flutter applications. The source code for the client is available on
-[Github](https://github.com/flagsmith/flagsmith-flutter-client).
+[GitHub](https://github.com/flagsmith/flagsmith-flutter-client).
 
 The Flagsmith Flutter SDK supports iOS, Android and Web targets.
 

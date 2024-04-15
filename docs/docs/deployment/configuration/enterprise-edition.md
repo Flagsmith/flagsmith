@@ -365,7 +365,7 @@ Running this command will:
 
 ### JMeter
 
-There are [JMeter](https://jmeter.apache.org/) tests avaiable in our public repo on Github:
+There are [JMeter](https://jmeter.apache.org/) tests avaiable in our public repo on GitHub:
 
 https://github.com/Flagsmith/flagsmith/tree/main/api/jmeter-tests
 
