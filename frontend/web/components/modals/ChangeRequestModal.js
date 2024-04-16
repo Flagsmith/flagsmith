@@ -8,6 +8,7 @@ import { getStore } from 'common/store'
 import DateSelect from 'components/DateSelect'
 import { close } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
+import InfoMessage from 'components/InfoMessage'
 
 const ChangeRequestModal = class extends Component {
   static displayName = 'ChangeRequestModal'
@@ -23,8 +24,9 @@ const ChangeRequestModal = class extends Component {
       (this.props.changeRequest && this.props.changeRequest.description) || '',
     groups: [],
     live_from:
-      this.props.changeRequest &&
-      this.props.changeRequest.feature_states[0].live_from,
+      (this.props.changeRequest &&
+        this.props.changeRequest.feature_states[0].live_from) ||
+      undefined,
     title: (this.props.changeRequest && this.props.changeRequest.title) || '',
   }
 
@@ -116,32 +118,24 @@ const ChangeRequestModal = class extends Component {
               </FormGroup>
               <div>
                 <InputGroup
-                  tooltip='Allows you to set a date and time in which your change will only become active '
+                  tooltip='Allows you to set a date and time in which your change will only become active. All dates are displayed in your local timezone.'
                   title='Schedule Change'
                   component={
                     <Row>
                       <DateSelect
+                        dateFormat='MMMM d, yyyy h:mm aa'
                         onChange={(e) => {
                           this.setState({
                             live_from: e.toISOString(),
                           })
                         }}
                         selected={moment(this.state.live_from)._d}
-                        value={
-                          this.state.live_from
-                            ? `${moment(this.state.live_from).format(
-                                'Do MMM YYYY hh:mma',
-                              )} (${
-                                Intl.DateTimeFormat().resolvedOptions().timeZone
-                              })`
-                            : 'Immediately'
-                        }
                       />
 
                       <Button
                         className='ml-2'
                         onClick={() => {
-                          this.setState({ live_from: null })
+                          this.setState({ live_from: undefined })
                         }}
                         theme='secondary'
                         size='large'
@@ -152,6 +146,15 @@ const ChangeRequestModal = class extends Component {
                   }
                 />
               </div>
+              {moment(this.state.live_from).isAfter(moment()) && (
+                <InfoMessage>
+                  This change will be scheduled to go live at{' '}
+                  <strong>
+                    {moment(this.state.live_from).format('Do MMM YYYY hh:mma')}{' '}
+                    ({Intl.DateTimeFormat().resolvedOptions().timeZone} Time).
+                  </strong>
+                </InfoMessage>
+              )}
               {!this.props.changeRequest &&
                 this.props.showAssignees &&
                 !Utils.getFlagsmithHasFeature('disable_users_as_reviewers') && (

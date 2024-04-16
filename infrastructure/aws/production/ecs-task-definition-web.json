@@ -44,6 +44,10 @@
                     "value": "10"
                 },
                 {
+                    "name": "CACHE_ENVIRONMENT_SEGMENTS_SECONDS",
+                    "value": "30"
+                },
+                {
                     "name": "CHARGEBEE_SITE",
                     "value": "flagsmith"
                 },
@@ -178,6 +182,10 @@
                 {
                     "name": "PIPEDRIVE_IGNORE_DOMAINS",
                     "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io,flagsmithe2etestdomain.io"
+                },
+                {
+                    "name": "ENABLE_HUBSPOT_LEAD_TRACKING",
+                    "value": "True"
                 }
             ],
             "secrets": [

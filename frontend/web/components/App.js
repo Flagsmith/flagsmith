@@ -23,7 +23,8 @@ import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 import InfoMessage from './InfoMessage'
 import OrganisationLimit from './OrganisationLimit'
-import OrganisationLink from './OrganisationLink'
+import GithubStar from './GithubStar'
+import Tooltip from './Tooltip'
 
 const App = class extends Component {
   static propTypes = {
@@ -166,7 +167,7 @@ const App = class extends Component {
               id: lastEnv.orgId,
             })
             if (!lastOrg) {
-              this.context.router.history.replace('/projects')
+              this.context.router.history.replace('/organisation-settings')
               return
             }
 
@@ -182,7 +183,7 @@ const App = class extends Component {
             return
           }
 
-          this.context.router.history.replace('/projects')
+          this.context.router.history.replace('/organisation-settings')
         })
       }
     }
@@ -347,7 +348,21 @@ const App = class extends Component {
                             <React.Fragment>
                               <nav className='my-3 my-md-0 hidden-xs-down flex-row navbar-right space'>
                                 <Row>
-                                  <OrganisationLink />
+                                  <NavLink
+                                    id='org-settings-link'
+                                    activeClassName='active'
+                                    className='nav-link'
+                                    to='/organisation-settings'
+                                  >
+                                    <span className='mr-1'>
+                                      <Icon
+                                        name='layout'
+                                        width={20}
+                                        fill='#9DA4AE'
+                                      />
+                                    </span>
+                                    {'Organisation'}
+                                  </NavLink>
                                 </Row>
                                 <Row>
                                   <NavLink
@@ -370,28 +385,44 @@ const App = class extends Component {
                                     </span>
                                     Account
                                   </NavLink>
-                                  <Button
-                                    href='https://docs.flagsmith.com'
-                                    target='_blank'
-                                    className='btn btn-with-icon mr-2'
-                                    size='small'
+                                  <GithubStar />
+                                  <Tooltip
+                                    place='bottom'
+                                    title={
+                                      <Button
+                                        href='https://docs.flagsmith.com'
+                                        target='_blank'
+                                        className='btn btn-with-icon mr-2'
+                                        size='small'
+                                      >
+                                        <Icon
+                                          name='file-text'
+                                          width={20}
+                                          fill='#9DA4AE'
+                                        />
+                                      </Button>
+                                    }
                                   >
-                                    <Icon
-                                      name='file-text'
-                                      width={20}
-                                      fill='#9DA4AE'
-                                    />
-                                  </Button>
+                                    Docs
+                                  </Tooltip>
+
                                   <Headway className='cursor-pointer mr-2' />
-                                  <div className='dark-mode mt-0'>
-                                    <Switch
-                                      checked={Utils.getFlagsmithHasFeature(
-                                        'dark_mode',
-                                      )}
-                                      onChange={this.toggleDarkMode}
-                                      darkMode
-                                    />
-                                  </div>
+                                  <Tooltip
+                                    place='bottom'
+                                    title={
+                                      <div className='dark-mode mt-0'>
+                                        <Switch
+                                          checked={Utils.getFlagsmithHasFeature(
+                                            'dark_mode',
+                                          )}
+                                          onChange={this.toggleDarkMode}
+                                          darkMode
+                                        />
+                                      </div>
+                                    }
+                                  >
+                                    Dark Mode
+                                  </Tooltip>
                                 </Row>
                               </nav>
                             </React.Fragment>
@@ -431,7 +462,7 @@ const App = class extends Component {
                             />
                           )}
                           {user && showBanner && (
-                            <Row>
+                            <Row className={'px-3'}>
                               <InfoMessage
                                 title={announcementValue.title}
                                 infoMessageClass={'announcement'}

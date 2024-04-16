@@ -1,5 +1,15 @@
 import { Component, FC, ReactNode } from 'react'
 import _Select from './web/components/Select'
+export type OpenConfirm = {
+  title: ReactNode
+  body: ReactNode
+  onYes: () => void
+  onNo?: () => void
+  destructive?: boolean
+  yesText?: string
+  noText?: string
+}
+import { TooltipProps } from './web/components/Tooltip'
 
 export declare const openModal: (name?: string) => Promise<void>
 declare global {
@@ -15,16 +25,9 @@ declare global {
     className?: string,
     onClose?: () => void,
   ) => void
-  const openConfirm: (
-    header: ReactNode,
-    body: ReactNode,
-    onYes: () => void,
-    onNo?: () => void,
-    yesText?: string,
-    noText?: string,
-  ) => void
+  const openConfirm: (data: OpenConfirm) => void
   const Row: typeof Component
-  const toast: (value: string) => void
+  const toast: (value: string, theme?: string, expiry?: number) => void
   const Flex: typeof Component
   const isMobile: boolean
   const FormGroup: typeof Component
@@ -37,10 +40,5 @@ declare global {
   const dtrum: undefined | { identifyUser: (id: string) => void }
   const closeModal: () => void
   const toast: (message: string) => void
-  const Tooltip: FC<{
-    title: ReactNode
-    children: ReactNode
-    place?: string
-    html?: boolean
-  }>
+  const Tooltip: FC<TooltipProps>
 }

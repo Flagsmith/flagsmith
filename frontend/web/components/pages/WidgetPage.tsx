@@ -180,7 +180,6 @@ const FeatureList = class extends Component<FeatureListType> {
       true,
       this.state.search,
       this.state.sort,
-      0,
       this.getFilter(),
       this.props.pageSize,
     )
@@ -261,7 +260,6 @@ const FeatureList = class extends Component<FeatureListType> {
                                           true,
                                           this.state.search,
                                           this.state.sort,
-                                          0,
                                           this.getFilter(),
                                           this.props.pageSize,
                                         )
@@ -428,6 +426,7 @@ const FeatureList = class extends Component<FeatureListType> {
                                     <FeatureRow
                                       hideRemove
                                       hideAudit
+                                      hideHistory
                                       widget
                                       readOnly
                                       environmentFlags={environmentFlags}

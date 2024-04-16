@@ -22,11 +22,11 @@ const ConfirmToggleEnvFeature: FC<ConfirmToggleEnvFeatureType> = ({
           This will turn <strong>{feature}</strong> to{' '}
           {featureValue ? (
             <span className='feature--off'>
-              <strong>"Off"</strong>
+              <strong>Off</strong>
             </span>
           ) : (
             <span className='feature--on'>
-              <strong>"On"</strong>
+              <strong>On</strong>
             </span>
           )}
           . <span>{description}</span>
@@ -45,7 +45,7 @@ const ConfirmToggleEnvFeature: FC<ConfirmToggleEnvFeatureType> = ({
             className='btn btn-primary'
             id='confirm-toggle-feature-btn'
           >
-            Confirm changes
+            Confirm
           </Button>
         </FormGroup>
       </div>

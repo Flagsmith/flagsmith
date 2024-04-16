@@ -31,12 +31,13 @@ const InputGroup = class extends Component {
             title={
               <label htmlFor={id} className='cols-sm-2 control-label'>
                 <div>
-                  {props.title} <Icon name='info-outlined' />{' '}
+                  {props.title}{' '}
+                  {!props.hideTooltipIcon && <Icon name='info-outlined' />}{' '}
                   {props.unsaved && <div className='unread'>Unsaved</div>}
                 </div>
               </label>
             }
-            place={this.props.tooltipPlace || 'right'}
+            place={this.props.tooltipPlace || 'top'}
           >
             {this.props.tooltip}
           </Tooltip>
@@ -122,6 +123,7 @@ const InputGroup = class extends Component {
 
 InputGroup.propTypes = {
   disabled: OptionalBool,
+  hideTooltipIcon: OptionalBool,
   inputProps: OptionalObject,
   isValid: propTypes.any,
   onChange: OptionalFunc,

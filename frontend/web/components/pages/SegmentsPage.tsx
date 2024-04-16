@@ -22,11 +22,9 @@ import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import Switch from 'components/Switch'
-import { globeOutline } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
+import Panel from 'components/base/grid/Panel'
 
 const CodeHelp = require('../../components/CodeHelp')
-const Panel = require('../../components/base/grid/Panel')
 type SegmentsPageType = {
   router: RouterChildContext['router']
   match: {
@@ -64,6 +62,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   const [showFeatureSpecific, setShowFeatureSpecific] = useState(false)
 
   const { data, error, isLoading, refetch } = useGetSegmentsQuery({
+    include_feature_specific: showFeatureSpecific,
     page,
     page_size: 100,
     projectId,
@@ -83,7 +82,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   useEffect(() => {
     if (error) {
       // Kick user back out to projects
-      props.router.history.replace('/projects')
+      props.router.history.replace('/organisation-settings')
     }
   }, [error, props.router.history])
   const newSegment = () => {
@@ -146,7 +145,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     return permission ? (
       el
     ) : (
-      <Tooltip title={el} place='right' html>
+      <Tooltip title={el} place='right'>
         {Constants.projectPermissions('Manage segments')}
       </Tooltip>
     )
@@ -246,9 +245,15 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                         )
                         preselect.current = null
                       }
+
+                      // TODO: remove this check
+                      // I'm leaving this here for now so that we can deploy the FE and
+                      // API independently, but we should remove this once PR #3430 is
+                      // merged and released.
                       if (feature && !showFeatureSpecific) {
                         return null
                       }
+
                       return renderWithPermission(
                         manageSegmentsPermission,
                         'Manage segments',
@@ -359,12 +364,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                       data-test='show-create-segment-btn'
                       onClick={newSegment}
                     >
-                      <span className='icon icon-inner'>
-                        <IonIcon
-                          icon={globeOutline}
-                          style={{ contain: 'none', height: '25px' }}
-                        />
-                      </span>
                       Create your first Segment
                     </Button>,
                   )}

@@ -36,4 +36,4 @@ Panel.propTypes = {
   title: oneOfType([OptionalObject, OptionalString]),
 }
 
-module.exports = Panel
+export default Panel

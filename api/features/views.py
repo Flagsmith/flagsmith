@@ -33,6 +33,7 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
+from features.value_types import BOOLEAN, INTEGER, STRING
 from projects.models import Project
 from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser, UserPermissionGroup
@@ -49,13 +50,13 @@ from .permissions import (
     IdentityFeatureStatePermissions,
 )
 from .serializers import (
+    CreateFeatureSerializer,
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureEvaluationDataSerializer,
     FeatureGroupOwnerInputSerializer,
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
     FeatureQuerySerializer,
-    FeatureSerializerWithMetadata,
     FeatureStateSerializerBasic,
     FeatureStateSerializerCreate,
     FeatureStateSerializerFull,
@@ -63,11 +64,11 @@ from .serializers import (
     FeatureStateValueSerializer,
     GetInfluxDataQuerySerializer,
     GetUsageDataQuerySerializer,
-    ListCreateFeatureSerializer,
+    ListFeatureSerializer,
     ProjectFeatureSerializer,
     SDKFeatureStateSerializer,
     SDKFeatureStatesQuerySerializer,
-    UpdateFeatureSerializerWithMetadata,
+    UpdateFeatureSerializer,
     WritableNestedFeatureStateSerializer,
 )
 from .tasks import trigger_feature_state_change_webhooks
@@ -82,7 +83,7 @@ logger.setLevel(logging.INFO)
 flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 
 
-@swagger_auto_schema(responses={200: ListCreateFeatureSerializer()}, method="get")
+@swagger_auto_schema(responses={200: CreateFeatureSerializer()}, method="get")
 @api_view(["GET"])
 def get_feature_by_uuid(request, uuid):
     accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
@@ -90,7 +91,7 @@ def get_feature_by_uuid(request, uuid):
         "multivariate_options", "owners", "tags"
     )
     feature = get_object_or_404(qs, uuid=uuid)
-    serializer = ListCreateFeatureSerializer(instance=feature)
+    serializer = CreateFeatureSerializer(instance=feature)
     return Response(serializer.data)
 
 
@@ -104,11 +105,11 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         return {
-            "list": FeatureSerializerWithMetadata,
-            "retrieve": FeatureSerializerWithMetadata,
-            "create": FeatureSerializerWithMetadata,
-            "update": UpdateFeatureSerializerWithMetadata,
-            "partial_update": UpdateFeatureSerializerWithMetadata,
+            "list": ListFeatureSerializer,
+            "retrieve": ListFeatureSerializer,
+            "create": ListFeatureSerializer,
+            "update": UpdateFeatureSerializer,
+            "partial_update": UpdateFeatureSerializer,
         }.get(self.action, ProjectFeatureSerializer)
 
     def get_queryset(self):
@@ -149,13 +150,38 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 )
             )
 
+        if query_data["value_search"] or query_data["is_enabled"] is not None:
+            queryset = self.apply_state_to_queryset(query_data, queryset)
         sort = "%s%s" % (
             "-" if query_data["sort_direction"] == "DESC" else "",
             query_data["sort_field"],
         )
         queryset = queryset.order_by(sort)
 
+        if environment_id:
+            page = self.paginate_queryset(queryset)
+
+            self.environment = Environment.objects.get(id=environment_id)
+            q = Q(
+                feature_id__in=[feature.id for feature in page],
+                identity__isnull=True,
+                feature_segment__isnull=True,
+            )
+            feature_states = FeatureState.objects.get_live_feature_states(
+                self.environment,
+                additional_filters=q,
+            ).select_related("feature_state_value", "feature")
+
+            self._feature_states = {fs.feature_id: fs for fs in feature_states}
+
         return queryset
+
+    def paginate_queryset(self, queryset: QuerySet[Feature]) -> list[Feature]:
+        if getattr(self, "_page", None):
+            return self._page
+
+        self._page = super().paginate_queryset(queryset)
+        return self._page
 
     def perform_create(self, serializer):
         serializer.save(
@@ -174,12 +200,13 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
+
+        feature_states = getattr(self, "_feature_states", {})
+        project = get_object_or_404(Project.objects.all(), pk=self.kwargs["project_pk"])
         context.update(
-            project=get_object_or_404(
-                Project.objects.all(), pk=self.kwargs["project_pk"]
-            ),
-            user=self.request.user,
+            project=project, user=self.request.user, feature_states=feature_states
         )
+
         if self.action == "list" and "environment" in self.request.query_params:
             environment = get_object_or_404(
                 Environment, id=self.request.query_params["environment"]
@@ -187,6 +214,56 @@ class FeatureViewSet(viewsets.ModelViewSet):
             context["overrides_data"] = get_overrides_data(environment)
 
         return context
+
+    def apply_state_to_queryset(
+        self, query_data: dict[str, typing.Any], queryset: QuerySet[Feature]
+    ) -> QuerySet[Feature]:
+        if not query_data.get("environment"):
+            raise serializers.ValidationError(
+                "Environment is required in order to filter by state search or by state enabled"
+            )
+        is_enabled = query_data["is_enabled"]
+        value_search = query_data["value_search"]
+        environment_id = query_data["environment"]
+
+        filter_search_q = Q()
+        if value_search is not None:
+            filter_search_q = filter_search_q | Q(
+                feature_state_value__string_value__icontains=value_search,
+                feature_state_value__type=STRING,
+            )
+
+            if value_search.lower() in {"true", "false"}:
+                boolean_search = value_search.lower() == "true"
+                filter_search_q = filter_search_q | Q(
+                    feature_state_value__boolean_value=boolean_search,
+                    feature_state_value__type=BOOLEAN,
+                )
+
+            if value_search.isdigit():
+                integer_search = int(value_search)
+                filter_search_q = filter_search_q | Q(
+                    feature_state_value__integer_value=integer_search,
+                    feature_state_value__type=INTEGER,
+                )
+        filter_enabled_q = Q()
+        if is_enabled is not None:
+            filter_enabled_q = filter_enabled_q | Q(enabled=is_enabled)
+
+        base_q = Q(
+            identity__isnull=True,
+            feature_segment__isnull=True,
+        )
+        if not getattr(self, "environment", None):
+            self.environment = Environment.objects.get(id=environment_id)
+
+        feature_states = FeatureState.objects.get_live_feature_states(
+            environment=self.environment,
+            additional_filters=base_q & filter_search_q & filter_enabled_q,
+        )
+
+        feature_ids = {fs.feature_id for fs in feature_states}
+        return queryset.filter(id__in=feature_ids)
 
     @swagger_auto_schema(
         request_body=FeatureGroupOwnerInputSerializer,
@@ -301,7 +378,26 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 feature_state, WebhookEventType.FLAG_DELETED
             )
 
-    def _filter_queryset(self, queryset: QuerySet) -> QuerySet:
+    def filter_owners_and_group_owners(
+        self,
+        queryset: QuerySet[Feature],
+        query_data: dict[str, typing.Any],
+    ) -> QuerySet[Feature]:
+        owners_q = Q()
+        if query_data.get("owners"):
+            owners_q = owners_q | Q(
+                owners__id__in=query_data["owners"],
+            )
+
+        group_owners_q = Q()
+        if query_data.get("group_owners"):
+            group_owners_q = group_owners_q | Q(
+                group_owners__id__in=query_data["group_owners"],
+            )
+
+        return queryset.filter(owners_q | group_owners_q)
+
+    def _filter_queryset(self, queryset: QuerySet[Feature]) -> QuerySet[Feature]:
         query_serializer = FeatureQuerySerializer(data=self.request.query_params)
         query_serializer.is_valid(raise_exception=True)
         query_data = query_serializer.validated_data
@@ -324,6 +420,8 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         if "is_archived" in query_serializer.initial_data:
             queryset = queryset.filter(is_archived=query_data["is_archived"])
+
+        queryset = self.filter_owners_and_group_owners(queryset, query_data)
 
         return queryset
 

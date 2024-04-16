@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useRef } from 'react'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
 import WarningMessage from './WarningMessage'
 import moment from 'moment'
@@ -19,10 +19,11 @@ const ExistingChangeRequestAlert: FC<ExistingChangeRequestAlertType> = ({
     environmentId,
     feature_id: featureId,
   })
+  const date = useRef(moment().toISOString())
   const { data: scheduledChangeRequests } = useGetChangeRequestsQuery({
     environmentId,
     feature_id: featureId,
-    live_from_after: moment().startOf('hour').toISOString(),
+    live_from_after: date.current,
   })
 
   if (scheduledChangeRequests?.results?.length) {

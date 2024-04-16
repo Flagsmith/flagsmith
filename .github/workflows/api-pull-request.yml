@@ -35,16 +35,16 @@ jobs:
     strategy:
       max-parallel: 2
       matrix:
-        python-version: ['3.10', '3.11']
+        python-version: ['3.10', '3.11', '3.12']
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install poetry
         run: pipx install poetry
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'poetry'
@@ -73,7 +73,7 @@ jobs:
         run: make test
 
       - name: Upload Coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         env:
           PYTHON: ${{ matrix.python-version }}
         with:

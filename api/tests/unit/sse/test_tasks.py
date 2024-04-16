@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Callable
 from unittest.mock import call
 
 import pytest
+from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
@@ -36,23 +36,26 @@ def test_send_environment_update_message_for_project_make_correct_request(
     send_environment_update_message_for_project(realtime_enabled_project.id)
 
     # Then
-    mocked_requests.post.has_calls(
-        mocker.call(
-            f"{base_url}/sse/environments/{realtime_enabled_project_environment_one.api_key}/queue-change",
-            headers={"Authorization": f"Token {token}"},
-            json={
-                "updated_at": realtime_enabled_project_environment_one.updated_at.isoformat()
-            },
-            timeout=2,
-        ),
-        mocker.call(
-            f"{base_url}/sse/environments/{realtime_enabled_project_environment_two.api_key}/queue-change",
-            headers={"Authorization": f"Token {token}"},
-            json={
-                "updated_at": realtime_enabled_project_environment_two.updated_at.isoformat()
-            },
-            timeout=2,
-        ),
+    mocked_requests.post.assert_has_calls(
+        calls=[
+            mocker.call(
+                f"{base_url}/sse/environments/{realtime_enabled_project_environment_one.api_key}/queue-change",
+                headers={"Authorization": f"Token {token}"},
+                json={
+                    "updated_at": realtime_enabled_project_environment_one.updated_at.isoformat()
+                },
+                timeout=2,
+            ),
+            mocker.call(
+                f"{base_url}/sse/environments/{realtime_enabled_project_environment_two.api_key}/queue-change",
+                headers={"Authorization": f"Token {token}"},
+                json={
+                    "updated_at": realtime_enabled_project_environment_two.updated_at.isoformat()
+                },
+                timeout=2,
+            ),
+        ],
+        any_order=True,
     )
 
 
@@ -91,7 +94,7 @@ def test_auth_header_raises_exception_if_token_not_set(settings):
 def test_track_sse_usage(
     mocker: MockerFixture,
     environment: Environment,
-    django_assert_num_queries: Callable,
+    django_assert_num_queries: DjangoAssertNumQueries,
     settings: SettingsWrapper,
 ):
     # Given - two valid logs

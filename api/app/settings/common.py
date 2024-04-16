@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
+
 import importlib
 import json
 import os
@@ -878,6 +879,8 @@ MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
 SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
 AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
 ENABLE_FLAGSMITH_REALTIME = env.bool("ENABLE_FLAGSMITH_REALTIME", default=False)
+USE_SECURE_COOKIES = env.bool("USE_SECURE_COOKIES", default=True)
+COOKIE_SAME_SITE = env.str("COOKIE_SAME_SITE", default="none")
 
 # Set this to enable create organisation for only superusers
 RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS", False)
@@ -904,19 +907,18 @@ if SAML_INSTALLED:
     INSTALLED_APPS.append("saml")
     SAML_ACCEPTED_TIME_DIFF = env.int("SAML_ACCEPTED_TIME_DIFF", default=60)
     DJOSER["SERIALIZERS"]["current_user"] = "saml.serializers.SamlCurrentUserSerializer"
+    EXTRA_ALLOWED_CANONICALIZATIONS = env.list(
+        "EXTRA_ALLOWED_CANONICALIZATIONS", default=[]
+    )
 
 
-# Additional functionality needed for using workflows in Flagsmith SaaS
-# python module path to the workflows logic module, e.g. "path.to.workflows"
-WORKFLOWS_LOGIC_MODULE_PATH = env(
-    "WORKFLOWS_LOGIC_MODULE_PATH", "features.workflows.logic"
-)
-WORKFLOWS_LOGIC_INSTALLED = (
-    importlib.util.find_spec(WORKFLOWS_LOGIC_MODULE_PATH) is not None
-)
+WORKFLOWS_LOGIC_INSTALLED = importlib.util.find_spec("workflows_logic") is not None
 
 if WORKFLOWS_LOGIC_INSTALLED:
-    INSTALLED_APPS.append(WORKFLOWS_LOGIC_MODULE_PATH)
+    INSTALLED_APPS.append("workflows_logic")
+
+    if importlib.util.find_spec("workflows_logic.stale_flags") is not None:
+        INSTALLED_APPS.append("workflows_logic.stale_flags")
 
 # Additional functionality for restricting authentication to a set of authentication methods in Flagsmith SaaS
 AUTH_CONTROLLER_INSTALLED = importlib.util.find_spec("auth_controller") is not None
@@ -966,9 +968,11 @@ MAX_SELF_MIGRATABLE_IDENTITIES = env.int("MAX_SELF_MIGRATABLE_IDENTITIES", 10000
 TASK_RUN_METHOD = env.enum(
     "TASK_RUN_METHOD",
     type=TaskRunMethod,
-    default=TaskRunMethod.TASK_PROCESSOR.value
-    if env.bool("RUN_BY_PROCESSOR", False)
-    else TaskRunMethod.SEPARATE_THREAD.value,
+    default=(
+        TaskRunMethod.TASK_PROCESSOR.value
+        if env.bool("RUN_BY_PROCESSOR", False)
+        else TaskRunMethod.SEPARATE_THREAD.value
+    ),
 )
 ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
@@ -1025,6 +1029,37 @@ PIPEDRIVE_IGNORE_DOMAINS = env.list("PIPEDRIVE_IGNORE_DOMAINS", [])
 PIPEDRIVE_IGNORE_DOMAINS_REGEX = env("PIPEDRIVE_IGNORE_DOMAINS_REGEX", "")
 PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID = env(
     "PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID", None
+)
+
+# Hubspot settings
+HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
+ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
+HUBSPOT_IGNORE_DOMAINS = env.list("HUBSPOT_IGNORE_DOMAINS", [])
+HUBSPOT_IGNORE_DOMAINS_REGEX = env("HUBSPOT_IGNORE_DOMAINS_REGEX", "")
+HUBSPOT_IGNORE_ORGANISATION_DOMAINS = env.list(
+    "HUBSPOT_IGNORE_ORGANISATION_DOMAINS",
+    [
+        "126.com",
+        "163.com",
+        "aol.com",
+        "att.net",
+        "comcast.net",
+        "gmail.com",
+        "gmx.com",
+        "hotmail.com",
+        "icloud.com",
+        "live.com",
+        "mail.com",
+        "mail.ru",
+        "outlook.co.uk",
+        "outlook.com",
+        "protonmail.com",
+        "qq.com",
+        "sina.com",
+        "yahoo.com",
+        "yandex.com",
+        "zoho.com",
+    ],
 )
 
 # List of plan ids that support seat upgrades
@@ -1164,3 +1199,5 @@ WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
 SPLIT_TESTING_INSTALLED = importlib.util.find_spec("split_testing")
 if SPLIT_TESTING_INSTALLED:
     INSTALLED_APPS += ("split_testing",)
+
+ENABLE_API_USAGE_ALERTING = env.bool("ENABLE_API_USAGE_ALERTING", default=False)

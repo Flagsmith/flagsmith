@@ -18,6 +18,8 @@ import { getRolesProjectPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import ImportPage from 'components/import-export/ImportPage'
 import FeatureExport from 'components/import-export/FeatureExport'
+import ProjectUsage from 'components/ProjectUsage'
+import ProjectStore from 'common/stores/project-store'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -377,13 +379,13 @@ const ProjectSettingsPage = class extends Component {
                             <Button
                               disabled={isSaving || Utils.isMigrating()}
                               onClick={() =>
-                                openConfirm(
-                                  'Are you sure?',
-                                  'This will migrate your project to the Global Edge API.',
-                                  () => {
+                                openConfirm({
+                                  body: 'This will migrate your project to the Global Edge API.',
+                                  onYes: () => {
                                     this.migrate(project)
                                   },
-                                )
+                                  title: 'Migrate to Global Edge API',
+                                })
                               }
                               size='xSmall'
                               theme='outline'
@@ -424,7 +426,9 @@ const ProjectSettingsPage = class extends Component {
                           <Button
                             onClick={() =>
                               this.confirmRemove(project, () => {
-                                this.context.router.history.replace('/projects')
+                                this.context.router.history.replace(
+                                  '/organisation-settings',
+                                )
                                 deleteProject(this.props.match.params.projectId)
                               })
                             }
@@ -473,6 +477,11 @@ const ProjectSettingsPage = class extends Component {
                         </form>
                       </div>
                     </TabItem>
+                    <TabItem tabLabel='Usage'>
+                      <ProjectUsage
+                        projectId={this.props.match.params.projectId}
+                      />
+                    </TabItem>
                     <TabItem tabLabel='Permissions'>
                       <EditPermissions
                         onSaveUser={() => {
@@ -487,22 +496,25 @@ const ProjectSettingsPage = class extends Component {
                         roles={this.state.roles}
                       />
                     </TabItem>
-                    <TabItem data-test='js-import-page' tabLabel='Import'>
-                      <ImportPage
-                        environmentId={this.props.match.params.environmentId}
-                        projectId={this.props.match.params.projectId}
-                        projectName={project.name}
-                      />
-                    </TabItem>
-                    {Utils.getFlagsmithHasFeature(
-                      'flagsmith_import_export',
-                    ) && (
-                      <TabItem tabLabel='Export'>
-                        <FeatureExport
+                    {!!ProjectStore.getEnvs()?.length && (
+                      <TabItem data-test='js-import-page' tabLabel='Import'>
+                        <ImportPage
+                          environmentId={this.props.match.params.environmentId}
                           projectId={this.props.match.params.projectId}
+                          projectName={project.name}
                         />
                       </TabItem>
                     )}
+                    {!!ProjectStore.getEnvs()?.length &&
+                      Utils.getFlagsmithHasFeature(
+                        'flagsmith_import_export',
+                      ) && (
+                        <TabItem tabLabel='Export'>
+                          <FeatureExport
+                            projectId={this.props.match.params.projectId}
+                          />
+                        </TabItem>
+                      )}
                   </Tabs>
                 }
               </div>

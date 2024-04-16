@@ -2,10 +2,15 @@ module.exports = (
   envId,
   { LIB_NAME, TRAIT_NAME, USER_ID },
   userId,
-) => `${LIB_NAME}.identify("${
-  userId || USER_ID
-}"); // This will create a user in the dashboard if they don't already exist
+) => `// Option 1: initialise with an identity and traits
+${LIB_NAME}.init({
+    environmentID: "${envId}",
+    identity: "${userId || USER_ID}",
+    traits: { "${TRAIT_NAME}": 21 },
+    onChange: (oldFlags, params) => { /* ... */ },
+});
 
-// Set a user trait, setting traits will retrieve new flags and trigger an onChange event
-${LIB_NAME}.setTrait("${TRAIT_NAME}", 21);
+// Option 2: identify/set traits after initialising
+${LIB_NAME}.identify("${userId || USER_ID}", { "${TRAIT_NAME}": 21 });
+${LIB_NAME}.setTraits({ "${TRAIT_NAME}": 21 });
 `

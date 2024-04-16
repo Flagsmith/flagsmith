@@ -25,6 +25,7 @@ type AuditLogItemPageType = {
 const AuditLogItemPage: FC<AuditLogItemPageType> = ({ match }) => {
   const { data, error, isLoading } = useGetAuditLogItemQuery({
     id: match.params.id,
+    projectId: match.params.projectId,
   })
 
   const index = (ProjectStore.getEnvs() as Environment[] | null)?.findIndex(
@@ -103,10 +104,7 @@ const AuditLogItemPage: FC<AuditLogItemPageType> = ({ match }) => {
                               newValue={!!v.new}
                             />
                           ) : (
-                            <DiffString
-                              oldValue={`${v.old}`}
-                              newValue={`${v.new}`}
-                            />
+                            <DiffString oldValue={v.old} newValue={v.new} />
                           )}
                         </div>
                       </Row>

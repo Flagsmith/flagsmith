@@ -2,11 +2,15 @@ import uuid
 
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 
 from environments.dynamodb import DynamoEnvironmentV2Wrapper
 from environments.dynamodb.types import (
     IdentityOverridesV2Changeset,
     IdentityOverrideV2,
+)
+from environments.dynamodb.utils import (
+    get_environments_v2_identity_override_document_key,
 )
 from environments.models import Environment
 from features.models import Feature, FeatureState
@@ -31,7 +35,9 @@ def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__retur
     identifier = "identity1"
     override_document = {
         "environment_id": str(environment.id),
-        "document_key": f"identity_override:{feature.id}:{identity_uuid}",
+        "document_key": get_environments_v2_identity_override_document_key(
+            feature_id=feature.id, identity_uuid=identity_uuid
+        ),
         "environment_api_key": environment.api_key,
         "identifier": identifier,
         "feature_state": {},
@@ -53,6 +59,45 @@ def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__retur
     assert results[0] == override_document
 
 
+def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__last_evaluated_key__call_expected(
+    flagsmith_environments_v2_table: Table,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    wrapper = DynamoEnvironmentV2Wrapper()
+    mocker.patch.object(wrapper, "get_table").return_value = table_mock = (
+        mocker.MagicMock(spec=flagsmith_environments_v2_table)
+    )
+
+    last_evaluated_key = "next_page_key"
+    override_document = {"test": "document"}
+
+    table_mock.query.side_effect = [
+        {"Items": [override_document], "LastEvaluatedKey": last_evaluated_key},
+        {"Items": [override_document], "LastEvaluatedKey": None},
+    ]
+
+    # When
+    results = wrapper.get_identity_overrides_by_environment_id(
+        environment_id=mocker.ANY,
+        feature_id=mocker.ANY,
+    )
+
+    # Then
+    assert results == [override_document, override_document]
+    wrapper.table.query.assert_has_calls(
+        [
+            mocker.call(
+                KeyConditionExpression=mocker.ANY,
+            ),
+            mocker.call(
+                KeyConditionExpression=mocker.ANY,
+                ExclusiveStartKey=last_evaluated_key,
+            ),
+        ]
+    )
+
+
 def test_environment_v2_wrapper__update_identity_overrides__put_expected(
     settings: SettingsWrapper,
     environment: Environment,
@@ -69,7 +114,9 @@ def test_environment_v2_wrapper__update_identity_overrides__put_expected(
     override_document = IdentityOverrideV2.parse_obj(
         {
             "environment_id": str(environment.id),
-            "document_key": f"identity_override:{feature.id}:{identity_uuid}",
+            "document_key": get_environments_v2_identity_override_document_key(
+                feature_id=feature.id, identity_uuid=identity_uuid
+            ),
             "environment_api_key": environment.api_key,
             "feature_state": map_feature_state_to_engine(feature_state),
             "identifier": identifier,
@@ -110,7 +157,9 @@ def test_environment_v2_wrapper__update_identity_overrides__delete_expected(
         IdentityOverrideV2.parse_obj(
             {
                 "environment_id": str(environment.id),
-                "document_key": f"identity_override:{feature.id}:{identity_uuid}",
+                "document_key": get_environments_v2_identity_override_document_key(
+                    feature_id=feature.id, identity_uuid=identity_uuid
+                ),
                 "environment_api_key": environment.api_key,
                 "feature_state": map_feature_state_to_engine(feature_state),
                 "identifier": identifier,
@@ -170,7 +219,9 @@ def test_environment_v2_wrapper__delete_environment__deletes_related_data_from_d
             Item={
                 "environment_api_key": environment_api_key,
                 "environment_id": environment_id,
-                "document_key": f"identity_override:{i}",
+                "document_key": get_environments_v2_identity_override_document_key(
+                    feature_id=i,
+                ),
             }
         )
 
@@ -181,7 +232,9 @@ def test_environment_v2_wrapper__delete_environment__deletes_related_data_from_d
         Item={
             "environment_api_key": environment_2_api_key,
             "environment_id": environment_2_id,
-            "document_key": "identity_override:1",
+            "document_key": get_environments_v2_identity_override_document_key(
+                feature_id=1,
+            ),
         }
     )
 
@@ -194,5 +247,7 @@ def test_environment_v2_wrapper__delete_environment__deletes_related_data_from_d
     assert results[0] == {
         "environment_api_key": environment_2_api_key,
         "environment_id": environment_2_id,
-        "document_key": "identity_override:1",
+        "document_key": get_environments_v2_identity_override_document_key(
+            feature_id=1,
+        ),
     }

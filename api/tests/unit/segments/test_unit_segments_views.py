@@ -10,13 +10,16 @@ from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from audit.constants import SEGMENT_DELETED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature
 from metadata.models import MetadataModelField
 from projects.models import Project
+from projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
+from tests.types import WithProjectPermissionsCallable
 from util.mappers import map_identity_to_identity_document
 
 User = get_user_model()
@@ -173,6 +176,32 @@ def test_audit_log_created_when_segment_updated(project, segment, client):
     assert (
         AuditLog.objects.filter(
             related_object_type=RelatedObjectType.SEGMENT.name
+        ).count()
+        == 1
+    )
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_audit_log_created_when_segment_deleted(project, segment, client):
+    # Given
+    segment = Segment.objects.create(name="Test segment", project=project)
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project.id, segment.id],
+    )
+
+    # When
+    res = client.delete(url, content_type="application/json")
+
+    # Then
+    assert res.status_code == status.HTTP_204_NO_CONTENT
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.SEGMENT.name,
+            log=SEGMENT_DELETED_MESSAGE % segment.name,
         ).count()
         == 1
     )
@@ -922,3 +951,48 @@ def test_create_segment_obeys_max_conditions(
         "segment": "The segment has 11 conditions, which exceeds the maximum condition count of 10."
     }
     assert Segment.objects.count() == 0
+
+
+def test_include_feature_specific_query_filter__true(
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+    project: Project,
+    segment: Segment,
+    feature_specific_segment: Segment,
+) -> None:
+    # Given
+    with_project_permissions([MANAGE_SEGMENTS, VIEW_PROJECT])
+    url = "%s?include_feature_specific=1" % (
+        reverse("api-v1:projects:project-segments-list", args=[project.id]),
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.json()["count"] == 2
+    assert [res["id"] for res in response.json()["results"]] == [
+        segment.id,
+        feature_specific_segment.id,
+    ]
+
+
+def test_include_feature_specific_query_filter__false(
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+    project: Project,
+    segment: Segment,
+    feature_specific_segment: Segment,
+) -> None:
+    # Given
+    with_project_permissions([MANAGE_SEGMENTS, VIEW_PROJECT])
+    url = "%s?include_feature_specific=0" % (
+        reverse("api-v1:projects:project-segments-list", args=[project.id]),
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.json()["count"] == 1
+    assert [res["id"] for res in response.json()["results"]] == [segment.id]

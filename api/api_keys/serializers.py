@@ -23,6 +23,7 @@ class MasterAPIKeySerializer(serializers.ModelSerializer):
             "expiry_date",
             "key",
             "is_admin",
+            "has_expired",
         )
         read_only_fields = ("prefix", "created", "key")
 

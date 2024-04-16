@@ -11,12 +11,11 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run Staging E2E Tests
         working-directory: frontend
         env:
-          E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
           ENV: staging
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           STATIC_ASSET_CDN_URL: /

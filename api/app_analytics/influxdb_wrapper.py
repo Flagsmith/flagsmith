@@ -88,7 +88,6 @@ class InfluxDBWrapper:
             f" |> drop(columns: {drop_columns_input})"
             f"{extra}"
         )
-
         logger.debug("Running query in influx: \n\n %s", query)
 
         try:
@@ -312,6 +311,45 @@ def get_top_organisations(date_range: str, limit: str = ""):
                 )
 
     return dataset
+
+
+def get_current_api_usage(organisation_id: int, date_range: str) -> int:
+    """
+    Query influx db for api usage
+
+    :param organisation_id: filtered organisation
+    :param date_range: data range for current api usage window
+
+    :return: number of current api calls
+    """
+
+    bucket = read_bucket
+    results = InfluxDBWrapper.influx_query_manager(
+        date_range=date_range,
+        bucket=bucket,
+        filters=build_filter_string(
+            [
+                'r._measurement == "api_call"',
+                'r["_field"] == "request_count"',
+                f'r["organisation_id"] == "{organisation_id}"',
+            ]
+        ),
+        drop_columns=("_start", "_stop", "_time"),
+        extra='|> sum() \
+               |> sort(columns: ["_value"], desc: true) ',
+    )
+
+    for result in results:
+        # Return zero if there are no API calls recorded.
+        if len(result.records) == 0:
+            return 0
+
+        # There should only be one matching result due to the
+        # sum part of the query.
+        assert len(result.records) == 1
+        return result.records[0].get_value()
+
+    return 0
 
 
 def build_filter_string(filter_expressions: typing.List[str]) -> str:

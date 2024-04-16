@@ -6,7 +6,7 @@ repos:
         name: isort (python)
 
   - repo: https://github.com/psf/black
-    rev: 23.7.0
+    rev: 24.3.0
     hooks:
       - id: black
         language_version: python3
@@ -31,3 +31,9 @@ repos:
     hooks:
       - id: prettier
         exclude: ^(frontend/|CHANGELOG.md)
+
+  - repo: https://github.com/python-poetry/poetry
+    rev: 1.8.2
+    hooks:
+      - id: poetry-check
+        args: ['-C', 'api']
