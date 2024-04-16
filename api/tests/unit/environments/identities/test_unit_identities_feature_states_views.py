@@ -1,4 +1,5 @@
 import json
+import typing
 
 import pytest
 from django.test import Client
@@ -11,7 +12,7 @@ from environments.permissions.constants import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from features.models import Feature, FeatureState, FeatureStateValue
+from features.models import FeatureState, FeatureStateValue
 from projects.models import Project
 from tests.unit.environments.helpers import get_environment_user_client
 
@@ -113,12 +114,18 @@ def test_user_with_view_environment_permission_can_retrieve_all_feature_states_f
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_clone_flag_states_from_copies_feature_states_for_source_and_target_identities(
+def test_identity_clone_flag_states_from(
     project: Project,
     environment: Environment,
     admin_client: Client,
+    features_for_identity_clone_flag_states_from: typing.Callable,
 ) -> None:
-    # Given
+    # GIVEN
+
+    # Create 3 features
+    feature_1, feature_2, feature_3 = features_for_identity_clone_flag_states_from(
+        project
+    )
 
     # Create source and target identities
     source_identity: Identity = Identity.objects.create(
@@ -126,24 +133,6 @@ def test_clone_flag_states_from_copies_feature_states_for_source_and_target_iden
     )
     target_identity: Identity = Identity.objects.create(
         identifier="target_identity", environment=environment
-    )
-    # target_identity: Identity = identity
-
-    # Create 3 features
-    feature_1: Feature = Feature.objects.create(
-        name="feature_1",
-        project=project,
-        default_enabled=True,
-    )
-    feature_2: Feature = Feature.objects.create(
-        name="feature_2",
-        project=project,
-        default_enabled=True,
-    )
-    feature_3: Feature = Feature.objects.create(
-        name="feature_3",
-        project=project,
-        default_enabled=True,
     )
 
     # Create 2 feature states for source identity for feature 1 and feature 2
@@ -198,7 +187,7 @@ def test_clone_flag_states_from_copies_feature_states_for_source_and_target_iden
         args=[environment.api_key, target_identity.id],
     )
 
-    # When
+    # WHEN
 
     clone_identity_feature_states_response = admin_client.post(
         clone_identity_feature_states_url,
@@ -209,7 +198,7 @@ def test_clone_flag_states_from_copies_feature_states_for_source_and_target_iden
     # And getting feature states for target identity
     get_feature_states_response = admin_client.get(get_feature_states_url)
 
-    # Then
+    # THEN
 
     # Assert API calls responses status are HTTP OK (200)
     assert clone_identity_feature_states_response.status_code == status.HTTP_200_OK
@@ -221,12 +210,12 @@ def test_clone_flag_states_from_copies_feature_states_for_source_and_target_iden
     assert len(response) == 3
 
     # Assert cloned data is correct
-    assert response[0]["feature"]["id"] == source_feature_state_1.feature.id
+    assert response[0]["feature"]["id"] == feature_1.id
     assert response[0]["enabled"] == source_feature_state_1.enabled
     assert response[0]["feature_state_value"] == source_feature_state_1_value
     assert response[0]["overridden_by"] == "IDENTITY"
 
-    assert response[1]["feature"]["id"] == source_feature_state_2.feature.id
+    assert response[1]["feature"]["id"] == feature_2.id
     assert response[1]["enabled"] == source_feature_state_2.enabled
     assert response[1]["feature_state_value"] == source_feature_state_2_value
     assert response[1]["overridden_by"] == "IDENTITY"

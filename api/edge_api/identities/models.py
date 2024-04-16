@@ -62,6 +62,16 @@ class EdgeIdentity:
     def add_feature_override(self, feature_state: FeatureStateModel) -> None:
         self._engine_identity_model.identity_features.append(feature_state)
 
+    # Method that receives no parameters and returns only the overridden
+    # feature_states of an identity as a dictionary with the feature ID as the key
+    # and the overridden feature_state as the value.
+    def get_overridden_feature_states_dict(self) -> dict[str, FeatureStateModel]:
+        overridden_feature_states: dict[str, FeatureStateModel] = {}
+
+        for feature_state in self.feature_overrides:
+            overridden_feature_states[str(feature_state.feature.id)] = feature_state
+        return overridden_feature_states
+
     def get_all_feature_states(
         self,
     ) -> typing.Tuple[
@@ -241,3 +251,33 @@ class EdgeIdentity:
 
     def _reset_initial_state(self):
         self._initial_state = copy.deepcopy(self)
+
+    def clone_flag_states_from(self, source_identity: "EdgeIdentity"):
+        """
+        Clone the feature states from the source identity to the target identity.
+        """
+        target_feature_states: dict[str, FeatureStateModel] = (
+            self.get_overridden_feature_states_dict()
+        )
+        source_feature_states: dict[str, FeatureStateModel] = (
+            source_identity.get_overridden_feature_states_dict()
+        )
+
+        # Delete identity_target's feature states
+        for feature_state_id in target_feature_states:
+            self.remove_feature_override(
+                feature_state=target_feature_states[feature_state_id]
+            )
+
+        # Clone identity_source's feature states to identity_target
+        for feature_id_source in source_feature_states:
+            feature_state_target: FeatureStateModel = FeatureStateModel(
+                feature=source_feature_states[feature_id_source].feature,
+                feature_state_value=source_feature_states[
+                    feature_id_source
+                ].feature_state_value,
+                enabled=source_feature_states[feature_id_source].enabled,
+            )
+            self.add_feature_override(feature_state_target)
+
+        return list(target_feature_states.values())

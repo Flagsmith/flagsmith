@@ -615,6 +615,7 @@ def flagsmith_identities_table(dynamodb: DynamoDBServiceResource) -> Table:
             {"AttributeName": "composite_key", "AttributeType": "S"},
             {"AttributeName": "environment_api_key", "AttributeType": "S"},
             {"AttributeName": "identifier", "AttributeType": "S"},
+            {"AttributeName": "identity_uuid", "AttributeType": "S"},
         ],
         GlobalSecondaryIndexes=[
             {
@@ -624,7 +625,12 @@ def flagsmith_identities_table(dynamodb: DynamoDBServiceResource) -> Table:
                     {"AttributeName": "identifier", "KeyType": "RANGE"},
                 ],
                 "Projection": {"ProjectionType": "ALL"},
-            }
+            },
+            {
+                "IndexName": "identity_uuid-index",
+                "KeySchema": [{"AttributeName": "identity_uuid", "KeyType": "HASH"}],
+                "Projection": {"ProjectionType": "ALL"},
+            },
         ],
         BillingMode="PAY_PER_REQUEST",
     )

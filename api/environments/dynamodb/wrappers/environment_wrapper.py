@@ -38,7 +38,8 @@ class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper):
 
 
 class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
-    table_name = settings.ENVIRONMENTS_TABLE_NAME_DYNAMO
+    def get_table_name(self) -> str | None:
+        return settings.ENVIRONMENTS_TABLE_NAME_DYNAMO
 
     def write_environments(self, environments: Iterable["Environment"]):
         with self.table.batch_writer() as writer:

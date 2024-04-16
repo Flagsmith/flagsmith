@@ -7,7 +7,7 @@ from boto3.dynamodb.conditions import Key
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
-from flag_engine.identities.models import IdentityModel
+from flag_engine.identities.models import IdentityFeaturesList, IdentityModel
 from flag_engine.identities.traits.models import TraitModel
 from pyngo import drf_error_details
 from rest_framework import status, viewsets
@@ -202,7 +202,6 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
     lookup_field = "featurestate_uuid"
 
     serializer_class = EdgeIdentityFeatureStateSerializer
-
     # Patch is not supported
     http_method_names = [
         "get",
@@ -215,10 +214,9 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
     ]
     pagination_class = None
 
-    def initial(self, request, *args, **kwargs):
-        super().initial(request, *args, **kwargs)
+    def get_identity(self, edge_identity_identity_uuid) -> EdgeIdentity:
         identity_document = EdgeIdentity.dynamo_wrapper.get_item_from_uuid_or_404(
-            self.kwargs["edge_identity_identity_uuid"]
+            uuid=edge_identity_identity_uuid
         )
 
         if (
@@ -233,8 +231,15 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
                 environment__api_key=identity.environment_api_key
             ).values_list("feature__name", flat=True)
         )
-        identity.synchronise_features(valid_feature_names)
-        self.identity = identity
+        identity.synchronise_features(valid_feature_names=valid_feature_names)
+
+        return identity
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        self.identity: EdgeIdentity = self.get_identity(
+            edge_identity_identity_uuid=self.kwargs["edge_identity_identity_uuid"]
+        )
 
     def get_object(self):
         feature_state = self.identity.get_feature_state_by_featurestate_uuid(
@@ -261,7 +266,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
         )
         q_params_serializer.is_valid(raise_exception=True)
 
-        identity_features = self.identity.feature_overrides
+        identity_features: IdentityFeaturesList = self.identity.feature_overrides
 
         feature = q_params_serializer.data.get("feature")
         if feature:
@@ -299,6 +304,19 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
         )
 
         return Response(serializer.data)
+
+    @action(detail=False, methods=["POST"], url_path="clone-flag-states-from")
+    def clone_flag_states_from(self, request, *args, **kwargs) -> Response:
+        source_identity: EdgeIdentity = self.get_identity(
+            edge_identity_identity_uuid=request.data.get("source_identity_uuid")
+        )
+
+        self.identity.clone_flag_states_from(source_identity)
+        self.identity.save(
+            user=request.user.id,
+            master_api_key=getattr(request, "master_api_key", None),
+        )
+        return Response(status=status.HTTP_200_OK)
 
 
 class EdgeIdentityWithIdentifierFeatureStateView(APIView):

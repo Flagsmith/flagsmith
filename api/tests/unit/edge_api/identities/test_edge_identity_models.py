@@ -9,6 +9,7 @@ from freezegun import freeze_time
 from pytest_mock import MockerFixture
 
 from edge_api.identities.models import EdgeIdentity
+from environments.models import Environment
 from features.models import FeatureSegment, FeatureState, FeatureStateValue
 from features.workflows.core.models import ChangeRequest
 from segments.models import Segment
@@ -479,3 +480,79 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_up
             "identifier": edge_identity_model.identifier,
         }
     )
+
+
+def test_edge_identity_clone_flag_states_from(
+    edge_identity_model: EdgeIdentity,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+
+    identity_model = mocker.MagicMock(
+        environment_api_key=environment.api_key, identity_features=[]
+    )
+    # Create new identity model
+    new_identity_model: EdgeIdentity = EdgeIdentity(
+        engine_identity_model=identity_model
+    )
+
+    feature_state_model_1 = FeatureStateModel(
+        feature=FeatureModel(id=1, name="feature1", type="standard"), enabled=True
+    )
+
+    feature_state_model_2 = FeatureStateModel(
+        feature=FeatureModel(id=2, name="feature2", type="standard"),
+        enabled=False,
+        feature_state_value="source_identity_value_1",
+    )
+
+    feature_state_model_3 = FeatureStateModel(
+        feature=FeatureModel(id=3, name="feature3", type="standard"),
+        enabled=True,
+        feature_state_value="target_identity_value_1",
+    )
+
+    # Add feature states 1 and 2 to source identity
+    new_identity_model.add_feature_override(feature_state=feature_state_model_1)
+    new_identity_model.add_feature_override(feature_state=feature_state_model_2)
+
+    # Add feature states 3 to target identity.
+    # This feature state must be deleted as part of the cloning process.
+    edge_identity_model.add_feature_override(feature_state=feature_state_model_3)
+
+    # Clone features from new identity to fixture
+    edge_identity_model.clone_flag_states_from(source_identity=new_identity_model)
+    # edge_identity_model.save(user=mocker.MagicMock())
+
+    # Assert target identity contains only the 2 cloned features states
+    assert len(edge_identity_model.feature_overrides) == 2
+    assert (
+        edge_identity_model.feature_overrides[0].feature.id
+        == feature_state_model_1.feature.id
+    )
+    assert (
+        edge_identity_model.feature_overrides[0].enabled
+        == feature_state_model_1.enabled
+    )
+    assert (
+        edge_identity_model.feature_overrides[0].feature_state_value
+        == feature_state_model_1.feature_state_value
+    )
+    assert (
+        edge_identity_model.feature_overrides[1].feature.id
+        == feature_state_model_2.feature.id
+    )
+    assert (
+        edge_identity_model.feature_overrides[1].enabled
+        == feature_state_model_2.enabled
+    )
+    assert (
+        edge_identity_model.feature_overrides[1].feature_state_value
+        == feature_state_model_2.feature_state_value
+    )
+
+    # Assert new identity model remains unchanged
+    assert new_identity_model.feature_overrides == [
+        feature_state_model_1,
+        feature_state_model_2,
+    ]

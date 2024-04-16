@@ -1,15 +1,26 @@
 import json
 import typing
+import uuid
+from string import Template
 
 import pytest
 from core.constants import BOOLEAN, INTEGER, STRING
 from django.urls import reverse
+from flag_engine.features.models import FeatureModel, FeatureStateModel
+from mypy_boto3_dynamodb.service_resource import Table
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.test import APIClient
 
+from edge_api.identities.models import (
+    EdgeIdentity,
+    IdentityFeaturesList,
+    IdentityModel,
+)
+from projects.models import Project
 from tests.integration.helpers import create_mv_option_with_api
+from util.mappers.engine import map_feature_to_engine
 
 
 def test_edge_identities_feature_states_list_does_not_call_sync_identity_document_features_if_not_needed(
@@ -1033,3 +1044,139 @@ def _create_segment_override(
         content_type="application/json",
     )
     assert create_segment_override_response.status_code == status.HTTP_201_CREATED
+
+
+def test_edge_identity_clone_flag_states_from(
+    admin_client: APIClient,
+    app_settings_for_dynamodb: None,
+    dynamo_enabled_environment: int,
+    dynamo_enabled_project: int,
+    environment_api_key: str,
+    flagsmith_identities_table: Table,
+    features_for_identity_clone_flag_states_from: typing.Callable,
+    featurestates_urls: dict[str, Template],
+) -> None:
+    # GIVEN
+    project: Project = Project.objects.get(id=dynamo_enabled_project)
+
+    # Create 3 features
+    feature_1, feature_2, feature_3 = features_for_identity_clone_flag_states_from(
+        project
+    )
+
+    feature_model_1: FeatureModel = map_feature_to_engine(feature=feature_1)
+    feature_model_2: FeatureModel = map_feature_to_engine(feature=feature_2)
+    feature_model_3: FeatureModel = map_feature_to_engine(feature=feature_3)
+
+    # Create source and target identities
+    source_identity: EdgeIdentity = EdgeIdentity(
+        engine_identity_model=IdentityModel(
+            identifier="source_identity",
+            environment_api_key=environment_api_key,
+            identity_features=IdentityFeaturesList(),
+            identity_uuid=uuid.uuid4(),
+        )
+    )
+    target_identity: EdgeIdentity = EdgeIdentity(
+        engine_identity_model=IdentityModel(
+            identifier="target_identity",
+            environment_api_key=environment_api_key,
+            identity_features=IdentityFeaturesList(),
+            identity_uuid=uuid.uuid4(),
+        )
+    )
+
+    # Create 2 feature states for source identity for feature 1 and feature 2
+
+    source_feature_state_1_value = "Source Identity for feature value 1"
+    source_feature_state_1 = FeatureStateModel(
+        feature=feature_model_1,
+        environment_id=dynamo_enabled_environment,
+        enabled=True,
+        feature_state_value=source_feature_state_1_value,
+    )
+
+    source_feature_state_2_value = "Source Identity for feature value 2"
+    source_feature_state_2 = FeatureStateModel(
+        feature=feature_model_2,
+        environment_id=dynamo_enabled_environment,
+        enabled=True,
+        feature_state_value=source_feature_state_2_value,
+    )
+
+    # Create 2 feature states for target identity for feature 2 and feature 3
+    target_feature_state_2_value = "Target Identity value for feature 2"
+    target_feature_state_2 = FeatureStateModel(
+        feature=feature_model_2,
+        environment_id=dynamo_enabled_environment,
+        enabled=False,
+        feature_state_value=target_feature_state_2_value,
+    )
+
+    target_feature_state_3 = FeatureStateModel(
+        feature=feature_model_3,
+        environment_id=dynamo_enabled_environment,
+        enabled=False,
+    )
+
+    # Add feature states for features 1 and 2 to source identity
+    source_identity.add_feature_override(feature_state=source_feature_state_1)
+    source_identity.add_feature_override(feature_state=source_feature_state_2)
+
+    # Add feature states for features 2 and 3 to target identity.
+    # This feature state must be deleted as part of the cloning process.
+    target_identity.add_feature_override(feature_state=target_feature_state_2)
+    target_identity.add_feature_override(feature_state=target_feature_state_3)
+
+    # Save identities to identities document
+    target_identity_document = target_identity.to_document()
+    source_identity_document = source_identity.to_document()
+
+    flagsmith_identities_table.put_item(Item=target_identity_document)
+    flagsmith_identities_table.put_item(Item=source_identity_document)
+
+    # WHEN
+
+    # Clone feature states from source identity to target identity
+    clone_identity_feature_states_response = admin_client.post(
+        path=featurestates_urls["clone-flag-states-from"].substitute(
+            {"identity_uuid": target_identity.identity_uuid}
+        ),
+        data=json.dumps(
+            obj={"source_identity_uuid": str(object=source_identity.identity_uuid)}
+        ),
+        content_type="application/json",
+    )
+
+    # Get current feature states for fixture target identity
+    get_feature_states_response = admin_client.get(
+        path=featurestates_urls["all"].substitute(
+            {"identity_uuid": target_identity.identity_uuid}
+        ),
+    )
+
+    # THEN
+
+    # Assert API calls responses status are HTTP OK (200)
+    assert clone_identity_feature_states_response.status_code == status.HTTP_200_OK
+    assert get_feature_states_response.status_code == status.HTTP_200_OK
+
+    # Assert target identity contains only the 2 cloned features states
+    response = get_feature_states_response.json()
+
+    # Assert target identity contains only the 2 cloned overridden features states and 1 environment feature state
+    assert len(response) == 3
+
+    # Assert cloned data is correct
+    assert response[0]["feature"]["id"] == feature_1.id
+    assert response[0]["enabled"] == source_feature_state_1.enabled
+    assert response[0]["feature_state_value"] == source_feature_state_1_value
+    assert response[0]["overridden_by"] == "IDENTITY"
+
+    assert response[1]["feature"]["id"] == feature_2.id
+    assert response[1]["enabled"] == source_feature_state_2.enabled
+    assert response[1]["feature_state_value"] == source_feature_state_2_value
+    assert response[1]["overridden_by"] == "IDENTITY"
+
+    assert response[2]["feature"]["id"] == feature_3.id
+    assert response[2]["overridden_by"] is None
