@@ -590,17 +590,24 @@ const CreateFlag = class extends Component {
             />
           </FormGroup>
         )}
-        {metadataEnable && isEdit && (
+        {metadataEnable && (
           <FormGroup className='mb-5 setting'>
-            <AddMetadataToEntity
-              organisationId={AccountStore.getOrganisation().id}
-              projectId={this.props.projectId}
-              entityId={projectFlag.id}
-              entityContentType={featureContentType?.id}
-              entity={featureContentType?.model}
-              getMetadata={(m) => {
-                console.log('DEBUG: m:', m)
-              }}
+            <InputGroup
+              title={'Metadata'}
+              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} feature`}
+              tooltipPlace='left'
+              component={
+                <AddMetadataToEntity
+                  organisationId={AccountStore.getOrganisation().id}
+                  projectId={this.props.projectId}
+                  entityId={projectFlag.id}
+                  entityContentType={featureContentType?.id}
+                  entity={featureContentType?.model}
+                  getMetadata={(m) => {
+                    console.log('DEBUG: m:', m)
+                  }}
+                />
+              }
             />
           </FormGroup>
         )}

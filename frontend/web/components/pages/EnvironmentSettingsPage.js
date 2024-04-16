@@ -16,13 +16,14 @@ import Constants from 'common/constants'
 import Switch from 'components/Switch'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
-import OrganisationMetadataSelect from 'components/OrganisationMetadataSelect'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 import { getRolesEnvironmentPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import { Link } from 'react-router-dom'
 import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersioning'
+import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
+import { getSupportedContentType } from 'common/services/useSupportedContentType'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -39,7 +40,12 @@ const EnvironmentSettingsPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = { env: {}, roles: [], showMetadataList: false }
+    this.state = {
+      env: {},
+      environmentContentType: {},
+      roles: [],
+      showMetadataList: false,
+    }
     AppActions.getProject(this.props.match.params.projectId)
   }
 
@@ -69,6 +75,18 @@ const EnvironmentSettingsPage = class extends Component {
           )
           this.setState({ roles: matchingItems })
         })
+      })
+    }
+    if (Utils.getFlagsmithHasFeature('enable_metadata')) {
+      getSupportedContentType(getStore(), {
+        organisation_id: AccountStore.getOrganisation().id,
+      }).then((res) => {
+        const environmentContentType = Utils.getContentType(
+          res.data,
+          'model',
+          'environment',
+        )
+        this.setState({ environmentContentType: environmentContentType })
       })
     }
 
@@ -892,33 +910,24 @@ const EnvironmentSettingsPage = class extends Component {
                             tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} environments`}
                             tooltipPlace='left'
                             component={
-                              <Button
-                                size='xSmall'
-                                type='button'
-                                theme='outline'
-                                className='mt-3'
-                                onClick={() =>
-                                  this.setState({
-                                    showMetadataList:
-                                      !this.state.showMetadataList,
-                                  })
+                              <AddMetadataToEntity
+                                organisationId={
+                                  AccountStore.getOrganisation().id
                                 }
-                              >
-                                Add Metadata
-                              </Button>
+                                projectId={this.props.match.params.projectId}
+                                entityId={env.id}
+                                entityContentType={
+                                  this.state.environmentContentType.id
+                                }
+                                entity={this.state.environmentContentType.model}
+                                getMetadata={(m) => {
+                                  console.log('DEBUG: m:', m)
+                                }}
+                              />
                             }
                           />
                         </FormGroup>
-                        {/* <OrganisationMetadataSelect
-                          contentType={30}
-                          isOpen={this.state.showMetadataList}
-                          onToggle={() =>
-                            this.setState({
-                              showMetadataList: !this.state.showMetadataList,
-                            })
-                          }
-                          orgId={AccountStore.getOrganisation().id}
-                        /> */}
+                        <FormGroup className='mb-5 setting'></FormGroup>
                       </TabItem>
                     )}
                   </Tabs>
