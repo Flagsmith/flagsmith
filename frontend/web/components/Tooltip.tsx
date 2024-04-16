@@ -4,7 +4,7 @@ import Utils from 'common/utils/utils'
 
 export type TooltipProps = {
   title: ReactNode
-  children: string
+  children: string | false | null
   place?: _TooltipProps['place']
   plainText?: boolean
 }

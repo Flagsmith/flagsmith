@@ -31,6 +31,11 @@ import IdentityProvider from 'common/providers/IdentityProvider'
 import FeatureListProvider from 'common/providers/FeatureListProvider'
 const Project = require('common/project')
 import AppActions from 'common/dispatcher/app-actions'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import FeatureUsage from 'components/FeatureUsage'
+import CreateFlagSettings from './CreateFlagSettings'
+import useRegexValid from 'common/useRegexValid'
+import FeatureListStore from 'common/stores/feature-list-store'
 type CreateFlagType = {
   environmentApiKey: string
   projectId: string
@@ -60,15 +65,15 @@ const _CreateFlag: FC<CreateFlagType> = ({
   updateSegments,
 }) => {
   const { data: project } = useGetProjectQuery({ id: projectId })
-  const environment = project?.environments?.find(
+  const { data: environments } = useGetEnvironmentsQuery({ projectId })
+  const environment = environments?.results?.find(
     (env) => env.api_key === environmentApiKey,
   )
   const [killSwitch, setKillSwitch] = useState(false)
-
   const [_, setUpdate] = useState(Date.now())
   const [valueChanged, setValueChanged] = useState(false)
   const [segmentsChanged, setSegmentsChanged] = useState(false)
-  const [settingsChanged, setSettingsChanged] = useState()
+  const [settingsChanged, setSettingsChanged] = useState(false)
   const [showCreateSegment, setShowCreateSegment] = useState(false)
 
   const [projectFlag, setProjectFlag] = useState<CreateProjectFlagType>(
@@ -92,6 +97,10 @@ const _CreateFlag: FC<CreateFlagType> = ({
         },
   )
   const isEdit = !!projectFlag?.id
+  const regexValid = useRegexValid(
+    projectFlag.name,
+    project?.feature_name_regex || '',
+  )
 
   const controlValuePercentage = Utils.calculateControl(multivariate_options)
   const invalidFeature = !projectFlag.name
@@ -123,8 +132,6 @@ const _CreateFlag: FC<CreateFlagType> = ({
   useEffect(() => {
     setInterceptClose(onClosing)
   }, [onClosing])
-
-  const [environmentFeatureState, setEnvironmentFeatureState] = useState()
 
   const [featureState, setFeatureState] = useState<CreateFeatureStateType>(
     previousFeatureState
@@ -204,7 +211,12 @@ const _CreateFlag: FC<CreateFlagType> = ({
     !!environment &&
     Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)
 
-  if (!project || !environment) return null
+  if (!project || !environment)
+    return (
+      <div className='text-center'>
+        <Loader />
+      </div>
+    )
   const permissionsLoading =
     manageSegmentsLoading || manageFeaturesLoading || projectPermissionLoading
   if (permissionsLoading) {
@@ -242,6 +254,40 @@ const _CreateFlag: FC<CreateFlagType> = ({
           editFeatureValue,
         },
       ) => {
+        const controlValue = Utils.calculateControl(
+          featureState.multivariate_feature_state_values,
+        )
+
+        const featureLimitAlert = Utils.calculateRemainingLimitsPercentage(
+          project.total_features,
+          project.max_features_allowed,
+        )
+        const isOverLimit = featureLimitAlert.percentage >= 100
+        const mvInvalid =
+          !!multivariate_options &&
+          multivariate_options.length &&
+          controlValue < 0
+
+        const onCreateFeature = () => {
+          FeatureListStore.isSaving = true
+          createFlag(
+            projectId,
+            environmentApiKey,
+            {
+              ...projectFlag,
+              default_enabled: featureState.enabled,
+              initial_value: featureState.feature_state_value,
+            },
+            [],
+          )
+        }
+        const preventCreateFeature =
+          isSaving ||
+          mvInvalid ||
+          !projectFlag.name ||
+          isOverLimit ||
+          !regexValid
+
         return isEdit ? (
           <div id='create-feature-modal'>
             <Tabs
@@ -265,11 +311,23 @@ const _CreateFlag: FC<CreateFlagType> = ({
                 <FeatureLimit project={project} />
                 {!!identity && projectFlag.description}
                 <CreateFlagValue
+                  featureState={featureState}
+                  setFeatureState={setFeatureState}
                   project={project}
                   environmentApiKey={environmentApiKey}
                   projectFlag={projectFlag}
-                  setProjectFlag={setProjectFlag}
+                  setProjectFlag={(projectFlag) => {
+                    setProjectFlag(projectFlag)
+                    setValueChanged(true)
+                  }}
                 />
+                <ModalHR className='mt-4' />
+                <div className='text-right mt-4 mb-3 fs-small lh-sm modal-caption'>
+                  {is4Eyes
+                    ? 'This will create a change request for the environment'
+                    : 'This will update the feature value for the environment'}{' '}
+                  <strong>{environment.name}</strong>
+                </div>
               </TabItem>
               {!changeRequest && (
                 <TabItem
@@ -381,9 +439,13 @@ const _CreateFlag: FC<CreateFlagType> = ({
                   <div />
                 </TabItem>
               )}
-              {!hideAnalyticsTab && (
+              {!hideAnalyticsTab && !!projectFlag && (
                 <TabItem data-test='analytics' tabLabel='Analytics'>
-                  <div />
+                  <FeatureUsage
+                    featureId={projectFlag.id!}
+                    projectId={projectFlag.project!}
+                    environmentId={environment.id}
+                  />
                 </TabItem>
               )}
               <TabItem
@@ -398,18 +460,58 @@ const _CreateFlag: FC<CreateFlagType> = ({
                   </Row>
                 }
               >
-                <div />
+                <CreateFlagSettings
+                  projectFlag={projectFlag}
+                  setProjectFlag={(projectFlag) => {
+                    setProjectFlag(projectFlag)
+                    setSettingsChanged(true)
+                  }}
+                  project={project}
+                />
               </TabItem>
             </Tabs>
           </div>
         ) : (
-          <div className='px-3 mt-2'>
+          <div className='px-3 mt-2 create-feature-tab'>
             <CreateFlagValue
               project={project}
+              featureState={featureState}
+              setFeatureState={setFeatureState}
               environmentApiKey={environmentApiKey}
               projectFlag={projectFlag}
               setProjectFlag={setProjectFlag}
             />
+            <CreateFlagSettings
+              projectFlag={projectFlag}
+              setProjectFlag={setProjectFlag}
+              project={project}
+            />
+            <ModalHR className={`my-4`} />
+            <div className='text-right mb-3'>
+              {project.prevent_flag_defaults ? (
+                <p className='text-right modal-caption fs-small lh-sm'>
+                  This will create the feature for{' '}
+                  <strong>all environments</strong>, you can edit this feature
+                  per environment once the feature's enabled state and
+                  environment once the feature is created.
+                </p>
+              ) : (
+                <p className='text-right modal-caption fs-small lh-sm'>
+                  This will create the feature for{' '}
+                  <strong>all environments</strong>, you can edit this feature
+                  per environment once the feature is created.
+                </p>
+              )}
+
+              <Button
+                onClick={onCreateFeature}
+                data-test='create-feature-btn'
+                id='create-feature-btn'
+                disabled={preventCreateFeature}
+              >
+                {isSaving ? 'Creating' : 'Create Feature'}
+              </Button>
+            </div>
           </div>
         )
       }}

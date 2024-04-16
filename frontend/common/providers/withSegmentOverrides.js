@@ -20,7 +20,7 @@ export default (WrappedComponent) => {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-      if (prevProps.environmentId !== this.props.environmentId) {
+      if (prevProps.environmentApiKey !== this.props.environmentApiKey) {
         this.getOverrides()
       }
     }
@@ -32,14 +32,14 @@ export default (WrappedComponent) => {
             `${
               Project.api
             }features/feature-segments/?environment=${ProjectStore.getEnvironmentIdFromKey(
-              this.props.environmentId,
+              this.props.environmentApiKey,
             )}&feature=${this.props.projectFlag.id}`,
           ),
           data.get(
             `${
               Project.api
             }features/featurestates/?environment=${ProjectStore.getEnvironmentIdFromKey(
-              this.props.environmentId,
+              this.props.environmentApiKey,
             )}&feature=${this.props.projectFlag.id}`,
           ),
         ]).then(([res, res2]) => {

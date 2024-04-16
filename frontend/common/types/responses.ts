@@ -276,8 +276,9 @@ export type Tag = {
 }
 
 export type MultivariateFeatureStateValue = {
-  id: number
+  id?: number
   multivariate_feature_option: number
+  multivariate_feature_option_index: number
   percentage_allocation: number
 }
 
@@ -340,7 +341,6 @@ export type FeatureState = {
     uuid: string
   }
   feature_state_value: FlagsmithValue
-  hide_from_client?: boolean
   id: number
   identity?: string
   live_from?: string
@@ -511,5 +511,9 @@ export type Res = {
   featureImports: PagedResponse<FeatureImport>
   serversideEnvironmentKeys: APIKey[]
   userGroupPermissions: GroupPermission[]
+  featureUsage: {
+    'day': string //YYYY-MM-DD
+    'count': number
+  }[]
   // END OF TYPES
 }

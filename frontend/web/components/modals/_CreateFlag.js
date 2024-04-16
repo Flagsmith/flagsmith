@@ -27,7 +27,7 @@ import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import Permission from 'common/providers/Permission'
 import IdentitySelect from 'components/IdentitySelect'
-import { setInterceptClose, setModalTitle } from './base/ModalDefault';
+import { setInterceptClose, setModalTitle } from './base/ModalDefault'
 import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
 import FeatureValue from 'components/FeatureValue'
@@ -45,7 +45,6 @@ const CreateFlag = class extends Component {
       description,
       enabled,
       feature_state_value,
-      hide_from_client,
       is_archived,
       is_server_key_only,
       multivariate_options,
@@ -71,7 +70,6 @@ const CreateFlag = class extends Component {
       enabledIndentity: false,
       enabledSegment: false,
       environmentFlag: this.props.environmentFlag,
-      hide_from_client,
       identityVariations:
         this.props.identityFlag &&
         this.props.identityFlag.multivariate_feature_state_values
@@ -190,7 +188,6 @@ const CreateFlag = class extends Component {
       default_enabled,
       description,
       environmentFlag,
-      hide_from_client,
       initial_value,
       is_archived,
       is_server_key_only,

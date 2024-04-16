@@ -168,7 +168,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         description: projectFlag.description,
         enabled: false,
         feature_state_value: projectFlag.initial_value,
-        hide_from_client: false,
         is_archived: projectFlag.is_archived,
         is_server_key_only: projectFlag.is_server_key_only,
         multivariate_options: projectFlag.multivariate_options,
@@ -182,7 +181,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         description: projectFlag.description,
         enabled: identityFlag.enabled,
         feature_state_value: identityFlag.feature_state_value,
-        hide_from_client: environmentFlag.hide_from_client,
         is_archived: projectFlag.is_archived,
         is_server_key_only: projectFlag.is_server_key_only,
         multivariate_options: projectFlag.multivariate_options,
@@ -194,7 +192,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       description: projectFlag.description,
       enabled: environmentFlag.enabled,
       feature_state_value: environmentFlag.feature_state_value,
-      hide_from_client: environmentFlag.hide_from_client,
       is_archived: projectFlag.is_archived,
       is_server_key_only: projectFlag.is_server_key_only,
       multivariate_options: projectFlag.multivariate_options.map((v) => {

@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useRef } from 'react'
 import {
   FeatureState,
   MultivariateFeatureStateValue,
@@ -15,7 +15,12 @@ import useRegexValid from 'common/useRegexValid'
 import InfoMessage from 'components/InfoMessage'
 import ErrorMessage from 'components/ErrorMessage'
 import { useHasPermission } from 'common/providers/Permission'
-import Feature from 'components/Feature'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import Tooltip from 'components/Tooltip'
+import Switch from 'components/Switch'
+import ValueEditor from 'components/ValueEditor'
+import VariationOptions from 'components/mv/VariationOptions'
+import AddVariationButton from 'components/mv/AddVariationButton'
 
 export type CreateProjectFlagType = Omit<
   ProjectFlag,
@@ -39,8 +44,8 @@ type CreateFlagValueType = {
   projectFlag: CreateProjectFlagType
   setProjectFlag: (projectFlag: CreateProjectFlagType) => void
   identity?: string
-  featureState: FeatureState
-  setFeatureState: (featureState: FeatureState) => void
+  featureState: CreateFeatureStateType
+  setFeatureState: (featureState: CreateFeatureStateType) => void
 }
 
 const CreateFlagValue: FC<CreateFlagValueType> = ({
@@ -55,8 +60,11 @@ const CreateFlagValue: FC<CreateFlagValueType> = ({
 }) => {
   const caseSensitive = project?.only_allow_lower_case_feature_names
   const regexValid = useRegexValid(projectFlag.name, project.feature_name_regex)
-  const environment = project?.environments?.find(
-    (environment) => environment.api_key === environmentApiKey,
+  const { data: environments } = useGetEnvironmentsQuery({
+    projectId: `${project.id}`,
+  })
+  const environment = environments?.results?.find(
+    (env) => env.api_key === environmentApiKey,
   )
   const { permission: canManageFeatures } = useHasPermission({
     id: `${environmentApiKey || ''}`,
@@ -73,9 +81,11 @@ const CreateFlagValue: FC<CreateFlagValueType> = ({
     permission: 'CREATE_FEATURE',
   })
   if (!environment) return null
-
+  const focused = useRef(false)
   const isEdit = !!projectFlag?.id
   const onRef = (e: InstanceType<typeof InputGroup>) => {
+    if (focused.current) return
+    focused.current = true
     if (!isEdit) {
       setTimeout(() => {
         e?.focus()
@@ -136,13 +146,31 @@ const CreateFlagValue: FC<CreateFlagValueType> = ({
       multivariate_feature_state_values: environmentVariations,
     })
   }
-  const onValueChange = (e: InputEvent) => {
+  const onValueChange = (e: string) => {
     const value = Utils.getTypedValue(Utils.safeParseEventValue(e))
     setFeatureState({
       ...featureState,
       feature_state_value: value,
     })
   }
+  const onEnabledChange = () => {
+    setFeatureState({
+      ...featureState,
+      enabled: !featureState.enabled,
+    })
+  }
+  const environmentVariations = featureState.multivariate_feature_state_values
+  const enabledString = isEdit ? 'Enabled' : 'Enabled by default'
+  const controlPercentage = Utils.calculateControl(
+    projectFlag.multivariate_options,
+  )
+  const hideValue = !!identity && !!projectFlag.multivariate_options.length
+  const valueTitle = identity
+    ? 'User override'
+    : projectFlag.multivariate_options.length
+    ? `Control Value - ${controlPercentage}%`
+    : `Value (optional)`
+
   return (
     <>
       {isEdit && (
@@ -230,29 +258,117 @@ const CreateFlagValue: FC<CreateFlagValueType> = ({
             identity && !projectFlag.description ? 'mt-4 mx-3' : ''
           } ${identity ? 'mx-3' : ''}`}
         >
-          <Feature
-            readOnly={!canManageFeatures}
-            hide_from_client={!!featureState.hide_from_client}
-            multivariate_options={projectFlag.multivariate_options}
-            environmentVariations={
-              featureState.multivariate_feature_state_values
-            }
-            isEdit={isEdit}
-            error={error?.initial_value?.[0]}
-            canCreateFeature={canCreateFeature}
-            identity={!!identity}
-            removeVariation={removeVariation}
-            updateVariation={updateVariation}
-            addVariation={addVariation}
-            checked={featureState.enabled}
-            value={featureState.feature_state_value}
-            identityVariations={featureState.multivariate_feature_state_values}
-            onChangeIdentityVariations={onChangeVariations}
-            environmentFlag={featureState}
-            projectFlag={projectFlag}
-            onValueChange={onValueChange}
-            onCheckedChange={onEnabledChange}
-          />
+          <div>
+            <FormGroup className='mb-4'>
+              <Tooltip
+                title={
+                  <div className='flex-row'>
+                    <Switch
+                      data-test='toggle-feature-button'
+                      defaultChecked={featureState.enabled}
+                      disabled={!canManageFeatures}
+                      checked={featureState.enabled}
+                      onChange={onEnabledChange}
+                      className='ml-0'
+                    />
+                    <div className='label-switch ml-3 mr-1'>
+                      {enabledString}
+                    </div>
+                    {!isEdit && <Icon name='info-outlined' />}
+                  </div>
+                }
+              >
+                {!isEdit &&
+                  'This will determine the initial enabled state for all environments. You can edit the this individually for each environment once the feature is created.'}
+              </Tooltip>
+            </FormGroup>
+
+            {!hideValue && (
+              <FormGroup className='mb-4'>
+                <InputGroup
+                  component={
+                    <ValueEditor
+                      data-test='featureValue'
+                      name='featureValue'
+                      className='full-width'
+                      value={
+                        typeof featureState.feature_state_value ===
+                          'undefined' ||
+                        featureState.feature_state_value === null
+                          ? ''
+                          : featureState.feature_state_value
+                      }
+                      onChange={onValueChange}
+                      disabled={!canManageFeatures}
+                      placeholder="e.g. 'big' "
+                    />
+                  }
+                  tooltip={`${Constants.strings.REMOTE_CONFIG_DESCRIPTION}${
+                    !isEdit
+                      ? '<br/>Setting this when creating a feature will set the value for all environments. You can edit the this individually for each environment once the feature is created.'
+                      : ''
+                  }`}
+                  title={`${valueTitle}`}
+                />
+              </FormGroup>
+            )}
+
+            {!!error && (
+              <div className='mx-2 mt-2'>
+                <ErrorMessage error={error} />
+              </div>
+            )}
+            {!!identity && (
+              <div>
+                <FormGroup className='mb-4'>
+                  <VariationOptions
+                    disabled
+                    select
+                    controlValue={featureState?.feature_state_value}
+                    controlPercentage={controlPercentage}
+                    variationOverrides={
+                      featureState.multivariate_feature_state_values
+                    }
+                    setVariations={onChangeVariations}
+                    updateVariation={() => {}}
+                    weightTitle='Override Weight %'
+                    multivariateOptions={projectFlag.multivariate_options}
+                    removeVariation={() => {}}
+                  />
+                </FormGroup>
+              </div>
+            )}
+            {!identity && (
+              <div>
+                <FormGroup className='mb-0'>
+                  {!!environmentVariations || !isEdit ? (
+                    <VariationOptions
+                      setVariations={onChangeVariations}
+                      disabled={!!identity || !canManageFeatures}
+                      controlValue={featureState.feature_state_value}
+                      controlPercentage={controlPercentage}
+                      variationOverrides={environmentVariations}
+                      updateVariation={updateVariation}
+                      weightTitle={
+                        isEdit ? 'Environment Weight %' : 'Default Weight %'
+                      }
+                      multivariateOptions={projectFlag.multivariate_options}
+                      removeVariation={removeVariation}
+                    />
+                  ) : null}
+                </FormGroup>
+                {Utils.renderWithPermission(
+                  canCreateFeature,
+                  Constants.projectPermissions('Create Feature'),
+                  <AddVariationButton
+                    multivariateOptions={projectFlag.multivariate_options}
+                    disabled={!canCreateFeature || !canManageFeatures}
+                    onClick={addVariation}
+                  />,
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </>

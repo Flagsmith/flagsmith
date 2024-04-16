@@ -6,22 +6,23 @@ import ErrorMessage from 'components/ErrorMessage'
 import { FC } from 'react'
 import {
   FeatureStateValue,
+  FlagsmithValue,
   MultivariateFeatureStateValue,
   MultivariateOption,
 } from 'common/types/responses'
-import Utils from "common/utils/utils";
+import Utils from 'common/utils/utils'
 
 export type VariationOptionsType = {
   controlPercentage: number
-  controlValue: FeatureStateValue
+  controlValue: FlagsmithValue
   disabled?: boolean
   multivariateOptions: MultivariateOption[]
   preventRemove?: boolean
   readOnlyValue?: FeatureStateValue
-  removeVariation?: () => void
+  removeVariation?: (index: number) => void
   select?: boolean
-  setValue?: (value: FeatureStateValue) => void
-  setVariations: (options: MultivariateOption[]) => void
+  setValue?: (value: FlagsmithValue) => void
+  setVariations: (options: MultivariateFeatureStateValue[]) => void
   updateVariation: (
     index: number,
     multivariateOption: MultivariateOption,
@@ -95,7 +96,7 @@ const VariationOptions: FC<VariationOptionsType> = ({
                 onMouseDown={(e) => {
                   e.stopPropagation()
                   setVariations([])
-                  setValue(controlValue)
+                  setValue?.(controlValue)
                 }}
                 className={`btn-radio ml-2 ${
                   controlSelected ? 'btn-radio-on' : ''
@@ -157,15 +158,14 @@ const VariationOptions: FC<VariationOptionsType> = ({
             key={i}
             index={i}
             readOnlyValue={readOnlyValue}
-            preventRemove={preventRemove || disabled}
             value={theValue}
-            onChange={(e) => {
-              updateVariation(i, e, variationOverrides)
+            onChange={(e: MultivariateOption) => {
+              updateVariation(i, e, variationOverrides!)
             }}
             weightTitle={weightTitle}
             disabled={disabled}
             onRemove={
-              preventRemove || disabled ? null : () => removeVariation(i)
+              preventRemove || disabled ? null : () => removeVariation?.(i)
             }
           />
         )

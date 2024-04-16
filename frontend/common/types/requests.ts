@@ -330,5 +330,11 @@ export type Req = {
     multivariate_options: MultivariateOption[]
     title: string
   }
+  getFeatureUsage: {
+    projectId: number
+    featureId: number
+    environmentId: number
+    period: number // number of days
+  }
   // END OF TYPES
 }

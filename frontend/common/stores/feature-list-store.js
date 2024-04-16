@@ -318,7 +318,6 @@ const controller = {
               Object.assign({}, environmentFlag, {
                 enabled: flag.default_enabled,
                 feature_state_value: flag.initial_value,
-                hide_from_client: flag.hide_from_client,
               }),
             )
           })
@@ -540,7 +539,6 @@ const controller = {
             uuid: override.uuid,
           },
           feature_state_value: override.value,
-          hide_from_client: flag.hide_from_client,
           id: override.id,
           toRemove: override.toRemove,
         }
@@ -591,7 +589,6 @@ const controller = {
             const data = Object.assign({}, environmentFlag, {
               enabled: flag.default_enabled,
               feature_state_value: flag.initial_value,
-              hide_from_client: flag.hide_from_client,
             })
             return createAndPublishFeatureVersion(getStore(), {
               environmentId: res,
@@ -629,42 +626,6 @@ const controller = {
       onComplete && onComplete()
       store.saved()
     })
-  },
-  getFeatureUsage(projectId, environmentId, flag, period) {
-    data
-      .get(
-        `${Project.api}projects/${projectId}/features/${flag}/evaluation-data/?period=${period}&environment_id=${environmentId}`,
-      )
-      .then((result) => {
-        const firstResult = result[0]
-        const lastResult = firstResult && result[result.length - 1]
-        const diff = firstResult
-          ? moment(lastResult.day, 'YYYY-MM-DD').diff(
-              moment(firstResult.day, 'YYYY-MM-DD'),
-              'days',
-            )
-          : 0
-        if (firstResult && diff) {
-          _.range(0, diff).map((v) => {
-            const day = moment(firstResult.day)
-              .add(v, 'days')
-              .format('YYYY-MM-DD')
-            if (!result.find((v) => v.day === day)) {
-              result.push({
-                'count': 0,
-                day,
-              })
-            }
-          })
-        }
-        store.model.usageData = _.sortBy(result, (v) =>
-          moment(v.day, 'YYYY-MM-DD').valueOf(),
-        ).map((v) => ({
-          ...v,
-          day: moment(v.day, 'YYYY-MM-DD').format('Do MMM'),
-        }))
-        store.changed()
-      })
   },
   getFeatures: (projectId, environmentId, force, page, filter, pageSize) => {
     if (!store.model || store.envId !== environmentId || force) {
@@ -800,9 +761,6 @@ const store = Object.assign({}, BaseStore, {
   getEnvironmentFlags() {
     return store.model && store.model.keyedEnvironmentFeatures
   },
-  getFeatureUsage() {
-    return store.model && store.model.usageData
-  },
   getLastSaved() {
     return store.model && store.model.lastSaved
   },
@@ -865,14 +823,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
           store.filter,
         )
       }
-      break
-    case Actions.GET_FEATURE_USAGE:
-      controller.getFeatureUsage(
-        action.projectId,
-        action.environmentId,
-        action.flag,
-        action.period,
-      )
       break
     case Actions.CREATE_FLAG:
       controller.createFlag(
