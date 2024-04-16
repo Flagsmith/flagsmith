@@ -1056,7 +1056,17 @@ def test_edge_identity_clone_flag_states_from(
     features_for_identity_clone_flag_states_from: typing.Callable,
     featurestates_urls: dict[str, Template],
 ) -> None:
+    def create_identity(identifier: str) -> EdgeIdentity:
+        identity_model = IdentityModel(
+            identifier=identifier,
+            environment_api_key=environment_api_key,
+            identity_features=IdentityFeaturesList(),
+            identity_uuid=uuid.uuid4(),
+        )
+        return EdgeIdentity(engine_identity_model=identity_model)
+
     # GIVEN
+
     project: Project = Project.objects.get(id=dynamo_enabled_project)
 
     # Create 3 features
@@ -1069,22 +1079,8 @@ def test_edge_identity_clone_flag_states_from(
     feature_model_3: FeatureModel = map_feature_to_engine(feature=feature_3)
 
     # Create source and target identities
-    source_identity: EdgeIdentity = EdgeIdentity(
-        engine_identity_model=IdentityModel(
-            identifier="source_identity",
-            environment_api_key=environment_api_key,
-            identity_features=IdentityFeaturesList(),
-            identity_uuid=uuid.uuid4(),
-        )
-    )
-    target_identity: EdgeIdentity = EdgeIdentity(
-        engine_identity_model=IdentityModel(
-            identifier="target_identity",
-            environment_api_key=environment_api_key,
-            identity_features=IdentityFeaturesList(),
-            identity_uuid=uuid.uuid4(),
-        )
-    )
+    source_identity: EdgeIdentity = create_identity(identifier="source_identity")
+    target_identity: EdgeIdentity = create_identity(identifier="target_identity")
 
     # Create 2 feature states for source identity for feature 1 and feature 2
 
