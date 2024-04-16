@@ -153,7 +153,7 @@ class ProjectFeatureTestCase(TestCase):
         mock_calls = [
             mock.call(fs, WebhookEventType.FLAG_DELETED) for fs in feature_states
         ]
-        mocked_trigger_fs_change_webhook.has_calls(mock_calls)
+        mocked_trigger_fs_change_webhook.assert_has_calls(mock_calls)
 
     def test_remove_owners_only_remove_specified_owners(self):
         # Given

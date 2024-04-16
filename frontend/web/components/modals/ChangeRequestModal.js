@@ -24,8 +24,9 @@ const ChangeRequestModal = class extends Component {
       (this.props.changeRequest && this.props.changeRequest.description) || '',
     groups: [],
     live_from:
-      this.props.changeRequest &&
-      this.props.changeRequest.feature_states[0].live_from,
+      (this.props.changeRequest &&
+        this.props.changeRequest.feature_states[0].live_from) ||
+      undefined,
     title: (this.props.changeRequest && this.props.changeRequest.title) || '',
   }
 
