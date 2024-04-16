@@ -38,6 +38,7 @@ from edge_api.identities.serializers import (
     EdgeIdentityFsQueryparamSerializer,
     EdgeIdentityIdentifierSerializer,
     EdgeIdentitySerializer,
+    EdgeIdentitySourceIdentityRequestSerializer,
     EdgeIdentityTraitsSerializer,
     EdgeIdentityWithIdentifierFeatureStateDeleteRequestBody,
     EdgeIdentityWithIdentifierFeatureStateRequestBody,
@@ -305,6 +306,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
+    @swagger_auto_schema(request_body=EdgeIdentitySourceIdentityRequestSerializer())
     @action(detail=False, methods=["POST"], url_path="clone-from-given-identity")
     def clone_from_given_identity(self, request, *args, **kwargs) -> Response:
         """

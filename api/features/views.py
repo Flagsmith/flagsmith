@@ -27,6 +27,7 @@ from environments.authentication import EnvironmentKeyAuthentication
 from environments.identities.models import Identity
 from environments.identities.serializers import (
     IdentityAllFeatureStatesSerializer,
+    IdentitySourceIdentityRequestSerializer,
 )
 from environments.models import Environment
 from environments.permissions.permissions import (
@@ -636,6 +637,7 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
 
         return Response(serializer.data)
 
+    @swagger_auto_schema(request_body=IdentitySourceIdentityRequestSerializer())
     @action(methods=["POST"], detail=False, url_path="clone-from-given-identity")
     def clone_from_given_identity(self, request, *args, **kwargs) -> Response:
         """
