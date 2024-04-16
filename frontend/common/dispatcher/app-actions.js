@@ -360,7 +360,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     force,
     search,
     sort,
-    page,
     filter,
     pageSize,
   ) {
@@ -369,7 +368,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       environmentId,
       filter,
       force,
-      page,
       pageSize,
       projectId,
       search,
