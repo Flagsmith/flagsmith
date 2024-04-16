@@ -36,23 +36,26 @@ def test_send_environment_update_message_for_project_make_correct_request(
     send_environment_update_message_for_project(realtime_enabled_project.id)
 
     # Then
-    mocked_requests.post.has_calls(
-        mocker.call(
-            f"{base_url}/sse/environments/{realtime_enabled_project_environment_one.api_key}/queue-change",
-            headers={"Authorization": f"Token {token}"},
-            json={
-                "updated_at": realtime_enabled_project_environment_one.updated_at.isoformat()
-            },
-            timeout=2,
-        ),
-        mocker.call(
-            f"{base_url}/sse/environments/{realtime_enabled_project_environment_two.api_key}/queue-change",
-            headers={"Authorization": f"Token {token}"},
-            json={
-                "updated_at": realtime_enabled_project_environment_two.updated_at.isoformat()
-            },
-            timeout=2,
-        ),
+    mocked_requests.post.assert_has_calls(
+        calls=[
+            mocker.call(
+                f"{base_url}/sse/environments/{realtime_enabled_project_environment_one.api_key}/queue-change",
+                headers={"Authorization": f"Token {token}"},
+                json={
+                    "updated_at": realtime_enabled_project_environment_one.updated_at.isoformat()
+                },
+                timeout=2,
+            ),
+            mocker.call(
+                f"{base_url}/sse/environments/{realtime_enabled_project_environment_two.api_key}/queue-change",
+                headers={"Authorization": f"Token {token}"},
+                json={
+                    "updated_at": realtime_enabled_project_environment_two.updated_at.isoformat()
+                },
+                timeout=2,
+            ),
+        ],
+        any_order=True,
     )
 
 
