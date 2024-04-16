@@ -307,6 +307,9 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["POST"], url_path="clone-from-given-identity")
     def clone_from_given_identity(self, request, *args, **kwargs) -> Response:
+        """
+        Clone feature states from a given source identity.
+        """
         source_identity: EdgeIdentity = self.get_identity(
             edge_identity_identity_uuid=request.data.get("source_identity_uuid")
         )

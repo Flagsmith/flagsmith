@@ -637,7 +637,10 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         return Response(serializer.data)
 
     @action(methods=["POST"], detail=False, url_path="clone-from-given-identity")
-    def clone_flag_states_from(self, request, *args, **kwargs) -> Response:
+    def clone_from_given_identity(self, request, *args, **kwargs) -> Response:
+        """
+        Clone feature states from a given source identity.
+        """
         # Get and validate source and target identities
         target_identity = get_object_or_404(
             queryset=Identity, pk=self.kwargs["identity_pk"]
