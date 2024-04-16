@@ -100,7 +100,10 @@ def environment(
 
 @pytest.fixture()
 def dynamo_enabled_environment(
-    admin_client, dynamo_enabled_project, environment_api_key
+    admin_client,
+    dynamo_enabled_project,
+    environment_api_key,
+    app_settings_for_dynamodb,
 ) -> int:
     environment_data = {
         "name": "Test Environment",
