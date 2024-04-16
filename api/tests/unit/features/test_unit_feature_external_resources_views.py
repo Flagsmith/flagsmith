@@ -3,6 +3,7 @@ import simplejson as json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import IntegrityError
 from django.urls import reverse
+from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -12,8 +13,12 @@ from features.models import Feature
 _django_json_encoder_default = DjangoJSONEncoder().default
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_create_feature_external_resource(
-    admin_client: APIClient,
+    client: APIClient,
     feature: Feature,
 ) -> None:
     # Given
@@ -26,9 +31,7 @@ def test_create_feature_external_resource(
     url = reverse("api-v1:features:external-resources-list", args=[feature.id])
 
     # When
-    response = admin_client.post(
-        url, data=feature_external_resource_data, format="json"
-    )
+    response = client.post(url, data=feature_external_resource_data, format="json")
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     # assert that the payload has been save to the database
@@ -52,7 +55,7 @@ def test_create_feature_external_resource(
         kwargs={"feature_pk": feature.id},
     )
 
-    response = admin_client.get(url)
+    response = client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -67,8 +70,12 @@ def test_create_feature_external_resource(
     )
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_cannot_create_feature_external_resource_when_the_type_is_incorrect(
-    admin_client: APIClient,
+    client: APIClient,
     feature: Feature,
 ) -> None:
     # Given
@@ -80,13 +87,17 @@ def test_cannot_create_feature_external_resource_when_the_type_is_incorrect(
     url = reverse("api-v1:features:external-resources-list", args=[feature.id])
 
     # When
-    response = admin_client.post(url, data=feature_external_resource_data)
+    response = client.post(url, data=feature_external_resource_data)
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_cannot_create_feature_external_resource_due_to_unique_constraint(
-    admin_client: APIClient,
+    client: APIClient,
     feature: Feature,
     feature_external_resource: FeatureExternalResource,
 ) -> None:
@@ -100,7 +111,7 @@ def test_cannot_create_feature_external_resource_due_to_unique_constraint(
 
     # When
     with pytest.raises(IntegrityError) as exc_info:
-        response = admin_client.post(url, data=feature_external_resource_data)
+        response = client.post(url, data=feature_external_resource_data)
 
         # Then
         assert "duplicate key value violates unique constraint" in str(exc_info.value)
@@ -111,8 +122,12 @@ def test_cannot_create_feature_external_resource_due_to_unique_constraint(
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_delete_feature_external_resource(
-    admin_client: APIClient,
+    client: APIClient,
     feature_external_resource: FeatureExternalResource,
     feature: Feature,
 ) -> None:
@@ -123,7 +138,7 @@ def test_delete_feature_external_resource(
     )
 
     # When
-    response = admin_client.delete(url)
+    response = client.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -132,8 +147,12 @@ def test_delete_feature_external_resource(
     ).exists()
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_get_feature_external_resources(
-    admin_client: APIClient,
+    client: APIClient,
     feature_external_resource: FeatureExternalResource,
     feature: Feature,
 ) -> None:
@@ -144,14 +163,18 @@ def test_get_feature_external_resources(
     )
 
     # When
-    response = admin_client.get(url)
+    response = client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_get_feature_external_resource(
-    admin_client: APIClient,
+    client: APIClient,
     feature_external_resource: FeatureExternalResource,
     feature: Feature,
 ) -> None:
@@ -162,7 +185,7 @@ def test_get_feature_external_resource(
     )
 
     # When
-    response = admin_client.get(url)
+    response = client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
