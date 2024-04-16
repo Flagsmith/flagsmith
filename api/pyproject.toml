@@ -133,7 +133,7 @@ workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", ta
 django-test-migrations = "~1.2.0"
 responses = "~0.22.0"
 pre-commit = "~3.0.4"
-flake8 = "~6.0.0"
+flake8 = "~7.0.0"
 pytest-mock = "~3.10.0"
 pytest-lazy-fixture = "~0.6.3"
 moto = "~4.1.3"
