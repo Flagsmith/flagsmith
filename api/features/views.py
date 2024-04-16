@@ -643,6 +643,10 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         """
         Clone feature states from a given source identity.
         """
+        serializer = IdentitySourceIdentityRequestSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
         # Get and validate source and target identities
         target_identity = get_object_or_404(
             queryset=Identity, pk=self.kwargs["identity_pk"]

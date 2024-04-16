@@ -312,6 +312,12 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
         """
         Clone feature states from a given source identity.
         """
+        # Get and validate source identity
+        serializer = EdgeIdentitySourceIdentityRequestSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+
         source_identity: EdgeIdentity = self.get_identity(
             edge_identity_identity_uuid=request.data.get("source_identity_uuid")
         )
