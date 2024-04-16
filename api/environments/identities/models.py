@@ -141,6 +141,32 @@ class Identity(models.Model):
 
         return list(identity_flags.values())
 
+    def get_overridden_feature_states(self) -> dict[str, FeatureState]:
+        """
+        Get all overridden feature states for an identity.
+
+        :return: dict[str, FeatureState] - Key: feature ID. Value: Overridden feature_state.
+        """
+        overridden_feature_states: dict[str, FeatureState] = {}
+
+        query = Q(environment=self.environment) & Q(identity=self)
+        query &= Q(live_from__lte=timezone.now(), version__isnull=False)
+
+        select_related_args: list[str] = [
+            "environment",
+            "feature",
+            "feature_state_value",
+            "identity",
+        ]
+
+        identity_flags: models.BaseManager[FeatureState] = (
+            FeatureState.objects.select_related(*select_related_args).filter(query)
+        )
+
+        for feature_state in identity_flags:
+            overridden_feature_states[feature_state.feature.id] = feature_state
+        return overridden_feature_states
+
     def get_segments(
         self, traits: typing.List[Trait] = None, overrides_only: bool = False
     ) -> typing.List[Segment]:

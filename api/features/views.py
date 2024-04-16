@@ -636,6 +636,36 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
 
         return Response(serializer.data)
 
+    @action(methods=["POST"], detail=False, url_path="clone-from-given-identity")
+    def clone_flag_states_from(self, request, *args, **kwargs) -> Response:
+        # Get and validate source and target identities
+        target_identity = get_object_or_404(
+            queryset=Identity, pk=self.kwargs["identity_pk"]
+        )
+        source_identity = get_object_or_404(
+            queryset=Identity, pk=request.data.get("source_identity_id")
+        )
+
+        # Clone feature states
+        cloned_feature_states: dict[str, FeatureState] = (
+            FeatureState.copy_identity_feature_states(
+                target_identity=target_identity, source_identity=source_identity
+            )
+        )
+
+        # Prepare response
+        serializer_target = IdentityAllFeatureStatesSerializer(
+            instance=list(cloned_feature_states.values()),
+            many=True,
+            context={
+                "request": request,
+                "identity": target_identity,
+                "environment_api_key": target_identity.environment.api_key,
+            },
+        )
+
+        return Response(data=serializer_target.data)
+
 
 @method_decorator(
     name="list",

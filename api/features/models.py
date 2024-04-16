@@ -947,6 +947,55 @@ class FeatureState(
             and self.version > other.version
         ) or (self.version is not None and other.version is None)
 
+    @staticmethod
+    def copy_identity_feature_states(
+        target_identity: "Identity", source_identity: "Identity"
+    ) -> dict[str, "FeatureState"]:
+        target_feature_states: dict[str, FeatureState] = (
+            target_identity.get_overridden_feature_states()
+        )
+        source_feature_states: dict[str, FeatureState] = (
+            source_identity.get_overridden_feature_states()
+        )
+
+        # Delete own feature states not in source_identity
+        feature_states_to_delete = list(
+            target_feature_states.keys() - source_feature_states.keys()
+        )
+        for feature_state_id in feature_states_to_delete:
+            target_feature_states[feature_state_id].delete()
+
+        # Clone source_identity's feature states to target_identity
+        for feature_id_source in source_feature_states:
+            # Get target feature_state if exists in target identity or create new one
+            target_feature_state: FeatureState = target_feature_states.get(
+                feature_id_source
+            ) or FeatureState.objects.create(
+                environment=target_identity.environment,
+                identity=target_identity,
+                feature=source_feature_states[feature_id_source].feature,
+            )
+
+            # Copy enabled value from source feature_state
+            target_feature_state.enabled = source_feature_states[
+                feature_id_source
+            ].enabled
+
+            # Copy feature state value from source feature_state
+            target_feature_state.feature_state_value.copy_from(
+                source_feature_states[feature_id_source].feature_state_value
+            )
+
+            # Save changes to target feature_state
+            target_feature_state.save()
+
+        cloned_feature_states: dict[str, FeatureState] = (
+            target_identity.get_overridden_feature_states()
+        )
+
+        # Return cloned feature states sorted by feature ID
+        return {k: cloned_feature_states[k] for k in sorted(cloned_feature_states)}
+
 
 class FeatureStateValue(
     AbstractBaseFeatureValueModel,
@@ -971,6 +1020,14 @@ class FeatureStateValue(
         clone.feature_state = feature_state
         clone.save()
         return clone
+
+    def copy_from(self, source_feature_state_value: "FeatureStateValue"):
+        # Copy feature state type and values from given feature state value.
+        self.type = source_feature_state_value.type
+        self.boolean_value = source_feature_state_value.boolean_value
+        self.integer_value = source_feature_state_value.integer_value
+        self.string_value = source_feature_state_value.string_value
+        self.save()
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         fs = self.feature_state
