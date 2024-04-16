@@ -305,8 +305,8 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
-    @action(detail=False, methods=["POST"], url_path="clone-flag-states-from")
-    def clone_flag_states_from(self, request, *args, **kwargs) -> Response:
+    @action(detail=False, methods=["POST"], url_path="clone-from-given-identity")
+    def clone_from_given_identity(self, request, *args, **kwargs) -> Response:
         source_identity: EdgeIdentity = self.get_identity(
             edge_identity_identity_uuid=request.data.get("source_identity_uuid")
         )

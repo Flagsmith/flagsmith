@@ -178,7 +178,7 @@ def test_identity_clone_flag_states_from(
     )
 
     clone_identity_feature_states_url = reverse(
-        "api-v1:environments:identity-featurestates-clone-flag-states-from",
+        "api-v1:environments:identity-featurestates-clone-from-given-identity",
         args=[environment.api_key, target_identity.id],
     )
 

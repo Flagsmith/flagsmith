@@ -14,9 +14,9 @@ def webhook_mock(mocker):
 @pytest.fixture()
 def featurestates_urls(environment_api_key: str) -> dict[str, Template]:
     return {
-        "clone-flag-states-from": Template(
+        "clone-from-given-identity": Template(
             reverse(
-                "api-v1:environments:edge-identity-featurestates-clone-flag-states-from",
+                "api-v1:environments:edge-identity-featurestates-clone-from-given-identity",
                 args=(environment_api_key, "$identity_uuid"),
             )
         ),

@@ -1135,7 +1135,7 @@ def test_edge_identity_clone_flag_states_from(
 
     # Clone feature states from source identity to target identity
     clone_identity_feature_states_response = admin_client.post(
-        path=featurestates_urls["clone-flag-states-from"].substitute(
+        path=featurestates_urls["clone-from-given-identity"].substitute(
             {"identity_uuid": target_identity.identity_uuid}
         ),
         data=json.dumps(
