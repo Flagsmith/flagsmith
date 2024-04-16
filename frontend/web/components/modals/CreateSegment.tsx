@@ -38,9 +38,10 @@ import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
-// import OrganisationMetadataSelect from 'components/OrganisationMetadataSelect'
 import Permission from 'common/providers/Permission'
 import classNames from 'classnames'
+import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
+import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 
 type PageType = {
   number: number
@@ -147,6 +148,15 @@ const CreateSegment: FC<CreateSegmentType> = ({
     maxSegmentsAllowed,
     THRESHOLD,
   )
+  const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
+    organisation_id: AccountStore.getOrganisation().id,
+  })
+
+  const segmentContentType = useMemo(() => {
+    if (supportedContentTypes) {
+      return Utils.getContentType(supportedContentTypes, 'model', 'segment')
+    }
+  }, [supportedContentTypes])
 
   const addRule = (type = 'ANY') => {
     const newRules = cloneDeep(rules)
@@ -420,24 +430,18 @@ const CreateSegment: FC<CreateSegmentType> = ({
               tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} segments`}
               tooltipPlace='left'
               component={
-                <Button
-                  size='xSmall'
-                  type='button'
-                  theme='outline'
-                  onClick={() => setShowMetadataList(!showDescriptions)}
-                >
-                  Add Metadata
-                </Button>
+                <AddMetadataToEntity
+                  organisationId={AccountStore.getOrganisation().id}
+                  projectId={projectId}
+                  entityId={name || ''}
+                  entityContentType={segmentContentType?.id}
+                  entity={segmentContentType?.model}
+                  getMetadata={(m: any) => {
+                    console.log('DEBUG: m:', m)
+                  }}
+                />
               }
             />
-            {metadataEnable && (
-              <div></div>
-              // <OrganisationMetadataSelect
-              //   isOpen={showMetadataList}
-              //   onToggle={() => setShowMetadataList(!showMetadataList)}
-              //   orgId={AccountStore.getOrganisation().id}
-              // />
-            )}
           </FormGroup>
         )}
         <Flex className='mb-3'>

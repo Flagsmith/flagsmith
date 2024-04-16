@@ -38,10 +38,12 @@ const ContentTypesValues: FC<ContentTypesValuesType> = ({
               )}
               data-test={'data-test'}
             >
-              {contentType.model}
+              {`${contentType.model}${
+                contentType.is_required_for.length ? '*' : ''
+              }`}
             </span>
           }
-          place='top'
+          place='right'
         >
           {contentType.is_required_for.length ? 'Required' : 'Optional'}
         </Tooltip>

@@ -12,9 +12,6 @@ import {
 } from 'common/services/useMetadataField'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
 
-import { IonIcon } from '@ionic/react'
-import { informationCircle } from 'ionicons/icons'
-
 const metadataWidth = [200, 150, 150, 90]
 type MetadataPageType = {
   organisationId: string
@@ -107,13 +104,13 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
 
   return (
     <div>
-      <Row space className='mt-4'>
+      <Row space className='mb-2'>
         <Tooltip
           title={
             <Row>
               <h5>Metadata Fields</h5>
               <div>
-                <IonIcon icon={informationCircle} />
+                <Icon name='info-outlined' />
               </div>
             </Row>
           }

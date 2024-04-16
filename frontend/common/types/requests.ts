@@ -168,7 +168,7 @@ export type Req = {
     tags?: string[]
     is_archived?: boolean
   }
-  getProjectFlag: { project: string; id: string }
+  getProjectFlag: { project: string | number; id: string }
   getRolesPermissionUsers: { organisation_id: number; role_id: number }
   deleteRolesPermissionUsers: {
     organisation_id: number

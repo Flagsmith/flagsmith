@@ -24,7 +24,7 @@ type CustomMetadata = (Metadata & CustomMetadataField) | null
 
 type AddMetadataToEntityType = {
   organisationId: string
-  projectId: string
+  projectId: string | number
   entityContentType: number
   entityId: string
   entity: number | string
