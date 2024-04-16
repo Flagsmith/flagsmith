@@ -2262,7 +2262,7 @@ def test_create_feature_with_optional_metadata_returns_201(
     project: Project,
     client: APIClient,
     optional_b_feature_metadata_field: MetadataModelField,
-):
+) -> None:
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
     description = "This is the description"
