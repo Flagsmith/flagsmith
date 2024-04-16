@@ -501,12 +501,6 @@ const ProjectSettingsPage = class extends Component {
                         roles={this.state.roles}
                       />
                     </TabItem>
-                    <TabItem data-test='js-import-page' tabLabel='Import'>
-                      <ImportPage
-                        projectId={this.props.match.params.projectId}
-                        projectName={project.name}
-                      />
-                    </TabItem>
                     {metadataEnable && (
                       <TabItem tabLabel='Metadata'>
                         <MetadataPage
