@@ -950,7 +950,7 @@ class FeatureState(
     @staticmethod
     def copy_identity_feature_states(
         target_identity: "Identity", source_identity: "Identity"
-    ) -> dict[str, "FeatureState"]:
+    ) -> None:
         target_feature_states: dict[str, FeatureState] = (
             target_identity.get_overridden_feature_states()
         )
@@ -988,13 +988,6 @@ class FeatureState(
 
             # Save changes to target feature_state
             target_feature_state.save()
-
-        cloned_feature_states: dict[str, FeatureState] = (
-            target_identity.get_overridden_feature_states()
-        )
-
-        # Return cloned feature states sorted by feature ID
-        return {k: cloned_feature_states[k] for k in sorted(cloned_feature_states)}
 
 
 class FeatureStateValue(

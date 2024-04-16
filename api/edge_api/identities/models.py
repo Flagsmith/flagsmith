@@ -252,7 +252,7 @@ class EdgeIdentity:
     def _reset_initial_state(self):
         self._initial_state = copy.deepcopy(self)
 
-    def clone_flag_states_from(self, source_identity: "EdgeIdentity"):
+    def clone_flag_states_from(self, source_identity: "EdgeIdentity") -> None:
         """
         Clone the feature states from the source identity to the target identity.
         """
@@ -279,5 +279,3 @@ class EdgeIdentity:
                 enabled=source_feature_states[feature_id_source].enabled,
             )
             self.add_feature_override(feature_state_target)
-
-        return list(target_feature_states.values())

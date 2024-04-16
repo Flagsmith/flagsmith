@@ -647,24 +647,11 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         )
 
         # Clone feature states
-        cloned_feature_states: dict[str, FeatureState] = (
-            FeatureState.copy_identity_feature_states(
-                target_identity=target_identity, source_identity=source_identity
-            )
+        FeatureState.copy_identity_feature_states(
+            target_identity=target_identity, source_identity=source_identity
         )
 
-        # Prepare response
-        serializer_target = IdentityAllFeatureStatesSerializer(
-            instance=list(cloned_feature_states.values()),
-            many=True,
-            context={
-                "request": request,
-                "identity": target_identity,
-                "environment_api_key": target_identity.environment.api_key,
-            },
-        )
-
-        return Response(data=serializer_target.data)
+        return Response(status=status.HTTP_200_OK)
 
 
 @method_decorator(
