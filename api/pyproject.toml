@@ -44,7 +44,7 @@ authors = ["Flagsmith <support@flagsmith.com>"]
 readme = "readme.md"
 
 [tool.poetry.dependencies]
-python = "~3.12"
+python = ">=3.10,<3.13"
 django = "~3.2.25"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
