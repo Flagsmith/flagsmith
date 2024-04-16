@@ -42,10 +42,9 @@ version = "2.68.0"
 description = "The API component for the Flagsmith application."
 authors = ["Flagsmith <support@flagsmith.com>"]
 readme = "readme.md"
-package-mode = false
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.12"
+python = "~3.12"
 django = "~3.2.25"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
@@ -88,7 +87,7 @@ opencensus-ext-azure = "~1.1.4"
 opencensus-ext-django = "~0.7.6"
 djangorestframework-api-key = "~2.2.0"
 pymemcache = "~4.0.0"
-google-re2 = "~1.0"
+google-re2 = "^1.0"
 django-softdelete = "~0.10.5"
 simplejson = "~3.19.1"
 djoser = "~2.2.0"
