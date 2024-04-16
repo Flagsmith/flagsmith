@@ -340,7 +340,7 @@ export type FeatureState = {
     uuid: string
   }
   feature_state_value: FlagsmithValue
-  hide_from_client?: string
+  hide_from_client?: boolean
   id: number
   identity?: string
   live_from?: string

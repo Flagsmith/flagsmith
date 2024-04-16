@@ -439,7 +439,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return id ? 'put' : 'post'
   },
 
-  getTypedValue(str: FlagsmithValue, boolToString?: boolean) {
+  getTypedValue(str: FlagsmithValue, boolToString?: boolean): FlagsmithValue {
     if (typeof str === 'undefined') {
       return ''
     }

@@ -3,8 +3,35 @@ import VariationValue from './VariationValue'
 import ValueEditor from 'components/ValueEditor'
 import InfoMessage from 'components/InfoMessage'
 import ErrorMessage from 'components/ErrorMessage'
+import { FC } from 'react'
+import {
+  FeatureStateValue,
+  MultivariateFeatureStateValue,
+  MultivariateOption,
+} from 'common/types/responses'
+import Utils from "common/utils/utils";
 
-export default function VariationOptions({
+export type VariationOptionsType = {
+  controlPercentage: number
+  controlValue: FeatureStateValue
+  disabled?: boolean
+  multivariateOptions: MultivariateOption[]
+  preventRemove?: boolean
+  readOnlyValue?: FeatureStateValue
+  removeVariation?: () => void
+  select?: boolean
+  setValue?: (value: FeatureStateValue) => void
+  setVariations: (options: MultivariateOption[]) => void
+  updateVariation: (
+    index: number,
+    multivariateOption: MultivariateOption,
+    environmentVariations: MultivariateFeatureStateValue[],
+  ) => void
+  variationOverrides?: MultivariateFeatureStateValue[]
+  weightTitle?: string
+}
+
+const VariationOptions: FC<VariationOptionsType> = ({
   controlPercentage,
   controlValue,
   disabled,
@@ -18,7 +45,7 @@ export default function VariationOptions({
   updateVariation,
   variationOverrides,
   weightTitle,
-}) {
+}) => {
   const invalid = multivariateOptions.length && controlPercentage < 0
   if (!multivariateOptions || !multivariateOptions.length) {
     return null
@@ -146,3 +173,4 @@ export default function VariationOptions({
     </>
   )
 }
+export default VariationOptions

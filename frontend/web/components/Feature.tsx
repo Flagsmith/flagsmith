@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react'
 import ValueEditor from './ValueEditor'
 import Constants from 'common/constants'
-import VariationOptions from './mv/VariationOptions'
+import VariationOptions, { VariationOptionsType } from './mv/VariationOptions'
 import AddVariationButton from './mv/AddVariationButton'
 import ErrorMessage from './ErrorMessage'
 import Tooltip from './Tooltip'
@@ -11,10 +11,12 @@ import Switch from './Switch'
 import InputGroup from './base/forms/InputGroup'
 import {
   FeatureState,
+  FeatureStateValue,
   MultivariateFeatureStateValue,
   MultivariateOption,
-  ProjectFlag
-} from "common/types/responses";
+  ProjectFlag,
+} from 'common/types/responses'
+import { CreateProjectFlagType } from './modals/CreateFlagValue'
 
 interface FeatureProps {
   checked: boolean
@@ -27,13 +29,13 @@ interface FeatureProps {
   multivariate_options: MultivariateOption[]
   onCheckedChange: () => void
   onValueChange: (value: string) => void
-  projectFlag: ProjectFlag
+  projectFlag: CreateProjectFlagType
   readOnly: boolean
-  value: string
+  value: FeatureStateValue
   removeVariation: (index: number) => void
   identityVariations?: MultivariateFeatureStateValue[]
-  onChangeIdentityVariations: (variations: any[]) => void
-  updateVariation: () => void
+  onChangeIdentityVariations: VariationOptionsType['setVariations']
+  updateVariation: VariationOptionsType['updateVariation']
   canCreateFeature: boolean
   hideAddVariation?: boolean
   addVariation: () => void
@@ -142,7 +144,6 @@ const Feature: FunctionComponent<FeatureProps> = ({
               setVariations={onChangeIdentityVariations}
               updateVariation={() => {}}
               weightTitle='Override Weight %'
-              projectFlag={projectFlag}
               multivariateOptions={projectFlag.multivariate_options}
               removeVariation={() => {}}
             />
