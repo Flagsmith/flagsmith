@@ -25,6 +25,7 @@ export type FeatureVersionState = {
   feature_state_value: FeatureStateValue
   feature_segment: null | FeatureState['feature_segment']
   multivariate_feature_state_values: Omit<MultivariateFeatureStateValue, 'id'>[]
+  live_from: FeatureState['live_from']
 }
 export type Operator = {
   value: string | null

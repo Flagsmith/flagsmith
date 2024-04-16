@@ -151,7 +151,7 @@ We collect the following data on startup and then once every 8 hours per API ser
 ## Running Flagsmith on Flagsmith
 
 Flagsmith uses Flagsmith to control features on the front end dashboard. If you are self hosting the platform, you will
-sometimes see features greyed out, or you may want to disable specific features, e.g. logging in via Google and Github.
+sometimes see features greyed out, or you may want to disable specific features, e.g. logging in via Google and GitHub.
 If you are using your own Flagsmith environment then you will need to have a replica of our flags in order to control
 access to those features.
 
@@ -691,8 +691,7 @@ Create an OAuth application in the Google Developer Console and then provide the
 
 ```json
 {
- "clientId": "<Your Google oAuth Client ID>",
- "apiKey": "<Your Google oAuth Client secret>"
+ "clientId": "<Your Google oAuth Client ID>"
 }
 ```
 

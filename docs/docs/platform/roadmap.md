@@ -1,3 +1,3 @@
 # Roadmap
 
-You can view our public roadmap on [Github](https://github.com/orgs/Flagsmith/projects/7).
+You can view our public roadmap on [GitHub](https://github.com/orgs/Flagsmith/projects/7).

@@ -26,6 +26,7 @@ const ChangeRequestsPage = class extends Component {
     this.state = {
       live_after: new Date().toISOString(),
       showArchived: false,
+      tab: Utils.fromParam().tab === 'closed' ? 1 : 0,
       tags: [],
     }
     ES6Component(this)

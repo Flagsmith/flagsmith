@@ -247,9 +247,10 @@ export type Req = {
   deleteUserWithRole: { org_id: number; user_id: number; role_id: number }
   getGroupWithRole: { org_id: number; group_id: number }
   deleteGroupWithRole: { org_id: number; group_id: number; role_id: number }
-  createAndPublishFeatureVersion: {
+  createAndSetFeatureVersion: {
     environmentId: string
     featureId: number
+    skipPublish?: boolean
     featureStates: (FeatureState & { toRemove: boolean })[]
   }
   createFeatureVersion: {
@@ -277,6 +278,7 @@ export type Req = {
   getFeatureVersions: PagedRequest<{
     featureId: number
     environmentId: string
+    is_live?: boolean
   }>
   getUsers: { organisationId: number }
   getFeatureVersion: {
