@@ -18,6 +18,7 @@ export type FeatureVersionState = {
   feature_state_value: FeatureStateValue
   feature_segment: null | FeatureState['feature_segment']
   multivariate_feature_state_values: Omit<MultivariateFeatureStateValue, 'id'>[]
+  live_from: FeatureState['live_from']
 }
 export type Operator = {
   value: string | null
@@ -143,6 +144,7 @@ export type User = {
   first_name: string
   last_name: string
   role: 'ADMIN' | 'USER'
+  date_joined: string
 }
 export type GroupUser = Omit<User, 'role'> & {
   group_admin: boolean

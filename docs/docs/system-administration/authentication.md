@@ -8,13 +8,13 @@ help integrating with your IDP.
 ## Open Source Version
 
 - Username and Password
-- Github OAuth (with configuration)
+- GitHub OAuth (with configuration)
 - Google OAuth (with configuration)
 
 ## SaaS, Free and Startup Plans
 
 - Username and Password
-- Github OAuth (with configuration)
+- GitHub OAuth (with configuration)
 - Google OAuth (with configuration)
 
 ## SaaS, Scale-Up Plan
@@ -22,7 +22,7 @@ help integrating with your IDP.
 2FA can also be enabled with this plan.
 
 - Username and Password
-- Github OAuth (with configuration)
+- GitHub OAuth (with configuration)
 - Google OAuth (with configuration)
 
 ## Enterprise Plan (SaaS, On Prem or Private Cloud)
@@ -32,7 +32,7 @@ help integrating with your IDP.
 Enterprise plans also allows for restrictions to lock down Organisation logins to specific authentication methods.
 
 - Username and Password
-- Github OAuth (with configuration)
+- GitHub OAuth (with configuration)
 - Google OAuth (with configuration)
 - SAML
 - Okta

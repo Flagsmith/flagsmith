@@ -15,7 +15,8 @@ settings page which will help you access these variables.
 
 :::info
 
-Our Admin API has a [Rate Limit](/system-administration/system-limits#rate-limit) that you need to be aware of.
+Our Admin API has a [Rate Limit](/system-administration/system-limits#admin-api-rate-limit) that you need to be aware
+of.
 
 :::
 

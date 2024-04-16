@@ -27,7 +27,7 @@ import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import Permission from 'common/providers/Permission'
 import IdentitySelect from 'components/IdentitySelect'
-import { setInterceptClose } from './base/ModalDefault'
+import { setInterceptClose, setModalTitle } from './base/ModalDefault';
 import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
 import FeatureValue from 'components/FeatureValue'
@@ -102,20 +102,6 @@ const CreateFlag = class extends Component {
 
   componentDidUpdate(prevProps) {
     ES6Component(this)
-    this.listenTo(FeatureListStore, 'saved', () => {
-      if (this.props.projectFlag) {
-        //update the active environment flag as the ID would have changed
-        const envFlags = FeatureListStore.getEnvironmentFlags()
-        const projectFlag = this.props.projectFlag
-        const newEnvironmentFlag = envFlags?.[projectFlag.id] || {}
-        this.setState({
-          environmentFlag: {
-            ...this.state.environmentFlag,
-            ...(newEnvironmentFlag || {}),
-          },
-        })
-      }
-    })
     if (
       !this.props.identity &&
       this.props.environmentVariations !== prevProps.environmentVariations
@@ -805,7 +791,7 @@ const CreateFlag = class extends Component {
         {({ project }) => (
           <Provider
             onSave={() => {
-              if (!isEdit || identity) {
+              if (identity) {
                 this.close()
               }
               AppActions.refreshFeatures(
@@ -1780,4 +1766,56 @@ const CreateFlag = class extends Component {
 
 CreateFlag.propTypes = {}
 
-module.exports = ConfigProvider(withSegmentOverrides(CreateFlag))
+//This will remount the modal when a feature is created
+const FeatureProvider = (WrappedComponent) => {
+  class HOC extends Component {
+    static contextTypes = {
+      router: propTypes.object.isRequired,
+    }
+
+    constructor(props) {
+      super(props)
+      this.state = {
+        ...props,
+      }
+      ES6Component(this)
+    }
+
+    componentDidMount() {
+      ES6Component(this)
+      this.listenTo(FeatureListStore, 'saved', (createdFlag) => {
+        if (createdFlag) {
+          const projectFlag = FeatureListStore.getProjectFlags()?.find?.(
+            (flag) => flag.name === createdFlag,
+          )
+          window.history.replaceState(
+            {},
+            `${document.location.pathname}?feature=${projectFlag.id}`,
+          )
+          const envFlags = FeatureListStore.getEnvironmentFlags()
+          const newEnvironmentFlag = envFlags?.[projectFlag.id] || {}
+          setModalTitle(`Edit Feature ${projectFlag.name}`)
+          this.setState({
+            environmentFlag: {
+              ...this.state.environmentFlag,
+              ...(newEnvironmentFlag || {}),
+            },
+            projectFlag,
+          })
+        }
+      })
+    }
+
+    render() {
+      return (
+        <WrappedComponent
+          key={this.state.projectFlag?.id || 'new'}
+          {...this.state}
+        />
+      )
+    }
+  }
+  return HOC
+}
+
+export default FeatureProvider(ConfigProvider(withSegmentOverrides(CreateFlag)))
