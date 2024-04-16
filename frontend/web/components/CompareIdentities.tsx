@@ -147,7 +147,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
       onYes: () => {
         createCloneIdentityFeatureStates({
           body: {
-            identity_id: leftIdentityId,
+            source_identity_id: leftIdentityId,
           },
           environment_id: environmentId,
           identity_id: rightIdentityId,

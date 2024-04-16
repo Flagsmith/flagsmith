@@ -19,7 +19,7 @@ export const identityFeatureStateService = service
             query.environment_id
           }/${Utils.getIdentitiesEndpoint()}/${
             query.identity_id
-          }/${Utils.getFeatureStatesEndpoint()}/clone-flag-states-from/`,
+          }/${Utils.getFeatureStatesEndpoint()}/clone-from-given-identity/`,
         }),
       }),
       getIdentityFeatureStatesAll: builder.query<

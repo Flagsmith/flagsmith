@@ -311,7 +311,7 @@ export type Req = {
     environment_id: string
     identity_id: string
     body: {
-      identity_id: string
+      source_identity_id: string
     }
   }
   // END OF TYPES
