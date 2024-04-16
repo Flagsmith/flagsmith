@@ -110,7 +110,7 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
         renderRow={(mainItem: NameAndId, index: number) => (
           <div
             className='list-item d-flex flex-column justify-content-center py-2 list-item-sm clickable'
-            key={index}
+            key={mainItem.id}
           >
             <Row
               className='px-3 flex-fill align-items-center user-select-none'
