@@ -94,7 +94,7 @@ const controller = {
               _.keyBy(environmentFeatures.results, 'feature'),
           }
           store.model.lastSaved = new Date().valueOf()
-          store.saved(true)
+          store.saved(flag.name)
         }),
       )
       .catch((e) => API.ajaxHandler(store, e))

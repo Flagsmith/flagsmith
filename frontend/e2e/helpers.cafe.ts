@@ -326,6 +326,7 @@ export const createRemoteConfig = async (
   await click(byId('create-feature-btn'))
   await waitForElementVisible(byId(`feature-value-${index}`))
   await assertTextContent(byId(`feature-value-${index}`), expectedValue)
+  await closeModal()
 }
 
 export const createOrganisationAndProject = async (organisationName:string,projectName:string) =>{
@@ -389,6 +390,7 @@ export const createFeature = async (
   }
   await click(byId('create-feature-btn'))
   await waitForElementVisible(byId(`feature-item-${index}`))
+  await closeModal()
 }
 
 export const deleteFeature = async (index: number, name: string) => {
