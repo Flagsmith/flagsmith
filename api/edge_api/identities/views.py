@@ -216,7 +216,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
 
     def get_identity(self, edge_identity_identity_uuid) -> EdgeIdentity:
         identity_document = EdgeIdentity.dynamo_wrapper.get_item_from_uuid_or_404(
-            uuid=edge_identity_identity_uuid
+            edge_identity_identity_uuid
         )
 
         if (

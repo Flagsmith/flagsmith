@@ -94,7 +94,9 @@ def dynamo_enabled_project_environment_one_document(
 @pytest.fixture()
 def dynamo_environment_wrapper(
     flagsmith_environment_table: Table,
+    settings: SettingsWrapper,
 ) -> DynamoEnvironmentWrapper:
+    settings.ENVIRONMENTS_TABLE_NAME_DYNAMO = flagsmith_environment_table.name
     wrapper = DynamoEnvironmentWrapper()
     wrapper.table_name = flagsmith_environment_table.name
     return wrapper
