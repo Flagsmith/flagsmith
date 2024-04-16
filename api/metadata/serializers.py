@@ -58,7 +58,7 @@ class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializ
                 requirement["content_type"]
                 .model_class()
                 .objects.get(id=requirement["object_id"])
-                .get_org_id
+                .organisation_id
             )
             if org_id != data["field"].organisation_id:
                 raise serializers.ValidationError(

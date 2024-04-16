@@ -199,10 +199,6 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
             == IdentityOverridesV2MigrationStatus.COMPLETE
         )
 
-    @property
-    def get_org_id(self) -> int:
-        return self.organisation_id
-
 
 class ProjectPermissionManager(models.Manager):
     def get_queryset(self):
