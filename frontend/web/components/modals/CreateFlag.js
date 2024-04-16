@@ -600,7 +600,7 @@ const CreateFlag = class extends Component {
                 <AddMetadataToEntity
                   organisationId={AccountStore.getOrganisation().id}
                   projectId={this.props.projectId}
-                  entityId={projectFlag.id}
+                  entityId={projectFlag?.id}
                   entityContentType={featureContentType?.id}
                   entity={featureContentType?.model}
                   getMetadata={(m) => {
