@@ -116,6 +116,7 @@ const FeaturesPage = class extends Component {
     openModal(
       'New Feature',
       <CreateFlagModal
+        history={this.props.router.history}
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,

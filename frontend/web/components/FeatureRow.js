@@ -57,7 +57,7 @@ class TheComponent extends Component {
     const { feature, tab } = Utils.fromParam()
     const { id } = projectFlag
     if (`${id}` === feature) {
-      this.editFeature(projectFlag, environmentFlags[id], tab)
+      this.editFeature(projectFlag, environmentFlags[id])
     }
   }
 
@@ -88,7 +88,9 @@ class TheComponent extends Component {
     history.replaceState(
       {},
       null,
-      `${document.location.pathname}?feature=${projectFlag.id}`,
+      `${document.location.pathname}?feature=${projectFlag.id}&tab=${
+        tab || Utils.fromParam().tab || 'value'
+      }`,
     )
     openModal(
       <Row>
@@ -104,6 +106,7 @@ class TheComponent extends Component {
         </Button>
       </Row>,
       <CreateFlagModal
+        history={this.context.router.history}
         environmentId={this.props.environmentId}
         projectId={this.props.projectId}
         projectFlag={projectFlag}
@@ -200,14 +203,22 @@ class TheComponent extends Component {
               <SegmentOverridesIcon
                 onClick={(e) => {
                   e.stopPropagation()
-                  this.editFeature(projectFlag, environmentFlags[id], 1)
+                  this.editFeature(
+                    projectFlag,
+                    environmentFlags[id],
+                    'segment-overrides',
+                  )
                 }}
                 count={projectFlag.num_segment_overrides}
               />
               <IdentityOverridesIcon
                 onClick={(e) => {
                   e.stopPropagation()
-                  this.editFeature(projectFlag, environmentFlags[id], 1)
+                  this.editFeature(
+                    projectFlag,
+                    environmentFlags[id],
+                    'identity-overrides',
+                  )
                 }}
                 count={projectFlag.num_identity_overrides}
               />
