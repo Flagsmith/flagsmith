@@ -848,7 +848,9 @@ const CreateFlag = class extends Component {
             />
           </div>
         )}
-        {!isEdit && !identity && Settings(projectAdmin, createFeature)}
+        {!isEdit &&
+          !identity &&
+          Settings(projectAdmin, createFeature, featureContentType)}
       </>
     )
     return (

@@ -4,7 +4,7 @@ import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
 import { useGetMetadataFieldListQuery } from 'common/services/useMetadataField'
-import {} from 'common/services/useFeatureSegment'
+// import {} from 'common/services/useFeatureSegment'
 import { MetadataField, Metadata } from 'common/types/responses'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
@@ -61,7 +61,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
         id: entityId,
         project: projectId,
       },
-      { skip: entity !== 'feature' },
+      { skip: entity !== 'feature' || !entityId },
     )
 
   // const [updateMetadataProjectFeature] = useUpdateProjectFlagMutation()
@@ -121,7 +121,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
             metadataModelFieldId: matchingItem ? matchingItem.id : null,
           }
         })
-      // if (projectFeatureData && projectFeatureDataLoaded) {
+      // if (projectFeatureData?.metadata && projectFeatureDataLoaded) {
       //   const mergeMetadataWithMetadataField: CustomMetadata[] =
       //     projectFeatureData?.metadata
       //       .map((item1) => {
@@ -155,11 +155,9 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
           className='mt-1 no-pad'
           header={
             <Row className='table-header'>
-              <Flex className='table-column mr-5'>Metadata</Flex>
-              <Flex className='flex-row'>
-                <Flex className='table-column ml-4'>Value</Flex>
-              </Flex>
-              <Flex className='table-column'>Delete</Flex>
+              <Flex className='table-column'>Metadata</Flex>
+              <Flex className='table-column'>Value</Flex>
+              {/* <Flex className='table-column'>Delete</Flex> */}
             </Row>
           }
           items={metadataFieldsAssociatedtoEntity}
@@ -214,17 +212,29 @@ const MetadataRow: FC<MetadataRowType> = ({ isEdit, metadata }) => {
           <Flex className='table-column'>{metadata?.field_value}</Flex>
         </Flex>
       )}
-
-      <div className='table-column text-center' style={{ width: '80px' }}>
-        <Button
-          onClick={() => {
-            console.log('DEBUG: delete')
-          }}
-          className='btn btn-with-icon'
-        >
-          <Icon name='trash-2' width={20} fill='#656D7B' />
-        </Button>
-      </div>
+      {metadata?.field_value && (
+        <div className='table-column text-center' style={{ width: '80px' }}>
+          <Button
+            onClick={() => {
+              openConfirm({
+                body: (
+                  <div>
+                    {'Are you sure you delete this metadata '}
+                    {'? This action cannot be undone.'}
+                  </div>
+                ),
+                destructive: true,
+                onYes: () => true,
+                title: 'Delete Group',
+                yesText: 'Confirm',
+              })
+            }}
+            className='btn btn-with-icon'
+          >
+            <Icon name='trash-2' width={20} fill='#656D7B' />
+          </Button>
+        </div>
+      )}
     </Row>
   )
 }
