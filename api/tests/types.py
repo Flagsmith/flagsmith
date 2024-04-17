@@ -5,11 +5,11 @@ from organisations.permissions.models import UserOrganisationPermission
 from projects.models import UserProjectPermission
 
 WithProjectPermissionsCallable = Callable[
-    [list[str], int | None], UserProjectPermission
+    [list[str], int | None, bool], UserProjectPermission
 ]
 WithOrganisationPermissionsCallable = Callable[
     [list[str], int | None], UserOrganisationPermission
 ]
 WithEnvironmentPermissionsCallable = Callable[
-    [list[str], int | None, bool], UserEnvironmentPermission
+    [list[str], int | None], UserEnvironmentPermission
 ]
