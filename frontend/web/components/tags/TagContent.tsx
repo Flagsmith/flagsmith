@@ -6,7 +6,7 @@ import { IonIcon } from '@ionic/react'
 import { alarmOutline, lockClosed } from 'ionicons/icons'
 import Tooltip from 'components/Tooltip'
 import { getTagColor } from './Tag'
-import ProjectStore from 'common/stores/project-store'
+import OrganisationStore from 'common/stores/organisation-store'
 type TagContent = {
   tag: Partial<TTag>
 }
@@ -15,12 +15,15 @@ const getTooltip = (tag: TTag | undefined) => {
   if (!tag) {
     return null
   }
+  const stale_flags_limit_days = OrganisationStore.getProject(
+    tag.project,
+  )?.stale_flags_limit_days
   const truncated = Format.truncateText(tag.label, 12)
   const isTruncated = truncated !== tag.label ? tag.label : null
   let tooltip = null
   switch (tag.type) {
     case 'STALE': {
-      tooltip = `A feature is marked as stale if no changes have been made to it in any environment within ${Project.stale_flags_limit_days} days. This is automatically applied and will be re-evaluated if you remove this tag unless you apply a permanent tag to the feature.`
+      tooltip = `A feature is marked as stale if no changes have been made to it in any environment within ${stale_flags_limit_days} days. This is automatically applied and will be re-evaluated if you remove this tag unless you apply a permanent tag to the feature.`
       break
     }
     default:
