@@ -16,13 +16,14 @@ export type Rule = {
 export const setText = async (selector: string, text: string) => {
   logUsingLastSection(`Set text ${selector} : ${text}`)
   if (text) {
-     return t
+    return t
       .selectText(selector)
       .pressKey('delete')
       .selectText(selector) // Prevents issue where input tabs out of focus
       .typeText(selector, `${text}`)
   } else {
-    return t.selectText(selector) // Prevents issue where input tabs out of focus
+    return t
+      .selectText(selector) // Prevents issue where input tabs out of focus
       .pressKey('delete')
   }
 }
@@ -80,6 +81,7 @@ export const gotoFeatures = async () => {
 export const click = async (selector: string) => {
   await waitForElementVisible(selector)
   await t
+    .scrollIntoView(selector)
     .expect(Selector(selector).hasAttribute('disabled'))
     .notOk('ready for testing', { timeout: 5000 })
     .hover(selector)
@@ -324,6 +326,7 @@ export const createRemoteConfig = async (
   await click(byId('create-feature-btn'))
   await waitForElementVisible(byId(`feature-value-${index}`))
   await assertTextContent(byId(`feature-value-${index}`), expectedValue)
+  await closeModal()
 }
 
 export const createOrganisationAndProject = async (organisationName:string,projectName:string) =>{
@@ -387,6 +390,7 @@ export const createFeature = async (
   }
   await click(byId('create-feature-btn'))
   await waitForElementVisible(byId(`feature-item-${index}`))
+  await closeModal()
 }
 
 export const deleteFeature = async (index: number, name: string) => {

@@ -1,5 +1,107 @@
 # Changelog
 
+## [2.107.4](https://github.com/Flagsmith/flagsmith/compare/v2.107.3...v2.107.4) (2024-04-17)
+
+
+### Bug Fixes
+
+* Add Flagsmith signature header when testing webhook. ([#3666](https://github.com/Flagsmith/flagsmith/issues/3666)) ([c950875](https://github.com/Flagsmith/flagsmith/commit/c95087516e17cc610eea80d733cf11ddf8b74d80))
+* correct JS code snippets syntax ([#3770](https://github.com/Flagsmith/flagsmith/issues/3770)) ([e2155d2](https://github.com/Flagsmith/flagsmith/commit/e2155d2cecdd67c37bc5b8e98c5b354923abac67))
+* Enable faster feature loading ([#3550](https://github.com/Flagsmith/flagsmith/issues/3550)) ([157a9aa](https://github.com/Flagsmith/flagsmith/commit/157a9aab645e6853ecf9f98b8b453a1a9c95f0d6))
+* tests using `has_calls` instead of `assert_has_calls` ([#3775](https://github.com/Flagsmith/flagsmith/issues/3775)) ([b019a35](https://github.com/Flagsmith/flagsmith/commit/b019a35df425e439c2ff36239bf6540c61ffe993))
+
+## [2.107.3](https://github.com/Flagsmith/flagsmith/compare/v2.107.2...v2.107.3) (2024-04-10)
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* cache environment segments in production ([#3745](https://github.com/Flagsmith/flagsmith/issues/3745)) ([f2302ee](https://github.com/Flagsmith/flagsmith/commit/f2302ee34d9b80f0de43b460b1f6cd2f712ba3e6))
+
+## [2.107.2](https://github.com/Flagsmith/flagsmith/compare/v2.107.1...v2.107.2) (2024-04-09)
+
+
+### Bug Fixes
+
+* Revert "feat: Support multiple OR'd search terms in sales-dashboard" ([#3739](https://github.com/Flagsmith/flagsmith/issues/3739)) ([7dd0c82](https://github.com/Flagsmith/flagsmith/commit/7dd0c8296859717f9723047605dac9ed44ae77b0))
+
+## [2.107.1](https://github.com/Flagsmith/flagsmith/compare/v2.107.0...v2.107.1) (2024-04-09)
+
+
+### Bug Fixes
+
+* segment override assignment ([#3734](https://github.com/Flagsmith/flagsmith/issues/3734)) ([a859902](https://github.com/Flagsmith/flagsmith/commit/a859902c21d564ddfbb5c2c433eeefab34deedb3))
+* **task-processor:** catch all exceptions ([#3737](https://github.com/Flagsmith/flagsmith/issues/3737)) ([84ab486](https://github.com/Flagsmith/flagsmith/commit/84ab4867bb25c4db7c75826b3b74fdb687d86eb1))
+
+## [2.107.0](https://github.com/Flagsmith/flagsmith/compare/v2.106.0...v2.107.0) (2024-04-09)
+
+
+### Features
+
+* add is_live filter to versions endpoint ([#3688](https://github.com/Flagsmith/flagsmith/issues/3688)) ([af0cc9c](https://github.com/Flagsmith/flagsmith/commit/af0cc9c3105759e95a35283bab2776aeab5ce65c))
+* Support multiple OR'd search terms in sales-dashboard ([#3715](https://github.com/Flagsmith/flagsmith/issues/3715)) ([d5f76ff](https://github.com/Flagsmith/flagsmith/commit/d5f76ff88ef8a4356d6b653df8cf7c34d4d1c078))
+
+
+### Bug Fixes
+
+* Adjust permissions logic for view / manage groups ([#3679](https://github.com/Flagsmith/flagsmith/issues/3679)) ([5ba3083](https://github.com/Flagsmith/flagsmith/commit/5ba3083f88ddd8965d65225105d515cfd1ab9bd0))
+* allow deletion of scheduled change requests ([#3713](https://github.com/Flagsmith/flagsmith/issues/3713)) ([cd1f79c](https://github.com/Flagsmith/flagsmith/commit/cd1f79c55a5a794cbf1064b10e4643707ba1f74d))
+* async feature versioning test ([#3717](https://github.com/Flagsmith/flagsmith/issues/3717)) ([8ad7f04](https://github.com/Flagsmith/flagsmith/commit/8ad7f04aefca6fd519a4f2c99cf0c66540843838))
+* convert CharFields to TextFields for FeatureImport / FeatureExport models ([#3720](https://github.com/Flagsmith/flagsmith/issues/3720)) ([6bebcef](https://github.com/Flagsmith/flagsmith/commit/6bebceff1cdf7bbfbcf9b22db6ca551a46ae1435))
+* Create API usage notification butter bar ([#3698](https://github.com/Flagsmith/flagsmith/issues/3698)) ([d99fb24](https://github.com/Flagsmith/flagsmith/commit/d99fb24b820231e24a1a5635b717fcf5af3f679a))
+* database Compose warnings and set a project name ([#3701](https://github.com/Flagsmith/flagsmith/issues/3701)) ([93ace86](https://github.com/Flagsmith/flagsmith/commit/93ace8615b30b8c7cee916be0ab73abd431dfb4f))
+* ensure api/static directory is created by Git ([#3702](https://github.com/Flagsmith/flagsmith/issues/3702)) ([eca05ca](https://github.com/Flagsmith/flagsmith/commit/eca05cad2581032cac1320e422767ccd9500eeef))
+* Incorrect environment variable interpolation in Makefile ([#3709](https://github.com/Flagsmith/flagsmith/issues/3709)) ([79a85bd](https://github.com/Flagsmith/flagsmith/commit/79a85bda45660c76043d17c0d06abb3f8b622954))
+* organisation store imports ([#3721](https://github.com/Flagsmith/flagsmith/issues/3721)) ([2df29c4](https://github.com/Flagsmith/flagsmith/commit/2df29c4cb486e6c13b8753a462b65cc9e4d683b9))
+* Remove CSRF parameter from sales-dashboard search form ([#3716](https://github.com/Flagsmith/flagsmith/issues/3716)) ([1e75ae9](https://github.com/Flagsmith/flagsmith/commit/1e75ae9b573063684c5935fd01ac1945bc869a93))
+
+## [2.106.0](https://github.com/Flagsmith/flagsmith/compare/v2.105.1...v2.106.0) (2024-04-02)
+
+
+### Features
+
+* Add Hubspot lead tracking for Hubspot data ([#3647](https://github.com/Flagsmith/flagsmith/issues/3647)) ([ee1c396](https://github.com/Flagsmith/flagsmith/commit/ee1c396c7b22a1d751e5408a9e78450c22480fa8))
+* Enabled state filter (Frontend) ([#3542](https://github.com/Flagsmith/flagsmith/issues/3542)) ([741320e](https://github.com/Flagsmith/flagsmith/commit/741320edc22046eed4248d8fb53bcfd6d230366a))
+
+
+### Bug Fixes
+
+* API usage alerting in production ([#3507](https://github.com/Flagsmith/flagsmith/issues/3507)) ([ce38ab7](https://github.com/Flagsmith/flagsmith/commit/ce38ab787e743ec20ce071ac8515bd8f39eb8358))
+* Avoid using a Gunicorn config file ([#3699](https://github.com/Flagsmith/flagsmith/issues/3699)) ([647c52a](https://github.com/Flagsmith/flagsmith/commit/647c52aba4add765061fcb29eb073c6d68ee9115))
+* broken CSS on Integrations page in non-Chromium browsers ([#3705](https://github.com/Flagsmith/flagsmith/issues/3705)) ([0fe8646](https://github.com/Flagsmith/flagsmith/commit/0fe8646e6a6ff9c016a5665c6cb8b1766ba4eec3))
+
+## [2.105.1](https://github.com/Flagsmith/flagsmith/compare/v2.105.0...v2.105.1) (2024-03-28)
+
+
+### Bug Fixes
+
+* rollback json access logging ([#3694](https://github.com/Flagsmith/flagsmith/issues/3694)) ([6f66e0f](https://github.com/Flagsmith/flagsmith/commit/6f66e0ff3d295e11e9ba699b92be2f53309d8459))
+
+## [2.105.0](https://github.com/Flagsmith/flagsmith/compare/v2.104.1...v2.105.0) (2024-03-27)
+
+
+### Features
+
+* Add domain to Hubspot company ([#3648](https://github.com/Flagsmith/flagsmith/issues/3648)) ([87d2d52](https://github.com/Flagsmith/flagsmith/commit/87d2d52b21f161352b9880aaae210853ceb9e321))
+* Add org id to hubspot company ([#3680](https://github.com/Flagsmith/flagsmith/issues/3680)) ([9952424](https://github.com/Flagsmith/flagsmith/commit/99524247399079f6d28491e6d66d3776f3abaf51))
+* Add subscription to Hubspot tracker ([#3676](https://github.com/Flagsmith/flagsmith/issues/3676)) ([44ed1bf](https://github.com/Flagsmith/flagsmith/commit/44ed1bfabebace7929d0b83f9a6d1508896d08e2))
+* JSON logging for Gunicorn ([#3672](https://github.com/Flagsmith/flagsmith/issues/3672)) ([3ce1754](https://github.com/Flagsmith/flagsmith/commit/3ce1754d9c45200ef4e4f464953d079d478f5dac))
+* Summary of group permissions in the Project settings page ([#3629](https://github.com/Flagsmith/flagsmith/issues/3629)) ([da12c93](https://github.com/Flagsmith/flagsmith/commit/da12c932c4b5a72084a0025c0c9bd8ef7daa1625))
+
+
+### Bug Fixes
+
+* Avoid loading Django settings in Gunicorn ([#3685](https://github.com/Flagsmith/flagsmith/issues/3685)) ([7c65445](https://github.com/Flagsmith/flagsmith/commit/7c654457c7eb673df61ee33295c55edff3cea172))
+* prevent tasks dying from temporary loss of db connection ([#3674](https://github.com/Flagsmith/flagsmith/issues/3674)) ([b872a6c](https://github.com/Flagsmith/flagsmith/commit/b872a6ca568b0541ca46c2f38135739d214b2f10))
+* Use dotenv in frontend/bin/env.js ([#3668](https://github.com/Flagsmith/flagsmith/issues/3668)) ([8c25cd6](https://github.com/Flagsmith/flagsmith/commit/8c25cd6199973cb60a70608737e3bd83631f06e9))
+
+## [2.104.1](https://github.com/Flagsmith/flagsmith/compare/v2.104.0...v2.104.1) (2024-03-26)
+
+
+### Bug Fixes
+
+* Create group should auto focus on the name input ([#3632](https://github.com/Flagsmith/flagsmith/issues/3632)) ([ddb0b7f](https://github.com/Flagsmith/flagsmith/commit/ddb0b7f35b5e414d8a2f6d01dc88f642b0514f92))
+* No pagination when querying `environments_v2` ([#3661](https://github.com/Flagsmith/flagsmith/issues/3661)) ([7e19f4f](https://github.com/Flagsmith/flagsmith/commit/7e19f4ff2b2f3941e55360936b816879af4d06b6))
+
 ## [2.104.0](https://github.com/Flagsmith/flagsmith/compare/v2.103.4...v2.104.0) (2024-03-20)
 
 

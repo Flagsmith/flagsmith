@@ -29,7 +29,6 @@ import ComparePage from './components/pages/ComparePage'
 import WidgetPage from './components/pages/WidgetPage'
 import BrokenPage from './components/pages/BrokenPage'
 import GitHubSetupPage from './components/pages/GitHubSetupPage'
-import ProjectsPage from './components/pages/ProjectsPage'
 import AuditLogItemPage from './components/pages/AuditLogItemPage'
 import FeatureHistoryPage from './components/pages/FeatureHistoryPage'
 import Utils from 'common/utils/utils'
@@ -42,7 +41,6 @@ export default (
       <Route path='/404' exact component={NotFoundErrorPage} />
       <Route path='/signup' exact component={HomePage} />
       <Route path='/home' exact component={HomePage} />
-      <Route path='/projects' exact component={ProjectsPage} />
       {Utils.getFlagsmithHasFeature('github_integration') && (
         <Route path='/github-setup' exact component={GitHubSetupPage} />
       )}

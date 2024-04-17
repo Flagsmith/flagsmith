@@ -1,5 +1,5 @@
 import { Modal, ModalBody } from 'reactstrap'
-import React, { FC, ReactNode } from 'react'
+import React, { FC, ReactNode, useState } from 'react'
 import ModalHeader from './ModalHeader'
 
 interface ModalDefault {
@@ -17,15 +17,21 @@ export const setInterceptClose = (promise: (() => Promise<any>) | null) => {
   interceptClose = promise
 }
 
+let cb
+export const setModalTitle = (title: string) => {
+  cb?.(title)
+}
 const ModalDefault: FC<ModalDefault> = ({
   children,
   className,
   isOpen,
   onClosed,
   onDismiss,
-  title,
+  title: _title,
   toggle,
 }) => {
+  const [title, setTitle] = useState(_title)
+  cb = setTitle
   const onDismissClick = async () => {
     if (interceptClose) {
       const shouldClose = await interceptClose()

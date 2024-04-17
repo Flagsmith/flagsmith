@@ -327,9 +327,11 @@ class FeatureSegment(
                         pair[0] for pair in new_feature_segment_id_priorities
                     ],
                     "user_id": getattr(request.user, "id", None),
-                    "master_api_key_id": request.master_api_key.id
-                    if hasattr(request, "master_api_key")
-                    else None,
+                    "master_api_key_id": (
+                        request.master_api_key.id
+                        if hasattr(request, "master_api_key")
+                        else None
+                    ),
                     "changed_at": timezone.now().isoformat(),
                 }
             )
@@ -787,9 +789,11 @@ class FeatureState(
         kwargs = {
             "feature": feature,
             "environment": environment,
-            "enabled": False
-            if environment.project.prevent_flag_defaults
-            else feature.default_enabled,
+            "enabled": (
+                False
+                if environment.project.prevent_flag_defaults
+                else feature.default_enabled
+            ),
         }
         if environment.use_v2_feature_versioning:
             kwargs.update(

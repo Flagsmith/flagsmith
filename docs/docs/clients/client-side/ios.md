@@ -6,7 +6,7 @@ slug: /clients/ios
 ---
 
 This library can be used with iOS and Mac applications. The source code for the client is available on
-[Github](https://github.com/flagsmith/flagsmith-ios-client).
+[GitHub](https://github.com/flagsmith/flagsmith-ios-client).
 
 ## Installation
 
@@ -74,7 +74,6 @@ Note that you can use:
 
 - `flag.value?.stringValue`
 - `flag.value?.intValue`
-- `flag.value?.floatValue`
 
 Based on your desired type.
 

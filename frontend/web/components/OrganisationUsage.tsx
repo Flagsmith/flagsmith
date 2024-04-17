@@ -76,10 +76,8 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
         <label>Project</label>
         <ProjectFilter
           showAll
-          organisationId={organisationId}
-          onChange={(id: string) => {
-            setProject(id)
-          }}
+          organisationId={parseInt(organisationId)}
+          onChange={setProject}
           value={project}
         />
         {project && (

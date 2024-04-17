@@ -34,7 +34,7 @@ Every time a Trait as set via the SDK, they will make a request to the Flagsmith
 updated set of flags.
 
 In order to reduce these calls, we recommend setting the full complement of traits in a single SDK call. There's more
-info around achieving this in our [Javascript FAQ](/clients/javascript/#faqs).
+info around achieving this in our [Javascript FAQ](/clients/javascript#faqs).
 
 ### Real Time Flag Updates
 
