@@ -35,7 +35,6 @@ const widths = [300, 200, 80]
 const SettingsTab = {
   'Billing': 'billing',
   'General': 'general',
-  'Groups': 'groups',
   'Keys': 'keys',
   'Members': 'members',
   'Projects': 'projects',
@@ -334,7 +333,6 @@ const OrganisationSettingsPage = class extends Component {
               <OrganisationProvider id={AccountStore.getOrganisation()?.id}>
                 {({
                   error,
-                  groups,
                   invalidateInviteLink,
                   inviteLinks,
                   invites,
@@ -343,7 +341,6 @@ const OrganisationSettingsPage = class extends Component {
                   subscriptionMeta,
                   users,
                 }) => {
-                  const canManageGroups = !!groups?.length
                   const { max_seats } = subscriptionMeta ||
                     organisation.subscription || { max_seats: 1 }
                   const isAWS =
@@ -361,9 +358,9 @@ const OrganisationSettingsPage = class extends Component {
                   const displayedTabs = [SettingsTab.Projects]
 
                   if (this.state.permissionsError) {
-                    if (canManageGroups) {
-                      displayedTabs.push(SettingsTab.Groups)
-                    }
+                    displayedTabs.push(
+                      ...[SettingsTab.Members].filter((v) => !!v),
+                    )
                   } else {
                     displayedTabs.push(
                       ...[
@@ -403,43 +400,6 @@ const OrganisationSettingsPage = class extends Component {
 
                             <ProjectManageWidget
                               organisationId={organisation.id}
-                            />
-                          </TabItem>
-                        )}
-
-                        {displayedTabs.includes(SettingsTab.Groups) && (
-                          <TabItem tabLabel='Groups'>
-                            <Flex className='flex-row justify-content-between'>
-                              <div>
-                                <h5 className='mt-4 mb-2'>User Groups</h5>
-
-                                <p className='fs-small lh-sm mb-4'>
-                                  Groups allow you to manage permissions for
-                                  viewing and editing projects, features and
-                                  environments.
-                                </p>
-                              </div>
-
-                              <Button
-                                id='btn-invite'
-                                onClick={() =>
-                                  openModal(
-                                    'Create Group',
-                                    <CreateGroupModal
-                                      orgId={organisation.id}
-                                    />,
-                                  )
-                                }
-                                type='button'
-                              >
-                                Create Group
-                              </Button>
-                            </Flex>
-                            <UserGroupList
-                              showRemove
-                              onClick={this.editGroup}
-                              roles={this.state.roles}
-                              orgId={organisation.id}
                             />
                           </TabItem>
                         )}
@@ -735,23 +695,30 @@ const OrganisationSettingsPage = class extends Component {
                                               <h5 className='mb-0'>
                                                 Team Members
                                               </h5>
-                                              <Button
-                                                disabled={
-                                                  needsUpgradeForAdditionalSeats
-                                                }
-                                                id='btn-invite'
-                                                onClick={() =>
-                                                  openModal(
-                                                    'Invite Users',
-                                                    <InviteUsersModal />,
-                                                    'p-0 side-modal',
-                                                  )
-                                                }
-                                                type='button'
-                                                size='small'
-                                              >
-                                                Invite members
-                                              </Button>
+                                              {Utils.renderWithPermission(
+                                                !this.state.permissionsError,
+                                                Constants.organisationPermissions(
+                                                  'Admin',
+                                                ),
+                                                <Button
+                                                  disabled={
+                                                    needsUpgradeForAdditionalSeats ||
+                                                    this.state.permissionsError
+                                                  }
+                                                  id='btn-invite'
+                                                  onClick={() =>
+                                                    openModal(
+                                                      'Invite Users',
+                                                      <InviteUsersModal />,
+                                                      'p-0 side-modal',
+                                                    )
+                                                  }
+                                                  type='button'
+                                                  size='small'
+                                                >
+                                                  Invite members
+                                                </Button>,
+                                              )}
                                             </Row>
                                             <FormGroup className='mt-2'>
                                               {paymentsEnabled &&
@@ -1355,22 +1322,34 @@ const OrganisationSettingsPage = class extends Component {
                                                 <h5 className='mb-0'>
                                                   User Groups
                                                 </h5>
-                                                <Button
-                                                  id='btn-invite'
-                                                  onClick={() =>
-                                                    openModal(
-                                                      'Create Group',
-                                                      <CreateGroupModal
-                                                        orgId={organisation.id}
-                                                      />,
-                                                      'side-modal',
-                                                    )
-                                                  }
-                                                  type='button'
-                                                  size='small'
-                                                >
-                                                  Create Group
-                                                </Button>
+                                                {Utils.renderWithPermission(
+                                                  !this.state.permissionsError,
+                                                  Constants.organisationPermissions(
+                                                    'Admin',
+                                                  ),
+                                                  <Button
+                                                    id='btn-invite'
+                                                    disabled={
+                                                      this.state
+                                                        .permissionsError
+                                                    }
+                                                    onClick={() =>
+                                                      openModal(
+                                                        'Create Group',
+                                                        <CreateGroupModal
+                                                          orgId={
+                                                            organisation.id
+                                                          }
+                                                        />,
+                                                        'side-modal',
+                                                      )
+                                                    }
+                                                    type='button'
+                                                    size='small'
+                                                  >
+                                                    Create Group
+                                                  </Button>,
+                                                )}
                                               </Row>
                                               <p className='col-md-8 mb-4'>
                                                 Groups allow you to manage
