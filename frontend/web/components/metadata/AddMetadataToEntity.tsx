@@ -4,8 +4,8 @@ import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
 import { useGetMetadataFieldListQuery } from 'common/services/useMetadataField'
-// import {} from 'common/services/useFeatureSegment'
-import { MetadataField, Metadata } from 'common/types/responses'
+import { useGetSegmentQuery } from 'common/services/useSegment'
+import { MetadataField, Metadata, ProjectFlag } from 'common/types/responses'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
 import {
@@ -18,6 +18,7 @@ import { sortBy } from 'lodash'
 type CustomMetadataField = MetadataField & {
   metadataModelFieldId: number | string | null
   isRequiredFor: boolean
+  model_field?: string | number
 }
 
 type CustomMetadata = (Metadata & CustomMetadataField) | null
@@ -30,17 +31,14 @@ type AddMetadataToEntityType = {
   entity: number | string
   createMetadataField: () => void
   updateMetadata: () => void
+  getMetadata: (m: CustomMetadataField[]) => void
 }
 
-// type MetadataFieldSelectType = {
-//   label: string
-//   modelFieldId: number
-//   value: string
-// }
 const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
   entity,
   entityContentType,
   entityId,
+  getMetadata,
   organisationId,
   projectId,
 }) => {
@@ -64,24 +62,24 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
       { skip: entity !== 'feature' || !entityId },
     )
 
-  // const [updateMetadataProjectFeature] = useUpdateProjectFlagMutation()
+  const { data: segmentData, isSuccess: segmentDataLoaded } =
+    useGetSegmentQuery(
+      {
+        id: `${entityId}`,
+        projectId: `${projectId}`,
+      },
+      { skip: entity !== 'segment' || !entityId },
+    )
 
   const [
     metadataFieldsAssociatedtoEntity,
     setMetadataFieldsAssociatedtoEntity,
   ] = useState<CustomMetadataField[]>()
 
-  // const updateEntityMetadata = (modelFieldId: number, fieldValue: string) => {
-  //   if (entity === 'feature') {
-  //     updateMetadataProjectFeature({
-  //       body: {
-  //         metadata: [{ field_value: fieldValue, model_field: modelFieldId }],
-  //       },
-  //       feature_id: entityId,
-  //       project_id: projectId,
-  //     })
-  //   }
-  // }
+  useEffect(() => {
+    getMetadata?.(metadataFieldsAssociatedtoEntity!)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [metadataFieldsAssociatedtoEntity])
 
   useEffect(() => {
     if (
@@ -121,23 +119,37 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
             metadataModelFieldId: matchingItem ? matchingItem.id : null,
           }
         })
-      // if (projectFeatureData?.metadata && projectFeatureDataLoaded) {
-      //   const mergeMetadataWithMetadataField: CustomMetadata[] =
-      //     projectFeatureData?.metadata
-      //       .map((item1) => {
-      //         const matchingItem = metadataForContentType.find(
-      //           (item2) => item1.model_field === item2.metadataModelFieldId,
-      //         )
-      //         return matchingItem ? { ...item1, ...matchingItem } : null
-      //       })
-      //       .filter((item) => item !== null)
-      //   // setMergeMetadataWithMetadataField(mergeMetadataWithMetadataField)
-      // }
-      const sortedArray = sortBy(metadataForContentType, (m) =>
-        m.isRequiredFor ? -1 : 1,
-      )
+      if (projectFeatureData?.metadata && projectFeatureDataLoaded) {
+        const mergeLists = (
+          metadata: ProjectFlag['metadata'],
+          metadataField: CustomMetadataField[],
+        ) => {
+          const map = new Map(
+            metadataField.map((item) => [item.metadataModelFieldId, item]),
+          )
+          return metadataField.map((item) => ({
+            ...item,
+            ...(map.get(item.model_field!) || {}),
+            ...(metadata.find(
+              (m) => m.model_field === item.metadataModelFieldId,
+            ) || {}),
+          }))
+        }
 
-      setMetadataFieldsAssociatedtoEntity(sortedArray)
+        const mergedList = mergeLists(
+          projectFeatureData?.metadata,
+          metadataForContentType,
+        )
+        const sortedArray = sortBy(mergedList, (m) =>
+          m.isRequiredFor ? -1 : 1,
+        )
+        setMetadataFieldsAssociatedtoEntity(sortedArray)
+      } else {
+        const sortedArray = sortBy(metadataForContentType, (m) =>
+          m.isRequiredFor ? -1 : 1,
+        )
+        setMetadataFieldsAssociatedtoEntity(sortedArray)
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -212,8 +224,8 @@ const MetadataRow: FC<MetadataRowType> = ({ isEdit, metadata }) => {
           <Flex className='table-column'>{metadata?.field_value}</Flex>
         </Flex>
       )}
-      {metadata?.field_value && (
-        <div className='table-column text-center' style={{ width: '80px' }}>
+      <div className='table-column text-center' style={{ width: '80px' }}>
+        {metadata?.field_value && (
           <Button
             onClick={() => {
               openConfirm({
@@ -233,8 +245,8 @@ const MetadataRow: FC<MetadataRowType> = ({ isEdit, metadata }) => {
           >
             <Icon name='trash-2' width={20} fill='#656D7B' />
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </Row>
   )
 }

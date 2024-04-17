@@ -902,34 +902,37 @@ const EnvironmentSettingsPage = class extends Component {
                         )}
                       </FormGroup>
                     </TabItem>
-                    {metadataEnable && (
-                      <TabItem tabLabel='Metadata'>
-                        <FormGroup className='mt-5 setting'>
-                          <InputGroup
-                            title={'Metadata'}
-                            tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} environments`}
-                            tooltipPlace='left'
-                            component={
-                              <AddMetadataToEntity
-                                organisationId={
-                                  AccountStore.getOrganisation().id
-                                }
-                                projectId={this.props.match.params.projectId}
-                                entityId={env.id || ''}
-                                entityContentType={
-                                  this.state.environmentContentType.id
-                                }
-                                entity={this.state.environmentContentType.model}
-                                getMetadata={(m) => {
-                                  console.log('DEBUG: m:', m)
-                                }}
-                              />
-                            }
-                          />
-                        </FormGroup>
-                        <FormGroup className='mb-5 setting'></FormGroup>
-                      </TabItem>
-                    )}
+                    {metadataEnable &&
+                      this.state.environmentContentType?.id && (
+                        <TabItem tabLabel='Metadata'>
+                          <FormGroup className='mt-5 setting'>
+                            <InputGroup
+                              title={'Metadata'}
+                              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} environments`}
+                              tooltipPlace='left'
+                              component={
+                                <AddMetadataToEntity
+                                  organisationId={
+                                    AccountStore.getOrganisation().id
+                                  }
+                                  projectId={this.props.match.params.projectId}
+                                  entityId={env.id || ''}
+                                  entityContentType={
+                                    this.state.environmentContentType.id
+                                  }
+                                  entity={
+                                    this.state.environmentContentType.model
+                                  }
+                                  getMetadata={(m) => {
+                                    console.log('DEBUG: m:', m)
+                                  }}
+                                />
+                              }
+                            />
+                          </FormGroup>
+                          <FormGroup className='mb-5 setting'></FormGroup>
+                        </TabItem>
+                      )}
                   </Tabs>
                 )}
               </>

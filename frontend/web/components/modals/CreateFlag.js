@@ -590,7 +590,7 @@ const CreateFlag = class extends Component {
             />
           </FormGroup>
         )}
-        {metadataEnable && (
+        {metadataEnable && featureContentType?.id && (
           <FormGroup className='mb-5 setting'>
             <InputGroup
               title={'Metadata'}
