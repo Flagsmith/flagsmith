@@ -168,11 +168,11 @@ Local Evaluation mode is only available with Server-side SDKs.
 
 :::tip
 
-A JSON Environment Document in the context of a feature flag company is a structured file containing configuration
-settings for feature flags within different environments, such as development, staging, and production. It typically
-includes details like feature names, identities, rules, and associated metadata. This document serves as a source of
-truth for managing feature flags across various situations, allowing developers to easily control feature rollout and
-behavior without redeploying code. JSON Environment Documents are primarily used with Local Evaluation and Offline Mode.
+A JSON Environment Document in the context of Flagsmith is a structured file containing configuration settings for
+feature flags within an Environment, such as development, staging, and production. It typically includes details like
+feature names, identities, rules, and associated metadata. This document serves as a source of truth for managing
+feature flags across various situations, allowing developers to easily control feature rollout and behavior without
+redeploying code. JSON Environment Documents are primarily used with Local Evaluation and Offline Mode.
 
 :::
 
