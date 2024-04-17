@@ -5,6 +5,7 @@ import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import { getStore } from 'common/store'
 import { projectService } from 'common/services/useProject'
+import { environmentService } from 'common/services/useEnvironment'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -51,6 +52,9 @@ const controller = {
                 ])
               }
               store.saved()
+              getStore().dispatch(
+                environmentService.util.invalidateTags(['Environment']),
+              )
               AppActions.refreshOrganisation()
             }),
         ),
@@ -76,6 +80,9 @@ const controller = {
       const index = _.findIndex(store.model.environments, { id: env.id })
       store.model.environments[index] = res
       store.saved()
+      getStore().dispatch(
+        environmentService.util.invalidateTags(['Environment']),
+      )
       AppActions.refreshOrganisation()
     })
   },
