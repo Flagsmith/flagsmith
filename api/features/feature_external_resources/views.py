@@ -4,6 +4,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 
 from features.models import Feature
+from features.permissions import FeatureStatePermissions
 
 from .models import FeatureExternalResource
 from .serializers import FeatureExternalResourceSerializer
@@ -11,7 +12,7 @@ from .serializers import FeatureExternalResourceSerializer
 
 class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
     serializer_class = FeatureExternalResourceSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, FeatureStatePermissions]
 
     def get_queryset(self):
         if "pk" in self.kwargs:

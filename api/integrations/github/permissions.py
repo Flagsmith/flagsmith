@@ -11,5 +11,4 @@ class HasPermissionToGithubConfiguration(BasePermission):
         if not request.user.is_authenticated:
             return False
 
-        organisation_id = view.kwargs.get("organisation_pk")
-        return request.user.organisations.filter(id=organisation_id).exists()
+        return request.user.belong_to()
