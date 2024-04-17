@@ -1,6 +1,7 @@
 import pytest
 from django.db import IntegrityError
 from django.urls import reverse
+from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -9,8 +10,12 @@ from organisations.models import Organisation
 from projects.models import Project
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_get_github_configuration(
-    admin_client: APIClient,
+    client: APIClient,
     organisation: Organisation,
 ) -> None:
     # Given
@@ -19,13 +24,17 @@ def test_get_github_configuration(
         kwargs={"organisation_pk": organisation.id},
     )
     # When
-    response = admin_client.get(url)
+    response = client.get(url)
     # Then
     assert response.status_code == status.HTTP_200_OK
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_create_github_configuration(
-    admin_client: APIClient,
+    client: APIClient,
     organisation: Organisation,
 ) -> None:
     # Given
@@ -37,13 +46,17 @@ def test_create_github_configuration(
         kwargs={"organisation_pk": organisation.id},
     )
     # When
-    response = admin_client.post(url, data)
+    response = client.post(url, data)
     # Then
     assert response.status_code == status.HTTP_201_CREATED
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_delete_github_configuration(
-    admin_client: APIClient,
+    client: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
@@ -57,13 +70,17 @@ def test_delete_github_configuration(
         ],
     )
     # When
-    response = admin_client.delete(url)
+    response = client.delete(url)
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_get_github_repository(
-    admin_client: APIClient,
+    client: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
 ):
@@ -73,13 +90,17 @@ def test_get_github_repository(
         args=[organisation.id, github_configuration.id],
     )
     # When
-    response = admin_client.get(url)
+    response = client.get(url)
     # Then
     assert response.status_code == status.HTTP_200_OK
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_create_github_repository(
-    admin_client: APIClient,
+    client: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     project: Project,
@@ -96,14 +117,18 @@ def test_create_github_repository(
         args=[organisation.id, github_configuration.id],
     )
 
-    response = admin_client.post(url, data)
+    response = client.post(url, data)
 
     assert response.status_code == status.HTTP_201_CREATED
     assert GithubRepository.objects.filter(repository_owner="repositoryowner").exists()
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_cannot_create_github_repository_due_to_unique_constraint(
-    admin_client: APIClient,
+    client: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     project: Project,
@@ -124,7 +149,7 @@ def test_cannot_create_github_repository_due_to_unique_constraint(
 
     # When
     with pytest.raises(IntegrityError) as exc_info:
-        response = admin_client.post(url, data)
+        response = client.post(url, data)
 
         # Then
         assert "duplicate key value violates unique constraint" in str(exc_info.value)
@@ -134,8 +159,12 @@ def test_cannot_create_github_repository_due_to_unique_constraint(
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_github_delete_repository(
-    admin_client: APIClient,
+    client: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
@@ -144,5 +173,23 @@ def test_github_delete_repository(
         "api-v1:organisations:repositories-detail",
         args=[organisation.id, github_configuration.id, github_repository.id],
     )
-    response = admin_client.delete(url)
+    response = client.delete(url)
     assert response.status_code == status.HTTP_204_NO_CONTENT
+
+
+# @pytest.mark.parametrize(
+#     "client",
+#     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+# )
+# def test_github_delete_repository(
+#     client: APIClient,
+#     organisation: Organisation,
+#     github_configuration: GithubConfiguration,
+#     github_repository: GithubRepository,
+# ) -> None:
+#     url = reverse(
+#         "api-v1:organisations:repositories-detail",
+#         args=[organisation.id, github_configuration.id, github_repository.id],
+#     )
+#     response = client.delete(url)
+#     assert response.status_code == status.HTTP_204_NO_CONTENT

@@ -163,9 +163,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             return None
         return " ".join([self.first_name, self.last_name]).strip()
 
-    def belong_to(self) -> bool:
-        return Organisation.objects.filter(userorganisation__user=self).exists()
-
     def can_send_password_reset_email(self) -> bool:
         limit = timezone.now() - timezone.timedelta(
             seconds=settings.PASSWORD_RESET_EMAIL_COOLDOWN
