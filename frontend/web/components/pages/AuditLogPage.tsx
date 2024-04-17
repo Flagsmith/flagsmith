@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react' // we need this to make JSX compile
+import React, { FC, useEffect, useState } from 'react' // we need this to make JSX compile
 import ConfigProvider from 'common/providers/ConfigProvider'
 import ToggleChip from 'components/ToggleChip'
 import Utils from 'common/utils/utils'
@@ -23,7 +23,17 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
   const projectId = props.match.params.projectId
 
   const [environment, setEnvironment] = useState(Utils.fromParam().env)
-
+  useEffect(() => {
+    const currentParams = Utils.fromParam()
+    if (currentParams.env !== environment) {
+      props.router.history.replace(
+        `${document.location.pathname}?${Utils.toParam({
+          env: environment,
+          search: currentParams.search,
+        })}`,
+      )
+    }
+  }, [environment])
   const hasRbacPermission = Utils.getPlansPermission('AUDIT')
   if (!hasRbacPermission) {
     return (

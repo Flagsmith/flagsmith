@@ -50,6 +50,7 @@ from .permissions import (
     IdentityFeatureStatePermissions,
 )
 from .serializers import (
+    CreateFeatureSerializer,
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureEvaluationDataSerializer,
     FeatureGroupOwnerInputSerializer,
@@ -63,7 +64,7 @@ from .serializers import (
     FeatureStateValueSerializer,
     GetInfluxDataQuerySerializer,
     GetUsageDataQuerySerializer,
-    ListCreateFeatureSerializer,
+    ListFeatureSerializer,
     ProjectFeatureSerializer,
     SDKFeatureStateSerializer,
     SDKFeatureStatesQuerySerializer,
@@ -82,7 +83,7 @@ logger.setLevel(logging.INFO)
 flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 
 
-@swagger_auto_schema(responses={200: ListCreateFeatureSerializer()}, method="get")
+@swagger_auto_schema(responses={200: CreateFeatureSerializer()}, method="get")
 @api_view(["GET"])
 def get_feature_by_uuid(request, uuid):
     accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
@@ -90,7 +91,7 @@ def get_feature_by_uuid(request, uuid):
         "multivariate_options", "owners", "tags"
     )
     feature = get_object_or_404(qs, uuid=uuid)
-    serializer = ListCreateFeatureSerializer(instance=feature)
+    serializer = CreateFeatureSerializer(instance=feature)
     return Response(serializer.data)
 
 
@@ -104,9 +105,9 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         return {
-            "list": ListCreateFeatureSerializer,
-            "retrieve": ListCreateFeatureSerializer,
-            "create": ListCreateFeatureSerializer,
+            "list": ListFeatureSerializer,
+            "retrieve": CreateFeatureSerializer,
+            "create": CreateFeatureSerializer,
             "update": UpdateFeatureSerializer,
             "partial_update": UpdateFeatureSerializer,
         }.get(self.action, ProjectFeatureSerializer)
@@ -157,7 +158,30 @@ class FeatureViewSet(viewsets.ModelViewSet):
         )
         queryset = queryset.order_by(sort)
 
+        if environment_id:
+            page = self.paginate_queryset(queryset)
+
+            self.environment = Environment.objects.get(id=environment_id)
+            q = Q(
+                feature_id__in=[feature.id for feature in page],
+                identity__isnull=True,
+                feature_segment__isnull=True,
+            )
+            feature_states = FeatureState.objects.get_live_feature_states(
+                self.environment,
+                additional_filters=q,
+            ).select_related("feature_state_value", "feature")
+
+            self._feature_states = {fs.feature_id: fs for fs in feature_states}
+
         return queryset
+
+    def paginate_queryset(self, queryset: QuerySet[Feature]) -> list[Feature]:
+        if getattr(self, "_page", None):
+            return self._page
+
+        self._page = super().paginate_queryset(queryset)
+        return self._page
 
     def perform_create(self, serializer):
         serializer.save(
@@ -176,12 +200,13 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
+
+        feature_states = getattr(self, "_feature_states", {})
+        project = get_object_or_404(Project.objects.all(), pk=self.kwargs["project_pk"])
         context.update(
-            project=get_object_or_404(
-                Project.objects.all(), pk=self.kwargs["project_pk"]
-            ),
-            user=self.request.user,
+            project=project, user=self.request.user, feature_states=feature_states
         )
+
         if self.action == "list" and "environment" in self.request.query_params:
             environment = get_object_or_404(
                 Environment, id=self.request.query_params["environment"]

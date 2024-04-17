@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom'
 import PageTitle from 'components/PageTitle'
 import { timeOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
+import Utils from 'common/utils/utils'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -25,6 +26,7 @@ const ChangeRequestsPage = class extends Component {
     this.state = {
       live_after: new Date().toISOString(),
       showArchived: false,
+      tab: Utils.fromParam().tab === 'closed' ? 1 : 0,
       tags: [],
     }
     ES6Component(this)
@@ -114,7 +116,13 @@ const ChangeRequestsPage = class extends Component {
               <Tabs
                 value={this.state.tab}
                 onChange={(tab) => {
-                  this.setState({ tab })
+                  this.setState({ tab }, (tab) => {
+                    this.props.router.history.replace(
+                      `${document.location.pathname}?${Utils.toParam({
+                        tab: this.state.tab ? 'closed' : 'open',
+                      })}`,
+                    )
+                  })
                 }}
               >
                 <TabItem
