@@ -9,7 +9,6 @@ module.exports = {
     selectorTimeout: 20000,
     assertionTimeout: 20000,
     cache: true,
-    speed:0.5,
     "videoPath": "reports/screen-captures",
     "videoOptions": {
         "singleFile": true,
