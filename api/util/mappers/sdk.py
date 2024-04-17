@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, TypeAlias
 
+from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
 from util.mappers.engine import (
     map_environment_to_engine,
     map_identity_to_engine,
@@ -9,19 +10,14 @@ if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import Identity
     from environments.models import Environment
 
-ENVIRONMENT_RESPONSE_EXCLUDE_FIELDS = [
-    "amplitude_config",
-    "dynatrace_config",
-    "heap_config",
-    "mixpanel_config",
-    "rudderstack_config",
-    "segment_config",
-    "webhook_config",
-]
-
 
 SDKDocumentValue: TypeAlias = dict[str, "SDKDocumentValue"] | str | bool | None | float
 SDKDocument: TypeAlias = dict[str, SDKDocumentValue]
+
+SDK_DOCUMENT_EXCLUDE = [
+    *IDENTITY_INTEGRATIONS_RELATION_NAMES,
+    "dynatrace_config",
+]
 
 
 def map_environment_to_sdk_document(
@@ -47,5 +43,5 @@ def map_environment_to_sdk_document(
     ]
 
     return engine_environment.model_dump(
-        exclude=ENVIRONMENT_RESPONSE_EXCLUDE_FIELDS,
+        exclude=SDK_DOCUMENT_EXCLUDE,
     )

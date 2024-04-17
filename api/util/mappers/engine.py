@@ -24,7 +24,9 @@ from flag_engine.segments.models import (
     SegmentRuleModel,
 )
 
-if TYPE_CHECKING:
+from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
+
+if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import Identity, Trait
     from environments.models import Environment, EnvironmentAPIKey
     from features.models import Feature, FeatureSegment, FeatureState
@@ -48,16 +50,6 @@ __all__ = (
     "map_segment_to_engine",
     "map_traits_to_engine",
 )
-
-INTEGRATIONS_RELATION_NAMES = [
-    "amplitude_config",
-    "dynatrace_config",
-    "heap_config",
-    "mixpanel_config",
-    "rudderstack_config",
-    "segment_config",
-    "webhook_config",
-]
 
 
 def map_traits_to_engine(traits: Iterable["Trait"]) -> list[TraitModel]:
@@ -231,7 +223,7 @@ def map_environment_to_engine(
         str, "EnvironmentIntegrationModel | WebhookConfiguration | None"
     ] = {}
     if with_integrations:
-        for attr_name in INTEGRATIONS_RELATION_NAMES:
+        for attr_name in IDENTITY_INTEGRATIONS_RELATION_NAMES:
             integration_config = getattr(environment, attr_name, None)
             if integration_config and not integration_config.deleted:
                 integration_configs[attr_name] = integration_config
@@ -295,9 +287,6 @@ def map_environment_to_engine(
     amplitude_config_model = map_integration_to_engine(
         integration_configs.pop("amplitude_config", None),
     )
-    dynatrace_config_model = map_integration_to_engine(
-        integration_configs.pop("dynatrace_config", None),
-    )
     heap_config_model = map_integration_to_engine(
         integration_configs.pop("heap_config", None),
     )
@@ -332,7 +321,6 @@ def map_environment_to_engine(
         #
         # Integrations:
         amplitude_config=amplitude_config_model,
-        dynatrace_config=dynatrace_config_model,
         heap_config=heap_config_model,
         mixpanel_config=mixpanel_config_model,
         rudderstack_config=rudderstack_config_model,
