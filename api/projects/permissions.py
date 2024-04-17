@@ -77,9 +77,6 @@ class ProjectPermissions(IsAuthenticated):
         ):
             return True
 
-        if view.action in ("update", "destroy") and request.user.is_project_admin(obj):
-            return True
-
         if view.action == "user_permissions":
             return True
 
