@@ -32,13 +32,13 @@ const controller = {
       .post(`${Project.api}projects/`, { name, organisation: store.id })
       .then((project) => {
         Promise.all(
-          defaultEnvironmentNames.map((v) => {
+          defaultEnvironmentNames.map((envName) => {
             data
               .post(`${Project.api}environments/`, {
                 name: v,
                 project: project.id,
               })
-              .then((res) => createSampleUser(res, 'development', project))
+              .then((res) => createSampleUser(res, envName, project))
           })
         ).then((res) => {
           project.environments = res
