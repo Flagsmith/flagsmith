@@ -1,11 +1,15 @@
 from typing import Callable
 
 from environments.permissions.models import UserEnvironmentPermission
-from projects.models import Project, UserProjectPermission
+from organisations.permissions.models import UserOrganisationPermission
+from projects.models import UserProjectPermission
 
 WithProjectPermissionsCallable = Callable[
-    [list[str], Project | None], UserProjectPermission
+    [list[str], int | None, bool], UserProjectPermission
+]
+WithOrganisationPermissionsCallable = Callable[
+    [list[str], int | None], UserOrganisationPermission
 ]
 WithEnvironmentPermissionsCallable = Callable[
-    [list[str], Project | None], UserEnvironmentPermission
+    [list[str], int | None], UserEnvironmentPermission
 ]
