@@ -49,6 +49,16 @@ __all__ = (
     "map_traits_to_engine",
 )
 
+INTEGRATIONS_RELATION_NAMES = [
+    "amplitude_config",
+    "dynatrace_config",
+    "heap_config",
+    "mixpanel_config",
+    "rudderstack_config",
+    "segment_config",
+    "webhook_config",
+]
+
 
 def map_traits_to_engine(traits: Iterable["Trait"]) -> list[TraitModel]:
     return [
@@ -174,6 +184,8 @@ def map_mv_option_to_engine(
 
 def map_environment_to_engine(
     environment: "Environment",
+    *,
+    with_integrations: bool = True,
 ) -> EnvironmentModel:
     """
     Maps Core API's `environments.models.Environment` model instance to the
@@ -215,22 +227,14 @@ def map_environment_to_engine(
     }
 
     # Read integrations.
-    integration_configs: dict[str, Optional["EnvironmentIntegrationModel"]] = {}
-    for attr_name in (
-        "amplitude_config",
-        "dynatrace_config",
-        "heap_config",
-        "mixpanel_config",
-        "rudderstack_config",
-        "segment_config",
-    ):
-        integration_config = getattr(environment, attr_name, None)
-        if integration_config and not integration_config.deleted:
-            integration_configs[attr_name] = integration_config
-
-    webhook_config: Optional["WebhookConfiguration"] = getattr(
-        environment, "webhook_config", None
-    )
+    integration_configs: dict[
+        str, "EnvironmentIntegrationModel | WebhookConfiguration | None"
+    ] = {}
+    if with_integrations:
+        for attr_name in INTEGRATIONS_RELATION_NAMES:
+            integration_config = getattr(environment, attr_name, None)
+            if integration_config and not integration_config.deleted:
+                integration_configs[attr_name] = integration_config
 
     # No reading from ORM past this point!
 
@@ -306,13 +310,8 @@ def map_environment_to_engine(
     segment_config_model = map_integration_to_engine(
         integration_configs.pop("segment_config", None),
     )
-
-    webhook_config_model = (
-        map_webhook_config_to_engine(
-            webhook_config,
-        )
-        if webhook_config and not webhook_config.deleted
-        else None
+    webhook_config_model = map_webhook_config_to_engine(
+        integration_configs.pop("webhook_config", None),
     )
 
     return EnvironmentModel(

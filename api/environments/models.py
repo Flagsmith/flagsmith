@@ -1,17 +1,15 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import logging
 import typing
 from copy import deepcopy
 
 from core.models import abstract_base_auditable_model_factory
 from core.request_origin import RequestOrigin
+from django.apps import apps
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
 from django.db import models
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import (
@@ -35,6 +33,7 @@ from environments.api_keys import (
     generate_client_api_key,
     generate_server_api_key,
 )
+from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
 from environments.dynamodb import (
     DynamoEnvironmentAPIKeyWrapper,
     DynamoEnvironmentV2Wrapper,
@@ -207,11 +206,7 @@ class Environment(
                 select_related_args = (
                     "project",
                     "project__organisation",
-                    "mixpanel_config",
-                    "segment_config",
-                    "amplitude_config",
-                    "heap_config",
-                    "dynatrace_config",
+                    *IDENTITY_INTEGRATIONS_RELATION_NAMES,
                 )
                 base_qs = cls.objects.select_related(*select_related_args).defer(
                     "description"
@@ -237,7 +232,10 @@ class Environment(
             Q(id=environment_id) if environment_id else Q(project_id=project_id)
         )
         environments = list(
-            cls.objects.filter_for_document_builder(environments_filter)
+            cls.objects.filter_for_document_builder(
+                environments_filter,
+                extra_select_related=IDENTITY_INTEGRATIONS_RELATION_NAMES,
+            )
         )
         if not environments:
             return
@@ -363,8 +361,21 @@ class Environment(
         cls,
         api_key: str,
     ) -> dict[str, typing.Any]:
-        environment = cls.objects.filter_for_document_builder(api_key=api_key).get()
-        return map_environment_to_sdk_document(environment)
+        Identity = apps.get_model("identities", "Identity")
+        environment = cls.objects.filter_for_document_builder(
+            api_key=api_key,
+            extra_prefetch_related=[
+                Prefetch(
+                    "identities",
+                    queryset=Identity.objects.only_overrides(),
+                    to_attr="identities_with_overrides",
+                )
+            ],
+        ).get()
+        return map_environment_to_sdk_document(
+            environment,
+            identities_with_overrides=environment.identities_with_overrides,
+        )
 
     def _get_environment(self):
         return self

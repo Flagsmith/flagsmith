@@ -6,19 +6,19 @@ from features.multivariate.models import MultivariateFeatureStateValue
 
 
 class EnvironmentManager(SoftDeleteManager):
-    def filter_for_document_builder(self, *args, **kwargs):
+    def filter_for_document_builder(
+        self,
+        *args,
+        extra_select_related: list[str] | None = None,
+        extra_prefetch_related: list[Prefetch | str] | None = None,
+        **kwargs,
+    ):
         return (
             super()
             .select_related(
                 "project",
                 "project__organisation",
-                "amplitude_config",
-                "dynatrace_config",
-                "heap_config",
-                "mixpanel_config",
-                "rudderstack_config",
-                "segment_config",
-                "webhook_config",
+                *extra_select_related or (),
             )
             .prefetch_related(
                 Prefetch(
@@ -55,6 +55,7 @@ class EnvironmentManager(SoftDeleteManager):
                         "multivariate_feature_option"
                     ),
                 ),
+                *extra_prefetch_related or (),
             )
             .filter(*args, **kwargs)
         )
