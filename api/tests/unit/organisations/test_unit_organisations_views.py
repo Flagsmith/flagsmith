@@ -1797,3 +1797,49 @@ def test_doesnt_retrieve_stale_api_usage_notifications(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert len(response.data["results"]) == 0
+
+
+def test_non_organisation_user_cannot_remove_user_from_organisation(
+    staff_user: FFAdminUser, organisation: Organisation, api_client: APIClient
+) -> None:
+    # Given
+    another_organisation = Organisation.objects.create(name="another organisation")
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(another_organisation)
+    api_client.force_authenticate(another_user)
+
+    url = reverse(
+        "api-v1:organisations:organisation-remove-users", args=[organisation.id]
+    )
+
+    data = [{"id": staff_user.id}]
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_non_admin_user_cannot_remove_user_from_organisation(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    staff_client: APIClient,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-remove-users", args=[organisation.id]
+    )
+
+    data = [{"id": admin_user.id}]
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
