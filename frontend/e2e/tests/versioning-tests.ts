@@ -31,7 +31,7 @@ export default async () => {
     await waitForElementVisible(byId('features-page'))
     await click('#env-settings-link')
     await click(byId('enable-versioning'))
-    await click('#confirm-toggle-feature-btn')
+    await click('#confirm-btn-yes')
     await waitAndRefresh(1000)
     await refreshUntilElementVisible(byId('feature-versioning-enabled'))
 
