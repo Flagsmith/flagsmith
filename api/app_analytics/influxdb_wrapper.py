@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from django.conf import settings
 from influxdb_client import InfluxDBClient, Point
+from influxdb_client.client.exceptions import InfluxDBError
 from influxdb_client.client.write_api import SYNCHRONOUS
 from sentry_sdk import capture_exception
 from urllib3 import Retry
@@ -61,8 +62,8 @@ class InfluxDBWrapper:
     def write(self):
         try:
             self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
-        except HTTPError:
-            logger.warning("Failed to write records to Influx.")
+        except (HTTPError, InfluxDBError) as e:
+            logger.warning("Failed to write records to Influx: %s", str(e))
             logger.debug(
                 "Records: %s. Bucket: %s",
                 self.records,
