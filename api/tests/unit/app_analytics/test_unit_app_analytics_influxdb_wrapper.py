@@ -46,7 +46,7 @@ def mock_write_api(mock_influxdb_client: MagicMock) -> MagicMock:
     return mock_write_api
 
 
-def test_write(mock_influxdb_client: MagicMock, mock_write_api: MagicMock):
+def test_write(mock_write_api: MagicMock) -> None:
     # Given
     influxdb = InfluxDBWrapper("name")
     influxdb.add_data_point("field_name", "field_value")
