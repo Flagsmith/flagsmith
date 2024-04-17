@@ -24,7 +24,10 @@ export type FeatureVersionState = {
   feature: number
   feature_state_value: FeatureStateValue
   feature_segment: null | FeatureState['feature_segment']
-  multivariate_feature_state_values: Omit<MultivariateFeatureStateValue, 'id'>[]
+  multivariate_feature_state_values: Omit<
+    MultivariateFeatureStateValue,
+    'id' | 'multivariate_feature_option_index'
+  >[]
   live_from: FeatureState['live_from']
 }
 export type Operator = {
@@ -45,6 +48,7 @@ export type ChangeRequestSummary = {
   committed_by: number | null
   deleted_at: string | null
   live_from: string | null
+  approvals: { user?: number; group?: number }[]
 }
 export type SegmentCondition = {
   delete?: boolean
@@ -213,6 +217,8 @@ export type SegmentOverride = {
   enabled: boolean
   feature_segment_value: FeatureState
   value: string
+  multivariate_options: MultivariateFeatureStateValue[]
+  toRemove?: boolean //added by FE
 }
 
 export type AuditLogDetail = AuditLogItem & {
@@ -278,7 +284,7 @@ export type Tag = {
 
 export type MultivariateFeatureStateValue = {
   id?: number
-  multivariate_feature_option: number
+  multivariate_feature_option?: number
   multivariate_feature_option_index: number
   percentage_allocation: number
 }
@@ -299,8 +305,8 @@ export type FeatureStateValue = {
 }
 
 export type MultivariateOption = {
-  id: number
-  uuid: string
+  id?: number
+  uuid?: string
   type: string
   integer_value?: number
   string_value: string
@@ -331,6 +337,7 @@ export type IdentityFeatureState = {
 export type FeatureState = {
   change_request?: number
   created_at: string
+  deleted_at: string | null
   enabled: boolean
   environment: number
   environment_feature_version: string
@@ -349,6 +356,7 @@ export type FeatureState = {
   updated_at: string
   uuid: string
   version?: number
+  toRemove?: boolean // Added by FE
 }
 
 export type ProjectFlag = {
@@ -369,6 +377,8 @@ export type ProjectFlag = {
   tags: number[]
   type: string
   uuid: string
+  skipSaveProjectFeature?: boolean //added by frontend, todo: would move to parameter or remove when migrating to RTK
+  ignore?: boolean //added by frontend, todo: would move to parameter or remove when migrating to RTK
 }
 
 export type AuthType = 'EMAIL' | 'GITHUB' | 'GOOGLE'
@@ -426,6 +436,31 @@ export type RolePermissionGroup = {
   role: number
   id: number
   role_name: string
+}
+export type ChangeRequest = {
+  id: number
+  created_at: string
+  updated_at: string
+  environment: number
+  title: string
+  description: string | number
+  feature_states: FeatureState[]
+  user: number
+  committed_at: number | null
+  committed_by: number | null
+  deleted_at: null
+  approvals: {
+    id: 3122
+    user: number
+    approved_at: null
+  }[]
+  is_approved: true
+  is_committed: false
+  group_assignments: { group: number }[]
+  environment_feature_versions: {
+    uuid: string
+    feature_states: FeatureState[]
+  }[]
 }
 export type FeatureVersion = {
   created_at: string
@@ -516,5 +551,8 @@ export type Res = {
     'day': string //YYYY-MM-DD
     'count': number
   }[]
+  createAndSetVersion: {
+    data: { data: Res['featureVersion']; version_sha: string }[]
+  }
   // END OF TYPES
 }

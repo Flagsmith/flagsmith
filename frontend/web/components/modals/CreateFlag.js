@@ -27,6 +27,7 @@ import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import Permission from 'common/providers/Permission'
 import IdentitySelect from 'components/IdentitySelect'
+import { setInterceptClose, setModalTitle } from './base/ModalDefault'
 import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
 import FeatureValue from 'components/FeatureValue'
@@ -34,6 +35,9 @@ import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
 import Button from 'components/base/forms/Button'
 import { removeUserOverride } from 'components/RemoveUserOverride'
+import FeatureListProvider from 'common/providers/FeatureListProvider'
+import IdentityProvider from 'common/providers/IdentityProvider'
+import FeatureUsage from 'components/FeatureUsage'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -44,6 +48,7 @@ const CreateFlag = class extends Component {
       description,
       enabled,
       feature_state_value,
+      hide_from_client,
       is_archived,
       is_server_key_only,
       multivariate_options,
@@ -69,6 +74,7 @@ const CreateFlag = class extends Component {
       enabledIndentity: false,
       enabledSegment: false,
       environmentFlag: this.props.environmentFlag,
+      hide_from_client,
       identityVariations:
         this.props.identityFlag &&
         this.props.identityFlag.multivariate_feature_state_values
@@ -129,6 +135,46 @@ const CreateFlag = class extends Component {
     }
   }
 
+  onClosing = () => {
+    if (this.state.isEdit) {
+      return new Promise((resolve) => {
+        if (
+          this.state.valueChanged ||
+          this.state.segmentsChanged ||
+          this.state.settingsChanged
+        ) {
+          openConfirm({
+            body: 'Closing this will discard your unsaved changes.',
+            noText: 'Cancel',
+            onNo: () => resolve(false),
+            onYes: () => resolve(true),
+            title: 'Discard changes',
+            yesText: 'Ok',
+          })
+        } else {
+          resolve(true)
+        }
+      })
+    }
+    return Promise.resolve(true)
+  }
+
+  componentDidMount = () => {
+    setInterceptClose(this.onClosing)
+    if (!this.state.isEdit && !E2E) {
+      this.focusTimeout = setTimeout(() => {
+        this.input.focus()
+        this.focusTimeout = null
+      }, 500)
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.focusTimeout) {
+      clearTimeout(this.focusTimeout)
+    }
+  }
+
   userOverridesPage = (page) => {
     if (Utils.getIsEdge()) {
       if (!Utils.getShouldHideIdentityOverridesTab(ProjectStore.model)) {
@@ -175,6 +221,7 @@ const CreateFlag = class extends Component {
         })
       })
   }
+
   save = (func, isSaving) => {
     const {
       environmentId,
@@ -187,6 +234,7 @@ const CreateFlag = class extends Component {
       default_enabled,
       description,
       environmentFlag,
+      hide_from_client,
       initial_value,
       is_archived,
       is_server_key_only,
@@ -739,7 +787,7 @@ const CreateFlag = class extends Component {
             }}
           >
             {(
-              { error, isSaving, usageData },
+              { error, isSaving },
               {
                 createChangeRequest,
                 createFlag,
@@ -786,6 +834,9 @@ const CreateFlag = class extends Component {
                               {
                                 approvals,
                                 description,
+                                featureStateId:
+                                  this.props.changeRequest &&
+                                  this.props.changeRequest.feature_states[0].id,
                                 id:
                                   this.props.changeRequest &&
                                   this.props.changeRequest.id,
@@ -1495,32 +1546,11 @@ const CreateFlag = class extends Component {
                                       data-test='analytics'
                                       tabLabel='Analytics'
                                     >
-                                      <FormGroup className='mb-4'>
-                                        {!!usageData && (
-                                          <h5 className='mb-2'>
-                                            Flag events for last 30 days
-                                          </h5>
-                                        )}
-                                        {!usageData && (
-                                          <div className='text-center'>
-                                            <Loader />
-                                          </div>
-                                        )}
-
-                                        {this.drawChart(usageData)}
-                                      </FormGroup>
-                                      <InfoMessage>
-                                        The Flag Analytics data will be visible
-                                        in the Dashboard between 30 minutes and
-                                        1 hour after it has been collected.{' '}
-                                        <a
-                                          target='_blank'
-                                          href='https://docs.flagsmith.com/advanced-use/flag-analytics'
-                                          rel='noreferrer'
-                                        >
-                                          View docs
-                                        </a>
-                                      </InfoMessage>
+                                      <FeatureUsage
+                                        featureId={this.props.flagId}
+                                        projectId={this.props.projectId}
+                                        environmentId={this.props.environmentId}
+                                      />
                                     </TabItem>
                                   )}
                                 {!existingChangeRequest && createFeature && (

@@ -2,12 +2,13 @@ import { FeatureState, FeatureVersionState, Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
+import { CreateFeatureStateType } from 'components/modals/CreateFlagValue'
 
 //Converts a create / update version feature state to an API payload
-const convertFeatureState = (featureState: FeatureState) => {
+const convertFeatureState = (featureState: CreateFeatureStateType) => {
   const res: FeatureVersionState = {
     enabled: featureState.enabled,
-    feature: featureState.feature,
+    feature: featureState.feature!,
     feature_segment: featureState.feature_segment,
     feature_state_value: Utils.valueToFeatureState(
       featureState.feature_state_value,

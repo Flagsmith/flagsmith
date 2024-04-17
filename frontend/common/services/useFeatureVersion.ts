@@ -16,7 +16,7 @@ export const featureVersionService = service
   .injectEndpoints({
     endpoints: (builder) => ({
       createAndSetFeatureVersion: builder.mutation<
-        Res['featureVersion'],
+        Res['createAndSetVersion'],
         Req['createAndSetFeatureVersion']
       >({
         invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],

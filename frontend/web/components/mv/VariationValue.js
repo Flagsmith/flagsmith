@@ -47,7 +47,7 @@ const VariationValue = ({
               : null,
           })
         }}
-        value={`${value.default_percentage_allocation}`}
+        value={value.default_percentage_allocation}
         inputProps={{
           maxLength: 3,
           readOnly: disabled,

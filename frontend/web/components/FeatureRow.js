@@ -107,7 +107,7 @@ class TheComponent extends Component {
       </Row>,
       <CreateFlagModal
         history={this.context.router.history}
-        environmentApiKey={this.props.environmentId}
+        environmentId={this.props.environmentId}
         projectId={this.props.projectId}
         projectFlag={projectFlag}
         noPermissions={!this.props.permission}

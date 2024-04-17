@@ -117,7 +117,7 @@ const VariationOptions: FC<VariationOptionsType> = ({
             : variationOverrides &&
               variationOverrides.find(
                 (v) => v.multivariate_feature_option === theValue.id,
-              )
+          )
           : variationOverrides &&
             variationOverrides.find((v) => v.percentage_allocation === 100)
         return select ? (
@@ -159,8 +159,8 @@ const VariationOptions: FC<VariationOptionsType> = ({
             index={i}
             readOnlyValue={readOnlyValue}
             value={theValue}
-            onChange={(e: MultivariateOption) => {
-              updateVariation(i, e, variationOverrides!)
+            onChange={(e) => {
+              updateVariation(i, e, variationOverrides)
             }}
             weightTitle={weightTitle}
             disabled={disabled}

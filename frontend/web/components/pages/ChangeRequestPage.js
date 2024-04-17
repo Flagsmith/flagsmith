@@ -128,7 +128,7 @@ const ChangeRequestsPage = class extends Component {
       'Edit Change Request',
       <CreateFlagModal
         history={this.props.router.history}
-        environmentApiKey={this.props.match.params.environmentId}
+        environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
         changeRequest={ChangeRequestStore.model[id]}
         projectFlag={projectFlag}

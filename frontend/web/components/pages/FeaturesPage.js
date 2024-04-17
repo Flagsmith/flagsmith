@@ -118,7 +118,7 @@ const FeaturesPage = class extends Component {
       'New Feature',
       <CreateFlagModal
         history={this.props.router.history}
-        environmentApiKey={this.props.match.params.environmentId}
+        environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
       'side-modal create-feature-modal',

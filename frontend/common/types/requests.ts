@@ -9,6 +9,7 @@ import {
   Tag,
   UserGroup,
 } from './responses'
+import { CreateFeatureStateType } from 'components/modals/CreateFlagValue'
 
 export type PagedRequest<T> = T & {
   page?: number
@@ -18,10 +19,10 @@ export type PagedRequest<T> = T & {
 export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
 export type CreateVersionFeatureState = {
-  environmentId: string
+  environmentId: number
   featureId: number
   sha: string
-  featureState: FeatureState
+  featureState: CreateFeatureStateType
 }
 export type Req = {
   getSegments: PagedRequest<{
@@ -248,18 +249,27 @@ export type Req = {
   getGroupWithRole: { org_id: number; group_id: number }
   deleteGroupWithRole: { org_id: number; group_id: number; role_id: number }
   createAndSetFeatureVersion: {
-    environmentId: string
+    environmentId: number
     featureId: number
     skipPublish?: boolean
-    featureStates: (FeatureState & { toRemove: boolean })[]
+    featureStates: Pick<
+      FeatureState,
+      | 'enabled'
+      | 'feature_segment'
+      | 'uuid'
+      | 'feature_state_value'
+      | 'id'
+      | 'toRemove'
+      | 'multivariate_feature_state_values'
+    >[]
   }
   createFeatureVersion: {
-    environmentId: string
+    environmentId: number
     featureId: number
   }
   publishFeatureVersion: {
     sha: string
-    environmentId: string
+    environmentId: number
     featureId: number
   }
   createVersionFeatureState: CreateVersionFeatureState
@@ -270,7 +280,7 @@ export type Req = {
   }
   getVersionFeatureState: {
     sha: string
-    environmentId: string
+    environmentId: number
     featureId: number
   }
   updateSegmentPriorities: { id: number; priority: number }[]

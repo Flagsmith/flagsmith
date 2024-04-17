@@ -318,6 +318,7 @@ const controller = {
               Object.assign({}, environmentFlag, {
                 enabled: flag.default_enabled,
                 feature_state_value: flag.initial_value,
+                hide_from_client: flag.hide_from_client,
               }),
             )
           })
@@ -561,6 +562,7 @@ const controller = {
             uuid: override.uuid,
           },
           feature_state_value: override.value,
+          hide_from_client: flag.hide_from_client,
           id: override.id,
           toRemove: override.toRemove,
         }
@@ -611,6 +613,7 @@ const controller = {
             const data = Object.assign({}, environmentFlag, {
               enabled: flag.default_enabled,
               feature_state_value: flag.initial_value,
+              hide_from_client: flag.hide_from_client,
             })
             return createAndSetFeatureVersion(getStore(), {
               environmentId: res,
