@@ -68,11 +68,14 @@ def generate_body_comment(
         f"Last Updated {datetime.datetime.now().strftime('%dth %b %Y %I:%M%p')}"
     )
     updated_text = (
-        f"### The Flagsmith Feature {name} "
-        f"was updated in the environment {feature_states[0]['environment_name']}"
+        f"### The Flagsmith Feature {name} " f"was updated in the environment "
     )
 
-    result = updated_text if is_update else f"title ({name}):\n"
+    result = (
+        updated_text
+        if is_update
+        else f"### This pull request is linked to a Flagsmith Feature ({name}):\n"
+    )
 
     for v in feature_states:
         feature_value = (
