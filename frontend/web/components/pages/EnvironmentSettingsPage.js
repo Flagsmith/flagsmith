@@ -260,6 +260,24 @@ const EnvironmentSettingsPage = class extends Component {
                 })
               }, 10)
             }
+            const onEnableVersioning = () => {
+              openConfirm({
+                body: 'This will allow you to attach versions to updating feature values and segment overrides. Note: this may take several minutes to process',
+                onYes: () => {
+                  enableFeatureVersioning(getStore(), {
+                    environmentId: env.api_key,
+                  }).then((res) => {
+                    toast(
+                      'Feature Versioning Enabled, this may take several minutes to process.',
+                    )
+                    this.setState({
+                      enabledFeatureVersioning: true,
+                    })
+                  })
+                },
+                title: 'Enable "Feature Versioning"',
+              })
+            }
             return (
               <>
                 <PageTitle title='Settings' />
@@ -406,24 +424,7 @@ const EnvironmentSettingsPage = class extends Component {
                                   }
                                   className='float-right'
                                   checked={use_v2_feature_versioning}
-                                  onChange={(v) => {
-                                    openConfirm({
-                                      body: 'This will allow you to attach versions to updating feature values and segment overrides. Note: this may take several minutes to process',
-                                      onYes: () => {
-                                        enableFeatureVersioning(getStore(), {
-                                          environmentId: env.api_key,
-                                        }).then((res) => {
-                                          toast(
-                                            'Feature Versioning Enabled, this may take several minutes to process.',
-                                          )
-                                          this.setState({
-                                            enabledFeatureVersioning: true,
-                                          })
-                                        })
-                                      },
-                                      title: 'Enable "Feature Versioning"',
-                                    })
-                                  }}
+                                  onChange={onEnableVersioning}
                                 />
                                 <h5 className='mb-0 ml-3'>
                                   Feature versioning
