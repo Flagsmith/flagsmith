@@ -9,9 +9,11 @@ const OrganisationSelect = class extends Component {
   }
 
   componentDidMount() {
-    const orgId = JSON.parse(localStorage.lastEnv).orgId
-    if (this.props.firstOrganisation && orgId) {
-      this.props.onChange(orgId)
+    if (localStorage.lastEnv) {
+      const orgId = JSON.parse(localStorage.lastEnv).orgId
+      if (this.props.firstOrganisation && orgId) {
+        this.props.onChange(orgId)
+      }
     }
   }
 

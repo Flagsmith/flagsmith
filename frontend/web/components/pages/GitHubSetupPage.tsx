@@ -133,7 +133,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
           <Row className='mb-2'>
             <div style={{ minWidth: '250px' }}>
               <ProjectFilter
-                organisationId={organisation}
+                organisationId={parseInt(organisation)}
                 onChange={(id: string, name: string) => {
                   setProject({ id, name })
                 }}
