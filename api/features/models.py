@@ -951,10 +951,10 @@ class FeatureState(
     def copy_identity_feature_states(
         target_identity: "Identity", source_identity: "Identity"
     ) -> None:
-        target_feature_states: dict[str, FeatureState] = (
+        target_feature_states: dict[int, FeatureState] = (
             target_identity.get_overridden_feature_states()
         )
-        source_feature_states: dict[str, FeatureState] = (
+        source_feature_states: dict[int, FeatureState] = (
             source_identity.get_overridden_feature_states()
         )
 
@@ -966,24 +966,24 @@ class FeatureState(
             target_feature_states[feature_state_id].delete()
 
         # Clone source_identity's feature states to target_identity
-        for feature_id_source in source_feature_states:
+        for source_feature_id, source_feature_state in source_feature_states.items():
             # Get target feature_state if exists in target identity or create new one
             target_feature_state: FeatureState = target_feature_states.get(
-                feature_id_source
+                source_feature_id
             ) or FeatureState.objects.create(
                 environment=target_identity.environment,
                 identity=target_identity,
-                feature=source_feature_states[feature_id_source].feature,
+                feature=source_feature_state.feature,
             )
 
             # Copy enabled value from source feature_state
             target_feature_state.enabled = source_feature_states[
-                feature_id_source
+                source_feature_id
             ].enabled
 
             # Copy feature state value from source feature_state
             target_feature_state.feature_state_value.copy_from(
-                source_feature_states[feature_id_source].feature_state_value
+                source_feature_state.feature_state_value
             )
 
             # Save changes to target feature_state

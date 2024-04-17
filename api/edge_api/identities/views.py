@@ -215,7 +215,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
     ]
     pagination_class = None
 
-    def get_identity(self, edge_identity_identity_uuid) -> EdgeIdentity:
+    def get_identity(self, edge_identity_identity_uuid: str) -> EdgeIdentity:
         identity_document = EdgeIdentity.dynamo_wrapper.get_item_from_uuid_or_404(
             edge_identity_identity_uuid
         )
@@ -319,7 +319,9 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         source_identity: EdgeIdentity = self.get_identity(
-            edge_identity_identity_uuid=request.data.get("source_identity_uuid")
+            edge_identity_identity_uuid=serializer.validated_data[
+                "source_identity_uuid"
+            ]
         )
 
         self.identity.clone_flag_states_from(source_identity)

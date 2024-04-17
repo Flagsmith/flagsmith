@@ -117,26 +117,17 @@ def app_settings_for_dynamodb(
 
 @pytest.fixture()
 def features_for_identity_clone_flag_states_from() -> (
-    typing.Callable[..., tuple[Feature, Feature, Feature]]
+    typing.Callable[[Project], tuple[Feature, ...]]
 ):
-    def make(project: Project) -> tuple[Feature, Feature, Feature]:
+    def make(project: Project) -> tuple[Feature, ...]:
         # Create 3 features
-        feature_1: Feature = Feature.objects.create(
-            name="feature_1",
-            project=project,
-            default_enabled=True,
-        )
-        feature_2: Feature = Feature.objects.create(
-            name="feature_2",
-            project=project,
-            default_enabled=True,
-        )
-
-        feature_3: Feature = Feature.objects.create(
-            name="feature_3",
-            project=project,
-            default_enabled=True,
-        )
-        return feature_1, feature_2, feature_3
+        features: list[Feature] = []
+        for i in range(1, 4):
+            features.append(
+                Feature.objects.create(
+                    name=f"feature_{i}", project=project, default_enabled=True
+                )
+            )
+        return tuple(features)
 
     return make

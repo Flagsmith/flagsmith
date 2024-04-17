@@ -1124,7 +1124,7 @@ def test_edge_identity_clone_flag_states_from(
     target_identity.add_feature_override(feature_state=target_feature_state_2)
     target_identity.add_feature_override(feature_state=target_feature_state_3)
 
-    # Save identities to identities document
+    # Save identities to table
     target_identity_document = target_identity.to_document()
     source_identity_document = source_identity.to_document()
 

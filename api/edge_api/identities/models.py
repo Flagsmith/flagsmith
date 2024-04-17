@@ -252,7 +252,7 @@ class EdgeIdentity:
 
         # Clone identity_source's feature states to identity_target
         for feature_in_source in source_identity.feature_overrides:
-            feature_state_target: FeatureStateModel = FeatureStateModel(
+            feature_state_target = FeatureStateModel(
                 feature=feature_in_source.feature,
                 feature_state_value=feature_in_source.feature_state_value,
                 enabled=feature_in_source.enabled,
