@@ -1,8 +1,11 @@
 from datetime import date
+from typing import Generator, Type
 from unittest import mock
+from unittest.mock import MagicMock
 
 import app_analytics
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from app_analytics.influxdb_wrapper import (
     InfluxDBWrapper,
     build_filter_string,
@@ -14,6 +17,9 @@ from app_analytics.influxdb_wrapper import (
     get_usage_data,
 )
 from django.conf import settings
+from influxdb_client.client.exceptions import InfluxDBError
+from influxdb_client.rest import ApiException
+from urllib3.exceptions import HTTPError
 
 # Given
 org_id = 123
@@ -24,16 +30,24 @@ influx_org = settings.INFLUXDB_ORG
 read_bucket = settings.INFLUXDB_BUCKET + "_downsampled_15m"
 
 
-def test_write(monkeypatch):
-    # Given
+@pytest.fixture()
+def mock_influxdb_client(monkeypatch: Generator[MonkeyPatch, None, None]) -> MagicMock:
     mock_influxdb_client = mock.MagicMock()
     monkeypatch.setattr(
         app_analytics.influxdb_wrapper, "influxdb_client", mock_influxdb_client
     )
+    return mock_influxdb_client
 
+
+@pytest.fixture()
+def mock_write_api(mock_influxdb_client: MagicMock) -> MagicMock:
     mock_write_api = mock.MagicMock()
     mock_influxdb_client.write_api.return_value = mock_write_api
+    return mock_write_api
 
+
+def test_write(mock_write_api: MagicMock) -> None:
+    # Given
     influxdb = InfluxDBWrapper("name")
     influxdb.add_data_point("field_name", "field_value")
 
@@ -42,6 +56,27 @@ def test_write(monkeypatch):
 
     # Then
     mock_write_api.write.assert_called()
+
+
+@pytest.mark.parametrize("exception_class", [HTTPError, InfluxDBError, ApiException])
+def test_write_handles_errors(
+    mock_write_api: MagicMock,
+    exception_class: Type[Exception],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    # Given
+    mock_write_api.write.side_effect = exception_class
+
+    influxdb = InfluxDBWrapper("name")
+    influxdb.add_data_point("field_name", "field_value")
+
+    # When
+    influxdb.write()
+
+    # Then
+    # The write API was called
+    mock_write_api.write.assert_called()
+    # but the exception was not raised
 
 
 def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):
