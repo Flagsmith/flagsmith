@@ -463,18 +463,15 @@ export const waitAndRefresh = async (waitFor = 3000) => {
   await t.eval(() => location.reload())
 }
 
-export const refreshUntilElementVisible = async (selector: string, retries=20) => {
+export const refreshUntilElementVisible = async (selector: string, maxRetries=20) => {
   const element = Selector(selector);
-
   const isElementVisible = async () => await element.exists && await element.visible;
-
-  // Loop with maximum of 3 retries
-  while (retries < 3 && !(await isElementVisible())) {
+  let retries = 0;
+  while (retries < maxRetries && !(await isElementVisible())) {
     await t.eval(() => location.reload()); // Reload the page
     await t.wait(3000);
     retries++;
   }
-
   return t.scrollIntoView(element)
 }
 
