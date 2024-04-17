@@ -57,7 +57,7 @@ def trigger_feature_state_change_webhooks(
         )
     )
 
-    if hasattr(instance.environment.project.organisation, "github_config"):
+    if instance.feature.feature_external_resource:
         github_configuration = instance.environment.project.organisation.github_config
 
         feature_state = {

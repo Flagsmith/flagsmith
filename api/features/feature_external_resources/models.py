@@ -30,7 +30,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
     metadata = models.TextField(null=True)
     feature = models.ForeignKey(
         Feature,
-        related_name="features",
+        related_name="feature_external_resources",
         on_delete=models.CASCADE,
     )
 
