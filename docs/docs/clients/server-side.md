@@ -415,11 +415,17 @@ secret_button_feature_value = Flagsmith.Client.get_feature_value(flags, "secret_
 
 ## Get Flags for an Identity
 
-- By default, all Traits defined in the SDK will automatically be persisted against the Identity within the Flagsmith
-  API.
-- Traits passed to the SDK will be added to all the other Traits associated with that Identity.
+### When running in [Remote Evaluation mode](/clients/overview#remote-evaluation)
+
+- All Traits defined in the SDK will automatically be persisted against the Identity within the Flagsmith API.
+- Traits passed to the SDK will be added to all the other previously persisted Traits associated with that Identity.
 - This full set of Traits are then used to evaluate the Flag values for the Identity.
 - This all happens in a single request/response.
+
+### When running in [Local Evaluation mode](/clients/overview#local-evaluation)
+
+- _Only_ the Traits provided to the SDK at runtime will be used. Local Evaluation mode, by design, does not make any
+  network requests to the Flagsmith API when evaluating Flags for an Identity.
 
 <Tabs groupId="language">
 <TabItem value="python" label="Python">
