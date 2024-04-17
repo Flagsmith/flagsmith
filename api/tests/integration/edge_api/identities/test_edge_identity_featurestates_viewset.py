@@ -1,7 +1,6 @@
 import json
 import typing
 import uuid
-from string import Template
 
 import pytest
 from core.constants import BOOLEAN, INTEGER, STRING
@@ -1054,7 +1053,6 @@ def test_edge_identity_clone_flag_states_from(
     environment_api_key: str,
     flagsmith_identities_table: Table,
     features_for_identity_clone_flag_states_from: typing.Callable,
-    featurestates_urls: dict[str, Template],
 ) -> None:
     def create_identity(identifier: str) -> EdgeIdentity:
         identity_model = IdentityModel(
@@ -1131,13 +1129,20 @@ def test_edge_identity_clone_flag_states_from(
     flagsmith_identities_table.put_item(Item=target_identity_document)
     flagsmith_identities_table.put_item(Item=source_identity_document)
 
+    clone_from_given_identity_url: str = reverse(
+        viewname="api-v1:environments:edge-identity-featurestates-clone-from-given-identity",
+        args=(environment_api_key, target_identity.identity_uuid),
+    )
+    get_all_feature_states_url: str = reverse(
+        viewname="api-v1:environments:edge-identity-featurestates-all",
+        args=(environment_api_key, target_identity.identity_uuid),
+    )
+
     # WHEN
 
     # Clone feature states from source identity to target identity
     clone_identity_feature_states_response = admin_client.post(
-        path=featurestates_urls["clone-from-given-identity"].substitute(
-            {"identity_uuid": target_identity.identity_uuid}
-        ),
+        path=clone_from_given_identity_url,
         data=json.dumps(
             obj={"source_identity_uuid": str(object=source_identity.identity_uuid)}
         ),
@@ -1145,11 +1150,7 @@ def test_edge_identity_clone_flag_states_from(
     )
 
     # Get current feature states for fixture target identity
-    get_feature_states_response = admin_client.get(
-        path=featurestates_urls["all"].substitute(
-            {"identity_uuid": target_identity.identity_uuid}
-        ),
-    )
+    get_feature_states_response = admin_client.get(path=get_all_feature_states_url)
 
     # THEN
 
