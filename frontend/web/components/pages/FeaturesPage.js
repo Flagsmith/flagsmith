@@ -161,6 +161,7 @@ const FeaturesPage = class extends Component {
       )
     }
   }
+
   filter = (page) => {
     const currentParams = Utils.fromParam()
     // this.props.router.push()
@@ -221,7 +222,6 @@ const FeaturesPage = class extends Component {
       'feature_enabled_state_filter',
     )
     const environment = ProjectStore.getEnvironment(environmentId)
-
     const ownersFilter = Utils.getFlagsmithHasFeature('owners_filter')
     return (
       <div

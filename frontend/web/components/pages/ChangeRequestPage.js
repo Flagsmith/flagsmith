@@ -18,12 +18,9 @@ import { getStore } from 'common/store'
 import PageTitle from 'components/PageTitle'
 import { close } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
-import DiffFeature from 'components/diff/DiffFeature'
 import Breadcrumb from 'components/Breadcrumb'
 import SettingsButton from 'components/SettingsButton'
 import DiffChangeRequest from 'components/diff/DiffChangeRequest'
-
-const labelWidth = 120
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'

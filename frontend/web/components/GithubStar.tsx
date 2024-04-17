@@ -17,13 +17,14 @@ const GithubStar: FC<GithubStarType> = ({}) => {
   useEffect(() => {
     if (planName !== planNames.enterprise) {
       fetch(`https://api.github.com/repos/flagsmith/flagsmith`)
-        .then(function (res) {
-          return res.json()
-        })
-        .then(function (res) {
-          setStars(res.stargazers_count)
-        })
+          .then(function (res) {
+            return res.json()
+          })
+          .then(function (res) {
+            setStars(res.stargazers_count)
+          })
     }
+
   }, [planName])
 
   if (planName === planNames.enterprise) {
