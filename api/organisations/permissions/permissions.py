@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Model
 from django.views import View
-from rest_framework.exceptions import APIException, PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.request import Request
 
@@ -91,7 +91,7 @@ class OrganisationPermission(BasePermission):
 
         organisation_id = view.kwargs.get("pk")
         if organisation_id and not organisation_id.isnumeric():
-            raise APIException("Invalid organisation ID")
+            raise ValidationError("Invalid organisation ID")
 
         if view.action == "remove_users":
             return request.user.is_organisation_admin(int(organisation_id))

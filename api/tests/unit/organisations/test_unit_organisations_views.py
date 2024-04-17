@@ -1843,3 +1843,20 @@ def test_non_admin_user_cannot_remove_user_from_organisation(
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_validation_error_if_non_numeric_organisation_id(
+    staff_client: APIClient,
+) -> None:
+    # Given
+    url = reverse("api-v1:organisations:organisation-remove-users", args=["foo"])
+
+    data = []
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
