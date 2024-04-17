@@ -22,7 +22,7 @@ const transformChangeRequest = async (changeRequest) => {
   const feature_states = await Promise.all(
     res.feature_states.map(addFeatureSegmentsToFeatureStates),
   )
-  debugger
+
   return {
     ...res,
     feature_states,
@@ -125,15 +125,32 @@ const controller = {
   updateChangeRequest: (changeRequest) => {
     store.loading()
     data
-      .put(
+      .get(
         `${Project.api}features/workflows/change-requests/${changeRequest.id}/`,
-        changeRequest,
       )
-      .then(async (res) => {
-        store.model[changeRequest.id] = await transformChangeRequest(res)
-        store.loaded()
+      .then((res) => {
+        data
+          .put(
+            `${Project.api}features/workflows/change-requests/${changeRequest.id}/`,
+            {
+              ...res,
+              approvals: changeRequest.approvals,
+              description: changeRequest.description,
+              environment_feature_versions:
+                changeRequest?.environment_feature_versions?.map((v) => v.uuid),
+              group_assignments: changeRequest.group_assignments,
+              title: changeRequest.title,
+            },
+          )
+          .then(async () => {
+            const res = await data.get(
+              `${Project.api}features/workflows/change-requests/${changeRequest.id}/`,
+            )
+            store.model[changeRequest.id] = await transformChangeRequest(res)
+            store.loaded()
+          })
+          .catch((e) => API.ajaxHandler(store, e))
       })
-      .catch((e) => API.ajaxHandler(store, e))
   },
 }
 
