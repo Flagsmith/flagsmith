@@ -16,7 +16,7 @@ Open Source, SaaS hosted and Enterprise versions:
 - The SaaS and Enterprise versions have [Role-Based Access Control](/system-administration/rbac).
 - The SaaS and Enterprise versions have [Audit Logs](/system-administration/audit-logs).
 - The SaaS and Enterprise versions have additional Authentication Providers:
-  - [Okta](/system-administration/authentication/SAML/Okta)
+  - [Okta](/system-administration/authentication/Okta)
   - [LDAP](/system-administration/authentication/LDAP)
   - [SAML](/system-administration/authentication/SAML)
   - [ADFS](/system-administration/authentication/ADFS)
@@ -44,7 +44,7 @@ You can run our Enterprise version either on-premise, or we can provide private 
 organisation.
 
 - [Role Based Access Control](/system-administration/rbac).
-- [Okta](/system-administration/authentication/SAML/Okta), [LDAP](/system-administration/authentication/LDAP),
+- [Okta](/system-administration/authentication/Okta), [LDAP](/system-administration/authentication/LDAP),
   [SAML](/system-administration/authentication/SAML) and [ADFS](/system-administration/authentication/ADFS)
   authentication, as well as the ability to lock authentication to a single provider.
 - Additional database engines: Oracle, SQL Server and MySQL.

@@ -136,7 +136,7 @@ You can authenticate Flagsmith with LDAP providers. [Learn more](/system-adminis
 
 ### Okta
 
-You can authenticate Flagsmith with Okta. [Learn more](/system-administration/authentication/SAML/Okta).
+You can authenticate Flagsmith with Okta. [Learn more](/system-administration/authentication/Okta).
 
 ### ADFS
 

@@ -10,8 +10,8 @@ Source product:
 - [Role Based Access Controls](/system-administration/rbac)
 - [SAML](/system-administration/authentication/SAML), [OAuth](/system-administration/authentication/OAuth),
   [LDAP](/system-administration/authentication/LDAP), [ADFS](/system-administration/authentication/ADFS) and
-  [Okta](/system-administration/authentication/SAML/Okta) authentication, as well as the ability to lock authentication
-  to a single provider
+  [Okta](/system-administration/authentication/Okta) authentication, as well as the ability to lock authentication to a
+  single provider
 - Additional database engines: Oracle, SQL Server and MySQL
 - Additional deployment and orchestration options as detailed below
 

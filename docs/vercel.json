@@ -54,7 +54,7 @@
         },
         {
             "source": "/guides-and-examples/okta-configuration",
-            "destination": "/system-administration/authentication/saml/okta"
+            "destination": "/system-administration/authentication/okta"
         },
         {
             "source": "/self-hosting/",
