@@ -24,9 +24,13 @@ import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
-import { EditPermissionsModal } from 'components/EditPermissions'
+import editPermissions, {
+  EditPermissionsModal,
+} from 'components/EditPermissions'
 import { Req } from 'common/types/requests'
 import PermissionsTabs from 'components/PermissionsTabs'
+import { useGetPermissionQuery } from 'common/services/usePermission'
+import { useHasPermission } from 'common/providers/Permission'
 
 const widths = [80, 80]
 
@@ -54,7 +58,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
     }[]
   >([])
 
-  const { data: groupData } = useGetGroupQuery(
+  const { data: groupData, error } = useGetGroupQuery(
     { id: `${group?.id}`, orgId },
     { skip: !group || !orgId },
   )
@@ -182,7 +186,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
   }
 
   const isEdit = !!group
-  const editGroup = (
+  const editGroupEl = (
     <OrganisationProvider>
       {({ users: organisationUsers }) => {
         const activeUsers = intersectionBy(organisationUsers, users, 'id')
@@ -437,7 +441,21 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       }}
     </OrganisationProvider>
   )
-
+  const editPermissionsEl = (
+    <div className='mt-4'>
+      {!!groupData && (
+        <PermissionsTabs
+          uncontrolled
+          orgId={AccountStore.getOrganisation()?.id}
+          roles={roles}
+          group={group}
+        />
+      )}
+    </div>
+  )
+  if(error) {
+    return
+  }
   return isEdit ? (
     <Tabs uncontrolled tabClassName='px-0'>
       <TabItem
@@ -448,20 +466,9 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
           </div>
         }
       >
-        {editGroup}
+        {editGroupEl}
       </TabItem>
-      <TabItem tabLabel={<div>Permissions</div>}>
-        <div className='mt-4'>
-          {!!groupData && (
-            <PermissionsTabs
-              uncontrolled
-              orgId={AccountStore.getOrganisation()?.id}
-              roles={roles}
-              group={groupData}
-            />
-          )}
-        </div>
-      </TabItem>
+      <TabItem tabLabel={<div>Permissions</div>}>{editPermissionsEl}</TabItem>
     </Tabs>
   ) : (
     editGroup

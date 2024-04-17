@@ -60,6 +60,7 @@ import InputGroup from './base/forms/InputGroup'
 import classNames from 'classnames'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import { useGetPermissionQuery } from 'common/services/usePermission'
+import { useHasPermission } from 'common/providers/Permission'
 const Project = require('common/project')
 
 type EditPermissionModalType = {
@@ -102,8 +103,11 @@ const withAdminPermissions = (InnerComponent: any) => {
   const WrappedComponent: FC<EditPermissionModalType> = (props) => {
     const { id, level } = props
     const notReady = !id || !level
-    const { data: adminPermissions, isLoading: permissionsLoading } =
-      useGetPermissionQuery({ id: `${id}`, level }, { skip: notReady })
+    const { isLoading: permissionsLoading, permission } = useHasPermission({
+      id: id,
+      level,
+      permission: 'ADMIN',
+    })
 
     if (permissionsLoading || notReady) {
       return (
@@ -112,7 +116,7 @@ const withAdminPermissions = (InnerComponent: any) => {
         </div>
       )
     }
-    if (!adminPermissions?.ADMIN) {
+    if (!permission) {
       return (
         <div className='my-4 text-center text-muted'>
           To manage permissions you need to be admin of this {level}.

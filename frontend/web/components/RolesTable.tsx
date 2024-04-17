@@ -8,9 +8,9 @@ import ConfirmDeleteRole from './modals/ConfirmDeleteRole'
 import Icon from './Icon'
 import Panel from './base/grid/Panel'
 import { useGetGroupsQuery } from 'common/services/useGroup'
-import { useGetPermissionQuery } from 'common/services/usePermission'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
+import { useHasPermission } from 'common/providers/Permission'
 const rolesWidths = [250, 100]
 
 type RolesTableType = {
@@ -27,11 +27,11 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
     { organisation_id: organisationId },
     { skip: !organisationId },
   )
-  const { data: permissions } = useGetPermissionQuery({
+  const { permission: isAdmin } = useHasPermission({
     id: organisationId,
     level: 'organisation',
+    permission: 'ADMIN',
   })
-  const isAdmin = permissions?.ADMIN
   const createRole = () => {
     openModal(
       'Create Role',
