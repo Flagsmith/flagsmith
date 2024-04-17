@@ -1,4 +1,4 @@
 module.exports = (envId) => `
-curl 'https://edge.api.flagsmith.com/api/v1/flags/'\\
-     -H 'x-environment-key: ${envId}' > flagsmith.json
+curl -i 'https://edge.api.flagsmith.com/api/v1/flags/' \\
+     -H 'x-environment-key: ${envId}' | tee flagsmith.json
 `
