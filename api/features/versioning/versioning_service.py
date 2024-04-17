@@ -12,6 +12,17 @@ def get_environment_flags_latest(
     environment: Environment,
     additional_filters: None | Q = None,
 ) -> list[FeatureState]:
+    """
+    Get a list of FeatureStates ordered by their natural sorting operation.
+
+    Similar to get_environment_flags_list, this function provides feature
+    states ordered by their natural sorting operation. It's most
+    useful to apply identity__isnull=True and
+    feature_segment__isnull=True as additional_filters to this
+    function as feature states are sorted and reduced by solely
+    their feature_id attribute.
+    """
+
     feature_states = FeatureState.objects.get_live_feature_states(
         environment=environment, additional_filters=additional_filters
     )
