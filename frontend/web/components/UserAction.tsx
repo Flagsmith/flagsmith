@@ -78,6 +78,22 @@ export const FeatureAction: FC<FeatureActionProps> = ({
     )
   }
 
+  if (!!canEdit && !canRemove) {
+    return (
+      <Button
+        onClick={() => handleActionClick('edit')}
+        size='small'
+        className='btn-with-icon'
+      >
+        <Icon name='edit' width={16} fill='#656D7B' />
+      </Button>
+    )
+  }
+
+  if (!canEdit && !canRemove) {
+    return null
+  }
+
   return (
     <div>
       <div ref={btnRef}>

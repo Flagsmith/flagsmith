@@ -29,6 +29,7 @@ import CreateGroup from 'components/modals/CreateGroup'
 import PermissionsTabs from 'components/PermissionsTabs'
 import UserAction from 'components/UserAction'
 import classNames from 'classnames'
+import AccountStore from 'common/stores/account-store'
 
 const widths = [300, 200, 80]
 
@@ -1155,11 +1156,11 @@ const OrganisationSettingsPage = class extends Component {
                                                         className='table-column text-end'
                                                       >
                                                         <UserAction
-                                                          canRemove
                                                           onRemove={
                                                             onRemoveClick
                                                           }
                                                           onEdit={onEditClick}
+                                                          canRemove={AccountStore.isAdmin()}
                                                           canEdit={
                                                             role !== 'ADMIN'
                                                           }
