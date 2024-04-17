@@ -86,6 +86,11 @@ const DiffFeature: FC<FeatureDiffType> = ({
                 </div>
               }
             >
+              {!totalChanges && (
+                <div className='mt-4'>
+                  <InfoMessage>No Changes Found</InfoMessage>
+                </div>
+              )}
               <div className='panel-content'>
                 <div className='search-list mt-2'>
                   <div className='flex-row table-header'>

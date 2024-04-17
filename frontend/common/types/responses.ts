@@ -4,6 +4,13 @@ export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
 }
+export type Approval =
+  | {
+      user: number
+    }
+  | {
+      group: number
+    }
 export type PagedResponse<T> = {
   count?: number
   next?: string
@@ -309,7 +316,6 @@ export type FeatureState = {
   environment_feature_version: string
   version?: number
   live_from?: string
-  hide_from_client?: string
   feature: number
   environment: number
   feature_segment?: {
@@ -319,6 +325,8 @@ export type FeatureState = {
     uuid: string
   }
   change_request?: number
+  //Added by FE
+  toRemove?: boolean
 }
 
 export type ProjectFlag = {
@@ -390,6 +398,31 @@ export type RolePermissionGroup = {
   role: number
   id: number
   role_name: string
+}
+export type ChangeRequest = {
+  id: number
+  created_at: string
+  updated_at: string
+  environment: number
+  title: string
+  description: string | number
+  feature_states: FeatureState[]
+  user: number
+  committed_at: number | null
+  committed_by: number | null
+  deleted_at: null
+  approvals: {
+    id: number
+    user: number
+    approved_at: null | string
+  }[]
+  is_approved: boolean
+  is_committed: boolean
+  group_assignments: { group: number }[]
+  environment_feature_versions: {
+    uuid: string
+    feature_states: FeatureState[]
+  }[]
 }
 export type FeatureVersion = {
   created_at: string
@@ -488,7 +521,7 @@ export type Res = {
   changeRequests: PagedResponse<ChangeRequestSummary>
   groupSummaries: UserGroupSummary[]
   segmentPriorities: {}
-  featureSegment: { id: string }
+  featureSegment: FeatureState['feature_segment']
   featureVersions: PagedResponse<FeatureVersion>
   users: User[]
   enableFeatureVersioning: { id: string }
@@ -499,5 +532,6 @@ export type Res = {
   featureImports: PagedResponse<FeatureImport>
   serversideEnvironmentKeys: APIKey[]
   userGroupPermissions: GroupPermission[]
+  featureStates: PagedResponse<FeatureState>
   // END OF TYPES
 }

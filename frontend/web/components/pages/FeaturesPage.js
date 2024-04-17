@@ -149,11 +149,6 @@ const FeaturesPage = class extends Component {
         : this.state.tags.join(','),
     value_search: this.state.value_search ? this.state.value_search : undefined,
   })
-
-  onSave = (isCreate) => {
-    toast(`${isCreate ? 'Created' : 'Updated'} Feature`)
-  }
-
   onError = (error) => {
     // Kick user back out to projects
     this.setState({ error })
@@ -166,7 +161,6 @@ const FeaturesPage = class extends Component {
       )
     }
   }
-
   filter = (page) => {
     const currentParams = Utils.fromParam()
     // this.props.router.push()
@@ -227,6 +221,7 @@ const FeaturesPage = class extends Component {
       'feature_enabled_state_filter',
     )
     const environment = ProjectStore.getEnvironment(environmentId)
+
     const ownersFilter = Utils.getFlagsmithHasFeature('owners_filter')
     return (
       <div

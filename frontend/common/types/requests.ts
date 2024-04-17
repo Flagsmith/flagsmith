@@ -7,6 +7,8 @@ import {
   Role,
   ImportStrategy,
   APIKey,
+  Approval,
+  MultivariateOption,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -17,7 +19,7 @@ export type PagedRequest<T> = T & {
 export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
 export type CreateVersionFeatureState = {
-  environmentId: string
+  environmentId: number
   featureId: number
   sha: string
   featureState: FeatureState
@@ -247,18 +249,27 @@ export type Req = {
   getGroupWithRole: { org_id: number; group_id: number }
   deleteGroupWithRole: { org_id: number; group_id: number; role_id: number }
   createAndSetFeatureVersion: {
-    environmentId: string
+    environmentId: number
     featureId: number
     skipPublish?: boolean
-    featureStates: (FeatureState & { toRemove: boolean })[]
+    featureStates: Pick<
+      FeatureState,
+      | 'enabled'
+      | 'feature_segment'
+      | 'uuid'
+      | 'feature_state_value'
+      | 'id'
+      | 'toRemove'
+      | 'multivariate_feature_state_values'
+    >[]
   }
   createFeatureVersion: {
-    environmentId: string
+    environmentId: number
     featureId: number
   }
   publishFeatureVersion: {
     sha: string
-    environmentId: string
+    environmentId: number
     featureId: number
   }
   createVersionFeatureState: CreateVersionFeatureState
@@ -269,7 +280,7 @@ export type Req = {
   }
   getVersionFeatureState: {
     sha: string
-    environmentId: string
+    environmentId: number
     featureId: number
   }
   updateSegmentPriorities: { id: number; priority: number }[]
@@ -310,5 +321,17 @@ export type Req = {
   }
   getProject: { id: string }
   getUserGroupPermission: { project_id: string }
+  createChangeRequest: {
+    approvals: Approval[]
+    live_from: string | undefined
+    description: string
+    multivariate_options: MultivariateOption[]
+    title: string
+  }
+  getFeatureStates: {
+    environment?: number
+    feature?: number
+  }
+  getFeatureSegment: { id: string }
   // END OF TYPES
 }
