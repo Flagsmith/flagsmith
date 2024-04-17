@@ -63,7 +63,11 @@ class InfluxDBWrapper:
         try:
             self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
         except (HTTPError, InfluxDBError) as e:
-            logger.warning("Failed to write records to Influx: %s", str(e))
+            logger.warning(
+                "Failed to write records to Influx: %s",
+                str(e),
+                exc_info=e,
+            )
             logger.debug(
                 "Records: %s. Bucket: %s",
                 self.records,
