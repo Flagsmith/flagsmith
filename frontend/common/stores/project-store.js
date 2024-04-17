@@ -3,6 +3,8 @@ import OrganisationStore from './organisation-store'
 
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
+import { getStore } from 'common/store'
+import { projectService } from 'common/services/useProject'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -81,6 +83,7 @@ const controller = {
     store.saving()
     data.put(`${Project.api}projects/${project.id}/`, project).then((res) => {
       store.model = Object.assign(store.model, res)
+      getStore().dispatch(projectService.util.invalidateTags(['Project']))
       store.saved()
     })
   },
