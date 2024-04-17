@@ -9,6 +9,7 @@ import {
   Role,
   User,
   UserGroup,
+  UserGroupSummary,
   UserPermission,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
@@ -64,7 +65,7 @@ import { useHasPermission } from 'common/providers/Permission'
 const Project = require('common/project')
 
 type EditPermissionModalType = {
-  group?: UserGroup
+  group?: UserGroupSummary
   id: number
   className?: string
   isGroup?: boolean

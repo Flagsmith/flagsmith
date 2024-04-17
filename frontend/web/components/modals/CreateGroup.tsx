@@ -447,7 +447,6 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
         <PermissionsTabs
           uncontrolled
           orgId={AccountStore.getOrganisation()?.id}
-          roles={roles}
           group={group}
         />
       )}
