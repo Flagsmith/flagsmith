@@ -1824,7 +1824,7 @@ router.get('/', function (req, res, next) {
 <TabItem value="php" label="PHP">
 
 ```php
-$flagsmith = (new Flagsmith(FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY));
+$flagsmith = (new Flagsmith("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY"));
 // This will load the environment from cache (or API, if cache does not exist.)
 $flagsmith->updateEnvironment();
 ```
@@ -1836,7 +1836,7 @@ composer require symfony/cache
 ```
 
 ```php
-$flagsmith = (new Flagsmith(FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY))
+$flagsmith = (new Flagsmith("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY"))
   ->withCache(new Psr16Cache(new FilesystemAdapter()));
 // Cache the environment call to reduce network calls for each and every evaluation.
 // This will load the environment from cache (or API, if cache does not exist.)
