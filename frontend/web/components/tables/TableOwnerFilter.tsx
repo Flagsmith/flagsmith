@@ -23,14 +23,11 @@ const TableOwnerFilter: FC<TableFilterType> = ({
   const checkedLocalStorage = useRef(false)
   const orgUsers = OrganisationStore.model && OrganisationStore.model.users
   const users = useMemo(() => {
-    return sortBy(
-      (orgUsers || []).map((item: User) => ({
-        label: `${item.first_name} ${item.last_name}`,
-        subtitle: item.email,
-        value: item.id,
-      })),
-      'label',
-    )
+    return (orgUsers || []).map((item: User) => ({
+      label: `${item.first_name} ${item.last_name}`,
+      subtitle: item.email,
+      value: item.id,
+    }))
   }, [orgUsers, value])
 
   return (
