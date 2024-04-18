@@ -8,7 +8,6 @@ const _ = require('lodash')
 const controller = {
   createProject: (name) => {
     store.saving()
-    const defaultEnvironmentNames = Utils.getFlagsmithValue('default_environment_names_for_new_project') ? JSON.parse(Utils.getFlagsmithValue('default_environment_names_for_new_project')) : ['Development', 'Production']
     const createSampleUser = (res, envName, project) =>
       data
         .post(
@@ -31,6 +30,8 @@ const controller = {
     data
       .post(`${Project.api}projects/`, { name, organisation: store.id })
       .then((project) => {
+        const defaultEnvironmentNames = Utils.getFlagsmithHasFeature('default_environment_names_for_new_project')
+         ? JSON.parse(Utils.getFlagsmithValue('default_environment_names_for_new_project')) : ['Development', 'Production']
         Promise.all(
           defaultEnvironmentNames.map((envName) => {
             data
