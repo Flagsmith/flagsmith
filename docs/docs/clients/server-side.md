@@ -415,12 +415,6 @@ secret_button_feature_value = Flagsmith.Client.get_feature_value(flags, "secret_
 
 ## Get Flags for an Identity
 
-- By default, all Traits defined in the SDK will automatically be persisted against the Identity within the Flagsmith
-  API.
-- Traits passed to the SDK will be added to all the other Traits associated with that Identity.
-- This full set of Traits are then used to evaluate the Flag values for the Identity.
-- This all happens in a single request/response.
-
 <Tabs groupId="language">
 <TabItem value="python" label="Python">
 
@@ -516,7 +510,6 @@ flags, _ := client.GetIdentityFlags(ctx, identifier, traits)
 
 showButton, _ := flags.IsFeatureEnabled("secret_button")
 buttonData, _ := flags.GetFeatureValue("secret_button")
-
 ```
 
 </TabItem>
@@ -541,7 +534,6 @@ let identity_flags = flagsmith.get_identity_flags(identifier, Some(traits)).unwr
 
 let show_button = identity_flags.is_feature_enabled("secret_button").unwrap();
 let button_data = identity_flags.get_feature_value_as_string("secret_button").unwrap();
-
 ```
 
 </TabItem>
@@ -561,6 +553,22 @@ secret_button_feature_value = Flagsmith.Client.get_feature_value(flags, "secret_
 
 </TabItem>
 </Tabs>
+
+### When running in [Remote Evaluation mode](/clients/overview#remote-evaluation)
+
+- When requesting Flags for an Identity, all the Traits defined in the SDK will automatically be persisted against the
+  Identity within the Flagsmith API.
+- Traits passed to the SDK will be added to all the other previously persisted Traits associated with that Identity.
+- This full set of Traits are then used to evaluate the Flag values for the Identity.
+- This all happens in a single request/response.
+
+### When running in [Local Evaluation mode](/clients/overview#local-evaluation)
+
+- _Only_ the Traits provided to the SDK at runtime will be used. Local Evaluation mode, by design, does not make any
+  network requests to the Flagsmith API when evaluating Flags for an Identity.
+  - When running in Local Evaluation Mode, the SDK requests the
+    [Environment Document](/clients/overview#the-environment-document) from the Flagsmith API. This contains all the
+    information required to make Flag Evaluations, but it does _not_ contain any Trait data.
 
 ## Managing Default Flags
 
@@ -767,8 +775,8 @@ Flagsmith SDKs can be configured to include an offline handler which has 2 funct
    offline mode.
 
 To use it as a default handler, we recommend using the [flagsmith CLI](https://github.com/Flagsmith/flagsmith-cli) to
-generate the environment document and use our LocalFileHandler class, but you can also create your own offline handlers,
-by extending the base class.
+generate the [Environment Document](/clients/overview#the-environment-document) and use our LocalFileHandler class, but
+you can also create your own offline handlers, by extending the base class.
 
 <Tabs groupId="language">
 <TabItem value="python" label="Python">
