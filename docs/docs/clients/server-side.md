@@ -556,7 +556,8 @@ secret_button_feature_value = Flagsmith.Client.get_feature_value(flags, "secret_
 
 ### When running in [Remote Evaluation mode](/clients/overview#remote-evaluation)
 
-- All Traits defined in the SDK will automatically be persisted against the Identity within the Flagsmith API.
+- When requesting Flags for an Identity, all the Traits defined in the SDK will automatically be persisted against the
+  Identity within the Flagsmith API.
 - Traits passed to the SDK will be added to all the other previously persisted Traits associated with that Identity.
 - This full set of Traits are then used to evaluate the Flag values for the Identity.
 - This all happens in a single request/response.
@@ -565,6 +566,8 @@ secret_button_feature_value = Flagsmith.Client.get_feature_value(flags, "secret_
 
 - _Only_ the Traits provided to the SDK at runtime will be used. Local Evaluation mode, by design, does not make any
   network requests to the Flagsmith API when evaluating Flags for an Identity.
+  - When running in Local Evaluation Mode, the SDK requests the Environment Document from the Flagsmith API. This
+    contains all the information required to make Flag Evaluations, but it does _not_ contain any Trait data.
 
 ## Managing Default Flags
 
