@@ -923,14 +923,10 @@ const EnvironmentSettingsPage = class extends Component {
                                   entity={
                                     this.state.environmentContentType.model
                                   }
-                                  getMetadata={(m) => {
-                                    console.log('DEBUG: m:', m)
-                                  }}
                                 />
                               }
                             />
                           </FormGroup>
-                          <FormGroup className='mb-5 setting'></FormGroup>
                         </TabItem>
                       )}
                   </Tabs>

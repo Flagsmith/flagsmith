@@ -513,16 +513,6 @@ const CreateFlag = class extends Component {
     this.forceUpdate()
   }
 
-  // removeMetadata = (id) => {
-  //   this.setState({
-  //     metadata: (this.state.metadata || []).filter((v) => v.metadata !== id),
-  //   })
-  // }
-
-  // getMetadataList = (metadataList, metadata) => {
-  //   return metadataList.filter((v) => metadata.find((a) => a.metadata === v.id))
-  // }
-
   render() {
     const {
       default_enabled,
@@ -533,14 +523,10 @@ const CreateFlag = class extends Component {
       hide_from_client,
       initial_value,
       isEdit,
-      // metadata,
-      // metadataList,
       multivariate_options,
       name,
-      // supportedContentTypes,
     } = this.state
     const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID
-    // const metadataAdded = this.getMetadataList(metadataList, metadata)
 
     const { identity, identityName, projectFlag } = this.props
     const Provider = identity ? IdentityProvider : FeatureListProvider
@@ -603,9 +589,6 @@ const CreateFlag = class extends Component {
                   entityId={projectFlag?.id}
                   entityContentType={featureContentType?.id}
                   entity={featureContentType?.model}
-                  getMetadata={(m) => {
-                    console.log('DEBUG: m:', m)
-                  }}
                 />
               }
             />

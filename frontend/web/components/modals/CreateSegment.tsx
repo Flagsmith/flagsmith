@@ -134,7 +134,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [name, setName] = useState<Segment['name']>(segment.name)
   const [rules, setRules] = useState<Segment['rules']>(segment.rules)
   const [tab, setTab] = useState(0)
-  // const [showMetadataList, setShowMetadataList] = useState<boolean>(false)
   const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
 
   const error = createError || updateError
@@ -436,9 +435,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   entityId={name || ''}
                   entityContentType={segmentContentType?.id}
                   entity={segmentContentType?.model}
-                  getMetadata={(m: any) => {
-                    console.log('DEBUG: m:', m)
-                  }}
                 />
               }
             />
