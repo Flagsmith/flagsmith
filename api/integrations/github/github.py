@@ -114,7 +114,7 @@ def generate_data(
     type: str,
     feature_states: typing.Union[list[FeatureState], list[FeatureStateValue]] = None,
     url: str = None,
-):
+) -> dict[str, typing.Any]:
 
     feature_data = {
         "id": feature_id,

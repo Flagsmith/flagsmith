@@ -282,6 +282,42 @@ def test_fetch_issue(
 
 
 @pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_fetch_repositories(
+    client: APIClient,
+    mock_generate_token,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mocker,
+) -> None:
+    # Given
+    mock_generate_token.return_value = "mocked_token"
+    github_request_mock = mocker.patch("requests.get", side_effect=mocked_requests_get)
+    url = reverse("api-v1:organisations:get-github-installation-repos")
+    data = {"repo_owner": "owner", "repo_name": "repo"}
+    # When
+    response = client.get(url, data=data)
+
+    # Then
+    assert response.status_code == 200
+    response_json = response.json()
+    assert "data" in response_json
+
+    github_request_mock.assert_called_with(
+        "https://api.github.com/installation/repositories",
+        headers={
+            "X-GitHub-Api-Version": "2022-11-28",
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": "Bearer mocked_token",
+        },
+        timeout=10,
+    )
+
+
+@pytest.mark.parametrize(
     "client, reverse_url",
     [
         (
