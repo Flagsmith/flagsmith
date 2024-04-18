@@ -7,12 +7,15 @@ import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
 import Button from './base/forms/Button'
 import Icon from './Icon'
+import { Tag } from 'common/types/responses'
+import color from 'color'
+import { getTagColor } from './tags/Tag'
 
 interface FeatureActionProps {
   projectId: string
   featureIndex: number
   readOnly: boolean
-  isProtected: boolean
+  protectedTags: Tag[] | undefined
   hideAudit: boolean
   hideHistory: boolean
   hideRemove: boolean
@@ -44,12 +47,12 @@ export const FeatureAction: FC<FeatureActionProps> = ({
   hideHistory,
   hideRemove,
   isCompact,
-  isProtected,
   onCopyName,
   onRemove,
   onShowAudit,
   onShowHistory,
   projectId,
+  protectedTags,
   readOnly,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
@@ -90,6 +93,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
     listRef.current.style.left = `${listPosition.left}px`
   }, [isOpen])
 
+  const isProtected = !!protectedTags?.length
   return (
     <div className='feature-action'>
       <div ref={btnRef}>
@@ -169,7 +173,22 @@ export const FeatureAction: FC<FeatureActionProps> = ({
                     }
                   >
                     {isProtected &&
-                      '<span>This feature has been tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>'}
+                      `<span>This feature has been tagged with the permanent tag${
+                        protectedTags?.length > 1 ? 's' : ''
+                      } ${protectedTags
+                        ?.map((tag) => {
+                          const tagColor = getTagColor(tag)
+                          return `<strong class='chip chip--xs d-inline-block ms-1' style='background:${color(
+                            tagColor,
+                          ).fade(0.92)};border-color:${color(tagColor).darken(
+                            0.1,
+                          )};color:${color(tagColor).darken(0.1)};'>
+                        ${tag.label}
+                      </strong>`
+                        })
+                        .join('')}. Please remove the tag${
+                        protectedTags?.length > 1 ? 's' : ''
+                      } before attempting to delete this flag.</span>`}
                   </Tooltip>,
                 )
               }

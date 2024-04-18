@@ -14,6 +14,8 @@ import Button from 'components/base/forms/Button'
 import Tag from './Tag'
 import InlineModal from 'components/InlineModal'
 import ErrorMessage from 'components/ErrorMessage'
+import Switch from 'components/Switch'
+import Icon from 'components/Icon'
 
 type CreateEditTagType = {
   projectId: string
@@ -47,6 +49,9 @@ const CreateEditTag: FC<CreateEditTagType> = ({
 
   const { data: tags } = useGetTagsQuery({ projectId })
   const existingTag = useMemo(() => {
+    if (isEdit) {
+      return false
+    }
     if (tag?.label && tags) {
       const lowercaseTag = tag?.label.toLowerCase()
       return tags?.find((tag) => {
@@ -54,7 +59,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
       })
     }
     return false
-  }, [tags, tag?.label])
+  }, [tags, isEdit, tag?.label])
 
   const tagsSaving = creating || saving
 
@@ -159,6 +164,25 @@ const CreateEditTag: FC<CreateEditTagType> = ({
           title='Name'
           onChange={(e: InputEvent) => update('label', e)}
         />
+        <Tooltip
+          title={
+            <FormGroup className='mb-4 mt-2 flex-row'>
+              <Switch
+                defaultChecked={tag?.is_permanent}
+                checked={tag?.is_permanent}
+                onChange={(e: InputEvent) => update('is_permanent', e)}
+              />
+              <div className='label-switch ml-3'>
+                Is permanent? <Icon className='ms-1' name={'info-outlined'} />
+              </div>
+            </FormGroup>
+          }
+          place='top'
+        >
+          Flags marked with permanent tags are not monitored for staleness and
+          have deletion protection.
+        </Tooltip>
+
         <InputGroup
           title='Select a color'
           component={

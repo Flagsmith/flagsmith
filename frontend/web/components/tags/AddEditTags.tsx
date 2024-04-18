@@ -1,4 +1,4 @@
-import React, { FC, useMemo, useState } from 'react'
+import React, { FC, useEffect, useMemo, useState } from 'react'
 import { filter as loFilter } from 'lodash'
 import { useHasPermission } from 'common/providers/Permission'
 import Utils from 'common/utils/utils'
@@ -46,6 +46,11 @@ const AddEditTags: FC<AddEditTagsType> = ({
     permission: 'ADMIN',
   })
 
+  useEffect(() => {
+    if (!isOpen) {
+      setTab('SELECT')
+    }
+  }, [isOpen])
   const selectTag = (tag: TTag) => {
     const _value = value || []
     const isSelected = _value?.includes(tag.id)
@@ -200,22 +205,24 @@ const AddEditTags: FC<AddEditTagsType> = ({
                           tag={tag}
                         />
                       </Flex>
-                      {!readOnly && !!projectAdminPermission && (
-                        <>
-                          <div
-                            onClick={() => editTag(tag)}
-                            className='clickable'
-                          >
-                            <Icon name='setting' fill='#9DA4AE' />
-                          </div>
-                          <div
-                            onClick={() => confirmDeleteTag(tag)}
-                            className='ml-3 clickable'
-                          >
-                            <Icon name='trash-2' fill='#9DA4AE' />
-                          </div>
-                        </>
-                      )}
+                      {!readOnly &&
+                        !!projectAdminPermission &&
+                        !tag.is_system_tag && (
+                          <>
+                            <div
+                              onClick={() => editTag(tag)}
+                              className='clickable'
+                            >
+                              <Icon name='setting' fill='#9DA4AE' />
+                            </div>
+                            <div
+                              onClick={() => confirmDeleteTag(tag)}
+                              className='ml-3 clickable'
+                            >
+                              <Icon name='trash-2' fill='#9DA4AE' />
+                            </div>
+                          </>
+                        )}
                     </Row>
                   </div>
                 ))}
