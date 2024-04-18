@@ -281,9 +281,9 @@ Server-side SDK Keys give server-side SDKs access to [Local Evaluation](#remote-
 
 These keys are secret and should not be shared.
 
-### Flagsmith API Keys
+### Management API Keys
 
-Flagsmith API keys are used to interact with the Flagsmith API directly. These keys can be used in the following
+Management API keys are used to interact with the Flagsmith API directly. These keys can be used in the following
 situations:
 
 - If you want to work with Flagsmith programatically, for example when creating and deleting Environments as part of a
