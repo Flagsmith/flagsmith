@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
-from rest_framework.exceptions import PermissionDenied
+from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from features.models import Feature
 from features.permissions import FeatureStatePermissions
@@ -27,8 +27,17 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
                 id=self.kwargs["feature_pk"],
             ),
         )
-        if hasattr(feature.project, "github_config"):
-            raise PermissionDenied("You don't have a GitHub config")
+
+        if not hasattr(feature.project.organisation, "github_config") or not hasattr(
+            feature.project, "github_project"
+        ):
+            return Response(
+                data={
+                    "detail": "This Project doesn't have a valid GitHub integration configuration"
+                },
+                content_type="application/json",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         return super().create(request, *args, **kwargs)
 
