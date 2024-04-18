@@ -24,6 +24,7 @@ $shadow-dark: 0 4px 4px 0 #00000029;
     &:after {
       box-shadow: $shadow;
       border-top-color: white;
+      background-color: white;
       border-right-width: $arrow;
       border-left-width: $arrow;
       margin-top: -$arrow;
@@ -35,6 +36,7 @@ $shadow-dark: 0 4px 4px 0 #00000029;
     &:after {
       box-shadow: $shadow;
       border-bottom-color: white;
+      background-color: white;
       border-right-width: $arrow;
       border-left-width: $arrow;
       margin-left: -$arrow;
@@ -46,6 +48,7 @@ $shadow-dark: 0 4px 4px 0 #00000029;
     &:after {
       box-shadow: $shadow;
       border-right-color: white;
+      background-color: white;
       border-top-width: $arrow;
       border-bottom-width: $arrow;
       margin-top: -5px;
@@ -57,6 +60,7 @@ $shadow-dark: 0 4px 4px 0 #00000029;
     &:after {
       box-shadow: $shadow;
       border-left-color: white;
+      background-color: white;
       border-top-width: $arrow;
       border-bottom-width: $arrow;
       margin-top: -5px;

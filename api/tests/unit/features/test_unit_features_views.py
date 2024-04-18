@@ -153,7 +153,7 @@ class ProjectFeatureTestCase(TestCase):
         mock_calls = [
             mock.call(fs, WebhookEventType.FLAG_DELETED) for fs in feature_states
         ]
-        mocked_trigger_fs_change_webhook.has_calls(mock_calls)
+        mocked_trigger_fs_change_webhook.assert_has_calls(mock_calls)
 
     def test_remove_owners_only_remove_specified_owners(self):
         # Given
@@ -2402,7 +2402,7 @@ def test_list_features_n_plus_1(
         v1_feature_state.clone(env=environment, version=i, live_from=timezone.now())
 
     # When
-    with django_assert_num_queries(14):
+    with django_assert_num_queries(16):
         response = staff_client.get(url)
 
     # Then
@@ -2509,6 +2509,125 @@ def test_list_features_with_intersection_tag(
 
     assert response.data["results"][0]["id"] == feature2.id
     assert response.data["results"][0]["tags"] == [tag1.id, tag2.id]
+
+
+def test_list_features_with_feature_state(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    identity: Identity,
+    feature_segment: FeatureSegment,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+
+    feature2 = Feature.objects.create(
+        name="another_feature", project=project, initial_value="initial_value"
+    )
+    feature3 = Feature.objects.create(
+        name="fancy_feature", project=project, initial_value="gone"
+    )
+
+    Environment.objects.create(
+        name="Out of test scope environment",
+        project=project,
+    )
+
+    feature_state1 = feature.feature_states.filter(environment=environment).first()
+    feature_state1.enabled = True
+    feature_state1.version = 1
+    feature_state1.save()
+
+    feature_state_value1 = feature_state1.feature_state_value
+    feature_state_value1.string_value = None
+    feature_state_value1.integer_value = 1945
+    feature_state_value1.type = INTEGER
+    feature_state_value1.save()
+
+    # This should be ignored due to versioning.
+    feature_state_versioned = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        enabled=True,
+        version=100,
+    )
+    feature_state_value_versioned = feature_state_versioned.feature_state_value
+    feature_state_value_versioned.string_value = None
+    feature_state_value_versioned.integer_value = 2005
+    feature_state_value_versioned.type = INTEGER
+    feature_state_value_versioned.save()
+
+    feature_state2 = feature2.feature_states.filter(environment=environment).first()
+    feature_state2.enabled = True
+    feature_state2.save()
+
+    feature_state_value2 = feature_state2.feature_state_value
+    feature_state_value2.string_value = None
+    feature_state_value2.boolean_value = True
+    feature_state_value2.type = BOOLEAN
+    feature_state_value2.save()
+
+    feature_state_value3 = (
+        feature3.feature_states.filter(environment=environment)
+        .first()
+        .feature_state_value
+    )
+    feature_state_value3.string_value = "present"
+    feature_state_value3.save()
+
+    # This should be ignored due to identity being set.
+    FeatureState.objects.create(
+        feature=feature2,
+        environment=environment,
+        identity=identity,
+    )
+
+    # This should be ignored due to feature segment being set.
+    FeatureState.objects.create(
+        feature=feature2,
+        environment=environment,
+        feature_segment=feature_segment,
+    )
+
+    # Multivariate should be ignored.
+    MultivariateFeatureOption.objects.create(
+        feature=feature2,
+        default_percentage_allocation=30,
+        type=STRING,
+        string_value="mv_feature_option1",
+    )
+    MultivariateFeatureOption.objects.create(
+        feature=feature2,
+        default_percentage_allocation=70,
+        type=STRING,
+        string_value="mv_feature_option2",
+    )
+
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    url = f"{base_url}?environment={environment.id}"
+
+    # When
+    with django_assert_num_queries(16):
+        response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert len(response.data["results"]) == 3
+    results = response.data["results"]
+
+    assert results[0]["environment_feature_state"]["enabled"] is True
+    assert results[0]["environment_feature_state"]["feature_state_value"] == 2005
+    assert results[0]["name"] == feature.name
+    assert results[1]["environment_feature_state"]["enabled"] is True
+    assert results[1]["environment_feature_state"]["feature_state_value"] is True
+    assert results[1]["name"] == feature2.name
+    assert results[2]["environment_feature_state"]["enabled"] is False
+    assert results[2]["environment_feature_state"]["feature_state_value"] == "present"
+    assert results[2]["name"] == feature3.name
 
 
 def test_list_features_with_filter_by_value_search_string_and_int(
@@ -2759,7 +2878,7 @@ def test_feature_list_last_modified_values(
         Feature.objects.create(name=f"feature_{i}", project=project)
 
     # When
-    with django_assert_num_queries(14):  # TODO: reduce this number of queries!
+    with django_assert_num_queries(16):  # TODO: reduce this number of queries!
         response = staff_client.get(url)
 
     # Then
