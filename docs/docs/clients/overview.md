@@ -98,9 +98,8 @@ and wait for a response back from the Flagsmith API.
 :::tip
 
 The SDK has to request all of the data about an Environment in order to run. Because some of this data could be
-sensitive (for example, your Segment Rules), the SDK requires a specific `Server-side Environment Key`. This is
-different to the regular `Client-side Environment Key`. The `Server-side Environment Key` should _not_ be shared, and
-should be considered sensitive data.
+sensitive (for example, your Segment Rules), the SDK requires a specific
+[`Server-side Environment Key`](#server-side-sdk).
 
 :::
 
