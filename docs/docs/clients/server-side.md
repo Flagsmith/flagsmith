@@ -203,7 +203,7 @@ area and should be considered secret.
 from flagsmith import Flagsmith
 
 flagsmith = Flagsmith(
-    environment_key = "<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>"
+    environment_key = "FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY"
 )
 ```
 
@@ -213,7 +213,7 @@ flagsmith = Flagsmith(
 ```java
 private static FlagsmithClient flagsmith = FlagsmithClient
     .newBuilder()
-    .setApiKey(System.getenv("<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>"))
+    .setApiKey(System.getenv("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY"))
     .build();
 ```
 
@@ -225,7 +225,7 @@ using Flagsmith;
 
 FlagsmithClient _flagsmithClient;
 
-_flagsmithClient = new("<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>");
+_flagsmithClient = new("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY");
 ```
 
 </TabItem>
@@ -235,7 +235,7 @@ _flagsmithClient = new("<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>");
 const Flagsmith = require('flagsmith-nodejs');
 
 const flagsmith = new Flagsmith({
- environmentKey: '<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>',
+ environmentKey: 'FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY',
 });
 ```
 
@@ -246,7 +246,7 @@ const flagsmith = new Flagsmith({
 require "flagsmith"
 
 $flagsmith = Flagsmith::Client.new(
-  environment_key: '<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>'
+  environment_key: 'FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY'
 )
 ```
 
@@ -256,7 +256,7 @@ $flagsmith = Flagsmith::Client.new(
 ```php
 use Flagsmith\Flagsmith;
 
-$flagsmith = new Flagsmith('<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>');
+$flagsmith = new Flagsmith('FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY');
 ```
 
 </TabItem>
@@ -597,7 +597,7 @@ def default_flag_handler(feature_name: str) -> DefaultFlag:
     return DefaultFlag(False, None)
 
 flagsmith = Flagsmith(
-    environment_key="<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>",
+    environment_key="FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY",
     default_flag_handler=default_flag_handler,
 )
 ```
@@ -609,7 +609,7 @@ flagsmith = Flagsmith(
 private static FlagsmithClient flagsmith = FlagsmithClient
     .newBuilder()
     .setDefaultFlagValueFunction(HelloController::defaultFlagHandler)
-    .setApiKey(System.getenv("<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>"))
+    .setApiKey(System.getenv("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY"))
     .build();
 
 private static DefaultFlag defaultFlagHandler(String featureName) {
@@ -633,7 +633,7 @@ private static DefaultFlag defaultFlagHandler(String featureName) {
 using Flagsmith;
 
 FlagsmithClient _flagsmithClient;
-_flagsmithClient = new("<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>", defaultFlagHandler: defaultFlagHandler);
+_flagsmithClient = new("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY", defaultFlagHandler: defaultFlagHandler);
 
 static Flag defaultFlagHandler(string featureName)
 {
@@ -676,7 +676,7 @@ $flagsmith = Flagsmith::Client.new(
 <TabItem value="php" label="PHP">
 
 ```php
-$flagsmith = (new Flagsmith('<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>'))
+$flagsmith = (new Flagsmith('FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY'))
     ->withDefaultFlagHandler(function ($featureName) {
         $defaultFlag = (new DefaultFlag())
             ->withEnabled(false)->withValue(null);
@@ -701,7 +701,7 @@ func DefaultFlagHandler(featureName string) (flagsmith.Flag, error) {
 	}, nil
 }
 
-client := flagsmith.NewClient(os.Getenv("FLAGSMITH_API_KEY"),
+client := flagsmith.NewClient(os.Getenv("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY"),
 		flagsmith.WithDefaultHandler(DefaultFlagHandler),
 )
 
@@ -749,7 +749,7 @@ flag_handler =
         end
     end
 
-client_configuration = Flagsmith.Client.new(environment_key: "MY_SDK_KEY", default_flag_handler: flag_handler)
+client_configuration = Flagsmith.Client.new(environment_key: "FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY", default_flag_handler: flag_handler)
 ```
 
 </TabItem>
@@ -965,7 +965,7 @@ flagsmith = Flagsmith(
     # Note that this is either the `Environment API` key or the `Server Side SDK Token`
     # depending on if you are using Local or Remote Evaluation
     # Required.
-    environment_key = "<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>",
+    environment_key = "FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY",
 
     # Controls which mode to run in; local or remote evaluation.
     # See the `SDKs Overview Page` for more info
@@ -1044,7 +1044,7 @@ private static FlagsmithClient flagsmith = FlagsmithClient
     // Note that this is either the `Environment API` key or the `Server Side SDK Token`
     // depending on if you are using Local or Remote Evaluation
     // Required.
-    .setApiKey(System.getenv("FLAGSMITH_API_KEY"))
+    .setApiKey(System.getenv("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY"))
 
     // You can specify default Flag values on initialisation.
     // Optional
@@ -1248,7 +1248,7 @@ In the `appsettings.json` file you can configure the necessary flagsmith values.
 {
  "AllowedHosts": "*",
  "FlagsmithConfiguration": {
-  "EnvironmentKey": "YOUR_ENVIRONMENT_KEY",
+  "EnvironmentKey": "FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY",
   "EnableClientSideEvaluation": false,
   "EnvironmentRefreshIntervalSeconds": 60,
   "EnableAnalytics": true,
@@ -1330,7 +1330,7 @@ const flagsmith = new Flagsmith({
    depending on if you are using Local or Remote Evaluation
    Required.
    */
- environmentKey: '<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>',
+ environmentKey: 'FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY',
 
  /*
    Override the default Flagsmith API URL if you are self-hosting.
@@ -1465,7 +1465,7 @@ $flagsmith = new Flagsmith(
 <TabItem value="go" label="Go">
 
 ```go
-client := flagsmith.NewClient(os.Getenv("FLAGSMITH_API_KEY"),
+client := flagsmith.NewClient(os.Getenv("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY"),
         // Override the default Flagsmith API URL if you are self-hosting.
         // Defaults to https://edge.api.flagsmith.com/api/v1/
         flagsmith.WithBaseURL("http://localhost:8080/api/v1/"),
@@ -1586,7 +1586,7 @@ config :flagsmith_engine, :configuration,
        # Note that this is either the `Environment API` key or the
        # `Server Side SDK Token` depending on if you are using Local or
        # Remote Evaluation
-       environment_key: "<YOUR SDK KEY>",
+       environment_key: "FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY",
        #
        # Override the default Flagsmith API URL if you are self-hosting.
        # Defaults to https://edge.api.flagsmith.com/api/v1/
@@ -1628,7 +1628,7 @@ configuration.
 
 ```elixir
 client_configuration = Flagsmith.Client.new(
-        environment_key: "<YOUR SDK KEY>",
+        environment_key: "FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY",
         api_url: "https://api.yourselfhostedflagsmith.com/api/v1",
         default_flag_handler: function_defaults_to_not_found,
         custom_headers: [{"to add to", "the requests"}],
@@ -1644,7 +1644,7 @@ client_configuration = Flagsmith.Client.new(
 # or
 
 {:ok, flags} = Flagsmith.Client.get_environment_flags(
-        environment_key: "<YOUR SDK KEY>",
+        environment_key: "FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY",
         api_url: "https://api.yourselfhostedflagsmith.com/api/v1",
         default_flag_handler: function_defaults_to_not_found,
         custom_headers: [{"to add to", "the requests"}],
@@ -1681,7 +1681,7 @@ will be set for you:
 ```java
 // use in-memory caching with Flagsmith defaults as described above
 final FlagsmithClient flagsmithClient = FlagsmithClient.newBuilder()
-                .setApiKey("YOUR_ENV_API_KEY")
+                .setApiKey("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY")
                 .withConfiguration(FlagsmithConfig
                         .newBuilder()
                         .baseURI("http://yoururl.com")
@@ -1697,7 +1697,7 @@ If you would like to change the default settings, you can overwrite them by usin
 ```java
 // use in-memory caching with custom configuration
 final FlagsmithClient flagsmithClient = FlagsmithClient.newBuilder()
-                .setApiKey("YOUR_ENV_API_KEY")
+                .setApiKey("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY")
                 .withConfiguration(FlagsmithConfig
                         .newBuilder()
                         .baseURI("http://yoururl.com")
@@ -1735,7 +1735,7 @@ Make sure you select a project level cache key that will never be a user identif
 // use in-memory caching with Flagsmith defaults and project level caching enabled
 final String projectLevelCacheKey = "some-key-to-avoid-clashing-with-user-identifiers";
 final FlagsmithClient flagsmithClient = FlagsmithClient.newBuilder()
-                .setApiKey("YOUR_ENV_API_KEY")
+                .setApiKey("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY")
                 .withConfiguration(FlagsmithConfig
                         .newBuilder()
                         .baseURI("http://yoururl.com")
@@ -1784,7 +1784,7 @@ const redisClient = redis.createClient({
 });
 
 flagsmith.init({
- environmentID: '<Flagsmith Environment API Key>',
+ environmentID: 'FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY',
  cache: {
   has: (key) =>
    new Promise((resolve, reject) => {
@@ -1824,7 +1824,7 @@ router.get('/', function (req, res, next) {
 <TabItem value="php" label="PHP">
 
 ```php
-$flagsmith = (new Flagsmith(TOKEN));
+$flagsmith = (new Flagsmith("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY"));
 // This will load the environment from cache (or API, if cache does not exist.)
 $flagsmith->updateEnvironment();
 ```
@@ -1836,7 +1836,7 @@ composer require symfony/cache
 ```
 
 ```php
-$flagsmith = (new Flagsmith(TOKEN))
+$flagsmith = (new Flagsmith("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY"))
   ->withCache(new Psr16Cache(new FilesystemAdapter()));
 // Cache the environment call to reduce network calls for each and every evaluation.
 // This will load the environment from cache (or API, if cache does not exist.)
