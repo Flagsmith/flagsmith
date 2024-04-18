@@ -234,7 +234,7 @@ def add_1000_api_calls(
             subscription_id,
             {
                 "addons": [{"id": addon_id, "quantity": count}],
-                "prorate": True,
+                "prorate": False,
                 "invoice_immediately": invoice_immediately,
             },
         )
