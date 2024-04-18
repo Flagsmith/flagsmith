@@ -633,7 +633,8 @@ const CreateFlag = class extends Component {
           />
         </FormGroup>
         {Utils.getFlagsmithHasFeature('github_integration') &&
-          hasIntegrationWithGithub && (
+          hasIntegrationWithGithub &&
+          projectFlag?.id && (
             <>
               <FormGroup className='mt-4 setting'>
                 <label className='cols-sm-2 control-label'>
