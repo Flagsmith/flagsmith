@@ -163,7 +163,7 @@ Local Evaluation mode is only available with Server-side SDKs.
 - Future evaluations are all computed locally within the SDK runtime. This means they are extremely fast as there is no
   network latency to account for.
 - No further network calls take place for 60 seconds.
-- After 60 seconds have elapsed, the SDK will refresh the JSON Environment document with a network call to the Flagsmith
+- After 60 seconds have elapsed, the SDK will refresh the JSON Environment Document with a network call to the Flagsmith
   API.
 
 ## The Environment Document
