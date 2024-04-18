@@ -1,10 +1,5 @@
 # Changelog
 
-## [2.108.1](https://github.com/Flagsmith/flagsmith/compare/v2.107.4...v2.108.0) (2024-04-18)
-
-Manual release triggered for SaaS fix. 
-
-
 ## [2.108.0](https://github.com/Flagsmith/flagsmith/compare/v2.107.4...v2.108.0) (2024-04-17)
 
 
