@@ -8,10 +8,7 @@ import { useGetSegmentQuery } from 'common/services/useSegment'
 import { MetadataField, Metadata, ProjectFlag } from 'common/types/responses'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
-import {
-  // useUpdateProjectFlagMutation,
-  useGetProjectFlagQuery,
-} from 'common/services/useProjectFlag'
+import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
 import Tooltip from 'components/Tooltip'
 import { sortBy } from 'lodash'
 
