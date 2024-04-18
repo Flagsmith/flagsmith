@@ -264,24 +264,24 @@ A sample document is below.
 }
 ```
 
-## SDK Keys
+## API Keys
 
 Flagsmith has three different type of SDK Key.
 
-### Client-Side SDK Keys
+### Client-Side SDK
 
 Client-side SDK Keys give both client-side SDKs and server-side SDKs access to [Remote Evaluation](#remote-evaluation)
 mode.
 
 These keys are not secret and can be considered public.
 
-### Server-Side SDK Keys
+### Server-Side SDK
 
 Server-side SDK Keys give server-side SDKs access to [Local Evaluation](#remote-evaluation) mode.
 
 These keys are secret and should not be shared.
 
-### Management API Keys
+### Management API
 
 Management API keys are used to interact with the Flagsmith API directly. These keys can be used in the following
 situations:
