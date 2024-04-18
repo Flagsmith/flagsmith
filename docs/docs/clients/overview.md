@@ -283,7 +283,12 @@ These keys are secret and should not be shared.
 
 ### Flagsmith API Keys
 
-[Flagsmith API keys](/) are used to interact with the L
+Flagsmith API keys are used to interact with the Flagsmith API directly. These keys can be used in the following
+situations:
+
+- If you want to work with Flagsmith programatically, for example when creating and deleting Environments as part of a
+  CI/CD process.
+- When using the [Terraform Provider](/integrations/terraform).
 
 These keys are secret and should not be shared.
 
