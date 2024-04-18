@@ -203,10 +203,21 @@ def handle_api_usage_notifications():
 
 def charge_for_api_call_count_overages():
     now = timezone.now()
+
+    # Get the period where we're interested in any new API usage
+    # notifications for the relevant billing period (ie, this month).
     api_usage_notified_at = now - timedelta(days=30)
+
+    # Since we're interested in monthly billed accounts, set a wide
+    # threshold to catch as many billing periods that could be roughly
+    # considered to be a "monthly" subscription.
     month_window_start = timedelta(days=25)
     month_window_end = timedelta(days=35)
+
+    # Only apply charges to ongoing subscriptions that are close to
+    # being charged due to being at the end of the billing term.
     closing_billing_term = now + timedelta(hours=12)
+
     organisation_ids = set(
         OrganisationAPIUsageNotification.objects.filter(
             notified_at__gte=api_usage_notified_at,
@@ -232,6 +243,7 @@ def charge_for_api_call_count_overages():
         - month_window_end,
     ).select_related(
         "subscription_information_cache",
+        "subscription",
     ):
         subscription_cache = organisation.subscription_information_cache
         api_usage = get_current_api_usage(organisation.id, "30d")

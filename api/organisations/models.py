@@ -481,6 +481,20 @@ class HubspotOrganisation(models.Model):
 
 
 class OrganisationAPIBilling(models.Model):
+    """
+    Tracks API billing for when accounts go over their API usage
+    limits. This model is what allows subsequent billing runs
+    to not double bill an organisation for the same use.
+
+    Even though api_overage is charge per thousand API calls, this
+    class tracks the actual rounded count of API calls that are
+    billed for (i.e., 52000 for an account with 52233 api calls).
+
+    The option to set immediate_invoice means whether or not the
+    API billing was processed immediately versus pushed onto the
+    subsequent subscription billing period.
+    """
+
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="api_billing"
     )
