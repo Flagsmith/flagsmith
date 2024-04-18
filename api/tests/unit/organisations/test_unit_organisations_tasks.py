@@ -505,7 +505,7 @@ def test_charge_for_api_call_count_overages_scale_up(
                     "quantity": 2,  # Two thousand API requests.
                 }
             ],
-            "prorate": True,
+            "prorate": False,
             "invoice_immediately": False,
         },
     )
@@ -567,7 +567,7 @@ def test_charge_for_api_call_count_overages_start_up(
                     "quantity": 2,  # Two thousand API requests.
                 }
             ],
-            "prorate": True,
+            "prorate": False,
             "invoice_immediately": False,
         },
     )
