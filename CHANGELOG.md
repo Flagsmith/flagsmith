@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.108.1](https://github.com/Flagsmith/flagsmith/compare/v2.108.0...v2.108.1) (2024-04-18)
+
+
+### Bug Fixes
+
+* prevent unauthorised remove-users access ([#3791](https://github.com/Flagsmith/flagsmith/issues/3791)) ([05353a5](https://github.com/Flagsmith/flagsmith/commit/05353a5fbe661d504abdede8875f450c4cc8dce5))
+
 ## [2.108.0](https://github.com/Flagsmith/flagsmith/compare/v2.107.4...v2.108.0) (2024-04-17)
 
 
