@@ -166,6 +166,104 @@ Local Evaluation mode is only available with Server-side SDKs.
 - After 60 seconds have elapsed, the SDK will refresh the JSON Environment document with a network call to the Flagsmith
   API.
 
+## The Environment Document
+
+The Environment Document in the context of Flagsmith is a structured JSON file containing all the configuration settings
+for feature flags within a single Environment, such as development, staging, and production. It typically includes
+details like feature names, identities, rules, and associated metadata.
+
+This document serves as a source of truth for managing feature flags across various situations, allowing developers to
+easily control feature rollout and behaviour without redeploying code. JSON Environment Documents are primarily used
+with Local Evaluation and Offline Mode.
+
+The Environment Document schema can be found in our [Swagger docs](https://api.flagsmith.com/api/v1/docs/) - search for
+`/api/v1/environment-document`.
+
+A sample document is below.
+
+```json
+{
+ "id": 30156,
+ "api_key": "npfo95nMwUw8cjHXdHi2hG",
+ "project": {
+  "id": 11590,
+  "name": "Edge API E2E",
+  "organisation": {
+   "id": 13,
+   "name": "Flagsmith",
+   "feature_analytics": false,
+   "stop_serving_flags": false,
+   "persist_trait_data": true
+  },
+  "hide_disabled_flags": false,
+  "segments": [],
+  "enable_realtime_updates": false,
+  "server_key_only_feature_ids": []
+ },
+ "feature_states": [
+  {
+   "feature": {
+    "id": 48865,
+    "name": "example_feature",
+    "type": "STANDARD"
+   },
+   "enabled": false,
+   "django_id": 266961,
+   "feature_segment": null,
+   "featurestate_uuid": "d7303252-33a7-4991-b20f-8564959e42c8",
+   "feature_state_value": "test2",
+   "multivariate_feature_state_values": []
+  },
+  {
+   "feature": {
+    "id": 48866,
+    "name": "example_mv_feature",
+    "type": "MULTIVARIATE"
+   },
+   "enabled": false,
+   "django_id": 266962,
+   "feature_segment": null,
+   "featurestate_uuid": "5d688e14-4e5e-47e5-9c53-b452ac9e5f16",
+   "feature_state_value": "control",
+   "multivariate_feature_state_values": [
+    {
+     "multivariate_feature_option": {
+      "value": "variant1",
+      "id": 6596
+     },
+     "percentage_allocation": 10.0,
+     "id": 20957,
+     "mv_fs_value_uuid": "6d96689d-9b1b-4507-9894-b6a0903084f8"
+    },
+    {
+     "multivariate_feature_option": {
+      "value": "variant2",
+      "id": 6595
+     },
+     "percentage_allocation": 10.0,
+     "id": 20956,
+     "mv_fs_value_uuid": "6227b016-4221-42a9-89e6-7c31a6987a8c"
+    }
+   ]
+  }
+ ],
+ "identity_overrides": [],
+ "name": "E2E",
+ "allow_client_traits": true,
+ "updated_at": "2024-04-18T08:16:20.678868+00:00",
+ "hide_sensitive_data": false,
+ "hide_disabled_flags": null,
+ "use_identity_composite_key_for_hashing": true,
+ "amplitude_config": null,
+ "dynatrace_config": null,
+ "heap_config": null,
+ "mixpanel_config": null,
+ "rudderstack_config": null,
+ "segment_config": null,
+ "webhook_config": null
+}
+```
+
 ## SDK Keys
 
 Flagsmith has three different type of SDK Key.
@@ -185,17 +283,9 @@ These keys are secret and should not be shared.
 
 ### Flagsmith API Keys
 
-[Flagsmith API keys]() are used to interact with the L
+[Flagsmith API keys](/) are used to interact with the L
 
-These keys are secret and should not be shared. :::tip
-
-A JSON Environment Document in the context of Flagsmith is a structured file containing configuration settings for
-feature flags within an Environment, such as development, staging, and production. It typically includes details like
-feature names, identities, rules, and associated metadata. This document serves as a source of truth for managing
-feature flags across various situations, allowing developers to easily control feature rollout and behavior without
-redeploying code. JSON Environment Documents are primarily used with Local Evaluation and Offline Mode.
-
-:::
+These keys are secret and should not be shared.
 
 ### Client-side SDK approaches
 
