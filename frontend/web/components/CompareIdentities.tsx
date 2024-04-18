@@ -137,10 +137,9 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     return openConfirm({
       body: (
         <div>
-          {'Are you sure you want to clone all the feature states from '}
-          <strong>{leftIdentityName}</strong> {'to'}{' '}
-          <strong>{rightIdentityName}</strong>
-          {'?'}
+          {'Cloning '} <strong>{leftIdentityName}</strong>{' '}
+          {'will copy any identity overrides in '}
+          <strong>{`${rightIdentityName}.`}</strong> {'Are you sure?'}
         </div>
       ),
       destructive: true,
@@ -155,7 +154,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
           toast('Clonation Completed!')
         })
       },
-      title: 'Clone the values',
+      title: 'Clone identity',
       yesText: 'Confirm',
     })
   }
