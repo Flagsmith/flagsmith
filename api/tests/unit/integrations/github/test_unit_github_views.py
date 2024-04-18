@@ -177,20 +177,6 @@ def test_github_delete_repository(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-@pytest.fixture()
-def edge_identity_dynamo_wrapper_mock(mocker):
-    return mocker.patch(
-        "edge_api.identities.models.EdgeIdentity.dynamo_wrapper",
-    )
-
-
-@pytest.fixture
-def mock_generate_token(mocker):
-    return mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-
-
 def mocked_requests_get(*args, **kwargs):
     class MockResponse:
         def __init__(self, json_data, status_code):

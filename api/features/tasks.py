@@ -58,9 +58,11 @@ def trigger_feature_state_change_webhooks(
     )
 
     if (
-        instance.feature.feature_external_resources
-        and not instance.identity_id
+        not instance.identity_id
         and not instance.feature_segment
+        and instance.feature.feature_external_resources.exists()
+        and instance.environment.project.github_project.exists()
+        and hasattr(instance.environment.project.organisation, "github_config")
     ):
         github_configuration = instance.environment.project.organisation.github_config
 
