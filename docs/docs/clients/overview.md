@@ -126,9 +126,9 @@ running in `Local Evaluation` mode.
 When are network requests made, and when do you need to consider network latency? It depends on your evaluation mode,
 and whether you are using Client-side or Server-side SDKs!
 
-### Remote Evaluation
+### Remote Evaluation Network Model
 
-#### Client-side
+#### Client-side Network Model
 
 - By default, client-side SDKs will initialise and retrieve all the Flags for an Environment and store them in local
   memory. Flag evaluations within the SDK are then a simple lookup in memory with no associated network call.
@@ -146,7 +146,7 @@ for the relevant language platform for details.
 
 :::
 
-#### Server-side
+#### Server-side Network Model
 
 - Flagsmith server-side SDKs do not store Flags in local memory. Every Flag evaluation in your code will trigger a
   network request.
@@ -154,7 +154,7 @@ for the relevant language platform for details.
 If this approach does not work for you (generally for reasons of latency or overly chatty networking) you should
 consider Local Evaluation mode (explained below) or the [Edge Proxy](/advanced-use/edge-proxy).
 
-### Local Evaluation
+### Local Evaluation Network Model
 
 Local Evaluation mode is only available with Server-side SDKs.
 
@@ -165,6 +165,29 @@ Local Evaluation mode is only available with Server-side SDKs.
 - No further network calls take place for 60 seconds.
 - After 60 seconds have elapsed, the SDK will refresh the JSON Environment document with a network call to the Flagsmith
   API.
+
+## SDK Keys
+
+Flagsmith has three different type of SDK Key.
+
+### Client-Side SDK Keys
+
+Client-side SDK Keys give both client-side SDKs and server-side SDKs access to [Remote Evaluation](#remote-evaluation)
+mode.
+
+These keys are not secret and can be considered public.
+
+### Server-Side SDK Keys
+
+Server-side SDK Keys give server-side SDKs access to [Local Evaluation](#remote-evaluation) mode.
+
+These keys are secret and should not be shared.
+
+### Flagsmith API Keys
+
+[Flagsmith API keys]() are used to interact with the L
+
+These keys are secret and should not be shared.
 
 ### Client-side SDK approaches
 
