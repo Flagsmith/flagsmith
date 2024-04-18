@@ -36,7 +36,7 @@ class PydanticResponseCapableSwaggerAutoSchema(SwaggerAutoSchema):
     ) -> dict[str, Response]:
         result = {}
 
-        for status_code in response_serializers:
+        for status_code in list(response_serializers):
             if isinstance(response_serializers[status_code], type) and issubclass(
                 model_cls := response_serializers[status_code], BaseModel
             ):
