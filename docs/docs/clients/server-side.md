@@ -566,8 +566,9 @@ secret_button_feature_value = Flagsmith.Client.get_feature_value(flags, "secret_
 
 - _Only_ the Traits provided to the SDK at runtime will be used. Local Evaluation mode, by design, does not make any
   network requests to the Flagsmith API when evaluating Flags for an Identity.
-  - When running in Local Evaluation Mode, the SDK requests the Environment Document from the Flagsmith API. This
-    contains all the information required to make Flag Evaluations, but it does _not_ contain any Trait data.
+  - When running in Local Evaluation Mode, the SDK requests the
+    [Environment Document](/clients/overview#the-environment-document) from the Flagsmith API. This contains all the
+    information required to make Flag Evaluations, but it does _not_ contain any Trait data.
 
 ## Managing Default Flags
 
@@ -774,8 +775,8 @@ Flagsmith SDKs can be configured to include an offline handler which has 2 funct
    offline mode.
 
 To use it as a default handler, we recommend using the [flagsmith CLI](https://github.com/Flagsmith/flagsmith-cli) to
-generate the environment document and use our LocalFileHandler class, but you can also create your own offline handlers,
-by extending the base class.
+generate the [Environment Document](/clients/overview#the-environment-document) and use our LocalFileHandler class, but
+you can also create your own offline handlers, by extending the base class.
 
 <Tabs groupId="language">
 <TabItem value="python" label="Python">

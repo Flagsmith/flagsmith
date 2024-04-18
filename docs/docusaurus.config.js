@@ -30,6 +30,7 @@ const config = {
                     'kotlin',
                     'groovy',
                     'hcl',
+                    'json',
                 ],
             },
             algolia: {

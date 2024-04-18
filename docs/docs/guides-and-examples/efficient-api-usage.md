@@ -58,7 +58,8 @@ The most efficient way of evaluating Flags on the Server is using
 
 There are 3 main API calls the Flagsmith SDK can make:
 
-1. Get the Environment Document for [Local Evaluation mode](/clients/overview#local-evaluation).
+1. Get the [Environment Document](/clients/overview#the-environment-document) for
+   [Local Evaluation mode](/clients/overview#local-evaluation).
 2. Get the Flags for an Environment.
 3. Get the Flags for an Identity.
 

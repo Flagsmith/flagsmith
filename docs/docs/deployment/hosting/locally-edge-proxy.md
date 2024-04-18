@@ -249,8 +249,9 @@ There are 2 health check endpoints for the Edge Proxy.
 ### SDK Proxy Health Check
 
 When making a request to `/proxy/health` the proxy will respond with a HTTP `200` and `{"status": "ok"}`. You can point
-your orchestration health checks to this endpoint. This endpoint checks that the Environment document is not stale, and
-that the proxy is serving SDK requests.
+your orchestration health checks to this endpoint. This endpoint checks that the
+[Environment Document](/clients/overview#the-environment-document) is not stale, and that the proxy is serving SDK
+requests.
 
 ### Realtime Flags/Server Sent Events Health Check
 
