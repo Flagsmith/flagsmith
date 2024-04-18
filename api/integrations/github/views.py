@@ -1,7 +1,9 @@
+from functools import wraps
+
 import requests
 from django.conf import settings
 from django.http import JsonResponse
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -16,6 +18,26 @@ from integrations.github.serializers import (
     RepoQuerySerializer,
 )
 from organisations.models import Organisation
+
+
+def github_auth_required(func):
+
+    @wraps(func)
+    def wrapper(request, organisation_pk):
+
+        if not GithubConfiguration.has_github_configuration(
+            organisation_id=organisation_pk
+        ):
+            return Response(
+                data={
+                    "detail": "This Organisation doesn't have a valid GitHub Configuration"
+                },
+                content_type="application/json",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return func(request, organisation_pk)
+
+    return wrapper
 
 
 class GithubConfigurationViewSet(viewsets.ModelViewSet):
@@ -50,6 +72,7 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
+@github_auth_required
 def fetch_pull_requests(request, organisation_pk):
     organisation = Organisation.objects.get(id=organisation_pk)
 
@@ -84,6 +107,7 @@ def fetch_pull_requests(request, organisation_pk):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
+@github_auth_required
 def fetch_issues(request, organisation_pk):
     organisation = Organisation.objects.get(id=organisation_pk)
     token = generate_token(

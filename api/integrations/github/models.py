@@ -14,6 +14,12 @@ class GithubConfiguration(SoftDeleteExportableModel):
     )
     installation_id = models.CharField(max_length=100, blank=False, null=False)
 
+    @staticmethod
+    def has_github_configuration(organisation_id: int) -> bool:
+        return GithubConfiguration.objects.filter(
+            organisation_id=organisation_id
+        ).exists()
+
 
 class GithubRepository(SoftDeleteExportableModel):
     github_configuration = models.ForeignKey(

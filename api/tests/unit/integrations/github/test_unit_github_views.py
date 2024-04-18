@@ -1,14 +1,10 @@
-from unittest.mock import patch
-
 import pytest
-from django.conf import settings
 from django.db import IntegrityError
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from integrations.github.client import generate_token
 from integrations.github.models import GithubConfiguration, GithubRepository
 from organisations.models import Organisation
 from projects.models import Project
@@ -181,68 +177,82 @@ def test_github_delete_repository(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-@pytest.mark.django_db
-def test_fetch_pull_requests(
-    mocker,
-    admin_client: APIClient,
-    organisation: Organisation,
-    github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
-):
+@pytest.fixture()
+def edge_identity_dynamo_wrapper_mock(mocker):
+    return mocker.patch(
+        "edge_api.identities.models.EdgeIdentity.dynamo_wrapper",
+    )
 
+
+@pytest.fixture
+def mock_generate_token(mocker):
+    return mocker.patch(
+        "integrations.github.client.generate_token",
+    )
+
+
+def mocked_requests_get(*args, **kwargs):
     class MockResponse:
-        def __init__(self, status_code, json_data=None):
-            self.status_code = status_code
+        def __init__(self, json_data, status_code):
             self.json_data = json_data
+            self.status_code = status_code
+
+        def raise_for_status(self) -> None:
+            pass
 
         def json(self):
             return self.json_data
 
-    mocked_pem_content = """-----BEGIN CERTIFICATE-----
-        MIICUTCCAfugAwIBAgIBADANBgkqhkiG9w0BAQQFADBXMQswCQYDVQQGEwJDTjEL
-        MAkGA1UECBMCUE4xCzAJBgNVBAcTAkNOMQswCQYDVQQKEwJPTjELMAkGA1UECxMC
-        VU4xFDASBgNVBAMTC0hlcm9uZyBZYW5nMB4XDTA1MDcxNTIxMTk0N1oXDTA1MDgx
-        NDIxMTk0N1owVzELMAkGA1UEBhMCQ04xCzAJBgNVBAgTAlBOMQswCQYDVQQHEwJD
-        TjELMAkGA1UEChMCT04xCzAJBgNVBAsTAlVOMRQwEgYDVQQDEwtIZXJvbmcgWWFu
-        ZzBcMA0GCSqGSIb3DQEBAQUAA0sAMEgCQQCp5hnG7ogBhtlynpOS21cBewKE/B7j
-        V14qeyslnr26xZUsSVko36ZnhiaO/zbMOoRcKK9vEcgMtcLFuQTWDl3RAgMBAAGj
-        gbEwga4wHQYDVR0OBBYEFFXI70krXeQDxZgbaCQoR4jUDncEMH8GA1UdIwR4MHaA
-        FFXI70krXeQDxZgbaCQoR4jUDncEoVukWTBXMQswCQYDVQQGEwJDTjELMAkGA1UE
-        CBMCUE4xCzAJBgNVBAcTAkNOMQswCQYDVQQKEwJPTjELMAkGA1UECxMCVU4xFDAS
-        BgNVBAMTC0hlcm9uZyBZYW5nggEAMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQEE
-        BQADQQA/ugzBrjjK9jcWnDVfGHlk3icNRq0oV7Ri32z/+HQX67aRfgZu7KWdI+Ju
-        Wm7DCfrPNGVwFWUQOmsPue9rZBgO
-    -----END CERTIFICATE-----"""
+    return MockResponse(json_data={"data": "data"}, status_code=200)
 
-    settings.GITHUB_PEM = mocked_pem_content
 
-    mocker.patch(
-        "integrations.github.client.generate_token", return_value="TOKEN_DE_PRUEBA"
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_fetch_pull_requests(
+    client: APIClient,
+    mock_generate_token,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mocker,
+):
+
+    mock_generate_token.return_value = "mocked_token"
+    github_request_mock = mocker.patch("requests.get", side_effect=mocked_requests_get)
+
+    # mock_requests.get.return_value.json.return_value = {"data": "test"}
+
+    url = reverse("api-v1:organisations:get-github-pulls", args=[organisation.id])
+    data = {"repo_owner": "owner", "repo_name": "repo"}
+    response = client.get(url, data=data)
+
+    assert response.status_code == 200
+
+    response_json = response.json()
+    assert "data" in response_json
+
+    github_request_mock.assert_called_with(
+        "https://api.github.com/repos/owner/repo/pulls",
+        headers={
+            "X-GitHub-Api-Version": "2022-11-28",
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": "Bearer mocked_token",
+        },
+        timeout=10,
     )
 
-    mocker.patch(
-        "integrations.github.views.requests.get",
-        return_value=MockResponse(status_code=200, json_data={"results": []}),
-    )
+
+def test_fetch_pull_requests_fails_with_status_400_when_integration_not_configured(
+    admin_client,
+    mock_generate_token,
+    organisation,
+):
+    mock_generate_token.generate_token.return_value = "mocked_token"
+    # mock_requests.get.return_value.json.return_value = {"data": "test"}
 
     url = reverse("api-v1:organisations:get-github-pulls", args=[organisation.id])
     response = admin_client.get(url)
 
-    assert response.status_code == 200
-
-    assert "results" in response.data
-
-
-@patch("github.Auth.AppAuth")
-def test_generate_token(mocked_AppAuth):
-    mocked_auth_instance = mocked_AppAuth.return_value
-    mocked_auth_instance.get_installation_auth.return_value.token = "fake_token"
-
-    installation_id = "123456"
-    app_id = 789
-    token = generate_token(installation_id, app_id)
-    assert token == "fake_token"
+    assert response.status_code == 400

@@ -10,7 +10,4 @@ class HasPermissionToGithubConfiguration(BasePermission):
     def has_permission(self, request, view):
 
         organisation_id = view.kwargs.get("organisation_pk")
-        return (
-            request.user.belongs_to(organisation_id=organisation_id)
-            or request.user.is_master_api_key_user
-        )
+        return request.user.belongs_to(organisation_id=organisation_id)
