@@ -1,26 +1,21 @@
-import React, { FC, useEffect, useMemo, useRef } from 'react'
+import React, { FC, useMemo } from 'react'
 import { User } from 'common/types/responses'
-import { AsyncStorage } from 'polyfill-react-native'
 import OrganisationStore from 'common/stores/organisation-store'
 import TableFilterOptions from './TableFilterOptions'
-import { sortBy } from 'lodash'
 
 type TableFilterType = {
   value: number[]
   onChange: (value: TableFilterType['value']) => void
   className?: string
   isLoading?: boolean
-  projectId: string
 }
 
 const TableOwnerFilter: FC<TableFilterType> = ({
   className,
   isLoading,
   onChange,
-  projectId,
   value,
 }) => {
-  const checkedLocalStorage = useRef(false)
   const orgUsers = OrganisationStore.model && OrganisationStore.model.users
   const users = useMemo(() => {
     return (orgUsers || []).map((item: User) => ({
@@ -28,7 +23,7 @@ const TableOwnerFilter: FC<TableFilterType> = ({
       subtitle: item.email,
       value: item.id,
     }))
-  }, [orgUsers, value])
+  }, [orgUsers])
 
   return (
     <TableFilterOptions
