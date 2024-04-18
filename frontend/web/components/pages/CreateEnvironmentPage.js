@@ -135,7 +135,7 @@ const CreateEnvironmentPage = class extends Component {
                                     <InputGroup
                                       title={'Metadata'}
                                       tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} environments`}
-                                      tooltipPlace='left'
+                                      tooltipPlace='right'
                                       component={
                                         <Button
                                           size='xSmall'

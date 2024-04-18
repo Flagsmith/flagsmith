@@ -26,8 +26,6 @@ type AddMetadataToEntityType = {
   entityContentType: number
   entityId: string
   entity: number | string
-  createMetadataField: () => void
-  updateMetadata: () => void
   getMetadata: (m: CustomMetadataField[]) => void
 }
 
@@ -166,7 +164,6 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
             <Row className='table-header'>
               <Flex className='table-column'>Metadata</Flex>
               <Flex className='table-column'>Value</Flex>
-              {/* <Flex className='table-column'>Delete</Flex> */}
             </Row>
           }
           items={metadataFieldsAssociatedtoEntity}
