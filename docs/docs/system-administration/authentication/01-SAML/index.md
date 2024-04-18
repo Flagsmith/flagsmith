@@ -125,3 +125,11 @@ external IDs of `my_group` and `my_other_group`:
     </saml2:AttributeValue>
 </saml2:Attribute>
 ```
+
+Note that the claim must be named exactly `groups`. Some identity providers like Azure Active Directory or Microsoft
+Entra ID add a namespace to their claims such as `http://schemas.microsoft.com/ws/2008/06/identity/claims/groups`, which
+must be mapped to the `groups` claim that Flagsmith expects. If this is the case, please notify Flagsmith support to add
+the correct mapping for you. Or, if you are self-hosting, add a claim mapping like this one to your SAML configuration
+from the Django admin console:
+
+![Mapping Entra ID groups to Flagsmith groups](/img/saml-group-mapping.png)
