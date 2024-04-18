@@ -221,6 +221,8 @@ def test_identity_clone_flag_states_from(
     assert response[1]["overridden_by"] == "IDENTITY"
 
     assert response[2]["feature"]["id"] == feature_3.id
+    assert response[2]["enabled"] == feature_3.default_enabled
+    assert response[2]["feature_state_value"] == feature_3.initial_value
     assert response[2]["overridden_by"] is None
 
     # Assert target identity feature 3 override has been removed

@@ -17,6 +17,7 @@ from edge_api.identities.models import (
     IdentityFeaturesList,
     IdentityModel,
 )
+from features.models import Feature
 from projects.models import Project
 from tests.integration.helpers import create_mv_option_with_api
 from util.mappers.engine import map_feature_to_engine
@@ -1052,7 +1053,9 @@ def test_edge_identity_clone_flag_states_from(
     dynamo_enabled_project: int,
     environment_api_key: str,
     flagsmith_identities_table: Table,
-    features_for_identity_clone_flag_states_from: typing.Callable,
+    features_for_identity_clone_flag_states_from: typing.Callable[
+        [Project], tuple[Feature, ...]
+    ],
 ) -> None:
     def create_identity(identifier: str) -> EdgeIdentity:
         identity_model = IdentityModel(
@@ -1176,4 +1179,6 @@ def test_edge_identity_clone_flag_states_from(
     assert response[1]["overridden_by"] == "IDENTITY"
 
     assert response[2]["feature"]["id"] == feature_3.id
+    assert response[2]["enabled"] == feature_3.default_enabled
+    assert response[2]["feature_state_value"] == feature_3.initial_value
     assert response[2]["overridden_by"] is None
