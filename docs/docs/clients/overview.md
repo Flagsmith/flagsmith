@@ -98,9 +98,8 @@ and wait for a response back from the Flagsmith API.
 :::tip
 
 The SDK has to request all of the data about an Environment in order to run. Because some of this data could be
-sensitive (for example, your Segment Rules), the SDK requires a specific `Server-side Environment Key`. This is
-different to the regular `Client-side Environment Key`. The `Server-side Environment Key` should _not_ be shared, and
-should be considered sensitive data.
+sensitive (for example, your Segment Rules), the SDK requires a specific
+[`Server-side Environment Key`](#server-side-sdk).
 
 :::
 
@@ -126,9 +125,9 @@ running in `Local Evaluation` mode.
 When are network requests made, and when do you need to consider network latency? It depends on your evaluation mode,
 and whether you are using Client-side or Server-side SDKs!
 
-### Remote Evaluation
+### Remote Evaluation Network Model
 
-#### Client-side
+#### Client-side Network Model
 
 - By default, client-side SDKs will initialise and retrieve all the Flags for an Environment and store them in local
   memory. Flag evaluations within the SDK are then a simple lookup in memory with no associated network call.
@@ -146,7 +145,7 @@ for the relevant language platform for details.
 
 :::
 
-#### Server-side
+#### Server-side Network Model
 
 - Flagsmith server-side SDKs do not store Flags in local memory. Every Flag evaluation in your code will trigger a
   network request.
@@ -154,7 +153,7 @@ for the relevant language platform for details.
 If this approach does not work for you (generally for reasons of latency or overly chatty networking) you should
 consider Local Evaluation mode (explained below) or the [Edge Proxy](/advanced-use/edge-proxy).
 
-### Local Evaluation
+### Local Evaluation Network Model
 
 Local Evaluation mode is only available with Server-side SDKs.
 
@@ -163,8 +162,134 @@ Local Evaluation mode is only available with Server-side SDKs.
 - Future evaluations are all computed locally within the SDK runtime. This means they are extremely fast as there is no
   network latency to account for.
 - No further network calls take place for 60 seconds.
-- After 60 seconds have elapsed, the SDK will refresh the JSON Environment document with a network call to the Flagsmith
+- After 60 seconds have elapsed, the SDK will refresh the JSON Environment Document with a network call to the Flagsmith
   API.
+
+## The Environment Document
+
+The Environment Document in the context of Flagsmith is a structured JSON file containing all the configuration settings
+for feature flags within a single Environment, such as development, staging, and production. It typically includes
+details like feature names, identities, rules, and associated metadata.
+
+This document serves as a source of truth for managing feature flags across various situations, allowing developers to
+easily control feature rollout and behaviour without redeploying code. JSON Environment Documents are primarily used
+with Local Evaluation and Offline Mode.
+
+The Environment Document schema can be found in our [Swagger docs](https://api.flagsmith.com/api/v1/docs/) - search for
+`/api/v1/environment-document`.
+
+A sample document is below.
+
+```json
+{
+ "id": 30156,
+ "api_key": "npfo95nMwUw8cjHXdHi2hG",
+ "project": {
+  "id": 11590,
+  "name": "Edge API E2E",
+  "organisation": {
+   "id": 13,
+   "name": "Flagsmith",
+   "feature_analytics": false,
+   "stop_serving_flags": false,
+   "persist_trait_data": true
+  },
+  "hide_disabled_flags": false,
+  "segments": [],
+  "enable_realtime_updates": false,
+  "server_key_only_feature_ids": []
+ },
+ "feature_states": [
+  {
+   "feature": {
+    "id": 48865,
+    "name": "example_feature",
+    "type": "STANDARD"
+   },
+   "enabled": false,
+   "django_id": 266961,
+   "feature_segment": null,
+   "featurestate_uuid": "d7303252-33a7-4991-b20f-8564959e42c8",
+   "feature_state_value": "test2",
+   "multivariate_feature_state_values": []
+  },
+  {
+   "feature": {
+    "id": 48866,
+    "name": "example_mv_feature",
+    "type": "MULTIVARIATE"
+   },
+   "enabled": false,
+   "django_id": 266962,
+   "feature_segment": null,
+   "featurestate_uuid": "5d688e14-4e5e-47e5-9c53-b452ac9e5f16",
+   "feature_state_value": "control",
+   "multivariate_feature_state_values": [
+    {
+     "multivariate_feature_option": {
+      "value": "variant1",
+      "id": 6596
+     },
+     "percentage_allocation": 10.0,
+     "id": 20957,
+     "mv_fs_value_uuid": "6d96689d-9b1b-4507-9894-b6a0903084f8"
+    },
+    {
+     "multivariate_feature_option": {
+      "value": "variant2",
+      "id": 6595
+     },
+     "percentage_allocation": 10.0,
+     "id": 20956,
+     "mv_fs_value_uuid": "6227b016-4221-42a9-89e6-7c31a6987a8c"
+    }
+   ]
+  }
+ ],
+ "identity_overrides": [],
+ "name": "E2E",
+ "allow_client_traits": true,
+ "updated_at": "2024-04-18T08:16:20.678868+00:00",
+ "hide_sensitive_data": false,
+ "hide_disabled_flags": null,
+ "use_identity_composite_key_for_hashing": true,
+ "amplitude_config": null,
+ "dynatrace_config": null,
+ "heap_config": null,
+ "mixpanel_config": null,
+ "rudderstack_config": null,
+ "segment_config": null,
+ "webhook_config": null
+}
+```
+
+## API Keys
+
+Flagsmith has three different type of SDK Key.
+
+### Client-Side SDK
+
+Client-side SDK Keys give both client-side SDKs and server-side SDKs access to [Remote Evaluation](#remote-evaluation)
+mode.
+
+These keys are not secret and can be considered public.
+
+### Server-Side SDK
+
+Server-side SDK Keys give server-side SDKs access to [Local Evaluation](#remote-evaluation) mode.
+
+These keys are secret and should not be shared.
+
+### Management API
+
+Management API keys are used to interact with the Flagsmith API directly. These keys can be used in the following
+situations:
+
+- If you want to work with Flagsmith programatically, for example when creating and deleting Environments as part of a
+  CI/CD process.
+- When using the [Terraform Provider](/integrations/terraform).
+
+These keys are secret and should not be shared.
 
 ### Client-side SDK approaches
 
