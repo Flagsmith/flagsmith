@@ -3,7 +3,6 @@ name: API Security Audit
 on:
   schedule:
     - cron: 0 8 * * *
-  push:
 
 defaults:
   run:
