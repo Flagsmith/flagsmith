@@ -18,6 +18,7 @@ export type FeatureVersionState = {
   feature_state_value: FeatureStateValue
   feature_segment: null | FeatureState['feature_segment']
   multivariate_feature_state_values: Omit<MultivariateFeatureStateValue, 'id'>[]
+  live_from: FeatureState['live_from']
 }
 export type Operator = {
   value: string | null
@@ -91,6 +92,7 @@ export type Project = {
   max_features_allowed?: number | null
   max_segment_overrides_allowed?: number | null
   total_features?: number
+  stale_flags_limit_days?: number
   total_segments?: number
   environments: Environment[]
 }
@@ -143,6 +145,7 @@ export type User = {
   first_name: string
   last_name: string
   role: 'ADMIN' | 'USER'
+  date_joined: string
 }
 export type GroupUser = Omit<User, 'role'> & {
   group_admin: boolean
@@ -166,6 +169,7 @@ export type UserPermission = {
   permissions: string[]
   admin: boolean
   id: number
+  role?: number
 }
 export type GroupPermission = Omit<UserPermission, 'user'> & {
   group: UserGroup
@@ -248,6 +252,9 @@ export type Tag = {
   description: string
   project: number
   label: string
+  is_system_tag: boolean
+  is_permanent: boolean
+  type: 'STALE' | 'NONE'
 }
 
 export type MultivariateFeatureStateValue = {
@@ -382,6 +389,12 @@ export type RolePermissionUser = {
   id: number
   role_name: string
 }
+export type RolePermissionGroup = {
+  group: number
+  role: number
+  id: number
+  role_name: string
+}
 export type FeatureVersion = {
   created_at: string
   updated_at: string
@@ -454,13 +467,16 @@ export type Res = {
   }
   featureVersion: FeatureVersion
   versionFeatureState: FeatureState[]
-  roles: Role[]
-  rolePermission: { id: string }
+  role: Role
+  roles: PagedResponse<Role>
+  rolePermission: PagedResponse<UserPermission>
   projectFlags: PagedResponse<ProjectFlag>
   projectFlag: ProjectFlag
   identityFeatureStates: IdentityFeatureState[]
-  rolesPermissionUsers: RolePermissionUser
-  rolePermissionGroup: { id: string }
+  createRolesPermissionUsers: RolePermissionUser
+  rolesPermissionUsers: PagedResponse<RolePermissionUser>
+  createRolePermissionGroup: RolePermissionGroup
+  rolePermissionGroup: PagedResponse<RolePermissionGroup>
   getSubscriptionMetadata: { id: string }
   environment: Environment
   launchDarklyProjectImport: LaunchDarklyProjectImport

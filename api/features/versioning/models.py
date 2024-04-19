@@ -118,7 +118,8 @@ class EnvironmentFeatureVersion(
         persist: bool = True,
     ) -> None:
         now = timezone.now()
-        self.live_from = live_from or now
+
+        self.live_from = live_from or (self.live_from or now)
         self.published_at = now
         self.published_by = published_by
         if persist:

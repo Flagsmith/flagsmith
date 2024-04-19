@@ -8,7 +8,7 @@ $shadow-dark: 0 4px 4px 0 #00000029;
   font-size: $font-size-sm;
   color: $body-text !important;
   text-transform: none;
-
+  text-wrap: wrap;
   &.show {
     opacity: 1;
   }
@@ -20,43 +20,54 @@ $shadow-dark: 0 4px 4px 0 #00000029;
 
   background-color: white;
 
+  &:before {
+    z-index: -1 !important;
+  }
   &.place-top {
     &:after {
       box-shadow: $shadow;
+      border-top-color: white;
       background-color: white;
       border-right-width: $arrow;
       border-left-width: $arrow;
-      margin-left: -$arrow;
+      margin-top: -$arrow;
+      padding-top: 1px;
     }
   }
 
   &.place-bottom {
     &:after {
       box-shadow: $shadow;
+      border-bottom-color: white;
       background-color: white;
       border-right-width: $arrow;
       border-left-width: $arrow;
       margin-left: -$arrow;
+      padding-bottom: 1px;
     }
   }
 
   &.place-right {
     &:after {
       box-shadow: $shadow;
+      border-right-color: white;
       background-color: white;
       border-top-width: $arrow;
       border-bottom-width: $arrow;
       margin-top: -5px;
+      padding-right: 1px;
     }
   }
 
   &.place-left {
     &:after {
       box-shadow: $shadow;
+      border-left-color: white;
       background-color: white;
       border-top-width: $arrow;
       border-bottom-width: $arrow;
       margin-top: -5px;
+      padding-left: 1px;
     }
   }
 }
@@ -70,6 +81,7 @@ $shadow-dark: 0 4px 4px 0 #00000029;
     &.place-top {
       &:after {
         box-shadow: $shadow-dark;
+        border-top-color: $text-icon-dark;
         background-color: $text-icon-dark;
       }
     }
@@ -77,6 +89,7 @@ $shadow-dark: 0 4px 4px 0 #00000029;
     &.place-bottom {
       &:after {
         box-shadow: $shadow-dark;
+        border-bottom-color: $text-icon-dark;
         background-color: $text-icon-dark;
       }
     }
@@ -84,6 +97,7 @@ $shadow-dark: 0 4px 4px 0 #00000029;
     &.place-right {
       &:after {
         box-shadow: $shadow-dark;
+        border-right-color: $text-icon-dark;
         background-color: $text-icon-dark;
       }
     }
@@ -91,6 +105,7 @@ $shadow-dark: 0 4px 4px 0 #00000029;
     &.place-left {
       &:after {
         box-shadow: $shadow-dark;
+        border-left-color: $text-icon-dark;
         background-color: $text-icon-dark;
       }
     }

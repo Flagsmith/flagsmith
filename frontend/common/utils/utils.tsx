@@ -267,8 +267,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   } {
     if (isAdmin) {
       return {
-        items: [],
-        truncatedItems: ['Project Administrator'],
+        items: ['Administrator'],
+        truncatedItems: [],
       }
     }
     if (!permissions) return { items: [], truncatedItems: [] }
@@ -350,6 +350,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       }
       case '4_EYES': {
         valid = isScaleupOrGreater
+        break
+      }
+      case 'STALE_FLAGS': {
+        valid = isEnterprise
         break
       }
       default:

@@ -1,6 +1,7 @@
 import importlib
 import logging
 import typing
+from datetime import datetime
 
 from core.helpers import get_current_site_url
 from core.models import (
@@ -34,11 +35,11 @@ from audit.tasks import (
     create_feature_state_updated_by_change_request_audit_log,
     create_feature_state_went_live_audit_log,
 )
+from environments.tasks import rebuild_environment_document
 from features.models import FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import trigger_update_version_webhooks
-
-from ...versioning.models import EnvironmentFeatureVersion
-from .exceptions import (
+from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
     ChangeRequestDeletionError,
     ChangeRequestNotApprovedError,
@@ -164,6 +165,10 @@ class ChangeRequest(
                     },
                     delay_until=environment_feature_version.live_from,
                 )
+                rebuild_environment_document.delay(
+                    kwargs={"environment_id": self.environment_id},
+                    delay_until=environment_feature_version.live_from,
+                )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title
@@ -239,10 +244,30 @@ class ChangeRequest(
         # In the workflows-logic module, we prevent change requests from being
         # deleted but, since this can have unexpected effects on published
         # feature states, we also want to prevent it at the ORM level.
-        if self.committed_at and not self.environment.deleted_at:
+        if self.committed_at and not (
+            self.environment.deleted_at
+            or (self._live_from and self._live_from > timezone.now())
+        ):
             raise ChangeRequestDeletionError(
                 "Cannot delete a Change Request that has been committed."
             )
+
+    @property
+    def _live_from(self) -> datetime | None:
+        # First we check if there are feature states associated with the change request
+        # and, if so, we return the live_from of the feature state with the earliest
+        # live_from.
+        if first_feature_state := self.feature_states.order_by("live_from").first():
+            return first_feature_state.live_from
+
+        # Then we do the same for environment feature versions. Note that a change request
+        # can not have feature states and environment feature versions.
+        elif first_environment_feature_version := self.environment_feature_versions.order_by(
+            "live_from"
+        ).first():
+            return first_environment_feature_version.live_from
+
+        return None
 
 
 class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factory()):

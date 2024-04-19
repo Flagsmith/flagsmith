@@ -29,6 +29,7 @@ import { removeUserOverride } from 'components/RemoveUserOverride'
 import TableOwnerFilter from 'components/tables/TableOwnerFilter'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableValueFilter from 'components/tables/TableValueFilter'
+import Format from 'common/utils/format'
 const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
@@ -48,15 +49,40 @@ const UserPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
+
+    const params = Utils.fromParam()
     this.state = {
-      group_owners: [],
-      is_enabled: null,
-      owners: [],
+      group_owners:
+        typeof params.group_owners === 'string'
+          ? params.group_owners.split(',').map((v) => parseInt(v))
+          : [],
+      is_enabled:
+        params.is_enabled === 'true'
+          ? true
+          : params.is_enabled === 'false'
+          ? false
+          : null,
+      loadedOnce: false,
+      owners:
+        typeof params.owners === 'string'
+          ? params.owners.split(',').map((v) => parseInt(v))
+          : [],
+      page: params.page ? parseInt(params.page) - 1 : 1,
       preselect: Utils.fromParam().flag,
-      showArchived: false,
-      tag_strategy: 'INTERSECTION',
-      tags: [],
-      value_search: null,
+      search: params.search || null,
+      showArchived: params.is_archived === 'true',
+      sort: {
+        label: Format.camelCase(params.sortBy || 'Name'),
+        sortBy: params.sortBy || 'name',
+        sortOrder: params.sortOrder || 'asc',
+      },
+      tag_strategy: params.tag_strategy || 'INTERSECTION',
+      tags:
+        typeof params.tags === 'string'
+          ? params.tags.split(',').map((v) => parseInt(v))
+          : [],
+      value_search:
+        typeof params.value_search === 'string' ? params.value_search : '',
     }
   }
 
@@ -260,15 +286,31 @@ const UserPage = class extends Component {
       yesText: 'Confirm',
     })
   }
+  getURLParams = () => ({
+    ...this.getFilter(),
+    group_owners: (this.state.group_owners || [])?.join(',') || undefined,
+    owners: (this.state.owners || [])?.join(',') || undefined,
+    page: this.state.page || 1,
+    search: this.state.search || '',
+    sortBy: this.state.sort.sortBy,
+    sortOrder: this.state.sort.sortOrder,
+    tags: (this.state.tags || [])?.join(',') || undefined,
+  })
 
   filter = () => {
+    const currentParams = Utils.fromParam()
+    if (!currentParams.flag) {
+      // don't replace page if we are currently viewing a feature
+      this.props.router.history.replace(
+        `${document.location.pathname}?${Utils.toParam(this.getURLParams())}`,
+      )
+    }
     AppActions.searchFeatures(
       this.props.match.params.projectId,
       this.props.match.params.environmentId,
       true,
       this.state.search,
       this.state.sort,
-      0,
       this.getFilter(),
     )
   }

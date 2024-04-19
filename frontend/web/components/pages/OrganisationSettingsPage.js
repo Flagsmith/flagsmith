@@ -20,16 +20,15 @@ import OrganisationUsage from 'components/OrganisationUsage'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import Format from 'common/utils/format'
-import CreateRole from 'components/modals/CreateRole'
 import Icon from 'components/Icon'
 import OrganisationManageWidget from 'components/OrganisationManageWidget'
 import ProjectManageWidget from 'components/ProjectManageWidget'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 import _data from 'common/data/base/_data'
+import RolesTable from 'components/RolesTable'
 
 const widths = [450, 255, 250, 235, 150, 100]
-const rolesWidths = [250, 600, 100]
 
 const SettingsTab = {
   'Billing': 'billing',
@@ -106,7 +105,7 @@ const OrganisationSettingsPage = class extends Component {
   onRemove = () => {
     toast('Your organisation has been removed')
     if (AccountStore.getOrganisation()) {
-      this.context.router.history.replace('/projects')
+      this.context.router.history.replace('/organisation-settings')
     } else {
       this.context.router.history.replace('/create')
     }
@@ -315,69 +314,6 @@ const OrganisationSettingsPage = class extends Component {
     return 'Within 30 days'
   }
 
-  createRole = (organisationId) => {
-    openModal(
-      'Create Role',
-      <CreateRole
-        organisationId={organisationId}
-        onComplete={() => {
-          getRoles(
-            getStore(),
-            { organisation_id: AccountStore.getOrganisation().id },
-            { forceRefetch: true },
-          ).then((roles) => {
-            this.setState({ roles: roles.data.results })
-            toast('Role created')
-            closeModal()
-          })
-        }}
-      />,
-      'side-modal',
-    )
-  }
-  deleteRole = (role) => {
-    openModal(
-      'Remove Role',
-      <ConfirmDeleteRole
-        role={role}
-        onComplete={() => {
-          getRoles(
-            getStore(),
-            { organisation_id: AccountStore.getOrganisation().id },
-            { forceRefetch: true },
-          ).then((roles) => {
-            this.setState({ roles: roles.data.results })
-            toast('Role Deleted')
-          })
-        }}
-      />,
-      'p-0',
-    )
-  }
-  editRole = (role, users, groups) => {
-    openModal(
-      'Edit Role and Permissions',
-      <CreateRole
-        organisationId={role.organisation}
-        isEdit
-        role={role}
-        onComplete={() => {
-          getRoles(
-            getStore(),
-            { organisation_id: AccountStore.getOrganisation().id },
-            { forceRefetch: true },
-          ).then((roles) => {
-            this.setState({ roles: roles.data.results })
-            toast('Role updated')
-          })
-        }}
-        users={users}
-        groups={groups}
-      />,
-      'side-modal',
-    )
-  }
-
   getOrganisationPermissions = (id) => {
     if (this.state.permissions.length) return
 
@@ -397,8 +333,6 @@ const OrganisationSettingsPage = class extends Component {
     const verifySeatsLimit = Utils.getFlagsmithHasFeature(
       'verify_seats_limit_for_invite_links',
     )
-    const canManageGroups =
-      this.state.permissions.includes('MANAGE_USER_GROUPS')
 
     return (
       <div className='app-container container'>
@@ -421,6 +355,7 @@ const OrganisationSettingsPage = class extends Component {
                   subscriptionMeta,
                   users,
                 }) => {
+                  const canManageGroups = !!groups?.length
                   const { max_seats } = subscriptionMeta ||
                     organisation.subscription || { max_seats: 1 }
                   const isAWS =
@@ -463,6 +398,7 @@ const OrganisationSettingsPage = class extends Component {
                       </div>
 
                       <Tabs
+                        hideNavOnSingleTab
                         value={this.state.tab || 0}
                         onChange={(tab) => this.setState({ tab })}
                         className='mt-0'
@@ -1517,140 +1453,12 @@ const OrganisationSettingsPage = class extends Component {
                                             <TabItem tabLabel='Roles'>
                                               {hasRbacPermission ? (
                                                 <>
-                                                  <Row space className='mt-4'>
-                                                    <h5 className='m-b-0'>
-                                                      Roles
-                                                    </h5>
-                                                    <Button
-                                                      className='mr-2'
-                                                      id='btn-invite'
-                                                      onClick={() =>
-                                                        this.createRole(
-                                                          organisation.id,
-                                                          users,
-                                                        )
-                                                      }
-                                                      type='button'
-                                                    >
-                                                      Create Role
-                                                    </Button>
-                                                  </Row>
-                                                  <p className='fs-small lh-sm'>
-                                                    Create custom roles, assign
-                                                    permissions, and keys to the
-                                                    role, and then you can
-                                                    assign roles to users and/or
-                                                    groups.
-                                                  </p>
-                                                  <PanelSearch
-                                                    id='org-members-list'
-                                                    title={'Roles'}
-                                                    className='no-pad'
-                                                    items={this.state.roles}
-                                                    itemHeight={65}
-                                                    header={
-                                                      <Row className='table-header px-3'>
-                                                        <div
-                                                          style={{
-                                                            width:
-                                                              rolesWidths[0],
-                                                          }}
-                                                        >
-                                                          Roles
-                                                        </div>
-                                                        <div
-                                                          style={{
-                                                            width:
-                                                              rolesWidths[1],
-                                                          }}
-                                                        >
-                                                          Description
-                                                        </div>
-                                                        <div className='table-column text-center'>
-                                                          Remove
-                                                        </div>
-                                                      </Row>
+                                                  <RolesTable
+                                                    organisationId={
+                                                      AccountStore.getOrganisation()
+                                                        .id
                                                     }
-                                                    renderRow={(role) => (
-                                                      <Row
-                                                        className='list-item clickable cursor-pointer'
-                                                        key={role.id}
-                                                      >
-                                                        <Row
-                                                          onClick={() => {
-                                                            this.editRole(
-                                                              role,
-                                                              users,
-                                                              groups,
-                                                            )
-                                                          }}
-                                                          className='table-column px-3'
-                                                          style={{
-                                                            width:
-                                                              rolesWidths[0],
-                                                          }}
-                                                        >
-                                                          {role.name}
-                                                        </Row>
-                                                        <Row
-                                                          className='table-column px-3'
-                                                          onClick={() => {
-                                                            this.editRole(
-                                                              role,
-                                                              users,
-                                                              groups,
-                                                            )
-                                                          }}
-                                                          style={{
-                                                            width:
-                                                              rolesWidths[1],
-                                                          }}
-                                                        >
-                                                          {role.description}
-                                                        </Row>
-                                                        <div
-                                                          style={{
-                                                            width:
-                                                              rolesWidths[2],
-                                                          }}
-                                                          className='table-column text-center px-3'
-                                                        >
-                                                          <Button
-                                                            id='remove-role'
-                                                            type='button'
-                                                            onClick={() => {
-                                                              this.deleteRole(
-                                                                role,
-                                                              )
-                                                            }}
-                                                            className='btn btn-with-icon'
-                                                          >
-                                                            <Icon
-                                                              name='trash-2'
-                                                              width={20}
-                                                              fill='#656D7B'
-                                                            />
-                                                          </Button>
-                                                        </div>
-                                                      </Row>
-                                                    )}
-                                                    renderNoResults={
-                                                      <Panel
-                                                        title={
-                                                          'Organisation roles'
-                                                        }
-                                                        className='no-pad'
-                                                      >
-                                                        <div className='search-list'>
-                                                          <Row className='list-item p-3 text-muted'>
-                                                            You currently have
-                                                            no organisation
-                                                            roles
-                                                          </Row>
-                                                        </div>
-                                                      </Panel>
-                                                    }
-                                                    isLoading={false}
+                                                    users={users}
                                                   />
                                                 </>
                                               ) : (
