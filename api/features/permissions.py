@@ -14,7 +14,6 @@ from environments.permissions.constants import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from features.feature_external_resources.models import FeatureExternalResource
 from features.models import Feature, FeatureState
 from projects.models import Project
 from projects.permissions import CREATE_FEATURE, DELETE_FEATURE
@@ -125,27 +124,16 @@ class FeatureStatePermissions(IsAuthenticated):
     def has_object_permission(
         self, request: Request, view: GenericViewSet, obj: FeatureState
     ) -> bool:
-        if isinstance(obj, FeatureExternalResource):
-            permission = UPDATE_FEATURE_STATE
-            environment = (
-                Environment.objects.get(id=request.query_params.get("environment"))
-                if view.action != "destroy"
-                else Environment.objects.get(id=request.data.get("environment"))
-            )
-        else:
-            permission = (
-                MANAGE_SEGMENT_OVERRIDES
-                if obj.feature_segment_id
-                else UPDATE_FEATURE_STATE
-            )
-            environment = obj.environment
+        permission = (
+            MANAGE_SEGMENT_OVERRIDES if obj.feature_segment_id else UPDATE_FEATURE_STATE
+        )
 
         tag_ids = None
         if permission in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
             tag_ids = list(obj.feature.tags.values_list("id", flat=True))
 
         return request.user.has_environment_permission(
-            permission, environment=environment, tag_ids=tag_ids
+            permission, environment=obj.environment, tag_ids=tag_ids
         )
 
 
