@@ -2,7 +2,9 @@ import React, { FC, useEffect, useState } from 'react'
 import Utils from 'common/utils/utils'
 import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
-import SupportedContentTypesSelect from 'components/metadata/SupportedContentTypesSelect'
+import SupportedContentTypesSelect, {
+  SelectContentTypesType,
+} from 'components/metadata/SupportedContentTypesSelect'
 
 import {
   useCreateMetadataFieldMutation,
@@ -17,7 +19,11 @@ import {
   useUpdateMetadataModelFieldMutation,
   useDeleteMetadataModelFieldMutation,
 } from 'common/services/useMetadataModelField'
-import { MetadataModelField } from 'common/types/responses'
+import {
+  ContentType,
+  MetadataModelField,
+  isRequiredFor,
+} from 'common/types/responses'
 
 type CreateMetadataFieldType = {
   id?: string
@@ -25,18 +31,10 @@ type CreateMetadataFieldType = {
   metadataModelFieldList?: MetadataModelField[]
   onComplete?: () => void
   organisationId: string
-  projectId?: string
-}
-type IsRequiredForType = {
-  content_type: number
-  object_id: string
+  projectId: string
 }
 
-type QueryBody = {
-  content_type: string | number
-  field: number
-  is_required_for: boolean | IsRequiredForType[]
-}
+type QueryBody = Omit<MetadataModelField, 'id'>
 
 type Query = {
   body: QueryBody
@@ -50,19 +48,9 @@ type MetadataType = {
   label: string
 }
 
-type metadataFieldUpdatedSelectListType = {
-  id: number
-  field: number
-  content_type: number | string
-  is_required_for: boolean
+type metadataFieldUpdatedSelectListType = MetadataModelField & {
   removed: boolean
   new: boolean
-}
-
-type metadataFieldListType = {
-  label: string
-  value: string
-  isRequired: boolean
 }
 
 const CreateMetadataField: FC<CreateMetadataFieldType> = ({
@@ -97,7 +85,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   const [updateMetadataModelField] = useUpdateMetadataModelFieldMutation()
 
   const [deleteMetadataModelField] = useDeleteMetadataModelFieldMutation()
-  const projectContentType =
+  const projectContentType: ContentType =
     supportedContentTypes &&
     Utils.getContentType(supportedContentTypes, 'model', 'project')
   useEffect(() => {
@@ -132,7 +120,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   const [name, setName] = useState<string>('')
   const [description, setDescription] = useState<string>('')
   const [metadataFieldSelectList, setMetadataFieldSelectList] = useState<
-    metadataFieldListType[]
+    SelectContentTypesType[]
   >([])
   const [metadataUpdatedSelectList, setMetadataFieldUpdatedSelectList] =
     useState<metadataFieldUpdatedSelectListType[]>([])
@@ -152,9 +140,9 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           ? ([
               {
                 content_type: projectContentType.id,
-                object_id: projectId,
-              },
-            ] as IsRequiredForType[])
+                object_id: parseInt(projectId),
+              } as isRequiredFor,
+            ] as isRequiredFor[])
           : [],
       },
       id: id,
@@ -180,27 +168,29 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
         id: id!,
       }).then(() => {
         Promise.all(
-          metadataUpdatedSelectList?.map(async (m) => {
-            const query = generateDataQuery(
-              m.content_type,
-              m.field,
-              m.is_required_for,
-              m.id,
-              m?.new,
-            )
-            if (!('removed' in m) && !('new' in m)) {
-              await updateMetadataModelField(query)
-            } else if ('removed' in m && m.removed) {
-              await deleteMetadataModelField({
-                id: m.id,
-                organisation_id: organisationId,
-              })
-            } else if ('new' in m && m.new) {
-              const newQuery = { ...query }
-              delete newQuery.id
-              await createMetadataModelField(newQuery)
-            }
-          }),
+          metadataUpdatedSelectList?.map(
+            async (m: metadataFieldUpdatedSelectListType) => {
+              const query = generateDataQuery(
+                m.content_type,
+                m.field,
+                m.is_required_for,
+                m.id,
+                m?.new,
+              )
+              if (!m.removed && !m.new) {
+                await updateMetadataModelField(query)
+              } else if (m.removed) {
+                await deleteMetadataModelField({
+                  id: m.id,
+                  organisation_id: organisationId,
+                })
+              } else if (m.new) {
+                const newQuery = { ...query }
+                delete newQuery.id
+                await createMetadataModelField(newQuery)
+              }
+            },
+          ),
         )
         closeModal()
       })
@@ -278,7 +268,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
       <SupportedContentTypesSelect
         organisationId={organisationId}
         isEdit={isEdit}
-        getMetadataContentTypes={(m: metadataFieldListType[]) => {
+        getMetadataContentTypes={(m: SelectContentTypesType[]) => {
           if (isEdit) {
             const newMetadataFieldArray: metadataFieldUpdatedSelectListType[] =
               []
@@ -300,6 +290,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
               } else {
                 newMetadataFieldArray.push({
                   ...item1,
+                  new: false,
                   removed: true,
                 })
               }
@@ -313,6 +304,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
                     content_type: item.value,
                     is_required_for: m?.isRequired,
                     new: true,
+                    removed: false,
                   })
                 }
               })

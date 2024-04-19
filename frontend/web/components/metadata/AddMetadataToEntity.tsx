@@ -5,7 +5,7 @@ import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataMo
 import { useGetMetadataFieldListQuery } from 'common/services/useMetadataField'
 import { useGetSegmentQuery } from 'common/services/useSegment'
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
-import { MetadataField, Metadata, ProjectFlag } from 'common/types/responses'
+import { MetadataField, Metadata } from 'common/types/responses'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
@@ -78,14 +78,23 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
 
   const [metadataChanged, setMetadataChanged] = useState<boolean>(false)
   useEffect(() => {
-    // onChange?.(metadataFieldsAssociatedtoEntity!)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metadataFieldsAssociatedtoEntity])
 
-  console.log(
-    'DEBUG: metadataFieldsAssociatedtoEntity:',
-    metadataFieldsAssociatedtoEntity,
-  )
+  const mergeMetadataEntityWithMetadataField = (
+    metadata: Metadata[],
+    metadataField: CustomMetadataField[],
+  ) => {
+    const map = new Map(
+      metadataField.map((item) => [item.metadataModelFieldId, item]),
+    )
+    return metadataField.map((item) => ({
+      ...item,
+      ...(map.get(item.model_field!) || {}),
+      ...(metadata.find((m) => m.model_field === item.metadataModelFieldId) ||
+        {}),
+    }))
+  }
 
   useEffect(() => {
     if (
@@ -122,27 +131,29 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
           }
         })
       if (projectFeatureData?.metadata && projectFeatureDataLoaded) {
-        const mergeLists = (
-          metadata: ProjectFlag['metadata'],
-          metadataField: CustomMetadataField[],
-        ) => {
-          const map = new Map(
-            metadataField.map((item) => [item.metadataModelFieldId, item]),
-          )
-          return metadataField.map((item) => ({
-            ...item,
-            ...(map.get(item.model_field!) || {}),
-            ...(metadata.find(
-              (m) => m.model_field === item.metadataModelFieldId,
-            ) || {}),
-          }))
-        }
-
-        const mergedList = mergeLists(
+        const mergedFeatureEntity = mergeMetadataEntityWithMetadataField(
           projectFeatureData?.metadata,
           metadataForContentType,
         )
-        const sortedArray = sortBy(mergedList, (m) =>
+        const sortedArray = sortBy(mergedFeatureEntity, (m) =>
+          m.isRequiredFor ? -1 : 1,
+        )
+        setMetadataFieldsAssociatedtoEntity(sortedArray)
+      } else if (segmentData?.metadata && segmentDataLoaded) {
+        const mergedSegmentEntity = mergeMetadataEntityWithMetadataField(
+          segmentData?.metadata,
+          metadataForContentType,
+        )
+        const sortedArray = sortBy(mergedSegmentEntity, (m) =>
+          m.isRequiredFor ? -1 : 1,
+        )
+        setMetadataFieldsAssociatedtoEntity(sortedArray)
+      } else if (envData?.metadata && envDataLoaded) {
+        const mergedEnvEntity = mergeMetadataEntityWithMetadataField(
+          envData?.metadata,
+          metadataForContentType,
+        )
+        const sortedArray = sortBy(mergedEnvEntity, (m) =>
           m.isRequiredFor ? -1 : 1,
         )
         setMetadataFieldsAssociatedtoEntity(sortedArray)

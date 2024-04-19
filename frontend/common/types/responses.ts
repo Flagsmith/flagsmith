@@ -424,16 +424,16 @@ export type ContentType = {
   model: string
 }
 
+export type isRequiredFor = {
+  content_type: number
+  object_id: number
+}
+
 export type MetadataModelField = {
   id: string
   field: number
-  content_type: number
-  is_required_for: [
-    {
-      content_type: number
-      object_id: number
-    },
-  ]
+  content_type: number | string
+  is_required_for: isRequiredFor[]
 }
 
 export type Res = {

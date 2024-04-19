@@ -11,7 +11,7 @@ type SupportedContentTypesSelectType = {
   metadataModelFieldList: MetadataModelField[]
 }
 
-type SelectContentTypesType = {
+export type SelectContentTypesType = {
   label: string
   value: string
   isRequired?: boolean
