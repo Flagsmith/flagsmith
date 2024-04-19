@@ -385,12 +385,12 @@ def feature_state_with_value(environment: Environment) -> FeatureState:
 
 
 @pytest.fixture()
-def feature_with_value(project: Project) -> Feature:
+def feature_with_value(project: Project, environment: Environment) -> Feature:
     return Feature.objects.create(
         name="feature_with_value",
-        initial_value="foo",
+        initial_value="value",
         default_enabled=False,
-        project=project,
+        project=environment.project,
     )
 
 

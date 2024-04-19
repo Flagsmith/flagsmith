@@ -73,7 +73,7 @@ def test_create_feature_external_resource(
     github_request_mock.assert_called_with(
         "https://api.github.com/repos/repoowner/repo-name/issues/35/comments",
         json={
-            "body": f"### This pull request is linked to a Flagsmith Feature (feature_with_value):\n**Test Environment**\n- [ ] Disabled\nunicode\n```foo```\n\nLast Updated {datetime_now.strftime('%dth %b %Y %I:%M%p')}"  # noqa E501
+            "body": f"### This pull request is linked to a Flagsmith Feature (feature_with_value):\n**Test Environment**\n- [ ] Disabled\nunicode\n```value```\n\nLast Updated {datetime_now.strftime('%dth %b %Y %I:%M%p')}"  # noqa E501
         },
         headers={
             "Accept": "application/vnd.github.v3+json",
