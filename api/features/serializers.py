@@ -434,7 +434,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         try:
             return super().save(**kwargs)
         except django.core.exceptions.ValidationError as e:
-            raise serializers.ValidationError(e.message)
+            raise serializers.ValidationError(str(e))
 
     def validate_feature(self, feature):
         if self.instance and self.instance.feature_id != feature.id:
