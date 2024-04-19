@@ -199,7 +199,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
                 getMetadataValue={(m: string) => {
                   console.log('DEBUG: m:', m)
                 }}
-                unSavedMetadata={onChange}
+                unsavedMetadata={onChange}
               />
             )
           }}
@@ -214,20 +214,20 @@ type MetadataRowType = {
   onDelete?: () => void
   isEdit: boolean
   getMetadataValue?: (value: string) => void
-  unSavedMetadata: () => void
+  unsavedMetadata: () => void
 }
 const MetadataRow: FC<MetadataRowType> = ({
   getMetadataValue,
   isEdit,
   metadata,
-  unSavedMetadata,
+  unsavedMetadata,
 }) => {
+  const [metadataObject, setMetadataObject] = useState<CustomMetadata>(metadata)
   const [metadataValue, setMetadataValue] = useState<string>(
     metadata?.field_value || '',
   )
   const [metadataValueChanged, setMetadataValueChanged] =
     useState<boolean>(false)
-
   return (
     <Row className='space list-item clickable py-2'>
       {metadataValueChanged && <div className='unread ml-2 px-1'>{'*'}</div>}
@@ -243,7 +243,7 @@ const MetadataRow: FC<MetadataRowType> = ({
                 onChange={(e: InputEvent) => {
                   setMetadataValue(Utils.safeParseEventValue(e))
                   setMetadataValueChanged(true)
-                  unSavedMetadata?.()
+                  unsavedMetadata?.()
                   getMetadataValue?.(Utils.safeParseEventValue(e))
                 }}
                 className='mr-2'
@@ -267,20 +267,15 @@ const MetadataRow: FC<MetadataRowType> = ({
       )}
       <div className='table-column text-center px-3'>
         <Button
-          disabled={!metadataValueChanged}
+          disabled={
+            !metadataValueChanged ||
+            !Utils.validateMetadataType(metadata?.type, metadataValue)
+          }
           onClick={() => {
-            openConfirm({
-              body: (
-                <div>
-                  {'Are you sure you delete this metadata '}
-                  {'? This action cannot be undone.'}
-                </div>
-              ),
-              destructive: true,
-              onYes: () => true,
-              title: 'Delete Group',
-              yesText: 'Confirm',
-            })
+            const updatedMetadataObject = { ...metadataObject }
+            updatedMetadataObject.field_value = metadataValue
+            setMetadataObject(updatedMetadataObject as CustomMetadata)
+            setMetadataValueChanged(false)
           }}
           className='btn'
         >
