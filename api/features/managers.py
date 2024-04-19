@@ -8,6 +8,8 @@ from django.utils import timezone
 from ordered_model.models import OrderedModelManager
 from softdelete.models import SoftDeleteManager
 
+from features.versioning.models import EnvironmentFeatureVersion
+
 if typing.TYPE_CHECKING:
     from environments.models import Environment
     from features.models import FeatureState
@@ -31,10 +33,16 @@ class FeatureStateManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
 
         qs_filter = Q(environment=environment, deleted_at__isnull=True)
         if environment.use_v2_feature_versioning:
+            latest_environment_feature_version_uuids = [
+                efv.uuid
+                for efv in (
+                    EnvironmentFeatureVersion.objects.get_latest_version_uuids(
+                        environment
+                    )
+                )
+            ]
             qs_filter &= Q(
-                environment_feature_version__isnull=False,
-                environment_feature_version__published_at__isnull=False,
-                environment_feature_version__live_from__lte=now,
+                environment_feature_version__uuid__in=latest_environment_feature_version_uuids
             )
         else:
             qs_filter &= Q(
