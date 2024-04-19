@@ -198,7 +198,6 @@ def mocked_requests_get(*args, **kwargs):
 )
 def test_fetch_pull_requests(
     client: APIClient,
-    mock_generate_token,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
@@ -206,6 +205,9 @@ def test_fetch_pull_requests(
 ) -> None:
 
     # Given
+    mock_generate_token = mocker.patch(
+        "integrations.github.views.generate_token",
+    )
     mock_generate_token.return_value = "mocked_token"
     github_request_mock = mocker.patch("requests.get", side_effect=mocked_requests_get)
 
@@ -237,13 +239,15 @@ def test_fetch_pull_requests(
 )
 def test_fetch_issue(
     client: APIClient,
-    mock_generate_token,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
     mocker,
 ) -> None:
     # Given
+    mock_generate_token = mocker.patch(
+        "integrations.github.views.generate_token",
+    )
     mock_generate_token.return_value = "mocked_token"
     github_request_mock = mocker.patch("requests.get", side_effect=mocked_requests_get)
     url = reverse("api-v1:organisations:get-github-issues", args=[organisation.id])
@@ -273,13 +277,15 @@ def test_fetch_issue(
 )
 def test_fetch_repositories(
     client: APIClient,
-    mock_generate_token,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
     mocker,
 ) -> None:
     # Given
+    mock_generate_token = mocker.patch(
+        "integrations.github.views.generate_token",
+    )
     mock_generate_token.return_value = "mocked_token"
     github_request_mock = mocker.patch("requests.get", side_effect=mocked_requests_get)
     url = reverse("api-v1:organisations:get-github-installation-repos")
@@ -314,9 +320,12 @@ def test_fetch_repositories(
     ],
 )
 def test_fetch_pull_requests_fails_with_status_400_when_integration_not_configured(
-    client: APIClient, mock_generate_token, organisation: Organisation, reverse_url: str
+    client: APIClient, organisation: Organisation, reverse_url: str, mocker
 ) -> None:
     # Given
+    mock_generate_token = mocker.patch(
+        "integrations.github.views.generate_token",
+    )
     mock_generate_token.generate_token.return_value = "mocked_token"
     # When
     url = reverse(reverse_url, args=[organisation.id])

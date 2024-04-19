@@ -18,13 +18,6 @@ def edge_identity_dynamo_wrapper_mock(mocker):
     )
 
 
-@pytest.fixture
-def mock_generate_token(mocker):
-    return mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-
-
 @pytest.fixture()
 def flagsmith_environment_api_key_table(dynamodb: "DynamoDBServiceResource") -> "Table":
     return dynamodb.create_table(

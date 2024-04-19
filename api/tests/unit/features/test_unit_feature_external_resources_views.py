@@ -203,12 +203,16 @@ def test_cannot_create_feature_external_resource_due_to_unique_constraint(
     client: APIClient,
     feature: Feature,
     feature_external_resource: FeatureExternalResource,
+    environment: Environment,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
 ) -> None:
     # Given
     feature_external_resource_data = {
         "type": "GITHUB_ISSUE",
         "url": "https://github.com/userexample/example-project-repo/issues/11",
         "feature": feature.id,
+        "environment": environment.id,
     }
     url = reverse("api-v1:features:external-resources-list", args=[feature.id])
 
@@ -233,15 +237,24 @@ def test_delete_feature_external_resource(
     client: APIClient,
     feature_external_resource: FeatureExternalResource,
     feature: Feature,
+    environment: Environment,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mocker,
 ) -> None:
     # Given
+    data = {"environment": environment.id}
+    mock_generate_token = mocker.patch(
+        "integrations.github.github.generate_token",
+    )
+    mock_generate_token.return_value = "mocked_token"
     url = reverse(
         "api-v1:features:external-resources-detail",
         args=[feature.id, feature_external_resource.id],
     )
 
     # When
-    response = client.delete(url)
+    response = client.delete(url, data=data)
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -258,15 +271,19 @@ def test_get_feature_external_resources(
     client: APIClient,
     feature_external_resource: FeatureExternalResource,
     feature: Feature,
+    environment: Environment,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
 ) -> None:
     # Given
+    data = {"environment": environment.id}
     url = reverse(
         "api-v1:features:external-resources-list",
         kwargs={"feature_pk": feature.id},
     )
 
     # When
-    response = client.get(url)
+    response = client.get(url, data=data)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -280,15 +297,19 @@ def test_get_feature_external_resource(
     client: APIClient,
     feature_external_resource: FeatureExternalResource,
     feature: Feature,
+    environment: Environment,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
 ) -> None:
     # Given
+    data = {"environment": environment.id}
     url = reverse(
         "api-v1:features:external-resources-detail",
         args=[feature.id, feature_external_resource.id],
     )
 
     # When
-    response = client.get(url)
+    response = client.get(url, data=data)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
