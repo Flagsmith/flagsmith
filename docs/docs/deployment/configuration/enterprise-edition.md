@@ -2,16 +2,16 @@
 sidebar_position: 4
 ---
 
-import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
-
 # Enterprise Edition
 
 Flagsmith is also provided as an "Enterprise Edition" which has additional features and capabilities over the Open
 Source product:
 
 - [Role Based Access Controls](/system-administration/rbac)
-- [SAML](authentication/SAML), [OAuth](authentication/OAuth), [LDAP](authentication/LDAP), [ADFS](authentication/ADFS)
-  and [Okta](authentication/Okta) authentication, as well as the ability to lock authentication to a single provider
+- [SAML](/system-administration/authentication/SAML), [OAuth](/system-administration/authentication/OAuth),
+  [LDAP](/system-administration/authentication/LDAP), [ADFS](/system-administration/authentication/ADFS) and
+  [Okta](/system-administration/authentication/Okta) authentication, as well as the ability to lock authentication to a
+  single provider
 - Additional database engines: Oracle, SQL Server and MySQL
 - Additional deployment and orchestration options as detailed below
 
@@ -76,59 +76,6 @@ This image includes additions from the SaaS image above:
 
 Env Var: **FLAGSMITH** Value example: 4vfqhypYjcPoGGu8ByrBaj Description: The `environment id` for the
 `FLAGSMITH_CLIENT_API` project above.
-
-### Backend Environment Variables
-
-Note that some environment variables may be different depending on the image that you are using
-(`flagsmith/flagsmith-api-ee` or `flagsmith/flagsmith-private-cloud`). Please select the correct tab below to ensure you
-are using the correct environment variables.
-
-<Tabs groupId="ImageType">
-<TabItem value="ee" label="flagsmith-api-ee">
-
-| Variable                                   | Example Value                                                                                            | Description                                                                                                                                                                                                                                                                                                                                          | Default Value                                              |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| **LDAP_AUTH_URL**                          | ldap://localhost:389                                                                                     | The URL of the LDAP server                                                                                                                                                                                                                                                                                                                           | None                                                       |
-| **LDAP_AUTH_USE_TLS**                      | False                                                                                                    | Setting this to true will initiate TLS on connection                                                                                                                                                                                                                                                                                                 | False                                                      |
-| **LDAP_AUTH_SEARCH_BASE**                  | ou=people,dc=example,dc=com                                                                              | The LDAP search base for looking up users                                                                                                                                                                                                                                                                                                            | ou=people,dc=example,dc=com                                |
-| **LDAP_AUTH_OBJECT_CLASS**                 | inetOrgPerson                                                                                            | The LDAP class that represents a user                                                                                                                                                                                                                                                                                                                | inetOrgPerson                                              |
-| **LDAP_AUTH_USER_FIELDS**                  | username=uid,email=email                                                                                 | User model fields mapped to the LDAP attributes that represent them.                                                                                                                                                                                                                                                                                 | username=uid,email=email,first_name=givenName,last_name=sn |
-| **LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN**      | DOMAIN                                                                                                   | Sets the login domain for Active Directory users.                                                                                                                                                                                                                                                                                                    | None                                                       |
-| **LDAP_AUTH_CONNECT_TIMEOUT**              | 60                                                                                                       | Set connection timeouts (in seconds) on the underlying `ldap3` library.                                                                                                                                                                                                                                                                              | None                                                       |
-| **LDAP_AUTH_RECEIVE_TIMEOUT**              | 60                                                                                                       | Set receive timeouts (in seconds) on the underlying `ldap3` library.                                                                                                                                                                                                                                                                                 | None                                                       |
-| **LDAP_AUTH_FORMAT_USERNAME**              | django_python3_ldap.<br/>utils.format_username_openldap                                                  | Path to a callable used to format the username to bind to the LDAP server                                                                                                                                                                                                                                                                            | django_python3_ldap.utils.format_username_openldap         |
-| **LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID** | 1                                                                                                        | All newly created users will be added to this originisation                                                                                                                                                                                                                                                                                          | None                                                       |
-| **LDAP_AUTH_SYNC_USER_RELATIONS**          | custom_auth.ldap.sync_user_groups                                                                        | Path to a callable used to sync user relations. Note: if you are setting this value to `custom_auth.ldap.sync_user_groups` please make sure `LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID` is set.                                                                                                                                                         | django_python3_ldap.utils.sync_user_relations              |
-| **LDAP_AUTH_FORMAT_SEARCH_FILTERS**        | custom_auth.ldap.login_group_search_filter                                                               | Path to a callable used to add search filters to login to restrict login to a certain group                                                                                                                                                                                                                                                          | django_python3_ldap.utils.format_search_filters            |
-| **LDAP_SYNCED_GROUPS**                     | CN=Readers,CN=Roles,CN=webapp01,<br/>dc=admin,dc=com:CN=Marvel,CN=Roles,<br/>CN=webapp01,dc=admin,dc=com | colon(:) seperated list of DN's of ldap group that will be copied over to flagmsith (lazily, i.e: On user login we will create the group(s) and add the current user to the group(s) if the user is a part of them). Note: please make sure to set `LDAP_AUTH_SYNC_USER_RELATIONS` to `custom_auth.ldap.sync_user_groups` in order for this to work. | []                                                         |
-| **LDAP_LOGIN_GROUP**                       | CN=Readers,CN=Roles,CN=webapp01,<br/>dc=admin,dc=com                                                     | DN of the user allowed login user group. Note: Please make sure to set `LDAP_AUTH_FORMAT_SEARCH_FILTERS` to `custom_auth.ldap.login_group_search_filter` in order for this to work.                                                                                                                                                                  | None                                                       |
-| **LDAP_SYNC_USER_USERNAME**                | john                                                                                                     | Username used by [sync_ldap_users_and_groups](#sync-ldap-users-groups) in order to connect to the server.                                                                                                                                                                                                                                            | None                                                       |
-| **LDAP_SYNC_USER_PASSWORD**                | password                                                                                                 | Password used by [sync_ldap_users_and_groups](#sync-ldap-users-groups) in order to connect to the server.                                                                                                                                                                                                                                            | None                                                       |
-
-</TabItem>
-<TabItem value="pc" label="flagsmith-private-cloud">
-
-| Variable                                   | Example Value                                                                                            | Description                                                                                                                                                                                                                                                                                                                                        | Default Value                                              |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| **LDAP_AUTH_URL**                          | ldap://localhost:389                                                                                     | The URL of the LDAP server                                                                                                                                                                                                                                                                                                                         | None                                                       |
-| **LDAP_AUTH_USE_TLS**                      | False                                                                                                    | Setting this to true will initiate TLS on connection                                                                                                                                                                                                                                                                                               | False                                                      |
-| **LDAP_AUTH_SEARCH_BASE**                  | ou=people,dc=example,dc=com                                                                              | The LDAP search base for looking up users                                                                                                                                                                                                                                                                                                          | ou=people,dc=example,dc=com                                |
-| **LDAP_AUTH_OBJECT_CLASS**                 | inetOrgPerson                                                                                            | The LDAP class that represents a user                                                                                                                                                                                                                                                                                                              | inetOrgPerson                                              |
-| **LDAP_AUTH_USER_FIELDS**                  | username=uid,email=email                                                                                 | User model fields mapped to the LDAP attributes that represent them.                                                                                                                                                                                                                                                                               | username=uid,email=email,first_name=givenName,last_name=sn |
-| **LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN**      | DOMAIN                                                                                                   | Sets the login domain for Active Directory users.                                                                                                                                                                                                                                                                                                  | None                                                       |
-| **LDAP_AUTH_CONNECT_TIMEOUT**              | 60                                                                                                       | Set connection timeouts (in seconds) on the underlying `ldap3` library.                                                                                                                                                                                                                                                                            | None                                                       |
-| **LDAP_AUTH_RECEIVE_TIMEOUT**              | 60                                                                                                       | Set receive timeouts (in seconds) on the underlying `ldap3` library.                                                                                                                                                                                                                                                                               | None                                                       |
-| **LDAP_AUTH_FORMAT_USERNAME**              | django_python3_ldap.<br/>utils.format_username_openldap                                                  | Path to a callable used to format the username to bind to the LDAP server                                                                                                                                                                                                                                                                          | django_python3_ldap.utils.format_username_openldap         |
-| **LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID** | 1                                                                                                        | All newly created users will be added to this originisation                                                                                                                                                                                                                                                                                        | None                                                       |
-| **LDAP_AUTH_SYNC_USER_RELATIONS**          | flagsmith_ldap.ldap.sync_user_groups                                                                     | Path to a callable used to sync user relations. Note: if you are setting this value to `flagsmith_ldap.ldap.sync_user_groups` please make sure `LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID` is set.                                                                                                                                                    | django_python3_ldap.utils.sync_user_relations              |
-| **LDAP_AUTH_FORMAT_SEARCH_FILTERS**        | flagsmith_ldap.ldap.login_group_search_filter                                                            | Path to a callable used to add search filters to login to restrict login to a certain group                                                                                                                                                                                                                                                        | django_python3_ldap.utils.format_search_filters            |
-| **LDAP_SYNCED_GROUPS**                     | CN=Readers,CN=Roles,CN=webapp01,<br/>dc=admin,dc=com:CN=Marvel,CN=Roles,<br/>CN=webapp01,dc=admin,dc=com | colon(:) seperated list of DN's of ldap group that will be copied over to flagmsith (lazily, i.e: On user login we will create the group(s) and add the current user to the group(s) if the user is a part of them). Note: please make sure to set `LDAP_AUTH_SYNC_USER_RELATIONS` to `flagsmith.ldap.sync_user_groups` in order for this to work. | []                                                         |
-| **LDAP_LOGIN_GROUP**                       | CN=Readers,CN=Roles,CN=webapp01,<br/>dc=admin,dc=com                                                     | DN of the user allowed login user group. Note: Please make sure to set `LDAP_AUTH_FORMAT_SEARCH_FILTERS` to `flagsmith_ldap.ldap.login_group_search_filter` in order for this to work.                                                                                                                                                             | None                                                       |
-| **LDAP_SYNC_USER_USERNAME**                | john                                                                                                     | Username used by [sync_ldap_users_and_groups](#sync-ldap-users-groups) in order to connect to the server.                                                                                                                                                                                                                                          | None                                                       |
-| **LDAP_SYNC_USER_PASSWORD**                | password                                                                                                 | Password used by [sync_ldap_users_and_groups](#sync-ldap-users-groups) in order to connect to the server.                                                                                                                                                                                                                                          | None                                                       |
-
-</TabItem>
-</Tabs>
 
 ### Version Tags
 
@@ -261,111 +208,11 @@ GRANT EXECUTE ON SYS.DBMS_LOB TO oracle_user;
 GRANT EXECUTE ON SYS.DBMS_RANDOM TO oracle_user;
 ```
 
-### SAML Authentication
-
-The application can be run using SAML2 as an authentication backend. You should not need any additional configuration on
-the startup of the application to use SAML2, however, once the application is running, you will need to create the
-relevant configuration entities for any organisations on your installation that require SAML2 authentication. This can
-currently only be done via the Django admin console, via the 'Saml Configurations' section on the 'Organisation' page.
-Further information on how to access the django admin console can be found
-[here](/deployment/configuration/django-admin).
-
-The SAML configuration requires the following parameters:
-
-| Parameter name    | Description                                                                                                                   |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Organisation      | The flagsmith organisation entity to allow SAML login for                                                                     |
-| Organisation name | A unique string for the organisation. You'll enter this when prompted by the SSO login flow and forms part of your entity ID. |
-| Frontend URL      | This is the URL to redirect to on a successful SAML authentication, e.g. app.flagsmith.com.                                   |
-| Idp metadata      | This is the metadata from your Identity Provider.                                                                             |
-
-:::note
-
-When running the application locally, you will also need [xmlsec1](https://command-not-found.com/xmlsec1) installed.
-
-:::
-
-#### SAML Environment Variables
-
-| Variable           | Example Value | Description                                                                            | Default Value |
-| ------------------ | ------------- | -------------------------------------------------------------------------------------- | ------------- |
-| **SAML_FORCE_SSL** | True          | Ignores X-Forwarded-Proto HTTP headers and forces SAML redirects to occur over `https` | False         |
-
-### LDAP Authentication
-
-The application can be configured to use an LDAP based authentication backend using
-[environment variables](#backend-environment-variables). When enabled, it works by authenticating the user with username
-and password using the ldap server, fetching the user details from the LDAP server (if the authentication was
-successful) and creating the user in the Django database.
-
-:::note
-
-#### Microsoft Active Directory support
-
-LDAP is configured by default to support login via OpenLDAP. To connect to a Microsoft Active Directory, you need to
-modify following environment variables.
-
-:::
-
-For simple usernames (e.g. "username"):
-
-```txt
-LDAP_AUTH_FORMAT_USERNAME="django_python3_ldap.utils.format_username_active_directory"
-```
-
-For down-level login name formats (e.g. "DOMAIN\username"):
-
-```txt
-LDAP_AUTH_FORMAT_USERNAME="django_python3_ldap.utils.format_username_active_directory"
-LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN="DOMAIN"
-```
-
-For user-principal-name formats (e.g. "user@domain.com"):
-
-```txt
-LDAP_AUTH_FORMAT_USERNAME="django_python3_ldap.utils.format_username_active_directory_principal"
-LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN="domain.com"
-```
-
-Depending on how your Active Directory server is configured, the following additional settings may match your server
-better than the defaults used by django-python3-ldap:
-
-```txt
-LDAP_AUTH_USER_FIELDS=username=sAMAccountName,email=mail,first_name=givenName,last_name=sn
-LDAP_AUTH_OBJECT_CLASS="user"
-```
-
-#### Sync LDAP Users Groups
-
-You can synchronise Flagsmith users and groups with your LDAP (Directory) users and groups by running the following
-command:
-
-```bash
-python manage.py sync_ldap_users_and_groups
-```
-
-Running this command will:
-
-- Remove users from Flagsmith if they have been removed from Directory
-- Remove groups from Flagsmith if they have been removed from Directory
-- Remove users from group if they no longer belong to that group in Directory
-- Add users to group if they belong to a new group in Directory
-
-:::note Before running this command please make sure to set the following environment variables:
-
-- LDAP_SYNC_USER_USERNAME
-- LDAP_SYNC_USER_PASSWORD
-- LDAP_SYNCED_GROUPS
-- LDAP_AUTH_SYNC_USER_RELATIONS
-- LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID
-
-:::
-
 ## Load testing
 
 ### JMeter
 
-There are [JMeter](https://jmeter.apache.org/) tests avaiable in our public repo on Github:
+There are [JMeter](https://jmeter.apache.org/) tests avaiable in our public repo on GitHub:
 
 https://github.com/Flagsmith/flagsmith/tree/main/api/jmeter-tests
 

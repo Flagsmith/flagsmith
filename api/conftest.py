@@ -39,7 +39,10 @@ from metadata.models import (
     MetadataModelFieldRequirement,
 )
 from organisations.models import Organisation, OrganisationRole, Subscription
-from organisations.permissions.models import OrganisationPermissionModel
+from organisations.permissions.models import (
+    OrganisationPermissionModel,
+    UserOrganisationPermission,
+)
 from organisations.permissions.permissions import (
     CREATE_PROJECT,
     MANAGE_USER_GROUPS,
@@ -57,6 +60,7 @@ from segments.models import Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
 from tests.types import (
     WithEnvironmentPermissionsCallable,
+    WithOrganisationPermissionsCallable,
     WithProjectPermissionsCallable,
 )
 from users.models import FFAdminUser, UserPermissionGroup
@@ -235,6 +239,29 @@ def with_environment_permissions(
         return uep
 
     return _with_environment_permissions
+
+
+@pytest.fixture()
+def with_organisation_permissions(
+    organisation: Organisation, staff_user: FFAdminUser
+) -> WithOrganisationPermissionsCallable:
+    """
+    Add organisation permissions to the staff_user fixture.
+    Defaults to associating to the organisation fixture.
+    """
+
+    def _with_organisation_permissions(
+        permission_keys: list[str], organisation_id: int | None = None
+    ) -> UserOrganisationPermission:
+        organisation_id = organisation_id or organisation.id
+        uop, __ = UserOrganisationPermission.objects.get_or_create(
+            organisation_id=organisation_id, user=staff_user
+        )
+        uop.permissions.add(*permission_keys)
+
+        return uop
+
+    return _with_organisation_permissions
 
 
 @pytest.fixture()
