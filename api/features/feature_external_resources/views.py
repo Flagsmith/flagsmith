@@ -1,5 +1,7 @@
+from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from features.models import Feature
@@ -38,7 +40,12 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        return super().create(request, *args, **kwargs)
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError:
+            raise ValidationError(
+                detail="Duplication error. The feature already has this resource URI"
+            )
 
     def perform_update(self, serializer):
         external_resource_id = int(self.kwargs["id"])
