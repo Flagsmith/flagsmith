@@ -198,6 +198,13 @@ def handle_api_usage_notifications() -> None:
 
 
 def restrict_use_due_to_api_limit_grace_period_over() -> None:
+    """
+    Restrict API use once a grace period has ended.
+
+    Since free plans don't have predefined subscription periods, we
+    use a rolling thirty day period to filter them.
+    """
+
     grace_period = timezone.now() - timedelta(days=API_USAGE_GRACE_PERIOD)
     month_start = timezone.now() - timedelta(30)
     queryset = (
@@ -239,8 +246,17 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
 
 
 def unrestrict_after_api_limit_grace_period_is_stale() -> None:
+    """
+    This task handles accounts that have breached the API limit
+    and have become restricted by setting the stop_serving_flags
+    and block_access_to_admin to True. This task looks to find
+    which accounts have started following the API limits in the
+    latest rolling month and re-enables them if they no longer
+    have recent API usage notifications.
+    """
+
     month_start = timezone.now() - timedelta(30)
-    queryset = (
+    still_restricted_organisation_notifications = (
         OranisationAPIUsageNotification.objects.filter(
             notified_at__gt=month_start,
             percent_usage__gte=100,
@@ -248,20 +264,22 @@ def unrestrict_after_api_limit_grace_period_is_stale() -> None:
         .values("organisation")
         .annotate(max_value=Max("percent_usage"))
     )
-    still_restricted_organisation_ids = {q["organisation"] for q in queryset}
+    still_restricted_organisation_ids = {
+        q["organisation"] for q in still_restricted_organisation_notifications
+    }
     organisation_ids = set(
         Organisation.objects.filter(
             api_limit_access_block__isnull=False,
         ).values_list("id", flat=True)
     )
 
-    queryset = Organisation.objects.filter(
+    matching_organisations = Organisation.objects.filter(
         id__in=(organisation_ids - still_restricted_organisation_ids),
     )
 
-    queryset.update(stop_serving_flags=False, block_access_to_admin=False)
+    matching_organisations.update(stop_serving_flags=False, block_access_to_admin=False)
 
-    for organisation in queryset:
+    for organisation in matching_organisations:
         organisation.api_limit_access_block.delete()
 
 
