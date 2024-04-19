@@ -123,6 +123,29 @@ def test_create_github_repository(
     assert GithubRepository.objects.filter(repository_owner="repositoryowner").exists()
 
 
+def test_cannot_create_github_repository(
+    test_user_client: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    project: Project,
+) -> None:
+    data = {
+        "github_configuration": github_configuration.id,
+        "repository_owner": "repositoryowner",
+        "repository_name": "repositoryname",
+        "project": project.id,
+    }
+
+    url = reverse(
+        "api-v1:organisations:repositories-list",
+        args=[organisation.id, github_configuration.id],
+    )
+
+    response = test_user_client.post(url, data)
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
@@ -316,10 +339,15 @@ def test_fetch_repositories(
             lazy_fixture("admin_master_api_key_client"),
             "api-v1:organisations:get-github-issues",
         ),
+        (
+            lazy_fixture("admin_master_api_key_client"),
+            "api-v1:organisations:get-github-pulls",
+        ),
+        (lazy_fixture("admin_client"), "api-v1:organisations:get-github-issues"),
         (lazy_fixture("admin_client"), "api-v1:organisations:get-github-pulls"),
     ],
 )
-def test_fetch_pull_requests_fails_with_status_400_when_integration_not_configured(
+def test_fetch_issues_and_pull_requests_fails_with_status_400_when_integration_not_configured(
     client: APIClient, organisation: Organisation, reverse_url: str, mocker
 ) -> None:
     # Given
@@ -333,3 +361,32 @@ def test_fetch_pull_requests_fails_with_status_400_when_integration_not_configur
 
     # Then
     assert response.status_code == 400
+
+
+@pytest.mark.parametrize(
+    "reverse_url",
+    [
+        ("api-v1:organisations:get-github-issues"),
+        ("api-v1:organisations:get-github-issues"),
+    ],
+)
+def test_cannot_fetch_issues_or_prs_when_does_not_have_permissions(
+    test_user_client: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mocker,
+    reverse_url: str,
+) -> None:
+    # Given
+    mock_generate_token = mocker.patch(
+        "integrations.github.views.generate_token",
+    )
+    mock_generate_token.generate_token.return_value = "mocked_token"
+
+    # When
+    url = reverse(reverse_url, args=[organisation.id])
+    response = test_user_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN

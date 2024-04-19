@@ -3,7 +3,6 @@ import datetime
 import pytest
 import simplejson as json
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db import IntegrityError
 from django.urls import reverse
 from freezegun import freeze_time
 from pytest_lazyfixture import lazy_fixture
@@ -222,16 +221,14 @@ def test_cannot_create_feature_external_resource_due_to_unique_constraint(
     )
 
     # When
-    with pytest.raises(IntegrityError) as exc_info:
-        response = client.post(url, data=feature_external_resource_data)
+    response = client.post(url, data=feature_external_resource_data)
 
-        # Then
-        assert "duplicate key value violates unique constraint" in str(exc_info.value)
-        assert (
-            "Key (feature_id, url)=(1, https://github.com/userexample/example-project-repo/issues/11) already exists."
-            in str(exc_info.value)
-        )
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        "Duplication error. The feature already has this resource URI"
+        in response.json()[0]
+    )
 
 
 @pytest.mark.parametrize(
