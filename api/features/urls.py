@@ -3,9 +3,6 @@ from django.conf.urls import include
 from django.urls import path
 from rest_framework_nested import routers
 
-from features.feature_external_resources.views import (
-    FeatureExternalResourceViewSet,
-)
 from features.feature_segments.views import FeatureSegmentViewSet
 from features.import_export.views import (
     create_feature_export,
@@ -14,7 +11,6 @@ from features.import_export.views import (
     feature_import,
 )
 from features.views import (
-    FeatureViewSet,
     SimpleFeatureStateViewSet,
     get_feature_by_uuid,
     get_feature_state_by_uuid,
@@ -24,20 +20,10 @@ router = routers.DefaultRouter()
 router.register(r"featurestates", SimpleFeatureStateViewSet, basename="featurestates")
 router.register(r"feature-segments", FeatureSegmentViewSet, basename="feature-segment")
 
-features_router = routers.DefaultRouter()
-features_router.register(r"", FeatureViewSet, basename="feature")
-feature_external_resource_router = routers.NestedSimpleRouter(
-    features_router, r"", lookup="feature"
-)
-feature_external_resource_router.register(
-    r"external-resources", FeatureExternalResourceViewSet, basename="external-resources"
-)
-
 app_name = "features"
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("", include(feature_external_resource_router.urls)),
     path("get-by-uuid/<uuid:uuid>/", get_feature_by_uuid, name="get-feature-by-uuid"),
     path("create-feature-export/", create_feature_export, name="create-feature-export"),
     path(

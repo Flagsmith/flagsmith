@@ -1,10 +1,9 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from features.models import Feature
-from features.permissions import FeatureStatePermissions
+from features.permissions import FeatureExternalResourcePermissions
 
 from .models import FeatureExternalResource
 from .serializers import FeatureExternalResourceSerializer
@@ -12,7 +11,7 @@ from .serializers import FeatureExternalResourceSerializer
 
 class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
     serializer_class = FeatureExternalResourceSerializer
-    permission_classes = [IsAuthenticated, FeatureStatePermissions]
+    permission_classes = [FeatureExternalResourcePermissions]
 
     def get_queryset(self):
         if "pk" in self.kwargs:

@@ -197,3 +197,15 @@ class CreateSegmentOverridePermissions(IsAuthenticated):
             permission=MANAGE_SEGMENT_OVERRIDES,
             environment=environment,
         )
+
+
+class FeatureExternalResourcePermissions(FeaturePermissions):
+    def has_object_permission(self, request, view, obj):
+        if view.action == "destroy":
+            return request.user.has_project_permission(
+                CREATE_FEATURE, obj.feature.project
+            )
+
+        return request.user.has_project_permission(
+            ACTION_PERMISSIONS_MAP[view.action], obj.feature.project
+        )

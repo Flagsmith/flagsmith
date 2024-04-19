@@ -10,10 +10,10 @@ from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from environments.models import Environment
 from features.feature_external_resources.models import FeatureExternalResource
 from features.models import Feature
 from integrations.github.models import GithubConfiguration, GithubRepository
+from projects.models import Project
 
 _django_json_encoder_default = DjangoJSONEncoder().default
 
@@ -42,7 +42,7 @@ def test_create_feature_external_resource(
     # mock_generate_token,
     client: APIClient,
     feature: Feature,
-    environment: Environment,
+    project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
     mocker,
@@ -62,10 +62,12 @@ def test_create_feature_external_resource(
         "url": "https://github.com/repoowner/repo-name/issues/35",
         "feature": feature.id,
         "metadata": {"status": "open"},
-        "environment": environment.id,
     }
 
-    url = reverse("api-v1:features:external-resources-list", args=[feature.id])
+    url = reverse(
+        "api-v1:projects:feature-external-resources-list",
+        kwargs={"project_pk": project.id, "feature_pk": feature.id},
+    )
 
     # When
     response = client.post(url, data=feature_external_resource_data, format="json")
@@ -99,13 +101,12 @@ def test_create_feature_external_resource(
     assert db_record[0].url == feature_external_resource_data["url"]
 
     # And When
-    data = {"environment": environment.id}
     url = reverse(
-        "api-v1:features:external-resources-list",
-        kwargs={"feature_pk": feature.id},
+        "api-v1:projects:feature-external-resources-list",
+        kwargs={"project_pk": project.id, "feature_pk": feature.id},
     )
 
-    response = client.get(url, data=data)
+    response = client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -127,7 +128,7 @@ def test_create_feature_external_resource(
 def test_cannot_create_feature_external_resource_when_doesnt_have_a_valid_gitHub_integration(
     client: APIClient,
     feature: Feature,
-    environment: Environment,
+    project: Project,
 ) -> None:
     # Given
     feature_external_resource_data = {
@@ -135,9 +136,10 @@ def test_cannot_create_feature_external_resource_when_doesnt_have_a_valid_gitHub
         "url": "https://example.com?item=create",
         "feature": feature.id,
         "metadata": {"status": "open"},
-        "environment": environment.id,
     }
-    url = reverse("api-v1:features:external-resources-list", args=[feature.id])
+    url = reverse(
+        "api-v1:projects:feature-external-resources-list", args=[project.id, feature.id]
+    )
 
     # When
     response = client.post(url, data=feature_external_resource_data, format="json")
@@ -160,9 +162,10 @@ def test_cannot_create_feature_external_resource_when_doesnt_have_permissions(
         "url": "https://example.com?item=create",
         "feature": feature.id,
         "metadata": {"status": "open"},
-        "environment": 3,
     }
-    url = reverse("api-v1:features:external-resources-list", args=[feature.id])
+    url = reverse(
+        "api-v1:projects:feature-external-resources-list", args=[2, feature.id]
+    )
 
     # When
     response = client.post(url, data=feature_external_resource_data, format="json")
@@ -178,16 +181,17 @@ def test_cannot_create_feature_external_resource_when_doesnt_have_permissions(
 def test_cannot_create_feature_external_resource_when_the_type_is_incorrect(
     client: APIClient,
     feature: Feature,
-    environment: Environment,
+    project: Project,
 ) -> None:
     # Given
     feature_external_resource_data = {
         "type": "UNKNOWN_TYPE",
         "url": "https://example.com",
         "feature": feature.id,
-        "environment": environment.id,
     }
-    url = reverse("api-v1:features:external-resources-list", args=[feature.id])
+    url = reverse(
+        "api-v1:projects:feature-external-resources-list", args=[project.id, feature.id]
+    )
 
     # When
     response = client.post(url, data=feature_external_resource_data)
@@ -203,7 +207,7 @@ def test_cannot_create_feature_external_resource_due_to_unique_constraint(
     client: APIClient,
     feature: Feature,
     feature_external_resource: FeatureExternalResource,
-    environment: Environment,
+    project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
 ) -> None:
@@ -212,9 +216,10 @@ def test_cannot_create_feature_external_resource_due_to_unique_constraint(
         "type": "GITHUB_ISSUE",
         "url": "https://github.com/userexample/example-project-repo/issues/11",
         "feature": feature.id,
-        "environment": environment.id,
     }
-    url = reverse("api-v1:features:external-resources-list", args=[feature.id])
+    url = reverse(
+        "api-v1:projects:feature-external-resources-list", args=[project.id, feature.id]
+    )
 
     # When
     with pytest.raises(IntegrityError) as exc_info:
@@ -237,24 +242,23 @@ def test_delete_feature_external_resource(
     client: APIClient,
     feature_external_resource: FeatureExternalResource,
     feature: Feature,
-    environment: Environment,
+    project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
     mocker,
 ) -> None:
     # Given
-    data = {"environment": environment.id}
     mock_generate_token = mocker.patch(
         "integrations.github.github.generate_token",
     )
     mock_generate_token.return_value = "mocked_token"
     url = reverse(
-        "api-v1:features:external-resources-detail",
-        args=[feature.id, feature_external_resource.id],
+        "api-v1:projects:feature-external-resources-detail",
+        args=[project.id, feature.id, feature_external_resource.id],
     )
 
     # When
-    response = client.delete(url, data=data)
+    response = client.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -271,19 +275,18 @@ def test_get_feature_external_resources(
     client: APIClient,
     feature_external_resource: FeatureExternalResource,
     feature: Feature,
-    environment: Environment,
+    project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
 ) -> None:
     # Given
-    data = {"environment": environment.id}
     url = reverse(
-        "api-v1:features:external-resources-list",
-        kwargs={"feature_pk": feature.id},
+        "api-v1:projects:feature-external-resources-list",
+        kwargs={"project_pk": project.id, "feature_pk": feature.id},
     )
 
     # When
-    response = client.get(url, data=data)
+    response = client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -297,19 +300,18 @@ def test_get_feature_external_resource(
     client: APIClient,
     feature_external_resource: FeatureExternalResource,
     feature: Feature,
-    environment: Environment,
+    project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
 ) -> None:
     # Given
-    data = {"environment": environment.id}
     url = reverse(
-        "api-v1:features:external-resources-detail",
-        args=[feature.id, feature_external_resource.id],
+        "api-v1:projects:feature-external-resources-detail",
+        args=[project.id, feature.id, feature_external_resource.id],
     )
 
     # When
-    response = client.get(url, data=data)
+    response = client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
