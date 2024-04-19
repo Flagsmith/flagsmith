@@ -1,10 +1,10 @@
 import React, { FC, useEffect, useState } from 'react'
 import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button'
-import Icon from 'components/Icon'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
 import { useGetMetadataFieldListQuery } from 'common/services/useMetadataField'
 import { useGetSegmentQuery } from 'common/services/useSegment'
+import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 import { MetadataField, Metadata, ProjectFlag } from 'common/types/responses'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
@@ -26,14 +26,14 @@ type AddMetadataToEntityType = {
   entityContentType: number
   entityId: string
   entity: number | string
-  getMetadata: (m: CustomMetadataField[]) => void
+  onChange: () => void
 }
 
 const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
   entity,
   entityContentType,
   entityId,
-  getMetadata,
+  onChange,
   organisationId,
   projectId,
 }) => {
@@ -66,15 +66,26 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
       { skip: entity !== 'segment' || !entityId },
     )
 
+  const { data: envData, isSuccess: envDataLoaded } = useGetEnvironmentQuery(
+    { id: entityId },
+    { skip: entity !== 'environment' || !entityId },
+  )
+
   const [
     metadataFieldsAssociatedtoEntity,
     setMetadataFieldsAssociatedtoEntity,
   ] = useState<CustomMetadataField[]>()
 
+  const [metadataChanged, setMetadataChanged] = useState<boolean>(false)
   useEffect(() => {
-    getMetadata?.(metadataFieldsAssociatedtoEntity!)
+    // onChange?.(metadataFieldsAssociatedtoEntity!)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metadataFieldsAssociatedtoEntity])
+
+  console.log(
+    'DEBUG: metadataFieldsAssociatedtoEntity:',
+    metadataFieldsAssociatedtoEntity,
+  )
 
   useEffect(() => {
     if (
@@ -102,11 +113,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
             )
           })
           // Determine if isRequiredFor should be true or false based on is_required_for array
-          const isRequiredFor =
-            matchingItem &&
-            matchingItem.is_required_for &&
-            matchingItem.is_required_for.length > 0
-
+          const isRequiredFor = !!matchingItem?.is_required_for.length
           // Return the metadata field with additional metadata model field information including isRequiredFor
           return {
             ...meta,
@@ -162,13 +169,28 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
           className='mt-1 no-pad'
           header={
             <Row className='table-header'>
-              <Flex className='table-column'>Metadata</Flex>
+              <Row className='table-column flex-1'>
+                Metadata{' '}
+                {metadataChanged && (
+                  <div className='unread ml-2 px-1'>{'*'}</div>
+                )}
+              </Row>
               <Flex className='table-column'>Value</Flex>
+              <div className='table-column text-center px-3'></div>
             </Row>
           }
           items={metadataFieldsAssociatedtoEntity}
           renderRow={(m: CustomMetadata) => {
-            return <MetadataRow metadata={m} isEdit={true} />
+            return (
+              <MetadataRow
+                metadata={m}
+                isEdit={true}
+                getMetadataValue={(m: string) => {
+                  console.log('DEBUG: m:', m)
+                }}
+                unSavedMetadata={onChange}
+              />
+            )
           }}
         />
       </FormGroup>
@@ -180,13 +202,24 @@ type MetadataRowType = {
   metadata: CustomMetadata
   onDelete?: () => void
   isEdit: boolean
+  getMetadataValue?: (value: string) => void
+  unSavedMetadata: () => void
 }
-const MetadataRow: FC<MetadataRowType> = ({ isEdit, metadata }) => {
+const MetadataRow: FC<MetadataRowType> = ({
+  getMetadataValue,
+  isEdit,
+  metadata,
+  unSavedMetadata,
+}) => {
   const [metadataValue, setMetadataValue] = useState<string>(
     metadata?.field_value || '',
   )
+  const [metadataValueChanged, setMetadataValueChanged] =
+    useState<boolean>(false)
+
   return (
     <Row className='space list-item clickable py-2'>
+      {metadataValueChanged && <div className='unread ml-2 px-1'>{'*'}</div>}
       <Flex className='table-column'>{`${metadata?.name} ${
         metadata?.isRequiredFor ? '*' : ''
       }`}</Flex>
@@ -196,9 +229,12 @@ const MetadataRow: FC<MetadataRowType> = ({ isEdit, metadata }) => {
             title={
               <Input
                 value={metadataValue}
-                onChange={(e: InputEvent) =>
+                onChange={(e: InputEvent) => {
                   setMetadataValue(Utils.safeParseEventValue(e))
-                }
+                  setMetadataValueChanged(true)
+                  unSavedMetadata?.()
+                  getMetadataValue?.(Utils.safeParseEventValue(e))
+                }}
                 className='mr-2'
                 style={{ width: '250px' }}
                 placeholder='Metadata Value'
@@ -208,7 +244,7 @@ const MetadataRow: FC<MetadataRowType> = ({ isEdit, metadata }) => {
                 )}
               />
             }
-            place='right'
+            place='top'
           >
             {`This value has to be of type ${metadata?.type}`}
           </Tooltip>
@@ -218,28 +254,27 @@ const MetadataRow: FC<MetadataRowType> = ({ isEdit, metadata }) => {
           <Flex className='table-column'>{metadata?.field_value}</Flex>
         </Flex>
       )}
-      <div className='table-column text-center' style={{ width: '80px' }}>
-        {metadata?.field_value && (
-          <Button
-            onClick={() => {
-              openConfirm({
-                body: (
-                  <div>
-                    {'Are you sure you delete this metadata '}
-                    {'? This action cannot be undone.'}
-                  </div>
-                ),
-                destructive: true,
-                onYes: () => true,
-                title: 'Delete Group',
-                yesText: 'Confirm',
-              })
-            }}
-            className='btn btn-with-icon'
-          >
-            <Icon name='trash-2' width={20} fill='#656D7B' />
-          </Button>
-        )}
+      <div className='table-column text-center px-3'>
+        <Button
+          disabled={!metadataValueChanged}
+          onClick={() => {
+            openConfirm({
+              body: (
+                <div>
+                  {'Are you sure you delete this metadata '}
+                  {'? This action cannot be undone.'}
+                </div>
+              ),
+              destructive: true,
+              onYes: () => true,
+              title: 'Delete Group',
+              yesText: 'Confirm',
+            })
+          }}
+          className='btn'
+        >
+          Save
+        </Button>
       </div>
     </Row>
   )
