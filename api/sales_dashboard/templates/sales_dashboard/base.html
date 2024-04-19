@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="{% static 'sales_dashboard/css/bootstrap.min.css' %}"
           integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.18.3/dist/bootstrap-table.min.css">
-    <title>Flagsmith Sales Dashboard</title>
+    <title>{% block title %}{% endblock %} Flagsmith Sales Dashboard</title>
   </head>
   <body>
     <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
