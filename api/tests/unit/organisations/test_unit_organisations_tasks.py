@@ -530,20 +530,25 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     # Organisation without breaching 100 percent usage is ok.
     assert organisation3.stop_serving_flags is False
     assert organisation3.block_access_to_admin is False
+    assert getattr(organisation3, "api_limit_access_block", None) is None
 
     # Organisation which is still in the grace period is ok.
     assert organisation4.stop_serving_flags is False
     assert organisation4.block_access_to_admin is False
+    assert getattr(organisation4, "api_limit_access_block", None) is None
 
     # Organisation which is not on the free plan is ok.
     assert organisation5.stop_serving_flags is False
     assert organisation5.block_access_to_admin is False
+    assert getattr(organisation5, "api_limit_access_block", None) is None
 
     # Organisations that breached 100 are blocked.
     assert organisation.stop_serving_flags is True
     assert organisation.block_access_to_admin is True
+    assert organisation.api_limit_access_block
     assert organisation2.stop_serving_flags is True
     assert organisation2.block_access_to_admin is True
+    assert organisation2.api_limit_access_block
 
     # Organisations that change their subscription are unblocked.
     organisation.subscription.plan = "scale-up-v2"
@@ -551,6 +556,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     organisation.refresh_from_db()
     assert organisation.stop_serving_flags is False
     assert organisation.block_access_to_admin is False
+    assert getattr(organisation, "api_limit_access_block", None) is None
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
