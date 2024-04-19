@@ -45,17 +45,6 @@ def generate_body_comment(
     event_type: str,
     feature_states: typing.List[typing.Dict[str, typing.Any]],
 ) -> str:
-    def is_integer(value):
-        return isinstance(value, int)
-
-    def is_string(value):
-        return isinstance(value, str)
-
-    def is_boolean(value):
-        return isinstance(value, bool)
-
-    def parse_language(value):
-        return ""
 
     is_update = event_type == WebhookEventType.FLAG_UPDATED.value
     is_removed = event_type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
@@ -78,22 +67,10 @@ def generate_body_comment(
     )
 
     for v in feature_states:
-        feature_value = (
-            v.get("integer_value", "")
-            if is_integer(v.get("integer_value"))
-            else (
-                v.get("string_value", "")
-                if is_string(v.get("string_value"))
-                else v.get("boolean_value", "")
-            )
-        )
+        feature_value = v.get("feature_state_value")
+        feature_value_type = v.get("feature_state_value_type")
 
-        has_feature_value = feature_value is not None and feature_value != ""
-        language = parse_language(feature_value) if has_feature_value else ""
-
-        feature_value_string = (
-            f"\n{language}\n```{feature_value if feature_value else 'No value.'}```\n\n"
-        )
+        feature_value_string = f"\n{feature_value_type}\n```{feature_value if feature_value else 'No value.'}```\n\n"
 
         result += f"**{v['environment_name']}{' - ' + v['segment_name'] if v.get('segment_name') else ''}**\n"
         result += f"- [{'x' if v['feature_value'] else ' '}] {'Enabled' if v['feature_value'] else 'Disabled'}"
@@ -129,19 +106,14 @@ def generate_data(
     else:
         feature_data["feature_states"] = []
         for feature_state in feature_states:
+            feature_state_value = feature_state.get_feature_state_value()
+            feature_state_value_type = feature_state.get_feature_state_value_type(
+                feature_state_value
+            )
             feature_env_data = {}
-            if check_not_none(feature_state.feature_state_value.string_value):
-                feature_env_data["string_value"] = (
-                    feature_state.feature_state_value.string_value
-                )
-            if check_not_none(feature_state.feature_state_value.boolean_value):
-                feature_env_data["boolean_value"] = (
-                    feature_state.feature_state_value.boolean_value
-                )
-            if check_not_none(feature_state.feature_state_value.integer_value):
-                feature_env_data["integer_value"] = (
-                    feature_state.feature_state_value.integer_value
-                )
+            if check_not_none(feature_state_value):
+                feature_env_data["feature_state_value"] = feature_state_value
+                feature_env_data["feature_state_value_type"] = feature_state_value_type
             if type is not WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
                 feature_env_data["environment_name"] = feature_state.environment.name
                 feature_env_data["feature_value"] = feature_state.enabled

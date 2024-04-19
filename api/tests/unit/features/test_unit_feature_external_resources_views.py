@@ -38,9 +38,8 @@ def mocked_requests_post(*args, **kwargs):
 )
 @freeze_time("2024-01-01")
 def test_create_feature_external_resource(
-    # mock_generate_token,
     client: APIClient,
-    feature: Feature,
+    feature_with_value: Feature,
     project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
@@ -59,13 +58,13 @@ def test_create_feature_external_resource(
     feature_external_resource_data = {
         "type": "GITHUB_ISSUE",
         "url": "https://github.com/repoowner/repo-name/issues/35",
-        "feature": feature.id,
+        "feature": feature_with_value.id,
         "metadata": {"status": "open"},
     }
 
     url = reverse(
         "api-v1:projects:feature-external-resources-list",
-        kwargs={"project_pk": project.id, "feature_pk": feature.id},
+        kwargs={"project_pk": project.id, "feature_pk": feature_with_value.id},
     )
 
     # When
@@ -74,7 +73,7 @@ def test_create_feature_external_resource(
     github_request_mock.assert_called_with(
         "https://api.github.com/repos/repoowner/repo-name/issues/35/comments",
         json={
-            "body": f"### This pull request is linked to a Flagsmith Feature (Test Feature1):\n**Test Environment**\n- [ ] Disabled\n\n```No value.```\n\nLast Updated {datetime_now.strftime('%dth %b %Y %I:%M%p')}"  # noqa E501
+            "body": f"### This pull request is linked to a Flagsmith Feature (feature_with_value):\n**Test Environment**\n- [ ] Disabled\nunicode\n```foo```\n\nLast Updated {datetime_now.strftime('%dth %b %Y %I:%M%p')}"  # noqa E501
         },
         headers={
             "Accept": "application/vnd.github.v3+json",
@@ -86,7 +85,7 @@ def test_create_feature_external_resource(
     assert response.status_code == status.HTTP_201_CREATED
     # assert that the payload has been save to the database
     db_record = FeatureExternalResource.objects.filter(
-        feature=feature,
+        feature=feature_with_value,
         type=feature_external_resource_data["type"],
         url=feature_external_resource_data["url"],
     ).all()
@@ -95,14 +94,14 @@ def test_create_feature_external_resource(
     assert db_record[0].metadata == json.dumps(
         feature_external_resource_data["metadata"], default=_django_json_encoder_default
     )
-    assert db_record[0].feature == feature
+    assert db_record[0].feature == feature_with_value
     assert db_record[0].type == feature_external_resource_data["type"]
     assert db_record[0].url == feature_external_resource_data["url"]
 
     # And When
     url = reverse(
         "api-v1:projects:feature-external-resources-list",
-        kwargs={"project_pk": project.id, "feature_pk": feature.id},
+        kwargs={"project_pk": project.id, "feature_pk": feature_with_value.id},
     )
 
     response = client.get(url)

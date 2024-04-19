@@ -355,7 +355,7 @@ def api_client():
 
 
 @pytest.fixture()
-def feature(project, environment):
+def feature(project: Project, environment: Environment) -> Feature:
     return Feature.objects.create(name="Test Feature1", project=project)
 
 
@@ -381,6 +381,16 @@ def feature_state_with_value(environment: Environment) -> FeatureState:
     )
     return FeatureState.objects.get(
         environment=environment, feature=feature, feature_segment=None, identity=None
+    )
+
+
+@pytest.fixture()
+def feature_with_value(project: Project) -> Feature:
+    return Feature.objects.create(
+        name="feature_with_value",
+        initial_value="foo",
+        default_enabled=False,
+        project=project,
     )
 
 
