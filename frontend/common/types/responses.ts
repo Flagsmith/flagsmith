@@ -60,6 +60,7 @@ export type Segment = {
   description: string
   project: string | number
   feature?: number
+  metadata: Metadata[] | []
 }
 export type Environment = {
   id: number
@@ -74,6 +75,7 @@ export type Environment = {
   hide_sensitive_data: boolean
   total_segment_overrides?: number
   use_v2_feature_versioning: boolean
+  metadata: Metadata[] | []
 }
 export type Project = {
   id: number
@@ -333,7 +335,7 @@ export type ProjectFlag = {
   num_segment_overrides: number | null
   owners: User[]
   owner_groups: UserGroupSummary[]
-  metadata: Metadata[]
+  metadata: Metadata[] | []
   project: number
   tags: number[]
   type: string
