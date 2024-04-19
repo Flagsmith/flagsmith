@@ -1,6 +1,10 @@
 {% extends "sales_dashboard/base.html" %}
 {% load humanize %}
 
+{% block title %}
+{{organisation.name}} -
+{% endblock title %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="row">
