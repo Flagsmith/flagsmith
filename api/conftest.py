@@ -103,7 +103,7 @@ def django_db_setup(request: pytest.FixtureRequest) -> None:
         test_db_suffix = str(int(xdist_worker_id_suffix) + 1)
     else:
         # Tests are run on main node, which assumes -n0
-        return request.getfixturevalue("django_db_setup")
+        return request.getfixturevalue("django_db_setup")  # pragma: no cover
 
     from django.conf import settings
 
