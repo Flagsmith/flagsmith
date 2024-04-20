@@ -5,11 +5,15 @@ import boto3
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
+from django.db.backends.base.creation import TEST_DATABASE_PREFIX
+from django.test.utils import setup_databases
 from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
+from pytest_django.plugin import blocking_manager_key
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
+from xdist import get_xdist_worker_id
 
 from api_keys.models import MasterAPIKey
 from environments.identities.models import Identity
@@ -62,6 +66,51 @@ from tests.types import (
     WithProjectPermissionsCallable,
 )
 from users.models import FFAdminUser, UserPermissionGroup
+
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--ci",
+        action="store_true",
+        default=False,
+        help="Enable CI mode",
+    )
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_configure(config: pytest.Config) -> None:
+    if (
+        config.option.ci
+        and config.option.dist != "no"
+        and not hasattr(config, "workerinput")
+    ):
+        with config.stash[blocking_manager_key].unblock():
+            setup_databases(
+                verbosity=config.option.verbose,
+                interactive=False,
+                parallel=config.option.numprocesses,
+            )
+
+
+@pytest.fixture(scope="session")
+def django_db_setup(request: pytest.FixtureRequest) -> None:
+    if (
+        request.config.option.ci
+        and (xdist_worker_id_suffix := get_xdist_worker_id(request)[-1]).isnumeric()
+    ):
+        # Django's test database clone indices start at 1,
+        # Pytest's worker indices are 0-based
+        test_db_suffix = str(int(xdist_worker_id_suffix) + 1)
+    else:
+        # Tests are run on main node, which assumes -n0
+        return request.getfixturevalue("django_db_setup")
+
+    from django.conf import settings
+
+    for db_settings in settings.DATABASES.values():
+        test_db_name = f'{TEST_DATABASE_PREFIX}{db_settings["NAME"]}_{test_db_suffix}'
+        db_settings["NAME"] = test_db_name
+
 
 trait_key = "key1"
 trait_value = "value1"
