@@ -103,7 +103,7 @@ class OrganisationPermission(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return request.user.is_organisation_admin(obj) or (
-            view.action == "my_permissions" and obj in request.user.organisations.all()
+            view.action == "my_permissions" and request.user.belongs_to(obj)
         )
 
 

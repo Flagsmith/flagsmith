@@ -1,8 +1,10 @@
 import pytest
 from pytest_lazyfixture import lazy_fixture
 
+from api_keys.models import MasterAPIKey
 from api_keys.user import APIKeyUser
 from environments.permissions.models import EnvironmentPermissionModel
+from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import OrganisationPermissionModel
 from projects.models import ProjectPermissionModel
 
@@ -286,3 +288,84 @@ def test_get_permitted_environments(
         else:
             assert environments.count() == 1
             assert environments.first() == expected_environment
+
+
+def test_is_organisation_admin_for_admin_key(
+    admin_master_api_key_object: MasterAPIKey,
+    organisation: Organisation,
+    organisation_two: Organisation,
+) -> None:
+    # Given
+    user = APIKeyUser(admin_master_api_key_object)
+
+    # Then
+    # Return True for the associated organisation
+    assert user.is_organisation_admin(organisation) is True
+    assert user.is_organisation_admin(organisation.id) is True
+
+    # Returns False for other organisation
+    assert user.is_organisation_admin(organisation_two) is False
+    assert user.is_organisation_admin(organisation_two.id) is False
+
+
+def test_is_organisation_admin_for_non_admin_key(
+    master_api_key_object: MasterAPIKey,
+    organisation: Organisation,
+    organisation_two: Organisation,
+) -> None:
+    # Given
+    user = APIKeyUser(master_api_key_object)
+
+    # Then
+    assert user.is_organisation_admin(organisation) is False
+    assert user.is_organisation_admin(organisation.id) is False
+
+    assert user.is_organisation_admin(organisation_two) is False
+    assert user.is_organisation_admin(organisation_two.id) is False
+
+
+def test_organisation_property(
+    master_api_key_object: MasterAPIKey,
+    organisation: Organisation,
+):
+    # Given
+    user = APIKeyUser(master_api_key_object)
+
+    # When
+    organisations = user.organisations
+
+    # Then
+    assert organisations.count() == 1
+    assert organisations.first().id == organisation.id
+
+
+def test_get_organisation_role_for_admin_key(
+    admin_master_api_key_object: MasterAPIKey,
+    organisation: Organisation,
+    organisation_two: Organisation,
+) -> None:
+    # Given
+    user = APIKeyUser(admin_master_api_key_object)
+
+    # When/Then
+    # Returns ADMIN for the associated organisation
+    assert user.get_organisation_role(organisation) == OrganisationRole.ADMIN.value
+
+    # Returns None for other organisation
+    assert user.get_organisation_role(organisation_two) is None
+
+
+def test_get_organisation_role_for_non_admin_key(
+    master_api_key_object: MasterAPIKey,
+    organisation: Organisation,
+    organisation_two: Organisation,
+) -> None:
+    # Given
+    user = APIKeyUser(master_api_key_object)
+
+    # When/Then
+    # Returns USER for the associated organisation
+    assert user.get_organisation_role(organisation) == OrganisationRole.USER.value
+
+    # Returns None for other organisation
+    assert user.get_organisation_role(organisation_two) is None

@@ -2,7 +2,7 @@ import typing
 
 from django.db.models import QuerySet
 
-from organisations.models import Organisation
+from organisations.models import Organisation, OrganisationRole
 from permissions.permission_service import (
     get_permitted_environments_for_master_api_key,
     get_permitted_projects_for_master_api_key,
@@ -35,8 +35,28 @@ class APIKeyUser(UserABC):
     def is_master_api_key_user(self) -> bool:
         return True
 
+    @property
+    def organisations(self) -> QuerySet[Organisation]:
+        return Organisation.objects.filter(id=self.key.organisation_id)
+
     def belongs_to(self, organisation_id: int) -> bool:
         return self.key.organisation_id == organisation_id
+
+    def is_organisation_admin(
+        self, organisation: typing.Union["Organisation", int]
+    ) -> bool:
+        org_id = organisation.id if hasattr(organisation, "id") else organisation
+        return self.key.is_admin and self.key.organisation_id == org_id
+
+    def get_organisation_role(self, organisation: Organisation) -> typing.Optional[str]:
+        if self.key.organisation_id != organisation.id:
+            return None
+
+        return (
+            OrganisationRole.ADMIN.value
+            if self.key.is_admin
+            else OrganisationRole.USER.value
+        )
 
     def is_project_admin(self, project: "Project") -> bool:
         return is_master_api_key_project_admin(self.key, project)
