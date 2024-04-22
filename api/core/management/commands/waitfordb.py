@@ -62,8 +62,9 @@ class Command(BaseCommand):
                     cursor.execute("SELECT 1")
                 logger.info("Successfully connected to the database.")
                 break
-            except OperationalError:
+            except OperationalError as e:
                 logger.warning("Database not yet ready for connections.")
+                logger.warning("Error was: %s: %s", e.__class__.__name__, e)
 
             time.sleep(wait_between_checks)
 
