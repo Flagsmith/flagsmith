@@ -23,16 +23,6 @@ class GithubData:
     feature_states: typing.List[dict[str, typing.Any]] = None
     url: str = None
 
-    def to_dict(self) -> typing.Dict[str, typing.Any]:
-        data = {
-            "installation_id": self.installation_id,
-            "feature_id": self.feature_id,
-            "feature_name": self.feature_name,
-            "feature_states": self.feature_states,
-            "url": self.url,
-        }
-        return data
-
     @classmethod
     def from_dict(cls, data_dict: dict) -> "GithubData":
         return cls(**data_dict)
@@ -60,7 +50,7 @@ def post_comment_to_github(
 
         return response.json() if response.status_code == 200 else None
     except requests.RequestException as e:
-        logger.info(f" {e}")
+        logger.error(f" {e}")
         return None
 
 

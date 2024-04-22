@@ -84,19 +84,19 @@ def test_create_feature_external_resource(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     # assert that the payload has been save to the database
-    db_record = FeatureExternalResource.objects.filter(
+    feature_external_resources = FeatureExternalResource.objects.filter(
         feature=feature_with_value,
         type=feature_external_resource_data["type"],
         url=feature_external_resource_data["url"],
     ).all()
 
-    assert len(db_record) == 1
-    assert db_record[0].metadata == json.dumps(
+    assert len(feature_external_resources) == 1
+    assert feature_external_resources[0].metadata == json.dumps(
         feature_external_resource_data["metadata"], default=_django_json_encoder_default
     )
-    assert db_record[0].feature == feature_with_value
-    assert db_record[0].type == feature_external_resource_data["type"]
-    assert db_record[0].url == feature_external_resource_data["url"]
+    assert feature_external_resources[0].feature == feature_with_value
+    assert feature_external_resources[0].type == feature_external_resource_data["type"]
+    assert feature_external_resources[0].url == feature_external_resource_data["url"]
 
     # And When
     url = reverse(

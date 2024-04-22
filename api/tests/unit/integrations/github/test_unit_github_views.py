@@ -105,6 +105,7 @@ def test_create_github_repository(
     github_configuration: GithubConfiguration,
     project: Project,
 ) -> None:
+    # Given
     data = {
         "github_configuration": github_configuration.id,
         "repository_owner": "repositoryowner",
@@ -116,19 +117,21 @@ def test_create_github_repository(
         "api-v1:organisations:repositories-list",
         args=[organisation.id, github_configuration.id],
     )
-
+    # When
     response = client.post(url, data)
 
+    # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert GithubRepository.objects.filter(repository_owner="repositoryowner").exists()
 
 
-def test_cannot_create_github_repository(
+def test_cannot_create_github_repository_when_does_not_have_permissions(
     test_user_client: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     project: Project,
 ) -> None:
+    # Given
     data = {
         "github_configuration": github_configuration.id,
         "repository_owner": "repositoryowner",
@@ -140,9 +143,10 @@ def test_cannot_create_github_repository(
         "api-v1:organisations:repositories-list",
         args=[organisation.id, github_configuration.id],
     )
-
+    # When
     response = test_user_client.post(url, data)
 
+    # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
@@ -192,11 +196,14 @@ def test_github_delete_repository(
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
 ) -> None:
+    # Given
     url = reverse(
         "api-v1:organisations:repositories-detail",
         args=[organisation.id, github_configuration.id, github_repository.id],
     )
+    # When
     response = client.delete(url)
+    # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
@@ -367,7 +374,7 @@ def test_fetch_issues_and_pull_requests_fails_with_status_400_when_integration_n
     "reverse_url",
     [
         ("api-v1:organisations:get-github-issues"),
-        ("api-v1:organisations:get-github-issues"),
+        ("api-v1:organisations:get-github-pulls"),
     ],
 )
 def test_cannot_fetch_issues_or_prs_when_does_not_have_permissions(
