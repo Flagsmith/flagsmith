@@ -98,6 +98,7 @@ def pytest_configure(config: pytest.Config) -> None:
 def django_db_setup(request: pytest.FixtureRequest) -> None:
     if (
         request.config.option.ci
+        # xdist worker id is either `gw[0-9]+` or `master`
         and (xdist_worker_id_suffix := get_xdist_worker_id(request)[2:]).isnumeric()
     ):
         # Django's test database clone indices start at 1,
