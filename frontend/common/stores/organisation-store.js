@@ -1,4 +1,5 @@
 import Constants from 'common/constants'
+import sortBy from 'lodash/sortBy'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -145,7 +146,15 @@ const controller = {
             ...store.model,
             invites: invites && invites.results,
             subscriptionMeta,
-            users,
+            users: sortBy(users, (user) => {
+              const isYou = user.id === AccountStore.getUser().id
+              if (isYou) {
+                return ``
+              }
+              return `${user.first_name || ''} ${
+                user.last_name || ''
+              }`.toLowerCase()
+            }),
           }
 
           if (Project.hideInviteLinks) {
