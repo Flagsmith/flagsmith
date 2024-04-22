@@ -22,8 +22,9 @@ jobs:
         with:
           python-version: '3.12'
 
+      # Ignore CVE-2023-6129 as per https://github.com/pyca/pyopenssl/issues/1300
       - name: Run Audit
         run: |
           make install
           poetry self add poetry-audit-plugin==0.4.0
-          poetry audit
+          poetry audit --ignore-code=CVE-2023-6129
