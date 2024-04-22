@@ -270,7 +270,7 @@ const CreateFlag = class extends Component {
       )
     }
   }
-  save = (func, isSaving, metadataAdded) => {
+  save = (func, isSaving) => {
     const {
       environmentId,
       identity,
@@ -327,7 +327,7 @@ const CreateFlag = class extends Component {
             initial_value,
             is_archived,
             is_server_key_only,
-            metadata: metadataAdded,
+            metadata: this.state.metadata,
             multivariate_options: this.state.multivariate_options,
             name,
             tags: this.state.tags,
@@ -589,6 +589,9 @@ const CreateFlag = class extends Component {
                   entityId={projectFlag?.id}
                   entityContentType={featureContentType?.id}
                   entity={featureContentType?.model}
+                  onChange={(m) => {
+                    this.setState({ metadata: m, settingsChanged: true })
+                  }}
                 />
               }
             />

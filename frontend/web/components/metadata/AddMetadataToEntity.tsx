@@ -16,6 +16,7 @@ type CustomMetadataField = MetadataField & {
   metadataModelFieldId: number | string | null
   isRequiredFor: boolean
   model_field?: string | number
+  metadataEntity?: boolean
 }
 
 type CustomMetadata = (Metadata & CustomMetadataField) | null
@@ -26,7 +27,7 @@ type AddMetadataToEntityType = {
   entityContentType: number
   entityId: string
   entity: number | string
-  onChange: () => void
+  onChange: (m: CustomMetadataField[]) => void
 }
 
 const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
@@ -76,6 +77,13 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
     setMetadataFieldsAssociatedtoEntity,
   ] = useState<CustomMetadataField[]>()
 
+  useEffect(() => {
+    if (metadataFieldsAssociatedtoEntity?.length && metadataChanged) {
+      onChange(metadataFieldsAssociatedtoEntity.filter((m) => m.metadataEntity))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [metadataFieldsAssociatedtoEntity])
+
   const [metadataChanged, setMetadataChanged] = useState<boolean>(false)
   useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -88,12 +96,18 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
     const map = new Map(
       metadataField.map((item) => [item.metadataModelFieldId, item]),
     )
-    return metadataField.map((item) => ({
-      ...item,
-      ...(map.get(item.model_field!) || {}),
-      ...(metadata.find((m) => m.model_field === item.metadataModelFieldId) ||
-        {}),
-    }))
+    return metadataField.map((item) => {
+      const mergedItem = {
+        ...item,
+        ...(map.get(item.model_field!) || {}),
+        ...(metadata.find((m) => m.model_field === item.metadataModelFieldId) ||
+          {}),
+      }
+      mergedItem.metadataEntity =
+        mergedItem.metadataModelFieldId !== undefined &&
+        mergedItem.model_field !== undefined
+      return mergedItem
+    })
   }
 
   useEffect(() => {
@@ -180,12 +194,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
           className='mt-1 no-pad'
           header={
             <Row className='table-header'>
-              <Row className='table-column flex-1'>
-                Metadata{' '}
-                {metadataChanged && (
-                  <div className='unread ml-2 px-1'>{'*'}</div>
-                )}
-              </Row>
+              <Row className='table-column flex-1'>Metadata </Row>
               <Flex className='table-column'>Value</Flex>
               <div className='table-column text-center px-3'></div>
             </Row>
@@ -196,10 +205,21 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
               <MetadataRow
                 metadata={m}
                 isEdit={true}
-                getMetadataValue={(m: string) => {
-                  console.log('DEBUG: m:', m)
+                getMetadataValue={(m: CustomMetadata) => {
+                  setMetadataFieldsAssociatedtoEntity((prevState) =>
+                    prevState?.map((metadata) => {
+                      if (metadata.id === m?.id) {
+                        return {
+                          ...metadata,
+                          field_value: m?.field_value,
+                          metadataEntity: !!m?.field_value,
+                        }
+                      }
+                      return metadata
+                    }),
+                  )
+                  setMetadataChanged(true)
                 }}
-                unsavedMetadata={onChange}
               />
             )
           }}
@@ -213,16 +233,13 @@ type MetadataRowType = {
   metadata: CustomMetadata
   onDelete?: () => void
   isEdit: boolean
-  getMetadataValue?: (value: string) => void
-  unsavedMetadata: () => void
+  getMetadataValue?: (metadata: CustomMetadata) => void
 }
 const MetadataRow: FC<MetadataRowType> = ({
   getMetadataValue,
   isEdit,
   metadata,
-  unsavedMetadata,
 }) => {
-  const [metadataObject, setMetadataObject] = useState<CustomMetadata>(metadata)
   const [metadataValue, setMetadataValue] = useState<string>(
     metadata?.field_value || '',
   )
@@ -243,8 +260,6 @@ const MetadataRow: FC<MetadataRowType> = ({
                 onChange={(e: InputEvent) => {
                   setMetadataValue(Utils.safeParseEventValue(e))
                   setMetadataValueChanged(true)
-                  unsavedMetadata?.()
-                  getMetadataValue?.(Utils.safeParseEventValue(e))
                 }}
                 className='mr-2'
                 style={{ width: '250px' }}
@@ -268,14 +283,15 @@ const MetadataRow: FC<MetadataRowType> = ({
       <div className='table-column text-center px-3'>
         <Button
           disabled={
-            !metadataValueChanged ||
-            !Utils.validateMetadataType(metadata?.type, metadataValue)
+            !!metadataValue &&
+            (!metadataValueChanged ||
+              !Utils.validateMetadataType(metadata?.type, metadataValue))
           }
           onClick={() => {
-            const updatedMetadataObject = { ...metadataObject }
+            const updatedMetadataObject = { ...metadata }
             updatedMetadataObject.field_value = metadataValue
-            setMetadataObject(updatedMetadataObject as CustomMetadata)
             setMetadataValueChanged(false)
+            getMetadataValue?.(updatedMetadataObject as CustomMetadata)
           }}
           className='btn'
         >
