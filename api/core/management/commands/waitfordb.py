@@ -63,8 +63,11 @@ class Command(BaseCommand):
                 logger.info("Successfully connected to the database.")
                 break
             except OperationalError as e:
-                logger.warning("Database not yet ready for connections.")
-                logger.debug("Connection error was: %s", str(e), exc_info=e)
+                logger.warning(
+                    "Database not yet ready for connections. Error was: %s",
+                    str(e),
+                    exc_info=e,
+                )
 
             time.sleep(wait_between_checks)
 
