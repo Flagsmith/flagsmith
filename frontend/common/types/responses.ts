@@ -18,6 +18,7 @@ export type FeatureVersionState = {
   feature_state_value: FeatureStateValue
   feature_segment: null | FeatureState['feature_segment']
   multivariate_feature_state_values: Omit<MultivariateFeatureStateValue, 'id'>[]
+  live_from: FeatureState['live_from']
 }
 export type Operator = {
   value: string | null
@@ -93,6 +94,7 @@ export type Project = {
   max_features_allowed?: number | null
   max_segment_overrides_allowed?: number | null
   total_features?: number
+  stale_flags_limit_days?: number
   total_segments?: number
   environments: Environment[]
 }
@@ -145,6 +147,7 @@ export type User = {
   first_name: string
   last_name: string
   role: 'ADMIN' | 'USER'
+  date_joined: string
 }
 export type GroupUser = Omit<User, 'role'> & {
   group_admin: boolean
@@ -251,6 +254,9 @@ export type Tag = {
   description: string
   project: number
   label: string
+  is_system_tag: boolean
+  is_permanent: boolean
+  type: 'STALE' | 'NONE'
 }
 
 export type MultivariateFeatureStateValue = {

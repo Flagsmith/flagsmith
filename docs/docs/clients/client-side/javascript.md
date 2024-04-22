@@ -6,7 +6,7 @@ slug: /clients/javascript
 ---
 
 This library can be used with pure JavaScript, React (and all other popular frameworks/libraries) and React Native
-projects. The source code for the client is available on [Github](https://github.com/flagsmith/flagsmith-js-client).
+projects. The source code for the client is available on [GitHub](https://github.com/flagsmith/flagsmith-js-client).
 
 Example applications for a variety of JavaScript frameworks such as React, Vue and Angular, as well as React Native, can
 be found here:
@@ -82,6 +82,13 @@ flagsmith.init({
  },
 });
 ```
+
+:::info
+
+As of flagsmith 4.0.0, `flagsmith.init` will return a promise resolving with either cache or the latest features or
+defaults. The promise will reject if there is no cache and an invalid or no API response was received.
+
+:::
 
 ### Providing Default Flags
 
@@ -522,12 +529,18 @@ On change calls back with information telling you what has changed, you can use 
 re-renders.
 
 ```javascript
-onChange(this.oldFlags, {
+onChange(oldFlags, {
  isFromServer: true, // flags have come from the server or local storage
- flagsChanged: deepEqualsCheck(oldFlags, newFlags),
- traitsChanged: deepEqualsCheck(oldFlags, newFlags),
-});
+ flagsChanged: string[] | null,
+ traitsChanged: string[] | null,
+}, loadingState)
 ```
+
+:::info
+
+Prior to `flagsmith 4.0.0`, flagsChanged and traitsChanged returned a boolean.
+
+:::
 
 **How does caching flags work?**
 

@@ -1,7 +1,7 @@
 import Constants from 'common/constants'
 import { getIsWidget } from 'components/pages/WidgetPage'
 import ProjectStore from './project-store'
-import { createAndPublishFeatureVersion } from 'common/services/useFeatureVersion'
+import { createAndSetFeatureVersion } from 'common/services/useFeatureVersion'
 import { updateSegmentPriorities } from 'common/services/useSegmentPriority'
 import {
   createProjectFlag,
@@ -99,7 +99,7 @@ const controller = {
               _.keyBy(environmentFeatures.results, 'feature'),
           }
           store.model.lastSaved = new Date().valueOf()
-          store.saved(true)
+          store.saved(flag.name)
         }),
       )
       .catch((e) => API.ajaxHandler(store, e))
@@ -409,7 +409,7 @@ const controller = {
       })
     })
   },
-  editFeatureStateChangeRequest: (
+  editFeatureStateChangeRequest: async (
     projectId,
     environmentId,
     flag,
@@ -421,7 +421,25 @@ const controller = {
   ) => {
     store.saving()
     API.trackEvent(Constants.events.EDIT_FEATURE)
-
+    const env = ProjectStore.getEnvironment(environmentId)
+    let environment_feature_versions = []
+    if (env.use_v2_feature_versioning) {
+      const featureStates = [
+        Object.assign({}, environmentFlag, {
+          enabled: flag.default_enabled,
+          feature_state_value: flag.initial_value,
+          hide_from_client: flag.hide_from_client,
+          live_from: flag.live_from,
+        }),
+      ]
+      const version = await createAndSetFeatureVersion(getStore(), {
+        environmentId: env.id,
+        featureId: projectFlag.id,
+        featureStates,
+        skipPublish: true,
+      })
+      environment_feature_versions = version.data.map((v) => v.version_sha)
+    }
     const prom = data
       .get(
         `${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`,
@@ -444,19 +462,23 @@ const controller = {
           return keys.includes('group')
         })
 
-        const req = {
+        let req = {
           approvals: userApprovals,
-          feature_states: [
-            {
-              enabled: flag.default_enabled,
-              feature: projectFlag.id,
-              feature_state_value: Utils.valueToFeatureState(
-                flag.initial_value,
-              ),
-              id: featureStateId,
-              live_from: changeRequest.live_from || new Date().toISOString(),
-            },
-          ],
+          environment_feature_versions,
+          feature_states: !env.use_v2_feature_versioning
+            ? [
+                {
+                  enabled: flag.default_enabled,
+                  feature: projectFlag.id,
+                  feature_state_value: Utils.valueToFeatureState(
+                    flag.initial_value,
+                  ),
+                  id: featureStateId,
+                  live_from:
+                    changeRequest.live_from || new Date().toISOString(),
+                },
+              ]
+            : [],
           group_assignments,
           ...changeRequestData,
         }
@@ -466,7 +488,7 @@ const controller = {
           : `${Project.api}environments/${environmentId}/create-change-request/`
         return data[reqType](url, req).then((v) => {
           let prom = Promise.resolve()
-          if (multivariate_options) {
+          if (multivariate_options && v.feature_states?.[0]) {
             v.feature_states[0].multivariate_feature_state_values =
               v.feature_states[0].multivariate_feature_state_values.map((v) => {
                 const matching = multivariate_options.find(
@@ -556,7 +578,7 @@ const controller = {
         projectId,
         environmentId,
       ).then((res) => {
-        return createAndPublishFeatureVersion(getStore(), {
+        return createAndSetFeatureVersion(getStore(), {
           environmentId: res,
           featureId: projectFlag.id,
           featureStates,
@@ -600,7 +622,7 @@ const controller = {
               feature_state_value: flag.initial_value,
               hide_from_client: flag.hide_from_client,
             })
-            return createAndPublishFeatureVersion(getStore(), {
+            return createAndSetFeatureVersion(getStore(), {
               environmentId: res,
               featureId: projectFlag.id,
               featureStates: [data],

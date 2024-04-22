@@ -9,7 +9,7 @@ tracks the following request types:
 1. Get Flags
 2. Get Identity Flags
 3. Set Identity Traits
-4. Get Environment Document (for local evaluation SDKs)
+4. Get [Environment Document](/clients/overview#the-environment-document) (for local evaluation SDKs)
 
 ![API Usage](/img/api-usage.png)
 

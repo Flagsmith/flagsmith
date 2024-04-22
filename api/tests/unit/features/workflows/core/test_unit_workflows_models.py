@@ -3,6 +3,7 @@ from datetime import timedelta
 import pytest
 from django.contrib.sites.models import Site
 from django.utils import timezone
+from pytest_mock import MockerFixture
 
 from audit.constants import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
@@ -582,7 +583,10 @@ def test_change_request_group_assignment_sends_notification_emails_to_group_user
 
 @pytest.mark.freeze_time(now)
 def test_commit_change_request_publishes_environment_feature_versions(
-    environment: Environment, feature: Feature, admin_user: FFAdminUser
+    environment: Environment,
+    feature: Feature,
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
 ):
     # Given
     environment.use_v2_feature_versioning = True
@@ -603,6 +607,13 @@ def test_commit_change_request_publishes_environment_feature_versions(
 
     change_request.environment_feature_versions.add(environment_feature_version)
 
+    mock_rebuild_environment_document_task = mocker.patch(
+        "features.workflows.core.models.rebuild_environment_document"
+    )
+    mock_trigger_update_version_webhooks = mocker.patch(
+        "features.workflows.core.models.trigger_update_version_webhooks"
+    )
+
     # When
     change_request.commit(admin_user)
 
@@ -611,6 +622,17 @@ def test_commit_change_request_publishes_environment_feature_versions(
     assert environment_feature_version.published
     assert environment_feature_version.published_by == admin_user
     assert environment_feature_version.live_from == now
+
+    mock_rebuild_environment_document_task.delay.assert_called_once_with(
+        kwargs={"environment_id": environment.id},
+        delay_until=environment_feature_version.live_from,
+    )
+    mock_trigger_update_version_webhooks.delay.assert_called_once_with(
+        kwargs={
+            "environment_feature_version_uuid": str(environment_feature_version.uuid)
+        },
+        delay_until=environment_feature_version.live_from,
+    )
 
 
 def test_cannot_delete_committed_change_request(
