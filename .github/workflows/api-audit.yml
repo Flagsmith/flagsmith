@@ -17,10 +17,10 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       # Ignore CVE-2023-6129 as per https://github.com/pyca/pyopenssl/issues/1300
       - name: Run Audit
