@@ -1,5 +1,3 @@
-from functools import partial
-
 from django.conf import settings
 
 from task_processor.decorators import register_task_handler
@@ -21,13 +19,14 @@ def track_hubspot_lead(user_id: int, organisation_id: int = None) -> None:
         return
 
     hubspot_lead_tracker = HubspotLeadTracker()
-    create_lead = partial(hubspot_lead_tracker.create_lead, user=user)
 
+    create_lead_kwargs = {"user": user}
     if organisation_id:
-        organisation = Organisation.objects.get(id=organisation_id)
-        create_lead(organisation=organisation)
-    else:
-        create_lead()
+        create_lead_kwargs["organisation"] = Organisation.objects.get(
+            id=organisation_id
+        )
+
+    hubspot_lead_tracker.create_lead(**create_lead_kwargs)
 
 
 @register_task_handler()
@@ -41,3 +40,24 @@ def update_hubspot_active_subscription(subscription_id: int) -> None:
     subscription = Subscription.objects.get(id=subscription_id)
     hubspot_lead_tracker = HubspotLeadTracker()
     hubspot_lead_tracker.update_company_active_subscription(subscription)
+
+
+@register_task_handler()
+def track_hubspot_lead_without_organisation(user_id: int) -> None:
+    """
+    The Hubspot logic relies on users joining or creating an organisation
+    to be tracked. This should cover most use cases, but for users that
+    sign up but don't join or create an organisation we want to be able
+    to track them still.
+    """
+
+    from users.models import FFAdminUser
+
+    user = FFAdminUser.objects.get(id=user_id)
+    if hasattr(user, "hubspot_lead"):
+        # Since this task is designed to be delayed, there's a change
+        # that the user will have joined an organisation and thus been
+        # tracked in hubspot already. If so, do nothing.
+        return
+
+    track_hubspot_lead(user)

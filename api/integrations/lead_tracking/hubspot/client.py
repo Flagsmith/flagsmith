@@ -3,6 +3,7 @@ import logging
 import hubspot
 from django.conf import settings
 from hubspot.crm.companies import (
+    PublicObjectSearchRequest,
     SimplePublicObjectInput,
     SimplePublicObjectInputForCreate,
 )
@@ -66,6 +67,30 @@ class HubspotClient:
             )
         )
         return response.to_dict()
+
+    def get_company(self, domain: str) -> dict | None:
+        public_object_search_request = PublicObjectSearchRequest(
+            filter_groups=[
+                {
+                    "filters": [
+                        {"value": domain, "propertyName": "domain", "operator": "EQ"}
+                    ]
+                }
+            ]
+        )
+
+        response = self.client.crm.contacts.batch_api.read(
+            public_object_search_request=public_object_search_request,
+        )
+
+        results = response.to_dict()["results"]
+        if not results:
+            return None
+
+        if len(results) > 1:
+            logger.error("Multiple companies exist in Hubspot for domain %s.", domain)
+
+        return results[0]
 
     def create_company(
         self,

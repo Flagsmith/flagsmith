@@ -1,5 +1,6 @@
 import logging
 import typing
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
@@ -11,6 +12,9 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
+from integrations.lead_tracking.hubspot.tasks import (
+    track_hubspot_lead_without_organisation,
+)
 from organisations.models import (
     Organisation,
     OrganisationRole,
@@ -122,6 +126,14 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     @hook(AFTER_CREATE)
     def subscribe_to_mailing_list(self):
         mailer_lite.subscribe(self)
+
+    @hook(AFTER_CREATE)
+    def schedule_hubspot_tracking(self) -> None:
+        if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
+            track_hubspot_lead_without_organisation.delay(
+                kwargs={"user_id": self.id},
+                delay_until=timezone.now() + timedelta(minutes=30),
+            )
 
     def delete_orphan_organisations(self):
         Organisation.objects.filter(

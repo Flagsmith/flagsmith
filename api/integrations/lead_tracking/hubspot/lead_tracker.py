@@ -1,5 +1,4 @@
 import logging
-from functools import partial
 
 from django.conf import settings
 
@@ -79,13 +78,12 @@ class HubspotLeadTracker(LeadTracker):
         else:
             domain = user.email_domain
 
-        create_company = partial(self.client.create_company, domain=domain)
-
         if organisation:
-            response = create_company(
+            response = self.client.create_company(
                 name=organisation.name,
                 active_subscription=organisation.subscription.plan,
                 organisation_id=organisation.id,
+                domain=domain,
             )
 
             # Store the organisation data in the database since we are
@@ -95,7 +93,7 @@ class HubspotLeadTracker(LeadTracker):
                 hubspot_id=response["id"],
             )
         else:
-            response = create_company(name=domain)
+            response = self._get_or_create_company_by_domain(domain)
 
         return response["id"]
 
@@ -117,6 +115,16 @@ class HubspotLeadTracker(LeadTracker):
         )
 
         return response
+
+    def _get_or_create_company_by_domain(self, domain: str) -> dict:
+        # try to find the organisation via it's domain
+        company = self.client.get_company(domain)
+        if not company:
+            # otherwise create a new organisation with the domain
+            # as the name.
+            company = self.client.create_company(name=domain)
+
+        return company
 
     def _get_client(self) -> HubspotClient:
         return HubspotClient()
