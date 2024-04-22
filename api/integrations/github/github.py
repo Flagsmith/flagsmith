@@ -8,7 +8,13 @@ from django.conf import settings
 
 from features.models import FeatureState, FeatureStateValue
 from integrations.github.client import generate_token
-from integrations.github.constants import GITHUB_API_URL
+from integrations.github.constants import (
+    GITHUB_API_URL,
+    LAST_UPDATED_FEATURE_TEXT,
+    LINK_FEATURE_TEXT,
+    UNLINKED_FEATURE_TEXT,
+    UPDATED_FEATURE_TEXT,
+)
 from integrations.github.models import GithubConfiguration
 from webhooks.webhooks import WebhookEventType
 
@@ -63,23 +69,17 @@ def generate_body_comment(
 
     is_update = event_type == WebhookEventType.FLAG_UPDATED.value
     is_removed = event_type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
-    delete_text = f"### The feature flag {name} was unlinked from the issue/PR"
+    delete_text = UNLINKED_FEATURE_TEXT % (name,)
 
     if is_removed:
         return delete_text
 
-    last_updated_string = (
-        f"Last Updated {datetime.datetime.now().strftime('%dth %b %Y %I:%M%p')}"
+    last_updated_string = LAST_UPDATED_FEATURE_TEXT % (
+        datetime.datetime.now().strftime("%dth %b %Y %I:%M%p")
     )
-    updated_text = (
-        f"### The Flagsmith Feature {name} " f"was updated in the environment "
-    )
+    updated_text = UPDATED_FEATURE_TEXT % (name)
 
-    result = (
-        updated_text
-        if is_update
-        else f"### This pull request is linked to a Flagsmith Feature ({name}):\n"
-    )
+    result = updated_text if is_update else LINK_FEATURE_TEXT % (name)
 
     # if feature_states is None:
     for v in feature_states:
