@@ -3,6 +3,7 @@ import { getIsWidget } from 'components/pages/WidgetPage'
 import ProjectStore from './project-store'
 import { createAndPublishFeatureVersion } from 'common/services/useFeatureVersion'
 import { updateSegmentPriorities } from 'common/services/useSegmentPriority'
+import { updateProjectFlag } from 'common/services/useProjectFlag'
 import OrganisationStore from './organisation-store'
 
 const Dispatcher = require('common/dispatcher/dispatcher')
@@ -108,9 +109,11 @@ const controller = {
       })
       return
     }
-
-    data
-      .put(`${Project.api}projects/${projectId}/features/${flag.id}/`, flag)
+    updateProjectFlag(getStore(), {
+      body: flag,
+      feature_id: flag.id,
+      project_id: projectId,
+    })
       .then((res) => {
         // onComplete calls back preserving the order of multivariate_options with their updated ids
         if (onComplete) {

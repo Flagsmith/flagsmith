@@ -51,6 +51,7 @@ const CreateFlag = class extends Component {
       hide_from_client,
       is_archived,
       is_server_key_only,
+      metadata,
       multivariate_options,
       name,
       tags,
@@ -90,7 +91,7 @@ const CreateFlag = class extends Component {
       isEdit: !!this.props.projectFlag,
       is_archived,
       is_server_key_only,
-      metadata: [],
+      metadata,
       multivariate_options: _.cloneDeep(multivariate_options),
       name,
       period: 30,
@@ -327,7 +328,11 @@ const CreateFlag = class extends Component {
             initial_value,
             is_archived,
             is_server_key_only,
-            metadata: this.state.metadata,
+            metadata:
+              !this.props.projectFlag?.metadata ||
+              this.props.projectFlag.metadata !== this.state.metadata
+                ? this.state.metadata
+                : this.props.projectFlag.metadata,
             multivariate_options: this.state.multivariate_options,
             name,
             tags: this.state.tags,
@@ -590,7 +595,13 @@ const CreateFlag = class extends Component {
                   entityContentType={featureContentType?.id}
                   entity={featureContentType?.model}
                   onChange={(m) => {
-                    this.setState({ metadata: m, settingsChanged: true })
+                    const parseData = m.map((i) => {
+                      const { metadataModelFieldId, ...rest } = i
+                      return { model_field: metadataModelFieldId, ...rest }
+                    })
+                    this.setState({
+                      metadata: parseData,
+                    })
                   }}
                 />
               }

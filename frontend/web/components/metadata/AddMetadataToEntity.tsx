@@ -12,7 +12,7 @@ import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
 import Tooltip from 'components/Tooltip'
 import { sortBy } from 'lodash'
 
-type CustomMetadataField = MetadataField & {
+export type CustomMetadataField = MetadataField & {
   metadataModelFieldId: number | string | null
   isRequiredFor: boolean
   model_field?: string | number

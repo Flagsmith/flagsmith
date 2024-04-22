@@ -40,7 +40,9 @@ import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
 import Permission from 'common/providers/Permission'
 import classNames from 'classnames'
-import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
+import AddMetadataToEntity, {
+  CustomMetadataField,
+} from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 
 type PageType = {
@@ -134,6 +136,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [name, setName] = useState<Segment['name']>(segment.name)
   const [rules, setRules] = useState<Segment['rules']>(segment.rules)
   const [tab, setTab] = useState(0)
+  const [metadata, setMetadata] = useState<CustomMetadataField[]>(
+    segment.metadata,
+  )
   const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
 
   const error = createError || updateError
@@ -188,6 +193,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     const segmentData: Omit<Segment, 'id' | 'uuid'> = {
       description,
       feature: feature,
+      metadata: metadata,
       name,
       project: projectId,
       rules,
@@ -422,7 +428,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               : 'Show condition descriptions'}
           </span>
         </Row>
-        {metadataEnable && (
+        {metadataEnable && segmentContentType?.id && (
           <FormGroup className='mb-5 setting'>
             <InputGroup
               title={'Metadata'}
@@ -432,9 +438,16 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 <AddMetadataToEntity
                   organisationId={AccountStore.getOrganisation().id}
                   projectId={projectId}
-                  entityId={name || ''}
+                  entityId={`${segment.id}` || ''}
                   entityContentType={segmentContentType?.id}
                   entity={segmentContentType?.model}
+                  onChange={(m: CustomMetadataField[]) => {
+                    const parseData = m?.map((i) => {
+                      const { metadataModelFieldId, ...rest } = i
+                      return { model_field: metadataModelFieldId, ...rest }
+                    })
+                    setMetadata(parseData)
+                  }}
                 />
               }
             />

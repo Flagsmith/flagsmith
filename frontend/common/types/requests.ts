@@ -29,7 +29,10 @@ export type Req = {
     include_feature_specific?: boolean
   }>
   deleteSegment: { projectId: number | string; id: number }
-  updateSegment: { projectId: number | string; segment: Segment }
+  updateSegment: {
+    projectId: number | string
+    segment: Segment
+  }
   createSegment: {
     projectId: number | string
     segment: Omit<Segment, 'id' | 'uuid' | 'project'>
