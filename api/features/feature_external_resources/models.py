@@ -1,4 +1,5 @@
 import logging
+from dataclasses import asdict
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -30,7 +31,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
     metadata = models.TextField(null=True)
     feature = models.ForeignKey(
         Feature,
-        related_name="feature_external_resources",
+        related_name="external_resources",
         on_delete=models.CASCADE,
     )
 
@@ -59,14 +60,9 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
 
             call_github_app_webhook_for_feature_state.delay(
                 args=(
-                    feature_data.to_dict(),
+                    asdict(feature_data),
                     WebhookEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
                 ),
-            )
-        else:
-            organisation_id = self.feature.project.organisation.id
-            logger.warning(
-                f"No GitHub integration exists for organisation {organisation_id}. Not calling webhooks."
             )
 
     @hook(BEFORE_DELETE)
@@ -84,12 +80,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
 
             call_github_app_webhook_for_feature_state.delay(
                 args=(
-                    feature_data.to_dict(),
+                    asdict(feature_data),
                     WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
                 ),
-            )
-        else:
-            organisation_id = self.feature.project.organisation.id
-            logger.warning(
-                f"No GitHub integration exists for organisation {organisation_id}. Not calling webhooks."
             )

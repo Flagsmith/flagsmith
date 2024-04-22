@@ -1,4 +1,5 @@
 import logging
+from dataclasses import asdict
 
 from environments.models import Webhook
 from features.models import Feature, FeatureState
@@ -60,7 +61,7 @@ def trigger_feature_state_change_webhooks(
     if (
         not instance.identity_id
         and not instance.feature_segment
-        and instance.feature.feature_external_resources.exists()
+        and instance.feature.external_resources.exists()
         and instance.environment.project.github_project.exists()
         and hasattr(instance.environment.project.organisation, "github_config")
     ):
@@ -85,16 +86,10 @@ def trigger_feature_state_change_webhooks(
 
         call_github_app_webhook_for_feature_state.delay(
             args=(
-                feature_data.to_dict(),
+                asdict(feature_data),
                 event_type.value,
             ),
         )
-    else:
-        logger.warning(
-            "No GitHub integration exists for organisation %d. Not calling webhooks.",
-            instance.environment.project.organisation.id,
-        )
-        return
 
 
 def _get_previous_state(

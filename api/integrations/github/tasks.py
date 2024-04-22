@@ -75,7 +75,7 @@ def call_github_app_webhook_for_feature_state(
         return
 
     feature = Feature.objects.get(id=github_event_data.feature_id)
-    feature_external_resources = feature.feature_external_resources.all()
+    feature_external_resources = feature.external_resources.all()
     feature_external_resources = [
         {
             "type": resource.type,
