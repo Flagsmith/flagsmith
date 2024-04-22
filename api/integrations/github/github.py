@@ -1,6 +1,7 @@
 import datetime
 import logging
 import typing
+from dataclasses import dataclass
 
 import requests
 from django.conf import settings
@@ -12,6 +13,29 @@ from integrations.github.models import GithubConfiguration
 from webhooks.webhooks import WebhookEventType
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class GithubData:
+    installation_id: str
+    feature_id: int
+    feature_name: str
+    feature_states: typing.List[dict[str, typing.Any]] = None
+    url: str = None
+
+    def to_dict(self) -> typing.Dict[str, typing.Any]:
+        data = {
+            "installation_id": self.installation_id,
+            "feature_id": self.feature_id,
+            "feature_name": self.feature_name,
+            "feature_states": self.feature_states,
+            "url": self.url,
+        }
+        return data
+
+    @classmethod
+    def from_dict(cls, data_dict: dict) -> "GithubData":
+        return cls(**data_dict)
 
 
 def post_comment_to_github(
@@ -91,20 +115,10 @@ def generate_data(
     type: str,
     feature_states: typing.Union[list[FeatureState], list[FeatureStateValue]] = None,
     url: str = None,
-) -> dict[str, typing.Any]:
+) -> GithubData:
 
-    feature_data = {
-        "id": feature_id,
-        "name": feature_name,
-    }
-
-    feature_data["installation_id"] = github_configuration.installation_id
-    feature_data["organisation_id"] = github_configuration.organisation.id
-
-    if type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
-        feature_data["url"] = url
-    else:
-        feature_data["feature_states"] = []
+    if feature_states:
+        feature_states_list = []
         for feature_state in feature_states:
             feature_state_value = feature_state.get_feature_state_value()
             feature_state_value_type = feature_state.get_feature_state_value_type(
@@ -124,6 +138,16 @@ def generate_data(
                 feature_env_data["segment_name"] = (
                     feature_state.feature_segment.segment.name
                 )
-            feature_data["feature_states"].append(feature_env_data)
+            feature_states_list.append(feature_env_data)
 
-    return feature_data
+    return GithubData(
+        feature_id=feature_id,
+        feature_name=feature_name,
+        installation_id=github_configuration.installation_id,
+        url=(
+            url
+            if type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
+            else None
+        ),
+        feature_states=feature_states_list if feature_states else None,
+    )

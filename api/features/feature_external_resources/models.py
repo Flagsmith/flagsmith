@@ -10,7 +10,7 @@ from django_lifecycle import (
 )
 
 from features.models import Feature, FeatureState
-from integrations.github.github import generate_data
+from integrations.github.github import GithubData, generate_data
 from integrations.github.tasks import call_github_app_webhook_for_feature_state
 from webhooks.webhooks import WebhookEventType
 
@@ -49,7 +49,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
             github_configuration = self.feature.project.organisation.github_config
 
             feature_states = FeatureState.objects.filter(feature_id=self.feature_id)
-            feature_data = generate_data(
+            feature_data: GithubData = generate_data(
                 github_configuration,
                 self.feature_id,
                 self.feature.name,
@@ -59,7 +59,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
 
             call_github_app_webhook_for_feature_state.delay(
                 args=(
-                    feature_data,
+                    feature_data.to_dict(),
                     WebhookEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
                 ),
             )
@@ -74,7 +74,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
         # Add a comment to GitHub Issue/PR when feature is unlinked to the GH external resource
         if hasattr(self.feature.project.organisation, "github_config"):
             github_configuration = self.feature.project.organisation.github_config
-            feature_data = generate_data(
+            feature_data: GithubData = generate_data(
                 github_configuration=github_configuration,
                 feature_id=self.feature_id,
                 feature_name=self.feature.name,
@@ -84,7 +84,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
 
             call_github_app_webhook_for_feature_state.delay(
                 args=(
-                    feature_data,
+                    feature_data.to_dict(),
                     WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
                 ),
             )

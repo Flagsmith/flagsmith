@@ -2,7 +2,7 @@ import logging
 
 from environments.models import Webhook
 from features.models import Feature, FeatureState
-from integrations.github.github import generate_data
+from integrations.github.github import GithubData, generate_data
 from integrations.github.tasks import call_github_app_webhook_for_feature_state
 from task_processor.decorators import register_task_handler
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
@@ -73,7 +73,7 @@ def trigger_feature_state_change_webhooks(
         feature_states = []
         feature_states.append(instance)
 
-        feature_data = generate_data(
+        feature_data: GithubData = generate_data(
             github_configuration=github_configuration,
             feature_id=history_instance.feature.id,
             feature_name=history_instance.feature.name,
@@ -85,7 +85,7 @@ def trigger_feature_state_change_webhooks(
 
         call_github_app_webhook_for_feature_state.delay(
             args=(
-                feature_data,
+                feature_data.to_dict(),
                 event_type.value,
             ),
         )
