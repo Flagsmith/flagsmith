@@ -108,7 +108,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         <Tooltip
           title={
             <Row>
-              <h5>Metadata Fields</h5>
+              <h5 className='mt-2'>Metadata Fields</h5>
               <div>
                 <Icon name='info-outlined' />
               </div>
