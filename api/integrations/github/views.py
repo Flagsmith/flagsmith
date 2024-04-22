@@ -2,9 +2,11 @@ from functools import wraps
 
 import requests
 from django.conf import settings
+from django.db.utils import IntegrityError
 from django.http import JsonResponse
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -68,6 +70,15 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
         return GithubRepository.objects.filter(
             github_configuration=self.kwargs["github_pk"]
         )
+
+    def create(self, request, *args, **kwargs):
+
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError:
+            raise ValidationError(
+                detail="Duplication error. The Github repository already linked"
+            )
 
 
 @api_view(["GET"])

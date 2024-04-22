@@ -1,5 +1,4 @@
 import pytest
-from django.db import IntegrityError
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
@@ -175,15 +174,14 @@ def test_cannot_create_github_repository_due_to_unique_constraint(
     )
 
     # When
-    with pytest.raises(IntegrityError) as exc_info:
-        response = client.post(url, data)
+    response = client.post(url, data)
 
-        # Then
-        assert "duplicate key value violates unique constraint" in str(exc_info.value)
-        assert "(5, 3, repositoryownertest, repositorynametest) already exists." in str(
-            exc_info.value
-        )
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    assert (
+        "Duplication error. The Github repository already linked" in response.json()[0]
+    )
 
 
 @pytest.mark.parametrize(

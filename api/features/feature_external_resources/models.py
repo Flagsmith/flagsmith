@@ -59,10 +59,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
             )
 
             call_github_app_webhook_for_feature_state.delay(
-                args=(
-                    asdict(feature_data),
-                    WebhookEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
-                ),
+                args=(asdict(feature_data),),
             )
 
     @hook(BEFORE_DELETE)
@@ -79,8 +76,5 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
             )
 
             call_github_app_webhook_for_feature_state.delay(
-                args=(
-                    asdict(feature_data),
-                    WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
-                ),
+                args=(asdict(feature_data),),
             )

@@ -20,6 +20,7 @@ class GithubData:
     installation_id: str
     feature_id: int
     feature_name: str
+    type: str
     feature_states: typing.List[dict[str, typing.Any]] = None
     url: str = None
 
@@ -80,6 +81,7 @@ def generate_body_comment(
         else f"### This pull request is linked to a Flagsmith Feature ({name}):\n"
     )
 
+    # if feature_states is None:
     for v in feature_states:
         feature_value = v.get("feature_state_value")
         feature_value_type = v.get("feature_state_value_type")
@@ -134,6 +136,7 @@ def generate_data(
         feature_id=feature_id,
         feature_name=feature_name,
         installation_id=github_configuration.installation_id,
+        type=type,
         url=(
             url
             if type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value

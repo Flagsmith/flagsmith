@@ -85,10 +85,7 @@ def trigger_feature_state_change_webhooks(
         feature_data["feature_states"].append(feature_state)
 
         call_github_app_webhook_for_feature_state.delay(
-            args=(
-                asdict(feature_data),
-                event_type.value,
-            ),
+            args=(asdict(feature_data),),
         )
 
 

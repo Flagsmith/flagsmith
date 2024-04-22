@@ -59,15 +59,16 @@ def send_post_request(data: CallGithubData) -> None:
 
 
 @register_task_handler()
-def call_github_app_webhook_for_feature_state(
-    event_data: GithubData, event_type: str
-) -> None:
+def call_github_app_webhook_for_feature_state(event_data: dict[str, Any]) -> None:
 
     github_event_data = GithubData.from_dict(event_data)
 
-    if event_type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
+    if (
+        github_event_data.type
+        == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
+    ):
         data = CallGithubData(
-            event_type=event_type,
+            event_type=github_event_data.type,
             github_data=github_event_data,
             feature_external_resources=None,
         )
@@ -84,7 +85,7 @@ def call_github_app_webhook_for_feature_state(
         for resource in feature_external_resources
     ]
     data = CallGithubData(
-        event_type=event_type,
+        event_type=github_event_data.type,
         github_data=github_event_data,
         feature_external_resources=feature_external_resources,
     )
