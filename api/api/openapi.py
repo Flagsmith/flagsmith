@@ -11,6 +11,9 @@ class _GenerateJsonSchema(GenerateJsonSchema):
     def nullable_schema(self, schema: core_schema.NullableSchema) -> JsonSchemaValue:
         """Generates an OpenAPI 2.0-compatible JSON schema that matches a schema that allows null values.
 
+        (The catch is OpenAPI 2.0 does not allow them, but some clients are capable
+        to consume the `x-nullable` annotation.)
+
         Args:
             schema: The core schema.
 
@@ -36,6 +39,8 @@ class PydanticResponseCapableSwaggerAutoSchema(SwaggerAutoSchema):
     ) -> dict[str, Response]:
         result = {}
 
+        definitions = self.components.with_scope(SCHEMA_DEFINITIONS)
+
         for status_code in list(response_serializers):
             if isinstance(response_serializers[status_code], type) and issubclass(
                 model_cls := response_serializers[status_code], BaseModel
@@ -46,7 +51,6 @@ class PydanticResponseCapableSwaggerAutoSchema(SwaggerAutoSchema):
                     ref_template=f"#/{SCHEMA_DEFINITIONS}/{{model}}",
                 )
 
-                definitions = self.components.with_scope(SCHEMA_DEFINITIONS)
                 for ref_name, schema_kwargs in model_json_schema.pop("$defs").items():
                     definitions.setdefault(
                         ref_name,
