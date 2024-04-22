@@ -31,6 +31,17 @@ export const projectFlagService = service
   .enhanceEndpoints({ addTagTypes: ['ProjectFlag'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      createProjectFlag: builder.mutation<
+        Res['projectFlag'],
+        Req['createProjectFlag']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'ProjectFlag' }],
+        query: (query: Req['createProjectFlag']) => ({
+          body: query.body,
+          method: 'POST',
+          url: `projects/${query.project_id}/features/`,
+        }),
+      }),
       getProjectFlag: builder.query<Res['projectFlag'], Req['getProjectFlag']>({
         providesTags: (res) => [{ id: res?.id, type: 'ProjectFlag' }],
         query: (query: Req['getProjectFlag']) => ({
@@ -106,9 +117,21 @@ export async function updateProjectFlag(
     projectFlagService.endpoints.updateProjectFlag.initiate(data, options),
   )
 }
+export async function createProjectFlag(
+  store: any,
+  data: Req['createProjectFlag'],
+  options?: Parameters<
+    typeof projectFlagService.endpoints.createProjectFlag.initiate
+  >[1],
+) {
+  return store.dispatch(
+    projectFlagService.endpoints.createProjectFlag.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useCreateProjectFlagMutation,
   useGetProjectFlagQuery,
   useGetProjectFlagsQuery,
   useUpdateProjectFlagMutation,

@@ -6,6 +6,7 @@ import {
   FeatureState,
   ImportStrategy,
   Metadata,
+  ProjectFlag,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -357,7 +358,11 @@ export type Req = {
   updateProjectFlag: {
     project_id: string | number
     feature_id: string | number
-    body: { metadata: Metadata[] }
+    body: ProjectFlag
+  }
+  createProjectFlag: {
+    project_id: string | number
+    body: ProjectFlag
   }
   // END OF TYPES
 }
