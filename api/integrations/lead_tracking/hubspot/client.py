@@ -70,17 +70,22 @@ class HubspotClient:
     def create_company(
         self,
         name: str,
-        active_subscription: str,
-        organisation_id: int,
-        domain: str | None,
+        active_subscription: str = None,
+        organisation_id: int = None,
+        domain: str | None = None,
     ) -> dict:
         properties = {
             "name": name,
             "active_subscription": active_subscription,
             "orgid": str(organisation_id),
         }
+
         if domain:
             properties["domain"] = domain
+        if active_subscription:
+            properties["active_subscription"] = active_subscription
+        if organisation_id:
+            properties["orgid"] = organisation_id
 
         simple_public_object_input_for_create = SimplePublicObjectInputForCreate(
             properties=properties,
