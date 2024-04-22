@@ -335,7 +335,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
         <div className='mt-3'>
           <InfoMessage>
             Learn more about rule and trait value type conversions{' '}
-            <a href='https://docs-git-improvement-segment-rule-value-typing-flagsmith.vercel.app/basic-features/managing-segments#rule-typing'>
+            <a href='https://docs.flagsmith.com/basic-features/managing-segments#rule-typing'>
               here
             </a>
             .
