@@ -6,6 +6,7 @@ import AccountStore from 'common/stores/account-store'
 import {
   EdgePagedResponse,
   Identity,
+  Metadata,
   Operator,
   Segment,
   SegmentRule,
@@ -193,7 +194,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     const segmentData: Omit<Segment, 'id' | 'uuid'> = {
       description,
       feature: feature,
-      metadata: metadata,
+      metadata: metadata as Metadata[],
       name,
       project: projectId,
       rules,
@@ -442,11 +443,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   entityContentType={segmentContentType?.id}
                   entity={segmentContentType?.model}
                   onChange={(m: CustomMetadataField[]) => {
-                    const parseData = m?.map((i) => {
-                      const { metadataModelFieldId, ...rest } = i
-                      return { model_field: metadataModelFieldId, ...rest }
-                    })
-                    setMetadata(parseData)
+                    setMetadata(m)
                   }}
                 />
               }

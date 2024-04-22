@@ -595,12 +595,8 @@ const CreateFlag = class extends Component {
                   entityContentType={featureContentType?.id}
                   entity={featureContentType?.model}
                   onChange={(m) => {
-                    const parseData = m.map((i) => {
-                      const { metadataModelFieldId, ...rest } = i
-                      return { model_field: metadataModelFieldId, ...rest }
-                    })
                     this.setState({
-                      metadata: parseData,
+                      metadata: m,
                     })
                   }}
                 />
@@ -981,7 +977,6 @@ const CreateFlag = class extends Component {
 
               const onCreateFeature = () => {
                 this.save(createFlag, isSaving)
-                // this.save(createFlag, isSaving, metadataAdded)
               }
 
               const featureLimitAlert =

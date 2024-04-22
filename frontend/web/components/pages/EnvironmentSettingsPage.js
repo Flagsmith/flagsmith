@@ -916,7 +916,8 @@ const EnvironmentSettingsPage = class extends Component {
                                     AccountStore.getOrganisation().id
                                   }
                                   projectId={this.props.match.params.projectId}
-                                  entityId={env.id || ''}
+                                  entityId={env.api_key || ''}
+                                  envName={env.name}
                                   entityContentType={
                                     this.state.environmentContentType.id
                                   }

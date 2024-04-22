@@ -4,7 +4,10 @@ import Button from 'components/base/forms/Button'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
 import { useGetMetadataFieldListQuery } from 'common/services/useMetadataField'
 import { useGetSegmentQuery } from 'common/services/useSegment'
-import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
+import {
+  useGetEnvironmentQuery,
+  useUpdateEnvironmentMutation,
+} from 'common/services/useEnvironment'
 import { MetadataField, Metadata } from 'common/types/responses'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
@@ -27,13 +30,15 @@ type AddMetadataToEntityType = {
   entityContentType: number
   entityId: string
   entity: number | string
-  onChange: (m: CustomMetadataField[]) => void
+  envName?: string
+  onChange?: (m: CustomMetadataField[]) => void
 }
 
 const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
   entity,
   entityContentType,
   entityId,
+  envName,
   onChange,
   organisationId,
   projectId,
@@ -72,6 +77,8 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
     { skip: entity !== 'environment' || !entityId },
   )
 
+  const [updateEnvironment] = useUpdateEnvironmentMutation()
+
   const [
     metadataFieldsAssociatedtoEntity,
     setMetadataFieldsAssociatedtoEntity,
@@ -79,7 +86,13 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
 
   useEffect(() => {
     if (metadataFieldsAssociatedtoEntity?.length && metadataChanged) {
-      onChange(metadataFieldsAssociatedtoEntity.filter((m) => m.metadataEntity))
+      const metadataParsed = metadataFieldsAssociatedtoEntity
+        .filter((m) => m.metadataEntity)
+        .map((i) => {
+          const { metadataModelFieldId, ...rest } = i
+          return { model_field: metadataModelFieldId, ...rest }
+        })
+      onChange?.(metadataParsed as CustomMetadataField[])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metadataFieldsAssociatedtoEntity])
@@ -224,6 +237,28 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
             )
           }}
         />
+        {entity === 'environment' && (
+          <Button
+            theme='primary'
+            onClick={() => {
+              updateEnvironment({
+                body: {
+                  metadata: metadataFieldsAssociatedtoEntity
+                    ?.filter((m) => m.metadataEntity)
+                    .map((i) => {
+                      const { metadataModelFieldId, ...rest } = i
+                      return { model_field: metadataModelFieldId, ...rest }
+                    }),
+                  name: envName!,
+                  project: parseInt(`${projectId}`),
+                },
+                id: entityId,
+              })
+            }}
+          >
+            Save Metadata
+          </Button>
+        )}
       </FormGroup>
     </>
   )

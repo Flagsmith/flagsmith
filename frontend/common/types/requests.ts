@@ -5,8 +5,8 @@ import {
   FeatureStateValue,
   FeatureState,
   ImportStrategy,
-  Metadata,
   ProjectFlag,
+  Environment,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -364,5 +364,6 @@ export type Req = {
     project_id: string | number
     body: ProjectFlag
   }
+  updateEnvironment: { id: string; body: Environment }
   // END OF TYPES
 }

@@ -5,14 +5,13 @@ import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import PageTitle from 'components/PageTitle'
 import CondensedRow from 'components/CondensedRow'
-import OrganisationMetadataSelect from 'components/OrganisationMetadataSelect'
 
 const CreateEnvironmentPage = class extends Component {
   static displayName = 'CreateEnvironmentPage'
 
   constructor(props, context) {
     super(props, context)
-    this.state = { metadata: [], showMetadataList: false }
+    this.state = {}
   }
 
   static contextTypes = {
@@ -41,8 +40,7 @@ const CreateEnvironmentPage = class extends Component {
   }
 
   render() {
-    const { metadata, name, showMetadataList } = this.state
-    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
+    const { name } = this.state
     return (
       <div className='app-container container'>
         <PageTitle title={'Create Environment'}>
@@ -129,43 +127,6 @@ const CreateEnvironmentPage = class extends Component {
                                   placeholder='Environment Description'
                                 />
                               </CondensedRow>
-                              {metadataEnable && (
-                                <>
-                                  <FormGroup className='mt-5 setting'>
-                                    <InputGroup
-                                      title={'Metadata'}
-                                      tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} environments`}
-                                      tooltipPlace='right'
-                                      component={
-                                        <Button
-                                          size='xSmall'
-                                          type='button'
-                                          theme='outline'
-                                          className='mt-3'
-                                          onClick={() =>
-                                            this.setState({
-                                              showMetadataList:
-                                                !showMetadataList,
-                                            })
-                                          }
-                                        >
-                                          Add Metadata
-                                        </Button>
-                                      }
-                                    />
-                                  </FormGroup>
-                                  <OrganisationMetadataSelect
-                                    contentType={30}
-                                    isOpen={showMetadataList}
-                                    onToggle={() =>
-                                      this.setState({
-                                        showMetadataList: !showMetadataList,
-                                      })
-                                    }
-                                    orgId={AccountStore.getOrganisation().id}
-                                  />
-                                </>
-                              )}
                               <CondensedRow>
                                 {project &&
                                   project.environments &&
