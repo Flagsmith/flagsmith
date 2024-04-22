@@ -20,6 +20,7 @@ from integrations.github.serializers import (
     RepoQuerySerializer,
 )
 from organisations.models import Organisation
+from organisations.permissions.permissions import GithubIsAdminOrganisation
 
 
 def github_auth_required(func):
@@ -43,7 +44,11 @@ def github_auth_required(func):
 
 
 class GithubConfigurationViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated, HasPermissionToGithubConfiguration)
+    permission_classes = (
+        IsAuthenticated,
+        HasPermissionToGithubConfiguration,
+        GithubIsAdminOrganisation,
+    )
     serializer_class = GithubConfigurationSerializer
     model_class = GithubConfiguration
 
@@ -58,7 +63,11 @@ class GithubConfigurationViewSet(viewsets.ModelViewSet):
 
 
 class GithubRepositoryViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated, HasPermissionToGithubConfiguration)
+    permission_classes = (
+        IsAuthenticated,
+        HasPermissionToGithubConfiguration,
+        GithubIsAdminOrganisation,
+    )
     serializer_class = GithubRepositorySerializer
     model_class = GithubRepository
 
@@ -152,7 +161,8 @@ def fetch_issues(request, organisation_pk):
 
 
 @api_view(["GET"])
-def fetch_repositories(request):
+@permission_classes([IsAuthenticated, GithubIsAdminOrganisation])
+def fetch_repositories(request, organisation_pk: int):
     installation_id = request.GET.get("installation_id")
 
     token = generate_token(

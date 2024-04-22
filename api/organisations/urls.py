@@ -131,7 +131,7 @@ urlpatterns = [
         name="get-github-pulls",
     ),
     path(
-        "github/repositories/",
+        "<int:organisation_pk>/github/repositories/",
         fetch_repositories,
         name="get-github-installation-repos",
     ),

@@ -316,10 +316,11 @@ def test_fetch_repositories(
     )
     mock_generate_token.return_value = "mocked_token"
     github_request_mock = mocker.patch("requests.get", side_effect=mocked_requests_get)
-    url = reverse("api-v1:organisations:get-github-installation-repos")
-    data = {"repo_owner": "owner", "repo_name": "repo"}
+    url = reverse(
+        "api-v1:organisations:get-github-installation-repos", args=[organisation.id]
+    )
     # When
-    response = client.get(url, data=data)
+    response = client.get(url)
 
     # Then
     assert response.status_code == 200
