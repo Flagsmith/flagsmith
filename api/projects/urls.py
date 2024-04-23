@@ -3,6 +3,9 @@ from django.urls import path
 from rest_framework_nested import routers
 
 from audit.views import ProjectAuditLogViewSet
+from features.feature_external_resources.views import (
+    FeatureExternalResourceViewSet,
+)
 from features.import_export.views import (
     FeatureExportListView,
     FeatureImportListView,
@@ -64,6 +67,12 @@ nested_features_router = routers.NestedSimpleRouter(
 )
 nested_features_router.register(
     r"mv-options", MultivariateFeatureOptionViewSet, basename="feature-mv-options"
+)
+
+nested_features_router.register(
+    r"feature-external-resources",
+    FeatureExternalResourceViewSet,
+    basename="feature-external-resources",
 )
 
 app_name = "projects"
