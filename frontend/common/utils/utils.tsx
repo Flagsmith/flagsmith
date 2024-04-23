@@ -585,8 +585,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       default:
         return true
     }
-
-    Utils.isValidNumber
   },
   validateRule(rule: SegmentCondition) {
     if (!rule) return false
