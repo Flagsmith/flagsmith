@@ -186,6 +186,10 @@
                 {
                     "name": "ENABLE_HUBSPOT_LEAD_TRACKING",
                     "value": "True"
+                },
+                {
+                    "name": "GITHUB_APP_ID",
+                    "value": "811209"
                 }
             ],
             "secrets": [
@@ -240,6 +244,10 @@
                 {
                     "name": "SSE_AUTHENTICATION_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:SSE_AUTHENTICATION_TOKEN::"
+                },
+                {
+                    "name": "GITHUB_PEM",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:GITHUB_PEM::"
                 }
             ],
             "logConfiguration": {
