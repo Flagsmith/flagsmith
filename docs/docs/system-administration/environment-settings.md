@@ -22,6 +22,7 @@ split operator) when evaluated against the remote API. Evaluations in local eval
 When creating or updating a segment, you can enhance its information by adding previously created and enabled metadata
 fields. To create and enable this you can do it in the metadata tab on the project settings page.
 
-If you have metadata for features, it will create a list of fields that can be filled, saved, and will be stored with the feature's save flag.
+If you have metadata for features, it will create a list of fields that can be filled, saved, and will be stored with
+the feature's save flag.
 
 ![Image](/img/metadata/metadata-environment.png)
