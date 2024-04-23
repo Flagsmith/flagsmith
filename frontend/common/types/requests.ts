@@ -4,7 +4,6 @@ import {
   Tag,
   FeatureStateValue,
   FeatureState,
-  Role,
   ExternalResource,
   ImportStrategy,
 } from './responses'
@@ -298,10 +297,17 @@ export type Req = {
   getGroupSummaries: {
     orgId: string
   }
-  getExternalResources: { feature_id: string }
-  updateExternalResource: { external_resource_id: string }
-  deleteExternalResource: { feature_id: string; external_resource_id: string }
-  createExternalResource: { feature_id: string; body: ExternalResource }
+  getExternalResources: { project_id: string; feature_id: string }
+  deleteExternalResource: {
+    project_id: string
+    feature_id: string
+    external_resource_id: string
+  }
+  createExternalResource: {
+    project_id: string
+    feature_id: string
+    body: ExternalResource
+  }
 
   getGithubIntegration: {
     organisation_id: string
@@ -354,7 +360,7 @@ export type Req = {
     repo_name: string
     repo_owner: string
   }
-  getGithubRepos: { installation_id: string }
+  getGithubRepos: { installation_id: string; organisation_id: string }
   getServersideEnvironmentKeys: { environmentId: string }
   deleteServersideEnvironmentKeys: { environmentId: string; id: string }
   createServersideEnvironmentKeys: {

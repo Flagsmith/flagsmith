@@ -25,7 +25,9 @@ export const githubService = service
       getGithubRepos: builder.query<Res['githubRepos'], Req['getGithubRepos']>({
         providesTags: [{ id: 'LIST', type: 'Github' }],
         query: (query: Req['getGithubRepos']) => ({
-          url: `organisations/github/repositories/?${Utils.toParam({
+          url: `organisations/${
+            query.organisation_id
+          }/github/repositories/?${Utils.toParam({
             installation_id: query.installation_id,
           })}`,
         }),

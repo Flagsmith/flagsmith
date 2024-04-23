@@ -17,6 +17,7 @@ const MyGitHubRepositoriesSelect: FC<MyGitHubRepositoriesSelectType> = ({
 }) => {
   const { data } = useGetGithubReposQuery({
     installation_id: installationId,
+    organisation_id: organisationId,
   })
   return (
     <GitHubRepositoriesSelect

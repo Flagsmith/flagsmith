@@ -556,6 +556,7 @@ const CreateFlag = class extends Component {
           url: featureExternalResource,
         },
         feature_id: projectFlag.id,
+        project_id: `${this.props.projectId}`,
       })
     }
     let regexValid = true
@@ -714,7 +715,10 @@ const CreateFlag = class extends Component {
                   </>
                 )}
               </FormGroup>
-              <ExternalResourcesTable featureId={projectFlag.id} />
+              <ExternalResourcesTable
+                featureId={projectFlag.id}
+                projectId={`${this.props.projectId}`}
+              />
             </>
           )}
 

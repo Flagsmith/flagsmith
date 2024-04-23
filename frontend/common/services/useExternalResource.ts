@@ -14,7 +14,7 @@ export const externalResourceService = service
         query: (query: Req['createExternalResource']) => ({
           body: query.body,
           method: 'POST',
-          url: `features/${query.feature_id}/external-resources/`,
+          url: `projects/${query.project_id}/features/${query.feature_id}/feature-external-resources/`,
         }),
       }),
       deleteExternalResource: builder.mutation<
@@ -24,7 +24,7 @@ export const externalResourceService = service
         invalidatesTags: [{ id: 'LIST', type: 'ExternalResource' }],
         query: (query: Req['deleteExternalResource']) => ({
           method: 'DELETE',
-          url: `features/${query.feature_id}/external-resources/${query.external_resource_id}/`,
+          url: `projects/${query.project_id}/features/${query.feature_id}/feature-external-resources/${query.external_resource_id}/`,
         }),
       }),
       getExternalResources: builder.query<
@@ -33,18 +33,7 @@ export const externalResourceService = service
       >({
         providesTags: [{ id: 'LIST', type: 'ExternalResource' }],
         query: (query: Req['getExternalResources']) => ({
-          url: `features/${query.feature_id}/external-resources/`,
-        }),
-      }),
-      updateExternalResource: builder.mutation<
-        Res['externalResource'],
-        Req['updateExternalResource']
-      >({
-        invalidatesTags: [{ id: 'LIST', type: 'ExternalResource' }],
-        query: (query: Req['updateExternalResource']) => ({
-          body: query,
-          method: 'PUT',
-          url: `external-resources/${query.external_resource_id}/`,
+          url: `projects/${query.project_id}/features/${query.feature_id}/feature-external-resources/`,
         }),
       }),
       // END OF ENDPOINTS
@@ -93,27 +82,12 @@ export async function getExternalResources(
     ),
   )
 }
-export async function updateExternalResource(
-  store: any,
-  data: Req['updateExternalResource'],
-  options?: Parameters<
-    typeof externalResourceService.endpoints.updateExternalResource.initiate
-  >[1],
-) {
-  return store.dispatch(
-    externalResourceService.endpoints.updateExternalResource.initiate(
-      data,
-      options,
-    ),
-  )
-}
 // END OF FUNCTION_EXPORTS
 
 export const {
   useCreateExternalResourceMutation,
   useDeleteExternalResourceMutation,
   useGetExternalResourcesQuery,
-  useUpdateExternalResourceMutation,
   // END OF EXPORTS
 } = externalResourceService
 

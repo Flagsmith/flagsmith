@@ -10,13 +10,16 @@ import { ExternalResource } from 'common/types/responses'
 
 export type ExternalResourcesTableType = {
   featureId: string
+  projectId: string
 }
 
 const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
   featureId,
+  projectId,
 }) => {
   const { data } = useGetExternalResourcesQuery({
     feature_id: featureId,
+    project_id: projectId,
   })
 
   const [deleteExternalResource, { isSuccess: isDeleted }] =
@@ -71,6 +74,7 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
                 deleteExternalResource({
                   external_resource_id: `${v.id}`,
                   feature_id: featureId,
+                  project_id: projectId,
                 })
               }}
               className='btn btn-with-icon'
