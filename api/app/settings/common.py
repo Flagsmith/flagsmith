@@ -125,6 +125,7 @@ INSTALLED_APPS = [
     "permissions",
     "projects.tags",
     "api_keys",
+    "features.feature_external_resources",
     # 2FA
     "trench",
     # health check plugins
@@ -147,6 +148,7 @@ INSTALLED_APPS = [
     "integrations.dynatrace",
     "integrations.flagsmith",
     "integrations.launch_darkly",
+    "integrations.github",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -887,6 +889,10 @@ RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS"
 # Slack Integration
 SLACK_CLIENT_ID = env.str("SLACK_CLIENT_ID", default="")
 SLACK_CLIENT_SECRET = env.str("SLACK_CLIENT_SECRET", default="")
+# GitHub integrations
+GITHUB_PEM = env.str("GITHUB_PEM", default="")
+GITHUB_APP_ID: int = env.int("GITHUB_APP_ID", default=0)
+
 
 # MailerLite
 MAILERLITE_BASE_URL = env.str(
