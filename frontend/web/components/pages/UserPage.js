@@ -569,7 +569,6 @@ const UserPage = class extends Component {
                                             <TableOwnerFilter
                                               title={'Owners'}
                                               className={'me-4'}
-                                              projectId={projectId}
                                               useLocalStorage
                                               value={this.state.owners}
                                               onChange={(owners) => {

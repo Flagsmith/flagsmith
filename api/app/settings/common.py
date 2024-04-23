@@ -125,6 +125,7 @@ INSTALLED_APPS = [
     "permissions",
     "projects.tags",
     "api_keys",
+    "features.feature_external_resources",
     # 2FA
     "trench",
     # health check plugins
@@ -147,6 +148,7 @@ INSTALLED_APPS = [
     "integrations.dynatrace",
     "integrations.flagsmith",
     "integrations.launch_darkly",
+    "integrations.github",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -887,6 +889,10 @@ RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS"
 # Slack Integration
 SLACK_CLIENT_ID = env.str("SLACK_CLIENT_ID", default="")
 SLACK_CLIENT_SECRET = env.str("SLACK_CLIENT_SECRET", default="")
+# GitHub integrations
+GITHUB_PEM = env.str("GITHUB_PEM", default="")
+GITHUB_APP_ID: int = env.int("GITHUB_APP_ID", default=0)
+
 
 # MailerLite
 MAILERLITE_BASE_URL = env.str(
@@ -1037,29 +1043,7 @@ ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
 HUBSPOT_IGNORE_DOMAINS = env.list("HUBSPOT_IGNORE_DOMAINS", [])
 HUBSPOT_IGNORE_DOMAINS_REGEX = env("HUBSPOT_IGNORE_DOMAINS_REGEX", "")
 HUBSPOT_IGNORE_ORGANISATION_DOMAINS = env.list(
-    "HUBSPOT_IGNORE_ORGANISATION_DOMAINS",
-    [
-        "126.com",
-        "163.com",
-        "aol.com",
-        "att.net",
-        "comcast.net",
-        "gmail.com",
-        "gmx.com",
-        "hotmail.com",
-        "icloud.com",
-        "live.com",
-        "mail.com",
-        "mail.ru",
-        "outlook.co.uk",
-        "outlook.com",
-        "protonmail.com",
-        "qq.com",
-        "sina.com",
-        "yahoo.com",
-        "yandex.com",
-        "zoho.com",
-    ],
+    "HUBSPOT_IGNORE_ORGANISATION_DOMAINS", []
 )
 
 # List of plan ids that support seat upgrades

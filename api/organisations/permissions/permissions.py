@@ -10,6 +10,7 @@ from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.request import Request
 
 from organisations.models import Organisation
+from users.models import FFAdminUser
 
 CREATE_PROJECT = "CREATE_PROJECT"
 MANAGE_USER_GROUPS = "MANAGE_USER_GROUPS"
@@ -103,7 +104,7 @@ class OrganisationPermission(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return request.user.is_organisation_admin(obj) or (
-            view.action == "my_permissions" and obj in request.user.organisations.all()
+            view.action == "my_permissions" and request.user.belongs_to(obj)
         )
 
 
@@ -185,6 +186,28 @@ class NestedIsOrganisationAdminPermission(BasePermission):
         return request.user.is_organisation_admin(
             self.get_organisation_from_object_callable(obj)
         )
+
+
+class GithubIsAdminOrganisation(NestedIsOrganisationAdminPermission):
+    def has_permission(self, request, view):
+        organisation_pk = view.kwargs.get("organisation_pk")
+
+        with suppress(ObjectDoesNotExist):
+            if isinstance(request.user, FFAdminUser):
+                return request.user.is_organisation_admin(
+                    Organisation.objects.get(pk=organisation_pk)
+                )
+            else:
+                return request.user.is_master_api_key_user
+
+    def has_object_permission(self, request, view, obj):
+        organisation_pk = view.kwargs.get("organisation_pk")
+        if isinstance(request.user, FFAdminUser):
+            return request.user.is_organisation_admin(
+                Organisation.objects.get(pk=organisation_pk)
+            )
+        else:
+            return request.user.is_master_api_key_user
 
 
 class OrganisationAPIUsageNotificationPermission(IsAuthenticated):

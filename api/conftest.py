@@ -28,12 +28,14 @@ from environments.permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
 )
+from features.feature_external_resources.models import FeatureExternalResource
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
+from integrations.github.models import GithubConfiguration, GithubRepository
 from metadata.models import (
     Metadata,
     MetadataField,
@@ -96,6 +98,7 @@ def pytest_configure(config: pytest.Config) -> None:
 def django_db_setup(request: pytest.FixtureRequest) -> None:
     if (
         request.config.option.ci
+        # xdist worker id is either `gw[0-9]+` or `master`
         and (xdist_worker_id_suffix := get_xdist_worker_id(request)[2:]).isnumeric()
     ):
         # Django's test database clone indices start at 1,
@@ -402,7 +405,7 @@ def api_client():
 
 
 @pytest.fixture()
-def feature(project, environment):
+def feature(project: Project, environment: Environment) -> Feature:
     return Feature.objects.create(name="Test Feature1", project=project)
 
 
@@ -428,6 +431,16 @@ def feature_state_with_value(environment: Environment) -> FeatureState:
     )
     return FeatureState.objects.get(
         environment=environment, feature=feature, feature_segment=None, identity=None
+    )
+
+
+@pytest.fixture()
+def feature_with_value(project: Project, environment: Environment) -> Feature:
+    return Feature.objects.create(
+        name="feature_with_value",
+        initial_value="value",
+        default_enabled=False,
+        project=environment.project,
     )
 
 
@@ -725,4 +738,33 @@ def flagsmith_environments_v2_table(dynamodb: DynamoDBServiceResource) -> Table:
             {"AttributeName": "document_key", "AttributeType": "S"},
         ],
         BillingMode="PAY_PER_REQUEST",
+    )
+
+
+@pytest.fixture()
+def feature_external_resource(feature: Feature) -> FeatureExternalResource:
+    return FeatureExternalResource.objects.create(
+        url="https://github.com/userexample/example-project-repo/issues/11",
+        type="GITHUB_ISSUE",
+        feature=feature,
+    )
+
+
+@pytest.fixture()
+def github_configuration(organisation: Organisation) -> GithubConfiguration:
+    return GithubConfiguration.objects.create(
+        organisation=organisation, installation_id=1234567
+    )
+
+
+@pytest.fixture()
+def github_repository(
+    github_configuration: GithubConfiguration,
+    project: Project,
+) -> GithubRepository:
+    return GithubRepository.objects.create(
+        github_configuration=github_configuration,
+        repository_owner="repositoryownertest",
+        repository_name="repositorynametest",
+        project=project,
     )
