@@ -104,23 +104,29 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
   }, [metadataFieldsAssociatedtoEntity])
 
   const mergeMetadataEntityWithMetadataField = (
-    metadata: Metadata[],
-    metadataField: CustomMetadataField[],
+    metadata: Metadata[], // Metadata array
+    metadataField: CustomMetadataField[], // Custom metadata field array
   ) => {
+    // Create a map of metadata fields using metadataModelFieldId as key
     const map = new Map(
       metadataField.map((item) => [item.metadataModelFieldId, item]),
     )
+
+    // Merge metadata fields with metadata entities
     return metadataField.map((item) => {
       const mergedItem = {
-        ...item,
-        ...(map.get(item.model_field!) || {}),
+        ...item, // Spread the properties of the metadata field
+        ...(map.get(item.model_field!) || {}), // Get the corresponding metadata field from the map
         ...(metadata.find((m) => m.model_field === item.metadataModelFieldId) ||
-          {}),
+          {}), // Find the corresponding metadata entity
       }
+
+      // Determine if metadata entity exists
       mergedItem.metadataEntity =
         mergedItem.metadataModelFieldId !== undefined &&
         mergedItem.model_field !== undefined
-      return mergedItem
+
+      return mergedItem // Return the merged item
     })
   }
 
