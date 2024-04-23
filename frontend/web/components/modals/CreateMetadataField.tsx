@@ -175,7 +175,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
                 m.field,
                 m.is_required_for,
                 m.id,
-                m?.new,
+                m.new,
               )
               if (!m.removed && !m.new) {
                 await updateMetadataModelField(query)
@@ -208,7 +208,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
             const query = generateDataQuery(
               m.value,
               res?.data.id,
-              m?.isRequired,
+              !!m?.isRequired,
               0,
               true,
             )
