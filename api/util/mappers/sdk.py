@@ -7,7 +7,6 @@ from util.mappers.engine import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from environments.identities.models import Identity
     from environments.models import Environment
 
 
@@ -20,11 +19,7 @@ SDK_DOCUMENT_EXCLUDE = [
 ]
 
 
-def map_environment_to_sdk_document(
-    environment: "Environment",
-    *,
-    identities_with_overrides: list["Identity"] | None = None,
-) -> SDKDocument:
+def map_environment_to_sdk_document(environment: "Environment") -> SDKDocument:
     """
     Map an `environments.models.Environment` instance to an SDK document
     used by SDKs with local evaluation mode.
@@ -32,6 +27,14 @@ def map_environment_to_sdk_document(
     It's virtually the same data that gets indexed in DynamoDB,
     except it presents identity overrides and omits integrations configurations.
     """
+    # Read relationships.
+    identities_with_overrides = {}
+    for feature_state in environment.feature_states.all():
+        if (identity_id := feature_state.identity_id) and (
+            identity_id not in identities_with_overrides
+        ):
+            identities_with_overrides[identity_id] = feature_state.identity
+
     # Get the engine data.
     engine_environment = map_environment_to_engine(environment, with_integrations=False)
 
@@ -39,7 +42,8 @@ def map_environment_to_sdk_document(
 
     # Prepare relationships.
     engine_environment.identity_overrides = [
-        map_identity_to_engine(identity) for identity in identities_with_overrides or []
+        map_identity_to_engine(identity)
+        for identity in identities_with_overrides.values()
     ]
 
     return engine_environment.model_dump(

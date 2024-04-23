@@ -21,18 +21,6 @@ class EnvironmentManager(SoftDeleteManager):
                 *extra_select_related or (),
             )
             .prefetch_related(
-                Prefetch(
-                    "feature_states",
-                    queryset=FeatureState.objects.select_related(
-                        "feature", "feature_state_value"
-                    ),
-                ),
-                Prefetch(
-                    "feature_states__multivariate_feature_state_values",
-                    queryset=MultivariateFeatureStateValue.objects.select_related(
-                        "multivariate_feature_option"
-                    ),
-                ),
                 "project__segments",
                 "project__segments__rules",
                 "project__segments__rules__rules",

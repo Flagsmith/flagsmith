@@ -36,15 +36,8 @@ def test_map_environment_to_sdk_document__return_expected(
     identity_featurestate.enabled = True
     identity_featurestate.save()
 
-    identities_with_overrides = (
-        Identity.objects.only_overrides().filter(environment=environment).all()
-    )
-
     # When
-    result = map_environment_to_sdk_document(
-        environment,
-        identities_with_overrides=identities_with_overrides,
-    )
+    result = map_environment_to_sdk_document(environment)
 
     # Then
     assert result == {
