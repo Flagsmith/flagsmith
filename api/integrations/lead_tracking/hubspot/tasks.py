@@ -47,17 +47,17 @@ def track_hubspot_lead_without_organisation(user_id: int) -> None:
     """
     The Hubspot logic relies on users joining or creating an organisation
     to be tracked. This should cover most use cases, but for users that
-    sign up but don't join or create an organisation we want to be able
-    to track them still.
+    sign up but don't join or create an organisation we still want to be
+    able to track them.
     """
 
     from users.models import FFAdminUser
 
     user = FFAdminUser.objects.get(id=user_id)
     if hasattr(user, "hubspot_lead"):
-        # Since this task is designed to be delayed, there's a change
+        # Since this task is designed to be delayed, there's a chance
         # that the user will have joined an organisation and thus been
         # tracked in hubspot already. If so, do nothing.
         return
 
-    track_hubspot_lead(user)
+    track_hubspot_lead(user.id)

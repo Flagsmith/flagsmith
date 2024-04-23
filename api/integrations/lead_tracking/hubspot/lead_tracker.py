@@ -118,7 +118,7 @@ class HubspotLeadTracker(LeadTracker):
 
     def _get_or_create_company_by_domain(self, domain: str) -> dict:
         # try to find the organisation via it's domain
-        company = self.client.get_company(domain)
+        company = self.client.get_company_by_domain(domain)
         if not company:
             # otherwise create a new organisation with the domain
             # as the name.

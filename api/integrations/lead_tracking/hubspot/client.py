@@ -15,9 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 class HubspotClient:
-    def __init__(self) -> None:
+    def __init__(self, client: hubspot.Client = None) -> None:
         access_token = settings.HUBSPOT_ACCESS_TOKEN
-        self.client = hubspot.Client.create(access_token=access_token)
+        self.client = client or hubspot.Client.create(access_token=access_token)
 
     def get_contact(self, user: FFAdminUser) -> None | dict:
         public_object_id = BatchReadInputSimplePublicObjectId(
@@ -68,7 +68,11 @@ class HubspotClient:
         )
         return response.to_dict()
 
-    def get_company(self, domain: str) -> dict | None:
+    def get_company_by_domain(self, domain: str) -> dict | None:
+        """
+        Domain should be unique in Hubspot by design, so we should only ever have
+        0 or 1 results.
+        """
         public_object_search_request = PublicObjectSearchRequest(
             filter_groups=[
                 {
@@ -79,7 +83,7 @@ class HubspotClient:
             ]
         )
 
-        response = self.client.crm.contacts.batch_api.read(
+        response = self.client.crm.companies.search_api.do_search(
             public_object_search_request=public_object_search_request,
         )
 
@@ -109,8 +113,10 @@ class HubspotClient:
             properties["domain"] = domain
         if active_subscription:
             properties["active_subscription"] = active_subscription
-        if organisation_id:
-            properties["orgid"] = organisation_id
+
+        # hubspot doesn't allow null values for numeric fields, so we
+        # set this to -1 for auto generated organisations.
+        properties["orgid"] = organisation_id or -1
 
         simple_public_object_input_for_create = SimplePublicObjectInputForCreate(
             properties=properties,
