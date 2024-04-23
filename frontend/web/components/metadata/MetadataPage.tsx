@@ -117,7 +117,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         >
           {'Create or Update the Metadata Fields Project'}
         </Tooltip>
-        <Button onClick={() => createMetadataField()}>
+        <Button className='mt-2' onClick={() => createMetadataField()}>
           {'Create Metadata Field'}
         </Button>
       </Row>

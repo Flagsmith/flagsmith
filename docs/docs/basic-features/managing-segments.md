@@ -301,9 +301,8 @@ Metadata.
 
 You can add the Metadata value in the Feature Setting Tab.
 
-When creating or updating a segment, you can add Metadata if you was created Metadata Fields in Project Settings ->
-Metadata. fields. You can add the Metadata value in the Settings Setting Tab.
+When creating or updating a segment, you can add Metadata. You can add the Metadata value in the Settings Setting Tab.
 
-Then, add it using the "Add Metadata" button within the segment.
+If you have metadata for features, it will create a list of fields that can be filled, saved, and will be stored with the feature's save flag.
 
 ![Image](/img/metadata/metadata-segment-1.png)

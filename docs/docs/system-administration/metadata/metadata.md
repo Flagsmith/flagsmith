@@ -21,6 +21,8 @@ Here you'll also need to define whether it's optional or required.
 - **Optional**: You may or may not add Metadata to your Entities.
 - **Required**: You won't be able to update or create an Entity within your Project unless you include this Metadata.
 
+![Image](/img/metadata/metadata-fields.png)
+
 ### Types of Metadata Field
 
 Metadata Field supports five primary types of metadata values, each serving distinct purposes:

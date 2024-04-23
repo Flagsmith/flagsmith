@@ -20,6 +20,7 @@ export type CustomMetadataField = MetadataField & {
   isRequiredFor: boolean
   model_field?: string | number
   metadataEntity?: boolean
+  field_value?: string
 }
 
 type CustomMetadata = (Metadata & CustomMetadataField) | null
@@ -238,26 +239,35 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
           }}
         />
         {entity === 'environment' && (
-          <Button
-            theme='primary'
-            onClick={() => {
-              updateEnvironment({
-                body: {
-                  metadata: metadataFieldsAssociatedtoEntity
-                    ?.filter((m) => m.metadataEntity)
-                    .map((i) => {
-                      const { metadataModelFieldId, ...rest } = i
-                      return { model_field: metadataModelFieldId, ...rest }
-                    }),
-                  name: envName!,
-                  project: parseInt(`${projectId}`),
-                },
-                id: entityId,
-              })
-            }}
-          >
-            Save Metadata
-          </Button>
+          <div className='text-right'>
+            <Button
+              theme='primary'
+              className='mt-2'
+              onClick={() => {
+                updateEnvironment({
+                  body: {
+                    metadata: metadataFieldsAssociatedtoEntity
+                      ?.filter((m) => m.metadataEntity)
+                      .map((i) => {
+                        const { field_value, ...rest } = i
+                        return {
+                          field_value,
+                          model_field: i.metadataModelFieldId,
+                          ...rest,
+                        }
+                      }) as Metadata[],
+                    name: envName!,
+                    project: parseInt(`${projectId}`),
+                  },
+                  id: entityId,
+                }).then(() => {
+                  toast('Environment Metadata Updated')
+                })
+              }}
+            >
+              Save Metadata
+            </Button>
+          </div>
         )}
       </FormGroup>
     </>

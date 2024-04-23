@@ -106,6 +106,6 @@ Metadata.
 
 You can add the Metadata in the Feature Setting Tab.
 
-Then, add it using the "Add Metadata" button within the feature.
+If you have metadata for features, a list of fields that can be filled, saved, and will be stored with the feature's save flag will be displayed.
 
 ![Image](/img/metadata/metadata-feature-1.png)
