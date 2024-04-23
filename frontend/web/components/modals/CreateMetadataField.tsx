@@ -122,6 +122,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   const [metadataFieldSelectList, setMetadataFieldSelectList] = useState<
     SelectContentTypesType[]
   >([])
+  console.log('DEBUG: metadataFieldSelectList:', metadataFieldSelectList)
   const [metadataUpdatedSelectList, setMetadataFieldUpdatedSelectList] =
     useState<metadataFieldUpdatedSelectListType[]>([])
 
