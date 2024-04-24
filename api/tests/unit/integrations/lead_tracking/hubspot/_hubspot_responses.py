@@ -3,7 +3,7 @@ from datetime import datetime
 from dateutil.tz import tzlocal
 
 
-class DummyHubspotResponse:
+class FakeHubspotResponse:
     """
     Dummy class to replicate the to_dict() method of the Hubspot response classes.
     """
@@ -17,7 +17,7 @@ class DummyHubspotResponse:
 
 def generate_get_company_by_domain_response(
     name: str, domain: str
-) -> DummyHubspotResponse:
+) -> FakeHubspotResponse:
     """
     Generate a sample response given by the Hubspot API when searching for a company by domain.
 
@@ -25,7 +25,7 @@ def generate_get_company_by_domain_response(
     certain properties dynamically.
     """
 
-    return DummyHubspotResponse(
+    return FakeHubspotResponse(
         data={
             "paging": None,
             "results": [
@@ -54,7 +54,7 @@ def generate_get_company_by_domain_response(
     )
 
 
-def generate_get_company_by_domain_response_no_results() -> DummyHubspotResponse:
+def generate_get_company_by_domain_response_no_results() -> FakeHubspotResponse:
     """
     Generate a sample response given by the Hubspot API when searching for a company by domain
     but no results are returned.
@@ -62,7 +62,7 @@ def generate_get_company_by_domain_response_no_results() -> DummyHubspotResponse
     This response was retrieved from the API directly and hard coded here for simplicity.
     """
 
-    return DummyHubspotResponse(
+    return FakeHubspotResponse(
         data={
             "paging": None,
             "results": [],
@@ -73,7 +73,7 @@ def generate_get_company_by_domain_response_no_results() -> DummyHubspotResponse
 
 def generate_create_company_response(
     name: str, domain: str = None, organisation_id: int = None
-) -> DummyHubspotResponse:
+) -> FakeHubspotResponse:
     """
     Generate a sample response given by the Hubspot API when creating a company.
 
@@ -81,7 +81,7 @@ def generate_create_company_response(
     properties dynamically.
     """
 
-    return DummyHubspotResponse(
+    return FakeHubspotResponse(
         data={
             "archived": False,
             "archived_at": None,
