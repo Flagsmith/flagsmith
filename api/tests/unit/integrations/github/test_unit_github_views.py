@@ -4,6 +4,7 @@ from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from features.feature_external_resources.models import FeatureExternalResource
 from integrations.github.models import GithubConfiguration, GithubRepository
 from organisations.models import Organisation
 from projects.models import Project
@@ -191,18 +192,28 @@ def test_cannot_create_github_repository_due_to_unique_constraint(
 def test_github_delete_repository(
     client: APIClient,
     organisation: Organisation,
+    feature_external_resource: FeatureExternalResource,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    mocker,
 ) -> None:
     # Given
+    mock_generate_token = mocker.patch(
+        "integrations.github.github.generate_token",
+    )
+    mock_generate_token.return_value = "mocked_token"
     url = reverse(
         "api-v1:organisations:repositories-detail",
         args=[organisation.id, github_configuration.id, github_repository.id],
     )
+    for feature in github_repository.project.features.all():
+        assert FeatureExternalResource.objects.filter(feature=feature).exists()
     # When
     response = client.delete(url)
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
+    for feature in github_repository.project.features.all():
+        assert not FeatureExternalResource.objects.filter(feature=feature).exists()
 
 
 def mocked_requests_get(*args, **kwargs):
