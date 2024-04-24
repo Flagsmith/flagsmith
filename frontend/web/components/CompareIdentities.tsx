@@ -127,7 +127,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     )
   }
 
-  const clonedentityValues = (
+  const cloneIdentityValues = (
     leftIdentityName: string,
     rightIdentityName: string,
     leftIdentityId: string,
@@ -138,7 +138,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
       body: (
         <div>
           {'Cloning '} <strong>{leftIdentityName}</strong>{' '}
-          {'will copy any identity overrides in '}
+          {'will copy any Identity Overrides in '}
           <strong>{`${rightIdentityName}.`}</strong> {'Are you sure?'}
         </div>
       ),
@@ -154,7 +154,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
           toast('Clonation Completed!')
         })
       },
-      title: 'Clone identity',
+      title: 'Clone Identity',
       yesText: 'Confirm',
     })
   }
@@ -228,8 +228,9 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                     <Tooltip
                       title={
                         <Button
+                          disabled={!leftId || !rightId || !environmentId}
                           onClick={() => {
-                            clonedentityValues(
+                            cloneIdentityValues(
                               leftId?.label,
                               rightId?.label,
                               leftId?.value,
@@ -239,11 +240,11 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                           }}
                           className='ms-2 me-2'
                         >
-                          {'Clone features states'}
+                          {'Clone Features states'}
                         </Button>
                       }
                     >
-                      {`Clone the features states from ${leftId?.label} to ${rightId?.label}`}
+                      {`Clone the Features states from ${leftId?.label} to ${rightId?.label}`}
                     </Tooltip>
                   </>
                 )}
