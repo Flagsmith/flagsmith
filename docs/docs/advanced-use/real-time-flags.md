@@ -63,8 +63,8 @@ but are happy to take pull requests!
 
 ## Things you should know
 
-* Per-identity overrides do not trigger an update
-* Identity Trait updates do not trigger an update
+- Per-identity overrides do not trigger an update
+- Identity Trait updates do not trigger an update
 
 ## How it works under the hood
 
