@@ -4,7 +4,7 @@ import { useGetProjectsQuery } from 'common/services/useProject'
 export type ProjectFilterType = {
   organisationId: number
   value?: string
-  onChange: (value: string) => void
+  onChange: (id: string, name: string) => void
   showAll?: boolean
 }
 
@@ -33,7 +33,7 @@ const ProjectFilter: FC<ProjectFilterType> = ({
         (data || [])?.map((v) => ({ label: v.name, value: `${v.id}` })),
       )}
       onChange={(value: { value: string; label: string }) =>
-        onChange(value?.value || '')
+        onChange(value.value || '', value.label || '')
       }
     />
   )
