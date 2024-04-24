@@ -1,6 +1,20 @@
 {
   "api_key": "masked",
-  "feature_states": [],
+  "feature_states": [
+    {
+      "django_id": 517915,
+      "enabled": false,
+      "feature": {
+        "id": 91559,
+        "name": "api_usage_alerting",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "632b424f-dea1-4080-ba0c-55a3772b1712",
+      "multivariate_feature_state_values": []
+    }
+  ],
   "id": 0,
   "name": "Production",
   "project": {
