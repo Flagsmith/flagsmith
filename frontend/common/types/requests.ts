@@ -322,6 +322,7 @@ export type Req = {
 
     usersToAddAdmin: number[] | null
     usersToRemoveAdmin: number[] | null
+    usersToRemove: number[] | null
   }
   // END OF TYPES
 }

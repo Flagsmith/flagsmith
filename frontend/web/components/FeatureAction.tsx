@@ -104,7 +104,10 @@ export const FeatureAction: FC<FeatureActionProps> = ({
         <div ref={listRef} className='feature-action__list'>
           <div
             className='feature-action__item'
-            onClick={() => handleActionClick('copy')}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleActionClick('copy')
+            }}
           >
             <Icon name='copy' width={18} fill='#9DA4AE' />
             <span>Copy Feature Name</span>
@@ -113,7 +116,10 @@ export const FeatureAction: FC<FeatureActionProps> = ({
             <div
               className='feature-action__item'
               data-test={`feature-audit-${featureIndex}`}
-              onClick={() => handleActionClick('audit')}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleActionClick('audit')
+              }}
             >
               <Icon name='list' width={18} fill='#9DA4AE' />
               <span>Show Audit Logs</span>
@@ -124,7 +130,10 @@ export const FeatureAction: FC<FeatureActionProps> = ({
             <div
               className='feature-action__item'
               data-test={`feature-history-${featureIndex}`}
-              onClick={() => handleActionClick('history')}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleActionClick('history')
+              }}
             >
               <Icon name='clock' width={18} fill='#9DA4AE' />
               <span>Show History</span>
@@ -149,7 +158,10 @@ export const FeatureAction: FC<FeatureActionProps> = ({
                             !removeFeaturePermission || readOnly || isProtected,
                         })}
                         data-test={`remove-feature-btn-${featureIndex}`}
-                        onClick={() => handleActionClick('remove')}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleActionClick('remove')
+                        }}
                       >
                         <Icon name='trash-2' width={18} fill='#9DA4AE' />
                         <span>Remove feature</span>

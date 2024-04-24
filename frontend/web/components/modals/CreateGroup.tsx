@@ -148,6 +148,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
         orgId,
         users: users as any,
         usersToAddAdmin: (usersToAddAdmin || []).map((user) => user.id),
+        usersToRemove: getUsersToRemove(groupData.users).map((v) => v.id),
         usersToRemoveAdmin: (usersToRemoveAdmin || []).map((user) => user.id),
       }).then((data) => {
         if (!data.error) {
@@ -452,7 +453,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       )}
     </div>
   )
-  if(error) {
+  if (error) {
     return
   }
   return isEdit ? (

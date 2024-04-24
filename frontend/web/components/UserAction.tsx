@@ -105,7 +105,10 @@ export const FeatureAction: FC<FeatureActionProps> = ({
           {!!canEdit && (
             <div
               className='feature-action__item'
-              onClick={() => handleActionClick('edit')}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleActionClick('edit')
+              }}
             >
               <Icon name='edit' width={18} fill='#9DA4AE' />
               <span>Edit Permissions</span>
@@ -115,7 +118,10 @@ export const FeatureAction: FC<FeatureActionProps> = ({
           {!!canRemove && (
             <div
               className='feature-action__item'
-              onClick={() => handleActionClick('remove')}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleActionClick('remove')
+              }}
             >
               <Icon name='trash-2' width={18} fill='#9DA4AE' />
               <span>Remove</span>
