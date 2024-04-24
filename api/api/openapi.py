@@ -33,6 +33,27 @@ class _GenerateJsonSchema(GenerateJsonSchema):
 
 
 class PydanticResponseCapableSwaggerAutoSchema(SwaggerAutoSchema):
+    """
+    A `SwaggerAutoSchema` subclass that allows to generate view response Swagger docs
+    from a Pydantic model.
+
+    Example usage:
+
+    ```
+    @drf_yasg.utils.swagger_auto_schema(
+        responses={200: YourPydanticSchema},
+        auto_schema=PydanticResponseCapableSwaggerAutoSchema,
+    )
+    def your_view(): ...
+    ```
+
+    To adapt Pydantic-generated schemas, the following is taken care of:
+
+    1. Pydantic-generated definitions are unwrapped and added to drf-yasg's global definitions.
+    2. Rather than using `anyOf`, nullable fields are annotated with `x-nullable`.
+    3. As there's no way to annotate a reference, all nested models are assumed to be `x-nullable`.
+    """
+
     def get_response_schemas(
         self,
         response_serializers: dict[str | int, Any],
