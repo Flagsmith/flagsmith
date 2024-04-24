@@ -42,6 +42,9 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
                 fields=["feature", "url"], name="unique_feature_url_constraint"
             )
         ]
+        indexes = [
+            models.Index(fields=["type"]),
+        ]
 
     @hook(AFTER_SAVE)
     def exectute_after_save_actions(self):

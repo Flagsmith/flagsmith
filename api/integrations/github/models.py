@@ -2,6 +2,7 @@ import logging
 
 from core.models import SoftDeleteExportableModel
 from django.db import models
+from django_lifecycle import BEFORE_DELETE, LifecycleModelMixin, hook
 
 from organisations.models import Organisation
 
@@ -21,7 +22,7 @@ class GithubConfiguration(SoftDeleteExportableModel):
         ).exists()
 
 
-class GithubRepository(SoftDeleteExportableModel):
+class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
     github_configuration = models.ForeignKey(
         GithubConfiguration, related_name="repository_config", on_delete=models.CASCADE
     )
@@ -47,3 +48,19 @@ class GithubRepository(SoftDeleteExportableModel):
                 name="unique_repository_data",
             )
         ]
+
+    @hook(BEFORE_DELETE)
+    def delete_feature_external_resources(
+        self,
+    ) -> None:
+        from features.feature_external_resources.models import (
+            FeatureExternalResource,
+        )
+
+        FeatureExternalResource.objects.filter(
+            feature_id__in=self.project.features.values_list("id", flat=True),
+            type__in=[
+                FeatureExternalResource.ResourceType.GITHUB_ISSUE,
+                FeatureExternalResource.ResourceType.GITHUB_PR,
+            ],
+        ).delete()
