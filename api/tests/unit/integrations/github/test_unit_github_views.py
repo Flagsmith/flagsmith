@@ -1,6 +1,7 @@
 import pytest
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -195,7 +196,7 @@ def test_github_delete_repository(
     feature_external_resource: FeatureExternalResource,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
-    mocker,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     mock_generate_token = mocker.patch(

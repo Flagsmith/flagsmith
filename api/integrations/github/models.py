@@ -50,7 +50,7 @@ class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
         ]
 
     @hook(BEFORE_DELETE)
-    def delete_feature_external_respurces(
+    def delete_feature_external_resources(
         self,
     ) -> None:
         from features.feature_external_resources.models import (
@@ -58,7 +58,7 @@ class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
         )
 
         FeatureExternalResource.objects.filter(
-            feature__in=self.project.features.all(),
+            feature_id__in=self.project.features.values_list("id", flat=True),
             type__in=[
                 FeatureExternalResource.ResourceType.GITHUB_ISSUE,
                 FeatureExternalResource.ResourceType.GITHUB_PR,
