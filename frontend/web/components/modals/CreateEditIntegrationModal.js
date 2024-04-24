@@ -9,6 +9,7 @@ import GithubRepositoriesTable from 'components/GithubRepositoriesTable'
 import classNames from 'classnames'
 import { getStore } from 'common/store'
 import { getGithubRepos } from 'common/services/useGithub'
+import DeleteGithubIntegracion from 'components/DeleteGithubIntegracion'
 
 const GITHUB_INSTALLATION_UPDATE = 'update'
 
@@ -238,16 +239,25 @@ const CreateEditIntegration = class extends Component {
                   githubId={this.props.githubMeta.githubId}
                   organisationId={AccountStore.getOrganisation().id}
                 />
-                <Button
-                  className='ml-3'
-                  type='text'
-                  id='open-github-win-installations-btn'
-                  data-test='open-github-win-installations-btn'
-                  onClick={this.openGitHubWinInstallations}
-                  size='xSmall'
-                >
-                  Manage available GitHub Repositories
-                </Button>
+                <div className='text-right mt-2'>
+                  <Button
+                    className='mr-3'
+                    type='text'
+                    id='open-github-win-installations-btn'
+                    data-test='open-github-win-installations-btn'
+                    onClick={this.openGitHubWinInstallations}
+                    size='small'
+                  >
+                    Manage available GitHub Repositories
+                  </Button>
+                  <DeleteGithubIntegracion
+                    githubId={this.props.githubMeta.githubId}
+                    organisationId={AccountStore.getOrganisation().id}
+                    onConfirm={() => {
+                      closeModal()
+                    }}
+                  />
+                </div>
               </>
             )}
           {this.state.fields &&

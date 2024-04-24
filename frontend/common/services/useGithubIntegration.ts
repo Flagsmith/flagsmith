@@ -23,7 +23,6 @@ export const githubIntegrationService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'GithubIntegration' }],
         query: (query: Req['deleteGithubIntegration']) => ({
-          body: query,
           method: 'DELETE',
           url: `organisations/${query.organisation_id}/integrations/github/${query.github_integration_id}/`,
         }),
