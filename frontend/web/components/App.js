@@ -161,6 +161,15 @@ const App = class extends Component {
         this.context.router.history.replace(redirect)
       } else {
         AsyncStorage.getItem('lastEnv').then((res) => {
+          if (
+            this.props.location.search.includes('github-redirect') &&
+            Utils.getFlagsmithHasFeature('github_integration')
+          ) {
+            this.context.router.history.replace(
+              `/github-setup${this.props.location.search}`,
+            )
+            return
+          }
           if (res) {
             const lastEnv = JSON.parse(res)
             const lastOrg = _.find(AccountStore.getUser().organisations, {
@@ -247,6 +256,7 @@ const App = class extends Component {
       pathname === '/' ||
       pathname === '/login' ||
       pathname === '/signup' ||
+      pathname === '/github-setup' ||
       pathname.includes('/invite')
     if (Project.amplitude) {
       amplitude.getInstance().init(Project.amplitude)
@@ -361,7 +371,10 @@ const App = class extends Component {
                                         fill='#9DA4AE'
                                       />
                                     </span>
-                                    Organisation <strong>{AccountStore.getOrganisation()?.name}</strong>
+                                    Organisation{' '}
+                                    <strong>
+                                      {AccountStore.getOrganisation()?.name}
+                                    </strong>
                                   </NavLink>
                                 </Row>
                                 <Row>

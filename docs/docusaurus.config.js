@@ -124,6 +124,10 @@ const config = {
                         title: 'How-to guides',
                         items: [
                             {
+                                label: '.NET',
+                                href: 'https://www.flagsmith.com/blog/net-feature-flag',
+                            },
+                            {
                                 label: 'Angular',
                                 href: 'https://www.flagsmith.com/blog/angular-feature-flag',
                             },
