@@ -2,11 +2,12 @@ import { FC } from 'react'
 import Tag from './tags/Tag'
 import Constants from 'common/constants'
 import moment from 'moment'
-import { ProjectFlag } from 'common/types/responses'
+import { Project, ProjectFlag } from 'common/types/responses'
 import { getProtectedTags } from 'common/utils/getProtectedTags'
 import { IonIcon } from '@ionic/react'
 import { close, warning } from 'ionicons/icons'
 import Tooltip from './Tooltip'
+import ProjectStore from 'common/stores/project-store'
 
 type StaleFlagWarningType = {
   projectFlag: ProjectFlag
@@ -19,7 +20,10 @@ const StaleFlagWarning: FC<StaleFlagWarningType> = ({ projectFlag }) => {
   }
   const created_date = projectFlag?.created_date
   const daysAgo = created_date && moment().diff(moment(created_date), 'days')
-  const suggestStale = daysAgo >= 30
+  console.log(ProjectStore.model)
+  const suggestStale =
+    daysAgo >=
+    ((ProjectStore.model as Project | null)?.stale_flags_limit_days || 30)
   if (!suggestStale) {
     return null
   }
