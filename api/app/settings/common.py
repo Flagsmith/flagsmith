@@ -1062,6 +1062,11 @@ HUBSPOT_IGNORE_ORGANISATION_DOMAINS = env.list(
     ],
 )
 
+# Number of minutes to wait for a user that has signed up to
+# join or create an organisation before creating a lead in
+# hubspot without a Flagsmith organisation.
+CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES = 30
+
 # List of plan ids that support seat upgrades
 AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
 

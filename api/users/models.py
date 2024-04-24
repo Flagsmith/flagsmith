@@ -132,7 +132,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
             track_hubspot_lead_without_organisation.delay(
                 kwargs={"user_id": self.id},
-                delay_until=timezone.now() + timedelta(minutes=30),
+                delay_until=timezone.now()
+                + timedelta(
+                    minutes=settings.CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES
+                ),
             )
 
     def delete_orphan_organisations(self):
