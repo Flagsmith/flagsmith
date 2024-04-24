@@ -72,7 +72,7 @@ def generate_get_company_by_domain_response_no_results() -> FakeHubspotResponse:
 
 
 def generate_create_company_response(
-    name: str, domain: str = None, organisation_id: int = None
+    name: str, domain: str | None = None, organisation_id: int = -1
 ) -> FakeHubspotResponse:
     """
     Generate a sample response given by the Hubspot API when creating a company.
