@@ -241,3 +241,20 @@ class EdgeIdentity:
 
     def _reset_initial_state(self):
         self._initial_state = copy.deepcopy(self)
+
+    def clone_flag_states_from(self, source_identity: "EdgeIdentity") -> None:
+        """
+        Clone the feature states from the source identity to the target identity.
+        """
+        # Delete identity_target's feature states
+        for feature_state in list(self.feature_overrides):
+            self.remove_feature_override(feature_state=feature_state)
+
+        # Clone identity_source's feature states to identity_target
+        for feature_in_source in source_identity.feature_overrides:
+            feature_state_target = FeatureStateModel(
+                feature=feature_in_source.feature,
+                feature_state_value=feature_in_source.feature_state_value,
+                enabled=feature_in_source.enabled,
+            )
+            self.add_feature_override(feature_state_target)

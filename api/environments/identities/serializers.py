@@ -140,3 +140,10 @@ class IdentityAllFeatureStatesSerializer(serializers.Serializer):
                 instance=instance.feature_segment.segment
             ).data
         return None
+
+
+class IdentitySourceIdentityRequestSerializer(serializers.Serializer):
+    source_identity_id = serializers.IntegerField(
+        required=True,
+        help_text="ID of the source identity to clone feature states from.",
+    )

@@ -27,6 +27,7 @@ from environments.authentication import EnvironmentKeyAuthentication
 from environments.identities.models import Identity
 from environments.identities.serializers import (
     IdentityAllFeatureStatesSerializer,
+    IdentitySourceIdentityRequestSerializer,
 )
 from environments.models import Environment
 from environments.permissions.permissions import (
@@ -660,6 +661,34 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         )
 
         return Response(serializer.data)
+
+    @swagger_auto_schema(
+        request_body=IdentitySourceIdentityRequestSerializer(),
+        responses={200: IdentityAllFeatureStatesSerializer(many=True)},
+    )
+    @action(methods=["POST"], detail=False, url_path="clone-from-given-identity")
+    def clone_from_given_identity(self, request, *args, **kwargs) -> Response:
+        """
+        Clone feature states from a given source identity.
+        """
+        serializer = IdentitySourceIdentityRequestSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        # Get and validate source and target identities
+        target_identity = get_object_or_404(
+            queryset=Identity, pk=self.kwargs["identity_pk"]
+        )
+        source_identity = get_object_or_404(
+            queryset=Identity, pk=request.data.get("source_identity_id")
+        )
+
+        # Clone feature states
+        FeatureState.copy_identity_feature_states(
+            target_identity=target_identity, source_identity=source_identity
+        )
+
+        return self.all(request, *args, **kwargs)
 
 
 @method_decorator(
