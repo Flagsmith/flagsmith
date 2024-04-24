@@ -306,7 +306,10 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
-    @swagger_auto_schema(request_body=EdgeIdentitySourceIdentityRequestSerializer())
+    @swagger_auto_schema(
+        request_body=EdgeIdentitySourceIdentityRequestSerializer(),
+        responses={200: IdentityAllFeatureStatesSerializer(many=True)},
+    )
     @action(detail=False, methods=["POST"], url_path="clone-from-given-identity")
     def clone_from_given_identity(self, request, *args, **kwargs) -> Response:
         """
@@ -330,24 +333,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
             master_api_key=getattr(request, "master_api_key", None),
         )
 
-        # Prepare response
-        (
-            feature_states,
-            identity_feature_names,
-        ) = self.identity.get_all_feature_states()
-
-        serializer = IdentityAllFeatureStatesSerializer(
-            instance=feature_states,
-            many=True,
-            context={
-                "request": request,
-                "identity": self.identity,
-                "environment_api_key": self.identity.environment_api_key,
-                "identity_feature_names": identity_feature_names,
-            },
-        )
-
-        return Response(serializer.data)
+        return self.all(request, *args, **kwargs)
 
 
 class EdgeIdentityWithIdentifierFeatureStateView(APIView):

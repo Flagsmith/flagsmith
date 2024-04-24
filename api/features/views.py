@@ -637,7 +637,10 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
 
         return Response(serializer.data)
 
-    @swagger_auto_schema(request_body=IdentitySourceIdentityRequestSerializer())
+    @swagger_auto_schema(
+        request_body=IdentitySourceIdentityRequestSerializer(),
+        responses={200: IdentityAllFeatureStatesSerializer(many=True)},
+    )
     @action(methods=["POST"], detail=False, url_path="clone-from-given-identity")
     def clone_from_given_identity(self, request, *args, **kwargs) -> Response:
         """
@@ -660,19 +663,7 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
             target_identity=target_identity, source_identity=source_identity
         )
 
-        # Prepare response
-        feature_states = target_identity.get_all_feature_states()
-        serializer_target = IdentityAllFeatureStatesSerializer(
-            instance=feature_states,
-            many=True,
-            context={
-                "request": request,
-                "identity": target_identity,
-                "environment_api_key": target_identity.environment.api_key,
-            },
-        )
-
-        return Response(data=serializer_target.data)
+        return self.all(request, *args, **kwargs)
 
 
 @method_decorator(
