@@ -1156,36 +1156,40 @@ _flagsmithClient = new FlagsmithClient(
     # Override the default Flagsmith API URL if you are self-hosting.
     # Optional.
     # Defaults to https://edge.api.flagsmith.com/api/v1/
-    apiUrl: "https://flagsmith.myproject.com"
+    apiUrl: "https://flagsmith.myproject.com",
+
+    # Enables caching support.
+    # Optional.
+    cacheConfig: new CacheConfig(true),
 
     # Controls which mode to run in; local or remote evaluation.
     # See the `SDKs Overview Page` for more info
     # Optional.
     # Defaults to False.
-    enableClientSideEvaluation: false;
+    enableClientSideEvaluation: false,
 
     # Controls whether Flag Analytics data is sent to the Flagsmith API
     # See https://docs.flagsmith.com/advanced-use/flag-analytics
     # Optional
     # Defaults to false
-    enableAnalytics: false
+    enableAnalytics: false,
 
     # When running in local evaluation mode, defines
     # how often to request an updated Environment document in seconds
     # Optional
     # Defaults to 60 seconds
-    environmentRefreshIntervalSeconds: 60
+    environmentRefreshIntervalSeconds: 60,
 
     # You can pass custom headers to the Flagsmith API with this Dictionary.
     # This can be helpful, for example, when sending request IDs to help trace requests.
     # Optional
     # Defaults to None
-    customHeaders: <Dictionary>
+    customHeaders: <Dictionary>,
 
     # How often to retry failed HTTP requests
     # Optional
     # Defaults to 1
-    retries: 1
+    retries: 1,
 
     # The network timeout in seconds.
     # Optional.
@@ -1755,6 +1759,25 @@ final FlagsAndTraits flags = cache.getIfPresent(projectLevelCacheKey);
 ```
 
 </TabItem>
+<TabItem value="dotnet" label=".NET">
+
+You can initialise the SDK like this:
+
+```csharp
+            var flagsmithClient = new FlagsmithClient(Fixtures.ApiKey,
+                httpClient: mockHttpClient.Object,
+                enableClientSideEvaluation: true,
+                cacheConfig: new CacheConfig(true));
+```
+
+If cacheConfig is passed during initialization with its `Enabled` property set to `true`, the SDK will make use cached
+values initially, and then make required API calls as usual and update the cache under the hood.
+
+Currently the TTL for the cache is hard set to 5 minutes.
+
+````
+
+</TabItem>
 <TabItem value="nodejs" label="NodeJS">
 
 You can initialise the SDK with something like this:
@@ -1767,7 +1790,7 @@ flagsmith.init({
     set: (k,v)=> cache[k] = v // gets called if has returns false with response from API for Identify or getFlags
   }
 })
-```
+````
 
 The core concept is that if `has` returns false, the SDK will make the required API calls under the hood. The keys are
 either `flags` or `flags_traits-${identity}`.
