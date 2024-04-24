@@ -32,7 +32,6 @@ export default async () => {
     await click('#env-settings-link')
     await click(byId('enable-versioning'))
     await click('#confirm-btn-yes')
-    await waitAndRefresh(1000)
     await refreshUntilElementVisible(byId('feature-versioning-enabled'))
 
     log('Create feature 1')
