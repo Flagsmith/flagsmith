@@ -148,7 +148,7 @@ class Identity(models.Model):
         :return: dict[int, FeatureState] - Key: feature ID. Value: Overridden feature_state.
         """
 
-        return {fs.feature.id: fs for fs in self.identity_features.all()}
+        return {fs.feature_id: fs for fs in self.identity_features.all()}
 
     def get_segments(
         self, traits: typing.List[Trait] = None, overrides_only: bool = False
