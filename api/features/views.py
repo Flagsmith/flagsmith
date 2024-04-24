@@ -660,7 +660,19 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
             target_identity=target_identity, source_identity=source_identity
         )
 
-        return Response(status=status.HTTP_200_OK)
+        # Prepare response
+        feature_states = target_identity.get_all_feature_states()
+        serializer_target = IdentityAllFeatureStatesSerializer(
+            instance=feature_states,
+            many=True,
+            context={
+                "request": request,
+                "identity": target_identity,
+                "environment_api_key": target_identity.environment.api_key,
+            },
+        )
+
+        return Response(data=serializer_target.data)
 
 
 @method_decorator(

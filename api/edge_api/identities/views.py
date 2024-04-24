@@ -329,7 +329,25 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
             user=request.user.id,
             master_api_key=getattr(request, "master_api_key", None),
         )
-        return Response(status=status.HTTP_200_OK)
+
+        # Prepare response
+        (
+            feature_states,
+            identity_feature_names,
+        ) = self.identity.get_all_feature_states()
+
+        serializer = IdentityAllFeatureStatesSerializer(
+            instance=feature_states,
+            many=True,
+            context={
+                "request": request,
+                "identity": self.identity,
+                "environment_api_key": self.identity.environment_api_key,
+                "identity_feature_names": identity_feature_names,
+            },
+        )
+
+        return Response(serializer.data)
 
 
 class EdgeIdentityWithIdentifierFeatureStateView(APIView):

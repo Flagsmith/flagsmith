@@ -1,5 +1,3 @@
-import typing
-
 import pytest
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pytest_django.fixtures import SettingsWrapper
@@ -10,8 +8,6 @@ from environments.dynamodb import (
     DynamoIdentityWrapper,
 )
 from environments.models import Environment
-from features.models import Feature
-from projects.models import Project
 from util.mappers import map_environment_to_environment_document
 
 
@@ -113,21 +109,3 @@ def app_settings_for_dynamodb(
     settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = flagsmith_environments_v2_table.name
     settings.IDENTITIES_TABLE_NAME_DYNAMO = flagsmith_identities_table.name
     return
-
-
-@pytest.fixture()
-def features_for_identity_clone_flag_states_from() -> (
-    typing.Callable[[Project], tuple[Feature, ...]]
-):
-    def make(project: Project) -> tuple[Feature, ...]:
-        # Create 3 features
-        features: list[Feature] = []
-        for i in range(1, 4):
-            features.append(
-                Feature.objects.create(
-                    name=f"feature_{i}", project=project, default_enabled=True
-                )
-            )
-        return tuple(features)
-
-    return make

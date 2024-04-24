@@ -1053,9 +1053,6 @@ def test_edge_identity_clone_flag_states_from(
     dynamo_enabled_project: int,
     environment_api_key: str,
     flagsmith_identities_table: Table,
-    features_for_identity_clone_flag_states_from: typing.Callable[
-        [Project], tuple[Feature, ...]
-    ],
 ) -> None:
     def create_identity(identifier: str) -> EdgeIdentity:
         identity_model = IdentityModel(
@@ -1066,11 +1063,21 @@ def test_edge_identity_clone_flag_states_from(
         )
         return EdgeIdentity(engine_identity_model=identity_model)
 
-    # GIVEN
+    def features_for_identity_clone_flag_states_from(
+        project: Project,
+    ) -> tuple[Feature, ...]:
+        features: list[Feature] = []
+        for i in range(1, 4):
+            features.append(
+                Feature.objects.create(
+                    name=f"feature_{i}", project=project, default_enabled=True
+                )
+            )
+        return tuple(features)
 
+    # Given
     project: Project = Project.objects.get(id=dynamo_enabled_project)
 
-    # Create 3 features
     feature_1, feature_2, feature_3 = features_for_identity_clone_flag_states_from(
         project
     )
@@ -1079,11 +1086,8 @@ def test_edge_identity_clone_flag_states_from(
     feature_model_2: FeatureModel = map_feature_to_engine(feature=feature_2)
     feature_model_3: FeatureModel = map_feature_to_engine(feature=feature_3)
 
-    # Create source and target identities
     source_identity: EdgeIdentity = create_identity(identifier="source_identity")
     target_identity: EdgeIdentity = create_identity(identifier="target_identity")
-
-    # Create 2 feature states for source identity for feature 1 and feature 2
 
     source_feature_state_1_value = "Source Identity for feature value 1"
     source_feature_state_1 = FeatureStateModel(
@@ -1101,7 +1105,6 @@ def test_edge_identity_clone_flag_states_from(
         feature_state_value=source_feature_state_2_value,
     )
 
-    # Create 2 feature states for target identity for feature 2 and feature 3
     target_feature_state_2_value = "Target Identity value for feature 2"
     target_feature_state_2 = FeatureStateModel(
         feature=feature_model_2,
@@ -1121,7 +1124,6 @@ def test_edge_identity_clone_flag_states_from(
     source_identity.add_feature_override(feature_state=source_feature_state_2)
 
     # Add feature states for features 2 and 3 to target identity.
-    # This feature state must be deleted as part of the cloning process.
     target_identity.add_feature_override(feature_state=target_feature_state_2)
     target_identity.add_feature_override(feature_state=target_feature_state_3)
 
@@ -1136,14 +1138,9 @@ def test_edge_identity_clone_flag_states_from(
         viewname="api-v1:environments:edge-identity-featurestates-clone-from-given-identity",
         args=(environment_api_key, target_identity.identity_uuid),
     )
-    get_all_feature_states_url: str = reverse(
-        viewname="api-v1:environments:edge-identity-featurestates-all",
-        args=(environment_api_key, target_identity.identity_uuid),
-    )
 
-    # WHEN
+    # When
 
-    # Clone feature states from source identity to target identity
     clone_identity_feature_states_response = admin_client.post(
         path=clone_from_given_identity_url,
         data=json.dumps(
@@ -1152,22 +1149,15 @@ def test_edge_identity_clone_flag_states_from(
         content_type="application/json",
     )
 
-    # Get current feature states for fixture target identity
-    get_feature_states_response = admin_client.get(path=get_all_feature_states_url)
+    # Then
 
-    # THEN
-
-    # Assert API calls responses status are HTTP OK (200)
     assert clone_identity_feature_states_response.status_code == status.HTTP_200_OK
-    assert get_feature_states_response.status_code == status.HTTP_200_OK
 
-    # Assert target identity contains only the 2 cloned features states
-    response = get_feature_states_response.json()
+    response = clone_identity_feature_states_response.json()
 
-    # Assert target identity contains only the 2 cloned overridden features states and 1 environment feature state
+    # Target identity contains only the 2 cloned overridden features states and 1 environment feature state
     assert len(response) == 3
 
-    # Assert cloned data is correct
     assert response[0]["feature"]["id"] == feature_1.id
     assert response[0]["enabled"] == source_feature_state_1.enabled
     assert response[0]["feature_state_value"] == source_feature_state_1_value

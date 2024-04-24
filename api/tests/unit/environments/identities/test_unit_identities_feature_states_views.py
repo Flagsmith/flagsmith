@@ -1,5 +1,4 @@
 import json
-import typing
 
 import pytest
 from django.test import Client
@@ -12,7 +11,7 @@ from environments.permissions.constants import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from features.models import FeatureState, FeatureStateValue
+from features.models import Feature, FeatureState, FeatureStateValue
 from projects.models import Project
 from tests.unit.environments.helpers import get_environment_user_client
 
@@ -118,16 +117,25 @@ def test_identity_clone_flag_states_from(
     project: Project,
     environment: Environment,
     admin_client: Client,
-    features_for_identity_clone_flag_states_from: typing.Callable,
 ) -> None:
-    # GIVEN
 
-    # Create 3 features
+    def features_for_identity_clone_flag_states_from(
+        project: Project,
+    ) -> tuple[Feature, ...]:
+        features: list[Feature] = []
+        for i in range(1, 4):
+            features.append(
+                Feature.objects.create(
+                    name=f"feature_{i}", project=project, default_enabled=True
+                )
+            )
+        return tuple(features)
+
+    # Given
     feature_1, feature_2, feature_3 = features_for_identity_clone_flag_states_from(
         project
     )
 
-    # Create source and target identities
     source_identity: Identity = Identity.objects.create(
         identifier="source_identity", environment=environment
     )
@@ -135,7 +143,6 @@ def test_identity_clone_flag_states_from(
         identifier="target_identity", environment=environment
     )
 
-    # Create 2 feature states for source identity for feature 1 and feature 2
     source_feature_state_1: FeatureState = FeatureState.objects.create(
         feature=feature_1,
         environment=environment,
@@ -158,7 +165,6 @@ def test_identity_clone_flag_states_from(
         string_value=source_feature_state_2_value
     )
 
-    # Create 2 feature states for target identity for feature 2 and feature 3
     target_feature_state_2: FeatureState = FeatureState.objects.create(
         feature=feature_2,
         environment=environment,
@@ -182,31 +188,19 @@ def test_identity_clone_flag_states_from(
         args=[environment.api_key, target_identity.id],
     )
 
-    get_feature_states_url = reverse(
-        "api-v1:environments:identity-featurestates-all",
-        args=[environment.api_key, target_identity.id],
-    )
-
-    # WHEN
-
+    # When
     clone_identity_feature_states_response = admin_client.post(
         clone_identity_feature_states_url,
         data=json.dumps({"source_identity_id": str(source_identity.id)}),
         content_type="application/json",
     )
 
-    # And getting feature states for target identity
-    get_feature_states_response = admin_client.get(get_feature_states_url)
-
-    # THEN
-
-    # Assert API calls responses status are HTTP OK (200)
+    # Then
     assert clone_identity_feature_states_response.status_code == status.HTTP_200_OK
-    assert get_feature_states_response.status_code == status.HTTP_200_OK
 
-    response = get_feature_states_response.json()
+    response = clone_identity_feature_states_response.json()
 
-    # Assert target identity contains only the 2 cloned overridden features states and 1 environment feature state
+    # Target identity contains only the 2 cloned overridden features states and 1 environment feature state
     assert len(response) == 3
 
     # Assert cloned data is correct
@@ -225,8 +219,7 @@ def test_identity_clone_flag_states_from(
     assert response[2]["feature_state_value"] == feature_3.initial_value
     assert response[2]["overridden_by"] is None
 
-    # Assert target identity feature 3 override has been removed
-    # since it was not present in source identity
+    # Target identity feature 3 override has been removed
     assert not FeatureState.objects.filter(
         feature=feature_3,
         environment=environment,
