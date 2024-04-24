@@ -502,7 +502,7 @@ export default {
   tagColors: [
     '#3d4db6',
     '#ea5a45',
-    '#f1d502',
+    '#c6b215',
     '#60bd4e',
     '#fe5505',
     '#1492f4',
