@@ -201,6 +201,9 @@ const store = Object.assign({}, BaseStore, {
   getMaxSegmentsAllowed: () => {
     return store.model && store.model.max_segments_allowed
   },
+  getStaleFlagsLimit: () => {
+    return store.model && store.model.stale_flags_limit_days
+  },
   getTotalFeatures: () => {
     return store.model && store.model.total_features
   },

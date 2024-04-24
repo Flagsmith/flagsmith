@@ -53,6 +53,10 @@
             "destination": "/guides-and-examples/staged-feature-rollouts"
         },
         {
+            "source": "/guides-and-examples/okta-configuration",
+            "destination": "/system-administration/authentication/okta"
+        },
+        {
             "source": "/self-hosting/",
             "destination": "/basic-features/overview"
         },
@@ -227,6 +231,26 @@
         {
             "source": "/deployment/task-processor",
             "destination": "/deployment/configuration/task-processor"
+        },
+        {
+            "source": "/deployment/configuration/authentication/ADFS",
+            "destination": "/system-administration/authentication/ADFS"
+        },
+        {
+            "source": "/deployment/configuration/authentication/LDAP",
+            "destination": "/system-administration/authentication/LDAP"
+        },
+        {
+            "source": "/deployment/configuration/authentication/OAuth",
+            "destination": "/system-administration/authentication/OAuth"
+        },
+        {
+            "source": "/deployment/configuration/authentication/Okta",
+            "destination": "/system-administration/authentication/SAML/Okta"
+        },
+        {
+            "source": "/deployment/configuration/authentication/SAML",
+            "destination": "/system-administration/authentication/SAML"
         },
         {
             "source": "/integrations/amplitude",

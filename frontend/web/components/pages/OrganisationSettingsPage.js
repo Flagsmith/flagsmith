@@ -1010,10 +1010,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     </div>
                                                   </Row>
                                                 }
-                                                items={_.sortBy(
-                                                  users,
-                                                  'first_name',
-                                                )}
+                                                items={users}
                                                 itemHeight={65}
                                                 renderRow={(user, i) => {
                                                   const {
