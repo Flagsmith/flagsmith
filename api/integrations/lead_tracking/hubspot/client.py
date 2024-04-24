@@ -3,6 +3,7 @@ import logging
 import hubspot
 from django.conf import settings
 from hubspot.crm.companies import (
+    PublicObjectSearchRequest,
     SimplePublicObjectInput,
     SimplePublicObjectInputForCreate,
 )
@@ -14,9 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 class HubspotClient:
-    def __init__(self) -> None:
+    def __init__(self, client: hubspot.Client = None) -> None:
         access_token = settings.HUBSPOT_ACCESS_TOKEN
-        self.client = hubspot.Client.create(access_token=access_token)
+        self.client = client or hubspot.Client.create(access_token=access_token)
 
     def get_contact(self, user: FFAdminUser) -> None | dict:
         public_object_id = BatchReadInputSimplePublicObjectId(
@@ -67,20 +68,55 @@ class HubspotClient:
         )
         return response.to_dict()
 
+    def get_company_by_domain(self, domain: str) -> dict | None:
+        """
+        Domain should be unique in Hubspot by design, so we should only ever have
+        0 or 1 results.
+        """
+        public_object_search_request = PublicObjectSearchRequest(
+            filter_groups=[
+                {
+                    "filters": [
+                        {"value": domain, "propertyName": "domain", "operator": "EQ"}
+                    ]
+                }
+            ]
+        )
+
+        response = self.client.crm.companies.search_api.do_search(
+            public_object_search_request=public_object_search_request,
+        )
+
+        results = response.to_dict()["results"]
+        if not results:
+            return None
+
+        if len(results) > 1:
+            logger.error("Multiple companies exist in Hubspot for domain %s.", domain)
+
+        return results[0]
+
     def create_company(
         self,
         name: str,
-        active_subscription: str,
-        organisation_id: int,
-        domain: str | None,
+        active_subscription: str = None,
+        organisation_id: int = None,
+        domain: str | None = None,
     ) -> dict:
         properties = {
             "name": name,
             "active_subscription": active_subscription,
             "orgid": str(organisation_id),
         }
+
         if domain:
             properties["domain"] = domain
+        if active_subscription:
+            properties["active_subscription"] = active_subscription
+
+        # hubspot doesn't allow null values for numeric fields, so we
+        # set this to -1 for auto generated organisations.
+        properties["orgid"] = organisation_id or -1
 
         simple_public_object_input_for_create = SimplePublicObjectInputForCreate(
             properties=properties,
