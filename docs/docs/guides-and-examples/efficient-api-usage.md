@@ -52,7 +52,7 @@ significantly reduce API usage.
 
 The most efficient way of evaluating Flags on the Server is using
 [Local Evaluation mode](/clients/overview#local-evaluation). There are
-[some caveats](/clients/overview#local-evaluation-2), so please be aware of them!
+[some caveats](/clients/overview#local-evaluation), so please be aware of them!
 
 ### CDN Usage
 
