@@ -44,6 +44,10 @@
                     "value": "10"
                 },
                 {
+                    "name": "CACHE_ENVIRONMENT_SEGMENTS_SECONDS",
+                    "value": "30"
+                },
+                {
                     "name": "CHARGEBEE_SITE",
                     "value": "flagsmith"
                 },

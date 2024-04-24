@@ -23,7 +23,6 @@ import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 import InfoMessage from './InfoMessage'
 import OrganisationLimit from './OrganisationLimit'
-import OrganisationLink from './OrganisationLink'
 import GithubStar from './GithubStar'
 import Tooltip from './Tooltip'
 
@@ -168,7 +167,7 @@ const App = class extends Component {
               id: lastEnv.orgId,
             })
             if (!lastOrg) {
-              this.context.router.history.replace('/projects')
+              this.context.router.history.replace('/organisation-settings')
               return
             }
 
@@ -184,7 +183,7 @@ const App = class extends Component {
             return
           }
 
-          this.context.router.history.replace('/projects')
+          this.context.router.history.replace('/organisation-settings')
         })
       }
     }
@@ -349,7 +348,21 @@ const App = class extends Component {
                             <React.Fragment>
                               <nav className='my-3 my-md-0 hidden-xs-down flex-row navbar-right space'>
                                 <Row>
-                                  <OrganisationLink />
+                                  <NavLink
+                                    id='org-settings-link'
+                                    activeClassName='active'
+                                    className='nav-link'
+                                    to='/organisation-settings'
+                                  >
+                                    <span className='mr-1'>
+                                      <Icon
+                                        name='layout'
+                                        width={20}
+                                        fill='#9DA4AE'
+                                      />
+                                    </span>
+                                    Organisation <strong>{AccountStore.getOrganisation()?.name}</strong>
+                                  </NavLink>
                                 </Row>
                                 <Row>
                                   <NavLink

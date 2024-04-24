@@ -34,7 +34,7 @@ Every time a Trait as set via the SDK, they will make a request to the Flagsmith
 updated set of flags.
 
 In order to reduce these calls, we recommend setting the full complement of traits in a single SDK call. There's more
-info around achieving this in our [Javascript FAQ](/clients/javascript/#faqs).
+info around achieving this in our [Javascript FAQ](/clients/javascript#faqs).
 
 ### Real Time Flag Updates
 
@@ -58,7 +58,8 @@ The most efficient way of evaluating Flags on the Server is using
 
 There are 3 main API calls the Flagsmith SDK can make:
 
-1. Get the Environment Document for [Local Evaluation mode](/clients/overview#local-evaluation).
+1. Get the [Environment Document](/clients/overview#the-environment-document) for
+   [Local Evaluation mode](/clients/overview#local-evaluation).
 2. Get the Flags for an Environment.
 3. Get the Flags for an Identity.
 
