@@ -47,16 +47,12 @@ class Integration extends Component {
       'githubIntegrationSetupFromFlagsmith',
       GITHUB_INSTALLATION_SETUP,
     )
-    const messageEventHandler = (event) => {
-      const urlParams = new URLSearchParams(childWindow.location.href)
-      const installationId = urlParams.get('installation_id')
+    window.addEventListener('message', (event) => {
       if (
         event.source === childWindow &&
         (event.data?.hasOwnProperty('installationId') || installationId)
       ) {
-        this.setState({
-          windowInstallationId: event.data.installationId || installationId,
-        })
+        this.setState({ windowInstallationId: event.data.installationId })
         localStorage.removeItem('githubIntegrationSetupFromFlagsmith')
         childWindow.close()
         getGithubIntegration(
@@ -70,10 +66,8 @@ class Integration extends Component {
             reFetchgithubId: res?.data?.results[0]?.id,
           })
         })
-        window.removeEventListener('message', messageEventHandler)
       }
-    }
-    window.addEventListener('message', messageEventHandler)
+    })
   }
 
   remove = (integration) => {

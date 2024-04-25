@@ -675,30 +675,34 @@ const CreateFlag = class extends Component {
                           })}
                         />
                       </div>
-                      {externalResourceType == 'Github Issue' ? (
-                        <MyIssueSelect
-                          orgId={AccountStore.getOrganisation().id}
-                          onChange={(v) =>
-                            this.setState({
-                              featureExternalResource: v,
-                              status: 'open',
-                            })
-                          }
-                          repoOwner={repoOwner}
-                          repoName={repoName}
-                        />
-                      ) : externalResourceType == 'Github PR' ? (
-                        <MyPullRequestsSelect
-                          orgId={AccountStore.getOrganisation().id}
-                          onChange={(v) =>
-                            this.setState({ featureExternalResource: v.value })
-                          }
-                          repoOwner={repoOwner}
-                          repoName={repoName}
-                        />
-                      ) : (
-                        <></>
-                      )}
+                      <Flex className='ml-4'>
+                        {externalResourceType == 'Github Issue' ? (
+                          <MyIssueSelect
+                            orgId={AccountStore.getOrganisation().id}
+                            onChange={(v) =>
+                              this.setState({
+                                featureExternalResource: v,
+                                status: 'open',
+                              })
+                            }
+                            repoOwner={repoOwner}
+                            repoName={repoName}
+                          />
+                        ) : externalResourceType == 'Github PR' ? (
+                          <MyPullRequestsSelect
+                            orgId={AccountStore.getOrganisation().id}
+                            onChange={(v) =>
+                              this.setState({
+                                featureExternalResource: v.value,
+                              })
+                            }
+                            repoOwner={repoOwner}
+                            repoName={repoName}
+                          />
+                        ) : (
+                          <></>
+                        )}
+                      </Flex>
                       {(externalResourceType == 'Github Issue' ||
                         externalResourceType == 'Github PR') && (
                         <Button
