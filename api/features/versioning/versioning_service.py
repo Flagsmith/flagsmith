@@ -8,39 +8,6 @@ from features.models import FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 
 
-def get_environment_flags_latest(
-    environment: Environment,
-    additional_filters: None | Q = None,
-) -> list[FeatureState]:
-    """
-    Get a list of FeatureStates ordered by their natural sorting operation.
-
-    Similar to get_environment_flags_list, this function provides feature
-    states ordered by their natural sorting operation. It's most
-    useful to apply identity__isnull=True and
-    feature_segment__isnull=True as additional_filters to this
-    function as feature states are sorted and reduced by solely
-    their feature_id attribute.
-    """
-
-    feature_states = FeatureState.objects.get_live_feature_states(
-        environment=environment, additional_filters=additional_filters
-    )
-
-    # Build up a dictionary in the form
-    # {feature_id: feature_state}
-    # and only keep the latest version for each feature.
-    feature_states_dict = {}
-
-    for feature_state in feature_states:
-        key = feature_state.feature_id
-        current_feature_state = feature_states_dict.get(key)
-        if not current_feature_state or feature_state > current_feature_state:
-            feature_states_dict[key] = feature_state
-
-    return list(feature_states_dict.values())
-
-
 def get_environment_flags_queryset(
     environment: Environment, feature_name: str = None
 ) -> QuerySet[FeatureState]:
