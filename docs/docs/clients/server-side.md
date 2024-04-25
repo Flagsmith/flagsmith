@@ -1066,6 +1066,7 @@ private static FlagsmithClient flagsmith = FlagsmithClient
 
     // Enable in-memory caching for the Flagsmith API.
     // Optional.
+    // See Caching section below for more details.
     // Defaults to not cache anything.
     .withCache(FlagsmithCacheConfig.builder().enableEnvLevelCaching("cache-key").build())
 
@@ -1158,10 +1159,6 @@ _flagsmithClient = new FlagsmithClient(
     # Defaults to https://edge.api.flagsmith.com/api/v1/
     apiUrl: "https://flagsmith.myproject.com",
 
-    # Enables caching support.
-    # Optional.
-    cacheConfig: new CacheConfig(true),
-
     # Controls which mode to run in; local or remote evaluation.
     # See the `SDKs Overview Page` for more info
     # Optional.
@@ -1179,6 +1176,11 @@ _flagsmithClient = new FlagsmithClient(
     # Optional
     # Defaults to 60 seconds
     environmentRefreshIntervalSeconds: 60,
+
+    # Enables caching support.
+    # See Caching section below for more details.
+    # Optional.
+    cacheConfig: new CacheConfig(true),
 
     # You can pass custom headers to the Flagsmith API with this Dictionary.
     # This can be helpful, for example, when sending request IDs to help trace requests.
@@ -1346,7 +1348,7 @@ const flagsmith = new Flagsmith({
  /*
    Adds caching support
    Optional
-   See https://docs.flagsmith.com/clients/server-side#caching
+   See Caching section below for more details.
    */
  cache: {
   has: (key: string) => bool,
@@ -1770,12 +1772,10 @@ You can initialise the SDK like this:
                 cacheConfig: new CacheConfig(true));
 ```
 
-If cacheConfig is passed during initialization with its `Enabled` property set to `true`, the SDK will make use of cached
-values initially, and then make required API calls as usual and update the cache under the hood.
+If cacheConfig is passed during initialization with its `Enabled` property set to `true`, the SDK will make use of
+cached values initially, and then make required API calls as usual and update the cache under the hood.
 
 The TTL for the cache is 5 minutes, and is not configurable.
-
-````
 
 </TabItem>
 <TabItem value="nodejs" label="NodeJS">
@@ -1790,7 +1790,7 @@ flagsmith.init({
     set: (k,v)=> cache[k] = v // gets called if has returns false with response from API for Identify or getFlags
   }
 })
-````
+```
 
 The core concept is that if `has` returns false, the SDK will make the required API calls under the hood. The keys are
 either `flags` or `flags_traits-${identity}`.
