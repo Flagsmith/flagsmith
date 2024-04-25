@@ -14,6 +14,7 @@ import Utils from 'common/utils/utils'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
 import Tooltip from 'components/Tooltip'
 import { sortBy } from 'lodash'
+import Switch from 'components/Switch'
 
 export type CustomMetadataField = MetadataField & {
   metadataModelFieldId: number | string | null
@@ -216,7 +217,6 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
             <Row className='table-header'>
               <Row className='table-column flex-1'>Metadata </Row>
               <Flex className='table-column'>Value</Flex>
-              <div className='table-column text-center px-3'></div>
             </Row>
           }
           items={metadataFieldsAssociatedtoEntity}
@@ -224,7 +224,6 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
             return (
               <MetadataRow
                 metadata={m}
-                isEdit={true}
                 getMetadataValue={(m: CustomMetadata) => {
                   setMetadataFieldsAssociatedtoEntity((prevState) =>
                     prevState?.map((metadata) => {
@@ -282,18 +281,23 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
 
 type MetadataRowType = {
   metadata: CustomMetadata
-  onDelete?: () => void
-  isEdit: boolean
   getMetadataValue?: (metadata: CustomMetadata) => void
 }
-const MetadataRow: FC<MetadataRowType> = ({
-  getMetadataValue,
-  isEdit,
-  metadata,
-}) => {
-  const [metadataValue, setMetadataValue] = useState<string>(
-    metadata?.field_value || '',
-  )
+const MetadataRow: FC<MetadataRowType> = ({ getMetadataValue, metadata }) => {
+  const [metadataValue, setMetadataValue] = useState<string | boolean>(() => {
+    if (metadata?.type === 'bool') {
+      return metadata?.field_value === 'true' ? true : false
+    } else {
+      return metadata?.field_value !== undefined ? metadata?.field_value : ''
+    }
+  })
+  const saveMetadata = () => {
+    setMetadataValueChanged(false)
+    const updatedMetadataObject = { ...metadata }
+    updatedMetadataObject.field_value =
+      metadata?.type === 'bool' ? `${!metadataValue}` : `${metadataValue}`
+    getMetadataValue?.(updatedMetadataObject as CustomMetadata)
+  }
   const [metadataValueChanged, setMetadataValueChanged] =
     useState<boolean>(false)
   return (
@@ -302,12 +306,13 @@ const MetadataRow: FC<MetadataRowType> = ({
       <Flex className='table-column'>{`${metadata?.name} ${
         metadata?.isRequiredFor ? '*' : ''
       }`}</Flex>
-      {isEdit ? (
-        <Flex className='flex-row'>
+      {metadata?.type !== 'bool' ? (
+        <Flex className='flex-row' style={{ minWidth: '300px' }}>
           <Tooltip
             title={
               <Input
                 value={metadataValue}
+                onBlur={saveMetadata}
                 onChange={(e: InputEvent) => {
                   setMetadataValue(Utils.safeParseEventValue(e))
                   setMetadataValueChanged(true)
@@ -328,27 +333,16 @@ const MetadataRow: FC<MetadataRowType> = ({
         </Flex>
       ) : (
         <Flex className='flex-row'>
-          <Flex className='table-column'>{metadata?.field_value}</Flex>
+          <Switch
+            checked={!!metadataValue}
+            onChange={() => {
+              setMetadataValue(!metadataValue)
+              setMetadataValueChanged(true)
+              saveMetadata()
+            }}
+          />
         </Flex>
       )}
-      <div className='table-column text-center px-3'>
-        <Button
-          disabled={
-            !!metadataValue &&
-            (!metadataValueChanged ||
-              !Utils.validateMetadataType(metadata?.type, metadataValue))
-          }
-          onClick={() => {
-            const updatedMetadataObject = { ...metadata }
-            updatedMetadataObject.field_value = metadataValue
-            setMetadataValueChanged(false)
-            getMetadataValue?.(updatedMetadataObject as CustomMetadata)
-          }}
-          className='btn'
-        >
-          Save
-        </Button>
-      </div>
     </Row>
   )
 }
