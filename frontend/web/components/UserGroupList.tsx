@@ -161,22 +161,20 @@ const UserGroupList: FC<UserGroupListType> = ({
     ? [...userGroupsPermission]
     : []
 
-  if (userGroupsPermission && userGroupsPermission?.length > 0) {
-    userGroups?.forEach((group) => {
-      const existingPermissionIndex =
-        mergeduserGroupsPermissionWithUserGroups.findIndex(
-          (userGroupPermission) => userGroupPermission.group.id === group.id,
-        )
-      if (existingPermissionIndex === -1) {
-        mergeduserGroupsPermissionWithUserGroups.push({
-          admin: false,
-          group: group,
-          id: group.id,
-          permissions: [],
-        })
-      }
-    })
-  }
+  userGroups?.forEach?.((group) => {
+    const existingPermissionIndex =
+      mergeduserGroupsPermissionWithUserGroups.findIndex(
+        (userGroupPermission) => userGroupPermission.group.id === group.id,
+      )
+    if (existingPermissionIndex === -1) {
+      mergeduserGroupsPermissionWithUserGroups.push({
+        admin: false,
+        group: group,
+        id: group.id,
+        permissions: [],
+      })
+    }
+  })
 
   return (
     <FormGroup>
