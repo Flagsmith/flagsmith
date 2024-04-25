@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.110.1](https://github.com/Flagsmith/flagsmith/compare/v2.110.0...v2.110.1) (2024-04-25)
+
+
+### Bug Fixes
+
+* **saas:** add correct GITHUB env vars to all locations ([#3840](https://github.com/Flagsmith/flagsmith/issues/3840)) ([12242c4](https://github.com/Flagsmith/flagsmith/commit/12242c453729f9b3250a81b2637db9609c56d854))
+
 ## [2.110.0](https://github.com/Flagsmith/flagsmith/compare/v2.109.0...v2.110.0) (2024-04-25)
 
 
