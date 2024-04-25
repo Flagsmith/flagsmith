@@ -4,9 +4,8 @@ import {
   Tag,
   FeatureStateValue,
   FeatureState,
-  Role,
+  ExternalResource,
   ImportStrategy,
-  APIKey,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -246,9 +245,10 @@ export type Req = {
   deleteUserWithRole: { org_id: number; user_id: number; role_id: number }
   getGroupWithRole: { org_id: number; group_id: number }
   deleteGroupWithRole: { org_id: number; group_id: number; role_id: number }
-  createAndPublishFeatureVersion: {
+  createAndSetFeatureVersion: {
     environmentId: string
     featureId: number
+    skipPublish?: boolean
     featureStates: (FeatureState & { toRemove: boolean })[]
   }
   createFeatureVersion: {
@@ -276,6 +276,7 @@ export type Req = {
   getFeatureVersions: PagedRequest<{
     featureId: number
     environmentId: string
+    is_live?: boolean
   }>
   getUsers: { organisationId: number }
   getFeatureVersion: {
@@ -296,6 +297,70 @@ export type Req = {
   getGroupSummaries: {
     orgId: string
   }
+  getExternalResources: { project_id: string; feature_id: string }
+  deleteExternalResource: {
+    project_id: string
+    feature_id: string
+    external_resource_id: string
+  }
+  createExternalResource: {
+    project_id: string
+    feature_id: string
+    body: ExternalResource
+  }
+
+  getGithubIntegration: {
+    organisation_id: string
+    id?: string
+  }
+  updateGithubIntegration: {
+    organisation_id: string
+    github_integration_id: string
+  }
+  deleteGithubIntegration: {
+    organisation_id: string
+    github_integration_id: string
+  }
+  createGithubIntegration: {
+    organisation_id: string
+    body: {
+      installation_id: string
+    }
+  }
+  getGithubRepositories: {
+    organisation_id: string
+    github_id: string
+  }
+  updateGithubRepository: {
+    organisation_id: string
+    github_id: string
+    id: string
+  }
+  deleteGithubRepository: {
+    organisation_id: string
+    github_id: string
+    id: string
+  }
+  createGithubRepository: {
+    organisation_id: string
+    github_id: string
+    body: {
+      project: string
+      repository_name: string
+      repository_owner: string
+    }
+  }
+  getGithubIssues: {
+    organisation_id: string
+    repo_name: string
+    repo_owner: string
+  }
+  getGithubPulls: {
+    organisation_id: string
+    repo_name: string
+    repo_owner: string
+  }
+  getGithubRepos: { installation_id: string; organisation_id: string }
   getServersideEnvironmentKeys: { environmentId: string }
   deleteServersideEnvironmentKeys: { environmentId: string; id: string }
   createServersideEnvironmentKeys: {

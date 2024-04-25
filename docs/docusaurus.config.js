@@ -30,6 +30,7 @@ const config = {
                     'kotlin',
                     'groovy',
                     'hcl',
+                    'json',
                 ],
             },
             algolia: {
@@ -116,6 +117,67 @@ const config = {
                             {
                                 label: 'Podcast',
                                 href: 'https://flagsmith.com/podcast/',
+                            },
+                        ],
+                    },
+                    {
+                        title: 'How-to guides',
+                        items: [
+                            {
+                                label: '.NET',
+                                href: 'https://www.flagsmith.com/blog/net-feature-flag',
+                            },
+                            {
+                                label: 'Angular',
+                                href: 'https://www.flagsmith.com/blog/angular-feature-flag',
+                            },
+                            {
+                                label: 'Flutter',
+                                href: 'https://www.flagsmith.com/blog/flutter-feature-flags',
+                            },
+                            {
+                                label: 'Golang',
+                                href: 'https://www.flagsmith.com/blog/golang-feature-flag',
+                            },
+                            {
+                                label: 'Java',
+                                href: 'https://www.flagsmith.com/blog/java-feature-toggle',
+                            },
+                            {
+                                label: 'JavaScript',
+                                href: 'https://www.flagsmith.com/blog/javascript-feature-flags',
+                            },
+                            {
+                                label: 'Kotlin/Android',
+                                href: 'https://www.flagsmith.com/blog/feature-flags-android',
+                            },
+                            {
+                                label: 'Node.js',
+                                href: 'https://www.flagsmith.com/blog/nodejs-feature-flags',
+                            },
+                            {
+                                label: 'PHP',
+                                href: 'https://www.flagsmith.com/blog/php-feature-flags',
+                            },
+                            {
+                                label: 'Python',
+                                href: 'https://www.flagsmith.com/blog/python-feature-flag',
+                            },
+                            {
+                                label: 'React Native',
+                                href: 'https://www.flagsmith.com/blog/update-your-react-native-app-using-remote-config',
+                            },
+                            {
+                                label: 'Ruby',
+                                href: 'https://www.flagsmith.com/blog/ruby-feature-flags',
+                            },
+                            {
+                                label: 'Spring Boot',
+                                href: 'https://www.flagsmith.com/blog/spring-boot-feature-flags',
+                            },
+                            {
+                                label: 'Swift/iOS',
+                                href: 'https://www.flagsmith.com/blog/swift-ios-feature-flags',
                             },
                         ],
                     },

@@ -27,7 +27,7 @@ unintentionally leaking Identity trait data.
 
 ## Identity Overrides
 
-Once you have uniquely identified a user, you can then override features for that user from your environment defaults.
+Once you have uniquely identified a user, you can then override features for that user from your Environment defaults.
 For example, you've pushed a feature into production, but the relevant feature flag is still hiding that feature to all
 of your users. You can now override that flag for your own user, and test that feature. Once you are happy with
 everything, you can roll that feature out to all of your users by enabling the flag itself.
@@ -75,6 +75,19 @@ version.
 
 Traits are completely free-form. You can store any number of traits, with any relevant information you see fit, in the
 platform and then use Segments to control features based on these Trait values.
+
+## Identity and Trait Storage
+
+Identities are persisted within the Flagsmith platform, along with any Traits that have been assigned to them. When
+Flags are evaluated for an Identity, the full complement of Traits stored within the platform are used, even if they
+were not all sent as part of the request.
+
+This can be useful if, at runtime, your application does not have all the relevant Trait data available for that
+particular Identity; any Traits provided will be combined with the Traits stored within Flagsmith before the evaluation
+engine runs.
+
+There are some [exceptions to this rule](/clients/overview#server-side-sdks) with Server Side SDKs running in local
+evaluation mode.
 
 ### Using Traits as a data-store
 

@@ -3,6 +3,7 @@ from datetime import datetime
 
 import django.core.exceptions
 from drf_writable_nested import WritableNestedModelSerializer
+from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
@@ -32,47 +33,22 @@ from .multivariate.serializers import (
 )
 
 
-class FeatureOwnerInputSerializer(UserIdsSerializer):
-    def add_owners(self, feature: Feature):
-        user_ids = self.validated_data["user_ids"]
-        feature.owners.add(*user_ids)
-
-    def remove_users(self, feature: Feature):
-        user_ids = self.validated_data["user_ids"]
-        feature.owners.remove(*user_ids)
-
-
-class FeatureGroupOwnerInputSerializer(serializers.Serializer):
-    group_ids = serializers.ListField(child=serializers.IntegerField())
-
-    def add_group_owners(self, feature: Feature):
-        group_ids = self.validated_data["group_ids"]
-        feature.group_owners.add(*group_ids)
-
-    def remove_group_owners(self, feature: Feature):
-        group_ids = self.validated_data["group_ids"]
-        feature.group_owners.remove(*group_ids)
-
-
-class ProjectFeatureSerializer(serializers.ModelSerializer):
-    owners = UserListSerializer(many=True, read_only=True)
-    group_owners = UserPermissionGroupSummarySerializer(many=True, read_only=True)
+class FeatureStateSerializerSmall(serializers.ModelSerializer):
+    feature_state_value = serializers.SerializerMethodField()
 
     class Meta:
-        model = Feature
+        model = FeatureState
         fields = (
             "id",
-            "name",
-            "created_date",
-            "description",
-            "initial_value",
-            "default_enabled",
-            "type",
-            "owners",
-            "group_owners",
-            "is_server_key_only",
+            "feature_state_value",
+            "environment",
+            "identity",
+            "feature_segment",
+            "enabled",
         )
-        writeonly_fields = ("initial_value", "default_enabled")
+
+    def get_feature_state_value(self, obj):
+        return obj.get_feature_state_value(identity=self.context.get("identity"))
 
 
 class FeatureQuerySerializer(serializers.Serializer):
@@ -147,6 +123,9 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
     )
     owners = UserListSerializer(many=True, read_only=True)
     group_owners = UserPermissionGroupSummarySerializer(many=True, read_only=True)
+
+    environment_feature_state = serializers.SerializerMethodField()
+
     num_segment_overrides = serializers.SerializerMethodField(
         help_text="Number of segment overrides that exist for the given feature "
         "in the environment provided by the `environment` query parameter."
@@ -186,6 +165,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             "group_owners",
             "uuid",
             "project",
+            "environment_feature_state",
             "num_segment_overrides",
             "num_identity_overrides",
             "is_server_key_only",
@@ -282,6 +262,17 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
 
         return attrs
 
+    @swagger_serializer_method(
+        serializer_or_field=FeatureStateSerializerSmall(allow_null=True)
+    )
+    def get_environment_feature_state(
+        self, instance: Feature
+    ) -> dict[str, typing.Any] | None:
+        if (feature_states := self.context.get("feature_states")) and (
+            feature_state := feature_states.get(instance.id)
+        ):
+            return FeatureStateSerializerSmall(instance=feature_state).data
+
     def get_num_segment_overrides(self, instance) -> int:
         try:
             return self.context["overrides_data"][instance.id].num_segment_overrides
@@ -366,6 +357,49 @@ class FeatureStateSerializerFull(serializers.ModelSerializer):
         return obj.get_feature_state_value(identity=self.context.get("identity"))
 
 
+class FeatureOwnerInputSerializer(UserIdsSerializer):
+    def add_owners(self, feature: Feature):
+        user_ids = self.validated_data["user_ids"]
+        feature.owners.add(*user_ids)
+
+    def remove_users(self, feature: Feature):
+        user_ids = self.validated_data["user_ids"]
+        feature.owners.remove(*user_ids)
+
+
+class FeatureGroupOwnerInputSerializer(serializers.Serializer):
+    group_ids = serializers.ListField(child=serializers.IntegerField())
+
+    def add_group_owners(self, feature: Feature):
+        group_ids = self.validated_data["group_ids"]
+        feature.group_owners.add(*group_ids)
+
+    def remove_group_owners(self, feature: Feature):
+        group_ids = self.validated_data["group_ids"]
+        feature.group_owners.remove(*group_ids)
+
+
+class ProjectFeatureSerializer(serializers.ModelSerializer):
+    owners = UserListSerializer(many=True, read_only=True)
+    group_owners = UserPermissionGroupSummarySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Feature
+        fields = (
+            "id",
+            "name",
+            "created_date",
+            "description",
+            "initial_value",
+            "default_enabled",
+            "type",
+            "owners",
+            "group_owners",
+            "is_server_key_only",
+        )
+        writeonly_fields = ("initial_value", "default_enabled")
+
+
 class SDKFeatureStateSerializer(
     HideSensitiveFieldsSerializerMixin, FeatureStateSerializerFull
 ):
@@ -400,7 +434,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         try:
             return super().save(**kwargs)
         except django.core.exceptions.ValidationError as e:
-            raise serializers.ValidationError(e.message)
+            raise serializers.ValidationError(str(e))
 
     def validate_feature(self, feature):
         if self.instance and self.instance.feature_id != feature.id:

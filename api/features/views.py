@@ -27,6 +27,7 @@ from environments.authentication import EnvironmentKeyAuthentication
 from environments.identities.models import Identity
 from environments.identities.serializers import (
     IdentityAllFeatureStatesSerializer,
+    IdentitySourceIdentityRequestSerializer,
 )
 from environments.models import Environment
 from environments.permissions.permissions import (
@@ -158,7 +159,30 @@ class FeatureViewSet(viewsets.ModelViewSet):
         )
         queryset = queryset.order_by(sort)
 
+        if environment_id:
+            page = self.paginate_queryset(queryset)
+
+            self.environment = Environment.objects.get(id=environment_id)
+            q = Q(
+                feature_id__in=[feature.id for feature in page],
+                identity__isnull=True,
+                feature_segment__isnull=True,
+            )
+            feature_states = FeatureState.objects.get_live_feature_states(
+                self.environment,
+                additional_filters=q,
+            ).select_related("feature_state_value", "feature")
+
+            self._feature_states = {fs.feature_id: fs for fs in feature_states}
+
         return queryset
+
+    def paginate_queryset(self, queryset: QuerySet[Feature]) -> list[Feature]:
+        if getattr(self, "_page", None):
+            return self._page
+
+        self._page = super().paginate_queryset(queryset)
+        return self._page
 
     def perform_create(self, serializer):
         serializer.save(
@@ -178,8 +202,11 @@ class FeatureViewSet(viewsets.ModelViewSet):
     def get_serializer_context(self):
         context = super().get_serializer_context()
 
+        feature_states = getattr(self, "_feature_states", {})
         project = get_object_or_404(Project.objects.all(), pk=self.kwargs["project_pk"])
-        context.update(project=project, user=self.request.user)
+        context.update(
+            project=project, user=self.request.user, feature_states=feature_states
+        )
 
         if self.action == "list" and "environment" in self.request.query_params:
             environment = get_object_or_404(
@@ -638,6 +665,34 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         )
 
         return Response(serializer.data)
+
+    @swagger_auto_schema(
+        request_body=IdentitySourceIdentityRequestSerializer(),
+        responses={200: IdentityAllFeatureStatesSerializer(many=True)},
+    )
+    @action(methods=["POST"], detail=False, url_path="clone-from-given-identity")
+    def clone_from_given_identity(self, request, *args, **kwargs) -> Response:
+        """
+        Clone feature states from a given source identity.
+        """
+        serializer = IdentitySourceIdentityRequestSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        # Get and validate source and target identities
+        target_identity = get_object_or_404(
+            queryset=Identity, pk=self.kwargs["identity_pk"]
+        )
+        source_identity = get_object_or_404(
+            queryset=Identity, pk=request.data.get("source_identity_id")
+        )
+
+        # Clone feature states
+        FeatureState.copy_identity_feature_states(
+            target_identity=target_identity, source_identity=source_identity
+        )
+
+        return self.all(request, *args, **kwargs)
 
 
 @method_decorator(
