@@ -4,6 +4,7 @@ import {
   Tag,
   FeatureStateValue,
   FeatureState,
+  ExternalResource,
   ImportStrategy,
   ProjectFlag,
   Environment,
@@ -345,6 +346,70 @@ export type Req = {
     orgId: string
   }
   getSupportedContentType: { organisation_id: string }
+  getExternalResources: { project_id: string; feature_id: string }
+  deleteExternalResource: {
+    project_id: string
+    feature_id: string
+    external_resource_id: string
+  }
+  createExternalResource: {
+    project_id: string
+    feature_id: string
+    body: ExternalResource
+  }
+
+  getGithubIntegration: {
+    organisation_id: string
+    id?: string
+  }
+  updateGithubIntegration: {
+    organisation_id: string
+    github_integration_id: string
+  }
+  deleteGithubIntegration: {
+    organisation_id: string
+    github_integration_id: string
+  }
+  createGithubIntegration: {
+    organisation_id: string
+    body: {
+      installation_id: string
+    }
+  }
+  getGithubRepositories: {
+    organisation_id: string
+    github_id: string
+  }
+  updateGithubRepository: {
+    organisation_id: string
+    github_id: string
+    id: string
+  }
+  deleteGithubRepository: {
+    organisation_id: string
+    github_id: string
+    id: string
+  }
+  createGithubRepository: {
+    organisation_id: string
+    github_id: string
+    body: {
+      project: string
+      repository_name: string
+      repository_owner: string
+    }
+  }
+  getGithubIssues: {
+    organisation_id: string
+    repo_name: string
+    repo_owner: string
+  }
+  getGithubPulls: {
+    organisation_id: string
+    repo_name: string
+    repo_owner: string
+  }
+  getGithubRepos: { installation_id: string; organisation_id: string }
   getServersideEnvironmentKeys: { environmentId: string }
   deleteServersideEnvironmentKeys: { environmentId: string; id: string }
   createServersideEnvironmentKeys: {

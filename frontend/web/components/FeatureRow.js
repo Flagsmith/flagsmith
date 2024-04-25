@@ -15,6 +15,7 @@ import Tag from './tags/Tag'
 import Button from './base/forms/Button'
 import SegmentOverridesIcon from './SegmentOverridesIcon'
 import IdentityOverridesIcon from './IdentityOverridesIcon'
+import StaleFlagWarning from './StaleFlagWarning'
 
 export const width = [200, 70, 55, 70, 450]
 class TheComponent extends Component {
@@ -305,6 +306,7 @@ class TheComponent extends Component {
                     <Tag className='chip--xs' tag={Constants.archivedTag} />
                   )}
                 </TagValues>
+                {!!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
               </Row>
               {description && !isCompact && (
                 <div
@@ -312,6 +314,7 @@ class TheComponent extends Component {
                   style={{ lineHeight: '20px', width: width[4] }}
                 >
                   {description}
+                  <StaleFlagWarning projectFlag={projectFlag} />
                 </div>
               )}
             </Flex>

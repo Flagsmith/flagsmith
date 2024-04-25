@@ -24,6 +24,7 @@ import { Link } from 'react-router-dom'
 import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersioning'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
+import EnvironmentVersioningListener from 'components/EnvironmentVersioningListener'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -139,35 +140,28 @@ const EnvironmentSettingsPage = class extends Component {
       api_key: this.props.match.params.environmentId,
     })
 
-    if (
-      !!this.state.use_v2_feature_versioning &&
-      !env.use_v2_feature_versioning
-    ) {
-      enableFeatureVersioning(getStore(), { environmentId: env.api_key })
-    } else {
-      const { description, name } = this.state
-      if (ProjectStore.isSaving || !name) {
-        return
-      }
-      const has4EyesPermission = Utils.getPlansPermission('4_EYES')
-      AppActions.editEnv(
-        Object.assign({}, env, {
-          allow_client_traits: !!this.state.allow_client_traits,
-          banner_colour: this.state.banner_colour,
-          banner_text: this.state.banner_text,
-          description: description || env.description,
-          hide_disabled_flags: this.state.hide_disabled_flags,
-          hide_sensitive_data: !!this.state.hide_sensitive_data,
-          minimum_change_request_approvals: has4EyesPermission
-            ? this.state.minimum_change_request_approvals
-            : null,
-          name: name || env.name,
-          use_identity_composite_key_for_hashing:
-            !!this.state.use_identity_composite_key_for_hashing,
-          use_mv_v2_evaluation: !!this.state.use_mv_v2_evaluation,
-        }),
-      )
+    const { description, name } = this.state
+    if (ProjectStore.isSaving || !name) {
+      return
     }
+    const has4EyesPermission = Utils.getPlansPermission('4_EYES')
+    AppActions.editEnv(
+      Object.assign({}, env, {
+        allow_client_traits: !!this.state.allow_client_traits,
+        banner_colour: this.state.banner_colour,
+        banner_text: this.state.banner_text,
+        description: description || env.description,
+        hide_disabled_flags: this.state.hide_disabled_flags,
+        hide_sensitive_data: !!this.state.hide_sensitive_data,
+        minimum_change_request_approvals: has4EyesPermission
+          ? this.state.minimum_change_request_approvals
+          : null,
+        name: name || env.name,
+        use_identity_composite_key_for_hashing:
+          !!this.state.use_identity_composite_key_for_hashing,
+        use_mv_v2_evaluation: !!this.state.use_mv_v2_evaluation,
+      }),
+    )
   }
 
   saveDisabled = () => {
@@ -285,6 +279,24 @@ const EnvironmentSettingsPage = class extends Component {
                   use_v2_feature_versioning: !!env.use_v2_feature_versioning,
                 })
               }, 10)
+            }
+            const onEnableVersioning = () => {
+              openConfirm({
+                body: 'This will allow you to attach versions to updating feature values and segment overrides. Note: this may take several minutes to process',
+                onYes: () => {
+                  enableFeatureVersioning(getStore(), {
+                    environmentId: env.api_key,
+                  }).then((res) => {
+                    toast(
+                      'Feature Versioning Enabled, this may take several minutes to process.',
+                    )
+                    this.setState({
+                      enabledFeatureVersioning: true,
+                    })
+                  })
+                },
+                title: 'Enable "Feature Versioning"',
+              })
             }
             return (
               <>
@@ -410,19 +422,29 @@ const EnvironmentSettingsPage = class extends Component {
                         {Utils.getFlagsmithHasFeature('feature_versioning') && (
                           <div>
                             <div className='col-md-6 mt-4'>
+                              <EnvironmentVersioningListener
+                                id={env.api_key}
+                                versioningEnabled={use_v2_feature_versioning}
+                                onChange={() => {
+                                  this.setState({
+                                    use_v2_feature_versioning: true,
+                                  })
+                                }}
+                              />
                               <Row>
                                 <Switch
-                                  data-test='enable-versioning'
-                                  disabled={use_v2_feature_versioning}
+                                  data-test={
+                                    use_v2_feature_versioning
+                                      ? 'feature-versioning-enabled'
+                                      : 'enable-versioning'
+                                  }
+                                  disabled={
+                                    use_v2_feature_versioning ||
+                                    this.state.enabledFeatureVersioning
+                                  }
                                   className='float-right'
                                   checked={use_v2_feature_versioning}
-                                  onChange={(v) => {
-                                    this.confirmToggle(
-                                      'Enable "Feature Versioning"',
-                                      'Allows you to attach versions to updating feature values and segment overrides.',
-                                      'use_v2_feature_versioning',
-                                    )
-                                  }}
+                                  onChange={onEnableVersioning}
                                 />
                                 <h5 className='mb-0 ml-3'>
                                   Feature versioning
