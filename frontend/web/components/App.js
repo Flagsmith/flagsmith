@@ -361,7 +361,10 @@ const App = class extends Component {
                                         fill='#9DA4AE'
                                       />
                                     </span>
-                                    Organisation <strong>{AccountStore.getOrganisation()?.name}</strong>
+                                    Organisation{' '}
+                                    <strong>
+                                      {AccountStore.getOrganisation()?.name}
+                                    </strong>
                                   </NavLink>
                                 </Row>
                                 <Row>

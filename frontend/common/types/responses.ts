@@ -503,5 +503,9 @@ export type Res = {
   featureImports: PagedResponse<FeatureImport>
   serversideEnvironmentKeys: APIKey[]
   userGroupPermissions: GroupPermission[]
+  features: PagedResponse<ProjectFlag>
+  featureState: FeatureState
+  featureStates: PagedResponse<FeatureState>
+  sendKycLink: { id: string }
   // END OF TYPES
 }

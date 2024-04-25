@@ -76,12 +76,12 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
               <FlagSelect
                 placeholder='Select a Feature...'
                 projectId={match.params.projectId}
-                onChange={(flagId: string) => {
+                onChange={(flagId) => {
                   router.history.replace(
                     `${document.location.pathname}?feature=${flagId}`,
                   )
                 }}
-                value={feature ? parseInt(feature) : null}
+                value={feature}
               />
             </div>
           </div>

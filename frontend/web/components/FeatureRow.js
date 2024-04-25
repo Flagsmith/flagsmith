@@ -306,9 +306,7 @@ class TheComponent extends Component {
                     <Tag className='chip--xs' tag={Constants.archivedTag} />
                   )}
                 </TagValues>
-                {!!isCompact && (
-                  <StaleFlagWarning projectFlag={projectFlag} />
-                )}
+                {!!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
               </Row>
               {description && !isCompact && (
                 <div

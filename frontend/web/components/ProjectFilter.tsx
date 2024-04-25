@@ -6,9 +6,11 @@ export type ProjectFilterType = {
   value?: string
   onChange: (value: string) => void
   showAll?: boolean
+  exclude?: string[]
 }
 
 const ProjectFilter: FC<ProjectFilterType> = ({
+  exclude,
   onChange,
   organisationId,
   showAll,
@@ -29,9 +31,9 @@ const ProjectFilter: FC<ProjectFilterType> = ({
           ? { label: foundValue.name, value: `${foundValue.id}` }
           : { label: showAll ? 'All Projects' : 'Select a Project', value: '' }
       }
-      options={(showAll ? [{ label: 'All Projects', value: '' }] : []).concat(
-        (data || [])?.map((v) => ({ label: v.name, value: `${v.id}` })),
-      )}
+      options={(showAll ? [{ label: 'All Projects', value: '' }] : [])
+        .concat((data || [])?.map((v) => ({ label: v.name, value: `${v.id}` })))
+        .filter((v) => !exclude?.includes(v.value))}
       onChange={(value: { value: string; label: string }) =>
         onChange(value?.value || '')
       }

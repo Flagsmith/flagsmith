@@ -7,6 +7,7 @@ import CompareFeatures from 'components/CompareFeatures'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import CompareIdentities from 'components/CompareIdentities'
 import PageTitle from 'components/PageTitle'
+import CompareProjects from 'components/CompareProjects'
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -56,6 +57,11 @@ class TheComponent extends Component {
                 environmentId={this.props.match.params.environmentId}
                 projectId={this.props.match.params.projectId}
               />
+            </div>
+          </TabItem>
+          <TabItem tabLabel='Projects'>
+            <div className='mt-4'>
+              <CompareProjects />
             </div>
           </TabItem>
         </Tabs>

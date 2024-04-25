@@ -310,5 +310,15 @@ export type Req = {
   }
   getProject: { id: string }
   getUserGroupPermission: { project_id: string }
+  getFeatures: PagedRequest<{ project_id: string; search: string }>
+  getFeatureState: {
+    environmentAPIKey: string
+    id: string
+  }
+  getFeatureStates: PagedRequest<{
+    environmentAPIKey: string
+    feature?: string
+  }>
+  createSendKycLink: {}
   // END OF TYPES
 }
