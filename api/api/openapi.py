@@ -1,3 +1,4 @@
+import inspect
 from typing import Any
 
 from drf_yasg.inspectors import SwaggerAutoSchema
@@ -63,7 +64,7 @@ class PydanticResponseCapableSwaggerAutoSchema(SwaggerAutoSchema):
         definitions = self.components.with_scope(SCHEMA_DEFINITIONS)
 
         for status_code in list(response_serializers):
-            if isinstance(response_serializers[status_code], type) and issubclass(
+            if inspect.isclass(response_serializers[status_code]) and issubclass(
                 model_cls := response_serializers[status_code], BaseModel
             ):
                 model_json_schema = model_cls.model_json_schema(
