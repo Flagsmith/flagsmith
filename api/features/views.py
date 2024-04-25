@@ -73,7 +73,6 @@ from .serializers import (
 )
 from .tasks import trigger_feature_state_change_webhooks
 from .versioning.versioning_service import (
-    get_environment_flags_latest,
     get_environment_flags_list,
     get_environment_flags_queryset,
 )
@@ -232,7 +231,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         if not getattr(self, "environment", None):
             self.environment = Environment.objects.get(id=environment_id)
 
-        feature_states = get_environment_flags_latest(
+        feature_states = get_environment_flags_list(
             environment=self.environment,
             additional_filters=base_q,
         )
