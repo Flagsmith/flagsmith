@@ -52,7 +52,7 @@ const PermissionsSummary: FC<PermissionsSummaryType> = ({
         project_id: levelId,
         role_id: parseInt(`${role?.id}`),
       },
-      { skip: !levelId || level == 'project' || !role },
+      { skip: !levelId || level !== 'project' || !role },
     )
 
   const { data: envPermissions, isLoading: envIsLoading } =
