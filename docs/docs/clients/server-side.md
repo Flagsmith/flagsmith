@@ -1770,7 +1770,7 @@ You can initialise the SDK like this:
                 cacheConfig: new CacheConfig(true));
 ```
 
-If cacheConfig is passed during initialization with its `Enabled` property set to `true`, the SDK will make use cached
+If cacheConfig is passed during initialization with its `Enabled` property set to `true`, the SDK will make use of cached
 values initially, and then make required API calls as usual and update the cache under the hood.
 
 Currently the TTL for the cache is hard set to 5 minutes.
