@@ -1763,17 +1763,23 @@ final FlagsAndTraits flags = cache.getIfPresent(projectLevelCacheKey);
 </TabItem>
 <TabItem value="dotnet" label=".NET">
 
-You can initialise the SDK like this:
+To enable caching, you can initialise the SDK like this:
 
 ```csharp
-            var flagsmithClient = new FlagsmithClient(Fixtures.ApiKey,
-                httpClient: mockHttpClient.Object,
-                enableClientSideEvaluation: true,
-                cacheConfig: new CacheConfig(true));
+var flagsmithClient = new FlagsmithClient(Fixtures.ApiKey,
+    httpClient: mockHttpClient.Object,
+    enableClientSideEvaluation: true,
+    cacheConfig: new CacheConfig(true));
 ```
 
-If cacheConfig is passed during initialization with its `Enabled` property set to `true`, the SDK will make use of
-cached values initially, and then make required API calls as usual and update the cache under the hood.
+If the cacheConfig argument is passed during initialization with its `Enabled` property set to `true`, the SDK will make
+use of cached values initially, and then make required API calls as usual and update the cache under the hood. Note that
+this is only the case for remote evaluation mode and does not affect the behaviour of local evaluation mode.
+
+The Cache will be used when retrieving environment or identity flags. When caching the environment flags, the SDK will
+use the unique environment key as the cache key. When caching the identity flags, the SDK will use a combination of the
+identifier and traits to build the cache key, this ensures that the flags are refetched from the API if an identity's
+traits change.
 
 The TTL for the cache is 5 minutes, and is not configurable.
 
