@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.110.0](https://github.com/Flagsmith/flagsmith/compare/v2.109.0...v2.110.0) (2024-04-25)
+
+
+### Features
+
+* Add GitHub Integration ([#3298](https://github.com/Flagsmith/flagsmith/issues/3298)) ([9aa72bd](https://github.com/Flagsmith/flagsmith/commit/9aa72bdd144e89badc24607f68207b2b4a5a84de))
+* Add Pytest CI mode to optimise migrations ([#3815](https://github.com/Flagsmith/flagsmith/issues/3815)) ([25afe3b](https://github.com/Flagsmith/flagsmith/commit/25afe3b2e468687cdf3abede46da85a211f2e4d4))
+* Clone identity flag states ([#3773](https://github.com/Flagsmith/flagsmith/issues/3773)) ([01794b9](https://github.com/Flagsmith/flagsmith/commit/01794b9c669208659a3936baf327742c200f47fe))
+
+
+### Bug Fixes
+
+* Delete feature external resources when GitHub integration was deleted ([#3836](https://github.com/Flagsmith/flagsmith/issues/3836)) ([576cc83](https://github.com/Flagsmith/flagsmith/commit/576cc83936bbd155ac576a2e2498e38f1bd1b827))
+
 ## [2.109.0](https://github.com/Flagsmith/flagsmith/compare/v2.108.1...v2.109.0) (2024-04-23)
 
 
