@@ -69,14 +69,14 @@ const PermissionsSummary: FC<PermissionsSummaryType> = ({
   const roleResult = permissions?.results.filter(
     (item) => item.role === role?.id,
   )
-  const roleRermissions =
+  const rolePermissions =
     roleResult && roleResult.length > 0 ? roleResult[0].permissions : []
 
   const isAdmin =
     roleResult && roleResult.length > 0 ? roleResult[0].admin : false
 
   return projectIsLoading || envIsLoading ? null : (
-    <PermissionsSummaryList isAdmin={isAdmin} permissions={roleRermissions} />
+    <PermissionsSummaryList isAdmin={isAdmin} permissions={rolePermissions} />
   )
 }
 

@@ -129,6 +129,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
         {environments.length > 0 && (
           <RolePermissionsList
             user={user}
+            orgId={orgId}
             group={group}
             filter={searchEnv}
             mainItems={(environments || [])?.map((v) => {

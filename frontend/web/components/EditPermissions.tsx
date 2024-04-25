@@ -72,7 +72,7 @@ type EditPermissionModalType = {
   level: PermissionLevel
   name: string
   onSave?: () => void
-  envId?: number
+  envId?: number | string | undefined
   parentId?: string
   parentLevel?: string
   parentSettingsLink?: string
@@ -340,8 +340,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         {
           skip:
             !role ||
-            !envId ||
-            !id ||
+            (!envId && !id) ||
             !Utils.getFlagsmithHasFeature('show_role_management') ||
             level !== 'environment',
         },
