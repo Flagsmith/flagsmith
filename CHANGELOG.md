@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.110.2](https://github.com/Flagsmith/flagsmith/compare/v2.110.1...v2.110.2) (2024-04-25)
+
+
+### Bug Fixes
+
+* **saas:** fix account number in secrets references ([#3842](https://github.com/Flagsmith/flagsmith/issues/3842)) ([0f6d333](https://github.com/Flagsmith/flagsmith/commit/0f6d3339b3f0e0854acb473aeffd5c97e8d37a7d))
+
 ## [2.110.1](https://github.com/Flagsmith/flagsmith/compare/v2.110.0...v2.110.1) (2024-04-25)
 
 
