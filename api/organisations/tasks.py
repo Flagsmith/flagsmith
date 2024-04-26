@@ -208,9 +208,10 @@ def charge_for_api_call_count_overages():
     # notifications for the relevant billing period (ie, this month).
     api_usage_notified_at = now - timedelta(days=30)
 
-    # Since we're interested in monthly billed accounts, set a wide
+    # Since we're only interested in monthly billed accounts, set a wide
     # threshold to catch as many billing periods that could be roughly
-    # considered to be a "monthly" subscription.
+    # considered to be a "monthly" subscription, while still ruling out
+    # non-monthly subscriptions.
     month_window_start = timedelta(days=25)
     month_window_end = timedelta(days=35)
 
