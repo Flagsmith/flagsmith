@@ -19,9 +19,6 @@ class TheComponent extends Component {
 
   constructor(props) {
     super(props)
-    this.state = {
-      tab: 0,
-    }
   }
 
   render() {
@@ -30,13 +27,7 @@ class TheComponent extends Component {
         <PageTitle className='mb-2' title={'Compare'}>
           Compare data across your environments, features and identities.
         </PageTitle>
-        <Tabs
-          className='mt-0'
-          value={this.state.tab}
-          onChange={(tab) => {
-            this.setState({ tab })
-          }}
-        >
+        <Tabs className='mt-0' urlParam='tab'>
           <TabItem tabLabel='Environments'>
             <div className='mt-4'>
               <CompareEnvironments

@@ -60,8 +60,6 @@ import Panel from './base/grid/Panel'
 import InputGroup from './base/forms/InputGroup'
 import classNames from 'classnames'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
-import { useGetPermissionQuery } from 'common/services/usePermission'
-import { useHasPermission } from 'common/providers/Permission'
 const Project = require('common/project')
 
 type EditPermissionModalType = {
@@ -959,7 +957,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
           Learn about User Roles.
         </Button>
       </p>
-      <Tabs value={tab} onChange={setTab} theme='pill'>
+      <Tabs urlParam='type' value={tab} onChange={setTab} theme='pill'>
         <TabItem tabLabel='Users'>
           <OrganisationProvider>
             {({ isLoading, users }) => (
