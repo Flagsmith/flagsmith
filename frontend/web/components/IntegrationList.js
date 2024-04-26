@@ -38,7 +38,7 @@ class Integration extends Component {
 
   openChildWin = () => {
     const childWindow = window.open(
-      'https://github.com/apps/flagsmith-github-integration/installations/select_target',
+      'https://github.com/apps/flagsmith/installations/select_target',
       '_blank',
       'height=600,width=600,status=yes,toolbar=no,menubar=no,addressbar=no',
     )
