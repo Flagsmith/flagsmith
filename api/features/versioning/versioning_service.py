@@ -59,6 +59,12 @@ def get_environment_flags_list(
     if feature_name:
         feature_states = feature_states.filter(feature__name__iexact=feature_name)
 
+    if environment.use_v2_feature_versioning:
+        # TODO: we're unnecessarily converting this to a list, to then
+        #  convert to a queryset in the function above - we need to
+        #  optimise this.
+        return list(feature_states)
+
     # Build up a dictionary in the form
     # {(feature_id, feature_segment_id, identity_id): feature_state}
     # and only keep the latest version for each feature.

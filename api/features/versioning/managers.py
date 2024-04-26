@@ -6,7 +6,6 @@ from softdelete.models import SoftDeleteManager
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
-    from features.versioning.models import EnvironmentFeatureVersion
 
 
 with open(Path(__file__).parent.resolve() / "sql/get_latest_versions.sql") as f:
@@ -14,9 +13,7 @@ with open(Path(__file__).parent.resolve() / "sql/get_latest_versions.sql") as f:
 
 
 class EnvironmentFeatureVersionManager(SoftDeleteManager):
-    def get_latest_versions(
-        self, environment: "Environment"
-    ) -> RawQuerySet["EnvironmentFeatureVersion"]:
+    def get_latest_versions(self, environment: "Environment") -> RawQuerySet:
         """
         Get the latest EnvironmentFeatureVersion objects
         for a given environment.
