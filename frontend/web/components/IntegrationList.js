@@ -38,7 +38,7 @@ class Integration extends Component {
 
   openChildWin = () => {
     const childWindow = window.open(
-      `${Project.githubApURL}`,
+      `${Project.githubAppURL}`,
       '_blank',
       'height=600,width=600,status=yes,toolbar=no,menubar=no,addressbar=no',
     )
