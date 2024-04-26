@@ -116,7 +116,7 @@ app.get('/config/project-overrides', (req, res) => {
     { name: 'useSecureCookies', value: envToBool('USE_SECURE_COOKIES', true) },
     { name: 'cookieSameSite', value: process.env.USE_SECURE_COOKIES },
     {
-      name: 'githubApURL',
+      name: 'githubAppURL',
       value: process.env.GITHUB_APP_URL,
     },
   ]
