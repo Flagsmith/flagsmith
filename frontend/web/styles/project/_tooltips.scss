@@ -20,6 +20,9 @@ $shadow-dark: 0 4px 4px 0 #00000029;
 
   background-color: white;
 
+  &:before {
+    z-index: -1 !important;
+  }
   &.place-top {
     &:after {
       box-shadow: $shadow;

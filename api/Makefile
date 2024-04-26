@@ -9,6 +9,8 @@ DOTENV_OVERRIDE_FILE ?= .env
 
 POETRY_VERSION ?= 1.8.2
 
+GUNICORN_LOGGER_CLASS ?= util.logging.GunicornJsonCapableLogger
+
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
 

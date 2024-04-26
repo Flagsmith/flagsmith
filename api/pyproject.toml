@@ -35,6 +35,7 @@ skip = ['migrations','.venv','.direnv']
 
 [tool.pytest.ini_options]
 addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings']
+console_output_style = 'count'
 
 [tool.poetry]
 name = "flagsmith-api"
@@ -44,7 +45,7 @@ authors = ["Flagsmith <support@flagsmith.com>"]
 readme = "readme.md"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.13"
+python = "~3.12"
 django = "~3.2.25"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
@@ -103,8 +104,8 @@ pyngo = "~2.0.1"
 flagsmith = "^3.6.0"
 python-gnupg = "^0.5.1"
 django-redis = "^5.4.0"
+pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
-jsonref = "^1.1.0"
 
 [tool.poetry.group.auth-controller]
 optional = true

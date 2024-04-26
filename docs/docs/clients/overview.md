@@ -109,16 +109,22 @@ the Flagsmith every `60` seconds; this rate is configurable within each SDK.
 
 It's important to understand the [pros and cons](#pros-cons-and-caveats) for running `Local Evaluation`.
 
+:::info
+
+Identities and their Traits are **not** read from or written to the Flagsmith API, and so are not persisted in the
+datastore. This means that you have to provide the full complement of Traits when requesting the Flags for a particular
+Identity. Our SDKs all provide relevant methods to achieve this.
+
+[Read up on the other pros, cons and caveats.](#pros-cons-and-caveats)
+
+:::
+
 All our Client-side SDKs run in `Remote Evaluation` mode only; they cannot run in `Local Evaluation mode`. The reason
 for this is down to data sensitivity. Because some of this data could be sensitive (for example, your Segment Rules), we
 only allow Client-side SDKs to run in `Remote Evaluation` mode.
 
-:::info
-
 Because Clients are almost always operating remotely from your server infrastructure, there is little benefit to them
 running in `Local Evaluation` mode.
-
-:::
 
 ## Networking Model
 
@@ -337,10 +343,9 @@ serverless platforms.
 The benefit of running in Local Evaluation mode is that you can process flag evaluations much more efficiently as they
 are all computed locally.
 
-- Identities are _not_ sent to the API and so are not persisted in the datastore.
-- Because Local mode does not connect to the datastore for each Flag request, it is not able to read the Trait data of
-  Identities from the API. This means that you have to provide the full complement of Traits when requesting the Flags
-  for a particular Identity. Our SDKs all provide relevant methods to achieve this.
+- Identities and their Traits are **not** read from or written to the Flagsmith API, and so are not persisted in the
+  datastore. This means that you have to provide the full complement of Traits when requesting the Flags for a
+  particular Identity. Our SDKs all provide relevant methods to achieve this.
 - [Identity overrides](../basic-features/managing-identities#identity-overrides) do not operate at all.
 - [Analytics-based Integrations](/integrations/overview#analytics-platforms) do not run.
   [Flag Analytics](/advanced-use/flag-analytics) do still work, if enabled within the

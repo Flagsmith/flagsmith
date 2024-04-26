@@ -36,18 +36,18 @@ const getTooltip = (tag: TTag | undefined) => {
   const tagColor = getTagColor(tag, false)
 
   if (isTruncated) {
-    return `<div className='flex-row align-items-center'>
-        <div
+    return `<div>
+        <span
           style='background-color: ${color(tagColor).fade(
             0.92,
           )}; border: 1px solid ${color(tagColor).fade(0.76)}; color: ${color(
       tagColor,
     ).darken(0.1)};'
-          class="chip me-1"
+          class="chip d-inline-block chip--xs me-1"
         >
           ${tag.label}
-        </div>
-        ${tooltip || ''}
+        </span>
+          ${tooltip || ''}
       </div>`
   }
   return tooltip

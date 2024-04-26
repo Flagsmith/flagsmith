@@ -52,7 +52,7 @@ const FeaturesPage = class extends Component {
           : [],
       page: params.page ? parseInt(params.page) - 1 : 1,
       search: params.search || null,
-      showArchived: !!params.is_archived,
+      showArchived: params.is_archived === 'true',
       sort: {
         label: Format.camelCase(params.sortBy || 'Name'),
         sortBy: params.sortBy || 'name',
@@ -116,6 +116,7 @@ const FeaturesPage = class extends Component {
     openModal(
       'New Feature',
       <CreateFlagModal
+        history={this.props.router.history}
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
@@ -460,7 +461,6 @@ const FeaturesPage = class extends Component {
                                           <TableOwnerFilter
                                             title={'Owners'}
                                             className={'me-4'}
-                                            projectId={projectId}
                                             useLocalStorage
                                             value={this.state.owners}
                                             onChange={(owners) => {
