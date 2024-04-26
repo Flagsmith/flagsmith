@@ -1094,6 +1094,12 @@ FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID = env.int(
     default=None,
 )
 
+# The URL used to install the GitHub integration
+GITHUB_APP_URL = env.int(
+    "GITHUB_APP_URL",
+    default=None,
+)
+
 # LDAP setting
 LDAP_INSTALLED = importlib.util.find_spec("flagsmith_ldap")
 # The URL of the LDAP server.
