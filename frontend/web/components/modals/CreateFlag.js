@@ -106,7 +106,6 @@ const CreateFlag = class extends Component {
       tab: tab || 0,
       tags: tags || [],
     }
-    AppActions.getGroups(AccountStore.getOrganisation().id)
   }
 
   getState = () => {}
