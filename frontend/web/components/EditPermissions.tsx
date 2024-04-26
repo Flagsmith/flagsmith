@@ -9,6 +9,7 @@ import {
   Role,
   User,
   UserGroup,
+  UserGroupSummary,
   UserPermission,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
@@ -59,18 +60,17 @@ import Panel from './base/grid/Panel'
 import InputGroup from './base/forms/InputGroup'
 import classNames from 'classnames'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
-import { useGetPermissionQuery } from 'common/services/usePermission'
 const Project = require('common/project')
 
 type EditPermissionModalType = {
-  group?: UserGroup
+  group?: UserGroupSummary
   id: number
   className?: string
   isGroup?: boolean
   level: PermissionLevel
   name: string
   onSave?: () => void
-  envId?: number
+  envId?: number | string | undefined
   parentId?: string
   parentLevel?: string
   parentSettingsLink?: string
@@ -102,8 +102,11 @@ const withAdminPermissions = (InnerComponent: any) => {
   const WrappedComponent: FC<EditPermissionModalType> = (props) => {
     const { id, level } = props
     const notReady = !id || !level
-    const { data: adminPermissions, isLoading: permissionsLoading } =
-      useGetPermissionQuery({ id: `${id}`, level }, { skip: notReady })
+    const { isLoading: permissionsLoading, permission } = useHasPermission({
+      id: id,
+      level,
+      permission: 'ADMIN',
+    })
 
     if (permissionsLoading || notReady) {
       return (
@@ -112,7 +115,7 @@ const withAdminPermissions = (InnerComponent: any) => {
         </div>
       )
     }
-    if (!adminPermissions?.ADMIN) {
+    if (!permission) {
       return (
         <div className='my-4 text-center text-muted'>
           To manage permissions you need to be admin of this {level}.
@@ -335,8 +338,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         {
           skip:
             !role ||
-            !envId ||
-            !id ||
+            (!envId && !id) ||
             !Utils.getFlagsmithHasFeature('show_role_management') ||
             level !== 'environment',
         },

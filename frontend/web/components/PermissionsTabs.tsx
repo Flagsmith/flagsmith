@@ -3,9 +3,9 @@ import { EditPermissionsModal } from './EditPermissions'
 import {
   Environment,
   Project,
-  UserGroup,
   Role,
   User,
+  UserGroupSummary,
 } from 'common/types/responses'
 import Tabs from './base/forms/Tabs'
 import TabItem from './base/forms/TabItem'
@@ -17,7 +17,7 @@ import OrganisationStore from 'common/stores/organisation-store'
 
 type PermissionsTabsType = {
   orgId?: number
-  group?: UserGroup
+  group?: UserGroupSummary
   user?: User
   role?: Role | undefined
   value?: number
@@ -129,6 +129,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
         {environments.length > 0 && (
           <RolePermissionsList
             user={user}
+            orgId={orgId}
             group={group}
             filter={searchEnv}
             mainItems={(environments || [])?.map((v) => {

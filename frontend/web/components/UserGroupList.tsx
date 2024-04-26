@@ -14,8 +14,9 @@ import InfoMessage from './InfoMessage'
 import Icon from './Icon'
 import PermissionsSummaryList from './PermissionsSummaryList'
 import Panel from './base/grid/Panel'
+import { useGetGroupSummariesQuery } from 'common/services/useGroupSummary'
 
-type UserGroupsListType = {
+type UserGroupListType = {
   noTitle?: boolean
   orgId: string
   projectId: string | boolean
@@ -129,7 +130,7 @@ const UserGroupsRow: FC<UserGroupsRowType> = ({
   )
 }
 
-const UserGroupsList: FC<UserGroupsListType> = ({
+const UserGroupList: FC<UserGroupListType> = ({
   noTitle,
   onClick,
   onEditPermissions,
@@ -138,10 +139,9 @@ const UserGroupsList: FC<UserGroupsListType> = ({
   showRemove,
 }) => {
   const [page, setPage] = useState(1)
-  const { data: userGroups, isLoading } = useGetGroupsQuery(
+  const { data: userGroups, isLoading } = useGetGroupSummariesQuery(
     {
-      orgId: parseInt(`${orgId}`),
-      page,
+      orgId: `${orgId}`,
     },
     {
       skip: !orgId,
@@ -161,22 +161,20 @@ const UserGroupsList: FC<UserGroupsListType> = ({
     ? [...userGroupsPermission]
     : []
 
-  if (userGroupsPermission && userGroupsPermission?.length > 0) {
-    userGroups?.results.forEach((group) => {
-      const existingPermissionIndex =
-        mergeduserGroupsPermissionWithUserGroups.findIndex(
-          (userGroupPermission) => userGroupPermission.group.id === group.id,
-        )
-      if (existingPermissionIndex === -1) {
-        mergeduserGroupsPermissionWithUserGroups.push({
-          admin: false,
-          group: group,
-          id: group.id,
-          permissions: [],
-        })
-      }
-    })
-  }
+  userGroups?.forEach?.((group) => {
+    const existingPermissionIndex =
+      mergeduserGroupsPermissionWithUserGroups.findIndex(
+        (userGroupPermission) => userGroupPermission.group.id === group.id,
+      )
+    if (existingPermissionIndex === -1) {
+      mergeduserGroupsPermissionWithUserGroups.push({
+        admin: false,
+        group: group,
+        id: group.id,
+        permissions: [],
+      })
+    }
+  })
 
   return (
     <FormGroup>
@@ -195,7 +193,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
         items={
           userGroupsPermission
             ? sortBy(mergeduserGroupsPermissionWithUserGroups, 'group.name')
-            : sortBy(userGroups?.results, 'name')
+            : sortBy(userGroups, 'name')
         }
         paging={mergeduserGroupsPermissionWithUserGroups || userGroups}
         nextPage={() => setPage(page + 1)}
@@ -274,4 +272,4 @@ const UserGroupsList: FC<UserGroupsListType> = ({
   )
 }
 
-export default UserGroupsList
+export default UserGroupList

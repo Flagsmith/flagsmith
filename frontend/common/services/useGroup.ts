@@ -112,6 +112,13 @@ export const groupService = service
               url: `organisations/${query.orgId}/groups/${data.id}/add-users/`,
             })
           }
+          if (query.usersToRemove?.length) {
+            await baseQuery({
+              body: { user_ids: query.usersToRemove },
+              method: 'POST',
+              url: `organisations/${query.orgId}/groups/${data.id}/remove-users/`,
+            })
+          }
           // Make the admins
           await Promise.all(
             (query.usersToAddAdmin || []).map((v) =>
@@ -122,6 +129,7 @@ export const groupService = service
               }),
             ),
           )
+
           await Promise.all(
             (query.usersToRemoveAdmin || []).map((v) =>
               deleteGroupAdmin(getStore(), {

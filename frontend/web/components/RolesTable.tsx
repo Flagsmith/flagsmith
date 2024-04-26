@@ -8,6 +8,9 @@ import ConfirmDeleteRole from './modals/ConfirmDeleteRole'
 import Icon from './Icon'
 import Panel from './base/grid/Panel'
 import { useGetGroupsQuery } from 'common/services/useGroup'
+import Utils from 'common/utils/utils'
+import Constants from 'common/constants'
+import { useHasPermission } from 'common/providers/Permission'
 const rolesWidths = [250, 100]
 
 type RolesTableType = {
@@ -24,7 +27,11 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
     { organisation_id: organisationId },
     { skip: !organisationId },
   )
-
+  const { permission: isAdmin } = useHasPermission({
+    id: organisationId,
+    level: 'organisation',
+    permission: 'ADMIN',
+  })
   const createRole = () => {
     openModal(
       'Create Role',
@@ -71,14 +78,19 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
     <>
       <Row space className='mt-4'>
         <h5 className='m-b-0'>Roles</h5>
-        <Button
-          className='mr-2'
-          id='btn-invite'
-          onClick={() => createRole()}
-          type='button'
-        >
-          Create Role
-        </Button>
+        {Utils.renderWithPermission(
+          isAdmin,
+          Constants.organisationPermissions('Admin'),
+          <Button
+            disabled={!isAdmin}
+            className='mr-2'
+            id='btn-invite'
+            onClick={() => createRole()}
+            type='button'
+          >
+            Create Role
+          </Button>,
+        )}
       </Row>
       <p className='fs-small lh-sm'>
         Create custom roles, assign permissions and keys to the role, and then

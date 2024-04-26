@@ -34,7 +34,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
   )
 
   const { permission: canCreateProject } = useHasPermission({
-    id: organisationId as string,
+    id: organisationId,
     level: 'organisation',
     permission: Utils.getCreateProjectPermission(organisation),
   })

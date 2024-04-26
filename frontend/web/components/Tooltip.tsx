@@ -7,9 +7,16 @@ export type TooltipProps = {
   children: string
   place?: _TooltipProps['place']
   plainText?: boolean
+  titleClassName?: string
 }
 
-const Tooltip: FC<TooltipProps> = ({ children, place, plainText, title }) => {
+const Tooltip: FC<TooltipProps> = ({
+  children,
+  place,
+  plainText,
+  title,
+  titleClassName,
+}) => {
   const id = Utils.GUID()
 
   if (!children) {
@@ -19,7 +26,7 @@ const Tooltip: FC<TooltipProps> = ({ children, place, plainText, title }) => {
   return (
     <>
       {title && (
-        <span data-for={id} data-tip>
+        <span className={titleClassName} data-for={id} data-tip>
           {title}
         </span>
       )}

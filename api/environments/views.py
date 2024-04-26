@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import logging
 
 from django.db.models import Count
@@ -19,6 +16,7 @@ from environments.permissions.permissions import (
     EnvironmentPermissions,
     NestedEnvironmentPermissions,
 )
+from environments.sdk.schemas import SDKEnvironmentDocumentModel
 from features.versioning.tasks import enable_v2_versioning
 from permissions.permissions_calculator import get_environment_permission_data
 from permissions.serializers import (
@@ -201,6 +199,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)
 
+    @swagger_auto_schema(responses={200: SDKEnvironmentDocumentModel})
     @action(detail=True, methods=["GET"], url_path="document")
     def get_document(self, request, api_key: str):
         return Response(Environment.get_environment_document(api_key))

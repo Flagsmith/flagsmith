@@ -5,7 +5,7 @@ import ConfirmRemoveFeature from './modals/ConfirmRemoveFeature'
 import CreateFlagModal from './modals/CreateFlag'
 import ProjectStore from 'common/stores/project-store'
 import Constants from 'common/constants'
-import { hasProtectedTag } from 'common/utils/hasProtectedTag'
+import { getProtectedTags } from 'common/utils/getProtectedTags'
 import Icon from './Icon'
 import FeatureValue from './FeatureValue'
 import FeatureAction from './FeatureAction'
@@ -15,6 +15,7 @@ import Tag from './tags/Tag'
 import Button from './base/forms/Button'
 import SegmentOverridesIcon from './SegmentOverridesIcon'
 import IdentityOverridesIcon from './IdentityOverridesIcon'
+import StaleFlagWarning from './StaleFlagWarning'
 
 export const width = [200, 70, 55, 70, 450]
 class TheComponent extends Component {
@@ -135,7 +136,7 @@ class TheComponent extends Component {
     const { created_date, description, id, name } = this.props.projectFlag
     const readOnly =
       this.props.readOnly || Utils.getFlagsmithHasFeature('read_only_mode')
-    const isProtected = hasProtectedTag(projectFlag, projectId)
+    const protectedTags = getProtectedTags(projectFlag, projectId)
     const environment = ProjectStore.getEnvironment(environmentId)
     const changeRequestsEnabled = Utils.changeRequestsEnabled(
       environment && environment.minimum_change_request_approvals,
@@ -316,6 +317,9 @@ class TheComponent extends Component {
                     <Tag className='chip--xs' tag={Constants.archivedTag} />
                   )}
                 </TagValues>
+                {!!isCompact && (
+                  <StaleFlagWarning projectFlag={projectFlag} />
+                )}
               </Row>
               {description && !isCompact && (
                 <div
@@ -323,6 +327,7 @@ class TheComponent extends Component {
                   style={{ lineHeight: '20px', width: width[4] }}
                 >
                   {description}
+                  <StaleFlagWarning projectFlag={projectFlag} />
                 </div>
               )}
             </Flex>
@@ -379,7 +384,7 @@ class TheComponent extends Component {
             projectId={projectId}
             featureIndex={this.props.index}
             readOnly={readOnly}
-            isProtected={isProtected}
+            protectedTags={protectedTags}
             isCompact={isCompact}
             hideAudit={
               AccountStore.getOrganisationRole() !== 'ADMIN' ||

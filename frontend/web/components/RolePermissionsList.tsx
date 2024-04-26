@@ -12,7 +12,7 @@ import {
   useGetRoleProjectPermissionsQuery,
 } from 'common/services/useRolePermission'
 import { PermissionLevel } from 'common/types/requests'
-import { Role, User, UserGroup } from 'common/types/responses'
+import { Role, User, UserGroup, UserGroupSummary } from "common/types/responses";
 import PanelSearch from './PanelSearch'
 import PermissionsSummaryList from './PermissionsSummaryList'
 
@@ -30,7 +30,7 @@ type RolePermissionsListProps = {
   filter: string
   orgId?: string
   user?: User
-  group?: UserGroup
+  group?: UserGroupSummary
 }
 
 export type PermissionsSummaryType = {
@@ -52,7 +52,7 @@ const PermissionsSummary: FC<PermissionsSummaryType> = ({
         project_id: levelId,
         role_id: parseInt(`${role?.id}`),
       },
-      { skip: !levelId || level == 'project' || !role },
+      { skip: !levelId || level !== 'project' || !role },
     )
 
   const { data: envPermissions, isLoading: envIsLoading } =
@@ -69,14 +69,14 @@ const PermissionsSummary: FC<PermissionsSummaryType> = ({
   const roleResult = permissions?.results.filter(
     (item) => item.role === role?.id,
   )
-  const roleRermissions =
+  const rolePermissions =
     roleResult && roleResult.length > 0 ? roleResult[0].permissions : []
 
   const isAdmin =
     roleResult && roleResult.length > 0 ? roleResult[0].admin : false
 
   return projectIsLoading || envIsLoading ? null : (
-    <PermissionsSummaryList isAdmin={isAdmin} permissions={roleRermissions} />
+    <PermissionsSummaryList isAdmin={isAdmin} permissions={rolePermissions} />
   )
 }
 

@@ -24,7 +24,6 @@ import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
-import { EditPermissionsModal } from 'components/EditPermissions'
 import { Req } from 'common/types/requests'
 import PermissionsTabs from 'components/PermissionsTabs'
 
@@ -144,6 +143,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
         orgId,
         users: users as any,
         usersToAddAdmin: (usersToAddAdmin || []).map((user) => user.id),
+        usersToRemove: getUsersToRemove(groupData.users).map((v) => v.id),
         usersToRemoveAdmin: (usersToRemoveAdmin || []).map((user) => user.id),
       }).then((data) => {
         if (!data.error) {
@@ -182,7 +182,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
   }
 
   const isEdit = !!group
-  const editGroup = (
+  const editGroupEl = (
     <OrganisationProvider>
       {({ users: organisationUsers }) => {
         const activeUsers = intersectionBy(organisationUsers, users, 'id')
@@ -437,7 +437,20 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       }}
     </OrganisationProvider>
   )
-
+  const editPermissionsEl = (
+    <div className='mt-4'>
+      {!!groupData && (
+        <PermissionsTabs
+          uncontrolled
+          orgId={AccountStore.getOrganisation()?.id}
+          group={group}
+        />
+      )}
+    </div>
+  )
+  if (error) {
+    return
+  }
   return isEdit ? (
     <Tabs uncontrolled tabClassName='px-0'>
       <TabItem
@@ -448,20 +461,9 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
           </div>
         }
       >
-        {editGroup}
+        {editGroupEl}
       </TabItem>
-      <TabItem tabLabel={<div>Permissions</div>}>
-        <div className='mt-4'>
-          {!!groupData && (
-            <PermissionsTabs
-              uncontrolled
-              orgId={AccountStore.getOrganisation()?.id}
-              roles={roles}
-              group={groupData}
-            />
-          )}
-        </div>
-      </TabItem>
+      <TabItem tabLabel={<div>Permissions</div>}>{editPermissionsEl}</TabItem>
     </Tabs>
   ) : (
     editGroup
