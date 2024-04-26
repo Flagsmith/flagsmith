@@ -141,6 +141,15 @@ class Identity(models.Model):
 
         return list(identity_flags.values())
 
+    def get_overridden_feature_states(self) -> dict[int, FeatureState]:
+        """
+        Get all overridden feature states for an identity.
+
+        :return: dict[int, FeatureState] - Key: feature ID. Value: Overridden feature_state.
+        """
+
+        return {fs.feature_id: fs for fs in self.identity_features.all()}
+
     def get_segments(
         self, traits: typing.List[Trait] = None, overrides_only: bool = False
     ) -> typing.List[Segment]:
