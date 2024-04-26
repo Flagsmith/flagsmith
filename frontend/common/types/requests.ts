@@ -1,14 +1,15 @@
 import {
   Account,
-  Segment,
-  Tag,
-  FeatureStateValue,
+  ExternalResource,
   FeatureState,
-  Role,
+  FeatureStateValue,
   ImportStrategy,
   APIKey,
   Approval,
   MultivariateOption,
+  Segment,
+  Tag,
+  UserGroup,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -104,7 +105,7 @@ export type Req = {
     user: number | string
   }
   getGroups: PagedRequest<{
-    orgId: string
+    orgId: number
   }>
   deleteGroup: { id: number | string; orgId: number | string }
   getGroup: { id: string; orgId: string }
@@ -309,6 +310,70 @@ export type Req = {
   getGroupSummaries: {
     orgId: string
   }
+  getExternalResources: { project_id: string; feature_id: string }
+  deleteExternalResource: {
+    project_id: string
+    feature_id: string
+    external_resource_id: string
+  }
+  createExternalResource: {
+    project_id: string
+    feature_id: string
+    body: ExternalResource
+  }
+
+  getGithubIntegration: {
+    organisation_id: string
+    id?: string
+  }
+  updateGithubIntegration: {
+    organisation_id: string
+    github_integration_id: string
+  }
+  deleteGithubIntegration: {
+    organisation_id: string
+    github_integration_id: string
+  }
+  createGithubIntegration: {
+    organisation_id: string
+    body: {
+      installation_id: string
+    }
+  }
+  getGithubRepositories: {
+    organisation_id: string
+    github_id: string
+  }
+  updateGithubRepository: {
+    organisation_id: string
+    github_id: string
+    id: string
+  }
+  deleteGithubRepository: {
+    organisation_id: string
+    github_id: string
+    id: string
+  }
+  createGithubRepository: {
+    organisation_id: string
+    github_id: string
+    body: {
+      project: string
+      repository_name: string
+      repository_owner: string
+    }
+  }
+  getGithubIssues: {
+    organisation_id: string
+    repo_name: string
+    repo_owner: string
+  }
+  getGithubPulls: {
+    organisation_id: string
+    repo_name: string
+    repo_owner: string
+  }
+  getGithubRepos: { installation_id: string; organisation_id: string }
   getServersideEnvironmentKeys: { environmentId: string }
   deleteServersideEnvironmentKeys: { environmentId: string; id: string }
   createServersideEnvironmentKeys: {
@@ -320,7 +385,22 @@ export type Req = {
     id: string
   }
   getProject: { id: string }
+  createGroup: {
+    orgId: string
+    data: Omit<UserGroup, 'id' | 'users'>
+    users: UserGroup['users']
+    usersToAddAdmin: number[] | null
+  }
   getUserGroupPermission: { project_id: string }
+  updateGroup: Req['createGroup'] & {
+    orgId: string
+    data: UserGroup
+    users: UserGroup['users']
+
+    usersToAddAdmin: number[] | null
+    usersToRemoveAdmin: number[] | null
+    usersToRemove: number[] | null
+  }
   createChangeRequest: {
     approvals: Approval[]
     live_from: string | undefined

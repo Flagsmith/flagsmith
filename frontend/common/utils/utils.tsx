@@ -349,6 +349,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         valid = isScaleupOrGreater
         break
       }
+      case 'STALE_FLAGS': {
+        valid = isEnterprise
+        break
+      }
       default:
         valid = true
         break

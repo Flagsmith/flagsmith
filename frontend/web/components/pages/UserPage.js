@@ -70,7 +70,7 @@ const UserPage = class extends Component {
       page: params.page ? parseInt(params.page) - 1 : 1,
       preselect: Utils.fromParam().flag,
       search: params.search || null,
-      showArchived: !!params.is_archived,
+      showArchived: params.is_archived === 'true',
       sort: {
         label: Format.camelCase(params.sortBy || 'Name'),
         sortBy: params.sortBy || 'name',
@@ -569,7 +569,6 @@ const UserPage = class extends Component {
                                             <TableOwnerFilter
                                               title={'Owners'}
                                               className={'me-4'}
-                                              projectId={projectId}
                                               useLocalStorage
                                               value={this.state.owners}
                                               onChange={(owners) => {

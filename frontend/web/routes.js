@@ -13,7 +13,6 @@ import IntegrationsPage from './components/pages/IntegrationsPage'
 import FlagsPage from './components/pages/FeaturesPage'
 import SegmentsPage from './components/pages/SegmentsPage'
 import OrganisationSettingsPage from './components/pages/OrganisationSettingsPage'
-import OrganisationGroupsPage from './components/pages/OrganisationGroupsPage'
 import AccountSettingsPage from './components/pages/AccountSettingsPage'
 import NotFoundErrorPage from './components/pages/NotFoundErrorPage'
 import ProjectSettingsPage from './components/pages/ProjectSettingsPage'
@@ -28,8 +27,10 @@ import AuditLogPage from './components/pages/AuditLogPage'
 import ComparePage from './components/pages/ComparePage'
 import WidgetPage from './components/pages/WidgetPage'
 import BrokenPage from './components/pages/BrokenPage'
+import GitHubSetupPage from './components/pages/GitHubSetupPage'
 import AuditLogItemPage from './components/pages/AuditLogItemPage'
 import FeatureHistoryPage from './components/pages/FeatureHistoryPage'
+import Utils from 'common/utils/utils'
 
 export default (
   <App>
@@ -38,8 +39,10 @@ export default (
       <Route path='/login' exact component={HomePage} />
       <Route path='/404' exact component={NotFoundErrorPage} />
       <Route path='/signup' exact component={HomePage} />
-      <Route path='/signup' exact component={HomePage} />
       <Route path='/home' exact component={HomePage} />
+      {Utils.getFlagsmithHasFeature('github_integration') && (
+        <Route path='/github-setup' exact component={GitHubSetupPage} />
+      )}
       <Route path='/maintenance' exact component={Maintenance} />
       <Route
         path='/password-reset/confirm/:uid/:token/'
@@ -141,11 +144,6 @@ export default (
         path='/organisation-settings'
         exact
         component={OrganisationSettingsPage}
-      />
-      <Route
-        path='/organisation-groups'
-        exact
-        component={OrganisationGroupsPage}
       />
       <Route
         path='/project/:projectId/environment/:environmentId/account'

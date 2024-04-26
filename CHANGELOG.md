@@ -1,5 +1,83 @@
 # Changelog
 
+## [2.110.2](https://github.com/Flagsmith/flagsmith/compare/v2.110.1...v2.110.2) (2024-04-25)
+
+
+### Bug Fixes
+
+* **saas:** fix account number in secrets references ([#3842](https://github.com/Flagsmith/flagsmith/issues/3842)) ([0f6d333](https://github.com/Flagsmith/flagsmith/commit/0f6d3339b3f0e0854acb473aeffd5c97e8d37a7d))
+
+## [2.110.1](https://github.com/Flagsmith/flagsmith/compare/v2.110.0...v2.110.1) (2024-04-25)
+
+
+### Bug Fixes
+
+* **saas:** add correct GITHUB env vars to all locations ([#3840](https://github.com/Flagsmith/flagsmith/issues/3840)) ([12242c4](https://github.com/Flagsmith/flagsmith/commit/12242c453729f9b3250a81b2637db9609c56d854))
+
+## [2.110.0](https://github.com/Flagsmith/flagsmith/compare/v2.109.0...v2.110.0) (2024-04-25)
+
+
+### Features
+
+* Add GitHub Integration ([#3298](https://github.com/Flagsmith/flagsmith/issues/3298)) ([9aa72bd](https://github.com/Flagsmith/flagsmith/commit/9aa72bdd144e89badc24607f68207b2b4a5a84de))
+* Add Pytest CI mode to optimise migrations ([#3815](https://github.com/Flagsmith/flagsmith/issues/3815)) ([25afe3b](https://github.com/Flagsmith/flagsmith/commit/25afe3b2e468687cdf3abede46da85a211f2e4d4))
+* Clone identity flag states ([#3773](https://github.com/Flagsmith/flagsmith/issues/3773)) ([01794b9](https://github.com/Flagsmith/flagsmith/commit/01794b9c669208659a3936baf327742c200f47fe))
+
+
+### Bug Fixes
+
+* Delete feature external resources when GitHub integration was deleted ([#3836](https://github.com/Flagsmith/flagsmith/issues/3836)) ([576cc83](https://github.com/Flagsmith/flagsmith/commit/576cc83936bbd155ac576a2e2498e38f1bd1b827))
+
+## [2.109.0](https://github.com/Flagsmith/flagsmith/compare/v2.108.1...v2.109.0) (2024-04-23)
+
+
+### Features
+
+* Ability to customise default environments for new project ([#3655](https://github.com/Flagsmith/flagsmith/issues/3655)) ([cfb5748](https://github.com/Flagsmith/flagsmith/commit/cfb57484597274506f44c86ec4f089b1fe4c0f14))
+* Report database errors when waiting for database in entrypoint ([#3823](https://github.com/Flagsmith/flagsmith/issues/3823)) ([a66c262](https://github.com/Flagsmith/flagsmith/commit/a66c262bf169ed887418338efc735eee79884e87))
+* Show organisation name in header ([#3808](https://github.com/Flagsmith/flagsmith/issues/3808)) ([10b14fd](https://github.com/Flagsmith/flagsmith/commit/10b14fd6a73462305087832ed750752b3157be80))
+* Show organisation name in HTML title ([#3814](https://github.com/Flagsmith/flagsmith/issues/3814)) ([ccfe3c3](https://github.com/Flagsmith/flagsmith/commit/ccfe3c3ddea9cd7123e4576428c6a79c15ae5f5a))
+* stale flags (FE) ([#3606](https://github.com/Flagsmith/flagsmith/issues/3606)) ([424b754](https://github.com/Flagsmith/flagsmith/commit/424b754cbdfdb079c76de7c890848884402b6ed2))
+
+
+### Bug Fixes
+
+* archived persistence ([#3802](https://github.com/Flagsmith/flagsmith/issues/3802)) ([40363dc](https://github.com/Flagsmith/flagsmith/commit/40363dc8171520bee32227056c0496f283647b52))
+* broken link in New Segment modal ([#3820](https://github.com/Flagsmith/flagsmith/issues/3820)) ([97c5db7](https://github.com/Flagsmith/flagsmith/commit/97c5db7f9649077b230c19e67b2b4243d3478319))
+* master api key org api access ([#3817](https://github.com/Flagsmith/flagsmith/issues/3817)) ([cae2eac](https://github.com/Flagsmith/flagsmith/commit/cae2eacf2325cc3d6c4b6b590e3046fe0513844d))
+* Set error value from validation exception properly for feature seralizer ([#3809](https://github.com/Flagsmith/flagsmith/issues/3809)) ([18d8214](https://github.com/Flagsmith/flagsmith/commit/18d8214c760ee02a0b05ccc647868bbabc044a25))
+
+## [2.108.1](https://github.com/Flagsmith/flagsmith/compare/v2.108.0...v2.108.1) (2024-04-18)
+
+
+### Bug Fixes
+
+* prevent unauthorised remove-users access ([#3791](https://github.com/Flagsmith/flagsmith/issues/3791)) ([05353a5](https://github.com/Flagsmith/flagsmith/commit/05353a5fbe661d504abdede8875f450c4cc8dce5))
+
+## [2.108.0](https://github.com/Flagsmith/flagsmith/compare/v2.107.4...v2.108.0) (2024-04-17)
+
+
+### Features
+
+* Swagger schema for environment document ([#3789](https://github.com/Flagsmith/flagsmith/issues/3789)) ([dd89326](https://github.com/Flagsmith/flagsmith/commit/dd893262cff97a1b301a346737c106afc58bc146))
+
+
+### Bug Fixes
+
+* edge API not updated when versioned change request committed ([#3760](https://github.com/Flagsmith/flagsmith/issues/3760)) ([a7ee657](https://github.com/Flagsmith/flagsmith/commit/a7ee6578b5923c9f85527a022f88b1aaa0fe5a04))
+* handle InfluxDBError when writing data ([#3788](https://github.com/Flagsmith/flagsmith/issues/3788)) ([1eaa823](https://github.com/Flagsmith/flagsmith/commit/1eaa823d3b7a2167ba424c83838bb72a4b2ec7ad))
+* odd behaviour seen when using REPLICA_DATABASE_URLS ([#3771](https://github.com/Flagsmith/flagsmith/issues/3771)) ([ec9e8ab](https://github.com/Flagsmith/flagsmith/commit/ec9e8ab30d224042e1bc07c00355f7b3e1b3977a))
+
+## [2.107.4](https://github.com/Flagsmith/flagsmith/compare/v2.107.3...v2.107.4) (2024-04-17)
+
+
+### Bug Fixes
+
+* Add Flagsmith signature header when testing webhook. ([#3666](https://github.com/Flagsmith/flagsmith/issues/3666)) ([c950875](https://github.com/Flagsmith/flagsmith/commit/c95087516e17cc610eea80d733cf11ddf8b74d80))
+* correct JS code snippets syntax ([#3770](https://github.com/Flagsmith/flagsmith/issues/3770)) ([e2155d2](https://github.com/Flagsmith/flagsmith/commit/e2155d2cecdd67c37bc5b8e98c5b354923abac67))
+* Enable faster feature loading ([#3550](https://github.com/Flagsmith/flagsmith/issues/3550)) ([157a9aa](https://github.com/Flagsmith/flagsmith/commit/157a9aab645e6853ecf9f98b8b453a1a9c95f0d6))
+* tests using `has_calls` instead of `assert_has_calls` ([#3775](https://github.com/Flagsmith/flagsmith/issues/3775)) ([b019a35](https://github.com/Flagsmith/flagsmith/commit/b019a35df425e439c2ff36239bf6540c61ffe993))
+
 ## [2.107.3](https://github.com/Flagsmith/flagsmith/compare/v2.107.2...v2.107.3) (2024-04-10)
 
 

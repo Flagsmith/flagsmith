@@ -1,4 +1,7 @@
 import Constants from 'common/constants'
+import { projectService } from "common/services/useProject";
+import { getStore } from "common/store";
+import sortBy from 'lodash/sortBy'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -27,25 +30,24 @@ const controller = {
       API.trackEvent(Constants.events.CREATE_FIRST_PROJECT)
     }
     API.trackEvent(Constants.events.CREATE_PROJECT)
+    const defaultEnvironmentNames = Utils.getFlagsmithHasFeature('default_environment_names_for_new_project')
+      ? JSON.parse(Utils.getFlagsmithValue('default_environment_names_for_new_project')) : ['Development', 'Production']
     data
       .post(`${Project.api}projects/`, { name, organisation: store.id })
       .then((project) => {
-        Promise.all([
-          data
-            .post(`${Project.api}environments/`, {
-              name: 'Development',
-              project: project.id,
-            })
-            .then((res) => createSampleUser(res, 'development', project)),
-          data
-            .post(`${Project.api}environments/`, {
-              name: 'Production',
-              project: project.id,
-            })
-            .then((res) => createSampleUser(res, 'production', project)),
-        ]).then((res) => {
+        Promise.all(
+          defaultEnvironmentNames.map((envName) => {
+            return data
+              .post(`${Project.api}environments/`, {
+                name: envName,
+                project: project.id,
+              })
+              .then((res) => createSampleUser(res, envName, project))
+          })
+        ).then((res) => {
           project.environments = res
           store.model.projects = store.model.projects.concat(project)
+          getStore().dispatch(projectService.util.invalidateTags(['Project']))
           store.savedId = {
             environmentId: res[0].api_key,
             projectId: project.id,
@@ -86,6 +88,7 @@ const controller = {
       AsyncStorage.removeItem('lastEnv')
       store.trigger('removed')
       store.saved()
+      getStore().dispatch(projectService.util.invalidateTags(['Project']))
     })
   },
   deleteUser: (id) => {
@@ -147,7 +150,15 @@ const controller = {
             ...store.model,
             invites: invites && invites.results,
             subscriptionMeta,
-            users,
+            users: sortBy(users, (user) => {
+              const isYou = user.id === AccountStore.getUser().id
+              if (isYou) {
+                return ``
+              }
+              return `${user.first_name || ''} ${
+                user.last_name || ''
+              }`.toLowerCase()
+            }),
           }
 
           if (Project.hideInviteLinks) {
