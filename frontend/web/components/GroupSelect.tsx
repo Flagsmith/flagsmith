@@ -52,18 +52,19 @@ const GroupSelect: FC<GroupSelectType> = ({
       <div style={{ maxHeight: 200, overflowY: 'auto' }}>
         {grouplist &&
           grouplist.map((v) => (
-            <div className='assignees-list-item clickable' key={v.id}>
-              <Row
-                onClick={() => {
-                  const isRemove = value?.includes(v.id)
-                  if (isRemove && onRemove) {
-                    onRemove(v.id, false)
-                  } else if (!isRemove && onAdd) {
-                    onAdd(v.id, false)
-                  }
-                }}
-                space
-              >
+            <div
+              onClick={() => {
+                const isRemove = value?.includes(v.id)
+                if (isRemove && onRemove) {
+                  onRemove(v.id, false)
+                } else if (!isRemove && onAdd) {
+                  onAdd(v.id, false)
+                }
+              }}
+              className='assignees-list-item clickable'
+              key={v.id}
+            >
+              <Row space>
                 <Flex
                   className={value?.includes(v.id) ? 'font-weight-bold' : ''}
                 >

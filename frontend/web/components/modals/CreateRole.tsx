@@ -46,6 +46,8 @@ import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
 import SettingsButton from 'components/SettingsButton'
+import PermissionsTabs from 'components/PermissionsTabs'
+import AccountStore from 'common/stores/account-store'
 
 type TabRef = {
   onClosing: () => Promise<void>
@@ -70,8 +72,6 @@ const CreateRole: FC<CreateRoleType> = ({
   const buttonText = isEdit ? 'Update Role' : 'Create Role'
   const [tab, setTab] = useState<number>(0)
   const [userGroupTab, setUserGroupTab] = useState<number>(0)
-  const [project, setProject] = useState<string>('')
-  const [environments, setEnvironments] = useState<Environment[]>([])
   const [showUserSelect, setShowUserSelect] = useState<boolean>(false)
   const [showGroupSelect, setShowGroupSelect] = useState<boolean>(false)
   const [userSelected, setUserSelected] = useState<
@@ -86,8 +86,6 @@ const CreateRole: FC<CreateRoleType> = ({
       role_group_id: number
     }[]
   >([])
-
-  const projectData: Project[] = OrganisationStore.getProjects()
 
   const [createRolePermissionUser, { data: usersData, isSuccess: userAdded }] =
     useCreateRolesPermissionUsersMutation()
@@ -234,15 +232,6 @@ const CreateRole: FC<CreateRoleType> = ({
         return { ...group, role_group_id: matchingGroup!.role_group_id }
       })
   }, [groups, groupSelected])
-
-  useEffect(() => {
-    if (project && projectData) {
-      const environments = projectData.find(
-        (p) => p.id === parseInt(project),
-      )?.environments
-      setEnvironments(environments || [])
-    }
-  }, [project, projectData])
 
   useEffect(() => {
     if (userAdded && usersData) {
@@ -403,8 +392,6 @@ const CreateRole: FC<CreateRoleType> = ({
   })
 
   const TabValue = () => {
-    const [searchProject, setSearchProject] = useState<string>('')
-    const [searchEnv, setSearchEnv] = useState<string>('')
     const ref = useRef<TabRef>(null)
     const ref2 = useRef<TabRef>(null)
     useEffect(() => {
@@ -528,85 +515,13 @@ const CreateRole: FC<CreateRoleType> = ({
           tabLabel={<Row className='justify-content-center'>Permissions</Row>}
         >
           <div className='mt-4'>
-            <Tabs
+            <PermissionsTabs
+              tabRef={ref}
               value={userGroupTab}
               onChange={changeSubTab}
-              theme='pill m-0'
-              isRoles={true}
-            >
-              <TabItem
-                tabLabel={
-                  <Row className='justify-content-center'>Organisation</Row>
-                }
-              >
-                <EditPermissionsModal
-                  className='mt-2'
-                  level={'organisation'}
-                  role={role}
-                />
-              </TabItem>
-              <TabItem
-                tabLabel={<Row className='justify-content-center'>Project</Row>}
-              >
-                <Row className='justify-content-between'>
-                  <h5 className='my-3'>Permissions</h5>
-                  <Input
-                    type='text'
-                    className='ml-3'
-                    value={searchProject}
-                    onChange={(e: InputEvent) =>
-                      setSearchProject(Utils.safeParseEventValue(e))
-                    }
-                    size='small'
-                    placeholder='Search'
-                    search
-                  />
-                </Row>
-                <RolePermissionsList
-                  filter={searchProject}
-                  mainItems={projectData}
-                  role={role!}
-                  level={'project'}
-                  ref={ref}
-                />
-              </TabItem>
-              <TabItem
-                tabLabel={
-                  <Row className='justify-content-center'>Environment</Row>
-                }
-              >
-                <Row className='justify-content-between'>
-                  <h5 className='my-3'>Permissions</h5>
-                  <Input
-                    type='text'
-                    className='ml-3'
-                    value={searchEnv}
-                    onChange={(e: InputEvent) =>
-                      setSearchEnv(Utils.safeParseEventValue(e))
-                    }
-                    size='small'
-                    placeholder='Search'
-                    search
-                  />
-                </Row>
-                <div className='mb-2' style={{ width: 250 }}>
-                  <ProjectFilter
-                    organisationId={role!.organisation}
-                    onChange={setProject}
-                    value={project}
-                  />
-                </div>
-                {environments.length > 0 && (
-                  <RolePermissionsList
-                    filter={searchEnv}
-                    mainItems={environments}
-                    role={role!}
-                    level={'environment'}
-                    ref={ref}
-                  />
-                )}
-              </TabItem>
-            </Tabs>
+              role={role}
+              orgId={AccountStore.getOrganisation()?.id}
+            />
           </div>
         </TabItem>
       </Tabs>

@@ -70,6 +70,10 @@ const Toast = class extends React.Component {
   toast = (content, theme, expiry) => {
     const { messages } = this.state
 
+    // Ignore duplicate messages
+    if (messages[0]?.content === content) {
+      return
+    }
     const id = Utils.GUID()
     messages.unshift({ content, expiry: E2E ? 1000 : expiry, id, theme })
     this.setState({ messages })

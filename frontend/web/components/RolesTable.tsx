@@ -3,11 +3,14 @@ import CreateRole from './modals/CreateRole'
 import { useGetRolesQuery } from 'common/services/useRole'
 import { User, Role } from 'common/types/responses'
 import PanelSearch from './PanelSearch'
-import UserGroupStore from 'common/stores/user-group-store'
 import Button from './base/forms/Button'
 import ConfirmDeleteRole from './modals/ConfirmDeleteRole'
 import Icon from './Icon'
 import Panel from './base/grid/Panel'
+import { useGetGroupsQuery } from 'common/services/useGroup'
+import Utils from 'common/utils/utils'
+import Constants from 'common/constants'
+import { useHasPermission } from 'common/providers/Permission'
 const rolesWidths = [250, 100]
 
 type RolesTableType = {
@@ -16,12 +19,19 @@ type RolesTableType = {
 }
 
 const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
-  const groups = UserGroupStore.getGroups() // todo: this will become a hook
+  const { data: groups } = useGetGroupsQuery(
+    { orgId: organisationId, page: 1 },
+    { skip: !organisationId },
+  )
   const { data: roles } = useGetRolesQuery(
     { organisation_id: organisationId },
     { skip: !organisationId },
   )
-
+  const { permission: isAdmin } = useHasPermission({
+    id: organisationId,
+    level: 'organisation',
+    permission: 'ADMIN',
+  })
   const createRole = () => {
     openModal(
       'Create Role',
@@ -59,7 +69,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
           toast('Role Updated')
         }}
         users={users}
-        groups={groups}
+        groups={groups?.results || []}
       />,
       'side-modal',
     )
@@ -68,14 +78,19 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
     <>
       <Row space className='mt-4'>
         <h5 className='m-b-0'>Roles</h5>
-        <Button
-          className='mr-2'
-          id='btn-invite'
-          onClick={() => createRole()}
-          type='button'
-        >
-          Create Role
-        </Button>
+        {Utils.renderWithPermission(
+          isAdmin,
+          Constants.organisationPermissions('Admin'),
+          <Button
+            disabled={!isAdmin}
+            className='mr-2'
+            id='btn-invite'
+            onClick={() => createRole()}
+            type='button'
+          >
+            Create Role
+          </Button>,
+        )}
       </Row>
       <p className='fs-small lh-sm'>
         Create custom roles, assign permissions and keys to the role, and then
