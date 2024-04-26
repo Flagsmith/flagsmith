@@ -3,10 +3,10 @@ import { EditPermissionsModal } from './EditPermissions'
 import {
   Environment,
   Project,
-  UserGroup,
   Role,
-  User, UserGroupSummary
-} from "common/types/responses";
+  User,
+  UserGroupSummary,
+} from 'common/types/responses'
 import Tabs from './base/forms/Tabs'
 import TabItem from './base/forms/TabItem'
 import Input from './base/forms/Input'
