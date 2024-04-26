@@ -1,4 +1,6 @@
 import Constants from 'common/constants'
+import { projectService } from "common/services/useProject";
+import { getStore } from "common/store";
 import sortBy from 'lodash/sortBy'
 
 const Dispatcher = require('../dispatcher/dispatcher')
@@ -45,6 +47,7 @@ const controller = {
         ).then((res) => {
           project.environments = res
           store.model.projects = store.model.projects.concat(project)
+          getStore().dispatch(projectService.util.invalidateTags(['Project']))
           store.savedId = {
             environmentId: res[0].api_key,
             projectId: project.id,
@@ -85,6 +88,7 @@ const controller = {
       AsyncStorage.removeItem('lastEnv')
       store.trigger('removed')
       store.saved()
+      getStore().dispatch(projectService.util.invalidateTags(['Project']))
     })
   },
   deleteUser: (id) => {

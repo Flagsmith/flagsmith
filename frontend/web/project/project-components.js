@@ -11,6 +11,7 @@ import AccountStore from 'common/stores/account-store'
 import Tooltip from 'components/Tooltip'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import AccountProvider from 'common/providers/AccountProvider'
+import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Panel from 'components/base/grid/Panel'
 
 window.AppActions = require('../../common/dispatcher/app-actions')
@@ -22,7 +23,7 @@ window.IdentityProvider = require('../../common/providers/IdentityProvider')
 window.AccountProvider = AccountProvider
 window.AccountStore = AccountStore
 window.FeatureListProvider = require('../../common/providers/FeatureListProvider')
-window.OrganisationProvider = require('../../common/providers/OrganisationProvider')
+window.OrganisationProvider = OrganisationProvider
 window.ProjectProvider = ProjectProvider
 
 window.Paging = Paging
