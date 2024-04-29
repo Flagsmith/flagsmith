@@ -55,6 +55,7 @@ def project_overrides(request):
         "sentry": "SENTRY_API_KEY",
         "useSecureCookies": "USE_SECURE_COOKIES",
         "cookieSameSite": "COOKIE_SAME_SITE",
+        "githubAppURL": "GITHUB_APP_URL",
     }
 
     override_data = {
