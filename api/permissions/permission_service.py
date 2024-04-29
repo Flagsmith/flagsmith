@@ -151,13 +151,19 @@ def get_permitted_environments_for_master_api_key(
     project: Project,
     permission_key: str,
     tag_ids: List[int] = None,
+    prefetch_metadata: bool = False,
 ) -> QuerySet[Environment]:
     if is_master_api_key_project_admin(master_api_key, project):
-        return project.environments.all()
+        queryset = project.environments.all()
+    else:
+        queryset = get_permitted_environments_for_master_api_key_using_roles(
+            master_api_key, project, permission_key, tag_ids
+        )
 
-    return get_permitted_environments_for_master_api_key_using_roles(
-        master_api_key, project, permission_key, tag_ids
-    )
+    if prefetch_metadata:
+        queryset = queryset.prefetch_related("metadata")
+
+    return queryset
 
 
 def user_has_organisation_permission(
