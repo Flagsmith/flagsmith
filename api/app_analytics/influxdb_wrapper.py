@@ -341,6 +341,7 @@ def get_current_api_usage(organisation_id: int, date_range: str) -> int:
         ),
         drop_columns=("_start", "_stop", "_time"),
         extra='|> sum() \
+               |> group() \
                |> sort(columns: ["_value"], desc: true) ',
     )
 
@@ -349,10 +350,7 @@ def get_current_api_usage(organisation_id: int, date_range: str) -> int:
         if len(result.records) == 0:
             return 0
 
-        # There should only be one matching result due to the
-        # sum part of the query.
-        assert len(result.records) == 1
-        return result.records[0].get_value()
+        return sum(r.get_value() for r in result.records)
 
     return 0
 
