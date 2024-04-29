@@ -60,6 +60,7 @@ import Panel from './base/grid/Panel'
 import InputGroup from './base/forms/InputGroup'
 import classNames from 'classnames'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
+import { useHasPermission } from 'common/providers/Permission';
 const Project = require('common/project')
 
 type EditPermissionModalType = {
