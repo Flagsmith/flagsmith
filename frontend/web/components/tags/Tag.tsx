@@ -54,8 +54,8 @@ const Tag: FC<TagType> = ({
         color={tagColor}
         active={selected}
         onClick={() => {
-          if (onClick) {
-            onClick(tag as TTag)
+          if (!disabled) {
+            onClick?.(tag as TTag)
           }
         }}
       >
@@ -67,7 +67,9 @@ const Tag: FC<TagType> = ({
   return (
     <div
       onClick={() => {
-        if (!disabled) onClick?.(tag as TTag)
+        if (!disabled) {
+          onClick?.(tag as TTag)
+        }
       }}
       style={{
         backgroundColor: `${color(tagColor).fade(0.92)}`,
