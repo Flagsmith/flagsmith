@@ -45,6 +45,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
   const { data: repos, isSuccess: reposLoaded } = useGetGithubReposQuery(
     {
       installation_id: installationId,
+      organisation_id: organisation,
     },
     { skip: !installationId },
   )
@@ -85,7 +86,9 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
         organisation_id: JSON.parse(localStorage.lastEnv).orgId,
       }).then(async (res) => {
         if (res?.data && githubIntegrationSetupFromFlagsmithValue) {
-          const dataToSend = { 'installationId': installationId }
+          const dataToSend = {
+            'installationId': installationId,
+          }
           window.opener.postMessage(dataToSend, '*')
         }
       })
