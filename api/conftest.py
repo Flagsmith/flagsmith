@@ -78,10 +78,30 @@ def auth_token(test_user):
 
 
 @pytest.fixture()
-def admin_client(admin_user):
+def admin_client_original(admin_user):
     client = APIClient()
     client.force_authenticate(user=admin_user)
     return client
+
+
+@pytest.fixture()
+def admin_client(admin_client_original):
+    """
+    This fixture will eventually be switched over to what is now
+    called admin_client_new which will run an admin client as well
+    as admin_master_api_key_client automatically.
+
+    In the meantime consider this fixture as deprecated. Use either
+    admin_client_original to preserve a singular admin client or
+    if the test suite can handle it, use admin_client_new to
+    automatically handling both query methods.
+
+    If a test must use pytest.mark.parametrize to differentiate
+    between other required parameters for a test then please
+    use admin_client_original as the parametrized version as this
+    fixture will ultimately be updated to the new approach.
+    """
+    yield admin_client_original
 
 
 @pytest.fixture()
@@ -677,3 +697,18 @@ def flagsmith_environments_v2_table(dynamodb: DynamoDBServiceResource) -> Table:
         ],
         BillingMode="PAY_PER_REQUEST",
     )
+
+
+@pytest.fixture(
+    params=[
+        "admin_client_original",
+        "admin_master_api_key_client",
+    ]
+)
+def admin_client_new(request, admin_client_original, admin_master_api_key_client):
+    if request.param == "admin_client_original":
+        yield admin_client_original
+    elif request.param == "admin_master_api_key_client":
+        yield admin_master_api_key_client
+    else:
+        assert False, "Request param mismatch"
