@@ -36,10 +36,12 @@ def test_track_hubspot_lead_without_organisation(
     # Given
     hubspot_company_id = "company-id"
     hubspot_contact_id = "contact-id"
+    domain = "example.com"
+    email = f"test@{domain}"
 
     settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
 
-    user = FFAdminUser.objects.create(email="test@example.com")
+    user = FFAdminUser.objects.create(email=email)
 
     mock_hubspot_client = mocker.MagicMock(spec=HubspotClient)
     mocker.patch(
@@ -56,5 +58,8 @@ def test_track_hubspot_lead_without_organisation(
     track_hubspot_lead_without_organisation(user_id=user.id)
 
     # Then
+    mock_hubspot_client.create_company.assert_called_once_with(
+        name=domain, domain=domain
+    )
     mock_hubspot_client.create_contact.assert_called_once_with(user, hubspot_company_id)
     assert HubspotLead.objects.filter(user=user).exists()
