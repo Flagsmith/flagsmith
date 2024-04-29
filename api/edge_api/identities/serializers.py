@@ -264,3 +264,10 @@ class GetEdgeIdentityOverridesResultSerializer(serializers.Serializer):
 
 class GetEdgeIdentityOverridesSerializer(serializers.Serializer):
     results = GetEdgeIdentityOverridesResultSerializer(many=True)
+
+
+class EdgeIdentitySourceIdentityRequestSerializer(serializers.Serializer):
+    source_identity_uuid = serializers.CharField(
+        required=True,
+        help_text="UUID of the source identity to clone feature states from.",
+    )

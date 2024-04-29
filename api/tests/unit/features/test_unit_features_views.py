@@ -2643,13 +2643,16 @@ def test_list_features_with_feature_state(
 
 def test_list_features_with_filter_by_value_search_string_and_int(
     staff_client: APIClient,
+    staff_user: FFAdminUser,
     project: Project,
     feature: Feature,
     with_project_permissions: WithProjectPermissionsCallable,
-    environment: Environment,
+    environment_v2_versioning: Environment,
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])
+    environment = environment_v2_versioning
+
     feature2 = Feature.objects.create(
         name="another_feature", project=project, initial_value="initial_value"
     )
@@ -2665,9 +2668,32 @@ def test_list_features_with_filter_by_value_search_string_and_int(
         project=project,
     )
 
-    feature_state1 = feature.feature_states.filter(environment=environment).first()
+    environment_feature_version1 = EnvironmentFeatureVersion.objects.create(
+        environment=environment,
+        feature=feature,
+    )
+
+    feature_state1 = FeatureState.objects.filter(
+        environment_feature_version=environment_feature_version1
+    ).first()
     feature_state1.enabled = True
     feature_state1.save()
+
+    # Create a secondary feature state that will be versioned in the past.
+    environment_feature_version1b = EnvironmentFeatureVersion.objects.create(
+        environment=environment,
+        feature=feature,
+    )
+
+    feature_state1b = FeatureState.objects.filter(
+        environment_feature_version=environment_feature_version1b
+    ).first()
+    feature_state1b.enabled = False
+    feature_state1b.save()
+
+    environment_feature_version1b.publish(staff_user)
+
+    environment_feature_version1.publish(staff_user)
 
     feature_state_value1 = feature_state1.feature_state_value
     feature_state_value1.string_value = None

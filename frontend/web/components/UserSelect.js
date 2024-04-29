@@ -38,24 +38,25 @@ class TheComponent extends Component {
         <div style={{ maxHeight: 200, overflowY: 'auto' }}>
           {users &&
             users.map((v) => (
-              <div className='assignees-list-item clickable' key={v.id}>
-                <Row
-                  onClick={() => {
-                    const isRemove = value.includes(v.id)
-                    if (isRemove && this.props.onRemove) {
-                      this.props.onRemove(v.id)
-                    } else if (!isRemove && this.props.onAdd) {
-                      this.props.onAdd(v.id)
-                    }
-                    this.props.onChange &&
-                      this.props.onChange(
-                        isRemove
-                          ? value.filter((f) => f !== v.id)
-                          : value.concat([v.id]),
-                      )
-                  }}
-                  space
-                >
+              <div
+                onClick={() => {
+                  const isRemove = value.includes(v.id)
+                  if (isRemove && this.props.onRemove) {
+                    this.props.onRemove(v.id)
+                  } else if (!isRemove && this.props.onAdd) {
+                    this.props.onAdd(v.id)
+                  }
+                  this.props.onChange &&
+                    this.props.onChange(
+                      isRemove
+                        ? value.filter((f) => f !== v.id)
+                        : value.concat([v.id]),
+                    )
+                }}
+                className='assignees-list-item clickable'
+                key={v.id}
+              >
+                <Row space>
                   <Flex
                     className={value.includes(v.id) ? 'font-weight-bold' : ''}
                   >

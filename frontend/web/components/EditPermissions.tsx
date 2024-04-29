@@ -1,4 +1,4 @@
-import React, { FC, forwardRef, useEffect, useState } from 'react'
+import React, { FC, forwardRef, useCallback, useEffect, useState } from 'react'
 import { find } from 'lodash'
 import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
@@ -9,6 +9,7 @@ import {
   Role,
   User,
   UserGroup,
+  UserGroupSummary,
   UserPermission,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
@@ -55,34 +56,32 @@ import {
 } from 'common/services/useGroupWithRole'
 
 import MyRoleSelect from './MyRoleSelect'
-import { setInterceptClose } from './modals/base/ModalDefault'
 import Panel from './base/grid/Panel'
 import InputGroup from './base/forms/InputGroup'
 import classNames from 'classnames'
-
-const OrganisationProvider = require('common/providers/OrganisationProvider')
+import OrganisationProvider from 'common/providers/OrganisationProvider'
+import { useHasPermission } from 'common/providers/Permission';
 const Project = require('common/project')
 
 type EditPermissionModalType = {
-  group?: UserGroup
+  group?: UserGroupSummary
   id: number
   className?: string
   isGroup?: boolean
   level: PermissionLevel
   name: string
-  onSave: () => void
-  envId?: number
+  onSave?: () => void
+  envId?: number | string | undefined
   parentId?: string
   parentLevel?: string
   parentSettingsLink?: string
-  roleTabTitle: string
+  roleTabTitle?: string
   permissions?: UserPermission[]
   push: (route: string) => void
   user?: User
   role?: Role
   roles?: Role[]
   permissionChanged: () => void
-  editPermissionsFromSettings?: boolean
   isEditUserPermission?: boolean
   isEditGroupPermission?: boolean
 }
@@ -100,9 +99,37 @@ type EntityPermissions = Omit<
   id?: number
   user?: number
 }
+const withAdminPermissions = (InnerComponent: any) => {
+  const WrappedComponent: FC<EditPermissionModalType> = (props) => {
+    const { id, level } = props
+    const notReady = !id || !level
+    const { isLoading: permissionsLoading, permission } = useHasPermission({
+      id: id,
+      level,
+      permission: 'ADMIN',
+    })
 
-const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
-  (props) => {
+    if (permissionsLoading || notReady) {
+      return (
+        <div className='my-4 text-center'>
+          <Loader />
+        </div>
+      )
+    }
+    if (!permission) {
+      return (
+        <div className='my-4 text-center text-muted'>
+          To manage permissions you need to be admin of this {level}.
+        </div>
+      )
+    }
+
+    return <InnerComponent {...props} />
+  }
+  return WrappedComponent
+}
+const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
+  forwardRef((props) => {
     const [entityPermissions, setEntityPermissions] =
       useState<EntityPermissions>({ admin: false, permissions: [] })
     const [parentError, setParentError] = useState(false)
@@ -120,30 +147,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       }[]
     >([])
 
-    useEffect(() => {
-      setInterceptClose(() => {
-        if (valueChanged) {
-          return new Promise((resolve) => {
-            openConfirm({
-              body: 'Closing this will discard your unsaved changes.',
-              noText: 'Cancel',
-              onNo: () => resolve(false),
-              onYes: () => resolve(true),
-              title: 'Discard changes',
-              yesText: 'Ok',
-            })
-          })
-        } else {
-          return Promise.resolve(true)
-        }
-      })
-      return () => {
-        setInterceptClose(null)
-      }
-    }, [valueChanged])
     const {
       className,
-      editPermissionsFromSettings,
       envId,
       group,
       id,
@@ -192,6 +197,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         }))
         setRolesSelected(resultArray)
       }
+      //eslint-disable-next-line
     }, [userWithRolesDataSuccesfull])
 
     useEffect(() => {
@@ -202,6 +208,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         }))
         setRolesSelected(resultArray)
       }
+      //eslint-disable-next-line
     }, [groupWithRolesDataSuccesfull])
 
     const processResults = (results: (UserPermission | GroupPermission)[]) => {
@@ -278,16 +285,14 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           `${level.charAt(0).toUpperCase() + level.slice(1)} permissions Saved`,
         )
         permissionChanged?.()
-        setInterceptClose(null)
         onSave?.()
         setSaving(false)
-        if (editPermissionsFromSettings) {
-          close()
-        }
       }
       if (errorUpdating || errorCreating) {
         setSaving(false)
       }
+
+      //eslint-disable-next-line
     }, [
       errorUpdating,
       errorCreating,
@@ -334,7 +339,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         {
           skip:
             !role ||
-            !id ||
+            (!envId && !id) ||
             !Utils.getFlagsmithHasFeature('show_role_management') ||
             level !== 'environment',
         },
@@ -351,6 +356,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         )
         setEntityPermissions(entityPermissions)
       }
+      //eslint-disable-next-line
     }, [organisationPermissions, organisationIsLoading])
 
     useEffect(() => {
@@ -358,6 +364,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         const entityPermissions = processResults(projectPermissions?.results)
         setEntityPermissions(entityPermissions)
       }
+      //eslint-disable-next-line
     }, [projectPermissions, projectIsLoading])
 
     useEffect(() => {
@@ -365,6 +372,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         const entityPermissions = processResults(envPermissions?.results)
         setEntityPermissions(entityPermissions)
       }
+      //eslint-disable-next-line
     }, [envPermissions, envIsLoading])
 
     useEffect(() => {
@@ -418,13 +426,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       return entityPermissions.permissions.includes(key)
     }
 
-    const close = () => {
-      closeModal()
-    }
-
-    const save = () => {
+    const save = useCallback(() => {
       const entityId =
         typeof entityPermissions.id === 'undefined' ? '' : entityPermissions.id
+      setValueChanged(false)
       if (!role) {
         const url = isGroup
           ? `${level}s/${id}/user-group-permissions/${entityId}`
@@ -435,17 +440,19 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           `${Project.api}${url}${entityId && '/'}`,
           entityPermissions,
         )
-          .then(() => {
-            setInterceptClose(null)
+          .then((res: EntityPermissions) => {
+            setEntityPermissions(res)
             toast(
               `${
                 level.charAt(0).toUpperCase() + level.slice(1)
               } Permissions Saved`,
             )
             onSave && onSave()
-            close()
           })
           .catch(() => {
+            toast(`Error Saving Permissions`, 'danger')
+          })
+          .finally(() => {
             setSaving(false)
           })
       } else {
@@ -483,8 +490,25 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           }).then(onRoleSaved as any)
         }
       }
-    }
+    }, [
+      createRolePermissions,
+      entityPermissions,
+      envId,
+      id,
+      isGroup,
+      level,
+      onSave,
+      permissionWasCreated,
+      role,
+      updateRolePermissions,
+    ])
 
+    useEffect(() => {
+      if (valueChanged) {
+        save()
+      }
+      //eslint-disable-next-line
+    }, [valueChanged])
     const togglePermission = (key: string) => {
       if (role) {
         permissionChanged?.()
@@ -584,7 +608,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               org_id: id,
               role_id: roleId,
             }).then(onRoleRemoved as any)
-          } else {
+          } else if (roleSelected) {
             deleteRolePermissionGroup({
               group_id: roleSelected.group_role_id,
               organisation_id: id,
@@ -616,6 +640,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         }
         toast('Role assigned')
       }
+      //eslint-disable-next-line
     }, [userAdded, usersData, groupsData, groupAdded])
 
     const getRoles = (
@@ -686,7 +711,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                   </div>
                 </Flex>
                 <Switch
-                  disabled={!hasRbacPermission}
+                  disabled={!hasRbacPermission || saving}
                   onChange={() => {
                     toggleAdmin()
                     setValueChanged(true)
@@ -726,7 +751,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                         setValueChanged(true)
                         togglePermission(p.key)
                       }}
-                      disabled={disabled || admin() || !hasRbacPermission}
+                      disabled={
+                        disabled || admin() || !hasRbacPermission || saving
+                      }
                       checked={!disabled && hasPermission(p.key)}
                     />
                   </Row>
@@ -738,11 +765,17 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           <p className='text-right mt-5 text-dark'>
             This will edit the permissions for{' '}
             <strong>
-              {isGroup
-                ? `the ${name} group`
-                : role
-                ? ` ${role.name}`
-                : ` ${name}`}
+              {isGroup ? (
+                `the ${group?.name || ''} group`
+              ) : user ? (
+                <>
+                  {user.first_name || ''} {user.last_name || ''}
+                </>
+              ) : role ? (
+                ` ${role.name}`
+              ) : (
+                ` ${name}`
+              )}
             </strong>
             .
           </p>
@@ -831,27 +864,14 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               />
             </div>
           )}
-        <div className='modal-footer'>
-          {!role && (
-            <Button className='mr-2' onClick={closeModal} theme='secondary'>
-              Cancel
-            </Button>
-          )}
-          <Button
-            onClick={save}
-            data-test='update-feature-btn'
-            id='update-feature-btn'
-            disabled={saving || !hasRbacPermission}
-          >
-            {saving ? 'Saving' : 'Save Permissions'}
-          </Button>
-        </div>
       </div>
     )
-  },
+  }),
 )
 
-export const EditPermissionsModal = ConfigProvider(_EditPermissionsModal)
+export const EditPermissionsModal = ConfigProvider(
+  _EditPermissionsModal,
+) as FC<EditPermissionModalType>
 
 const rolesWidths = [250, 600, 100]
 const EditPermissions: FC<EditPermissionsType> = (props) => {
@@ -913,7 +933,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
       <EditPermissionsModal
         name={`${role.name}`}
         id={id}
-        editPermissionsFromSettings
         envId={envId}
         level={level}
         role={role}
@@ -922,7 +941,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
     )
   }
   const hasRbacPermission = Utils.getPlansPermission('RBAC')
-
   return (
     <div className='mt-4'>
       <Row>
@@ -940,10 +958,10 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
           Learn about User Roles.
         </Button>
       </p>
-      <Tabs value={tab} onChange={setTab} theme='pill'>
+      <Tabs urlParam='type' value={tab} onChange={setTab} theme='pill'>
         <TabItem tabLabel='Users'>
           <OrganisationProvider>
-            {({ isLoading, users }: { isLoading: boolean; users?: User[] }) => (
+            {({ isLoading, users }) => (
               <div className='mt-4'>
                 {isLoading && !users?.length && (
                   <div className='centered-container'>

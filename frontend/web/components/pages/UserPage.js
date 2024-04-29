@@ -213,6 +213,7 @@ const UserPage = class extends Component {
         </Row>
       </span>,
       <CreateFlagModal
+        history={this.props.router.history}
         identity={this.props.match.params.id}
         identityName={decodeURIComponent(this.props.match.params.identity)}
         environmentId={this.props.match.params.environmentId}
