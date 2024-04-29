@@ -448,9 +448,6 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       )}
     </div>
   )
-  if (error) {
-    return
-  }
   return isEdit ? (
     <Tabs uncontrolled tabClassName='px-0'>
       <TabItem
