@@ -463,7 +463,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       <TabItem tabLabel={<div>Permissions</div>}>{editPermissionsEl}</TabItem>
     </Tabs>
   ) : (
-    editGroup
+    editGroupEl
   )
 }
 
