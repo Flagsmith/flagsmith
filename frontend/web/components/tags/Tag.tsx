@@ -46,12 +46,18 @@ const Tag: FC<TagType> = ({
     )
   }
 
+  const disabled = Utils.tagDisabled()
+
   if (!hideNames && !!onClick) {
     return (
       <ToggleChip
         color={tagColor}
         active={selected}
-        onClick={onClick ? () => onClick(tag as TTag) : null}
+        onClick={() => {
+          if (onClick) {
+            onClick(tag as TTag)
+          }
+        }}
       >
         {!!tag.label && <TagContent tag={tag} />}
       </ToggleChip>
@@ -60,7 +66,9 @@ const Tag: FC<TagType> = ({
 
   return (
     <div
-      onClick={() => onClick?.(tag as TTag)}
+      onClick={() => {
+        if (!disabled) onClick?.(tag as TTag)
+      }}
       style={{
         backgroundColor: `${color(tagColor).fade(0.92)}`,
         border: `1px solid ${color(tagColor).fade(0.76)}`,
