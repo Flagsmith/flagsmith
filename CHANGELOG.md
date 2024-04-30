@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.111.1](https://github.com/Flagsmith/flagsmith/compare/v2.111.0...v2.111.1) (2024-04-30)
+
+
+### Bug Fixes
+
+* edit group ([#3856](https://github.com/Flagsmith/flagsmith/issues/3856)) ([b25e6f8](https://github.com/Flagsmith/flagsmith/commit/b25e6f8ad1256b5556cfc7623064a6fd42b299fb))
+
 ## [2.111.0](https://github.com/Flagsmith/flagsmith/compare/v2.110.2...v2.111.0) (2024-04-30)
 
 
