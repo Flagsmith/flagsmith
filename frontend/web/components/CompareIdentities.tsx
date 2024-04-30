@@ -134,24 +134,31 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     rightIdentityId: string,
     environmentId: string,
   ) => {
+    const body =
+      Utils.getFeatureStatesEndpoint() === 'featurestates'
+        ? { source_identity_id: leftIdentityId }
+        : { source_identity_uuid: leftIdentityId }
+
     return openConfirm({
       body: (
         <div>
-          {'Cloning '} <strong>{leftIdentityName}</strong>{' '}
-          {'will copy any Identity Overrides in '}
-          <strong>{`${rightIdentityName}.`}</strong> {'Are you sure?'}
+          {'This will copy any Identity overrides from '}{' '}
+          <strong>{leftIdentityName}</strong> {'to '}
+          <strong>{`${rightIdentityName}.`}</strong>{' '}
+          {'Any existing Identity overrides on '}
+          <strong>{`${rightIdentityName}`}</strong> {'will be lost.'}
+          <br />
+          {'The Multivariate values will not be cloned.'}
         </div>
       ),
       destructive: true,
       onYes: () => {
         createCloneIdentityFeatureStates({
-          body: {
-            source_identity_id: leftIdentityId,
-          },
+          body: body,
           environment_id: environmentId,
           identity_id: rightIdentityId,
         }).then(() => {
-          toast('Clonation Completed!')
+          toast('Identity overrides successfully cloned!')
         })
       },
       title: 'Clone Identity',
