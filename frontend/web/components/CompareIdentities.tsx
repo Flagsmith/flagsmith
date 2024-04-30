@@ -2,7 +2,10 @@ import React, { FC, useEffect, useMemo, useState } from 'react'
 import IdentitySelect, { IdentitySelectType } from './IdentitySelect'
 import Utils from 'common/utils/utils'
 import EnvironmentSelect from './EnvironmentSelect'
-import { useGetIdentityFeatureStatesQuery } from 'common/services/useIdentityFeatureState'
+import {
+  useGetIdentityFeatureStatesAllQuery,
+  useCreateCloneIdentityFeatureStatesMutation,
+} from 'common/services/useIdentityFeatureState'
 import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import Tag from './tags/Tag'
 import PanelSearch from './PanelSearch'
@@ -17,6 +20,8 @@ import Button from './base/forms/Button'
 import ProjectStore from 'common/stores/project-store'
 import SegmentOverridesIcon from './SegmentOverridesIcon'
 import IdentityOverridesIcon from './IdentityOverridesIcon'
+import Tooltip from './Tooltip'
+import PageTitle from './PageTitle'
 
 type CompareIdentitiesType = {
   projectId: string
@@ -66,14 +71,16 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     permission: Utils.getViewIdentitiesPermission(),
   })
 
-  const { data: leftUser } = useGetIdentityFeatureStatesQuery(
+  const { data: leftUser } = useGetIdentityFeatureStatesAllQuery(
     { environment: environmentId, user: `${leftId?.value}` },
     { skip: !leftId },
   )
-  const { data: rightUser } = useGetIdentityFeatureStatesQuery(
+  const { data: rightUser } = useGetIdentityFeatureStatesAllQuery(
     { environment: environmentId, user: `${rightId?.value}` },
     { skip: !rightId },
   )
+  const [createCloneIdentityFeatureStates] =
+    useCreateCloneIdentityFeatureStatesMutation()
 
   useEffect(() => {
     // Clear users whenever environment or project is changed
@@ -118,6 +125,38 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
       )}/${user!.value}?flag=${encodeURIComponent(feature)}`,
       '_blank',
     )
+  }
+
+  const cloneIdentityValues = (
+    leftIdentityName: string,
+    rightIdentityName: string,
+    leftIdentityId: string,
+    rightIdentityId: string,
+    environmentId: string,
+  ) => {
+    return openConfirm({
+      body: (
+        <div>
+          {'Cloning '} <strong>{leftIdentityName}</strong>{' '}
+          {'will copy any Identity Overrides in '}
+          <strong>{`${rightIdentityName}.`}</strong> {'Are you sure?'}
+        </div>
+      ),
+      destructive: true,
+      onYes: () => {
+        createCloneIdentityFeatureStates({
+          body: {
+            source_identity_id: leftIdentityId,
+          },
+          environment_id: environmentId,
+          identity_id: rightIdentityId,
+        }).then(() => {
+          toast('Clonation Completed!')
+        })
+      },
+      title: 'Clone Identity',
+      yesText: 'Confirm',
+    })
   }
 
   return (
@@ -179,9 +218,41 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
 
       {isReady && (
         <>
+          <PageTitle
+            title={'Changed Flags'}
+            className='mt-3'
+            cta={
+              <>
+                {Utils.getFlagsmithHasFeature('clone_identities') && (
+                  <>
+                    <Tooltip
+                      title={
+                        <Button
+                          disabled={!leftId || !rightId || !environmentId}
+                          onClick={() => {
+                            cloneIdentityValues(
+                              leftId?.label,
+                              rightId?.label,
+                              leftId?.value,
+                              rightId?.value,
+                              environmentId,
+                            )
+                          }}
+                          className='ms-2 me-2'
+                        >
+                          {'Clone Features states'}
+                        </Button>
+                      }
+                    >
+                      {`Clone the Features states from ${leftId?.label} to ${rightId?.label}`}
+                    </Tooltip>
+                  </>
+                )}
+              </>
+            }
+          ></PageTitle>
           <PanelSearch
             className='no-pad mt-4'
-            title={'Changed Flags'}
             searchPanel={
               <Row className='mb-2'>
                 <Tag

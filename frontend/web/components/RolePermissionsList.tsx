@@ -12,7 +12,7 @@ import {
   useGetRoleProjectPermissionsQuery,
 } from 'common/services/useRolePermission'
 import { PermissionLevel } from 'common/types/requests'
-import { Role, User, UserGroup, UserGroupSummary } from "common/types/responses";
+import { Role, User, UserGroup, UserGroupSummary } from 'common/types/responses'
 import PanelSearch from './PanelSearch'
 import PermissionsSummaryList from './PermissionsSummaryList'
 

@@ -1,6 +1,6 @@
 import Constants from 'common/constants'
-import { projectService } from "common/services/useProject";
-import { getStore } from "common/store";
+import { projectService } from 'common/services/useProject'
+import { getStore } from 'common/store'
 import sortBy from 'lodash/sortBy'
 
 const Dispatcher = require('../dispatcher/dispatcher')
@@ -30,8 +30,13 @@ const controller = {
       API.trackEvent(Constants.events.CREATE_FIRST_PROJECT)
     }
     API.trackEvent(Constants.events.CREATE_PROJECT)
-    const defaultEnvironmentNames = Utils.getFlagsmithHasFeature('default_environment_names_for_new_project')
-      ? JSON.parse(Utils.getFlagsmithValue('default_environment_names_for_new_project')) : ['Development', 'Production']
+    const defaultEnvironmentNames = Utils.getFlagsmithHasFeature(
+      'default_environment_names_for_new_project',
+    )
+      ? JSON.parse(
+          Utils.getFlagsmithValue('default_environment_names_for_new_project'),
+        )
+      : ['Development', 'Production']
     data
       .post(`${Project.api}projects/`, { name, organisation: store.id })
       .then((project) => {
@@ -43,7 +48,7 @@ const controller = {
                 project: project.id,
               })
               .then((res) => createSampleUser(res, envName, project))
-          })
+          }),
         ).then((res) => {
           project.environments = res
           store.model.projects = store.model.projects.concat(project)
