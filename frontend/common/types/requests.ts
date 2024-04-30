@@ -159,7 +159,7 @@ export type Req = {
   updateRolePermission: Req['createRolePermission'] & { id: number }
   deleteRolePermission: { organisation_id: number; role_id: number }
 
-  getIdentityFeatureStates: {
+  getIdentityFeatureStatesAll: {
     environment: string
     user: string
   }
@@ -380,6 +380,13 @@ export type Req = {
     usersToAddAdmin: number[] | null
   }
   getUserGroupPermission: { project_id: string }
+  createCloneIdentityFeatureStates: {
+    environment_id: string
+    identity_id: string
+    body: {
+      source_identity_id: string
+    }
+  }
   updateGroup: Req['createGroup'] & {
     orgId: string
     data: UserGroup
