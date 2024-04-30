@@ -103,20 +103,14 @@ class HubspotClient:
         organisation_id: int = None,
         domain: str | None = None,
     ) -> dict:
-        properties = {
-            "name": name,
-            "active_subscription": active_subscription,
-            "orgid": str(organisation_id),
-        }
+        properties = {"name": name}
 
         if domain:
             properties["domain"] = domain
         if active_subscription:
             properties["active_subscription"] = active_subscription
-
-        # hubspot doesn't allow null values for numeric fields, so we
-        # set this to -1 for auto generated organisations.
-        properties["orgid"] = organisation_id or -1
+        if organisation_id:
+            properties["orgid_unique"] = organisation_id
 
         simple_public_object_input_for_create = SimplePublicObjectInputForCreate(
             properties=properties,
