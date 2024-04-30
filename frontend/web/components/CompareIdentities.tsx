@@ -142,10 +142,10 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     return openConfirm({
       body: (
         <div>
-          {'This will copy any identity overrides from '}{' '}
-          <strong>{leftIdentityName}</strong> {'to'}
+          {'This will copy any Identity overrides from '}{' '}
+          <strong>{leftIdentityName}</strong> {'to '}
           <strong>{`${rightIdentityName}.`}</strong>{' '}
-          {'Any existing identity overrides on '}
+          {'Any existing Identity overrides on '}
           <strong>{`${rightIdentityName}`}</strong> {'will be lost.'}
           <br />
           {'The Multivariate values will not be cloned.'}
