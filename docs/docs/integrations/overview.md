@@ -120,6 +120,14 @@ Manage your Flagsmith Change Requests inside ServiceNow. [Learn more](/integrati
 You can integrate Flagsmith with Slack. Send flag change events from Flagsmith into your Slack channels.
 [Learn more](/integrations/project-management/slack).
 
+---
+
+<a href="/integrations/project-management/github" alt="GitHub"><img width="30%" src="/img/integrations/github/github-logo.svg"/></a>
+
+View your Flagsmith flags inside GitHub Issues and Pull Request. [Learn more](/integrations/project-management/github).
+
+---
+
 ## Authentication Providers / IDPs
 
 ### OAuth

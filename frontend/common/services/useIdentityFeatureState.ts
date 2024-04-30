@@ -7,14 +7,29 @@ export const identityFeatureStateService = service
   .enhanceEndpoints({ addTagTypes: ['IdentityFeatureState'] })
   .injectEndpoints({
     endpoints: (builder) => ({
-      getIdentityFeatureStates: builder.query<
+      createCloneIdentityFeatureStates: builder.mutation<
+        Res['cloneidentityFeatureStates'],
+        Req['createCloneIdentityFeatureStates']
+      >({
+        invalidatesTags: [{ type: 'IdentityFeatureState' }],
+        query: (query: Req['createCloneIdentityFeatureStates']) => ({
+          body: query.body,
+          method: 'POST',
+          url: `environments/${
+            query.environment_id
+          }/${Utils.getIdentitiesEndpoint()}/${
+            query.identity_id
+          }/${Utils.getFeatureStatesEndpoint()}/clone-from-given-identity/`,
+        }),
+      }),
+      getIdentityFeatureStatesAll: builder.query<
         Res['identityFeatureStates'],
-        Req['getIdentityFeatureStates']
+        Req['getIdentityFeatureStatesAll']
       >({
         providesTags: (res, _, req) => [
           { id: req.user, type: 'IdentityFeatureState' },
         ],
-        query: (query: Req['getIdentityFeatureStates']) => ({
+        query: (query: Req['getIdentityFeatureStatesAll']) => ({
           url: `environments/${
             query.environment
           }/${Utils.getIdentitiesEndpoint()}/${
@@ -26,15 +41,30 @@ export const identityFeatureStateService = service
     }),
   })
 
-export async function getIdentityFeatureStates(
+export async function getIdentityFeatureStateAll(
   store: any,
-  data: Req['getIdentityFeatureStates'],
+  data: Req['getIdentityFeatureStatesAll'],
   options?: Parameters<
-    typeof identityFeatureStateService.endpoints.getIdentityFeatureStates.initiate
+    typeof identityFeatureStateService.endpoints.getIdentityFeatureStatesAll.initiate
   >[1],
 ) {
   return store.dispatch(
-    identityFeatureStateService.endpoints.getIdentityFeatureStates.initiate(
+    identityFeatureStateService.endpoints.getIdentityFeatureStatesAll.initiate(
+      data,
+      options,
+    ),
+  )
+}
+
+export async function createIdentityFeatureStates(
+  store: any,
+  data: Req['createCloneIdentityFeatureStates'],
+  options?: Parameters<
+    typeof identityFeatureStateService.endpoints.createCloneIdentityFeatureStates.initiate
+  >[1],
+) {
+  return store.dispatch(
+    identityFeatureStateService.endpoints.createCloneIdentityFeatureStates.initiate(
       data,
       options,
     ),
@@ -43,12 +73,13 @@ export async function getIdentityFeatureStates(
 // END OF FUNCTION_EXPORTS
 
 export const {
-  useGetIdentityFeatureStatesQuery,
+  useCreateCloneIdentityFeatureStatesMutation,
+  useGetIdentityFeatureStatesAllQuery,
   // END OF EXPORTS
 } = identityFeatureStateService
 
 /* Usage examples:
 const { data, isLoading } = useGetIdentityFeatureStatesQuery({ id: 2 }, {}) //get hook
 const [createIdentityFeatureStates, { isLoading, data, isSuccess }] = useCreateIdentityFeatureStatesMutation() //create hook
-identityFeatureStateService.endpoints.getIdentityFeatureStates.select({id: 2})(store.getState()) //access data from any function
+identityFeatureStateService.endpoints.getIdentityFeatureStatesAll.select({id: 2})(store.getState()) //access data from any function
 */
