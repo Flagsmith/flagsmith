@@ -10,12 +10,13 @@ import {
 import { useGetUserGroupPermissionQuery } from 'common/services/useUserGroupPermission'
 import PanelSearch from './PanelSearch'
 import { sortBy } from 'lodash'
-import InfoMessage from './InfoMessage' // we need this to make JSX compile
+import InfoMessage from './InfoMessage'
 import Icon from './Icon'
-import Panel from './base/grid/Panel'
 import PermissionsSummaryList from './PermissionsSummaryList'
+import Panel from './base/grid/Panel'
+import { useGetGroupSummariesQuery } from 'common/services/useGroupSummary'
 
-type UserGroupsListType = {
+type UserGroupListType = {
   noTitle?: boolean
   orgId: string
   projectId: string | boolean
@@ -78,11 +79,12 @@ const UserGroupsRow: FC<UserGroupsRowType> = ({
   return (
     <Row
       space
+      onClick={_onClick}
       className='list-item list-item-sm clickable'
       key={id}
       data-test={`user-item-${index}`}
     >
-      <Flex onClick={_onClick} className=' table-column px-3'>
+      <Flex className=' table-column px-3'>
         <div className='font-weight-medium'>{name}</div>
       </Flex>
       {permissionSummary && <Flex>{permissionSummary}</Flex>}
@@ -108,7 +110,10 @@ const UserGroupsRow: FC<UserGroupsRowType> = ({
             <Button
               id='remove-group'
               type='button'
-              onClick={() => removeGroup(id, name)}
+              onClick={(e) => {
+                e.stopPropagation()
+                removeGroup(id, name)
+              }}
               className='btn btn-with-icon'
             >
               <Icon name='trash-2' width={20} fill='#656D7B' />
@@ -128,7 +133,7 @@ const UserGroupsRow: FC<UserGroupsRowType> = ({
   )
 }
 
-const UserGroupsList: FC<UserGroupsListType> = ({
+const UserGroupList: FC<UserGroupListType> = ({
   noTitle,
   onClick,
   onEditPermissions,
@@ -137,10 +142,14 @@ const UserGroupsList: FC<UserGroupsListType> = ({
   showRemove,
 }) => {
   const [page, setPage] = useState(1)
-  const { data: userGroups, isLoading } = useGetGroupsQuery({
-    orgId: `${orgId}`,
-    page,
-  })
+  const { data: userGroups, isLoading } = useGetGroupSummariesQuery(
+    {
+      orgId: `${orgId}`,
+    },
+    {
+      skip: !orgId,
+    },
+  )
   const { data: userGroupsPermission, isLoading: userGroupPermissionLoading } =
     useGetUserGroupPermissionQuery(
       {
@@ -155,22 +164,20 @@ const UserGroupsList: FC<UserGroupsListType> = ({
     ? [...userGroupsPermission]
     : []
 
-  if (userGroupsPermission?.length > 0) {
-    userGroups?.results.forEach((group) => {
-      const existingPermissionIndex =
-        mergeduserGroupsPermissionWithUserGroups.findIndex(
-          (userGroupPermission) => userGroupPermission.group.id === group.id,
-        )
-      if (existingPermissionIndex === -1) {
-        mergeduserGroupsPermissionWithUserGroups.push({
-          admin: false,
-          group: group,
-          id: group.id,
-          permissions: [],
-        })
-      }
-    })
-  }
+  userGroups?.forEach?.((group) => {
+    const existingPermissionIndex =
+      mergeduserGroupsPermissionWithUserGroups.findIndex(
+        (userGroupPermission) => userGroupPermission.group.id === group.id,
+      )
+    if (existingPermissionIndex === -1) {
+      mergeduserGroupsPermissionWithUserGroups.push({
+        admin: false,
+        group: group,
+        id: group.id,
+        permissions: [],
+      })
+    }
+  })
 
   return (
     <FormGroup>
@@ -189,7 +196,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
         items={
           userGroupsPermission
             ? sortBy(mergeduserGroupsPermissionWithUserGroups, 'group.name')
-            : sortBy(userGroups?.results, 'name')
+            : sortBy(userGroups, 'name')
         }
         paging={mergeduserGroupsPermissionWithUserGroups || userGroups}
         nextPage={() => setPage(page + 1)}
@@ -268,4 +275,4 @@ const UserGroupsList: FC<UserGroupsListType> = ({
   )
 }
 
-export default UserGroupsList
+export default UserGroupList

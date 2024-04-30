@@ -27,7 +27,7 @@ View your Flagsmith Flags inside your GitHub Issues and Pull Request
 
 ### From github
 
-1. In GitHub, add the app from the [GitHub Marketplace](https://github.com/apps/flagsmith-github-integration).
+1. In GitHub, add the app from the [GitHub Marketplace](https://github.com/apps/flagsmith).
 2. Select your organisation.
 3. Select your repositories where you want install the app.
 4. You will be redirected back to the Flagsmith app to finish the integration setup.
@@ -47,4 +47,4 @@ View your Flagsmith Flags inside your GitHub Issues and Pull Request
 
 1. In the Integrations Option in the side bar, find the GitHub integration and click on 'Manage Integration'.
 2. Click on 'Delete Integracion' button, and confirm.
-3. In your Github organisation, uninstall the Flagsmith GitHub App.
+3. In your GitHub organisation, uninstall the Flagsmith GitHub App.

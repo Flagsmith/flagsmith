@@ -12,6 +12,7 @@ from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from api_keys.models import MasterAPIKey
 from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
@@ -23,18 +24,19 @@ from metadata.models import Metadata, MetadataModelField
 from organisations.models import Organisation
 from projects.models import Project
 from projects.permissions import CREATE_ENVIRONMENT
-from segments.models import Condition, SegmentRule
+from segments.models import Condition, Segment, SegmentRule
 from tests.types import WithEnvironmentPermissionsCallable
+from users.models import FFAdminUser
 
 
 def test_retrieve_environment(
-    admin_client: APIClient, environment: Environment
+    admin_client_new: APIClient, environment: Environment
 ) -> None:
     # Given
     url = reverse("api-v1:environments:environment-detail", args=[environment.api_key])
 
     # When
-    response = admin_client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -89,7 +91,7 @@ def test_can_clone_environment_with_create_environment_permission(
 
 
 def test_should_return_identities_for_an_environment(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     identity: Identity,
 ) -> None:
@@ -102,7 +104,7 @@ def test_should_return_identities_for_an_environment(
     )
 
     # When
-    response = admin_client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.data["results"][0]["identifier"] == identity.identifier
@@ -111,14 +113,14 @@ def test_should_return_identities_for_an_environment(
 
 def test_audit_log_entry_created_when_new_environment_created(
     project: Project,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
 ) -> None:
     # Given
     url = reverse("api-v1:environments:environment-list")
     data = {"project": project.id, "name": "Test Environment"}
 
     # When
-    admin_client.post(url, data=data)
+    admin_client_new.post(url, data=data)
 
     # Then
     assert (
@@ -129,10 +131,23 @@ def test_audit_log_entry_created_when_new_environment_created(
     )
 
 
+@pytest.mark.parametrize(
+    "client, master_api_key, author",
+    [
+        (
+            lazy_fixture("admin_master_api_key_client"),
+            lazy_fixture("admin_master_api_key_object"),
+            None,
+        ),
+        (lazy_fixture("admin_client_original"), None, lazy_fixture("admin_user")),
+    ],
+)
 def test_audit_log_created_when_feature_state_updated(
     feature: Feature,
     environment: Environment,
-    admin_client: APIClient,
+    client: APIClient,
+    master_api_key: MasterAPIKey,
+    author: FFAdminUser,
 ) -> None:
     # Given
     feature_state = FeatureState.objects.get(feature=feature, environment=environment)
@@ -143,7 +158,7 @@ def test_audit_log_created_when_feature_state_updated(
     data = {"id": feature.id, "enabled": True}
 
     # When
-    admin_client.put(url, data=data)
+    client.put(url, data=data)
 
     # Then
     assert (
@@ -152,13 +167,14 @@ def test_audit_log_created_when_feature_state_updated(
         ).count()
         == 1
     )
-    assert AuditLog.objects.first().author
+    assert AuditLog.objects.first().author == author
+    assert AuditLog.objects.first().master_api_key == master_api_key
 
 
 def test_delete_trait_keys_deletes_trait_for_all_users_in_that_environment(
     environment: Environment,
     identity: Identity,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     project: Project,
 ) -> None:
     # Given
@@ -190,7 +206,7 @@ def test_delete_trait_keys_deletes_trait_for_all_users_in_that_environment(
     )
 
     # When
-    response = admin_client.post(url, data={"key": trait_key})
+    response = admin_client_new.post(url, data={"key": trait_key})
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -221,7 +237,7 @@ def test_environment_user_can_get_their_permissions(
 
 def test_can_create_webhook_for_an_environment(
     environment: Environment,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
 ) -> None:
     # Given
     valid_webhook_url = "http://my.webhook.com/webhooks"
@@ -232,7 +248,7 @@ def test_can_create_webhook_for_an_environment(
     data = {"url": valid_webhook_url, "enabled": True}
 
     # When
-    response = admin_client.post(url, data)
+    response = admin_client_new.post(url, data)
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
@@ -241,7 +257,7 @@ def test_can_create_webhook_for_an_environment(
 
 def test_can_update_webhook_for_an_environment(
     environment: Environment,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
 ) -> None:
     # Given
     valid_webhook_url = "http://my.webhook.com/webhooks"
@@ -253,7 +269,7 @@ def test_can_update_webhook_for_an_environment(
     data = {"url": "http://my.new.url.com/wehbooks", "enabled": False}
 
     # When
-    response = admin_client.put(
+    response = admin_client_new.put(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -265,7 +281,7 @@ def test_can_update_webhook_for_an_environment(
 
 def test_can_update_webhook_secret(
     environment: Environment,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
 ) -> None:
     # Given
     valid_webhook_url = "http://my.webhook.com/webhooks"
@@ -277,7 +293,7 @@ def test_can_update_webhook_secret(
     data = {"secret": "random_secret"}
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -289,7 +305,7 @@ def test_can_update_webhook_secret(
 
 def test_can_delete_webhook_for_an_environment(
     environment: Environment,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
 ) -> None:
     # Given
     valid_webhook_url = "http://my.webhook.com/webhooks"
@@ -300,7 +316,7 @@ def test_can_delete_webhook_for_an_environment(
     )
 
     # When
-    response = admin_client.delete(url)
+    response = admin_client_new.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -309,7 +325,7 @@ def test_can_delete_webhook_for_an_environment(
 
 def test_can_list_webhooks_for_an_environment(
     environment: Environment,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
 ) -> None:
     # Given
     valid_webhook_url = "http://my.webhook.com/webhooks"
@@ -320,7 +336,7 @@ def test_can_list_webhooks_for_an_environment(
     )
 
     # When
-    response = admin_client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -329,7 +345,7 @@ def test_can_list_webhooks_for_an_environment(
 
 def test_cannot_delete_webhooks_for_environment_user_does_not_belong_to(
     environment: Environment,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
 ) -> None:
     # Given
     valid_webhook_url = "http://my.webhook.com/webhooks"
@@ -347,7 +363,7 @@ def test_cannot_delete_webhooks_for_environment_user_does_not_belong_to(
     )
 
     # When
-    response = admin_client.delete(url)
+    response = admin_client_new.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -382,7 +398,7 @@ def test_trigger_sample_webhook_calls_trigger_sample_webhook_method_with_correct
 
 def test_list_api_keys(
     environment: Environment,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
 ) -> None:
     # Given
     api_key_1 = EnvironmentAPIKey.objects.create(
@@ -394,7 +410,7 @@ def test_list_api_keys(
     url = reverse("api-v1:environments:api-keys-list", args={environment.api_key})
 
     # When
-    response = admin_client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -409,7 +425,7 @@ def test_list_api_keys(
 
 
 def test_create_api_key(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
 ) -> None:
     # Given
@@ -418,7 +434,7 @@ def test_create_api_key(
     url = reverse("api-v1:environments:api-keys-list", args={environment.api_key})
 
     # When
-    response = admin_client.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -432,7 +448,7 @@ def test_create_api_key(
 
 def test_update_api_key(
     environment: Environment,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
 ) -> None:
     # Given
     old_name = "Some key"
@@ -445,7 +461,7 @@ def test_update_api_key(
     # When
     new_name = "new name"
     new_key = "new_key"
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         update_url, data={"active": False, "name": new_name, "key": new_key}
     )
 
@@ -460,7 +476,7 @@ def test_update_api_key(
 
 def test_delete_api_key(
     environment: Environment,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
 ) -> None:
     # Given
     api_key = EnvironmentAPIKey.objects.create(name="Some key", environment=environment)
@@ -471,7 +487,7 @@ def test_delete_api_key(
     )
 
     # When
-    admin_client.delete(delete_url)
+    admin_client_new.delete(delete_url)
 
     # Then
     assert not EnvironmentAPIKey.objects.filter(id=api_key.id)
@@ -481,7 +497,7 @@ def test_delete_api_key(
     "client, is_admin_master_api_key_client",
     [
         (lazy_fixture("admin_master_api_key_client"), True),
-        (lazy_fixture("admin_client"), False),
+        (lazy_fixture("admin_client_original"), False),
     ],
 )
 def test_should_create_environments(
@@ -512,13 +528,9 @@ def test_should_create_environments(
         ).exists()
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_create_environment_without_required_metadata_returns_400(
     project,
-    client,
+    admin_client_new,
     required_a_environment_metadata_field,
     optional_b_environment_metadata_field,
 ) -> None:
@@ -532,7 +544,7 @@ def test_create_environment_without_required_metadata_returns_400(
     }
 
     # When
-    response = client.post(url, data=data)
+    response = admin_client_new.post(url, data=data)
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -588,7 +600,7 @@ def test_view_environment_with_staff__query_count_is_expected(
 
 
 def test_view_environment_with_admin__query_count_is_expected(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     project: Project,
     django_assert_num_queries: DjangoAssertNumQueries,
@@ -600,11 +612,11 @@ def test_view_environment_with_admin__query_count_is_expected(
     # Given
     url = reverse("api-v1:environments:environment-list")
     data = {"project": project.id}
-
     expected_query_count = 5
+
     # When
     with django_assert_num_queries(expected_query_count):
-        response = admin_client.get(url, data=data, content_type="application/json")
+        response = admin_client_new.get(url, data=data, content_type="application/json")
 
     assert response.status_code == status.HTTP_200_OK
 
@@ -621,18 +633,14 @@ def test_view_environment_with_admin__query_count_is_expected(
 
     # Then
     with django_assert_num_queries(expected_query_count):
-        response = admin_client.get(url, data=data, content_type="application/json")
+        response = admin_client_new.get(url, data=data, content_type="application/json")
 
     assert response.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_create_environment_with_required_metadata_returns_201(
     project,
-    client,
+    admin_client_new,
     required_a_environment_metadata_field,
     optional_b_environment_metadata_field,
 ) -> None:
@@ -653,7 +661,9 @@ def test_create_environment_with_required_metadata_returns_201(
     }
 
     # When
-    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
@@ -664,13 +674,9 @@ def test_create_environment_with_required_metadata_returns_201(
     assert response.json()["metadata"][0]["field_value"] == str(field_value)
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_update_environment_metadata(
     project,
-    client,
+    admin_client_new,
     environment,
     environment_metadata_a,
     environment_metadata_b,
@@ -694,7 +700,9 @@ def test_update_environment_metadata(
     }
 
     # When
-    response = client.put(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -709,12 +717,8 @@ def test_update_environment_metadata(
     assert Metadata.objects.filter(id=environment_metadata_b.id).exists() is False
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_audit_log_entry_created_when_environment_updated(
-    environment, project, client
+    environment: Environment, project: Project, admin_client_new: APIClient
 ) -> None:
     # Given
     environment = Environment.objects.create(name="Test environment", project=project)
@@ -736,7 +740,9 @@ def test_audit_log_entry_created_when_environment_updated(
     }
 
     # When
-    response = client.put(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -756,11 +762,13 @@ def test_audit_log_entry_created_when_environment_updated(
     )
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_get_document(environment, project, client, feature, segment) -> None:
+def test_get_document(
+    environment: Environment,
+    project: Project,
+    admin_client_new: APIClient,
+    feature: Feature,
+    segment: Segment,
+) -> None:
     # Given
 
     # and some sample data to make sure we're testing all of the document
@@ -777,19 +785,18 @@ def test_get_document(environment, project, client, feature, segment) -> None:
     )
 
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_get_all_trait_keys_for_environment_only_returns_distinct_keys(
-    identity, client, trait, environment
+    identity: Identity,
+    admin_client_new: APIClient,
+    trait: Trait,
+    environment: Environment,
 ) -> None:
     # Given
     trait_key_one = trait.trait_key
@@ -817,7 +824,7 @@ def test_get_all_trait_keys_for_environment_only_returns_distinct_keys(
     )
 
     # When
-    res = client.get(url)
+    res = admin_client_new.get(url)
 
     # Then
     assert res.status_code == status.HTTP_200_OK
@@ -826,12 +833,11 @@ def test_get_all_trait_keys_for_environment_only_returns_distinct_keys(
     assert len(res.json().get("keys")) == 2
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_delete_trait_keys_deletes_traits_matching_provided_key_only(
-    environment, client, identity, trait
+    identity: Identity,
+    admin_client_new: APIClient,
+    trait: Trait,
+    environment: Environment,
 ) -> None:
     # Given
     trait_to_delete = trait.trait_key
@@ -848,7 +854,7 @@ def test_delete_trait_keys_deletes_traits_matching_provided_key_only(
     )
 
     # When
-    client.post(url, data={"key": trait_to_delete})
+    admin_client_new.post(url, data={"key": trait_to_delete})
 
     # Then
     assert not Trait.objects.filter(
@@ -859,16 +865,14 @@ def test_delete_trait_keys_deletes_traits_matching_provided_key_only(
     assert Trait.objects.filter(identity=identity, trait_key=trait_to_persist).exists()
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_user_can_list_environment_permission(client, environment) -> None:
+def test_user_can_list_environment_permission(
+    admin_client_new: APIClient, environment: Environment
+) -> None:
     # Given
     url = reverse("api-v1:environments:environment-permissions")
 
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -876,7 +880,7 @@ def test_user_can_list_environment_permission(client, environment) -> None:
 
 
 def test_environment_my_permissions_reruns_400_for_master_api_key(
-    admin_master_api_key_client, environment
+    admin_master_api_key_client: APIClient, environment: Environment
 ) -> None:
     # Given
     url = reverse(
@@ -912,7 +916,7 @@ def test_partial_environment_update(
 
 def test_cannot_enable_v2_versioning_for_environment_already_enabled(
     environment_v2_versioning: Environment,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -924,7 +928,7 @@ def test_cannot_enable_v2_versioning_for_environment_already_enabled(
     mock_enable_v2_versioning = mocker.patch("environments.views.enable_v2_versioning")
 
     # When
-    response = admin_client.post(url)
+    response = admin_client_new.post(url)
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
