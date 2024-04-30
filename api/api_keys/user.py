@@ -94,8 +94,12 @@ class APIKeyUser(UserABC):
         )
 
     def get_permitted_environments(
-        self, permission_key: str, project: "Project", tag_ids: typing.List[int] = None
+        self,
+        permission_key: str,
+        project: "Project",
+        tag_ids: typing.List[int] = None,
+        prefetch_metadata: bool = False,
     ) -> QuerySet["Environment"]:
         return get_permitted_environments_for_master_api_key(
-            self.key, project, permission_key, tag_ids
+            self.key, project, permission_key, tag_ids, prefetch_metadata
         )
