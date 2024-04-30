@@ -485,6 +485,7 @@ if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 
 SWAGGER_SETTINGS = {
+    "DEFAULT_AUTO_SCHEMA_CLASS": "api.openapi.PydanticResponseCapableSwaggerAutoSchema",
     "SHOW_REQUEST_HEADERS": True,
     "SECURITY_DEFINITIONS": {
         "Private": {
@@ -1091,6 +1092,12 @@ FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID = env.int(
 )
 FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID = env.int(
     "FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID",
+    default=None,
+)
+
+# The URL used to install the GitHub integration
+GITHUB_APP_URL = env.int(
+    "GITHUB_APP_URL",
     default=None,
 )
 

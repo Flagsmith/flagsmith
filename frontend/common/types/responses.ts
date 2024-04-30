@@ -544,6 +544,30 @@ export type AuthType = 'EMAIL' | 'GITHUB' | 'GOOGLE'
 
 export type SignupType = 'NO_INVITE' | 'INVITE_EMAIL' | 'INVITE_LINK'
 
+export type Invite = {
+  id: number
+  email: string
+  date_created: string
+  invited_by: User
+  permission_groups: number[]
+}
+
+export type InviteLink = {
+  id: number
+  hash: string
+  date_created: string
+  role: string
+  expires_at: string | null
+}
+
+export type SubscriptionMeta = {
+  max_seats: number | null
+  max_api_calls: number | null
+  max_projects: number | null
+  payment_source: string | null
+  chargebee_email: string | null
+}
+
 export type Account = {
   first_name: string
   last_name: string
