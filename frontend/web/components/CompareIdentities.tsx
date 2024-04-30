@@ -134,6 +134,11 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     rightIdentityId: string,
     environmentId: string,
   ) => {
+    const body =
+      Utils.getFeatureStatesEndpoint() === 'featurestates'
+        ? { source_identity_id: leftIdentityId }
+        : { source_identity_uuid: leftIdentityId }
+
     return openConfirm({
       body: (
         <div>
@@ -149,9 +154,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
       destructive: true,
       onYes: () => {
         createCloneIdentityFeatureStates({
-          body: {
-            source_identity_id: leftIdentityId,
-          },
+          body: body,
           environment_id: environmentId,
           identity_id: rightIdentityId,
         }).then(() => {
