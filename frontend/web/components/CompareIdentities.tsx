@@ -137,9 +137,13 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     return openConfirm({
       body: (
         <div>
-          {'Cloning '} <strong>{leftIdentityName}</strong>{' '}
-          {'will copy any Identity Overrides in '}
-          <strong>{`${rightIdentityName}.`}</strong> {'Are you sure?'}
+          {'This will copy any identity overrides from '}{' '}
+          <strong>{leftIdentityName}</strong> {'to'}
+          <strong>{`${rightIdentityName}.`}</strong>{' '}
+          {'Any existing identity overrides on '}
+          <strong>{`${rightIdentityName}`}</strong> {'will be lost.'}
+          <br />
+          {'The Multivariate values will not be cloned.'}
         </div>
       ),
       destructive: true,
@@ -151,7 +155,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
           environment_id: environmentId,
           identity_id: rightIdentityId,
         }).then(() => {
-          toast('Clonation Completed!')
+          toast('Identity overrides successfully cloned!')
         })
       },
       title: 'Clone Identity',
