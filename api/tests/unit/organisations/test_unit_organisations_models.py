@@ -516,27 +516,6 @@ def test_organisation_update_clears_environment_caches(
     mock_environment_cache.delete_many.assert_called_once_with([environment.api_key])
 
 
-@pytest.mark.parametrize(
-    "allowed_calls_30d, actual_calls_30d, expected_overage",
-    ((1000000, 500000, 0), (1000000, 1100000, 100000), (0, 100000, 100000)),
-)
-def test_organisation_subscription_get_api_call_overage(
-    organisation, subscription, allowed_calls_30d, actual_calls_30d, expected_overage
-):
-    # Given
-    OrganisationSubscriptionInformationCache.objects.create(
-        organisation=organisation,
-        allowed_30d_api_calls=allowed_calls_30d,
-        api_calls_30d=actual_calls_30d,
-    )
-
-    # When
-    overage = subscription.get_api_call_overage()
-
-    # Then
-    assert overage == expected_overage
-
-
 def test_reset_of_api_notifications(organisation: Organisation) -> None:
     # Given
     now = timezone.now()

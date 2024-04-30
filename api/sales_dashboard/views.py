@@ -7,7 +7,8 @@ from app_analytics.influxdb_wrapper import (
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Count, F, Q
+from django.db.models import Count, F, Q, Value
+from django.db.models.functions import Greatest
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -57,6 +58,11 @@ class OrganisationList(ListView):
             num_projects=Count("projects", distinct=True),
             num_users=Count("users", distinct=True),
             num_features=Count("projects__features", distinct=True),
+            overage=Greatest(
+                Value(0),
+                F("subscription_information_cache__api_calls_30d")
+                - F("subscription_information_cache__allowed_30d_api_calls"),
+            ),
         ).select_related("subscription", "subscription_information_cache")
 
         if self.request.GET.get("search"):
