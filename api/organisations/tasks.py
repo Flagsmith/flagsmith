@@ -143,7 +143,7 @@ def _handle_api_usage_notifications(organisation: Organisation):
     period_starts_at = relativedelta(months=month_delta) + billing_starts_at
 
     days = relativedelta(now, period_starts_at).days
-    api_usage = get_current_api_usage(organisation.id, f"{days}d")
+    api_usage = get_current_api_usage(organisation.id, f"-{days}d")
 
     api_usage_percent = int(100 * api_usage / subscription_cache.allowed_30d_api_calls)
 
