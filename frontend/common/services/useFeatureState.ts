@@ -37,7 +37,7 @@ export const featureStateService = service
               }
             >
           } = await baseQuery({
-            url: `features/featurestates/?${Utils.toParam(query)}/`,
+            url: `features/featurestates/?${Utils.toParam(query)}`,
           })
           const results = await Promise.all(
             data.results.map(addFeatureSegmentsToFeatureStates),
