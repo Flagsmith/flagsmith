@@ -32,3 +32,10 @@ def generate_segment_data(
             }
         ],
     }
+
+
+def fix_issue_3869():
+    import freezegun  # noqa
+    import pydantic._internal._generate_schema  # noqa
+
+    freezegun.configure(extend_ignore_list=["pydantic._internal._generate_schema"])
