@@ -1,5 +1,4 @@
 import React, { FC } from 'react'
-import ProjectManageWidget from 'components/ProjectManageWidget'
 import Button from 'components/base/forms/Button'
 import AccountProvider from 'common/providers/AccountProvider'
 type OrganisationsPageType = {}

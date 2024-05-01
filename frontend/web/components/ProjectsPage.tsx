@@ -20,11 +20,6 @@ const ProjectsPage: FC<ProjectsPageType> = ({ match }) => {
       {() => {
         return (
           <div className='app-container container'>
-            <PageTitle title={'Projects'} />
-            <p className='fs-small lh-sm mb-4'>
-              Projects let you create and manage a set of features and configure
-              them between multiple app environments.
-            </p>
             <ProjectManageWidget organisationId={match.params.organisationId} />
           </div>
         )

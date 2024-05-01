@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo } from 'react'
+import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { RouterChildContext } from 'react-router'
 
@@ -14,6 +14,7 @@ import Button from './base/forms/Button'
 import PanelSearch from './PanelSearch'
 import Icon from './Icon'
 import AppActions from 'common/dispatcher/app-actions'
+import PageTitle from './PageTitle'
 const CreateProjectModal = require('components/modals/CreateProject')
 
 type SegmentsPageType = {
@@ -118,7 +119,13 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                     id='projects-list'
                     className='no-pad panel-projects'
                     listClassName='row mt-n2 gy-4'
-                    title='Your projects'
+                    title='Projects'
+                    header={
+                      <div className='fs-small mb-2 lh-sm'>
+                        Projects let you create and manage a set of features and
+                        configure them between multiple app environments.
+                      </div>
+                    }
                     items={projects}
                     renderRow={(
                       { environments, id, name }: Project,
