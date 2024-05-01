@@ -267,14 +267,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                         getEnvironments(getStore(), {
                           projectId: `${project.id}`,
                         }).then((res: { data: PagedResponse<Environment> }) => {
-                          router.history.push(
-                            `/project/${project.id}/environment/${
-                              res.data?.results?.length &&
-                              res.data?.results?.[0]
-                                ? `${res.data?.results?.[0].api_key}/features`
-                                : 'create'
-                            }`,
-                          )
+                          router.history.push(`/project/${project.id}`)
                           setOpen(false)
                         })
                       }}

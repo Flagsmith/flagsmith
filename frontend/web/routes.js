@@ -36,7 +36,8 @@ import OrganisationSettingsRedirectPage from './components/pages/OrganisationSet
 import OrganisationUsagePage from './components/pages/OrganisationUsagePage'
 import OrganisationsPage from './components/pages/OrganisationsPage'
 import PageTitle from './components/PageTitle'
-import UsersAndPermissionsPage from './components/pages/UsersAndPermissionsPage';
+import UsersAndPermissionsPage from './components/pages/UsersAndPermissionsPage'
+import ProjectRedirectPage from './components/pages/ProjectRedirectPage'
 
 export default (
   <App>
@@ -172,6 +173,7 @@ export default (
         exact
         component={AccountSettingsPage}
       />
+      <Route path='/project/:projectId' exact component={ProjectRedirectPage} />
       <Route path='/account' exact component={AccountSettingsPage} />
       <Route
         path='/project/:projectId/environment/:environmentId/audit-log'

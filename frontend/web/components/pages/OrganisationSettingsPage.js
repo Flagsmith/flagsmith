@@ -12,11 +12,9 @@ import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import Icon from 'components/Icon'
-import OrganisationManageWidget from 'components/OrganisationManageWidget'
 import _data from 'common/data/base/_data'
-import PermissionsTabs from 'components/PermissionsTabs'
 import AccountStore from 'common/stores/account-store'
-import PageTitle from '../PageTitle';
+import PageTitle from 'components/PageTitle'
 
 const SettingsTab = {
   'Billing': 'billing',
@@ -82,8 +80,6 @@ const OrganisationSettingsPage = class extends Component {
       this.context.router.history.replace('/create')
     }
   }
-
-
 
   save = (e) => {
     e && e.preventDefault()
