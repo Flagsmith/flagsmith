@@ -556,9 +556,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return `${value}`
   },
-  tagDisabled: (tag: Tag) => {
+  tagDisabled: (tag: Tag | undefined) => {
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
-    return tag.type === 'STALE' && !hasStaleFlagsPermission
+    return tag?.type === 'STALE' && !hasStaleFlagsPermission
   },
   validateRule(rule: SegmentCondition) {
     if (!rule) return false

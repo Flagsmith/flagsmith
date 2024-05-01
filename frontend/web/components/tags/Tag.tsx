@@ -46,7 +46,7 @@ const Tag: FC<TagType> = ({
     )
   }
 
-  const disabled = Utils.tagDisabled()
+  const disabled = Utils.tagDisabled(tag)
 
   if (!hideNames && !!onClick) {
     return (
