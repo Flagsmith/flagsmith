@@ -125,7 +125,7 @@ const controller = {
       })
   },
   getOrganisation: (id, force) => {
-    if (id !== store.id || force) {
+    if (`${id}` !== `${store.id}` || force) {
       store.id = id
       store.loading()
 
