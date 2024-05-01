@@ -1,5 +1,7 @@
 @import '../mixins/custom-scrollbar';
-
+.custom-scroll {
+  @include customScroll()
+}
 @mixin transition($transition...) {
   -moz-transition: $transition;
   -o-transition: $transition;

@@ -444,34 +444,45 @@ const App = class extends Component {
                                     isOrganisationSelect || isCreateOrganisation
                                   ) && (
                                     <div className='d-flex gap-1 ml-1 align-items-center'>
-                                      <BreadcrumbSeparator />
-                                      <NavLink
-                                        id='org-settings-link'
-                                        activeClassName='active'
-                                        className={classNames(
-                                          'breadcrumb-link',
-                                          {
-                                            active: !projectId,
-                                          },
-                                        )}
-                                        to={Utils.getOrganisationHomePage()}
+                                      <BreadcrumbSeparator
+                                        projectId={projectId}
+                                        router={this.context.router}
+                                        hideSlash={!activeProject}
                                       >
-                                        <div>
-                                          {AccountStore.getOrganisation()?.name}
-                                        </div>
-                                      </NavLink>
-                                      {!!activeProject && (
-                                        <BreadcrumbSeparator />
-                                      )}
-                                      {!!activeProject && (
                                         <NavLink
-                                          to={`/projects/${activeProject.id}`}
-                                          id='project-settings-link'
+                                          id='org-settings-link'
                                           activeClassName='active'
-                                          className={'breadcrumb-link active'}
+                                          className={classNames(
+                                            'breadcrumb-link',
+                                            {
+                                              active: !projectId,
+                                            },
+                                          )}
+                                          to={Utils.getOrganisationHomePage()}
                                         >
-                                          <div>{activeProject.name}</div>
+                                          <div>
+                                            {
+                                              AccountStore.getOrganisation()
+                                                ?.name
+                                            }
+                                          </div>
                                         </NavLink>
+                                      </BreadcrumbSeparator>
+                                      {!!activeProject && (
+                                        <BreadcrumbSeparator
+                                          projectId={projectId}
+                                          router={this.context.router}
+                                          hideSlash
+                                        >
+                                          <NavLink
+                                            to={`/projects/${activeProject.id}`}
+                                            id='project-settings-link'
+                                            activeClassName='active'
+                                            className={'breadcrumb-link active'}
+                                          >
+                                            <div>{activeProject.name}</div>
+                                          </NavLink>
+                                        </BreadcrumbSeparator>
                                       )}
                                     </div>
                                   )}

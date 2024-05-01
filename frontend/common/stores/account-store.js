@@ -1,3 +1,5 @@
+import { matchPath } from 'react-router'
+
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
@@ -277,6 +279,7 @@ const controller = {
   },
 
   selectOrganisation: (id) => {
+    API.setCookie('organisation', `${id}`)
     store.organisation = _.find(store.model.organisations, { id })
     store.changed()
   },
@@ -299,9 +302,13 @@ const controller = {
       if (user && user.organisations) {
         store.organisation = user.organisations[0]
         const cookiedID = API.getCookie('organisation')
+        const pathID = matchPath(document.location.pathname, {
+          path: '/organisation/:organisationId',
+          strict: false,
+        })?.params?.organisationId
         if (cookiedID) {
           const foundOrganisation = user.organisations.find(
-            (v) => `${v.id}` === cookiedID,
+            (v) => `${v.id}` === pathID || cookiedID,
           )
           if (foundOrganisation) {
             store.organisation = foundOrganisation

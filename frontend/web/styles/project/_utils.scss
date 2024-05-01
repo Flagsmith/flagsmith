@@ -52,7 +52,23 @@
 .float-left{
     float:left;
 }
-
+.left-0 {
+    left: 0 !important;
+}
+.max-w-auto {
+  max-width: none !important;
+}
+.top-form-item {
+    top: 30px;
+}
+.border-left-1 {
+    border-left: 1px solid $hr-border-color !important;
+}
+.border-bottom-1 {
+    border-bottom: 1px solid $hr-border-color !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
 .margin-top{
     margin-top:20px;
 }
