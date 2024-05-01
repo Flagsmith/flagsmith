@@ -3,6 +3,7 @@ import typing
 
 import boto3
 import pytest
+from _pytest.fixtures import SubRequest
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
 from django.db.backends.base.creation import TEST_DATABASE_PREFIX
@@ -10,6 +11,7 @@ from django.test.utils import setup_databases
 from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
+from pytest import Session
 from pytest_django.plugin import blocking_manager_key
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -802,10 +804,25 @@ def github_repository(
         "admin_master_api_key_client",
     ]
 )
-def admin_client_new(request, admin_client_original, admin_master_api_key_client):
+def admin_client_new(
+    request: SubRequest,
+    admin_client_original: APIClient,
+    admin_master_api_key_client: APIClient,
+) -> APIClient:
     if request.param == "admin_client_original":
         yield admin_client_original
     elif request.param == "admin_master_api_key_client":
         yield admin_master_api_key_client
     else:
         assert False, "Request param mismatch"
+
+
+def pytest_sessionstart(session: Session) -> None:
+    """
+    Hack to get around Pydantic issue with Freeze Gun.
+
+    https://github.com/Flagsmith/flagsmith/issues/3869
+    """
+    from environments.sdk.schemas import (  # noqa: F401
+        SDKEnvironmentDocumentModel,
+    )
