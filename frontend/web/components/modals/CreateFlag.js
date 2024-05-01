@@ -66,7 +66,7 @@ const CreateFlag = class extends Component {
       : {
           multivariate_options: [],
         }
-    const { allowEditDescription, tab } = this.props
+    const { allowEditDescription } = this.props
     if (this.props.projectFlag) {
       this.userOverridesPage(1)
     }
@@ -101,7 +101,6 @@ const CreateFlag = class extends Component {
       repoName: '',
       repoOwner: '',
       selectedIdentity: null,
-      tab: tab || 0,
       tags: tags || [],
     }
   }
@@ -668,30 +667,34 @@ const CreateFlag = class extends Component {
                           })}
                         />
                       </div>
-                      {externalResourceType == 'Github Issue' ? (
-                        <MyIssueSelect
-                          orgId={AccountStore.getOrganisation().id}
-                          onChange={(v) =>
-                            this.setState({
-                              featureExternalResource: v,
-                              status: 'open',
-                            })
-                          }
-                          repoOwner={repoOwner}
-                          repoName={repoName}
-                        />
-                      ) : externalResourceType == 'Github PR' ? (
-                        <MyPullRequestsSelect
-                          orgId={AccountStore.getOrganisation().id}
-                          onChange={(v) =>
-                            this.setState({ featureExternalResource: v.value })
-                          }
-                          repoOwner={repoOwner}
-                          repoName={repoName}
-                        />
-                      ) : (
-                        <></>
-                      )}
+                      <Flex className='ml-4'>
+                        {externalResourceType == 'Github Issue' ? (
+                          <MyIssueSelect
+                            orgId={AccountStore.getOrganisation().id}
+                            onChange={(v) =>
+                              this.setState({
+                                featureExternalResource: v,
+                                status: 'open',
+                              })
+                            }
+                            repoOwner={repoOwner}
+                            repoName={repoName}
+                          />
+                        ) : externalResourceType == 'Github PR' ? (
+                          <MyPullRequestsSelect
+                            orgId={AccountStore.getOrganisation().id}
+                            onChange={(v) =>
+                              this.setState({
+                                featureExternalResource: v.value,
+                              })
+                            }
+                            repoOwner={repoOwner}
+                            repoName={repoName}
+                          />
+                        ) : (
+                          <></>
+                        )}
+                      </Flex>
                       {(externalResourceType == 'Github Issue' ||
                         externalResourceType == 'Github PR') && (
                         <Button
@@ -1108,11 +1111,13 @@ const CreateFlag = class extends Component {
                           <div id='create-feature-modal'>
                             {isEdit && !identity ? (
                               <Tabs
-                                value={this.state.tab}
-                                onChange={(tab) => this.setState({ tab })}
+                                onChange={() => this.forceUpdate()}
+                                history={this.props.history}
+                                urlParam='tab'
                               >
                                 <TabItem
                                   data-test='value'
+                                  tabLabelString='Value'
                                   tabLabel={
                                     <Row className='justify-content-center'>
                                       Value{' '}
@@ -1300,6 +1305,7 @@ const CreateFlag = class extends Component {
                                 {!existingChangeRequest && (
                                   <TabItem
                                     data-test='segment_overrides'
+                                    tabLabelString='Segment Overrides'
                                     tabLabel={
                                       <Row
                                         className={`justify-content-center ${
@@ -1794,6 +1800,7 @@ const CreateFlag = class extends Component {
                                 {!existingChangeRequest && createFeature && (
                                   <TabItem
                                     data-test='settings'
+                                    tabLabelString='Settings'
                                     tabLabel={
                                       <Row className='justify-content-center'>
                                         Settings{' '}

@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.111.1](https://github.com/Flagsmith/flagsmith/compare/v2.111.0...v2.111.1) (2024-04-30)
+
+
+### Bug Fixes
+
+* edit group ([#3856](https://github.com/Flagsmith/flagsmith/issues/3856)) ([b25e6f8](https://github.com/Flagsmith/flagsmith/commit/b25e6f8ad1256b5556cfc7623064a6fd42b299fb))
+
+## [2.111.0](https://github.com/Flagsmith/flagsmith/compare/v2.110.2...v2.111.0) (2024-04-30)
+
+
+### Features
+
+* Capability for Pydantic-based OpenAPI response schemas ([#3795](https://github.com/Flagsmith/flagsmith/issues/3795)) ([609deaa](https://github.com/Flagsmith/flagsmith/commit/609deaa999c86bc05e1875c58f91c7c34532f3c5))
+* **permissions:** manage permissions from a single location ([#3730](https://github.com/Flagsmith/flagsmith/issues/3730)) ([fc34a53](https://github.com/Flagsmith/flagsmith/commit/fc34a53e92ba6c1870ab9539bfa21b6af08964cc))
+
+
+### Bug Fixes
+
+* Add GitHub app URL to env var ([#3847](https://github.com/Flagsmith/flagsmith/issues/3847)) ([210dbf7](https://github.com/Flagsmith/flagsmith/commit/210dbf7543dfddcbc36422eec0be958d6e8d6589))
+* Filter versioned features ([#3756](https://github.com/Flagsmith/flagsmith/issues/3756)) ([686e1ab](https://github.com/Flagsmith/flagsmith/commit/686e1ab81aae938a4a85680a6ed581d90b7ff11d))
+* Get current api usage InfluxDB query ([#3846](https://github.com/Flagsmith/flagsmith/issues/3846)) ([905c9fb](https://github.com/Flagsmith/flagsmith/commit/905c9fb36a67171464f03fd9565f02db74708974))
+* **hubspot:** create hubspot company with domain ([#3844](https://github.com/Flagsmith/flagsmith/issues/3844)) ([d4c9173](https://github.com/Flagsmith/flagsmith/commit/d4c9173c6c371546f581f2c81572fa2c7395dd17))
+* **sentry-FLAGSMITH-API-4BN:** update permission method ([#3851](https://github.com/Flagsmith/flagsmith/issues/3851)) ([b4e058a](https://github.com/Flagsmith/flagsmith/commit/b4e058a47c807455aefcd846f7a7f48de8c4a320))
+* useHasPermission import ([#3853](https://github.com/Flagsmith/flagsmith/issues/3853)) ([e156609](https://github.com/Flagsmith/flagsmith/commit/e156609570782fa9edbdf52e9e01e627e9bf8ffc))
+* user delete social auth ([#3693](https://github.com/Flagsmith/flagsmith/issues/3693)) ([3372207](https://github.com/Flagsmith/flagsmith/commit/3372207a8db623a6a07ac5df0902f24b8c0b1e4a))
+
 ## [2.110.2](https://github.com/Flagsmith/flagsmith/compare/v2.110.1...v2.110.2) (2024-04-25)
 
 

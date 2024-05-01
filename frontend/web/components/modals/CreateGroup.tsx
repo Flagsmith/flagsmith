@@ -24,13 +24,8 @@ import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
-import editPermissions, {
-  EditPermissionsModal,
-} from 'components/EditPermissions'
 import { Req } from 'common/types/requests'
 import PermissionsTabs from 'components/PermissionsTabs'
-import { useGetPermissionQuery } from 'common/services/usePermission'
-import { useHasPermission } from 'common/providers/Permission'
 
 const widths = [80, 80]
 
@@ -58,7 +53,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
     }[]
   >([])
 
-  const { data: groupData, error } = useGetGroupQuery(
+  const { data: groupData } = useGetGroupQuery(
     { id: `${group?.id}`, orgId },
     { skip: !group || !orgId },
   )
@@ -453,9 +448,6 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       )}
     </div>
   )
-  if (error) {
-    return
-  }
   return isEdit ? (
     <Tabs uncontrolled tabClassName='px-0'>
       <TabItem
@@ -471,7 +463,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       <TabItem tabLabel={<div>Permissions</div>}>{editPermissionsEl}</TabItem>
     </Tabs>
   ) : (
-    editGroup
+    editGroupEl
   )
 }
 

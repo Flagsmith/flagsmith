@@ -113,19 +113,9 @@ const ChangeRequestsPage = class extends Component {
                   </InfoMessage>
                 ) : null}
               </p>
-              <Tabs
-                value={this.state.tab}
-                onChange={(tab) => {
-                  this.setState({ tab }, (tab) => {
-                    this.props.router.history.replace(
-                      `${document.location.pathname}?${Utils.toParam({
-                        tab: this.state.tab ? 'closed' : 'open',
-                      })}`,
-                    )
-                  })
-                }}
-              >
+              <Tabs urlParam={'tab'}>
                 <TabItem
+                  tabLabelString='Open'
                   tabLabel={
                     <span className='flex-row justify-content-center'>
                       Open
@@ -229,6 +219,7 @@ const ChangeRequestsPage = class extends Component {
                   />
                 </TabItem>
                 <TabItem
+                  tabLabelString='Closed'
                   tabLabel={
                     <span className='flex-row justify-content-center'>
                       Closed
