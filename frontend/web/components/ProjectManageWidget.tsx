@@ -81,9 +81,13 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
       {({ isLoading, projects }) => (
         <div data-test='project-manage-widget' id='project-manage-widget'>
           <div>
-            {(projects && projects.length) || isLoading ? (
-              <div className='flex-row pl-0 pr-0'></div>
-            ) : isAdmin ? (
+            {(isLoading || !projects) && (
+              <div className='centered-container'>
+                <Loader />
+              </div>
+            )}
+
+            {projects?.length === 0 && !isLoading ? (
               <div className='container-mw-700 mb-4'>
                 <h5 className='mb-2'>
                   Great! Now you can create your first project.
@@ -108,11 +112,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                 </p>
               </div>
             )}
-            {!projects ? (
-              <div className='centered-container'>
-                <Loader />
-              </div>
-            ) : (
+            {!isLoading && (
               <div>
                 <FormGroup>
                   <PanelSearch
