@@ -73,6 +73,7 @@ const HomeAside: FC<HomeAsideType> = ({
                     {({ permission }) =>
                       permission && (
                         <Link
+                          id='create-env-link'
                           className='btn btn-xsm d-flex gap-1 align-items-center btn--outline'
                           to={`/project/${projectId}/environment/create`}
                         >

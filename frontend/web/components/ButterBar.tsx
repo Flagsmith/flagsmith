@@ -8,7 +8,7 @@ import Utils from 'common/utils/utils'
 import { Environment, FeatureImport, Res } from 'common/types/responses'
 import { useGetFeatureImportsQuery } from 'common/services/useFeatureImport'
 import AppActions from 'common/dispatcher/app-actions'
-import Constants from 'common/constants';
+import Constants from 'common/constants'
 
 interface ButterBarProps {
   billingStatus?: string
@@ -19,9 +19,12 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
   const matches = document.location.href.match(/\/environment\/([^/]*)/)
   const environment = matches && matches[1]
   const timerRef = useRef<NodeJS.Timer>()
-  const { data: featureImports, refetch } = useGetFeatureImportsQuery({
-    projectId,
-  })
+  const { data: featureImports, refetch } = useGetFeatureImportsQuery(
+    {
+      projectId,
+    },
+    { skip: !projectId },
+  )
   const processingRef = useRef(false)
   const checkProcessing = useCallback(
     (processing: FeatureImport | undefined) => {

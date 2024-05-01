@@ -320,7 +320,7 @@ const App = class extends Component {
     const projectNotLoaded =
       !activeProject && document.location.href.includes('project/')
 
-    if (this.props.isLoading || projectNotLoaded) {
+    if (this.props.isLoading) {
       return (
         <AccountProvider
           onNoUser={this.onNoUser}
@@ -430,13 +430,16 @@ const App = class extends Component {
                             <React.Fragment>
                               <nav className='mt-2 mb-1 space flex-row hidden-xs-down'>
                                 <Row className='gap-2'>
-                                  <Link to={'/organisations'}>
+                                  <Link
+                                    data-test='home-link'
+                                    to={'/organisations'}
+                                  >
                                     <img
                                       style={{
                                         height: 24,
                                         width: 24,
                                       }}
-                                      src='https://assets-global.website-files.com/64425c978745b453797839bb/6492f2e21ba18a967f85529d_icon256.png'
+                                      src='/static/images/nav-logo.png'
                                     />
                                   </Link>
 
@@ -478,7 +481,7 @@ const App = class extends Component {
                                         >
                                           <NavLink
                                             to={`/project/${activeProject.id}`}
-                                            id='project-settings-link'
+                                            id='project-link'
                                             activeClassName='active'
                                             className={'breadcrumb-link active'}
                                           >
@@ -622,7 +625,7 @@ const App = class extends Component {
                               permission && (
                                 <NavSubLink
                                   icon={<SettingsIcon />}
-                                  id='integrations-link'
+                                  id='project-settings-link'
                                   to={`/project/${projectId}/settings`}
                                 >
                                   Settings
@@ -642,6 +645,7 @@ const App = class extends Component {
                               Projects
                             </NavSubLink>
                             <NavSubLink
+                              data-test='users-and-permissions'
                               icon={<UsersIcon />}
                               id='permissions-link'
                               to={`/organisation/${

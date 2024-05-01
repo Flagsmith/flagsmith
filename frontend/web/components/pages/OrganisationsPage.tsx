@@ -20,8 +20,13 @@ const OrganisationsPage: FC<OrganisationsPageType> = ({ router }) => {
     openModal('Create Organisation', <CreateOrganisationModal />, 'side-modal')
   }, [])
 
+  const onSave = (id: number) => {
+    AppActions.selectOrganisation(id)
+    AppActions.getOrganisation(id)
+    router.history.push(Utils.getOrganisationHomePage(id))
+  }
   return (
-    <AccountProvider>
+    <AccountProvider onSave={onSave}>
       {({ user }: { user: User }) => {
         return (
           <div className='app-container container'>
@@ -58,6 +63,7 @@ const OrganisationsPage: FC<OrganisationsPageType> = ({ router }) => {
                             (Project.superUserCreateOnly &&
                               AccountStore.isSuper())) && (
                             <Button
+                              data-test='create-organisation-btn'
                               onClick={handleCreateOrganisationClick}
                               className='btn-project btn-project-create'
                             >

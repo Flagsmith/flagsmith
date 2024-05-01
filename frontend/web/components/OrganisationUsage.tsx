@@ -58,11 +58,14 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
   const [project, setProject] = useState<string | undefined>()
   const [environment, setEnvironment] = useState<string | undefined>()
 
-  const { data } = useGetOrganisationUsageQuery({
-    environmentId: environment,
-    organisationId,
-    projectId: project,
-  })
+  const { data } = useGetOrganisationUsageQuery(
+    {
+      environmentId: environment,
+      organisationId,
+      projectId: project,
+    },
+    { skip: !organisationId },
+  )
   const colours = ['#0AADDF', '#27AB95', '#FF9F43', '#EF4D56']
 
   return data?.totals ? (
@@ -111,9 +114,7 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
         <LegendItem value={data.totals.total} title='Total API Calls' />
       </Row>
       {data?.events_list?.length === 0 ? (
-        <div className='py-4 fw-semibold text-center'>
-          No usage recorded.
-        </div>
+        <div className='py-4 fw-semibold text-center'>No usage recorded.</div>
       ) : (
         <ResponsiveContainer height={400} width='100%'>
           <BarChart

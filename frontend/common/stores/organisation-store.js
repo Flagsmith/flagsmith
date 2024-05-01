@@ -57,6 +57,7 @@ const controller = {
             environmentId: res[0].api_key,
             projectId: project.id,
           }
+          AppActions.refreshOrganisation()
           store.saved()
         })
       })

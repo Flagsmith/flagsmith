@@ -14,7 +14,6 @@ import Button from './base/forms/Button'
 import PanelSearch from './PanelSearch'
 import Icon from './Icon'
 import AppActions from 'common/dispatcher/app-actions'
-import PageTitle from './PageTitle'
 const CreateProjectModal = require('components/modals/CreateProject')
 
 type SegmentsPageType = {
