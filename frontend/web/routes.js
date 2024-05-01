@@ -31,6 +31,9 @@ import GitHubSetupPage from './components/pages/GitHubSetupPage'
 import AuditLogItemPage from './components/pages/AuditLogItemPage'
 import FeatureHistoryPage from './components/pages/FeatureHistoryPage'
 import Utils from 'common/utils/utils'
+import ProjectsPage from './components/ProjectsPage'
+import OrganisationSettingsRedirectPage from './components/pages/OrganisationSettingsRedirectPage'
+import OrganisationUsagePage from './components/pages/OrganisationUsagePage'
 
 export default (
   <App>
@@ -115,11 +118,7 @@ export default (
         exact
         component={ProjectSettingsPage}
       />
-      <Route
-        path='/project/:projectId/environment/:environmentId/compare'
-        exact
-        component={ComparePage}
-      />
+      <Route path='/project/:projectId/compare' exact component={ComparePage} />
       <Route
         path='/project/:projectId/environment/:environmentId/history'
         exact
@@ -131,19 +130,34 @@ export default (
         component={ProjectSettingsPage}
       />
       <Route
-        path='/project/:projectId/environment/:environmentId/segments'
+        path='/project/:projectId/permissions'
+        exact
+        component={ProjectSettingsPage}
+      />
+      <Route
+        path='/project/:projectId/segments'
         exact
         component={SegmentsPage}
       />
       <Route
-        path='/project/:projectId/environment/:environmentId/organisation-settings'
+        path='/organisation/:organisationId/settings'
         exact
         component={OrganisationSettingsPage}
       />
       <Route
+        path='/organisation/:organisationId/usage'
+        exact
+        component={OrganisationUsagePage}
+      />
+      <Route
         path='/organisation-settings'
         exact
-        component={OrganisationSettingsPage}
+        component={OrganisationSettingsRedirectPage}
+      />
+      <Route
+        path='/organisation/:organisationId/projects'
+        exact
+        component={ProjectsPage}
       />
       <Route
         path='/project/:projectId/environment/:environmentId/account'

@@ -68,11 +68,6 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
   return data?.totals ? (
     <div className='mt-4'>
       <div className='col-md-6 mb-5'>
-        <InfoMessage>
-          Please be aware that usage data can be delayed by up to 3 hours and
-          that these numbers show the API usage for the last 30 days, not your
-          current billing period which may differ.
-        </InfoMessage>
         <label>Project</label>
         <ProjectFilter
           showAll
@@ -161,6 +156,11 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
           <Bar dataKey='traits' barSize={14} stackId='a' fill={colours[3]} />
         </BarChart>
       </ResponsiveContainer>
+      <InfoMessage>
+        Please be aware that usage data can be delayed by up to 3 hours and that
+        these numbers show the API usage for the last 30 days, not your current
+        billing period which may differ.
+      </InfoMessage>
       <div>
         <h4>What do these numbers mean?</h4>
         <h5>Flags</h5>

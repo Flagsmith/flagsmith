@@ -67,7 +67,7 @@ $bg-dark100: #2d3443;
 $bg-dark200: #202839;
 $bg-dark300: #161d30;
 $bg-dark400: #15192b;
-$bg-dark500: #0f1425;
+$bg-dark500: #101628;
 
 //Body
 $body-text: $text-icon-dark;
@@ -88,7 +88,7 @@ $btn-line-height-lg: 56px;
 $btn-padding-y: 0;
 $btn-font-weight: 700;
 $btn-border-radius: $border-radius;
-$btn-font-size: 16px;
+$btn-font-size: $font-size-base;
 $btn-padding-x: 20px; // todo, $spacer PR should change this to $spacer*5
 $btn-padding-y-sm: 0;
 $btn-padding-x-sm: 16px;
@@ -182,7 +182,7 @@ $font-sizes: (
   captionSmall: $font-caption-sm,
   captionXSmall: $font-caption-xs,
 );
-
+$font-size-base: 14px;
 $h1-font-size: 42px;
 $h1-line-height: 46px;
 $h2-font-size: 34px;
@@ -312,20 +312,6 @@ $nav-icon-color-dark: $text-icon-grey;
 $nav-link-color-dark: $text-icon-light;
 $nav-link-color-active-dark: $text-icon-light;
 
-//Aside
-$aside-bg: $primary900;
-$aside-bg-dark: $bg-dark300;
-$aside-nav-collapse: $primary900;
-$aside-nav-collapse-dark: $bg-dark300;
-$aside-nav-color: $text-icon-light-grey;
-$aside-nav-active-color: $text-icon-light;
-$aside-width: 300px;
-$aside-nav-hover: $primary400;
-$aside-nav-hover-dark: $primary400;
-$aside-nav-active: $primary;
-$aside-nav-active-dark: $primary;
-$aside-nav-active-color-dark: $text-icon-light;
-
 $bt-scrollbar-track: $white-alpha-16;
 $bt-scrollbar-thumb: $bg-light300;
 $bt-scrollbar-thumb-hover: $bg-light300;
@@ -348,4 +334,11 @@ $theme-colors: (
   .bg-light200 {
     background-color: $body-bg-dark !important;
   }
+}
+.bg-faint {
+  background-color: #fafafa;
+}
+
+.dark .bg-faint {
+  background-color: #0f1426;
 }

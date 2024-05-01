@@ -481,7 +481,7 @@ const ProjectSettingsPage = class extends Component {
                             onClick={() =>
                               this.confirmRemove(project, () => {
                                 this.context.router.history.replace(
-                                  '/organisation-settings',
+                                  Utils.getOrganisationHomePage(),
                                 )
                                 deleteProject(this.props.match.params.projectId)
                               })

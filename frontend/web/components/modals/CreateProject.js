@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import InfoMessage from 'components/InfoMessage'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
+import Constants from '../../../common/constants';
 
 const CreateProject = class extends Component {
   static displayName = 'CreateProject'
@@ -61,7 +62,7 @@ const CreateProject = class extends Component {
                     <a
                       href='#'
                       onClick={() => {
-                        document.location.replace('/organisation-settings')
+                        document.location.replace(Constants.upgradeURL)
                       }}
                     >
                       Startup plan

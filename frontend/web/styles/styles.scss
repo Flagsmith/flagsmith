@@ -6,6 +6,8 @@
 @import "project/segments";
 
 .butter-bar {
+  margin-top: 8px;
+  margin-bottom: 4px;
   background-color: $butter-bar-bg;
   text-align: center;
   line-height: 44px;
@@ -265,7 +267,6 @@ input:disabled {
 
 .bottom-banner {
   position: fixed;
-  left: $aside-width+20px;
   bottom: 20px;
   margin: auto;
   height: 44px;

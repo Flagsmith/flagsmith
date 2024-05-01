@@ -23,6 +23,7 @@ import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import Switch from 'components/Switch'
 import Panel from 'components/base/grid/Panel'
+import AccountStore from 'common/stores/account-store'
 
 const CodeHelp = require('../../components/CodeHelp')
 type SegmentsPageType = {
@@ -82,7 +83,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   useEffect(() => {
     if (error) {
       // Kick user back out to projects
-      props.router.history.replace('/organisation-settings')
+      props.router.history.replace(Utils.getOrganisationHomePage())
     }
   }, [error, props.router.history])
   const newSegment = () => {

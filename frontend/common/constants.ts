@@ -522,4 +522,5 @@ export default {
     '#DE3163',
   ],
   untaggedTag: { color: '#dedede', label: 'Untagged' },
+  upgradeURL: '/organisation-settings?tab=billing',
 }

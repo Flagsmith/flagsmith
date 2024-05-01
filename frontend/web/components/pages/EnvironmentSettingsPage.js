@@ -89,7 +89,7 @@ const EnvironmentSettingsPage = class extends Component {
 
   onRemove = () => {
     toast('Your project has been removed')
-    this.context.router.history.replace('/organisation-settings')
+    this.context.router.history.replace(Utils.getOrganisationHomePage())
   }
 
   confirmRemove = (environment, cb) => {
@@ -506,7 +506,7 @@ const EnvironmentSettingsPage = class extends Component {
                               View and manage your feature changes with a Change
                               Request flow with our{' '}
                               <Link
-                                to='/organisation-settings'
+                                to={Constants.upgradeURL}
                                 className='btn-link'
                               >
                                 Scale-up plan

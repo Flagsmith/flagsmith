@@ -13,7 +13,7 @@ import { Project } from 'common/types/responses'
 import Button from './base/forms/Button'
 import PanelSearch from './PanelSearch'
 import Icon from './Icon'
-
+import AppActions from 'common/dispatcher/app-actions'
 const CreateProjectModal = require('components/modals/CreateProject')
 
 type SegmentsPageType = {
@@ -65,20 +65,19 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
       handleCreateProjectClick()
     }
   }, [handleCreateProjectClick, router.route.location])
-
+  useEffect(() => {
+    if (organisationId) {
+      AppActions.getOrganisation(organisationId)
+    }
+  }, [organisationId])
   return (
     <OrganisationProvider
+      id={organisationId}
       onRemoveProject={() => {
         toast('Your project has been removed')
       }}
     >
-      {({
-        isLoading,
-        projects,
-      }: {
-        isLoading: boolean
-        projects: Project[]
-      }) => (
+      {({ isLoading, projects }) => (
         <div data-test='project-manage-widget' id='project-manage-widget'>
           <div>
             {(projects && projects.length) || isLoading ? (
@@ -108,12 +107,11 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                 </p>
               </div>
             )}
-            {(isLoading || !projects) && (
+            {!projects ? (
               <div className='centered-container'>
                 <Loader />
               </div>
-            )}
-            {!isLoading && (
+            ) : (
               <div>
                 <FormGroup>
                   <PanelSearch

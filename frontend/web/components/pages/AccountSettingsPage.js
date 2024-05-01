@@ -17,6 +17,7 @@ import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import { Link } from 'react-router-dom'
 import InfoMessage from 'components/InfoMessage'
+import Constants from '../../../common/constants';
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -459,7 +460,7 @@ class TheComponent extends Component {
                       ) : (
                         <div className='text-right'>
                           <Link
-                            to='/organisation-settings'
+                            to={Constants.upgradeURL}
                             className='btn btn-primary text-center ml-auto mt-2 mb-2'
                           >
                             Manage payment plan

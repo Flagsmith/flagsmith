@@ -384,6 +384,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
 
+  getOrganisationHomePage(id?: string) {
+    const orgId = id || AccountStore.getOrganisation()?.id
+    if (!orgId) {
+      return `/organisations`
+    }
+    return `/organisation/${orgId}/projects`
+  },
+
   getSDKEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
 
@@ -486,7 +494,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       id ? `${id}/` : ''
     }`
   },
-
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
@@ -518,6 +525,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       head.appendChild(script)
     })
   },
+
   numberWithCommas(x: number) {
     if (typeof x !== 'number') return ''
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -535,7 +543,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       zE('messenger', 'open')
     }
   },
-
   removeElementFromArray(array: any[], index: number) {
     return array.slice(0, index).concat(array.slice(index + 1))
   },

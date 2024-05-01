@@ -36,7 +36,7 @@ const GithubStar: FC<GithubStarType> = ({}) => {
         style={{ width: 90 }}
         target='_blank'
         href='https://github.com/flagsmith/flagsmith'
-        className='btn btn-sm btn-with-icon text-body me-2'
+        className='btn btn-sm btn-with-icon text-body'
         rel='noreferrer'
       >
         <div className='d-flex flex-row justify-content-center align-items-center'>

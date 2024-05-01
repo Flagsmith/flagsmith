@@ -8,6 +8,7 @@ import Utils from 'common/utils/utils'
 import { Environment, FeatureImport, Res } from 'common/types/responses'
 import { useGetFeatureImportsQuery } from 'common/services/useFeatureImport'
 import AppActions from 'common/dispatcher/app-actions'
+import Constants from 'common/constants';
 
 interface ButterBarProps {
   billingStatus?: string
@@ -92,7 +93,7 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
       {Utils.getFlagsmithHasFeature('read_only_mode') && (
         <div className='butter-bar'>
           Your organisation is over its usage limit, please{' '}
-          <Link to='/organisation-settings'>upgrade your plan</Link>.
+          <Link to={Constants.upgradeURL}>upgrade your plan</Link>.
         </div>
       )}
       {Utils.getFlagsmithHasFeature('show_dunning_banner') &&
