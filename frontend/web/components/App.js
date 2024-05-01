@@ -477,7 +477,7 @@ const App = class extends Component {
                                           focus='project'
                                         >
                                           <NavLink
-                                            to={`/projects/${activeProject.id}`}
+                                            to={`/project/${activeProject.id}`}
                                             id='project-settings-link'
                                             activeClassName='active'
                                             className={'breadcrumb-link active'}
