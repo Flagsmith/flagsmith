@@ -291,7 +291,8 @@ const App = class extends Component {
     const { asideIsVisible, lastEnvironmentId, lastProjectId } = this.state
     const projectId = this.getProjectId(this.props)
     const environmentId = this.getEnvironmentId(this.props)
-
+    const isCreateEnvironment = environmentId === 'create'
+    const isCreateOrganisation = document.location.pathname === '/create'
     const storageHasParams = lastEnvironmentId || lastProjectId
     const pageHasAside = environmentId || projectId || storageHasParams
     const isHomepage =
@@ -344,7 +345,7 @@ const App = class extends Component {
       (!dismissed || dismissed !== announcementValue.id) &&
       Utils.getFlagsmithHasFeature('announcement') &&
       this.state.showAnnouncement
-    const isOrgSelect = document.location.pathname === '/organisations'
+    const isOrganisationSelect = document.location.pathname === '/organisations'
     const integrations = Object.keys(
       JSON.parse(Utils.getFlagsmithValue('integration_data') || '{}'),
     )
@@ -436,31 +437,39 @@ const App = class extends Component {
                                     />
                                   </Link>
 
-                                  {!isOrgSelect && (
-                                    <NavLink
-                                      id='org-settings-link'
-                                      activeClassName='active'
-                                      className={classNames('breadcrumb-link', {
-                                        active: !projectId,
-                                      })}
-                                      to={Utils.getOrganisationHomePage()}
-                                    >
-                                      <div>
-                                        {AccountStore.getOrganisation()?.name}
-                                      </div>
-                                    </NavLink>
-                                  )}
-
-                                  {!!activeProject && <BreadcrumbSeparator />}
-                                  {!!activeProject && (
-                                    <NavLink
-                                      to={`/projects/${activeProject.id}`}
-                                      id='project-settings-link'
-                                      activeClassName='active'
-                                      className={'breadcrumb-link active'}
-                                    >
-                                      <div>{activeProject.name}</div>
-                                    </NavLink>
+                                  {!(
+                                    isOrganisationSelect || isCreateOrganisation
+                                  ) && (
+                                    <>
+                                      <NavLink
+                                        id='org-settings-link'
+                                        activeClassName='active'
+                                        className={classNames(
+                                          'breadcrumb-link',
+                                          {
+                                            active: !projectId,
+                                          },
+                                        )}
+                                        to={Utils.getOrganisationHomePage()}
+                                      >
+                                        <div>
+                                          {AccountStore.getOrganisation()?.name}
+                                        </div>
+                                      </NavLink>
+                                      {!!activeProject && (
+                                        <BreadcrumbSeparator />
+                                      )}
+                                      {!!activeProject && (
+                                        <NavLink
+                                          to={`/projects/${activeProject.id}`}
+                                          id='project-settings-link'
+                                          activeClassName='active'
+                                          className={'breadcrumb-link active'}
+                                        >
+                                          <div>{activeProject.name}</div>
+                                        </NavLink>
+                                      )}
+                                    </>
                                   )}
                                 </Row>
                                 <Row className='gap-3'>
@@ -526,7 +535,7 @@ const App = class extends Component {
                         </Flex>
                       </div>
                     )}
-                  {!isOrgSelect && (
+                  {!isOrganisationSelect && !isCreateOrganisation && (
                     <div className='py-0 bg-faint gap-4 d-flex px-3'>
                       {activeProject ? (
                         <>
@@ -658,7 +667,7 @@ const App = class extends Component {
                   {/*    disabled={!pageHasAside}*/}
                   {/*  />*/}
                   {/*)}*/}
-                  {environmentId && environmentId !== 'create' ? (
+                  {environmentId && !isCreateEnvironment ? (
                     <div className='d-flex'>
                       <HomeAside
                         history={this.context.router.history}

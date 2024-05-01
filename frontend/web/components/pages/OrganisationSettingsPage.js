@@ -16,6 +16,7 @@ import OrganisationManageWidget from 'components/OrganisationManageWidget'
 import _data from 'common/data/base/_data'
 import PermissionsTabs from 'components/PermissionsTabs'
 import AccountStore from 'common/stores/account-store'
+import PageTitle from '../PageTitle';
 
 const SettingsTab = {
   'Billing': 'billing',
@@ -266,6 +267,7 @@ const OrganisationSettingsPage = class extends Component {
       props: { webhooks, webhooksLoading },
     } = this
     const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
+    const force2faPermission = Utils.getPlansPermission('FORCE_2FA')
 
     return (
       <div className='app-container container'>
@@ -285,10 +287,8 @@ const OrganisationSettingsPage = class extends Component {
                   const displayedTabs = []
 
                   if (
-                    !(
-                      AccountStore.getUser() &&
-                      AccountStore.getOrganisationRole() === 'ADMIN'
-                    )
+                    AccountStore.getUser() &&
+                    AccountStore.getOrganisationRole() === 'ADMIN'
                   ) {
                     displayedTabs.push(
                       ...[
@@ -298,13 +298,16 @@ const OrganisationSettingsPage = class extends Component {
                         SettingsTab.Webhooks,
                       ].filter((v) => !!v),
                     )
+                  } else {
+                    return (
+                      <div className='py-2'>
+                        You do not have permission to view this page
+                      </div>
+                    )
                   }
                   return (
                     <div>
-                      <div className='py-4'>
-                        <OrganisationManageWidget />
-                      </div>
-
+                      <PageTitle title={'Organisation Settings'} />
                       <Tabs hideNavOnSingleTab urlParam='tab' className='mt-0'>
                         {displayedTabs.includes(SettingsTab.General) && (
                           <TabItem tabLabel='General'>

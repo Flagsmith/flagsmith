@@ -7,7 +7,7 @@ import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import { Link } from 'react-router-dom'
-import Constants from '../../../common/constants';
+import Constants from 'common/constants'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'

@@ -34,6 +34,7 @@ import Utils from 'common/utils/utils'
 import ProjectsPage from './components/ProjectsPage'
 import OrganisationSettingsRedirectPage from './components/pages/OrganisationSettingsRedirectPage'
 import OrganisationUsagePage from './components/pages/OrganisationUsagePage'
+import OrganisationsPage from './components/pages/OrganisationsPage';
 
 export default (
   <App>
@@ -175,6 +176,7 @@ export default (
         exact
         component={AuditLogPage}
       />
+      <Route path='/organisations' exact component={OrganisationsPage} />
       <Route
         path='/project/:projectId/environment/:environmentId/audit-log/:id'
         exact
