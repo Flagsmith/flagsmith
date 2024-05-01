@@ -78,7 +78,9 @@ const ItemList: FC<ItemListType> = ({
             )}
           >
             {v.name}
-            {isActive && <IonIcon icon={checkmarkCircle} />}
+            {isActive && (
+              <IonIcon className='text-primary' icon={checkmarkCircle} />
+            )}
           </a>
         )
       })}
