@@ -234,7 +234,10 @@ const App = class extends Component {
             }
 
             const org = AccountStore.getOrganisation()
-            if (!org || org.id !== lastOrg.id) {
+            if (
+              !org ||
+              (org.id !== lastOrg.id && this.getEnvironmentId(this.props))
+            ) {
               AppActions.selectOrganisation(lastOrg.id)
               AppActions.getOrganisation(lastOrg.id)
             }
@@ -440,7 +443,7 @@ const App = class extends Component {
                                   {!(
                                     isOrganisationSelect || isCreateOrganisation
                                   ) && (
-                                    <div className="d-flex gap-1 ml-1 align-items-center">
+                                    <div className='d-flex gap-1 ml-1 align-items-center'>
                                       <BreadcrumbSeparator />
                                       <NavLink
                                         id='org-settings-link'
@@ -634,27 +637,30 @@ const App = class extends Component {
                             >
                               Users and Permissions
                             </NavSubLink>
-                            {!Project.disableAnalytics && (
+                            {!Project.disableAnalytics &&
+                              AccountStore.isAdmin() && (
+                                <NavSubLink
+                                  icon={statsChart}
+                                  id='permissions-link'
+                                  to={`/organisation/${
+                                    AccountStore.getOrganisation().id
+                                  }/usage`}
+                                >
+                                  Usage
+                                </NavSubLink>
+                              )}
+
+                            {AccountStore.isAdmin() && (
                               <NavSubLink
-                                icon={statsChart}
-                                id='permissions-link'
+                                icon={<SettingsIcon />}
+                                id='org-settings-link'
                                 to={`/organisation/${
                                   AccountStore.getOrganisation().id
-                                }/usage`}
+                                }/settings`}
                               >
-                                Usage
+                                Settings
                               </NavSubLink>
                             )}
-
-                            <NavSubLink
-                              icon={<SettingsIcon />}
-                              id='org-settings-link'
-                              to={`/organisation/${
-                                AccountStore.getOrganisation().id
-                              }/settings`}
-                            >
-                              Settings
-                            </NavSubLink>
                           </>
                         )
                       )}
