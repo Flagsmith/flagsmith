@@ -53,10 +53,10 @@ to be long-lived in case they need to be put to use.
 
 ### Feature Management Flags
 
-You can make use of [Segments](../basic-features/managing-segments.md) and Flags to control how different features are
-enabled or disabled depending on the user. For example, you can send a Trait `plan` with the relevant user value (e.g.
-`scale-up`) to Flagsmith, then create a Segment that defines all users on the `scale-up` plan. You can then show or hide
-features based on this Segment and plan.
+You can make use of [Segments](../basic-features/segments.md) and Flags to control how different features are enabled or
+disabled depending on the user. For example, you can send a Trait `plan` with the relevant user value (e.g. `scale-up`)
+to Flagsmith, then create a Segment that defines all users on the `scale-up` plan. You can then show or hide features
+based on this Segment and plan.
 
 When employing feature flags in this manner, generally you would never remove this Flag or Segment, as you are using
 them to drive platform features for the lifetime of the application.
