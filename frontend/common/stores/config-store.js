@@ -50,7 +50,7 @@ flagsmith
     enableDynatrace,
     environmentID: Project.flagsmith,
     onChange: controller.loaded,
-    realtime: true,
+    realtime: Project.flagsmithRealtime,
   })
   .catch(() => {
     controller.onError()
