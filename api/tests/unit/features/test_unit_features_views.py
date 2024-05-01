@@ -1901,6 +1901,59 @@ def test_list_features_provides_information_on_number_of_overrides(
     assert response_json["results"][0]["num_identity_overrides"] == 1
 
 
+def test_list_features_provides_correct_information_on_number_of_overrides_based_on_version(
+    feature: Feature,
+    segment: Segment,
+    project: Project,
+    environment_v2_versioning: Environment,
+    admin_client_new: APIClient,
+    admin_user: FFAdminUser,
+):
+    # Given
+    url = "%s?environment=%d" % (
+        reverse("api-v1:projects:project-features-list", args=[project.id]),
+        environment_v2_versioning.id,
+    )
+
+    # let's create a new version with a segment override
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            environment=environment_v2_versioning,
+            segment=segment,
+        ),
+        environment_feature_version=version_2,
+    )
+    version_2.publish(admin_user)
+
+    # and now let's create a new version which removes the segment override
+    version_3 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    FeatureState.objects.filter(
+        environment_feature_version=version_3,
+        feature_segment__segment=segment,
+    ).delete()
+    version_3.publish(admin_user)
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+
+    # The number of segment overrides in the latest version should be 0
+    assert response_json["results"][0]["num_segment_overrides"] == 0
+
+
 def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
     dynamo_enabled_project: Project,
     dynamo_enabled_project_environment_one: Environment,
@@ -2915,7 +2968,7 @@ def test_feature_list_last_modified_values(
         Feature.objects.create(name=f"feature_{i}", project=project)
 
     # When
-    with django_assert_num_queries(16):  # TODO: reduce this number of queries!
+    with django_assert_num_queries(18):  # TODO: reduce this number of queries!
         response = staff_client.get(url)
 
     # Then

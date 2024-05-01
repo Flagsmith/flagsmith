@@ -384,7 +384,8 @@ export type Req = {
     environment_id: string
     identity_id: string
     body: {
-      source_identity_id: string
+      source_identity_id?: string
+      source_identity_uuid?: string
     }
   }
   updateGroup: Req['createGroup'] & {
