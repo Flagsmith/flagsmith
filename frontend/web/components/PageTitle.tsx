@@ -1,4 +1,5 @@
-import { FC, PropsWithChildren, ReactNode } from 'react' // we need this to make JSX compile
+import { FC, PropsWithChildren, ReactNode } from 'react'
+import classNames from 'classnames' // we need this to make JSX compile
 
 type PageTitleType = PropsWithChildren<{
   title: ReactNode
@@ -11,14 +12,7 @@ const PageTitle: FC<PageTitleType> = ({ children, className, cta, title }) => {
     <div className={className || 'mb-4'}>
       <div className='flex-row align-items-center'>
         <Flex>
-          <h4
-            className='mb-0'
-            style={{
-              lineHeight: children ? '' : '48px',
-            }}
-          >
-            {title}
-          </h4>
+          <h4 className={classNames(children ? 'mb-0' : 'mb-2')}>{title}</h4>
           {children && (
             <Row>
               <div className='col-xl-8 col-12 mt-1'>
