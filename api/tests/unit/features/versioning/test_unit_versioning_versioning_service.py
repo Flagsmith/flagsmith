@@ -115,7 +115,7 @@ def test_get_environment_flags_v2_versioning_returns_latest_live_versions_of_fea
     environment_v2_versioning: Environment,
     feature: Feature,
     admin_user: FFAdminUser,
-):
+) -> None:
     # Given
     # a second feature with its corresponding environment feature version
     feature_2 = Feature.objects.create(name="feature_2", project=project)
@@ -158,7 +158,7 @@ def test_get_environment_flags_v2_versioning_does_not_return_removed_segment_ove
     segment: Segment,
     segment_featurestate: FeatureState,
     environment_v2_versioning: Environment,
-):
+) -> None:
     # Given
     # The initial version has a segment override
     initial_version = EnvironmentFeatureVersion.objects.get(
