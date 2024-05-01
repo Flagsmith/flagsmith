@@ -146,7 +146,7 @@ const controller = {
             : [],
         ),
       ).then((res) => {
-        if (id === store.id) {
+        if (`${id}` === `${store.id}`) {
           // eslint-disable-next-line prefer-const
           let [_projects, users, invites, subscriptionMeta] = res
           let projects = _.sortBy(_projects, 'name')
