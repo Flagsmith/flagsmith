@@ -29,7 +29,7 @@ type OrganisationProviderType = {
     groups: UserGroupSummary[] | null
     projects: Project[] | null
     subscriptionMeta: SubscriptionMeta | null
-    users: User[] | null
+    users: User[]
   }) => ReactNode
 }
 
@@ -77,8 +77,8 @@ const OrganisationProvider: FC<OrganisationProviderType> = ({
     <>
       {children({
         createProject: AppActions.createProject,
-        groups: groups?.results || [],
         error: AccountStore.error,
+        groups: groups?.results || [],
         invalidateInviteLink: AppActions.invalidateInviteLink,
         inviteLinks: OrganisationStore.getInviteLinks(),
         invites: OrganisationStore.getInvites(),

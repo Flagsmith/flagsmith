@@ -83,36 +83,7 @@ const OrganisationSettingsPage = class extends Component {
     }
   }
 
-  deleteInvite = (id) => {
-    openConfirm({
-      body: (
-        <div>
-          Are you sure you want to delete this invite? This action cannot be
-          undone.
-        </div>
-      ),
-      destructive: true,
-      onYes: () => AppActions.deleteInvite(id),
-      title: 'Delete Invite',
-      yesText: 'Confirm',
-    })
-  }
 
-  deleteUser = (id, userDisplayName) => {
-    openConfirm({
-      body: (
-        <div>
-          Are you sure you want to remove the user{' '}
-          <strong>{userDisplayName}</strong> from the organisation? This action
-          cannot be undone.
-        </div>
-      ),
-      destructive: true,
-      onYes: () => AppActions.deleteUser(id),
-      title: 'Delete User',
-      yesText: 'Confirm',
-    })
-  }
 
   save = (e) => {
     e && e.preventDefault()
@@ -224,33 +195,6 @@ const OrganisationSettingsPage = class extends Component {
       />,
       'p-0',
     )
-  }
-
-  editUserPermissions = (user, organisationId) => {
-    openModal(
-      'Edit Organisation Permissions',
-      <div className='p-4'>
-        <PermissionsTabs uncontrolled user={user} orgId={organisationId} />
-      </div>,
-      'p-0 side-modal',
-    )
-  }
-  formatLastLoggedIn = (last_login) => {
-    if (!last_login) return 'Never'
-
-    const diff = moment().diff(moment(last_login), 'days')
-    if (diff >= 30) {
-      return (
-        <div className='mb-1'>
-          {`${diff} days ago`}
-          <br />
-          <div className='list-item-subtitle'>
-            {moment(last_login).format('Do MMM YYYY')}
-          </div>
-        </div>
-      )
-    }
-    return 'Within 30 days'
   }
 
   getOrganisationPermissions = (id) => {

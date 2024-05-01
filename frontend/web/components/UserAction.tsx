@@ -13,7 +13,7 @@ interface FeatureActionProps {
   canRemove: boolean
   onRemove: () => void
   onEdit: () => void
-  canEdit: () => void
+  canEdit: boolean
 }
 
 type ActionType = 'edit' | 'remove'

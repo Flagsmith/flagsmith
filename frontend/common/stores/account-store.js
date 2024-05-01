@@ -306,12 +306,14 @@ const controller = {
           path: '/organisation/:organisationId',
           strict: false,
         })?.params?.organisationId
-        if (cookiedID) {
+        const orgId = pathID || cookiedID
+        if (orgId) {
           const foundOrganisation = user.organisations.find(
-            (v) => `${v.id}` === pathID || cookiedID,
+            (v) => `${v.id}` === orgId,
           )
           if (foundOrganisation) {
             store.organisation = foundOrganisation
+            AppActions.getOrganisation(orgId)
           }
         }
       }

@@ -36,6 +36,7 @@ import OrganisationSettingsRedirectPage from './components/pages/OrganisationSet
 import OrganisationUsagePage from './components/pages/OrganisationUsagePage'
 import OrganisationsPage from './components/pages/OrganisationsPage'
 import PageTitle from './components/PageTitle'
+import UsersAndPermissionsPage from './components/pages/UsersAndPermissionsPage';
 
 export default (
   <App>
@@ -149,11 +150,7 @@ export default (
       <Route
         path='/organisation/:organisationId/permissions'
         exact
-        component={() => (
-          <div className="app-container container">
-            <PageTitle title={"Not Implemented Yet"}/>
-          </div>
-        )}
+        component={UsersAndPermissionsPage}
       />
       <Route
         path='/organisation/:organisationId/usage'
