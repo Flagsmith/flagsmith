@@ -1,9 +1,11 @@
 import { FC } from 'react'
+import { IonIcon } from '@ionic/react';
+import { chevronForward } from 'ionicons/icons';
 
 type BreadcrumbSeparatorType = {}
 
 const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({}) => {
-  return <span className='text-muted'>/</span>
+  return <IonIcon icon={chevronForward} className='text-muted'/>
 }
 
 export default BreadcrumbSeparator

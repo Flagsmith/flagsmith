@@ -440,7 +440,8 @@ const App = class extends Component {
                                   {!(
                                     isOrganisationSelect || isCreateOrganisation
                                   ) && (
-                                    <>
+                                    <div className="d-flex gap-1 ml-1 align-items-center">
+                                      <BreadcrumbSeparator />
                                       <NavLink
                                         id='org-settings-link'
                                         activeClassName='active'
@@ -469,7 +470,7 @@ const App = class extends Component {
                                           <div>{activeProject.name}</div>
                                         </NavLink>
                                       )}
-                                    </>
+                                    </div>
                                   )}
                                 </Row>
                                 <Row className='gap-3'>
