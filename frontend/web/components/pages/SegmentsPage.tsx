@@ -187,8 +187,16 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         }
         title={'Segments'}
       >
-        Create and manage groups of users with similar traits. Segments can be
-        used to override features within the features page for any environment.{' '}
+        Create and manage groups of users with similar{' '}
+        <Button
+          theme='text'
+          href='https://docs.flagsmith.com/basic-features/managing-identities#identity-traits'
+          target='_blank'
+        >
+          traits
+        </Button>
+        . Segments can be used to override features within the features page for
+        any environment.{' '}
         <Button
           theme='text'
           target='_blank'
@@ -328,31 +336,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
               </div>
             ) : (
               <div>
-                <h3>Target groups of users with segments.</h3>
-                <FormGroup>
-                  <Panel icon='ion-ios-globe' title='1. creating a segment'>
-                    <p>
-                      You can create a segment that targets{' '}
-                      <Button
-                        theme='text'
-                        href='https://docs.flagsmith.com/basic-features/managing-identities#identity-traits'
-                        target='_blank'
-                      >
-                        User Traits
-                      </Button>
-                      . As user's traits are updated they will automatically be
-                      added to the segments based on the rules you create.{' '}
-                      <Button
-                        theme='text'
-                        href='https://docs.flagsmith.com/basic-features/managing-segments'
-                        target='_blank'
-                      >
-                        Check out the documentation on Segments
-                      </Button>
-                      .
-                    </p>
-                  </Panel>
-                </FormGroup>
                 <FormGroup className='text-center'>
                   {renderWithPermission(
                     manageSegmentsPermission,
