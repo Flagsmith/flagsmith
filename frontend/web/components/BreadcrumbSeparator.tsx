@@ -240,6 +240,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                         AppActions.selectOrganisation(organisation.id)
                         AppActions.getOrganisation(organisation.id)
                         router.history.push(Utils.getOrganisationHomePage())
+                        setOpen(false)
                       }}
                     />
                   </div>
@@ -274,6 +275,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                                 : 'create'
                             }`,
                           )
+                          setOpen(false)
                         })
                       }}
                     />
