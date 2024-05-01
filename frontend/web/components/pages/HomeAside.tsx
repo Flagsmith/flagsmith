@@ -62,8 +62,8 @@ const HomeAside: FC<HomeAsideType> = ({
               }}
               className='border-right'
             >
-              <div className='mt-4'>
-                <div className='px-3 d-flex align-items-center justify-content-between'>
+              <div className='mt-3'>
+                <div className='px-3 mb-2 d-flex align-items-center justify-content-between'>
                   <h6 className='mb-0'>Environments</h6>
                   <Permission
                     level='project'
