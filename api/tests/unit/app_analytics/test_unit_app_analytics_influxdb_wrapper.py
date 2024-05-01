@@ -178,6 +178,7 @@ def test_influx_db_query_when_get_events_list_then_query_api_called(monkeypatch)
 def test_influx_db_query_when_get_multiple_events_for_organisation_then_query_api_called(
     monkeypatch, project_id, environment_id, expected_filters
 ):
+
     expected_query = (
         (
             f'from(bucket:"{read_bucket}") '
@@ -271,7 +272,11 @@ def test_get_usage_data(mocker):
 
     # Then
     mocked_get_multiple_event_list_for_organisation.assert_called_once_with(
-        org_id, None, None
+        organisation_id=org_id,
+        environment_id=None,
+        project_id=None,
+        date_start="-30d",
+        date_stop="now()",
     )
 
     assert len(usage_data) == 2
