@@ -36,13 +36,13 @@ nav a {
 .breadcrumb-link {
   padding: 4px 8px 4px 8px;
   border-radius: $border-radius;
-  &:hover {
+  &:hover,&.hovered {
     color: $body-text;
     background-color: $primary-alfa-8;
   }
 }
 .dark {
-  .breadcrumb-link:hover {
+  .breadcrumb-link:hover, .breadcrumb-link.hovered {
     color: $body-text-dark;
   }
   .nav-sub-link {

@@ -38,9 +38,10 @@ type BreadcrumbSeparatorType = {
 
 type ItemListType = {
   items: any[] | undefined
-  onHover: (item: any) => void
+  onHover?: (item: any) => void
   onClick: (item: any) => void
   value?: any
+  hoverValue?: any
   isLoading?: boolean
   className?: string
   title: string
@@ -49,6 +50,7 @@ type ItemListType = {
 
 const ItemList: FC<ItemListType> = ({
   className,
+  hoverValue,
   isLoading,
   items: _items,
   onClick,
@@ -84,6 +86,7 @@ const ItemList: FC<ItemListType> = ({
       ) : null}
       {items?.map((v) => {
         const isActive = `${v.id}` === `${value}`
+        const isHovered = `${v.id}` === `${hoverValue}`
         return (
           <a
             onMouseEnter={() => onHover?.(v)}
@@ -92,6 +95,7 @@ const ItemList: FC<ItemListType> = ({
             className={classNames(
               'breadcrumb-link py-2 d-flex align-items-center justify-content-between',
               { active: isActive },
+              { hovered: isHovered },
             )}
           >
             {v.name}
@@ -117,11 +121,14 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   const [organisationSearch, setOrganisationSearch] = useState('')
   const [projectSearch, setProjectSearch] = useState('')
 
-  const [activeOrganisation, setActiveOrganisation] = useState<number>(
-    AccountStore.getOrganisation()?.id,
+  const [activeOrganisation, setActiveOrganisation] = useState<string>(
+    `${AccountStore.getOrganisation()?.id}`,
   )
-  const [hoveredOrganisation, setHoveredOrganisation] = useState<number>(
-    AccountStore.getOrganisation()?.id,
+  const [hoveredOrganisation, setHoveredOrganisation] = useState<string>(
+    `${AccountStore.getOrganisation()?.id}`,
+  )
+  const [hoveredProject, setHoveredProject] = useState<string | undefined>(
+    projectId,
   )
 
   useEffect(() => {
@@ -151,10 +158,68 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   )
 
   const navigateOrganisations = (
-    e: InputEvent,
+    e: KeyboardEvent,
     organisations: Organisation[],
-  ) => {}
-  const navigateProjects = (e: InputEvent) => {}
+  ) => {
+    const currentIndex = organisations
+      ? organisations.findIndex((v) => `${v.id}` === `${hoveredOrganisation}`)
+      : -1
+    const newIndex = getNewIndex(e, currentIndex, organisations, goOrganisation)
+    if (newIndex > -1) {
+      setHoveredProject(undefined)
+      setHoveredOrganisation(`${organisations![newIndex]!.id}`)
+    }
+  }
+
+  const getNewIndex = (
+    e: KeyboardEvent,
+    currentIndex: number,
+    items: any[] | undefined,
+    go: (item: any) => void,
+  ) => {
+    if (!items?.length) {
+      return -1
+    }
+
+    if (e.key === 'Enter' && items[currentIndex]) {
+      go(items[currentIndex])
+      return currentIndex
+    }
+    if (e.key === 'ArrowDown') {
+      if (currentIndex + 1 < items?.length) {
+        return currentIndex + 1
+      } else {
+        return items?.length - 1
+      }
+    } else if (e.key === 'ArrowUp') {
+      return Math.max(-1, currentIndex - 1)
+    }
+
+    return -1
+  }
+  const navigateProjects = (e: KeyboardEvent) => {
+    const currentIndex = projects
+      ? projects.findIndex((v) => `${v.id}` === `${hoveredProject}`)
+      : -1
+    const newIndex = getNewIndex(e, currentIndex, projects, goProject)
+    if (newIndex > -1) {
+      setHoveredProject(`${projects![newIndex]!.id}`)
+    }
+  }
+  const goOrganisation = (organisation: Organisation) => {
+    AppActions.selectOrganisation(organisation.id)
+    AppActions.getOrganisation(organisation.id)
+    router.history.push(Utils.getOrganisationHomePage())
+    setOpen(false)
+  }
+  const goProject = (project: Project) => {
+    getEnvironments(getStore(), {
+      projectId: `${project.id}`,
+    }).then((res: { data: PagedResponse<Environment> }) => {
+      router.history.push(`/project/${project.id}`)
+      setOpen(false)
+    })
+  }
   return (
     <div className='d-flex align-items-center position-relative gap-1'>
       {children}
@@ -215,10 +280,10 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                   <div style={{ width: 260 }}>
                     <Input
                       autoFocus={focus === 'organisation'}
-                      onKeyDown={(e: InputEvent) =>
+                      onKeyDown={(e: KeyboardEvent) =>
                         navigateOrganisations(e, user.organisations)
                       }
-                      onChange={(e) => {
+                      onChange={(e: KeyboardEvent) => {
                         setOrganisationSearch(Utils.safeParseEventValue(e))
                       }}
                       search
@@ -231,26 +296,23 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                       search={organisationSearch}
                       className='px-2 pt-2'
                       title='Organisations'
+                      hoverValue={hoveredOrganisation}
                       items={user.organisations}
                       value={activeOrganisation}
                       onHover={(organisation: Organisation) => {
-                        setHoveredOrganisation(organisation.id)
+                        setHoveredOrganisation(`${organisation.id}`)
+                        setHoveredProject(undefined)
                       }}
-                      onClick={(organisation: Organisation) => {
-                        AppActions.selectOrganisation(organisation.id)
-                        AppActions.getOrganisation(organisation.id)
-                        router.history.push(Utils.getOrganisationHomePage())
-                        setOpen(false)
-                      }}
+                      onClick={goOrganisation}
                     />
                   </div>
                   <div style={{ width: 260 }} className='border-left-1'>
                     <Input
-                      onChange={(e) => {
+                      onChange={(e: InputEvent) => {
                         setProjectSearch(Utils.safeParseEventValue(e))
                       }}
                       autoFocus={focus === 'project'}
-                      onKeyDown={(e: InputEvent) => navigateOrganisations(e)}
+                      onKeyDown={(e: KeyboardEvent) => navigateProjects(e)}
                       search
                       className='full-width'
                       inputClassName='border-0 border-bottom-1'
@@ -263,14 +325,9 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                       title='Projects'
                       items={projects}
                       value={projectId}
-                      onClick={(project: Project) => {
-                        getEnvironments(getStore(), {
-                          projectId: `${project.id}`,
-                        }).then((res: { data: PagedResponse<Environment> }) => {
-                          router.history.push(`/project/${project.id}`)
-                          setOpen(false)
-                        })
-                      }}
+                      hoverValue={hoveredProject}
+                      onHover={(v) => setHoveredProject(v.id)}
+                      onClick={goProject}
                     />
                   </div>
                 </div>
