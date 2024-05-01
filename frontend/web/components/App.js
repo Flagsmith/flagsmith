@@ -627,7 +627,9 @@ const App = class extends Component {
                             <NavSubLink
                               icon={<UsersIcon />}
                               id='permissions-link'
-                              to='/permissions'
+                              to={`/organisation/${
+                                AccountStore.getOrganisation().id
+                              }/permissions`}
                             >
                               Users and Permissions
                             </NavSubLink>

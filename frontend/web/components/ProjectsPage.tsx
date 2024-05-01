@@ -5,6 +5,7 @@ import OrganisationProvider from 'common/providers/OrganisationProvider'
 import { Organisation } from 'common/types/responses'
 import { RouterChildContext } from 'react-router'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import PageTitle from './PageTitle'
 
 type ProjectsPageType = {
   match: {
@@ -19,8 +20,7 @@ const ProjectsPage: FC<ProjectsPageType> = ({ match }) => {
       {() => {
         return (
           <div className='app-container container'>
-            <h5 className='mt-4 mb-2'>Projects</h5>
-
+            <PageTitle title={'Projects'} />
             <p className='fs-small lh-sm mb-4'>
               Projects let you create and manage a set of features and configure
               them between multiple app environments.
