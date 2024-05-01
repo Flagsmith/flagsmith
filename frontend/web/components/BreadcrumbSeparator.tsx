@@ -31,6 +31,7 @@ type BreadcrumbSeparatorType = {
   hideDropdown?: boolean
   hideSlash?: boolean
   children: ReactNode
+  focus?: 'organisation' | 'project'
   projectId: string | undefined
   router: RouterChildContext['router']
 }
@@ -43,17 +44,24 @@ type ItemListType = {
   isLoading?: boolean
   className?: string
   title: string
+  search?: string
 }
 
 const ItemList: FC<ItemListType> = ({
   className,
   isLoading,
-  items,
+  items: _items,
   onClick,
   onHover,
+  search,
   title,
   value,
 }) => {
+  const items = search
+    ? _items?.filter((v) => {
+        return v.name.toLowerCase().includes(search.toLowerCase())
+      })
+    : _items
   return (
     <div
       className={classNames('overflow-auto custom-scroll', className)}
@@ -65,6 +73,15 @@ const ItemList: FC<ItemListType> = ({
           <Loader />
         </div>
       )}
+      {items?.length === 0 ? (
+        search ? (
+          <div className='py-2'>
+            No results found for <strong>"{search}"</strong>
+          </div>
+        ) : (
+          <div>No Results</div>
+        )
+      ) : null}
       {items?.map((v) => {
         const isActive = `${v.id}` === `${value}`
         return (
@@ -90,12 +107,15 @@ const ItemList: FC<ItemListType> = ({
 
 const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   children,
+  focus,
   hideDropdown,
   hideSlash,
   projectId,
   router,
 }) => {
   const [open, setOpen] = useState(false)
+  const [organisationSearch, setOrganisationSearch] = useState('')
+  const [projectSearch, setProjectSearch] = useState('')
 
   const [activeOrganisation, setActiveOrganisation] = useState<number>(
     AccountStore.getOrganisation()?.id,
@@ -177,75 +197,92 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
         hideClose
         relativeToParent
         isOpen={open}
-        onClose={setOpen}
+        onClose={() => {
+          setOpen(false)
+          setProjectSearch('')
+          setOrganisationSearch('')
+        }}
         containerClassName={'p-0'}
         className={
           'inline-modal left-0 top-form-item inline-modal--sm max-w-auto'
         }
       >
-        <AccountProvider>
-          {({ user }: { user: User }) => {
-            return (
-              <div className='d-flex'>
-                <div style={{ width: 260 }}>
-                  <Input
-                    onKeyDown={(e: InputEvent) =>
-                      navigateOrganisations(e, user.organisations)
-                    }
-                    search
-                    inputClassName='border-0 border-bottom-1'
-                    size='xSmall'
-                    className='full-width'
-                    placeholder='Search Organisations...'
-                  />
-                  <ItemList
-                    className='px-2 pt-2'
-                    title='Organisations'
-                    items={user.organisations}
-                    value={activeOrganisation}
-                    onHover={(organisation: Organisation) => {
-                      setHoveredOrganisation(organisation.id)
-                    }}
-                    onClick={(organisation: Organisation) => {
-                      AppActions.selectOrganisation(organisation.id)
-                      AppActions.getOrganisation(organisation.id)
-                      router.history.push(Utils.getOrganisationHomePage())
-                    }}
-                  />
+        {!!open && (
+          <AccountProvider>
+            {({ user }: { user: User }) => {
+              return (
+                <div className='d-flex'>
+                  <div style={{ width: 260 }}>
+                    <Input
+                      autoFocus={focus === 'organisation'}
+                      onKeyDown={(e: InputEvent) =>
+                        navigateOrganisations(e, user.organisations)
+                      }
+                      onChange={(e) => {
+                        setOrganisationSearch(Utils.safeParseEventValue(e))
+                      }}
+                      search
+                      inputClassName='border-0 border-bottom-1'
+                      size='xSmall'
+                      className='full-width'
+                      placeholder='Search Organisations...'
+                    />
+                    <ItemList
+                      search={organisationSearch}
+                      className='px-2 pt-2'
+                      title='Organisations'
+                      items={user.organisations}
+                      value={activeOrganisation}
+                      onHover={(organisation: Organisation) => {
+                        setHoveredOrganisation(organisation.id)
+                      }}
+                      onClick={(organisation: Organisation) => {
+                        AppActions.selectOrganisation(organisation.id)
+                        AppActions.getOrganisation(organisation.id)
+                        router.history.push(Utils.getOrganisationHomePage())
+                      }}
+                    />
+                  </div>
+                  <div style={{ width: 260 }} className='border-left-1'>
+                    <Input
+                      onChange={(e) => {
+                        setProjectSearch(Utils.safeParseEventValue(e))
+                      }}
+                      autoFocus={focus === 'project'}
+                      onKeyDown={(e: InputEvent) => navigateOrganisations(e)}
+                      search
+                      className='full-width'
+                      inputClassName='border-0 border-bottom-1'
+                      size='xSmall'
+                      placeholder='Search Projects...'
+                    />
+                    <ItemList
+                      search={projectSearch}
+                      className='px-2 pt-2'
+                      title='Projects'
+                      items={projects}
+                      value={projectId}
+                      onClick={(project: Project) => {
+                        getEnvironments(getStore(), {
+                          projectId: `${project.id}`,
+                        }).then((res: { data: PagedResponse<Environment> }) => {
+                          router.history.push(
+                            `/project/${project.id}/environment/${
+                              res.data?.results?.length &&
+                              res.data?.results?.[0]
+                                ? `${res.data?.results?.[0].api_key}/features`
+                                : 'create'
+                            }`,
+                          )
+                        })
+                      }}
+                    />
+                  </div>
                 </div>
-                <div style={{ width: 260 }} className='border-left-1'>
-                  <Input
-                    onKeyDown={(e: InputEvent) => navigateOrganisations(e)}
-                    search
-                    className='full-width'
-                    inputClassName='border-0 border-bottom-1'
-                    size='xSmall'
-                    placeholder='Search Projects...'
-                  />
-                  <ItemList
-                    className='px-2 pt-2'
-                    title='Projects'
-                    items={projects}
-                    value={projectId}
-                    onClick={(project: Project) => {
-                      getEnvironments(getStore(), {
-                        projectId: `${project.id}`,
-                      }).then((res: { data: PagedResponse<Environment> }) => {
-                        router.history.push(
-                          `/project/${project.id}/environment/${
-                            res.data?.results?.length && res.data?.results?.[0]
-                              ? `${res.data?.results?.[0].api_key}/features`
-                              : 'create'
-                          }`,
-                        )
-                      })
-                    }}
-                  />
-                </div>
-              </div>
-            )
-          }}
-        </AccountProvider>
+              )
+            }}
+          </AccountProvider>
+        )}
       </InlineModal>
     </div>
   )

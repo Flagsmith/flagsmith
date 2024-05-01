@@ -448,6 +448,7 @@ const App = class extends Component {
                                         projectId={projectId}
                                         router={this.context.router}
                                         hideSlash={!activeProject}
+                                        focus='organisation'
                                       >
                                         <NavLink
                                           id='org-settings-link'
@@ -473,6 +474,7 @@ const App = class extends Component {
                                           projectId={projectId}
                                           router={this.context.router}
                                           hideSlash
+                                          focus='project'
                                         >
                                           <NavLink
                                             to={`/projects/${activeProject.id}`}
