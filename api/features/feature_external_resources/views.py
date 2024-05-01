@@ -29,9 +29,9 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
             ),
         )
 
-        if not hasattr(feature.project.organisation, "github_config") or not hasattr(
-            feature.project, "github_project"
-        ):
+        if not feature.project.organisation.github_config.filter(
+            deleted_at__isnull=True
+        ).exists() or not hasattr(feature.project, "github_project"):
             return Response(
                 data={
                     "detail": "This Project doesn't have a valid GitHub integration configuration"

@@ -12,6 +12,7 @@ from rest_framework.response import Response
 
 from integrations.github.client import generate_token
 from integrations.github.constants import GITHUB_API_URL, GITHUB_API_VERSION
+from integrations.github.exceptions import DuplicateGitHubIntegration
 from integrations.github.models import GithubConfiguration, GithubRepository
 from integrations.github.permissions import HasPermissionToGithubConfiguration
 from integrations.github.serializers import (
@@ -61,6 +62,17 @@ class GithubConfigurationViewSet(viewsets.ModelViewSet):
             organisation_id=self.kwargs["organisation_pk"]
         )
 
+    def create(self, request, *args, **kwargs):
+
+        organisation_id = self.kwargs["organisation_pk"]
+        if GithubConfiguration.has_github_configuration(organisation_id):
+            raise DuplicateGitHubIntegration
+
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError:
+            raise DuplicateGitHubIntegration
+
 
 class GithubRepositoryViewSet(viewsets.ModelViewSet):
     permission_classes = (
@@ -86,7 +98,7 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
             return super().create(request, *args, **kwargs)
         except IntegrityError:
             raise ValidationError(
-                detail="Duplication error. The Github repository already linked"
+                detail="Duplication error. The GitHub repository already linked"
             )
 
 
@@ -95,9 +107,11 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
 @github_auth_required
 def fetch_pull_requests(request, organisation_pk):
     organisation = Organisation.objects.get(id=organisation_pk)
-
+    github_configuration = GithubConfiguration.objects.get(
+        organisation=organisation, deleted_at__isnull=True
+    )
     token = generate_token(
-        organisation.github_config.installation_id,
+        github_configuration.installation_id,
         settings.GITHUB_APP_ID,
     )
 
@@ -130,8 +144,11 @@ def fetch_pull_requests(request, organisation_pk):
 @github_auth_required
 def fetch_issues(request, organisation_pk):
     organisation = Organisation.objects.get(id=organisation_pk)
+    github_configuration = GithubConfiguration.objects.get(
+        organisation=organisation, deleted_at__isnull=True
+    )
     token = generate_token(
-        organisation.github_config.installation_id,
+        github_configuration.installation_id,
         settings.GITHUB_APP_ID,
     )
 

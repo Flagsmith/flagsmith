@@ -56,6 +56,62 @@ def test_create_github_configuration(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
+def test_cannot_create_github_configuration_due_to_unique_constraint(
+    client: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+) -> None:
+    # Given
+    data = {
+        "installation_id": 1234567,
+    }
+    url = reverse(
+        "api-v1:organisations:integrations-github-list",
+        kwargs={"organisation_pk": organisation.id},
+    )
+    # When
+    response = client.post(url, data)
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    assert (
+        "Duplication error. The GitHub integration already created"
+        in response.json()["detail"]
+    )
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_cannot_create_github_configuration_when_the_organization_already_has_an_integration(
+    client: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+) -> None:
+    # Given
+    data = {
+        "installation_id": 7654321,
+    }
+    url = reverse(
+        "api-v1:organisations:integrations-github-list",
+        kwargs={"organisation_pk": organisation.id},
+    )
+    # When
+    response = client.post(url, data)
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    assert (
+        "Duplication error. The GitHub integration already created"
+        in response.json()["detail"]
+    )
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_delete_github_configuration(
     client: APIClient,
     organisation: Organisation,
@@ -182,7 +238,7 @@ def test_cannot_create_github_repository_due_to_unique_constraint(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     assert (
-        "Duplication error. The Github repository already linked" in response.json()[0]
+        "Duplication error. The GitHub repository already linked" in response.json()[0]
     )
 
 

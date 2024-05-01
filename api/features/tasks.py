@@ -65,8 +65,11 @@ def trigger_feature_state_change_webhooks(
         and instance.environment.project.github_project.exists()
         and hasattr(instance.environment.project.organisation, "github_config")
     ):
-        github_configuration = instance.environment.project.organisation.github_config
-
+        github_configuration = (
+            instance.environment.project.organisation.github_config.get(
+                deleted_at__isnull=True
+            )
+        )
         feature_state = {
             "environment_name": new_state["environment"]["name"],
             "feature_value": new_state["enabled"],
@@ -78,11 +81,11 @@ def trigger_feature_state_change_webhooks(
             github_configuration=github_configuration,
             feature_id=history_instance.feature.id,
             feature_name=history_instance.feature.name,
-            type=WebhookEventType.FLAG_UPDATED,
+            type=WebhookEventType.FLAG_UPDATED.value,
             feature_states=feature_states,
         )
 
-        feature_data["feature_states"].append(feature_state)
+        feature_data.feature_states.append(feature_state)
 
         call_github_app_webhook_for_feature_state.delay(
             args=(asdict(feature_data),),

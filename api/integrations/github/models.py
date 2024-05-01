@@ -10,7 +10,7 @@ logger: logging.Logger = logging.getLogger(name=__name__)
 
 
 class GithubConfiguration(SoftDeleteExportableModel):
-    organisation = models.OneToOneField(
+    organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="github_config"
     )
     installation_id = models.CharField(max_length=100, blank=False, null=False)
@@ -20,6 +20,17 @@ class GithubConfiguration(SoftDeleteExportableModel):
         return GithubConfiguration.objects.filter(
             organisation_id=organisation_id
         ).exists()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "organisation",
+                    "installation_id",
+                ],
+                name="unique_github_config_data",
+            )
+        ]
 
 
 class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
