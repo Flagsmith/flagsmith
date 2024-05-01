@@ -97,6 +97,7 @@ const App = class extends Component {
     if (this.state.projectId) {
       AppActions.getProject(this.state.projectId)
     }
+    this.listenTo(OrganisationStore, 'change', () => this.forceUpdate())
     this.listenTo(ProjectStore, 'change', () => this.forceUpdate())
     this.listenTo(AccountStore, 'change', this.getOrganisationUsage)
     this.getOrganisationUsage()
@@ -311,7 +312,11 @@ const App = class extends Component {
     if (Project.maintenance || this.props.error || !window.projectOverrides) {
       return <Maintenance />
     }
-    if (this.props.isLoading) {
+    const activeProject = OrganisationStore.getProject(projectId)
+    const projectNotLoaded =
+      !activeProject && document.location.href.includes('project/')
+
+    if (this.props.isLoading || projectNotLoaded) {
       return (
         <AccountProvider
           onNoUser={this.onNoUser}
@@ -329,8 +334,6 @@ const App = class extends Component {
     if (AccountStore.forced2Factor()) {
       return <AccountSettingsPage isLoginPage={true} />
     }
-    const projectNotLoaded =
-      !ProjectStore.model && document.location.href.includes('project/')
     if (document.location.href.includes('widget')) {
       return <div>{this.props.children}</div>
     }
@@ -341,9 +344,7 @@ const App = class extends Component {
       (!dismissed || dismissed !== announcementValue.id) &&
       Utils.getFlagsmithHasFeature('announcement') &&
       this.state.showAnnouncement
-
     const isOrgSelect = document.location.pathname === '/organisations'
-    const activeProject = OrganisationStore.getProject(projectId)
     const integrations = Object.keys(
       JSON.parse(Utils.getFlagsmithValue('integration_data') || '{}'),
     )
@@ -660,6 +661,7 @@ const App = class extends Component {
                   {environmentId && environmentId !== 'create' ? (
                     <div className='d-flex'>
                       <HomeAside
+                        history={this.context.router.history}
                         environmentId={environmentId}
                         projectId={projectId}
                       />

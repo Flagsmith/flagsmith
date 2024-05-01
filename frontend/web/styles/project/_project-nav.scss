@@ -120,10 +120,22 @@ nav a {
 }
   .collapsible-title {
     line-height: 32px;
+    cursor: pointer;
+    border-radius: $border-radius;
+    &:hover {
+      color: $primary;
+      background-color: $primary-alfa-8;
+    }
+  }
+  .collapsible.active {
+    .collapsible-title {
+      pointer-events: none;
+    }
   }
 .collapsible__content a {
   padding-left: 12px;
   padding-right: 4px;
+  margin-right: 10px;
   line-height: 32px;
   border-radius: $border-radius;
   &.active {
