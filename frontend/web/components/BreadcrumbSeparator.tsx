@@ -1,4 +1,4 @@
-import { FC, ReactNode, useEffect, useState } from 'react'
+import { FC, ReactNode, useEffect, useRef, useState } from 'react'
 import { IonIcon } from '@ionic/react'
 import {
   checkmark,
@@ -64,8 +64,29 @@ const ItemList: FC<ItemListType> = ({
         return v.name.toLowerCase().includes(search.toLowerCase())
       })
     : _items
+  const ref = useRef(Utils.GUID())
+  useEffect(() => {
+    const index = items?.findIndex((v) => `${v.id}` === `${hoverValue}`)
+    const el = document.getElementById(ref.current)
+    const childEl = document.getElementById(`${ref.current}-${index}`)
+    if (el && childEl) {
+      const containerBounds = el.getBoundingClientRect()
+      const elementBounds = childEl.getBoundingClientRect()
+      const isInView =
+        elementBounds.top >= containerBounds.top &&
+        elementBounds.bottom <= containerBounds.bottom
+      if (!isInView) {
+        // Calculate how much to scroll the container to bring the element into view
+        const scrollAmount = elementBounds.top - containerBounds.top
+
+        // Scroll the container
+        el.scrollTop += scrollAmount
+      }
+    }
+  }, [hoverValue])
   return (
     <div
+      id={ref.current}
       className={classNames('overflow-auto custom-scroll', className)}
       style={{ maxHeight: 400 }}
     >
@@ -84,11 +105,12 @@ const ItemList: FC<ItemListType> = ({
           <div>No Results</div>
         )
       ) : null}
-      {items?.map((v) => {
+      {items?.map((v, i) => {
         const isActive = `${v.id}` === `${value}`
         const isHovered = `${v.id}` === `${hoverValue}`
         return (
           <a
+            id={`${ref.current}-${i}`}
             onMouseEnter={() => onHover?.(v)}
             onClick={() => onClick(v)}
             key={v.id}
