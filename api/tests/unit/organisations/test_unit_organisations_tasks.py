@@ -395,7 +395,7 @@ def test_handle_api_usage_notifications_above_100(
     handle_api_usage_notifications()
 
     # Then
-    mock_api_usage.assert_called_once_with(organisation.id, "14d")
+    mock_api_usage.assert_called_once_with(organisation.id, "-14d")
 
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
