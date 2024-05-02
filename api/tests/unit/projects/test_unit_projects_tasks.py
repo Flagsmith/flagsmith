@@ -5,7 +5,7 @@ from pytest_mock import MockerFixture
 from environments.dynamodb.types import IdentityOverridesV2Changeset
 from environments.models import Environment
 from features.models import Feature
-from projects.models import IdentityOverridesV2MigrationStatus, Project
+from projects.models import EdgeV2MigrationStatus, Project
 from projects.tasks import (
     handle_cascade_delete,
     migrate_project_environments_to_v2,
@@ -18,9 +18,7 @@ from task_processor.task_run_method import TaskRunMethod
 def project_v2_migration_in_progress(
     project: Project,
 ) -> Project:
-    project.identity_overrides_v2_migration_status = (
-        IdentityOverridesV2MigrationStatus.IN_PROGRESS
-    )
+    project.edge_v2_migration_status = EdgeV2MigrationStatus.IN_PROGRESS
     project.save()
     return project
 
@@ -30,11 +28,11 @@ def project_v2_migration_in_progress(
     (
         (
             IdentityOverridesV2Changeset(to_put=[], to_delete=[]),
-            IdentityOverridesV2MigrationStatus.COMPLETE,
+            EdgeV2MigrationStatus.COMPLETE,
         ),
         (
             None,
-            IdentityOverridesV2MigrationStatus.IN_PROGRESS,
+            EdgeV2MigrationStatus.IN_PROGRESS,
         ),
     ),
 )
@@ -62,10 +60,7 @@ def test_migrate_project_environments_to_v2__calls_expected(
     mocked_migrate_environments_to_v2.assert_called_once_with(
         project_id=project_v2_migration_in_progress.id,
     )
-    assert (
-        project_v2_migration_in_progress.identity_overrides_v2_migration_status
-        == expected_status
-    )
+    assert project_v2_migration_in_progress.edge_v2_migration_status == expected_status
 
 
 def test_migrate_project_environments_to_v2__expected_status_on_error(
@@ -73,8 +68,8 @@ def test_migrate_project_environments_to_v2__expected_status_on_error(
     project_v2_migration_in_progress: Project,
 ):
     # Given
-    project_v2_migration_in_progress.identity_overrides_v2_migration_status = (
-        IdentityOverridesV2MigrationStatus.IN_PROGRESS
+    project_v2_migration_in_progress.edge_v2_migration_status = (
+        EdgeV2MigrationStatus.IN_PROGRESS
     )
 
     mocked_migrate_environments_to_v2 = mocker.patch(
@@ -93,8 +88,8 @@ def test_migrate_project_environments_to_v2__expected_status_on_error(
     mocked_migrate_environments_to_v2.assert_called_once_with(
         project_id=project_v2_migration_in_progress.id
     )
-    assert project_v2_migration_in_progress.identity_overrides_v2_migration_status == (
-        IdentityOverridesV2MigrationStatus.IN_PROGRESS
+    assert project_v2_migration_in_progress.edge_v2_migration_status == (
+        EdgeV2MigrationStatus.IN_PROGRESS
     )
 
 

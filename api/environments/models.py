@@ -44,7 +44,7 @@ from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
 from metadata.models import Metadata
-from projects.models import IdentityOverridesV2MigrationStatus, Project
+from projects.models import EdgeV2MigrationStatus, Project
 from segments.models import Segment
 from util.mappers import map_environment_to_environment_document
 from webhooks.models import AbstractBaseExportableWebhookModel
@@ -256,8 +256,7 @@ class Environment(
         environment_wrapper.write_environments(environments)
 
         if (
-            project.identity_overrides_v2_migration_status
-            == IdentityOverridesV2MigrationStatus.COMPLETE
+            project.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE
             and environment_v2_wrapper.is_enabled
         ):
             environment_v2_wrapper.write_environments(environments)

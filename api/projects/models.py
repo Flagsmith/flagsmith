@@ -35,7 +35,7 @@ project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
 
-class IdentityOverridesV2MigrationStatus(models.TextChoices):
+class EdgeV2MigrationStatus(models.TextChoices):
     NOT_STARTED = "NOT_STARTED", "Not Started"
     IN_PROGRESS = "IN_PROGRESS", "In Progress"
     COMPLETE = "COMPLETE", "Complete"
@@ -82,12 +82,13 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         default=100,
         help_text="Max segments overrides allowed for any (one) environment within this project",
     )
-    identity_overrides_v2_migration_status = models.CharField(
+    edge_v2_migration_status = models.CharField(
         max_length=50,
-        choices=IdentityOverridesV2MigrationStatus.choices,
+        choices=EdgeV2MigrationStatus.choices,
         # Note that the default is actually set dynamically by a lifecycle hook on create
         # since we need to know whether edge is enabled or not.
-        default=IdentityOverridesV2MigrationStatus.NOT_STARTED,
+        default=EdgeV2MigrationStatus.NOT_STARTED,
+        db_column="identity_overrides_v2_migration_status",
     )
     stale_flags_limit_days = models.IntegerField(
         default=30,
@@ -139,11 +140,9 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         self.enable_dynamo_db = self.enable_dynamo_db or settings.EDGE_ENABLED
 
     @hook(BEFORE_CREATE)
-    def set_identity_overrides_v2_migration_status(self):
+    def set_edge_v2_migration_status(self):
         if settings.EDGE_ENABLED:
-            self.identity_overrides_v2_migration_status = (
-                IdentityOverridesV2MigrationStatus.COMPLETE
-            )
+            self.edge_v2_migration_status = EdgeV2MigrationStatus.COMPLETE
 
     @hook(AFTER_SAVE)
     def clear_environments_cache(self):
@@ -153,9 +152,9 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @hook(
         AFTER_SAVE,
-        when="identity_overrides_v2_migration_status",
+        when="edge_v2_migration_status",
         has_changed=True,
-        is_now=IdentityOverridesV2MigrationStatus.IN_PROGRESS,
+        is_now=EdgeV2MigrationStatus.IN_PROGRESS,
     )
     def trigger_environments_v2_migration(self) -> None:
         migrate_project_environments_to_v2.delay(kwargs={"project_id": self.id})
@@ -194,10 +193,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @property
     def show_edge_identity_overrides_for_feature(self) -> bool:
-        return (
-            self.identity_overrides_v2_migration_status
-            == IdentityOverridesV2MigrationStatus.COMPLETE
-        )
+        return self.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE
 
 
 class ProjectPermissionManager(models.Manager):
