@@ -71,7 +71,7 @@ def _update_caches_with_influx_data(
         return
 
     for date_start, limit in (("-30d", ""), ("-7d", ""), ("-24h", "100")):
-        key = f"api_calls_{date_start}"
+        key = f"api_calls_{date_start[1:]}"
         org_calls = get_top_organisations(date_start, limit)
         for org_id, calls in org_calls.items():
             subscription_info_cache = organisation_info_cache_dict.get(org_id)
