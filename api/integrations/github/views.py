@@ -63,11 +63,6 @@ class GithubConfigurationViewSet(viewsets.ModelViewSet):
         )
 
     def create(self, request, *args, **kwargs):
-
-        organisation_id = self.kwargs["organisation_pk"]
-        if GithubConfiguration.has_github_configuration(organisation_id):
-            raise DuplicateGitHubIntegration
-
         try:
             return super().create(request, *args, **kwargs)
         except IntegrityError:

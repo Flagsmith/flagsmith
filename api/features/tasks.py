@@ -5,6 +5,7 @@ from environments.models import Webhook
 from features.models import Feature, FeatureState
 from integrations.github.github import GithubData, generate_data
 from integrations.github.tasks import call_github_app_webhook_for_feature_state
+from organisations.models import Organisation
 from task_processor.decorators import register_task_handler
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 from webhooks.webhooks import (
@@ -66,9 +67,9 @@ def trigger_feature_state_change_webhooks(
         and hasattr(instance.environment.project.organisation, "github_config")
     ):
         github_configuration = (
-            instance.environment.project.organisation.github_config.get(
-                deleted_at__isnull=True
-            )
+            Organisation.objects.prefetch_related("github_config")
+            .get(id=instance.environment.project.organisationn_id)
+            .github_config.first()
         )
         feature_state = {
             "environment_name": new_state["environment"]["name"],

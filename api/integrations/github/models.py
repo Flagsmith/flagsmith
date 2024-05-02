@@ -26,9 +26,9 @@ class GithubConfiguration(SoftDeleteExportableModel):
             models.UniqueConstraint(
                 fields=[
                     "organisation",
-                    "installation_id",
                 ],
-                name="unique_github_config_data",
+                name="githubconf_organisation_id_idx",
+                condition=models.Q(deleted_at__isnull=True),
             )
         ]
 

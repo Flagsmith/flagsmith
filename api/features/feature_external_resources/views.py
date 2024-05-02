@@ -6,6 +6,7 @@ from rest_framework.response import Response
 
 from features.models import Feature
 from features.permissions import FeatureExternalResourcePermissions
+from organisations.models import Organisation
 
 from .models import FeatureExternalResource
 from .serializers import FeatureExternalResourceSerializer
@@ -29,9 +30,15 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
             ),
         )
 
-        if not feature.project.organisation.github_config.filter(
-            deleted_at__isnull=True
-        ).exists() or not hasattr(feature.project, "github_project"):
+        if not (
+            (
+                Organisation.objects.prefetch_related("github_config")
+                .get(id=feature.project.organisation_id)
+                .github_config.first()
+            )
+            or not hasattr(feature.project, "github_project")
+        ):
+
             return Response(
                 data={
                     "detail": "This Project doesn't have a valid GitHub integration configuration"
