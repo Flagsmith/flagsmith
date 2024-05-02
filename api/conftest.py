@@ -63,6 +63,7 @@ from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
+from tests.test_helpers import fix_issue_3869
 from tests.types import (
     WithEnvironmentPermissionsCallable,
     WithOrganisationPermissionsCallable,
@@ -78,6 +79,10 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=False,
         help="Enable CI mode",
     )
+
+
+def pytest_sessionstart(session: pytest.Session) -> None:
+    fix_issue_3869()
 
 
 @pytest.hookimpl(trylast=True)
