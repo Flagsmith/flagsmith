@@ -49,8 +49,7 @@ is affected.
 
 :::tip
 
-We can make use of [Semver Aware Operators](/basic-features/segments?operators=semver#segment-rule-ordering) to drive
-these Segment rules.
+We can make use of [Semver Aware Operators](/basic-features/segments?operators=semver) to drive these Segment rules.
 
 :::
 

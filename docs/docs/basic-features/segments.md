@@ -4,292 +4,236 @@ description: Group your users based on a set of rules, then control Feature Flag
 
 import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
 
-# Managing Segments
+# Segments
 
-Segments allow you to group your users based on a set of rules, and then control Feature Flags and Remote Config for
-those groups. You can create a Segment and then override a Feature Flag state or Remote Config value for that segment of
-users.
+A segment is a subset of [identities](/basic-features/managing-identities.md), defined by a set of rules that match
+identity [traits](managing-identities.md#identity-traits). An identity always belongs to a single environment and can
+belong to any number of segments.
 
-Segments for Flags and Config are overridden at the Environment level, meaning that different Environments can define
-their own Segment overrides.
+Once you have defined a segment, you can create **segment overrides** for features within an environment. A segment
+override allows you to control the state of a feature only for identities that belong to a specific segment. This is
+similar to how [identity overrides](managing-identities.md#identity-overrides) let you control the state of features for
+an explicit set of identities that is known in advance.
 
-Segments **_only_** come into effect if you are getting the Flags for a particular Identity. If you are just retrieving
-the flags for an Environment without passing in an Identity, your user will **_never_** be applied to a Segment as there
-is no context to use.
+Because segments are driven by identity traits, your application must identify the user when retrieving flags in order
+for segment overrides to be applied. If your user is not identified, no overrides will be applied and all flags will be
+returned exactly how they are defined in the current environment.
 
-:::tip
+Segments and segment overrides can be used to implement many scenarios. For example:
 
-Segments are _not_ sent back to [Client-Side SDKs](/clients/overview#client-side-sdks). They are used to override flag
-values within the dashboard, but they are never sent back to our
-[Client-Side SDKs](https://docs.flagsmith.com/clients/overview#client-side-sdks) from the API.
+- Test features in production before they are released by overriding them only for internal users or a QA team
+- Deliver features only to "power users" who have logged in a certain number of times, have used specific functionality
+  within your application, or any combination of factors
+- Force a group of users into a specific [A/B test](advanced-use/ab-testing.md) variation by overriding weightings on
+  [multivariate flags](managing-features.md#multi-variate-flags)
+- Override behaviour based on the [application version number](/guides-and-examples/mobile-app-versioning.md), e.g. by
+  using the SemVer rule operators
+- Control features based on the time of day, date, weekday, etc. by passing it as a trait when evaluating flags for an
+  identity
 
-They _are_ sent back to Server Side SDKs running in [Local Evaluation mode](/clients/overview#local-evaluation).
+## Security and privacy
 
-[Learn more about our architecture](/clients/overview#local-evaluation).
+The Flagsmith API to set user traits, e.g. the `setTraits` method from the JavaScript SDK, does not require
+authentication or credentials. This means that users can change their own traits, which could be a security problem if
+you are using segments for authorisation or access control. If you must use segments for access control, make sure to
+disable the
+["Allow client SDKs to set user traits" option](system-administration/security.md#preventing-client-sdks-from-setting-traits)
+on every environment that needs it, and use server-side SDKs to set traits instead. You can still use client-side SDKs
+to read traits and flags derived from segments in this case.
 
-:::
+Segment names and definitions might include sensitive or proprietary information that you do not want to expose to your
+users. Because of this, segments are transparent to applications and are not included in API responses when using
+[remote evaluation mode](/clients/overview#remote-evaluation).
 
-## Example - Beta Users
+Segment definitions _are_ served to clients running in [local evaluation mode](/clients/overview#local-evaluation), as
+this allows them to calculate segments without making requests to the Flagsmith API. This is only an implementation
+detail and no segment information is exposed when retrieving flags using any SDK method.
 
-:::important
+## Creating project or feature-specific segments
 
-Segment definitions can be defined at the **Project** or **Flag** level. **Project** level Segments are defined at the
-Project level and can be used with any number of Flags within that Project. **Flag Specific** Segments can only affect
-the Flag they are defined within.
+Segments created from the Segments page of the Flagsmith dashboard can be used to override any feature within a single
+project.
 
-:::
+To create a segment override, click on a feature in a specific environment and go to the Segment Overrides tab.
 
-Let's say that you want all your team to automatically be defined as `Beta Users`. Right now, all your logged in users
-are [identified](/basic-features/managing-identities.md) with their email address along with some other
-[traits](/basic-features/managing-identities.md#identity-traits).
+If you need to create a segment that will only ever be used to override a single feature, you can create a
+**feature-specific segment** by clicking on "Create Feature-Specific Segment" when creating a segment override.
+Feature-specific segments are otherwise functionally identical to project segments. By default, feature-specific
+segments are not shown in the Segments page, unless you enable the "Include Feature-Specific" option.
 
-You can create a new Segment by going navigating to Segments and clicking the "Create Segment" button, call it
-`Beta Users`, and define a single rule:
+Once created, project segments cannot be changed into feature-specific segments or vice versa.
 
-- `email_address` contains `@flagsmith.com`
+## Order of rules within segments
 
-Once the Segment has been defined, you can then associate that Segment with a specific Feature Flag. To do this, open
-the Feature Flag that you want to connect the Segment to and navigate to the **Segment Overrides** tab. You then have
-the option of connecting a Segment to the Feature. This then allows you to override the flag value for Users that are
-within that Segment. If the Identified user is a member of that Segment, the flag will be overridden.
+Segment rules are evaluated in order, i.e. from top to bottom when viewed in the Flagsmith dashboard.
 
-For all the Feature Flags that relate to Beta features, you can associate this `Beta Users` segment with each Flag, and
-set the Flag value to `true` for that Segment. To do this, edit the Feature Flag and select the segment in the 'Segment
-Overrides' drop down.
+For example, consider the following segment:
 
-At this point, all users who log in with an email address that contains `@flagsmith.com` will have all Beta features
-enabled.
+1. 10% percentage split
+2. `is_subscriber = true`
 
-Let's say that you then partner with another company who need access to all Beta features. You can then modify the
-Segment rules:
+This segment would first select 10% of _all_ identities, and then choose subscribers from that cohort. Instead, if we
+used the opposite order:
 
-- `email_address` contains `@flagsmith.com`
-- `email_address` contains `@solidstategroup.com`
+1. `is_subscriber = true`
+2. 10% percentage split
 
-Now all users who log in with a `@solidstategroup.com` email address are automatically included in beta features.
+This would first select all subscriber identities, and then randomly choose 10% of them.
 
-## Feature-Specific Segments
+## Multiple segment overrides for one feature
 
-You can also create Segments _within_ a Feature. This means that only that Feature can make use of that Segment. Feature
-Specific Segments are useful when you know you will only need to use that Segment definition once. Go to the Feature,
-then the Segment Overrides Tab, and click the "Create Feature-Specific Segment" button.
+If a feature has multiple segment overrides, they are evaluated in order, i.e. from top to bottom when viewed in the
+Flagsmith dashboard. The first matching override will be used to determine the state of a feature for a given identity.
 
-## Multi-Variate Values
+## Flag evaluation precedence
 
-If you are using [Multi-Variate Flag Values](managing-features.md#multi-variate-flags), you can also override the
-individual value weightings as part of a Segment override.
+Identity overrides always take precedence over segment overrides. Simply put, the order of precedence when evaluating a
+flag is:
 
-## Rules Operators
+1. Identity overrides
+2. Segment overrides
+3. Default value for the current environment
 
-The full set of Flagsmith rule operators are as follows:
+## Trait data types
 
-| Name                   | Condition                                                                                                                                                    |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Exactly Matches (==)` | Trait value is equal to segment value.                                                                                                                       |
-| `Does Not Match (!=)`  | Trait value is not equal to segment value.                                                                                                                   |
-| `% Split`              | Identity is in the percentage bucket. See [Percentage Split Operator](?operators=percent#operator-details).                                                  |
-| `>`                    | Trait value is greater than segment value.                                                                                                                   |
-| `>=`                   | Trait value is greater than or equal to segment value.                                                                                                       |
-| `<`                    | Trait value is less than segment value.                                                                                                                      |
-| `<=`                   | Trait value is less than or equal to segment value.                                                                                                          |
-| `In`                   | Trait value is equal to one or more elements in a comma delimited list. See [The `In` operator](?operators=in#operator-details).                             |
-| `Contains`             | Segment value is a substring of trait value.                                                                                                                 |
-| `Does Not Contain`     | Segment value is not a substring of the trait value.                                                                                                         |
-| `Matches Regex`        | Segment value, set to a valid Regex expression, is applied to trait value and matches it.                                                                    |
-| `Is Set`               | Trait value is set for given identity and trait key.                                                                                                         |
-| `Is Not Set`           | Trait value is not set for given identity and trait key.                                                                                                     |
-| `SemVer >`             | Trait value is set to a newer SemVer-formatted version than segment value. See [SemVer-aware operators](?operators=semver#operator-details).                 |
-| `SemVer >=`            | Trait value is set a newer SemVer-formatted version than segment value or equal to it. See [SemVer-aware operators](?operators=semver#operator-details).     |
-| `SemVer <`             | Trait value is set to an older SemVer-formatted version than segment value. See [SemVer-aware operators](?operators=semver#operator-details).                |
-| `SemVer <=`            | Trait value is set to an older SemVer-formatted version than segment value or equal to it. See [SemVer-aware operators](?operators=semver#operator-details). |
-
-## Operator Details
-
-<Tabs groupId="operators" queryString>
-<TabItem value="in" label="In">
-
-The `In` operator lets you match a Trait value against a comma-separated list of values. For example, the Segment rule
-value might read `21,682,8345`. This would then match against a Trait value of `682` but not against a Trait value of
-`683`.
-
-The `In` operator can be useful when building Segments to match against tenancies within your application. Let's say you
-wanted a Segment to evaluate as true for 5 different customer tenancies. Create a Segment rule where the `In` operator
-matches all of those 5 customer tenancy ID's and no others. You can then create a Trait value for the Identity that
-contains the tenancy ID of that user.
-
-The `In` operator _is_ case sensitive when evaluating alphabetical characters.
-
-:::important
-
-Earlier SDK versions will not work in local evaluation mode if your environment has segments with the `In` operator
-defined.
-
-To keep local evaluation from breaking, please ensure you have your SDK versions updated before you add such segments to
-your environment.
-
-:::
-
-These minimum SDK versions support segments with the `In` operator in
-[local evaluation mode](/clients/overview#local-evaluation):
-
-- Python SDK: `3.3.0+`
-- Java SDK: `7.1.0+`
-- .NET SDK: `5.0.0+`
-- NodeJS SDK: `2.5.0+`
-- Ruby SDK: `3.2.0+`
-- PHP SDK: `4.1.0+`
-- Go SDK: `3.1.0+`
-- Rust SDK: `1.3.0+`
-- Elixir SDK: `2.0.0+`
-
-</TabItem>
-<TabItem value="semver" label="SemVer">
-
-The following [SemVer](https://semver.org/) operators are also available:
-
-- `SemVer >`
-- `SemVer >=`
-- `SemVer <`
-- `SemVer <=`
-
-For example, if you are using the SemVer system to version your application, you can store the version as a `Trait` in
-Flagsmith and then create a rule that looks like, for example:
-
-`version` `SemVer >=` `4.2.52`
-
-This Segment rule will include all users running version `4.2.52` or greater of your application.
-
-</TabItem>
-<TabItem value="percent" label="Percentage Split">
-
-:::important
-
-The percentage split operator **_only_** comes into effect if you are getting the Flags for a particular Identity. If
-you are just retrieving the flags for an Environment without passing in an Identity, your user will **_never_** be
-included in the percentage split segment.
-
-:::
-
-This is the only operator that does not require a Trait. You can use the percentage split operator to drive
-[A/B tests](/advanced-use/ab-testing) and
-[staged feature rollouts](/guides-and-examples/staged-feature-rollouts#creating-staged-rollouts).
-
-When you use a percentage split operator in a segment that is overriding a feature, each user will be placed into the
-same 'bucket' whenever that feature is evaluated for that user, and hence they will always receive the same value.
-Different users will receive different values depending on your split percentage.
-
-</TabItem>
-<TabItem value="modulo" label="Modulo">
-
-:::important
-
-Earlier SDK versions will not work in local evaluation mode if your environment has segments with the `Modulo` operator
-defined.
-
-To keep local evaluation from breaking, please ensure you have your SDK versions updated before you add such segments to
-your environment.
-
-:::
-
-This operator performs [modulo operation](https://en.wikipedia.org/wiki/Modulo_operation). This operator accepts rule
-value in `divisor|remainder` format and is applicable for Traits having `integer` or `float` values. For example:
-
-`userId` `%` `2|0`
-
-This segment rule will include all identities having `int` or `float` `userId` trait and having a remainder equal to 0
-after being divided by 2.
-
-`userId % 2 == 0`
-
-These minimum SDK versions support segments with the `Modulo` operator in
-[local evaluation mode](/clients/overview#local-evaluation):
-
-- Python SDK: `2.3.0+`
-- Java SDK: `5.1.0+`
-- .NET SDK: `4.2.0+`
-- NodeJS SDK: `2.4.0+`
-- Ruby SDK: `3.1.0+`
-- PHP SDK: `3.1.0+`
-- Go SDK: `2.2.0+`
-- Rust SDK: `0.2.0+`
-- Elixir SDK: `1.1.0+`
-
-</TabItem>
-</Tabs>
-
-## Rule Typing
-
-When you store Trait values against an Identity, they are stored in our API with an associated type:
+Each individual trait value is always stored as one of the following data types:
 
 - String
 - Boolean
 - Integer
+- Float
 
-When you define a Segment rule, the value is stored as a String. When the Segment engine runs, the rule value will be
-coerced into the type of the Trait value. Here are some examples.
+Values in segment rules, on the other hand, are always stored as strings. When segment rules are evaluated, rule values
+will be coerced to be the same type as the trait value. If the rule value cannot be coerced, that rule will evaluate as
+false. This provides some flexibility if you ever need to change the data type of a trait, e.g. from boolean to string,
+while maintaining backwards and forwards compatibility in your application.
 
-You store a Trait, here with an example in Javascript:
+For example, consider the following code using the JavaScript SDK:
 
 ```javascript
-flagsmith.identify('flagsmith_sample_user');
+flagsmith.identify('example_user_1234');
 flagsmith.setTrait('accepted_cookies', true);
 ```
 
-So here you are storing a native `boolean` value against the Identity. You can then define a Segment rule, e.g.
-`accepted_cookies=true`. Because the Identity trait named `accepted_cookies` is a boolean, the Segment engine will
-coerce the string value from `accepted_cookies=true` into a boolean, and things will work as expected.
+The value of the `accepted_cookies` trait will be stored as a boolean for this identity. If you define a segment rule
+like `accepted_cookies = true`, the rule value `true` is stored as a string. Because the `accepted_cookies` was stored
+as a boolean for this identity, the segment engine will coerce the rule's string value into a boolean, and things will
+work as expected.
 
-If you were to then change the trait value to a String at a later point the Segment engine will continue to work,
-because the Identity's Trait value has been stored as a String
+Suppose later on you needed to store a third possible state for the trait `accepted_cookies`, for example if users can
+partially accept cookies. Your application can start storing this trait as a string without needing to modify your
+existing segment:
+
+```javascript
+flagsmith.setTrait('accepted_cookies', 'partial');
+```
+
+This would continue to work as expected for identities that already have this trait set as a string value. Always
+storing the trait as a string would also work, for example:
 
 ```javascript
 flagsmith.setTrait('accepted_cookies', 'true');
 ```
 
-For evaluating booleans, we evaluate the following 'truthy' String values as `true`:
+The following string trait values will evaluate to `true`:
 
-- `True`
-- `true`
-- `1`
+- `"True"`
+- `"true"`
+- `"1"`
 
-## Segment Rule Ordering
+## Rule operators reference
 
-Flagsmith evaluates the conditions of a Segment in the order they are defined. This can affect how things are processed
-and should be considered when creating your Segment rules.
+All rule operators are case-sensitive.
 
-For example, let’s say I have this segment:
+| Name                  | Description                                                                                                                                              |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Exactly Matches (=)` | Trait value is equal to the rule value                                                                                                                   |
+| `Does not match (!=)` | Trait value is not equal to the rule value                                                                                                               |
+| `% Split`             | Identity is in the percentage bucket. [Learn more](?operators=percent#operator-details)                                                                  |
+| `>`                   | Trait value is greater than the rule value                                                                                                               |
+| `>=`                  | Trait value is greater than or equal to the rule value                                                                                                   |
+| `<`                   | Trait value is less than the rule value                                                                                                                  |
+| `<=`                  | Trait value is less than or equal to the rule value                                                                                                      |
+| `In`                  | Trait value is equal to any element in a comma-separated list (case-sensitive). [Learn more](?operators=in#operator-details)                             |
+| `Contains`            | Rule value is a substring of the trait value                                                                                                             |
+| `Does not contain`    | Rule value is not a substring of the trait value                                                                                                         |
+| `Matches regex`       | Trait value matches the given regular expression                                                                                                         |
+| `Is set`              | Trait value is set for given identity and trait key                                                                                                      |
+| `Is not set`          | Trait value is not set for given identity and trait key                                                                                                  |
+| `SemVer`              | Trait value is compared against the rule value according to [Semantic Versioning](https://semver.org/). [Learn more](?operators=semver#operator-details) |
 
-1. Percentage Split = 10%
-2. isSubscriber = true
+### Operator details
 
-This Segment would randomly select 10% of _all_ Identities first and then filter the subscribers. You could also define
-the Segment rules the other way around:
+<Tabs groupId="operators" queryString>
+<TabItem value="in" label="In">
 
-1. isSubscriber = true
-2. Percentage Split = 10%
+The `In` operator lets you match a trait value against a comma-separated list of values. For example, the segment rule
+value might read `21,682,8345`. This would match against a trait value of `682` but not against a trait value of `683`
+or `834`.
 
-This definition makes the isSubscriber check first, and the Split condition is second, operating purely on the pool of
-subscribed users.
+The `In` operator can be useful to build segments that represent a specific set of tenants in your application. For
+example, you could create a segment with the following rule: `tenant_id In tenant_1,tenant_2,tenant_3`
 
-## Feature Flag and Remote Config Precedence
+</TabItem>
+<TabItem value="semver" label="SemVer">
 
-Feature Flag states and Remote Config values can be defined in 3 different places:
+[SemVer](https://semver.org/) operators compare semantic version values. Consider the following segment rule:
 
-1. The default Flag/Config value itself
-2. The Segment associated with the Flag/Config
-3. Overridden at an Identity level
+`version` `SemVer >=` `4.2.52`
 
-For example, a Feature Flag `Show Paypal Checkout` could be set to `false` on the Flag itself, `true` in the Beta Users
-segment, and then overridden as `false` for a specific Identity.
+This segment would include all users that have a `version` trait set to `4.2.52` or greater. For example, any of the
+following `version` values would match:
 
-In order to deal with this situation, there is an order of priority:
+- `4.2.53`
+- `4.10.0`
+- `5.0.0`
 
-1. If the Identity has an override value, this is returned ahead of Segments and Flags/Config
-2. If there's no Identity override, the Segment is checked and returned if valid
-3. If no Identity or Segment overrides the value, the default Flag/Config value is used
+Versions are compared as defined by the [Semantic Versioning specification](https://semver.org/#spec-item-11).
 
-More simply, the order of precedence is:
+</TabItem>
+<TabItem value="percent" label="Percentage Split">
 
-1. Identity
-2. Segment
-3. Flag
+Percentage Split is the only operator that does not require a trait. You can use it to drive
+[A/B tests](/advanced-use/ab-testing) and
+[staged feature rollouts](/guides-and-examples/staged-feature-rollouts#creating-staged-rollouts).
+
+Percentage Split deterministically assigns a "bucket" to each identity solely based on its ID and not any traits,
+meaning that segment overrides that use Percentage Split will always result in the same feature value for a given
+identity.
+
+</TabItem>
+<TabItem value="modulo" label="Modulo">
+
+This operator performs a [modulo operation](https://en.wikipedia.org/wiki/Modulo_operation), which returns the remainder
+of dividing a numeric trait value by a given divisor. The operator accepts rule value in the format `divisor|remainder`.
+For example:
+
+`user_id` `%` `2|0`
+
+This segment will include all identities having an `user_id` trait that is divisible by 2, i.e. even numbers. This is
+equivalent to the following expression in many programming languages:
+
+`user_id % 2 == 0`
+
+</TabItem>
+</Tabs>
+
+### Minimum SDK versions for local evaluation mode
+
+When running in local evaluation mode, SDK clients evaluate segment rules locally, which means they must be updated to
+support the latest operators.
+
+If an SDK client tries to evaluate a segment rule that has an unrecognised operator, that rule will silently evaluate to
+`false`. The table below lists the minimum required SDK version required by each operator:
+
+|         | Modulo | In    |
+| ------- | ------ | ----- |
+| Python  | 2.3.0  | 3.3.0 |
+| Java    | 5.1.0  | 7.1.0 |
+| .NET    | 4.2.0  | 5.0.0 |
+| Node.js | 2.4.0  | 2.5.0 |
+| Ruby    | 3.1.0  | 3.2.0 |
+| PHP     | 3.1.0  | 4.1.0 |
+| Go      | 2.2.0  | 3.1.0 |
+| Rust    | 0.2.0  | 1.3.0 |
+| Elixir  | 1.1.0  | 2.0.0 |
