@@ -11,7 +11,6 @@ from django.test.utils import setup_databases
 from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
-from pytest import Session
 from pytest_django.plugin import blocking_manager_key
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -816,14 +815,3 @@ def admin_client_new(
         yield admin_master_api_key_client
     else:
         assert False, "Request param mismatch"
-
-
-def pytest_sessionstart(session: Session) -> None:
-    """
-    Hack to get around Pydantic issue with Freeze Gun.
-
-    https://github.com/Flagsmith/flagsmith/issues/3869
-    """
-    from environments.sdk.schemas import (  # noqa: F401
-        SDKEnvironmentDocumentModel,
-    )
