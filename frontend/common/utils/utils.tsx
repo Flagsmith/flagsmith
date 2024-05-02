@@ -494,6 +494,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       id ? `${id}/` : ''
     }`
   },
+
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
@@ -525,7 +526,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       head.appendChild(script)
     })
   },
-
   numberWithCommas(x: number) {
     if (typeof x !== 'number') return ''
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -543,6 +543,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       zE('messenger', 'open')
     }
   },
+
   removeElementFromArray(array: any[], index: number) {
     return array.slice(0, index).concat(array.slice(index + 1))
   },
