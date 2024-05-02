@@ -30,6 +30,7 @@ const config = {
                     'kotlin',
                     'groovy',
                     'hcl',
+                    'json',
                 ],
             },
             algolia: {
@@ -123,55 +124,59 @@ const config = {
                         title: 'How-to guides',
                         items: [
                             {
-                                label: 'Angular Feature Flags',
+                                label: '.NET',
+                                href: 'https://www.flagsmith.com/blog/net-feature-flag',
+                            },
+                            {
+                                label: 'Angular',
                                 href: 'https://www.flagsmith.com/blog/angular-feature-flag',
                             },
                             {
-                                label: 'Flutter Feature Flags',
+                                label: 'Flutter',
                                 href: 'https://www.flagsmith.com/blog/flutter-feature-flags',
                             },
                             {
-                                label: 'Golang Feature Flags',
+                                label: 'Golang',
                                 href: 'https://www.flagsmith.com/blog/golang-feature-flag',
                             },
                             {
-                                label: 'Java Feature Flags',
+                                label: 'Java',
                                 href: 'https://www.flagsmith.com/blog/java-feature-toggle',
                             },
                             {
-                                label: 'JavaScript Feature Flags',
+                                label: 'JavaScript',
                                 href: 'https://www.flagsmith.com/blog/javascript-feature-flags',
                             },
                             {
-                                label: 'Kotlin/Android Feature Flags',
+                                label: 'Kotlin/Android',
                                 href: 'https://www.flagsmith.com/blog/feature-flags-android',
                             },
                             {
-                                label: 'Node.js Feature Flags',
+                                label: 'Node.js',
                                 href: 'https://www.flagsmith.com/blog/nodejs-feature-flags',
                             },
                             {
-                                label: 'PHP Feature Flags',
+                                label: 'PHP',
                                 href: 'https://www.flagsmith.com/blog/php-feature-flags',
                             },
                             {
-                                label: 'Python Feature Flags',
+                                label: 'Python',
                                 href: 'https://www.flagsmith.com/blog/python-feature-flag',
                             },
                             {
-                                label: 'React Native Feature Flags',
+                                label: 'React Native',
                                 href: 'https://www.flagsmith.com/blog/update-your-react-native-app-using-remote-config',
                             },
                             {
-                                label: 'Ruby Feature Flags',
+                                label: 'Ruby',
                                 href: 'https://www.flagsmith.com/blog/ruby-feature-flags',
                             },
                             {
-                                label: 'Spring Boot Feature Flags',
+                                label: 'Spring Boot',
                                 href: 'https://www.flagsmith.com/blog/spring-boot-feature-flags',
                             },
                             {
-                                label: 'Swift/iOS Feature Flags',
+                                label: 'Swift/iOS',
                                 href: 'https://www.flagsmith.com/blog/swift-ios-feature-flags',
                             },
                         ],

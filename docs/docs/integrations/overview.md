@@ -120,24 +120,32 @@ Manage your Flagsmith Change Requests inside ServiceNow. [Learn more](/integrati
 You can integrate Flagsmith with Slack. Send flag change events from Flagsmith into your Slack channels.
 [Learn more](/integrations/project-management/slack).
 
+---
+
+<a href="/integrations/project-management/github" alt="GitHub"><img width="30%" src="/img/integrations/github/github-logo.svg"/></a>
+
+View your Flagsmith flags inside GitHub Issues and Pull Request. [Learn more](/integrations/project-management/github).
+
+---
+
 ## Authentication Providers / IDPs
 
-### OAUTH
+### OAuth
 
-You can authenticate Flagsmith with oAuth providers. [Learn more](/deployment/configuration/authentication/OAuth).
+You can authenticate Flagsmith with OAuth providers. [Learn more](/system-administration/authentication/OAuth).
 
 ### SAML
 
-You can authenticate Flagsmith with SAML providers. [Learn more](/deployment/configuration/authentication/SAML).
+You can authenticate Flagsmith with SAML providers. [Learn more](/system-administration/authentication/SAML).
 
 ### LDAP
 
-You can authenticate Flagsmith with LDAP providers. [Learn more](/deployment/configuration/authentication/LDAP).
+You can authenticate Flagsmith with LDAP providers. [Learn more](/system-administration/authentication/LDAP).
 
 ### Okta
 
-You can authenticate Flagsmith with Okta. [Learn more](/deployment/configuration/authentication/Okta).
+You can authenticate Flagsmith with Okta. [Learn more](/system-administration/authentication/Okta).
 
 ### ADFS
 
-You can authenticate Flagsmith with ADFS. [Learn more](/deployment/configuration/authentication/ADFS).
+You can authenticate Flagsmith with ADFS. [Learn more](/system-administration/authentication/ADFS).
