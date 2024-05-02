@@ -1,6 +1,7 @@
 import logging
 import typing
 from contextlib import suppress
+from decimal import Decimal
 from typing import Iterable
 
 from boto3.dynamodb.conditions import Key
@@ -12,6 +13,7 @@ from flag_engine.segments.evaluator import get_identity_segments
 from rest_framework.exceptions import NotFound
 
 from environments.dynamodb.constants import IDENTITIES_PAGINATION_LIMIT
+from environments.dynamodb.wrappers.exceptions import CapacityBudgetExceeded
 from util.mappers import map_identity_to_identity_document
 
 from .base import BaseDynamoWrapper
@@ -89,7 +91,8 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         environment_api_key: str,
         limit: int,
         start_key: dict[str, "TableAttributeValueTypeDef"] | None = None,
-        projection_expression: str = None,
+        projection_expression: str | None = None,
+        return_consumed_capacity: bool = False,
     ) -> "QueryOutputTableTypeDef":
         filter_expression = Key("environment_api_key").eq(environment_api_key)
         query_kwargs: "QueryInputRequestTypeDef" = {
@@ -97,11 +100,12 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
             "KeyConditionExpression": filter_expression,
             "Limit": limit,
         }
-        if projection_expression:
-            query_kwargs["ProjectionExpression"] = projection_expression
-
         if start_key:
             query_kwargs["ExclusiveStartKey"] = start_key
+        if projection_expression:
+            query_kwargs["ProjectionExpression"] = projection_expression
+        if return_consumed_capacity:
+            query_kwargs["ReturnConsumedCapacity"] = "TOTAL"
         return self.query_items(**query_kwargs)
 
     def iter_all_items_paginated(
@@ -109,17 +113,27 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         environment_api_key: str,
         limit: int = IDENTITIES_PAGINATION_LIMIT,
         projection_expression: str = None,
+        capacity_budget: Decimal = Decimal("Inf"),
     ) -> typing.Generator[dict, None, None]:
         last_evaluated_key = "initial"
         get_all_items_kwargs = {
             "environment_api_key": environment_api_key,
             "limit": limit,
             "projection_expression": projection_expression,
+            "return_consumed_capacity": capacity_budget != Decimal("Inf"),
         }
+        capacity_spent = 0
         while last_evaluated_key:
+            if capacity_spent >= capacity_budget:
+                raise CapacityBudgetExceeded(
+                    capacity_budget=capacity_budget,
+                    capacity_spent=capacity_spent,
+                )
             query_response = self.get_all_items(
                 **get_all_items_kwargs,
             )
+            with suppress(KeyError):
+                capacity_spent += query_response["ConsumedCapacity"]["CapacityUnits"]
             for item in query_response["Items"]:
                 yield item
             if last_evaluated_key := query_response.get("LastEvaluatedKey"):
