@@ -228,6 +228,9 @@ def test_delete_feature_external_resource(
         "integrations.github.github.generate_token",
     )
     mock_generate_token.return_value = "mocked_token"
+    github_request_mock = mocker.patch(
+        "requests.post", side_effect=mocked_requests_post
+    )
     url = reverse(
         "api-v1:projects:feature-external-resources-detail",
         args=[project.id, feature.id, feature_external_resource.id],
@@ -237,6 +240,17 @@ def test_delete_feature_external_resource(
     response = admin_client_new.delete(url)
 
     # Then
+    github_request_mock.assert_called_with(
+        "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
+        json={
+            "body": "### The feature flag Test Feature1 was unlinked from the issue/PR"
+        },
+        headers={
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": "Bearer mocked_token",
+        },
+        timeout=10,
+    )
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert not FeatureExternalResource.objects.filter(
         id=feature_external_resource.id
