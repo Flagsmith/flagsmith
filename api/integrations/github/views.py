@@ -1,3 +1,4 @@
+import re
 from functools import wraps
 
 import requests
@@ -65,8 +66,9 @@ class GithubConfigurationViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         try:
             return super().create(request, *args, **kwargs)
-        except IntegrityError:
-            raise DuplicateGitHubIntegration
+        except IntegrityError as e:
+            if re.search(r"Key \(organisation_id\)=\(\d+\) already exists", str(e)):
+                raise DuplicateGitHubIntegration
 
 
 class GithubRepositoryViewSet(viewsets.ModelViewSet):
@@ -91,10 +93,15 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
 
         try:
             return super().create(request, *args, **kwargs)
-        except IntegrityError:
-            raise ValidationError(
-                detail="Duplication error. The GitHub repository already linked"
-            )
+
+        except IntegrityError as e:
+            if re.search(
+                r"Key \(github_configuration_id, project_id, repository_owner, repository_name\)",
+                str(e),
+            ) and re.search(r"already exists.$", str(e)):
+                raise ValidationError(
+                    detail="Duplication error. The GitHub repository already linked"
+                )
 
 
 @api_view(["GET"])

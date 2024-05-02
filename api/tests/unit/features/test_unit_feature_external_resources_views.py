@@ -115,7 +115,7 @@ def test_create_feature_external_resource(
     )
 
 
-def test_cannot_create_feature_external_resource_when_doesnt_have_a_valid_gitHub_integration(
+def test_cannot_create_feature_external_resource_when_doesnt_have_a_valid_github_integration(
     admin_client_new: APIClient,
     feature: Feature,
     project: Project,
