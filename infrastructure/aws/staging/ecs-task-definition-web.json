@@ -198,6 +198,10 @@
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:DATABASE_URL::"
                 },
                 {
+                    "name": "REPLICA_DATABASE_URLS",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:REPLICA_DATABASE_URLS::"
+                },
+                {
                     "name": "ANALYTICS_DATABASE_URL",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:ANALYTICS_DATABASE_URL::"
                 },

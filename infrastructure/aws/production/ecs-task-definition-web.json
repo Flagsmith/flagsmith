@@ -202,6 +202,10 @@
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DATABASE_URL::"
                 },
                 {
+                    "name": "REPLICA_DATABASE_URLS",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:REPLICA_DATABASE_URLS::"
+                },
+                {
                     "name": "DJANGO_SECRET_KEY",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DJANGO_SECRET_KEY::"
                 },
