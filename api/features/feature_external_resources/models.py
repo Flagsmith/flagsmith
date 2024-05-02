@@ -12,7 +12,6 @@ from django_lifecycle import (
 
 from features.models import Feature, FeatureState
 from integrations.github.github import GithubData, generate_data
-from integrations.github.models import GithubConfiguration
 from integrations.github.tasks import call_github_app_webhook_for_feature_state
 from webhooks.webhooks import WebhookEventType
 
@@ -50,13 +49,9 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
     @hook(AFTER_SAVE)
     def exectute_after_save_actions(self):
         # Add a comment to GitHub Issue/PR when feature is linked to the GH external resource
-        if self.feature.project.organisation.github_config.filter(
+        if github_configuration := self.feature.project.organisation.github_config.filter(
             deleted_at__isnull=True
-        ).exists():
-            github_configuration = GithubConfiguration.objects.get(
-                organisation=self.feature.project.organisation, deleted_at__isnull=True
-            )
-
+        ).first():
             feature_states = FeatureState.objects.filter(
                 feature_id=self.feature_id, identity_id__isnull=True
             )
@@ -75,12 +70,9 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
     @hook(BEFORE_DELETE)
     def execute_before_save_actions(self) -> None:
         # Add a comment to GitHub Issue/PR when feature is unlinked to the GH external resource
-        if self.feature.project.organisation.github_config.filter(
+        if github_configuration := self.feature.project.organisation.github_config.filter(
             deleted_at__isnull=True
-        ).exists():
-            github_configuration = GithubConfiguration.objects.get(
-                organisation=self.feature.project.organisation, deleted_at__isnull=True
-            )
+        ).first():
             feature_data: GithubData = generate_data(
                 github_configuration=github_configuration,
                 feature_id=self.feature_id,
