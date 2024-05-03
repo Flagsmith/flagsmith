@@ -178,9 +178,7 @@ const CodeHelp = class extends Component {
                       styles={{
                         control: (base) => ({
                           ...base,
-                          '&:hover': { borderColor: '$bt-brand-secondary' },
                           alignSelf: 'flex-end',
-                          border: '1px solid $bt-brand-secondary',
                           width: 200,
                         }),
                       }}

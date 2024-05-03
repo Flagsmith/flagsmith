@@ -101,7 +101,7 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
       )}
       {Utils.getFlagsmithHasFeature('show_dunning_banner') &&
         billingStatus === 'DUNNING' && (
-          <div className='alert-butter-bar'>
+          <div className='butter-bar text-white bg-danger'>
             <span className='icon-alert mr-2'>
               <Icon name='warning' fill='#fff' />
             </span>

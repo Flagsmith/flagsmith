@@ -43,7 +43,7 @@
   .title {
     font-weight: 500;
     margin-bottom: 2px;
-    color: $text-icon-dark;
+    color: $body-color;
   }
   a {
     color: $primary;
@@ -51,7 +51,7 @@
   }
   strong {
     font-weight: 500;
-    color: $text-icon-dark;
+    color: $body-color;
   }
 }
 .alert-success {
@@ -60,7 +60,7 @@
   .title {
     font-weight: 500;
     margin-bottom: 2px;
-    color: $text-icon-dark;
+    color: $body-color;
   }
   a {
     color: $primary;
@@ -68,7 +68,7 @@
   }
   strong {
     font-weight: 500;
-    color: $text-icon-dark;
+    color: $body-color;
   }
 }
 
@@ -121,5 +121,5 @@
   }
 }
 .text-info {
-  color: $bt-brand-primary !important;
+  color: $primary !important;
 }
