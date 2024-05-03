@@ -462,10 +462,16 @@ def test_handle_api_usage_notifications_above_100(
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_restrict_use_due_to_api_limit_grace_period_over(
+    mocker: MockerFixture,
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     # Given
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
     now = timezone.now()
     organisation2 = Organisation.objects.create(name="Org #2")
     organisation3 = Organisation.objects.create(name="Org #3")
