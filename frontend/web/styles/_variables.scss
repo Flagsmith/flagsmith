@@ -3,13 +3,9 @@
 $font-family: 'OpenSans', sans-serif;
 $font-family-header: 'OpenSans', sans-serif;
 
-$dark-bg-5: #1a1c26;
-$dark-bg-10: #252836;
-$dark-bg-15: #323242;
 $dark-bg-20: #3a3d4a;
 $dark-bg-50: #b3b3b3;
 $dark-highlight: #424b72;
-$dark-highlight2: $dark-bg-20;
 $dark-highlight3: #f18e7f;
 
 $dark-highlight-color: #e1e1e1;
@@ -61,16 +57,11 @@ $bt-link-color-hover: lighten($header-color, 10); // for headers and labels
 
 //Navbar
 $nav-link-color: $header-color; // navbar link
-$nav-link-color-dark: darken($header-color-dark, 10); // navbar link
 $nav-link-color-hover: $bt-brand-primary; //
-$nav-link-color-active: $bt-brand-primary-dark;
-$nav-link-color-hover-dark: $bt-brand-primary-dark-desaturated-light; //
 
-$nav-link-color-active-dark: $bt-brand-primary-dark-desaturated-light;
 $navbar-height: 5rem;
 $navbar-background: transparent;
 $nav-icon-color: $bt-brand-primary;
-$nav-icon-color-dark: $dark-highlight;
 
 $bt-input-border: #d9d9e9;
 $bt-input-border-dark: $input-bg-dark;
@@ -80,7 +71,7 @@ $body-bg: #fff;
 
 
 $butter-bar-bg: #fdf1dd;
-$butter-bar-bg-dark: $dark-bg-10;
+$butter-bar-bg-dark: $bg-dark400;
 
 $bt-gradient-text: $body-text;
 $bt-gradient-start: $bt-brand-faint-alt;
@@ -89,24 +80,14 @@ $bt-gradient-end: #fff;
 //Panel
 $panel-heading-height: 50px;
 $panel-bg: white;
-$panel-bg-dark: $dark-bg-10;
-$panel-bg-darker: $dark-bg-5;
+$panel-bg-dark: $bg-dark400;
 $panel-heading-bg: $bt-brand-primary-dark;
-$panel-heading-bg-dark: $dark-bg-10;
+$panel-heading-bg-dark: $bg-dark400;
 $panel-heading-color: white;
 $panel-heading-color-dark: $header-color-dark;
 $panel-heading-border: 1px solid $bt-brand-primary-dark;
 $panel-heading-border-dark: 1px solid transparent;
 
-
-//
-$panel-icon-color: $bt-brand-primary-dark;
-$panel-icon-border-color: #fff;
-$panel-icon-background-color: #fff;
-
-$panel-icon-border-color-dark: $dark-bg-20;
-$panel-icon-background-color-dark: $dark-bg-20;
-$panel-icon-color-dark: $dark-bg-50;
 
 // Code help e.g. installing the SDK
 $btn-code-button-background-hover: darken($bt-brand-faint-alt, 2);

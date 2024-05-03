@@ -305,20 +305,13 @@ $panel-list-item-sub-color: $text-icon-grey;
 $panel-grey-background: $bg-light200;
 $panel-grey-background-dark: $bg-dark300;
 
-//Nav
-$nav-background: $text-icon-light;
-$nav-background-dark: $bg-dark400;
-$nav-icon-color-dark: $text-icon-grey;
-$nav-link-color-dark: $text-icon-light;
-$nav-link-color-active-dark: $text-icon-light;
+$scrollbar-track: $white-alpha-16;
+$scrollbar-thumb: $bg-light300;
+$scrollbar-thumb-hover: $bg-light300;
 
-$bt-scrollbar-track: $white-alpha-16;
-$bt-scrollbar-thumb: $bg-light300;
-$bt-scrollbar-thumb-hover: $bg-light300;
-
-$bt-scrollbar-track-dark: $basic-alpha-16;
-$bt-scrollbar-thumb-dark: $bg-dark300;
-$bt-scrollbar-thumb-dark-hover: $bg-dark300;
+$scrollbar-track-dark: $basic-alpha-16;
+$scrollbar-thumb-dark: $bg-dark300;
+$scrollbar-thumb-dark-hover: $bg-dark300;
 
 $theme-colors: (
   light200: $bg-light200,

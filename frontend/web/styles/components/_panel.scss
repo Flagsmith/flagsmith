@@ -13,9 +13,6 @@
     border: none;
     .panel-heading {
       background-color: transparent;
-      .panel-icon {
-        display: none;
-      }
     }
   }
 }
@@ -103,7 +100,7 @@
       }
 
       .chip {
-        background-color: $panel-bg-darker;
+        background-color: $primary900;
       }
     }
     .panel-heading {
@@ -122,9 +119,6 @@
         }
       }
       color: $text-icon-light;
-      .ion-ios-information-circle {
-        color: $panel-icon-background-color;
-      }
     }
     a {
       color: $dark-highlight-color;
@@ -137,13 +131,6 @@
     }
     .list-item:hover a,.btn-link {
       color: $primary !important;
-    }
-    .panel-icon {
-      background-color: $panel-icon-background-color-dark;
-      border-color: $panel-icon-background-color-dark;
-      .icon {
-        color: $panel-icon-color-dark;
-      }
     }
 
     &.panel-integrations {
