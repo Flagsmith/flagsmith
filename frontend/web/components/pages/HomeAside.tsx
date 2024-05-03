@@ -51,17 +51,7 @@ const HomeAside: FC<HomeAsideType> = ({
       {() => (
         <ProjectProvider id={projectId} onSave={onProjectSave}>
           {({ project }: { project: Project }) => (
-            <div
-              style={{
-                bottom: 0,
-                height: '100vh',
-                maxHeight: '100vh',
-                position: 'sticky',
-                top: 0,
-                width: 300,
-              }}
-              className='border-right'
-            >
+            <div className='border-right home-aside'>
               <div className='mt-3'>
                 <div className='px-3 mb-2 d-flex align-items-center justify-content-between'>
                   <h6 className='mb-0'>Environments</h6>

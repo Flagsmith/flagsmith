@@ -13,7 +13,7 @@ import PageTitle from 'components/PageTitle'
 import { timeOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import Utils from 'common/utils/utils'
-import Constants from '../../../common/constants';
+import Constants from 'common/constants'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'

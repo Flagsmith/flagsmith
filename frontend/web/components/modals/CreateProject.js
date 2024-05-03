@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import InfoMessage from 'components/InfoMessage'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
-import Constants from '../../../common/constants';
+import Constants from 'common/constants'
 
 const CreateProject = class extends Component {
   static displayName = 'CreateProject'

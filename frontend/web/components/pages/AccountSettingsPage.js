@@ -17,7 +17,7 @@ import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import { Link } from 'react-router-dom'
 import InfoMessage from 'components/InfoMessage'
-import Constants from '../../../common/constants';
+import Constants from 'common/constants'
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
