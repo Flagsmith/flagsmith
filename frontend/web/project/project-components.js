@@ -1,7 +1,6 @@
 import { PureComponent } from 'react'
 import Select from 'react-select'
 import Button from 'components/base/forms/Button'
-import RemoveIcon from 'components/RemoveIcon'
 import Paging from 'components/Paging'
 import ToggleChip from 'components/ToggleChip'
 import Input from 'components/base/forms/Input'
@@ -82,7 +81,6 @@ window.Loader = class extends PureComponent {
 window.Tooltip = Tooltip
 
 global.ToggleChip = ToggleChip
-global.RemoveIcon = RemoveIcon
 global.Select = class extends PureComponent {
   static displayName = 'Select'
 

@@ -4,6 +4,8 @@ import Popover from './base/Popover'
 import Input from './base/forms/Input'
 import Icon from './Icon'
 import classNames from 'classnames'
+import { IonIcon } from '@ionic/react'
+import { chevronDown, chevronUp } from 'ionicons/icons'
 const PanelSearch = class extends Component {
   static displayName = 'PanelSearch'
 
@@ -176,30 +178,28 @@ const PanelSearch = class extends Component {
                     )}
                   >
                     {(toggle) => (
-                      <div className='popover-inner__content'>
+                      <div>
                         {this.props.sorting.map((sortOption, i) => (
                           <a
                             key={i}
-                            className='popover-bt__list-item'
+                            className='table-filter-item'
                             href='#'
                             onClick={(e) => {
                               this.onSort(e, sortOption)
                               toggle()
                             }}
                           >
-                            <Row space className='px-3 py-2'>
+                            <Row space className='px-3 align-items-center py-2'>
                               <div>{sortOption.label}</div>
                               {currentSort &&
                                 currentSort.value === sortOption.value && (
-                                  <div>
-                                    <Icon
-                                      name={
-                                        sortOrder === 'asc'
-                                          ? 'chevron-up'
-                                          : 'chevron-down'
-                                      }
-                                    />
-                                  </div>
+                                  <IonIcon
+                                    icon={
+                                      sortOrder === 'asc'
+                                        ? chevronUp
+                                        : chevronDown
+                                    }
+                                  />
                                 )}
                             </Row>
                           </a>

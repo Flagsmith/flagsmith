@@ -279,9 +279,6 @@ $side-width: 660px;
 .table-filter-item {
   display: block;
   border-bottom: 1px solid $input-border-color;
-  &:first-of-type {
-    border-top: 1px solid $input-border-color;
-  }
   &:last-of-type {
     border-bottom: none;
   }

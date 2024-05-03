@@ -17,9 +17,6 @@
         }
     }
 }
-.bg-secondary {
-    background-color: $bt-brand-secondary;
-}
 .clearfix { display: inline-block; }
 /* start commented backslash hack \*/
 * html .clearfix { height: 1%; }
@@ -77,10 +74,6 @@
     margin-bottom:20px;
 }
 
-.no-mb{
-    margin-bottom:0;
-}
-
 .text-left{
     text-align: left;
 }
@@ -88,7 +81,6 @@
 .link-style{
     text-decoration: underline;
 }
-
 
 .disable-transitions {
     .modal-dialog {
@@ -166,15 +158,6 @@
     position: relative;
     bottom: -1px;
 }
-.aside__environment-list-item.active {
-    .unread {
-        background-color: rgba(0,0,0,.2);
-    }
-}
-.aside__environment-list-item.disabled {
-    color:#696969;
-    pointer-events: none;
-  }
 
 .justify-content-end {
     justify-content: flex-end;
