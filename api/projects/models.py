@@ -39,6 +39,7 @@ class EdgeV2MigrationStatus(models.TextChoices):
     NOT_STARTED = "NOT_STARTED", "Not Started"
     IN_PROGRESS = "IN_PROGRESS", "In Progress"
     COMPLETE = "COMPLETE", "Complete"
+    INCOMPLETE = "INCOMPLETE", "Incomplete (identity overrides skipped)"
 
 
 class Project(LifecycleModelMixin, SoftDeleteExportableModel):
@@ -89,6 +90,16 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         # since we need to know whether edge is enabled or not.
         default=EdgeV2MigrationStatus.NOT_STARTED,
         db_column="identity_overrides_v2_migration_status",
+        help_text="[Edge V2 migration] Project migration status. Set to `IN_PROGRESS` to trigger migration start.",
+    )
+    edge_v2_migration_read_capacity_budget = models.IntegerField(
+        null=True,
+        default=None,
+        help_text=(
+            "[Edge V2 migration] Read capacity budget override. If project migration was finished with "
+            "`INCOMPLETE` status, you can set it to a higher value than `EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET` "
+            "setting before restarting the migration."
+        ),
     )
     stale_flags_limit_days = models.IntegerField(
         default=30,
