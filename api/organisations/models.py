@@ -489,6 +489,7 @@ class OrganisationAPIBilling(models.Model):
     Even though api_overage is charge per thousand API calls, this
     class tracks the actual rounded count of API calls that are
     billed for (i.e., 52000 for an account with 52233 api calls).
+    We're intentionally rounding down to the closest thousands.
 
     The option to set immediate_invoice means whether or not the
     API billing was processed immediately versus pushed onto the
