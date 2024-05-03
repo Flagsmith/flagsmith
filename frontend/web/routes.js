@@ -35,7 +35,6 @@ import ProjectsPage from './components/ProjectsPage'
 import OrganisationSettingsRedirectPage from './components/pages/OrganisationSettingsRedirectPage'
 import OrganisationUsagePage from './components/pages/OrganisationUsagePage'
 import OrganisationsPage from './components/pages/OrganisationsPage'
-import PageTitle from './components/PageTitle'
 import UsersAndPermissionsPage from './components/pages/UsersAndPermissionsPage'
 import ProjectRedirectPage from './components/pages/ProjectRedirectPage'
 

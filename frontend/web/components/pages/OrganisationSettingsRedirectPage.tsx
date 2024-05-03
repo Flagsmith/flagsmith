@@ -15,6 +15,8 @@ const OrganisationSettingsRedirectPage: FC<
       router.history.replace(
         `/organisation/${AccountStore.getOrganisation().id}/settings`,
       )
+    } else {
+      router.history.replace('/organisations')
     }
   }, [])
   return (
