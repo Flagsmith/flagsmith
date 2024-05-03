@@ -981,12 +981,17 @@ class FeatureState(
                 source_feature_id
             ].enabled
 
-            # Copy feature state value from source feature_state
-            target_feature_state.feature_state_value.copy_from(
-                source_feature_state.feature_state_value
-            )
+            if source_feature_state.feature.type == MULTIVARIATE:
+                mv_values = [
+                    mv_value.clone(feature_state=target_feature_state, persist=False)
+                    for mv_value in source_feature_state.multivariate_feature_state_values.all()
+                ]
+                MultivariateFeatureStateValue.objects.bulk_create(mv_values)
+            else:
+                target_feature_state.feature_state_value.copy_from(
+                    source_feature_state.feature_state_value
+                )
 
-            # Save changes to target feature_state
             target_feature_state.save()
 
 
