@@ -7,13 +7,13 @@ nav a {
 }
 .nav-sub-link {
   padding-bottom: 10px;
-  color: $body-text;
+  color: $body-color;
   &-inner {
     padding: 4px;
     border-radius: $border-radius;
 
     &:hover {
-      color: $body-text;
+      color: $body-color;
       background-color: $primary-alfa-8;
     }
   }
@@ -22,7 +22,7 @@ nav a {
     height: 14px;
     opacity: 0.6;
     path {
-      fill: $body-text;
+      fill: $body-color;
     }
   }
   ion-icon {
@@ -37,23 +37,23 @@ nav a {
   padding: 4px 8px 4px 8px;
   border-radius: $border-radius;
   &:hover,&.hovered {
-    color: $body-text;
+    color: $body-color;
     background-color: $primary-alfa-8;
   }
 }
 .dark {
   .breadcrumb-link:hover, .breadcrumb-link.hovered {
-    color: $body-text-dark;
+    color: $body-color-dark;
   }
   .nav-sub-link {
     &-inner {
       &:hover {
-        color: $body-text-dark;
+        color: $body-color-dark;
       }
     }
     svg {
       path {
-        fill: $body-text-dark;
+        fill: $body-color-dark;
       }
     }
   }
@@ -110,7 +110,7 @@ nav a {
     width: 16px;
     height: 16px;
     path {
-      fill: $body-text;
+      fill: $body-color;
       opacity: 0.6;
     }
   }
@@ -146,7 +146,7 @@ nav a {
   .collapsible__content {
     svg {
       path {
-        fill: $body-text-dark;
+        fill: $body-color-dark;
       }
       opacity: 0.3;
     }

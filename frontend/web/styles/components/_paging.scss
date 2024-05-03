@@ -7,14 +7,14 @@
 	border-bottom-right-radius: $border-radius;
 	.btn-paging {
 		background: transparent;
-		color: $body-text;
+		color: $body-color;
 		width: 34px;
 		height: 34px;
 		padding: 0;
 		line-height: 34px;
 		border-radius: 17px !important;
 		&:hover {
-			color: $body-text;
+			color: $body-color;
 			box-shadow: none;
 			background: transparent !important;
 		}

@@ -28,7 +28,6 @@ window.ProjectProvider = ProjectProvider
 window.Paging = Paging
 
 // Useful components
-window.Gif = require('../components/base/Gif')
 window.Row = require('../components/base/grid/Row')
 window.Flex = require('../components/base/grid/Flex')
 window.Column = require('../components/base/grid/Column')

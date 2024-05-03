@@ -65,7 +65,7 @@
         opacity: 1;
       }
       .language-icon {
-        color: $text-icon-dark;
+        color: $body-color;
       }
     }
     span {
@@ -74,7 +74,7 @@
       font-size: $font-caption-sm;
       line-height: $line-height-xxsm;
       &.active {
-        color: $text-icon-dark;
+        color: $body-color;
         font-weight: 500;
       }
       &.primary {
@@ -275,7 +275,7 @@ code.txt {
   background: transparent !important;
   border: 1px solid $input-border-color;
   font-family: 'OpenSans', sans-serif;
-  color: $text-icon-dark;
+  color: $body-color;
   &.empty {
     font-weight: normal;
     color: $input-placeholder-color;
@@ -283,7 +283,7 @@ code.txt {
   &:focus,
   &:focus.empty {
     font-weight: 500;
-    color: $text-icon-dark;
+    color: $body-color;
     border-color: $primary;
   }
 }

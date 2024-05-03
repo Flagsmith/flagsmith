@@ -35,7 +35,7 @@
     h4,
     h5,
     h6 {
-      color: $text-icon-dark;
+      color: $body-color;
       margin: 0;
     }
 
@@ -50,10 +50,10 @@
     padding-bottom: 2px;
 
     .title {
-      color: $text-icon-dark;
+      color: $body-color;
       font-family: $font-family-header;
       .subtitle {
-        color: $text-icon-dark;
+        color: $body-color;
         font-weight: normal;
         text-transform: none;
       }
@@ -81,7 +81,7 @@
 .dark {
   .panel {
     .icon {
-      color: $dark-color;
+      color: $hr-border-color;
     }
     .panel-content {
       background-color: transparent;
@@ -189,8 +189,8 @@ a.text-white {
           border-top: none;
         }
         &:last-of-type {
-          border-bottom-left-radius: $border-radius-default;
-          border-bottom-right-radius: $border-radius-default;
+          border-bottom-left-radius: $border-radius;
+          border-bottom-right-radius: $border-radius;
         }
         &:first-of-type {
           border-bottom-left-radius: 0;

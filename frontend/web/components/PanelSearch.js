@@ -211,50 +211,6 @@ const PanelSearch = class extends Component {
               )}
               {!!this.props.filterRow && (
                 <Row>
-                  {this.props.showExactFilter && (
-                    <div style={{ width: 140 }}>
-                      <Select
-                        size='select-sm'
-                        styles={{
-                          control: (base) => ({
-                            ...base,
-                            '&:hover': { borderColor: '$bt-brand-secondary' },
-                            border: '1px solid $bt-brand-secondary',
-                            height: 30,
-                          }),
-                        }}
-                        onChange={(v) => {
-                          this.setState({ exact: v.label === 'Exact' })
-                          if (this.props.search) {
-                            this.props.onChange &&
-                              this.props.onChange(
-                                !this.state.exact
-                                  ? `"${this.props.search}"`
-                                  : this.props.search.replace(/^"+|"+$/g, ''),
-                              )
-                          }
-                        }}
-                        value={{
-                          label: this.state.exact
-                            ? 'Exact'
-                            : this.props.filterLabel ||
-                              (Utils.getIsEdge() ? 'Starts with' : 'Contains'),
-                        }}
-                        options={[
-                          {
-                            label: Utils.getIsEdge()
-                              ? 'Starts with'
-                              : 'Contains',
-                            value: 'Contains',
-                          },
-                          {
-                            label: 'Exact',
-                            value: 'Exact',
-                          },
-                        ]}
-                      />
-                    </div>
-                  )}
                   <Row onClick={() => this.input.focus()}>
                     <Input
                       ref={(c) => (this.input = c)}

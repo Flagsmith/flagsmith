@@ -1,4 +1,4 @@
-@import '../new/variables-new';
+@import '../variables';
 
 .react-select .react-select {
   input[type='text'] {
@@ -149,12 +149,12 @@
 .react-select {
   font-weight: 500;
   line-height: $input-line-height;
-  color: $text-icon-dark;
+  color: $body-color;
   &.select-xsm {
     font-size: $font-size-sm;
   }
   &__option {
-    color: $body-text !important;
+    color: $body-color !important;
     background: white !important;
     padding: 9px 16px;
     cursor: pointer;

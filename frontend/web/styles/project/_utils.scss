@@ -118,7 +118,7 @@
 .signup-icon {
     width: 64px;
     path {
-        fill: $bt-brand-primary;
+        fill: $primary;
     }
 }
 
@@ -134,11 +134,11 @@
 }
 
 .text-primary {
-    color: $bt-brand-primary !important;
+    color: $primary !important;
 }
 
 .text-primary {
-    color: $bt-brand-primary !important;
+    color: $primary !important;
 }
 
 .unread {
@@ -168,7 +168,7 @@
 }
 
 .bg-primary {
-    background: $bt-brand-primary !important;
+    background: $primary !important;
 }
 .dark {
     .text-body {
@@ -178,7 +178,7 @@
         }
     }
     .bg-primary {
-        background: $bt-brand-primary-dark !important;
+        background: $primary900 !important;
     }
 }
 
@@ -186,7 +186,7 @@
     text-decoration: none;
     &:hover {
         text-decoration: none;
-        color: $bt-brand-primary-dark
+        color: $primary900
     }
 }
 
