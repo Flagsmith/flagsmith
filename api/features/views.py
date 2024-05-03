@@ -27,6 +27,7 @@ from environments.authentication import EnvironmentKeyAuthentication
 from environments.identities.models import Identity
 from environments.identities.serializers import (
     IdentityAllFeatureStatesSerializer,
+    IdentitySourceIdentityRequestSerializer,
 )
 from environments.models import Environment
 from environments.permissions.permissions import (
@@ -257,12 +258,16 @@ class FeatureViewSet(viewsets.ModelViewSet):
         if not getattr(self, "environment", None):
             self.environment = Environment.objects.get(id=environment_id)
 
-        feature_states = FeatureState.objects.get_live_feature_states(
+        feature_states = get_environment_flags_list(
             environment=self.environment,
-            additional_filters=base_q & filter_search_q & filter_enabled_q,
+            additional_filters=base_q,
         )
 
-        feature_ids = {fs.feature_id for fs in feature_states}
+        feature_ids = FeatureState.objects.filter(
+            filter_search_q & filter_enabled_q,
+            id__in=[fs.id for fs in feature_states],
+        ).values_list("feature_id", flat=True)
+
         return queryset.filter(id__in=feature_ids)
 
     @swagger_auto_schema(
@@ -660,6 +665,34 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         )
 
         return Response(serializer.data)
+
+    @swagger_auto_schema(
+        request_body=IdentitySourceIdentityRequestSerializer(),
+        responses={200: IdentityAllFeatureStatesSerializer(many=True)},
+    )
+    @action(methods=["POST"], detail=False, url_path="clone-from-given-identity")
+    def clone_from_given_identity(self, request, *args, **kwargs) -> Response:
+        """
+        Clone feature states from a given source identity.
+        """
+        serializer = IdentitySourceIdentityRequestSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        # Get and validate source and target identities
+        target_identity = get_object_or_404(
+            queryset=Identity, pk=self.kwargs["identity_pk"]
+        )
+        source_identity = get_object_or_404(
+            queryset=Identity, pk=request.data.get("source_identity_id")
+        )
+
+        # Clone feature states
+        FeatureState.copy_identity_feature_states(
+            target_identity=target_identity, source_identity=source_identity
+        )
+
+        return self.all(request, *args, **kwargs)
 
 
 @method_decorator(

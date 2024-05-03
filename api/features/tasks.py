@@ -1,5 +1,11 @@
+import logging
+from dataclasses import asdict
+
 from environments.models import Webhook
 from features.models import Feature, FeatureState
+from integrations.github.github import GithubData, generate_data
+from integrations.github.tasks import call_github_app_webhook_for_feature_state
+from organisations.models import Organisation
 from task_processor.decorators import register_task_handler
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 from webhooks.webhooks import (
@@ -9,6 +15,8 @@ from webhooks.webhooks import (
 )
 
 from .models import HistoricalFeatureState
+
+logger = logging.getLogger(__name__)
 
 
 def trigger_feature_state_change_webhooks(
@@ -35,6 +43,7 @@ def trigger_feature_state_change_webhooks(
     )
     data = {"new_state": new_state, "changed_by": changed_by, "timestamp": timestamp}
     previous_state = _get_previous_state(instance, history_instance, event_type)
+
     if previous_state:
         data.update(previous_state=previous_state)
 
@@ -49,6 +58,39 @@ def trigger_feature_state_change_webhooks(
             event_type.value,
         )
     )
+
+    if (
+        not instance.identity_id
+        and not instance.feature_segment
+        and instance.feature.external_resources.exists()
+        and instance.environment.project.github_project.exists()
+        and hasattr(instance.environment.project.organisation, "github_config")
+    ):
+        github_configuration = (
+            Organisation.objects.prefetch_related("github_config")
+            .get(id=instance.environment.project.organisationn_id)
+            .github_config.first()
+        )
+        feature_state = {
+            "environment_name": new_state["environment"]["name"],
+            "feature_value": new_state["enabled"],
+        }
+        feature_states = []
+        feature_states.append(instance)
+
+        feature_data: GithubData = generate_data(
+            github_configuration=github_configuration,
+            feature_id=history_instance.feature.id,
+            feature_name=history_instance.feature.name,
+            type=WebhookEventType.FLAG_UPDATED.value,
+            feature_states=feature_states,
+        )
+
+        feature_data.feature_states.append(feature_state)
+
+        call_github_app_webhook_for_feature_state.delay(
+            args=(asdict(feature_data),),
+        )
 
 
 def _get_previous_state(

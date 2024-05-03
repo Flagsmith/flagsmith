@@ -3,32 +3,33 @@ import typing
 from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
 
+from environments.models import Environment
 from features.models import FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 
-if typing.TYPE_CHECKING:
-    from environments.models import Environment
-
 
 def get_environment_flags_queryset(
-    environment: "Environment", feature_name: str = None
+    environment: Environment, feature_name: str = None
 ) -> QuerySet[FeatureState]:
     """
     Get a queryset of the latest live versions of an environments' feature states
     """
+    if environment.use_v2_feature_versioning:
+        return _get_feature_states_queryset(environment, feature_name)
+
     feature_states_list = get_environment_flags_list(environment, feature_name)
     return FeatureState.objects.filter(id__in=[fs.id for fs in feature_states_list])
 
 
 def get_environment_flags_list(
-    environment: "Environment",
+    environment: Environment,
     feature_name: str = None,
     additional_filters: Q = None,
     additional_select_related_args: typing.Iterable[str] = None,
     additional_prefetch_related_args: typing.Iterable[
         typing.Union[str, Prefetch]
     ] = None,
-) -> typing.List["FeatureState"]:
+) -> list[FeatureState]:
     """
     Get a list of the latest committed versions of FeatureState objects that are
     associated with the given environment. Can be filtered to remove segment /
@@ -38,26 +39,16 @@ def get_environment_flags_list(
     feature states. The logic to grab the latest version is then handled in python
     by building a dictionary. Returns a list of FeatureState objects.
     """
-    additional_select_related_args = additional_select_related_args or tuple()
-    additional_prefetch_related_args = additional_prefetch_related_args or tuple()
-
-    feature_states = (
-        FeatureState.objects.get_live_feature_states(
-            environment=environment, additional_filters=additional_filters
-        )
-        .select_related(
-            "environment",
-            "feature",
-            "feature_state_value",
-            "environment_feature_version",
-            "feature_segment",
-            *additional_select_related_args,
-        )
-        .prefetch_related(*additional_prefetch_related_args)
+    feature_states = _get_feature_states_queryset(
+        environment,
+        feature_name,
+        additional_filters,
+        additional_select_related_args,
+        additional_prefetch_related_args,
     )
 
-    if feature_name:
-        feature_states = feature_states.filter(feature__name__iexact=feature_name)
+    if environment.use_v2_feature_versioning:
+        return list(feature_states)
 
     # Build up a dictionary in the form
     # {(feature_id, feature_segment_id, identity_id): feature_state}
@@ -89,3 +80,36 @@ def get_current_live_environment_feature_version(
         .order_by("-live_from")
         .first()
     )
+
+
+def _get_feature_states_queryset(
+    environment: "Environment",
+    feature_name: str = None,
+    additional_filters: Q = None,
+    additional_select_related_args: typing.Iterable[str] = None,
+    additional_prefetch_related_args: typing.Iterable[
+        typing.Union[str, Prefetch]
+    ] = None,
+) -> QuerySet[FeatureState]:
+    additional_select_related_args = additional_select_related_args or tuple()
+    additional_prefetch_related_args = additional_prefetch_related_args or tuple()
+
+    queryset = (
+        FeatureState.objects.get_live_feature_states(
+            environment=environment, additional_filters=additional_filters
+        )
+        .select_related(
+            "environment",
+            "feature",
+            "feature_state_value",
+            "environment_feature_version",
+            "feature_segment",
+            *additional_select_related_args,
+        )
+        .prefetch_related(*additional_prefetch_related_args)
+    )
+
+    if feature_name:
+        queryset = queryset.filter(feature__name__iexact=feature_name)
+
+    return queryset

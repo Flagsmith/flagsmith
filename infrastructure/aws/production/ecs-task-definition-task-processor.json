@@ -148,6 +148,10 @@
                 {
                     "name": "HUBSPOT_IGNORE_DOMAINS",
                     "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io,flagsmithe2etestdomain.io"
+                },
+                {
+                    "name": "GITHUB_APP_ID",
+                    "value": "811209"
                 }
             ],
             "secrets": [
@@ -206,6 +210,10 @@
                 {
                     "name": "HUBSPOT_ACCESS_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:HUBSPOT_ACCESS_TOKEN::"
+                },
+                {
+                    "name": "GITHUB_PEM",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:GITHUB_PEM-E1Ot8p"
                 }
             ],
             "logConfiguration": {
