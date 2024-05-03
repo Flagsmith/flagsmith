@@ -36,7 +36,7 @@ def enable_v2_versioning(environment_id: int):
 
 
 def _create_initial_feature_versions(environment: "Environment"):
-    from features.models import Feature
+    from features.models import Feature, FeatureSegment
 
     now = timezone.now()
 
@@ -47,9 +47,16 @@ def _create_initial_feature_versions(environment: "Environment"):
             published_at=now,
             live_from=now,
         )
-        get_environment_flags_queryset(environment=environment).filter(
-            identity__isnull=True, feature=feature
-        ).update(environment_feature_version=ef_version)
+
+        latest_feature_states = get_environment_flags_queryset(
+            environment=environment
+        ).filter(identity__isnull=True, feature=feature)
+        related_feature_segments = FeatureSegment.objects.filter(
+            feature_states__in=latest_feature_states
+        )
+
+        latest_feature_states.update(environment_feature_version=ef_version)
+        related_feature_segments.update(environment_feature_version=ef_version)
 
 
 @register_task_handler()
