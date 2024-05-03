@@ -10,6 +10,7 @@ import {
 import { deleteFeatureSegment } from './useFeatureSegment'
 import transformCorePaging from 'common/transformCorePaging'
 import Utils from 'common/utils/utils'
+import { updateSegmentPriorities } from './useSegmentPriority'
 
 export const featureVersionService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureVersion'] })
@@ -34,9 +35,28 @@ export const featureVersionService = service
               featureId: query.featureId,
               sha: versionRes.data.uuid,
             })
+
+          //Step 3: Update feature segment priorities before saving feature states
+          const prioritiesToUpdate = query.featureStates
+            .filter((v) => !v.toRemove && !!v.feature_segment)
+            .map((v) => {
+              const matchingFeatureSegment = currentFeatureStates?.data?.find(
+                (currentFeatureState) =>
+                  v.feature_segment?.segment ===
+                  currentFeatureState.feature_segment?.segment,
+              )
+              return {
+                id: matchingFeatureSegment!.feature_segment!.id!,
+                priority: v.feature_segment!.priority,
+              }
+            })
+          if (prioritiesToUpdate.length) {
+            await updateSegmentPriorities(getStore(), prioritiesToUpdate)
+          }
+
           const res = await Promise.all(
             query.featureStates.map((featureState) => {
-              // Step 3: update, create or delete feature states from the new version
+              // Step 4: update, create or delete feature states from the new version
               const matchingVersionState = currentFeatureStates.data.find(
                 (feature) => {
                   return (
@@ -117,7 +137,8 @@ export const featureVersionService = service
             })),
             error: res.find((v) => !!v.error)?.error,
           }
-          // Step 4: Publish the feature version
+
+          // Step 5: Publish the feature version
           if (!query.skipPublish) {
             await publishFeatureVersion(getStore(), {
               environmentId: query.environmentId,
