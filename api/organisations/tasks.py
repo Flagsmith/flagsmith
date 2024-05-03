@@ -217,7 +217,7 @@ def charge_for_api_call_count_overages():
 
     # Only apply charges to ongoing subscriptions that are close to
     # being charged due to being at the end of the billing term.
-    closing_billing_term = now + timedelta(hours=12)
+    closing_billing_term = now + timedelta(hours=1)
 
     organisation_ids = set(
         OrganisationAPIUsageNotification.objects.filter(
@@ -284,6 +284,7 @@ if settings.ENABLE_API_USAGE_ALERTING:
     register_recurring_task(
         run_every=timedelta(hours=12),
     )(handle_api_usage_notifications)
+
     register_recurring_task(
-        run_every=timedelta(hours=12),
+        run_every=timedelta(minutes=30),
     )(charge_for_api_call_count_overages)

@@ -470,7 +470,7 @@ def test_charge_for_api_call_count_overages_scale_up(
         allowed_30d_api_calls=10_000,
         chargebee_email="test@example.com",
         current_billing_term_starts_at=now - timedelta(days=30),
-        current_billing_term_ends_at=now + timedelta(hours=6),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
     )
     organisation.subscription.subscription_id = "fancy_sub_id23"
     organisation.subscription.plan = "scale-up-v2"
@@ -532,7 +532,7 @@ def test_charge_for_api_call_count_overages_start_up(
         allowed_30d_api_calls=10_000,
         chargebee_email="test@example.com",
         current_billing_term_starts_at=now - timedelta(days=30),
-        current_billing_term_ends_at=now + timedelta(hours=6),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
     )
     organisation.subscription.subscription_id = "fancy_sub_id23"
     organisation.subscription.plan = "startup-v2"
