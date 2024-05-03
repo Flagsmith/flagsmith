@@ -237,3 +237,14 @@ If an SDK client tries to evaluate a segment rule that has an unrecognised opera
 | Go      | 2.2.0  | 3.1.0 |
 | Rust    | 0.2.0  | 1.3.0 |
 | Elixir  | 1.1.0  | 2.0.0 |
+
+## Limits
+
+These are the default limits for segments and rules:
+
+- 100 segments per project
+- 100 segment overrides per environment
+- 100 rules per segment override
+- 1000 bytes per segment rule value
+
+See the [documentation on System Limits](system-administration/system-limits.md) for more details.
