@@ -229,20 +229,33 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
         block_access_to_admin=True,
     )
 
-    organisation_ids = []
+    update_organisations = []
     api_limit_access_blocks = []
+    flagsmith_client = get_client("local", local_eval=True)
+
     for organisation in organisations:
+        flags = flagsmith_client.get_identity_flags(
+            f"org.{organisation.id}.{organisation.name}",
+            traits={"organisation_id": organisation.id},
+        )
+
+        stop_serving = flags.is_feature_enabled("api_limiting_stop_serving_flags")
+        block_access = flags.is_feature_enabled("api_limiting_block_access_to_admin")
+
+        if not stop_serving and not block_access:
+            continue
+
+        organisation.stop_serving_flags = stop_serving
+        organisation.block_access_to_admin = block_access
+
         api_limit_access_blocks.append(APILimitAccessBlock(organisation=organisation))
-        organisation_ids.append(organisation.id)
+        update_organisations.append(organisation)
 
     APILimitAccessBlock.objects.bulk_create(api_limit_access_blocks)
 
-    # Due to a bug in Django, calling update on the organisations
-    # queryset after it has been iterated through fails to save.
-    # So to work around that, we reload the queryset from the ids.
-    Organisation.objects.filter(
-        id__in=organisation_ids,
-    ).update(stop_serving_flags=True, block_access_to_admin=True)
+    Organisation.objects.bulk_update(
+        update_organisations, ["stop_serving_flags", "block_access_to_admin"]
+    )
 
 
 def unrestrict_after_api_limit_grace_period_is_stale() -> None:
