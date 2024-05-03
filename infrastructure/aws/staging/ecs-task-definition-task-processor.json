@@ -199,7 +199,7 @@
                 },
                 {
                     "name": "GITHUB_PEM",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:GITHUB_PEM::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:GITHUB_PEM-Bfoaql"
                 }
             ],
             "logConfiguration": {

@@ -78,8 +78,6 @@ def test_create_company_without_organisation_information(
     hubspot_client.client.crm.companies.basic_api.create.assert_called_once()
     call_args = hubspot_client.client.crm.companies.basic_api.create.call_args
     assert call_args.kwargs["simple_public_object_input_for_create"].properties == {
-        "active_subscription": None,
         "domain": domain,
         "name": name,
-        "orgid": -1,
     }

@@ -62,6 +62,7 @@ from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
+from tests.test_helpers import fix_issue_3869
 from tests.types import (
     WithEnvironmentPermissionsCallable,
     WithOrganisationPermissionsCallable,
@@ -77,6 +78,10 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=False,
         help="Enable CI mode",
     )
+
+
+def pytest_sessionstart(session: pytest.Session) -> None:
+    fix_issue_3869()
 
 
 @pytest.hookimpl(trylast=True)
@@ -130,10 +135,30 @@ def auth_token(test_user):
 
 
 @pytest.fixture()
-def admin_client(admin_user):
+def admin_client_original(admin_user):
     client = APIClient()
     client.force_authenticate(user=admin_user)
     return client
+
+
+@pytest.fixture()
+def admin_client(admin_client_original):
+    """
+    This fixture will eventually be switched over to what is now
+    called admin_client_new which will run an admin client as well
+    as admin_master_api_key_client automatically.
+
+    In the meantime consider this fixture as deprecated. Use either
+    admin_client_original to preserve a singular admin client or
+    if the test suite can handle it, use admin_client_new to
+    automatically handling both query methods.
+
+    If a test must use pytest.mark.parametrize to differentiate
+    between other required parameters for a test then please
+    use admin_client_original as the parametrized version as this
+    fixture will ultimately be updated to the new approach.
+    """
+    yield admin_client_original
 
 
 @pytest.fixture()
@@ -344,6 +369,7 @@ def with_project_permissions(
 @pytest.fixture()
 def environment_v2_versioning(environment):
     enable_v2_versioning(environment.id)
+    environment.refresh_from_db()
     return environment
 
 
@@ -774,3 +800,18 @@ def github_repository(
         repository_name="repositorynametest",
         project=project,
     )
+
+
+@pytest.fixture(
+    params=[
+        "admin_client_original",
+        "admin_master_api_key_client",
+    ]
+)
+def admin_client_new(request, admin_client_original, admin_master_api_key_client):
+    if request.param == "admin_client_original":
+        yield admin_client_original
+    elif request.param == "admin_master_api_key_client":
+        yield admin_master_api_key_client
+    else:
+        assert False, "Request param mismatch"

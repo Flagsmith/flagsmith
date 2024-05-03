@@ -165,6 +165,8 @@ Once you have created the project, you need to set the following
 - `FLAGSMITH_ON_FLAGSMITH_API_KEY`
   - The Flagsmith Client-side Environment Key we use to manage features - Flagsmith runs on Flagsmith. This will be the
     API key for the project you created as instructed above.
+- `ENABLE_FLAGSMITH_REALTIME`
+  - Determines whether the Flagsmith on Flagsmith SDK uses Realtime.
 - `FLAGSMITH_ON_FLAGSMITH_API_URL`
   - The API URL which the Flagsmith front end dashboard should communicate with. This will most likely be the domain
     name of the Flagsmith API you are self hosting: Flagsmith runs on Flagsmith. E.g. For our SaaS hosted platform, the
