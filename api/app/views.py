@@ -47,7 +47,6 @@ def project_overrides(request):
         "fpr": "FIRST_PROMOTER_ID",
         "headway": "HEADWAY_API_KEY",
         "hideInviteLinks": "DISABLE_INVITE_LINKS",
-        "linkedin_api_key": "LINKEDIN_API_KEY",
         "linkedinPartnerTracking": "LINKEDIN_PARTNER_TRACKING",
         "maintenance": "MAINTENANCE_MODE",
         "mixpanel": "MIXPANEL_API_KEY",
