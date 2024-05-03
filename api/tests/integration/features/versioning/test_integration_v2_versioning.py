@@ -514,3 +514,43 @@ def test_v2_versioning_multiple_segment_overrides(
         second_create_environment_feature_version_response.status_code
         == status.HTTP_201_CREATED
     )
+
+
+def test_v2_versioning_carries_existing_segment_overrides_across(
+    environment: int,
+    environment_api_key: str,
+    admin_client: "APIClient",
+    segment: int,
+    feature: int,
+    feature_segment: int,
+    segment_featurestate: int,
+) -> None:
+    """
+    This is a specific test to reproduce an issue found in testing where, after
+    enabling v2 versioning, feature segments were not being returned via the
+    API.
+    """
+
+    # Firstly, let's check the response to the feature segments list endpoint
+    # before we enable v2 versioning.
+    feature_segments_list_url = "%s?feature=%d&environment=%d" % (
+        reverse("api-v1:features:feature-segment-list"),
+        feature,
+        environment,
+    )
+    response = admin_client.get(feature_segments_list_url)
+    feature_segments_list_response_json = response.json()
+    assert feature_segments_list_response_json["count"] == 1
+
+    # Now, let's enable v2 versioning.
+    enable_v2_versioning_url = reverse(
+        "api-v1:environments:environment-enable-v2-versioning",
+        args=[environment_api_key],
+    )
+    response = admin_client.post(enable_v2_versioning_url)
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+    # and let's check the response to the feature segments endpoint after enabling v2 versioning
+    response = admin_client.get(feature_segments_list_url)
+    feature_segments_list_response_json = response.json()
+    assert feature_segments_list_response_json["count"] == 1
