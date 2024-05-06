@@ -6,7 +6,6 @@ from edge_api.identities.edge_identity_service import (
 )
 from features.dataclasses import EnvironmentFeatureOverridesData
 from features.versioning.versioning_service import get_environment_flags_list
-from projects.models import EdgeV2MigrationStatus
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
@@ -25,14 +24,15 @@ def get_overrides_data(
     :return: overrides data getter
     """
     project = environment.project
-    match project.enable_dynamo_db, project.edge_v2_migration_status:
-        case True, EdgeV2MigrationStatus.COMPLETE:
+    match project.enable_dynamo_db, project.edge_v2_identity_overrides_migrated:
+        case True, True:
             # If v2 migration is complete, count segment overrides from Core
             # and identity overrides from DynamoDB.
             return get_edge_overrides_data(environment)
         case True, _:
-            # If v2 migration is in progress or not started, we want to count Core overrides,
-            # but only the segment ones, as the identity ones in DynamoDB are uncountable for v1.
+            # If v2 migration is not started, in progress, or incomplete,
+            # only count segment overrides from Core.
+            # v1 Edge identity overrides are uncountable.
             return get_core_overrides_data(
                 environment,
                 skip_identity_overrides=True,

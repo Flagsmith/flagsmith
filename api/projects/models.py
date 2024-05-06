@@ -126,6 +126,20 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
             .exists()
         )
 
+    # The following should be instance methods on `EdgeV2MigrationStatus`,
+    # but the field value is coerced to `str` in some code paths
+    # even when using `django-enum`:
+    @property
+    def edge_v2_environments_migrated(self) -> bool:
+        return self.edge_v2_migration_status in (
+            EdgeV2MigrationStatus.COMPLETE,
+            EdgeV2MigrationStatus.INCOMPLETE,
+        )
+
+    @property
+    def edge_v2_identity_overrides_migrated(self) -> bool:
+        return self.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE
+
     def get_segments_from_cache(self):
         segments = project_segments_cache.get(self.id)
 

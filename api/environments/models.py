@@ -44,7 +44,7 @@ from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
 from metadata.models import Metadata
-from projects.models import EdgeV2MigrationStatus, Project
+from projects.models import Project
 from segments.models import Segment
 from util.mappers import map_environment_to_environment_document
 from webhooks.models import AbstractBaseExportableWebhookModel
@@ -255,10 +255,7 @@ class Environment(
 
         environment_wrapper.write_environments(environments)
 
-        if (
-            project.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE
-            and environment_v2_wrapper.is_enabled
-        ):
+        if project.edge_v2_environments_migrated and environment_v2_wrapper.is_enabled:
             environment_v2_wrapper.write_environments(environments)
 
     def get_feature_state(
