@@ -20,12 +20,12 @@ Split% Segment.
 
 :::
 
-You can achieve staged rollouts by creating a [Segment](/basic-features/managing-segments.md) and adding a rule defined
-with the "% Split" condition. Specifying a "% Split" value between 1 and 100 then defines what percentage of your user
-base are included within this Segment.
+You can achieve staged rollouts by creating a [Segment](/basic-features/segments.md) and adding a rule defined with the
+"% Split" condition. Specifying a "% Split" value between 1 and 100 then defines what percentage of your user base are
+included within this Segment.
 
 Once you have created the Segment, you can then go ahead and connect it up to a Feature Flag as per regular
-[Segments](/basic-features/managing-segments.md).
+[Segments](/basic-features/segments.md).
 
 Note that you can include the "% Split" rule alongside other Segment rules if you wish.
 

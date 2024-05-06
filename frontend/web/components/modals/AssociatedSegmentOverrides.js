@@ -127,7 +127,7 @@ class TheComponent extends Component {
           Segment overrides will only apply when you identify via the SDK.{' '}
           <a
             target='_blank'
-            href='https://docs.flagsmith.com/basic-features/managing-segments'
+            href='https://docs.flagsmith.com/basic-features/segments'
             rel='noreferrer'
           >
             Check the Docs for more details

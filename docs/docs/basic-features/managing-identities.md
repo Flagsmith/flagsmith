@@ -46,7 +46,7 @@ and modifying their Flags.
 
 You can also use Flagsmith to store 'Traits' against identities. Traits are key/value pairs that are associated with
 individual Identities for a particular Environment. Traits have two purposes outlined below, but the main use case is to
-drive [Segments](managing-segments.md).
+drive [Segments](segments.md).
 
 :::important
 
@@ -70,8 +70,7 @@ Flags flags = flagsmith.getIdentityFlags(identifier, traits);
 ```
 
 Here we are setting the trait key `app_version` with the value of `YourApplication.getVersion()`.You can now create a
-[Segment](managing-segments.md) that is based on the application version and manage features based on the application
-version.
+[Segment](segments.md) that is based on the application version and manage features based on the application version.
 
 Traits are completely free-form. You can store any number of traits, with any relevant information you see fit, in the
 platform and then use Segments to control features based on these Trait values.
@@ -104,8 +103,7 @@ Traits are stored natively as either numbers, strings or booleans.
 
 ## Traits powering Segments
 
-Traits can be used within your application, but they can also be used to power
-[Segments](/basic-features/managing-segments.md).
+Traits can be used within your application, but they can also be used to power [Segments](/basic-features/segments.md).
 
 ## Trait Value Data Types
 

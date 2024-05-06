@@ -70,7 +70,11 @@
         },
         {
             "source": "/managing-segments",
-            "destination": "/basic-features/managing-segments"
+            "destination": "/basic-features/segments"
+        },
+        {
+            "source": "/basic-features/managing-segments",
+            "destination": "/basic-features/segments"
         },
         {
             "source": "/architecture/",
@@ -114,7 +118,7 @@
         },
         {
             "source": "/managing-segments/",
-            "destination": "/basic-features/managing-segments"
+            "destination": "/basic-features/segments"
         },
         {
             "source": "/clients/02-3rd-party",

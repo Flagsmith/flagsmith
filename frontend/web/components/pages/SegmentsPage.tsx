@@ -192,7 +192,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         <Button
           theme='text'
           target='_blank'
-          href='https://docs.flagsmith.com/basic-features/managing-segments'
+          href='https://docs.flagsmith.com/basic-features/segments'
           className='fw-normal'
         >
           Learn more.
@@ -344,7 +344,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                       added to the segments based on the rules you create.{' '}
                       <Button
                         theme='text'
-                        href='https://docs.flagsmith.com/basic-features/managing-segments'
+                        href='https://docs.flagsmith.com/basic-features/segments'
                         target='_blank'
                       >
                         Check out the documentation on Segments

@@ -49,14 +49,13 @@ is affected.
 
 :::tip
 
-We can make use of [Semver Aware Operators](/basic-features/managing-segments?operators=semver#segment-rule-ordering) to
-drive these Segment rules.
+We can make use of [Semver Aware Operators](/basic-features/segments?operators=semver) to drive these Segment rules.
 
 :::
 
-From your work in #3, create a [Segment](/basic-features/managing-segments.md) in Flagsmith that captures the defined
-set of users from #3. Let's say we just shipped version `5.4.1`, but we have figured out that the bug actually showed up
-in version `5.4.0`. Also, this issue is only affecting iOS devices; Android users don't have the problem. So our Segment
+From your work in #3, create a [Segment](/basic-features/segments.md) in Flagsmith that captures the defined set of
+users from #3. Let's say we just shipped version `5.4.1`, but we have figured out that the bug actually showed up in
+version `5.4.0`. Also, this issue is only affecting iOS devices; Android users don't have the problem. So our Segment
 would contain 2 rules and read something like:
 
 - Trait `platform` _equals_ `iOS`

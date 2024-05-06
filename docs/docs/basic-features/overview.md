@@ -82,4 +82,4 @@ number of custom defined traits.
 Similarly to individual users, you will be able to override environment defaults for features. For example showing
 certain features for a "power user" segment.
 
-For more info see [Segments](/basic-features/managing-segments.md).
+For more info see [Segments](/basic-features/segments.md).
