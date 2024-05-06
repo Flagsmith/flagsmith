@@ -218,16 +218,10 @@ def test_when_create_feature_with_tags_then_success(project: Project) -> None:
     assert list(feature.tags.all()) == [tag1, tag2]
 
 
-@mock.patch("features.signals.trigger_feature_state_change_webhooks")
 def test_cannot_create_duplicate_feature_state_in_an_environment(
-    mock_trigger_webhooks: mock.MagicMock,
     feature: Feature,
     environment: Environment,
 ) -> None:
-    """
-    Note that although the mock isn't used in this test, it throws an exception on
-    it's thread so we mock it here anyway.
-    """
 
     # Given
     duplicate_feature_state = FeatureState(
@@ -245,18 +239,11 @@ def test_cannot_create_duplicate_feature_state_in_an_environment(
     )
 
 
-@mock.patch("features.signals.trigger_feature_state_change_webhooks")
 def test_cannot_create_duplicate_feature_state_in_an_environment_for_segment(
-    mock_trigger_webhooks: mock.MagicMock,
     project: Project,
     feature: Feature,
     environment: Environment,
 ) -> None:
-    """
-    Note that although the mock isn't used in this test, it throws an exception on
-    it's thread so we mock it here anyway.
-    """
-
     # Given
     segment = Segment.objects.create(project=project)
     feature_segment = FeatureSegment.objects.create(
@@ -290,19 +277,12 @@ def test_cannot_create_duplicate_feature_state_in_an_environment_for_segment(
     )
 
 
-@mock.patch("features.signals.trigger_feature_state_change_webhooks")
 def test_cannot_create_duplicate_feature_state_in_an_environment_for_identity(
-    mock_trigger_webhooks: mock.MagicMock,
     project: Project,
     feature: Feature,
     environment: Environment,
     identity: Identity,
 ) -> None:
-    """
-    Note that although the mock isn't used in this test, it throws an exception on
-    it's thread so we mock it here anyway.
-    """
-
     # Given
     FeatureState.objects.create(
         feature=feature, environment=environment, identity=identity
