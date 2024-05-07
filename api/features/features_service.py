@@ -24,22 +24,21 @@ def get_overrides_data(
     :return: overrides data getter
     """
     project = environment.project
-    match project.enable_dynamo_db, project.edge_v2_identity_overrides_migrated:
-        case True, True:
+
+    if project.enable_dynamo_db:
+        if project.edge_v2_identity_overrides_migrated:
             # If v2 migration is complete, count segment overrides from Core
             # and identity overrides from DynamoDB.
             return get_edge_overrides_data(environment)
-        case True, _:
-            # If v2 migration is not started, in progress, or incomplete,
-            # only count segment overrides from Core.
-            # v1 Edge identity overrides are uncountable.
-            return get_core_overrides_data(
-                environment,
-                skip_identity_overrides=True,
-            )
-        case _, _:
-            # For projects still fully on Core, count all overrides from Core.
-            return get_core_overrides_data(environment)
+        # If v2 migration is not started, in progress, or incomplete,
+        # only count segment overrides from Core.
+        # v1 Edge identity overrides are uncountable.
+        return get_core_overrides_data(
+            environment,
+            skip_identity_overrides=True,
+        )
+    # For projects still fully on Core, count all overrides from Core.
+    return get_core_overrides_data(environment)
 
 
 def get_core_overrides_data(
