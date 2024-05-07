@@ -2808,7 +2808,7 @@ def test_list_features_with_feature_state(
     url = f"{base_url}?environment={environment.id}"
 
     # When
-    with django_assert_num_queries(19):
+    with django_assert_num_queries(17):
         response = staff_client.get(url)
 
     # Then
@@ -3102,7 +3102,7 @@ def test_feature_list_last_modified_values(
         Feature.objects.create(name=f"feature_{i}", project=project)
 
     # When
-    with django_assert_num_queries(21):  # TODO: reduce this number of queries!
+    with django_assert_num_queries(19):  # TODO: reduce this number of queries!
         response = staff_client.get(url)
 
     # Then

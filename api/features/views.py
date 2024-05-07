@@ -131,7 +131,9 @@ class FeatureViewSet(viewsets.ModelViewSet):
                     ),
                 ),
             )
-            .prefetch_related("multivariate_options", "owners", "tags", "group_owners")
+            .prefetch_related(
+                "multivariate_options", "owners", "tags", "group_owners", "metadata"
+            )
         )
 
         query_serializer = FeatureQuerySerializer(data=self.request.query_params)
