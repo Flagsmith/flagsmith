@@ -13,6 +13,7 @@ from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pytest_django.plugin import blocking_manager_key
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
+from urllib3.connectionpool import HTTPConnectionPool
 from xdist import get_xdist_worker_id
 
 from api_keys.models import MasterAPIKey
@@ -118,6 +119,38 @@ def django_db_setup(request: pytest.FixtureRequest) -> None:
     for db_settings in settings.DATABASES.values():
         test_db_name = f'{TEST_DATABASE_PREFIX}{db_settings["NAME"]}_{test_db_suffix}'
         db_settings["NAME"] = test_db_name
+
+
+@pytest.fixture(autouse=True)
+def restrict_http_requests(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    This fixture prevents all tests from performing HTTP requests to
+    any host than `localhost`.
+
+    Any external request attempt leads to `RuntimeError` with a helpful message
+    pointing developers to the `responses` fixture.
+    """
+    allowed_hosts = {"localhost"}
+    original_urlopen = HTTPConnectionPool.urlopen
+
+    def urlopen_mock(
+        self,
+        method: str,
+        url: str,
+        *args,
+        **kwargs,
+    ) -> HTTPConnectionPool.ResponseCls:
+        if self.host in allowed_hosts:
+            return original_urlopen(self, method, url, *args, **kwargs)
+
+        raise RuntimeError(
+            f"Blocked {method} request to {self.scheme}://{self.host}{url}. "
+            "Use `responses` fixture to mock the response!"
+        )
+
+    monkeypatch.setattr(
+        "urllib3.connectionpool.HTTPConnectionPool.urlopen", urlopen_mock
+    )
 
 
 trait_key = "key1"
