@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.112.0](https://github.com/Flagsmith/flagsmith/compare/v2.111.1...v2.112.0) (2024-05-07)
+
+
+### Features
+
+* Clone identities (FE) ([#3725](https://github.com/Flagsmith/flagsmith/issues/3725)) ([084d775](https://github.com/Flagsmith/flagsmith/commit/084d7756864e72ef020554380e175238c39d5b3b))
+* sort by Overage in sales dashboard ([#3858](https://github.com/Flagsmith/flagsmith/issues/3858)) ([2417f57](https://github.com/Flagsmith/flagsmith/commit/2417f57a037a2a6444fa2604d38dc49ffbff234c))
+
+
+### Bug Fixes
+
+* Change some texts in the cloning Identities flow ([#3862](https://github.com/Flagsmith/flagsmith/issues/3862)) ([57313ca](https://github.com/Flagsmith/flagsmith/commit/57313ca6802321688b7c735d8284f540188c4d9f))
+* For Hubspot make the switch to unique org id ([#3863](https://github.com/Flagsmith/flagsmith/issues/3863)) ([54c2603](https://github.com/Flagsmith/flagsmith/commit/54c2603bbe7bef1bf3e520c6b6ae78c9c16b9458))
+* Organisation can't have a new Github integration when had a prior one deleted ([#3874](https://github.com/Flagsmith/flagsmith/issues/3874)) ([53e728a](https://github.com/Flagsmith/flagsmith/commit/53e728a588cd193c8ea352d1b99ce7157d6cf2ef))
+* typo ([#3861](https://github.com/Flagsmith/flagsmith/issues/3861)) ([29ae2e9](https://github.com/Flagsmith/flagsmith/commit/29ae2e995f794519cc6f5bb2fa22ebb5ba078650))
+* update secrets location for GITHUB_PEM ([#3868](https://github.com/Flagsmith/flagsmith/issues/3868)) ([6e8d7b7](https://github.com/Flagsmith/flagsmith/commit/6e8d7b768871fa57f871b24c92b10f55ec43233a))
+* use ENABLE_FLAGSMITH_REALTIME environment var ([#3867](https://github.com/Flagsmith/flagsmith/issues/3867)) ([41a8aa3](https://github.com/Flagsmith/flagsmith/commit/41a8aa3dd133424adef69b3f1b4ac0ae0df0bba8))
+* **versioning:** feature segments updated with version ([#3880](https://github.com/Flagsmith/flagsmith/issues/3880)) ([08d4046](https://github.com/Flagsmith/flagsmith/commit/08d4046d05bfb278851b4a6bb0b3a7956a3f018d))
+* **versioning:** prevent deleted segment overrides returning ([#3850](https://github.com/Flagsmith/flagsmith/issues/3850)) ([41981d4](https://github.com/Flagsmith/flagsmith/commit/41981d432b8adbb515d0bda2de3bdeb290a9276e))
+
 ## [2.111.1](https://github.com/Flagsmith/flagsmith/compare/v2.111.0...v2.111.1) (2024-04-30)
 
 
