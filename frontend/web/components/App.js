@@ -25,7 +25,7 @@ import OrganisationLimit from './OrganisationLimit'
 import GithubStar from './GithubStar'
 import Tooltip from './Tooltip'
 import classNames from 'classnames'
-import { apps, gitCompare, home, statsChart } from 'ionicons/icons'
+import { apps, gitBranch, gitCompare, home, statsChart } from 'ionicons/icons';
 import NavSubLink from './NavSubLink'
 import SettingsIcon from './svg/SettingsIcon'
 import UsersIcon from './svg/UsersIcon'
@@ -424,8 +424,8 @@ const App = class extends Component {
                 <div>
                   {!isHomepage &&
                     (!pageHasAside || !asideIsVisible || !isMobile) && (
-                      <div className='d-flex px-3 py-0'>
-                        <Flex className='flex-row bg-faint'>
+                      <div className='d-flex py-0'>
+                        <Flex className='flex-row px-3 bg-faint'>
                           {user ? (
                             <React.Fragment>
                               <nav className='mt-2 mb-1 space flex-row hidden-xs-down'>
@@ -560,14 +560,14 @@ const App = class extends Component {
                       {activeProject ? (
                         <>
                           <NavSubLink
-                            icon={home}
+                            icon={gitBranch}
                             className={environmentId ? 'active' : ''}
                             id={`features-link`}
                             to={`/project/${projectId}/environment/${
                               lastEnvironmentId || environmentId
                             }/features`}
                           >
-                            Home
+                            Environments
                           </NavSubLink>
                           <NavSubLink
                             icon={<SegmentsIcon />}

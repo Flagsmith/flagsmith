@@ -1,12 +1,6 @@
 import { FC, ReactNode, useEffect, useRef, useState } from 'react'
 import { IonIcon } from '@ionic/react'
-import {
-  checkmark,
-  checkmarkCircle,
-  chevronDown,
-  chevronForward,
-  chevronUp,
-} from 'ionicons/icons'
+import { checkmarkCircle, chevronDown, chevronUp } from 'ionicons/icons'
 import InlineModal from './InlineModal'
 import Input from './base/forms/Input'
 import {
@@ -17,9 +11,9 @@ import {
   User,
 } from 'common/types/responses'
 import AccountStore from 'common/stores/account-store'
-import { getProject, useGetProjectsQuery } from 'common/services/useProject'
+import { useGetProjectsQuery } from 'common/services/useProject'
 import AccountProvider from 'common/providers/AccountProvider'
-import { matchPath, RouterChildContext } from 'react-router'
+import { RouterChildContext } from 'react-router'
 import OrganisationStore from 'common/stores/organisation-store'
 import AppActions from 'common/dispatcher/app-actions'
 import Utils from 'common/utils/utils'
@@ -150,7 +144,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
     `${AccountStore.getOrganisation()?.id}`,
   )
   const [hoveredProject, setHoveredProject] = useState<string | undefined>(
-    projectId,
+    focus === 'organisation' ? undefined : projectId,
   )
 
   useEffect(() => {
@@ -299,7 +293,12 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
             {({ user }: { user: User }) => {
               return (
                 <div className='d-flex'>
-                  <div style={{ width: 260 }}>
+                  <div
+                    className={classNames({
+                      'bg-faint': !!hoveredProject,
+                    })}
+                    style={{ width: 260 }}
+                  >
                     <Input
                       autoFocus={focus === 'organisation'}
                       onKeyDown={(e: KeyboardEvent) =>
@@ -309,7 +308,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                         setOrganisationSearch(Utils.safeParseEventValue(e))
                       }}
                       search
-                      inputClassName='border-0 border-bottom-1'
+                      inputClassName='border-0 bg-transparent border-bottom-1'
                       size='xSmall'
                       className='full-width'
                       placeholder='Search Organisations...'
@@ -328,7 +327,15 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                       onClick={goOrganisation}
                     />
                   </div>
-                  <div style={{ width: 260 }} className='border-left-1'>
+                  <div
+                    style={{ width: 260 }}
+                    className={classNames(
+                      {
+                        'bg-faint': !hoveredProject,
+                      },
+                      'border-left-1',
+                    )}
+                  >
                     <Input
                       onChange={(e: InputEvent) => {
                         setProjectSearch(Utils.safeParseEventValue(e))
@@ -337,7 +344,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                       onKeyDown={(e: KeyboardEvent) => navigateProjects(e)}
                       search
                       className='full-width'
-                      inputClassName='border-0 border-bottom-1'
+                      inputClassName='border-0 bg-transparent border-bottom-1'
                       size='xSmall'
                       placeholder='Search Projects...'
                     />

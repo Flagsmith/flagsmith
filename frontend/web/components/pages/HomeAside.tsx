@@ -9,15 +9,16 @@ import { Link, NavLink } from 'react-router-dom'
 import { IonIcon } from '@ionic/react'
 import { createOutline } from 'ionicons/icons'
 import EnvironmentDropdown from 'components/EnvironmentDropdown'
-import Collapsible from 'components/Collapsible'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Icon from 'components/Icon'
+// @ts-ignore
 import { AsyncStorage } from 'polyfill-react-native'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
 import { RouterChildContext } from 'react-router'
 import Constants from 'common/constants'
+import EnvironmentSelect from 'components/EnvironmentSelect'
 
 type HomeAsideType = {
   environmentId: string
@@ -34,7 +35,6 @@ const HomeAside: FC<HomeAsideType> = ({
     environmentId === 'create'
       ? null
       : (ProjectStore.getEnvironment(environmentId) as any)
-  const hasRbacPermission = Utils.getPlansPermission('AUDIT')
   const changeRequest = Utils.changeRequestsEnabled(
     environment?.minimum_change_request_approvals,
   )
@@ -54,7 +54,31 @@ const HomeAside: FC<HomeAsideType> = ({
             <div className='border-right home-aside'>
               <div className='mt-3'>
                 <div className='px-3 mb-2 d-flex align-items-center justify-content-between'>
-                  <h6 className='mb-0'>Environments</h6>
+                  <div style={{ width: 200 }}>
+                    {!!environment && (
+                      <EnvironmentSelect
+                        styles={{
+                          container: (base: any) => ({
+                            ...base,
+                            border: 'none',
+                            padding: 0,
+                          }),
+                        }}
+                        label={environment.name}
+                        value={environmentId}
+                        projectId={projectId}
+                        onChange={(newEnvironmentId) => {
+                          if (newEnvironmentId !== environmentId) {
+                            history.push(
+                              `${document.location.pathname}${
+                                document.location.search || ''
+                              }`.replace(environmentId, newEnvironmentId),
+                            )
+                          }
+                        }}
+                      />
+                    )}
+                  </div>
                   <Permission
                     level='project'
                     permission='CREATE_ENVIRONMENT'
@@ -76,137 +100,133 @@ const HomeAside: FC<HomeAsideType> = ({
                 </div>
               </div>
               <EnvironmentDropdown
-                renderRow={(environment: Environment, onClick: any) => (
-                  <Collapsible
-                    data-test={`switch-environment-${environment.name.toLowerCase()}${
-                      environmentId === `${environment.api_key}`
-                        ? '-active'
-                        : ''
-                    }`}
-                    onClick={onClick}
-                    active={environment.api_key === environmentId}
-                    title={environment.name}
-                  >
-                    <Permission
-                      level='environment'
-                      permission={Utils.getViewIdentitiesPermission()}
-                      id={environment.api_key}
-                    >
-                      {({
-                        isLoading: manageIdentityLoading,
-                        permission: manageIdentityPermission,
-                      }) => (
-                        <Permission
-                          level='environment'
-                          permission='ADMIN'
-                          id={environment.api_key}
-                        >
-                          {({ isLoading, permission: environmentAdmin }) =>
-                            isLoading || manageIdentityLoading ? (
-                              <div className='text-center'>
-                                <Loader />
-                              </div>
-                            ) : (
-                              <div className='list-unstyled aside-nav d-flex flex-column gap-1 ms-3 mb-2 mt-1'>
-                                <NavLink
-                                  activeClassName='active'
-                                  id='features-link'
-                                  to={`/project/${project.id}/environment/${environment.api_key}/features`}
-                                >
-                                  <span className='mr-2'>
-                                    <Icon name='rocket' fill='#9DA4AE' />
-                                  </span>
-                                  Features
-                                </NavLink>
-                                <NavLink
-                                  activeClassName='active'
-                                  id='change-requests-link'
-                                  to={`/project/${project.id}/environment/${environment.api_key}/scheduled-changes/`}
-                                >
-                                  <span className='mr-2'>
-                                    <Icon name='timer' fill='#9DA4AE' />
-                                  </span>
-                                  Scheduling
-                                  {scheduled ? (
-                                    <span className='ml-1 unread d-inline'>
-                                      {scheduled}
-                                    </span>
-                                  ) : null}
-                                </NavLink>
-                                <NavLink
-                                  activeClassName='active'
-                                  id='change-requests-link'
-                                  to={`/project/${project.id}/environment/${environment.api_key}/change-requests/`}
-                                >
-                                  <span className='mr-2'>
-                                    <Icon name='request' fill='#9DA4AE' />
-                                  </span>
-                                  Change Requests{' '}
-                                  {changeRequests ? (
-                                    <span className='unread d-inline'>
-                                      {changeRequests}
-                                    </span>
-                                  ) : null}
-                                </NavLink>
-                                {environment.use_v2_feature_versioning && (
+                renderRow={(environment: Environment, onClick: any) =>
+                  environment?.api_key === environmentId && (
+                    <div className='collapsible__content'>
+                      <Permission
+                        level='environment'
+                        permission={Utils.getViewIdentitiesPermission()}
+                        id={environment.api_key}
+                      >
+                        {({
+                          isLoading: manageIdentityLoading,
+                          permission: manageIdentityPermission,
+                        }) => (
+                          <Permission
+                            level='environment'
+                            permission='ADMIN'
+                            id={environment.api_key}
+                          >
+                            {({ isLoading, permission: environmentAdmin }) =>
+                              isLoading || manageIdentityLoading ? (
+                                <div className='text-center'>
+                                  <Loader />
+                                </div>
+                              ) : (
+                                <div className='list-unstyled aside-nav d-flex flex-column gap-1 ms-3 mb-2 mt-1'>
                                   <NavLink
                                     activeClassName='active'
-                                    id='history-link'
-                                    to={`/project/${project.id}/environment/${environment.api_key}/history/`}
+                                    id='features-link'
+                                    to={`/project/${project.id}/environment/${environment.api_key}/features`}
                                   >
                                     <span className='mr-2'>
-                                      <Icon name='clock' fill='#9DA4AE' />
+                                      <Icon name='rocket' fill='#9DA4AE' />
                                     </span>
-                                    History
+                                    Features
                                   </NavLink>
-                                )}
-                                {Utils.renderWithPermission(
-                                  manageIdentityPermission,
-                                  Constants.environmentPermissions(
-                                    'View Identities',
-                                  ),
                                   <NavLink
-                                    id='users-link'
-                                    className={`${
-                                      !manageIdentityPermission && 'disabled'
-                                    }`}
-                                    exact
-                                    to={`/project/${project.id}/environment/${environment.api_key}/users`}
+                                    activeClassName='active'
+                                    id='change-requests-link'
+                                    to={`/project/${project.id}/environment/${environment.api_key}/scheduled-changes/`}
                                   >
                                     <span className='mr-2'>
-                                      <Icon
-                                        name='people'
-                                        fill={
-                                          manageIdentityPermission
-                                            ? '#9DA4AE'
-                                            : '#696969'
-                                        }
-                                      />
+                                      <Icon name='timer' fill='#9DA4AE' />
                                     </span>
-                                    Identities
-                                  </NavLink>,
-                                )}
+                                    Scheduling
+                                    {scheduled ? (
+                                      <span className='ml-1 unread d-inline'>
+                                        {scheduled}
+                                      </span>
+                                    ) : null}
+                                  </NavLink>
+                                  <NavLink
+                                    activeClassName='active'
+                                    id='change-requests-link'
+                                    to={`/project/${project.id}/environment/${environment.api_key}/change-requests/`}
+                                  >
+                                    <span className='mr-2'>
+                                      <Icon name='request' fill='#9DA4AE' />
+                                    </span>
+                                    Change Requests{' '}
+                                    {changeRequests ? (
+                                      <span className='unread d-inline'>
+                                        {changeRequests}
+                                      </span>
+                                    ) : null}
+                                  </NavLink>
+                                  {environment.use_v2_feature_versioning && (
+                                    <NavLink
+                                      activeClassName='active'
+                                      id='history-link'
+                                      to={`/project/${project.id}/environment/${environment.api_key}/history/`}
+                                    >
+                                      <span className='mr-2'>
+                                        <Icon name='clock' fill='#9DA4AE' />
+                                      </span>
+                                      History
+                                    </NavLink>
+                                  )}
+                                  {Utils.renderWithPermission(
+                                    manageIdentityPermission,
+                                    Constants.environmentPermissions(
+                                      'View Identities',
+                                    ),
+                                    <NavLink
+                                      id='users-link'
+                                      className={`${
+                                        !manageIdentityPermission && 'disabled'
+                                      }`}
+                                      exact
+                                      to={`/project/${project.id}/environment/${environment.api_key}/users`}
+                                    >
+                                      <span className='mr-2'>
+                                        <Icon
+                                          name='people'
+                                          fill={
+                                            manageIdentityPermission
+                                              ? '#9DA4AE'
+                                              : '#696969'
+                                          }
+                                        />
+                                      </span>
+                                      Identities
+                                    </NavLink>,
+                                  )}
 
-                                {environmentAdmin && (
-                                  <NavLink
-                                    id='env-settings-link'
-                                    className='aside__environment-list-item'
-                                    to={`/project/${project.id}/environment/${environment.api_key}/settings`}
-                                  >
-                                    <span className='mr-2'>
-                                      <Icon name='settings-2' fill='#9DA4AE' />
-                                    </span>
-                                    Settings
-                                  </NavLink>
-                                )}
-                              </div>
-                            )
-                          }
-                        </Permission>
-                      )}
-                    </Permission>
-                  </Collapsible>
-                )}
+                                  {environmentAdmin && (
+                                    <NavLink
+                                      id='env-settings-link'
+                                      className='aside__environment-list-item'
+                                      to={`/project/${project.id}/environment/${environment.api_key}/settings`}
+                                    >
+                                      <span className='mr-2'>
+                                        <Icon
+                                          name='settings-2'
+                                          fill='#9DA4AE'
+                                        />
+                                      </span>
+                                      Settings
+                                    </NavLink>
+                                  )}
+                                </div>
+                              )
+                            }
+                          </Permission>
+                        )}
+                      </Permission>
+                    </div>
+                  )
+                }
                 projectId={projectId}
                 environmentId={environmentId}
                 clearableValue={false}

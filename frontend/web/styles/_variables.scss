@@ -104,7 +104,7 @@ $border-radius-xlg: 10px;
 //Buttons
 $btn-line-height-xsm: 32px;
 $btn-line-height-sm: 40px;
-$btn-line-height: 48px;
+$btn-line-height: 44px;
 $btn-line-height-lg: 56px;
 
 $btn-padding-y: 0;
@@ -221,7 +221,7 @@ $input-bg-dark: $bg-dark300;
 $input-bg-alt: #f7f7f7;
 $input-color-dark: $text-icon-light-grey;
 $input-border-radius: $border-radius;
-$input-height: 48px;
+$input-height: 44px;
 $input-height-sm: 42px;
 $input-height-xsm: 34px;
 $input-height-xxsm: 32px;
@@ -358,11 +358,11 @@ $theme-colors: (
   }
 }
 .bg-faint {
-  background-color: #fafafa;
+  background-color: #fcfcfc;
 }
 
 .dark .bg-faint {
-  background-color: #0f1426;
+  background-color: $bg-dark300;
 }
 
 $butter-bar-bg: $secondary-alfa-16;
