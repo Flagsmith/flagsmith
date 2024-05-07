@@ -53,7 +53,9 @@ const HowToUseSegmentsMessage = () => (
 )
 
 const SegmentsPage: FC<SegmentsPageType> = (props) => {
-  const { environmentId, projectId } = props.match.params
+  const { projectId } = props.match.params
+  const environmentId =
+    ProjectStore.getEnvironment()?.api_key || 'ENVIRONMENT_API_KEY'
   const preselect = useRef(Utils.fromParam().id)
   const hasNoOperators = !Utils.getFlagsmithValue('segment_operators')
 
@@ -330,7 +332,9 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                 <FormGroup className='mt-4'>
                   <CodeHelp
                     title='Using segments'
-                    snippets={Constants.codeHelp.USER_TRAITS(environmentId)}
+                    snippets={Constants.codeHelp.USER_TRAITS(
+                      environmentId || 'ENVIRONMENT_KEY',
+                    )}
                   />
                 </FormGroup>
               </div>

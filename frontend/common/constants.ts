@@ -163,7 +163,7 @@ export default {
       ),
     }),
 
-    'USER_TRAITS': (envId: string, userId?: string) => ({
+    'USER_TRAITS': (envId: string, userId = keywords.USER_ID) => ({
       '.NET': require('./code-help/traits/traits-dotnet')(
         envId,
         keywords,
