@@ -11,7 +11,7 @@ re-renders.
 Example applications for a variety of React, React Native and Next.js can be found here:
 
 - [Usage with React](https://github.com/Flagsmith/flagsmith-js-examples/tree/main/react)
-- [Usage with React Native](https://github.com/Flagsmith/flagsmith-js-examples/tree/main/react)
+- [Usage with React Native](https://github.com/Flagsmith/flagsmith-js-examples/tree/main/reactnative)
 - [Usage with Next.js](https://github.com/Flagsmith/flagsmith-js-examples/tree/main/nextjs)
 
 ## Installation
