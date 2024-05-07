@@ -82,7 +82,7 @@ def test_batch_subscribe__subscribe_populates_batch_correctly(mocker):
     )
     users = [user1, user2]
     # When
-    with BatchSubscribe() as batch:
+    with BatchSubscribe(mocker.MagicMock()) as batch:
         for user in users:
             batch.subscribe(user)
         # Then
