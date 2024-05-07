@@ -123,6 +123,13 @@ def django_db_setup(request: pytest.FixtureRequest) -> None:
 
 @pytest.fixture(autouse=True)
 def restrict_http_requests(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    This fixture prevents all tests from performing HTTP requests to
+    any host than `localhost`.
+
+    Any external request attempt leads to `RuntimeError` with a helpful message
+    pointing developers to the `responses` fixture.
+    """
     allowed_hosts = {"localhost"}
     original_urlopen = HTTPConnectionPool.urlopen
 
