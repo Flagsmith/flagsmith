@@ -80,35 +80,29 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
       {({ isLoading, projects }) => (
         <div data-test='project-manage-widget' id='project-manage-widget'>
           <div>
+            {(projects && projects.length) || isLoading ? (
+              <div className='flex-row pl-0 pr-0'></div>
+            ) : (
+              isAdmin && (
+                <div className='container-mw-700 mb-4'>
+                  <h5 className='mb-2'>
+                    Great! Now you can create your first project.
+                  </h5>
+                  <p className='fs-small lh-sm mb-0'>
+                    When you create a project we'll also generate a{' '}
+                    <strong>development</strong> and <strong>production</strong>{' '}
+                    environment for you.
+                  </p>
+                  <p className='fs-small lh-sm mb-0'>
+                    You can create features for your project, then enable and
+                    configure them per environment.
+                  </p>
+                </div>
+              )
+            )}
             {(isLoading || !projects) && (
               <div className='centered-container'>
                 <Loader />
-              </div>
-            )}
-
-            {projects?.length === 0 && !isLoading ? (
-              <div className='container-mw-700 mb-4'>
-                <h5 className='mb-2'>
-                  Great! Now you can create your first project.
-                </h5>
-                <p className='fs-small lh-sm mb-0'>
-                  When you create a project we'll also generate a{' '}
-                  <strong>development</strong> and <strong>production</strong>{' '}
-                  environment for you.
-                </p>
-                <p className='fs-small lh-sm mb-0'>
-                  You can create features for your project, then enable and
-                  configure them per environment.
-                </p>
-              </div>
-            ) : (
-              <div className='container-mw-700 mb-4'>
-                <p className='fs-small lh-sm mb-0'>
-                  You do not have access to any projects within this
-                  Organisation. If this is unexpected please contact a member of
-                  the Project who has Administrator privileges. Users can be
-                  added to Projects from the Project settings menu.
-                </p>
               </div>
             )}
             {!isLoading && (
@@ -194,6 +188,17 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                     }}
                     renderNoResults={
                       <div>
+                        <h5 className='mt-4 mb-2'>Projects</h5>
+                        <div className='container-mw-700 mb-4'>
+                          <p className='fs-small lh-sm mb-0'>
+                            You do not have access to any projects within this
+                            Organisation. If this is unexpected please contact a
+                            member of the Project who has Administrator
+                            privileges. Users can be added to Projects from the
+                            Project settings menu.
+                          </p>
+                        </div>
+
                         {Utils.renderWithPermission(
                           canCreateProject,
                           Constants.organisationPermissions(
