@@ -102,7 +102,11 @@ global.Select = class extends PureComponent {
             <a
               key={index}
               onClick={() => props.onChange(option)}
-              data-test={`${props['data-test']}-option-${index}`}
+              data-test={
+                this.props.dataTest
+                  ? this.props.dataTest(option)
+                  : `${props['data-test']}-option-${index}`
+              }
             >
               .
             </a>

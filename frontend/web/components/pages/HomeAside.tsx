@@ -57,6 +57,10 @@ const HomeAside: FC<HomeAsideType> = ({
                   <div style={{ width: 200 }}>
                     {!!environment && (
                       <EnvironmentSelect
+                        dataTest={({ label }) =>
+                          `switch-environment-${label.toLowerCase()}`
+                        }
+                        data-test={`switch-environment-${environment.name.toLowerCase()}-active`}
                         styles={{
                           container: (base: any) => ({
                             ...base,
