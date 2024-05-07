@@ -144,6 +144,7 @@ def test_environments_are_updated_in_dynamodb_when_project_id_updated(
         (EdgeV2MigrationStatus.NOT_STARTED, False),
         (EdgeV2MigrationStatus.IN_PROGRESS, False),
         (EdgeV2MigrationStatus.COMPLETE, True),
+        (EdgeV2MigrationStatus.INCOMPLETE, False),
     ),
 )
 def test_show_edge_identity_overrides_for_feature(
