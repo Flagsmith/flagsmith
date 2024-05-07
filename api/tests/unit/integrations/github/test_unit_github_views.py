@@ -257,10 +257,14 @@ def test_fetch_pull_requests(
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
-    mocker,
+    mocker: MockerFixture,
 ) -> None:
 
     # Given
+    mock_check_if_installation_id_is_valid = mocker.patch(
+        "integrations.github.views.check_if_installation_id_is_valid",
+    )
+    mock_check_if_installation_id_is_valid.return_value = True
     mock_generate_token = mocker.patch(
         "integrations.github.views.generate_token",
     )
@@ -294,9 +298,13 @@ def test_fetch_issue(
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
-    mocker,
+    mocker: MockerFixture,
 ) -> None:
     # Given
+    mock_check_if_installation_id_is_valid = mocker.patch(
+        "integrations.github.views.check_if_installation_id_is_valid",
+    )
+    mock_check_if_installation_id_is_valid.return_value = True
     mock_generate_token = mocker.patch(
         "integrations.github.views.generate_token",
     )
@@ -328,9 +336,13 @@ def test_fetch_repositories(
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
-    mocker,
+    mocker: MockerFixture,
 ) -> None:
     # Given
+    mock_check_if_installation_id_is_valid = mocker.patch(
+        "integrations.github.views.check_if_installation_id_is_valid",
+    )
+    mock_check_if_installation_id_is_valid.return_value = True
     mock_generate_token = mocker.patch(
         "integrations.github.views.generate_token",
     )
@@ -416,3 +428,63 @@ def test_cannot_fetch_issues_or_prs_when_does_not_have_permissions(
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.parametrize(
+    "reverse_url",
+    [
+        ("api-v1:organisations:get-github-issues"),
+        ("api-v1:organisations:get-github-pulls"),
+        ("api-v1:organisations:get-github-pulls"),
+    ],
+)
+def test_cannot_fetch_issues_or_prs_or_repos_when_installation_id_is_invalid(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    reverse_url: str,
+    github_configuration_with_invalid_installation_id_status: GithubConfiguration,
+) -> None:
+    # When
+    url = reverse(reverse_url, args=[organisation.id])
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == 410
+    assert (
+        "The installation is no longer valid, please delete the GitHub integration from Flagsmith or update your installation ID"  # noqa: E501
+        in response.json()["detail"]
+    )
+
+
+@pytest.mark.parametrize(
+    "reverse_url",
+    [
+        ("api-v1:organisations:get-github-issues"),
+        ("api-v1:organisations:get-github-pulls"),
+        ("api-v1:organisations:get-github-pulls"),
+    ],
+)
+def test_cannot_fetch_issues_or_prs_or_repos_when_installation_id_is_not_found_in_github(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    reverse_url: str,
+    mocker: MockerFixture,
+    github_configuration: GithubConfiguration,
+) -> None:
+
+    # Given
+    mock_check_if_installation_id_is_valid = mocker.patch(
+        "integrations.github.views.check_if_installation_id_is_valid",
+    )
+    mock_check_if_installation_id_is_valid.return_value = False
+
+    # When
+    url = reverse(reverse_url, args=[organisation.id])
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == 410
+    assert (
+        "The installation is no longer valid, please delete the GitHub integration from Flagsmith or update your installation ID"  # noqa: E501
+        in response.json()["detail"]
+    )

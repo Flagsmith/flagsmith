@@ -790,6 +790,17 @@ def github_configuration(organisation: Organisation) -> GithubConfiguration:
 
 
 @pytest.fixture()
+def github_configuration_with_invalid_installation_id_status(
+    organisation: Organisation,
+) -> GithubConfiguration:
+    return GithubConfiguration.objects.create(
+        organisation=organisation,
+        installation_id=1234567,
+        status="INVALID_INSTALLATION_ID",
+    )
+
+
+@pytest.fixture()
 def github_repository(
     github_configuration: GithubConfiguration,
     project: Project,

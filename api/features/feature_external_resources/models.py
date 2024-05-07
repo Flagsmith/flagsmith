@@ -57,8 +57,12 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
             .get(id=self.feature.project.organisation_id)
             .github_config.first()
         ):
-            feature_states = FeatureState.objects.filter(
-                feature_id=self.feature_id, identity_id__isnull=True
+            feature_states = (
+                FeatureState.objects.filter(
+                    feature_id=self.feature_id, identity_id__isnull=True
+                )
+                .order_by("environment_id", "-updated_at")
+                .distinct("environment_id")
             )
             feature_data: GithubData = generate_data(
                 github_configuration,

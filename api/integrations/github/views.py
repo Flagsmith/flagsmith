@@ -11,9 +11,19 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from integrations.github.client import generate_token
-from integrations.github.constants import GITHUB_API_URL, GITHUB_API_VERSION
-from integrations.github.exceptions import DuplicateGitHubIntegration
+from integrations.github.client import (
+    check_if_installation_id_is_valid,
+    generate_token,
+)
+from integrations.github.constants import (
+    GITHUB_API_URL,
+    GITHUB_API_VERSION,
+    INVALID_INSTALLATION_ID,
+)
+from integrations.github.exceptions import (
+    DuplicateGitHubIntegration,
+    InvalidInstallation,
+)
 from integrations.github.models import GithubConfiguration, GithubRepository
 from integrations.github.permissions import HasPermissionToGithubConfiguration
 from integrations.github.serializers import (
@@ -63,6 +73,10 @@ class GithubConfigurationViewSet(viewsets.ModelViewSet):
             organisation_id=self.kwargs["organisation_pk"]
         )
 
+    def perform_update(self, serializer):
+        organisation_id = self.kwargs["organisation_pk"]
+        serializer.save(organisation_id=organisation_id, status="ACTIVE")
+
     def create(self, request, *args, **kwargs):
         try:
             return super().create(request, *args, **kwargs)
@@ -108,14 +122,21 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
 @permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
 @github_auth_required
 def fetch_pull_requests(request, organisation_pk):
-    organisation = Organisation.objects.get(id=organisation_pk)
-    github_configuration = GithubConfiguration.objects.get(
-        organisation=organisation, deleted_at__isnull=True
+    github_configuration = (
+        Organisation.objects.prefetch_related("github_config")
+        .get(id=organisation_pk)
+        .github_config.first()
     )
-    token = generate_token(
-        github_configuration.installation_id,
-        settings.GITHUB_APP_ID,
-    )
+    if github_configuration.status == INVALID_INSTALLATION_ID:
+        raise InvalidInstallation
+
+    if check_if_installation_id_is_valid(github_configuration):
+        token = generate_token(
+            github_configuration.installation_id,
+            settings.GITHUB_APP_ID,
+        )
+    else:
+        raise InvalidInstallation
 
     query_serializer = RepoQuerySerializer(data=request.query_params)
     if not query_serializer.is_valid():
@@ -145,14 +166,22 @@ def fetch_pull_requests(request, organisation_pk):
 @permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
 @github_auth_required
 def fetch_issues(request, organisation_pk):
-    organisation = Organisation.objects.get(id=organisation_pk)
-    github_configuration = GithubConfiguration.objects.get(
-        organisation=organisation, deleted_at__isnull=True
+    github_configuration = (
+        Organisation.objects.prefetch_related("github_config")
+        .get(id=organisation_pk)
+        .github_config.first()
     )
-    token = generate_token(
-        github_configuration.installation_id,
-        settings.GITHUB_APP_ID,
-    )
+
+    if github_configuration.status == INVALID_INSTALLATION_ID:
+        raise InvalidInstallation
+
+    if check_if_installation_id_is_valid(github_configuration):
+        token = generate_token(
+            github_configuration.installation_id,
+            settings.GITHUB_APP_ID,
+        )
+    else:
+        raise InvalidInstallation
 
     query_serializer = RepoQuerySerializer(data=request.query_params)
     if not query_serializer.is_valid():
@@ -183,11 +212,21 @@ def fetch_issues(request, organisation_pk):
 @permission_classes([IsAuthenticated, GithubIsAdminOrganisation])
 def fetch_repositories(request, organisation_pk: int):
     installation_id = request.GET.get("installation_id")
-
-    token = generate_token(
-        installation_id,
-        settings.GITHUB_APP_ID,
+    github_configuration = (
+        Organisation.objects.prefetch_related("github_config")
+        .get(id=organisation_pk)
+        .github_config.first()
     )
+    if github_configuration.status == INVALID_INSTALLATION_ID:
+        raise InvalidInstallation
+
+    if check_if_installation_id_is_valid(github_configuration):
+        token = generate_token(
+            installation_id,
+            settings.GITHUB_APP_ID,
+        )
+    else:
+        raise InvalidInstallation
 
     url = f"{GITHUB_API_URL}installation/repositories"
 

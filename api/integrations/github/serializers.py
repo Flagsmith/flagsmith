@@ -7,7 +7,7 @@ from .models import GithubConfiguration, GithubRepository
 class GithubConfigurationSerializer(ModelSerializer):
     class Meta:
         model = GithubConfiguration
-        fields = ("id", "installation_id", "organisation")
+        fields = ("id", "installation_id", "organisation", "status")
         read_only_fields = ("organisation",)
 
 

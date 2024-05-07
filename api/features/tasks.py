@@ -3,6 +3,8 @@ from dataclasses import asdict
 
 from environments.models import Webhook
 from features.models import Feature, FeatureState
+from integrations.github.client import check_if_installation_id_is_valid
+from integrations.github.exceptions import InvalidInstallation
 from integrations.github.github import GithubData, generate_data
 from integrations.github.tasks import call_github_app_webhook_for_feature_state
 from organisations.models import Organisation
@@ -60,7 +62,8 @@ def trigger_feature_state_change_webhooks(
     )
 
     if (
-        not instance.identity_id
+        event_type == WebhookEventType.FLAG_UPDATED
+        and not instance.identity_id
         and not instance.feature_segment
         and instance.feature.external_resources.exists()
         and instance.environment.project.github_project.exists()
@@ -68,29 +71,26 @@ def trigger_feature_state_change_webhooks(
     ):
         github_configuration = (
             Organisation.objects.prefetch_related("github_config")
-            .get(id=instance.environment.project.organisationn_id)
+            .get(id=instance.environment.project.organisation_id)
             .github_config.first()
         )
-        feature_state = {
-            "environment_name": new_state["environment"]["name"],
-            "feature_value": new_state["enabled"],
-        }
-        feature_states = []
-        feature_states.append(instance)
+        if check_if_installation_id_is_valid(github_configuration):
+            feature_states = []
+            feature_states.append(instance)
 
-        feature_data: GithubData = generate_data(
-            github_configuration=github_configuration,
-            feature_id=history_instance.feature.id,
-            feature_name=history_instance.feature.name,
-            type=WebhookEventType.FLAG_UPDATED.value,
-            feature_states=feature_states,
-        )
+            feature_data: GithubData = generate_data(
+                github_configuration=github_configuration,
+                feature_id=history_instance.feature.id,
+                feature_name=history_instance.feature.name,
+                type=WebhookEventType.FLAG_UPDATED.value,
+                feature_states=feature_states,
+            )
 
-        feature_data.feature_states.append(feature_state)
-
-        call_github_app_webhook_for_feature_state.delay(
-            args=(asdict(feature_data),),
-        )
+            call_github_app_webhook_for_feature_state.delay(
+                args=(asdict(feature_data),),
+            )
+        else:
+            raise InvalidInstallation
 
 
 def _get_previous_state(

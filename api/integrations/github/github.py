@@ -77,11 +77,10 @@ def generate_body_comment(
     last_updated_string = LAST_UPDATED_FEATURE_TEXT % (
         datetime.datetime.now().strftime("%dth %b %Y %I:%M%p")
     )
-    updated_text = UPDATED_FEATURE_TEXT % (name)
+    updated_text = f"{UPDATED_FEATURE_TEXT % (name)}\n"
 
     result = updated_text if is_update else LINK_FEATURE_TEXT % (name)
 
-    # if feature_states is None:
     for v in feature_states:
         feature_value = v.get("feature_state_value")
         feature_value_type = v.get("feature_state_value_type")
