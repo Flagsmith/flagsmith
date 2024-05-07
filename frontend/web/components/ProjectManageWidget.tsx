@@ -14,7 +14,7 @@ import Button from './base/forms/Button'
 import PanelSearch from './PanelSearch'
 import Icon from './Icon'
 import AppActions from 'common/dispatcher/app-actions'
-const CreateProjectModal = require('components/modals/CreateProject')
+import CreateProjectModal from './modals/CreateProject'
 
 type SegmentsPageType = {
   router: RouterChildContext['router']
@@ -26,7 +26,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
   router,
 }) => {
   const isAdmin = AccountStore.isAdmin()
-
+  const create = Utils.fromParam()?.create
   const { data: organisations } = useGetOrganisationsQuery({})
   const organisation = useMemo(
     () => organisations?.results?.find((v) => `${v.id}` === organisationId),
@@ -39,22 +39,15 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
     permission: Utils.getCreateProjectPermission(organisation),
   })
 
+  useEffect(() => {
+    if (create && canCreateProject && organisation) {
+      handleCreateProjectClick()
+    }
+  }, [organisationId, organisation, canCreateProject, create])
   const handleCreateProjectClick = useCallback(() => {
     openModal(
       'Create Project',
-      <CreateProjectModal
-        onSave={({
-          environmentId,
-          projectId,
-        }: {
-          environmentId: string
-          projectId: string
-        }) => {
-          router.history.push(
-            `/project/${projectId}/environment/${environmentId}/features?new=true`,
-          )
-        }}
-      />,
+      <CreateProjectModal history={router.history} />,
       'p-0 side-modal',
     )
   }, [router.history])

@@ -19,6 +19,8 @@ import AppActions from 'common/dispatcher/app-actions'
 import { RouterChildContext } from 'react-router'
 import Constants from 'common/constants'
 import EnvironmentSelect from 'components/EnvironmentSelect'
+import { components } from 'react-select'
+import Button from 'components/base/forms/Button'
 
 type HomeAsideType = {
   environmentId: string
@@ -54,12 +56,13 @@ const HomeAside: FC<HomeAsideType> = ({
             <div className='border-right home-aside'>
               <div className='mt-3'>
                 <div className='px-3 mb-2 d-flex align-items-center justify-content-between'>
-                  <div style={{ width: 200 }}>
+                  <div className='full-width mb-1'>
                     {!!environment && (
                       <EnvironmentSelect
                         dataTest={({ label }) =>
                           `switch-environment-${label.toLowerCase()}`
                         }
+                        id='environment-select'
                         data-test={`switch-environment-${environment.name.toLowerCase()}-active`}
                         styles={{
                           container: (base: any) => ({
@@ -71,6 +74,38 @@ const HomeAside: FC<HomeAsideType> = ({
                         label={environment.name}
                         value={environmentId}
                         projectId={projectId}
+                        components={{
+                          Menu: ({ ...props }: any) => {
+                            return (
+                              <components.Menu {...props}>
+                                <React.Fragment>
+                                  {props.children}
+                                  <Permission
+                                    level='project'
+                                    permission='CREATE_ENVIRONMENT'
+                                    id={projectId}
+                                  >
+                                    {({ permission }) =>
+                                      permission && (
+                                        <Link
+                                          id='create-env-link'
+                                          className='btn mt-1 mb-2 ml-2 mr-2 d-flex justify-content-center btn-xsm d-flex gap-1 align-items-center btn--outline'
+                                          to={`/project/${projectId}/environment/create`}
+                                        >
+                                          <IonIcon
+                                            className='fs-small'
+                                            icon={createOutline}
+                                          />
+                                          Create Environment
+                                        </Link>
+                                      )
+                                    }
+                                  </Permission>
+                                </React.Fragment>
+                              </components.Menu>
+                            )
+                          },
+                        }}
                         onChange={(newEnvironmentId) => {
                           if (newEnvironmentId !== environmentId) {
                             history.push(
@@ -83,24 +118,6 @@ const HomeAside: FC<HomeAsideType> = ({
                       />
                     )}
                   </div>
-                  <Permission
-                    level='project'
-                    permission='CREATE_ENVIRONMENT'
-                    id={projectId}
-                  >
-                    {({ permission }) =>
-                      permission && (
-                        <Link
-                          id='create-env-link'
-                          className='btn btn-xsm d-flex gap-1 align-items-center btn--outline'
-                          to={`/project/${projectId}/environment/create`}
-                        >
-                          <IonIcon className='fs-small' icon={createOutline} />
-                          Create
-                        </Link>
-                      )
-                    }
-                  </Permission>
                 </div>
               </div>
               <EnvironmentDropdown

@@ -58,25 +58,22 @@ const OrganisationsPage: FC<OrganisationsPageType> = ({ router }) => {
                   <>
                     {i === 0 && (
                       <div className='col-md-6 col-xl-3'>
-                        {!Utils.getFlagsmithHasFeature('disable_create_org') &&
-                          (!Project.superUserCreateOnly ||
-                            (Project.superUserCreateOnly &&
-                              AccountStore.isSuper())) && (
-                            <Button
-                              data-test='create-organisation-btn'
-                              onClick={handleCreateOrganisationClick}
-                              className='btn-project btn-project-create'
-                            >
-                              <Row className='flex-nowrap'>
-                                <div className='btn-project-icon'>
-                                  <Icon name='plus' width={32} fill='#9DA4AE' />
-                                </div>
-                                <div className='font-weight-medium btn-project-title'>
-                                  Create Organisation
-                                </div>
-                              </Row>
-                            </Button>
-                          )}
+                        {Utils.canCreateOrganisation() && (
+                          <Button
+                            data-test='create-organisation-btn'
+                            onClick={handleCreateOrganisationClick}
+                            className='btn-project btn-project-create'
+                          >
+                            <Row className='flex-nowrap'>
+                              <div className='btn-project-icon'>
+                                <Icon name='plus' width={32} fill='#9DA4AE' />
+                              </div>
+                              <div className='font-weight-medium btn-project-title'>
+                                Create Organisation
+                              </div>
+                            </Row>
+                          </Button>
+                        )}
                       </div>
                     )}
                     <a

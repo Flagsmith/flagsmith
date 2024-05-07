@@ -3,6 +3,7 @@ import InfoMessage from 'components/InfoMessage'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
 import Constants from 'common/constants'
+import { setInterceptClose } from './base/ModalDefault'
 
 const CreateProject = class extends Component {
   static displayName = 'CreateProject'
@@ -12,9 +13,16 @@ const CreateProject = class extends Component {
     this.state = {}
   }
 
-  close = (id) => {
+  close = (data = {}) => {
+    setInterceptClose(null)
     closeModal()
-    this.props.onSave(id)
+    if (data) {
+      const { environmentId, projectId } = data
+      this.props.history.push(
+        `/project/${projectId}/environment/${environmentId}/features?new=true`,
+      )
+      this.props.onSave?.(data)
+    }
   }
 
   componentDidMount = () => {
@@ -22,6 +30,14 @@ const CreateProject = class extends Component {
       this.input.focus()
       this.focusTimeout = null
     }, 500)
+
+    setInterceptClose(() => {
+      return new Promise((resolve) => {
+        this.props.history.push(document.location.pathname)
+        setInterceptClose(null)
+        resolve(true)
+      })
+    })
   }
 
   componentWillUnmount() {
@@ -109,4 +125,4 @@ const CreateProject = class extends Component {
 
 CreateProject.propTypes = {}
 
-module.exports = CreateProject
+export default CreateProject
