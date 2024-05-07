@@ -111,6 +111,7 @@ global.Select = class extends PureComponent {
               .
             </a>
           ))}
+        {this.props.components?.Menu?.({})}
       </div>
     ) : (
       <Select

@@ -76,32 +76,38 @@ const HomeAside: FC<HomeAsideType> = ({
                         projectId={projectId}
                         components={{
                           Menu: ({ ...props }: any) => {
+                            const inner = (
+                              <React.Fragment>
+                                {props.children}
+                                <Permission
+                                  level='project'
+                                  permission='CREATE_ENVIRONMENT'
+                                  id={projectId}
+                                >
+                                  {({ permission }) =>
+                                    permission && (
+                                      <Link
+                                        id='create-env-link'
+                                        className='btn mt-1 mb-2 ml-2 mr-2 d-flex justify-content-center btn-xsm d-flex gap-1 align-items-center btn--outline'
+                                        to={`/project/${projectId}/environment/create`}
+                                      >
+                                        <IonIcon
+                                          className='fs-small'
+                                          icon={createOutline}
+                                        />
+                                        Create Environment
+                                      </Link>
+                                    )
+                                  }
+                                </Permission>
+                              </React.Fragment>
+                            )
+                            if (E2E) {
+                              return inner
+                            }
                             return (
                               <components.Menu {...props}>
-                                <React.Fragment>
-                                  {props.children}
-                                  <Permission
-                                    level='project'
-                                    permission='CREATE_ENVIRONMENT'
-                                    id={projectId}
-                                  >
-                                    {({ permission }) =>
-                                      permission && (
-                                        <Link
-                                          id='create-env-link'
-                                          className='btn mt-1 mb-2 ml-2 mr-2 d-flex justify-content-center btn-xsm d-flex gap-1 align-items-center btn--outline'
-                                          to={`/project/${projectId}/environment/create`}
-                                        >
-                                          <IonIcon
-                                            className='fs-small'
-                                            icon={createOutline}
-                                          />
-                                          Create Environment
-                                        </Link>
-                                      )
-                                    }
-                                  </Permission>
-                                </React.Fragment>
+                                {inner}
                               </components.Menu>
                             )
                           },
