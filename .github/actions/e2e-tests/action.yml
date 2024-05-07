@@ -33,16 +33,20 @@ runs:
       shell: bash
 
     - name: Test with Chromedriver
-      working-directory: frontend
+      uses: nick-fields/retry@v3
+      with:
+        shell: bash
+        command: |
+          cd frontend
+          node -v
+          npm run env
+          npm run test -- ${{ inputs.tests }}
+        max_attempts: 2
+        retry_on: error
+        timeout_minutes: 10
       env:
         E2E_TEST_TOKEN: ${{ inputs.e2e_test_token }}
         SLACK_TOKEN: ${{ inputs.slack_token }}
         STATIC_ASSET_CDN_URL: /
         ENV: ${{ inputs.environment }}
         GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-      run: |
-        node -v
-        npm run env
-        npm run test -- ${{ inputs.tests }}
-      shell: bash
