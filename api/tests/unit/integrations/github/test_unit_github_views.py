@@ -11,12 +11,8 @@ from organisations.models import Organisation
 from projects.models import Project
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_get_github_configuration(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
 ) -> None:
     # Given
@@ -25,17 +21,13 @@ def test_get_github_configuration(
         kwargs={"organisation_pk": organisation.id},
     )
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
     # Then
     assert response.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_create_github_configuration(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
 ) -> None:
     # Given
@@ -47,17 +39,61 @@ def test_create_github_configuration(
         kwargs={"organisation_pk": organisation.id},
     )
     # When
-    response = client.post(url, data)
+    response = admin_client_new.post(url, data)
     # Then
     assert response.status_code == status.HTTP_201_CREATED
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
+def test_cannot_create_github_configuration_due_to_unique_constraint(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+) -> None:
+    # Given
+    data = {
+        "installation_id": 1234567,
+    }
+    url = reverse(
+        "api-v1:organisations:integrations-github-list",
+        kwargs={"organisation_pk": organisation.id},
+    )
+    # When
+    response = admin_client_new.post(url, data)
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    assert (
+        "Duplication error. The GitHub integration already created"
+        in response.json()["detail"]
+    )
+
+
+def test_cannot_create_github_configuration_when_the_organization_already_has_an_integration(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+) -> None:
+    # Given
+    data = {
+        "installation_id": 7654321,
+    }
+    url = reverse(
+        "api-v1:organisations:integrations-github-list",
+        kwargs={"organisation_pk": organisation.id},
+    )
+    # When
+    response = admin_client_new.post(url, data)
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    assert (
+        "Duplication error. The GitHub integration already created"
+        in response.json()["detail"]
+    )
+
+
 def test_delete_github_configuration(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
@@ -71,17 +107,13 @@ def test_delete_github_configuration(
         ],
     )
     # When
-    response = client.delete(url)
+    response = admin_client_new.delete(url)
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_get_github_repository(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
 ):
@@ -91,17 +123,13 @@ def test_get_github_repository(
         args=[organisation.id, github_configuration.id],
     )
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
     # Then
     assert response.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_create_github_repository(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     project: Project,
@@ -119,7 +147,7 @@ def test_create_github_repository(
         args=[organisation.id, github_configuration.id],
     )
     # When
-    response = client.post(url, data)
+    response = admin_client_new.post(url, data)
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
@@ -151,12 +179,8 @@ def test_cannot_create_github_repository_when_does_not_have_permissions(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_cannot_create_github_repository_due_to_unique_constraint(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     project: Project,
@@ -176,22 +200,18 @@ def test_cannot_create_github_repository_due_to_unique_constraint(
     )
 
     # When
-    response = client.post(url, data)
+    response = admin_client_new.post(url, data)
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     assert (
-        "Duplication error. The Github repository already linked" in response.json()[0]
+        "Duplication error. The GitHub repository already linked" in response.json()[0]
     )
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_github_delete_repository(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
     feature_external_resource: FeatureExternalResource,
     github_configuration: GithubConfiguration,
@@ -210,7 +230,7 @@ def test_github_delete_repository(
     for feature in github_repository.project.features.all():
         assert FeatureExternalResource.objects.filter(feature=feature).exists()
     # When
-    response = client.delete(url)
+    response = admin_client_new.delete(url)
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
     for feature in github_repository.project.features.all():
@@ -232,12 +252,8 @@ def mocked_requests_get(*args, **kwargs):
     return MockResponse(json_data={"data": "data"}, status_code=200)
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_fetch_pull_requests(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
@@ -255,7 +271,7 @@ def test_fetch_pull_requests(
     data = {"repo_owner": "owner", "repo_name": "repo"}
 
     # When
-    response = client.get(url, data=data)
+    response = admin_client_new.get(url, data=data)
     response_json = response.json()
 
     # Then
@@ -273,12 +289,8 @@ def test_fetch_pull_requests(
     )
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_fetch_issue(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
@@ -293,7 +305,7 @@ def test_fetch_issue(
     url = reverse("api-v1:organisations:get-github-issues", args=[organisation.id])
     data = {"repo_owner": "owner", "repo_name": "repo"}
     # When
-    response = client.get(url, data=data)
+    response = admin_client_new.get(url, data=data)
 
     # Then
     assert response.status_code == 200
@@ -311,12 +323,8 @@ def test_fetch_issue(
     )
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_fetch_repositories(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
@@ -332,7 +340,7 @@ def test_fetch_repositories(
         "api-v1:organisations:get-github-installation-repos", args=[organisation.id]
     )
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == 200

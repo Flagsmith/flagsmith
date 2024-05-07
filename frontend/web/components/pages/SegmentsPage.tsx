@@ -200,7 +200,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         <Button
           theme='text'
           target='_blank'
-          href='https://docs.flagsmith.com/basic-features/managing-segments'
+          href='https://docs.flagsmith.com/basic-features/segments'
           className='fw-normal'
         >
           Learn more.
