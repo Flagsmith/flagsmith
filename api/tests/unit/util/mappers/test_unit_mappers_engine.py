@@ -40,7 +40,7 @@ from integrations.webhook.models import WebhookConfiguration
 from segments.models import Segment, SegmentRule
 from util.mappers import engine
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from environments.identities import Identity, Trait
     from environments.models import EnvironmentAPIKey
     from features.models import Feature

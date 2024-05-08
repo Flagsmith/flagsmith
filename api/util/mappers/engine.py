@@ -24,7 +24,7 @@ from flag_engine.segments.models import (
     SegmentRuleModel,
 )
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from environments.identities.models import Identity, Trait
     from environments.models import Environment, EnvironmentAPIKey
     from features.models import Feature, FeatureSegment, FeatureState

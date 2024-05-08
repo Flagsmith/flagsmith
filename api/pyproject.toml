@@ -24,6 +24,13 @@ exclude = '''
 )/
 '''
 
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_also = [
+  'if TYPE_CHECKING:',
+  '@(abc\\.)?abstractmethod',
+]
+
 [tool.isort]
 use_parentheses = true
 multi_line_output = 3

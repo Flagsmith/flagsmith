@@ -7,7 +7,7 @@ from typing_extensions import NotRequired
 from audit.related_object_type import RelatedObjectType
 from projects.models import Project
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from users.models import FFAdminUser
 
 
