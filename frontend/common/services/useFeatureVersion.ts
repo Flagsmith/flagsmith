@@ -28,6 +28,7 @@ export const featureVersionService = service
               environmentId: query.environmentId,
               featureId: query.featureId,
             })
+
           // Step 2: Get the feature states for the live version
           const currentFeatureStates: { data: FeatureState[] } =
             await getVersionFeatureState(getStore(), {
@@ -36,27 +37,9 @@ export const featureVersionService = service
               sha: versionRes.data.uuid,
             })
 
-          //Step 3: Update feature segment priorities before saving feature states
-          const prioritiesToUpdate = query.featureStates
-            .filter((v) => !v.toRemove && !!v.feature_segment)
-            .map((v) => {
-              const matchingFeatureSegment = currentFeatureStates?.data?.find(
-                (currentFeatureState) =>
-                  v.feature_segment?.segment ===
-                  currentFeatureState.feature_segment?.segment,
-              )
-              return {
-                id: matchingFeatureSegment!.feature_segment!.id!,
-                priority: v.feature_segment!.priority,
-              }
-            })
-          if (prioritiesToUpdate.length) {
-            await updateSegmentPriorities(getStore(), prioritiesToUpdate)
-          }
-
-          const res = await Promise.all(
+          // Step 3: update, create or delete feature states from the new version
+          const res: { data: FeatureState }[] = await Promise.all(
             query.featureStates.map((featureState) => {
-              // Step 4: update, create or delete feature states from the new version
               const matchingVersionState = currentFeatureStates.data.find(
                 (feature) => {
                   return (
@@ -130,6 +113,25 @@ export const featureVersionService = service
               }
             }),
           )
+
+          //Step 4: Update feature segment priorities before saving feature states
+          const prioritiesToUpdate = query.featureStates
+            .filter((v) => !v.toRemove && !!v.feature_segment)
+            .map((v) => {
+              const matchingFeatureSegment = res?.find(
+                (currentFeatureState) =>
+                  v.feature_segment?.segment ===
+                  currentFeatureState.data.feature_segment?.segment,
+              )
+              return {
+                id: matchingFeatureSegment!.data.feature_segment!.id!,
+                priority: v.feature_segment!.priority,
+              }
+            })
+          if (prioritiesToUpdate.length) {
+            await updateSegmentPriorities(getStore(), prioritiesToUpdate)
+          }
+
           const ret = {
             data: res.map((item) => ({
               ...item,
