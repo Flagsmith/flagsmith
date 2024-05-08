@@ -49,3 +49,7 @@ def _get_file_contents(file_path: str) -> str:
             return f.read().replace("\n", "")
     except FileNotFoundError:
         return UNKNOWN
+
+
+def unreachable_code():
+    print("this code is not being called anywhere")
