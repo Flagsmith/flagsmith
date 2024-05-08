@@ -691,7 +691,7 @@ const CreateFlag = class extends Component {
                             orgId={AccountStore.getOrganisation().id}
                             onChange={(v) =>
                               this.setState({
-                                featureExternalResource: v.value,
+                                featureExternalResource: v,
                               })
                             }
                             repoOwner={repoOwner}

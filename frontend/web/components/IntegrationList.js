@@ -65,11 +65,7 @@ class Integration extends Component {
           this.setState({
             reFetchgithubId: res?.data?.results[0]?.id,
           })
-          history.replaceState(
-            {},
-            null,
-            `${document.location.pathname}/github/`,
-          )
+          history.replaceState({}, null, `${document.location.pathname}github/`)
           this.add()
         })
       }

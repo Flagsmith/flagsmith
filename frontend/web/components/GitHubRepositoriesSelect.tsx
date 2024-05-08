@@ -36,7 +36,7 @@ const GitHubRepositoriesSelect: FC<GitHubRepositoriesSelectType> = ({
     <div style={{ width: '100%' }}>
       <Select
         size='select-md'
-        placeholder={'Select Your Repository'}
+        placeholder={'Repositories'}
         disabled={disabled}
         onChange={(r: repoSelectValue) => {
           const repoData = r.value.split('/')

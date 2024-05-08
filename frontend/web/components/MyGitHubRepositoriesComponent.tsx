@@ -54,12 +54,18 @@ const MyGitHubRepositoriesComponent: FC<MyGitHubRepositoriesComponentType> = ({
         </div>
       ) : (
         <>
-          <GitHubRepositoriesSelect
-            githubId={githubId}
-            organisationId={organisationId}
-            projectId={projectId}
-            repositories={reposSelect}
-          />
+          {!!reposSelect.length && (
+            <>
+              <h5 className='title'>Add Your Repository</h5>
+              <GitHubRepositoriesSelect
+                githubId={githubId}
+                organisationId={organisationId}
+                projectId={projectId}
+                repositories={reposSelect}
+              />
+            </>
+          )}
+
           <GithubRepositoriesTable
             repos={GithubReposFromFlagsmith?.results}
             githubId={githubId}

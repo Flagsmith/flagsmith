@@ -223,9 +223,6 @@ const CreateEditIntegration = class extends Component {
             this.props.integration.isExternalInstallation && (
               <>
                 <div className='mb-3'>
-                  <label className={!this.props.modal ? 'mb-1 fw-bold' : ''}>
-                    GitHub Repositories
-                  </label>
                   <MyGitHubRepositoriesComponent
                     githubId={this.props.githubMeta.githubId}
                     installationId={this.props.githubMeta.installationId}
