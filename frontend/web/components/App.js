@@ -18,6 +18,7 @@ import { getStore } from 'common/store'
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
+import { getGithubIntegration } from 'common/services/useGithubIntegration'
 import Button from './base/forms/Button'
 import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
@@ -38,10 +39,12 @@ const App = class extends Component {
   state = {
     activeOrganisation: 0,
     asideIsVisible: !isMobile,
+    githubMessage: '',
     lastEnvironmentId: '',
     lastProjectId: '',
     pin: '',
     showAnnouncement: true,
+    showGithubMessage: false,
   }
 
   constructor(props, context) {
@@ -53,6 +56,7 @@ const App = class extends Component {
     getBuildVersion()
     this.listenTo(ProjectStore, 'change', () => this.forceUpdate())
     this.listenTo(AccountStore, 'change', this.getOrganisationUsage)
+    this.getGithubIntegration()
     this.getOrganisationUsage()
     window.addEventListener('scroll', this.handleScroll)
     AsyncStorage.getItem('lastEnv').then((res) => {
@@ -74,9 +78,27 @@ const App = class extends Component {
       getOrganisationUsage(getStore(), {
         organisationId: AccountStore.getOrganisation()?.id,
       }).then((res) => {
+        if (AccountStore.getOrganisation().id) {
+          this.getGithubIntegration()
+        }
         this.setState({
           activeOrganisation: AccountStore.getOrganisation().id,
         })
+      })
+    }
+  }
+
+  getGithubIntegration = () => {
+    if (this.state.activeOrganisation) {
+      getGithubIntegration(getStore(), {
+        organisation_id: this.state.activeOrganisation,
+      }).then((res) => {
+        if (res.isError && res.error.data.status === 410) {
+          this.setState({
+            githubMessage: res.error.data.detail,
+            showGithubMessage: true,
+          })
+        }
       })
     }
   }
@@ -473,6 +495,28 @@ const App = class extends Component {
                             <OrganisationLimit
                               id={AccountStore.getOrganisation()?.id}
                             />
+                          )}
+                          {user && this.state.showGithubMessage && (
+                            <Row className={'px-3'}>
+                              <InfoMessage
+                                title={'Invalid Github Installation'}
+                                infoMessageClass={'announcement'}
+                                isClosable={announcementValue.isClosable}
+                                close={() =>
+                                  this.closeAnnouncement(announcementValue.id)
+                                }
+                                buttonText={'Go to Integrations'}
+                                goToIntegrations={() => {
+                                  this.context.router.history.replace(
+                                    `/project/${projectId}/integrations/`,
+                                  )
+                                }}
+                              >
+                                <div>
+                                  <div>{this.state.githubMessage}</div>
+                                </div>
+                              </InfoMessage>
+                            </Row>
                           )}
                           {user && showBanner && (
                             <Row className={'px-3'}>

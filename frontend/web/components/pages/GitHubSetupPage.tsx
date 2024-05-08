@@ -1,5 +1,6 @@
 import React, { FC, useState, useEffect } from 'react'
 import OrganisationSelect from 'components/OrganisationSelect'
+import AppActions from 'common/dispatcher/app-actions'
 import Input from 'components/base/forms/Input'
 import Icon from 'components/Icon'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -45,9 +46,10 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
   const { data: repos, isSuccess: reposLoaded } = useGetGithubReposQuery(
     {
       installation_id: installationId,
+      is_github_installation: 'True',
       organisation_id: organisation,
     },
-    { skip: !installationId },
+    { skip: !installationId || !organisation },
   )
 
   const [createGithubIntegration] = useCreateGithubIntegrationMutation()
@@ -72,6 +74,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
     ) {
       window.location.href = `${baseUrl}/`
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSuccessCreatedGithubRepository])
 
   useEffect(() => {
@@ -124,7 +127,9 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
             <label>Select your Flagsmith Organisation</label>
             <OrganisationSelect
               onChange={(organisationId: string) => {
-                setOrganisation(organisationId)
+                setOrganisation(`${organisationId}`)
+                AppActions.selectOrganisation(organisationId)
+                AppActions.getOrganisation(organisationId)
               }}
               showSettings={false}
               firstOrganisation
@@ -170,7 +175,13 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
             </div>
             <Button
               theme='primary'
-              disabled={!project || !installationId || !repositoryName}
+              disabled={
+                !(
+                  Object.entries(project).length &&
+                  installationId &&
+                  repositoryName
+                )
+              }
               onClick={() => {
                 {
                   const newProjects = [...projects]

@@ -5,11 +5,9 @@ import _data from 'common/data/base/_data'
 import ErrorMessage from 'components/ErrorMessage'
 import ModalHR from './ModalHR'
 import Button from 'components/base/forms/Button'
-import GithubRepositoriesTable from 'components/GithubRepositoriesTable'
 import classNames from 'classnames'
 import { getStore } from 'common/store'
 import { getGithubRepos } from 'common/services/useGithub'
-import DeleteGithubIntegracion from 'components/DeleteGithubIntegracion'
 
 const GITHUB_INSTALLATION_UPDATE = 'update'
 
@@ -233,29 +231,8 @@ const CreateEditIntegration = class extends Component {
                     installationId={this.props.githubMeta.installationId}
                     organisationId={AccountStore.getOrganisation().id}
                     projectId={this.props.projectId}
-                  />
-                </div>
-                <GithubRepositoriesTable
-                  githubId={this.props.githubMeta.githubId}
-                  organisationId={AccountStore.getOrganisation().id}
-                />
-                <div className='text-right mt-2'>
-                  <Button
-                    className='mr-3'
-                    type='text'
-                    id='open-github-win-installations-btn'
-                    data-test='open-github-win-installations-btn'
-                    onClick={this.openGitHubWinInstallations}
-                    size='small'
-                  >
-                    Manage available GitHub Repositories
-                  </Button>
-                  <DeleteGithubIntegracion
-                    githubId={this.props.githubMeta.githubId}
-                    organisationId={AccountStore.getOrganisation().id}
-                    onConfirm={() => {
-                      closeModal()
-                    }}
+                    manageIntegration={this.openGitHubWinInstallations}
+                    onComplete={this.onComplete}
                   />
                 </div>
               </>

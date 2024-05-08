@@ -317,6 +317,7 @@ export type Req = {
   updateGithubIntegration: {
     organisation_id: string
     github_integration_id: string
+    installation_id: string
   }
   deleteGithubIntegration: {
     organisation_id: string
@@ -361,7 +362,11 @@ export type Req = {
     repo_name: string
     repo_owner: string
   }
-  getGithubRepos: { installation_id: string; organisation_id: string }
+  getGithubRepos: {
+    installation_id: string
+    organisation_id: string
+    is_github_installation: string
+  }
   getServersideEnvironmentKeys: { environmentId: string }
   deleteServersideEnvironmentKeys: { environmentId: string; id: string }
   createServersideEnvironmentKeys: {

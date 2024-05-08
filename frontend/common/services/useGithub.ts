@@ -29,6 +29,7 @@ export const githubService = service
             query.organisation_id
           }/github/repositories/?${Utils.toParam({
             installation_id: query.installation_id,
+            is_github_installation: query.is_github_installation,
           })}`,
         }),
       }),

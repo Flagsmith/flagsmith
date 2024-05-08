@@ -8,7 +8,11 @@ export default class InfoMessage extends PureComponent {
   static displayName = 'InfoMessage'
 
   handleOpenNewWindow = () => {
-    window.open(this.props.url, '_blank')
+    if (this.props.goToIntegrations) {
+      this.props.goToIntegrations()
+    } else {
+      window.open(this.props.url, '_blank')
+    }
   }
 
   render() {

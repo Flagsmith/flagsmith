@@ -224,17 +224,21 @@ class IntegrationList extends Component {
 
   componentDidMount() {
     this.fetch()
-    if (Utils.getFlagsmithHasFeature('github_integration')) {
-      getGithubIntegration(getStore(), {
+  }
+  fetchGithubIntegration() {
+    getGithubIntegration(
+      getStore(),
+      {
         organisation_id: AccountStore.getOrganisation().id,
-      }).then((res) => {
-        this.setState({
-          githubId: res?.data?.results[0]?.id,
-          hasIntegrationWithGithub: !!res?.data?.results?.length,
-          installationId: res?.data?.results[0]?.installation_id,
-        })
+      },
+      { forceRefetch: true },
+    ).then((res) => {
+      this.setState({
+        githubId: res?.data?.results[0]?.id,
+        hasIntegrationWithGithub: !!res?.data?.results?.length,
+        installationId: res?.data?.results[0]?.installation_id,
       })
-    }
+    })
   }
 
   fetch = () => {
@@ -280,6 +284,7 @@ class IntegrationList extends Component {
       }),
     ).then((res) => {
       console.log(res)
+      this.fetchGithubIntegration()
       this.setState({
         activeIntegrations: _.map(res, (item) =>
           !!item && item.length ? item : [],

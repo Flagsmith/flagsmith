@@ -2,6 +2,8 @@ import React, { FC, useEffect, useState } from 'react'
 import { Repository } from 'common/types/responses'
 import Button from './base/forms/Button'
 import { useCreateGithubRepositoryMutation } from 'common/services/useGithubRepository'
+import GithubRepositoriesTable from './GithubRepositoriesTable'
+import DeleteGithubIntegracion from './DeleteGithubIntegracion'
 
 export type GitHubRepositoriesSelectType = {
   disabled?: boolean
@@ -9,6 +11,7 @@ export type GitHubRepositoriesSelectType = {
   organisationId: string
   projectId: string
   githubId: string
+  manageIntegration: () => void
 }
 
 type repoSelectValue = {
@@ -18,6 +21,7 @@ type repoSelectValue = {
 const GitHubRepositoriesSelect: FC<GitHubRepositoriesSelectType> = ({
   disabled,
   githubId,
+  manageIntegration,
   organisationId,
   projectId,
   repositories,
@@ -73,6 +77,30 @@ const GitHubRepositoriesSelect: FC<GitHubRepositoriesSelectType> = ({
           Add Repository
         </Button>
       </div>
+      <>
+        <GithubRepositoriesTable
+          githubId={githubId}
+          organisationId={organisationId}
+        />
+        <div className='text-right mt-2'>
+          <Button
+            className='mr-3'
+            id='open-github-win-installations-btn'
+            data-test='open-github-win-installations-btn'
+            onClick={manageIntegration}
+            size='small'
+          >
+            Manage available GitHub Repositories
+          </Button>
+          <DeleteGithubIntegracion
+            githubId={githubId}
+            organisationId={organisationId}
+            onConfirm={() => {
+              window.location.reload()
+            }}
+          />
+        </div>
+      </>
     </div>
   )
 }
