@@ -987,10 +987,10 @@ class FeatureState(
                     for mv_value in source_feature_state.multivariate_feature_state_values.all()
                 ]
                 MultivariateFeatureStateValue.objects.bulk_create(mv_values)
-            else:
-                target_feature_state.feature_state_value.copy_from(
-                    source_feature_state.feature_state_value
-                )
+
+            target_feature_state.feature_state_value.copy_from(
+                source_feature_state.feature_state_value
+            )
 
             target_feature_state.save()
 
