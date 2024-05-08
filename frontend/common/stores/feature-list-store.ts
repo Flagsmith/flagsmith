@@ -76,6 +76,7 @@ const controller = {
       createdFirstFeature = true
       flagsmith.setTrait('first_feature', 'true')
       API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
+      window.lintrk?.('track', { conversion_id: 16798354 });
     }
 
     data

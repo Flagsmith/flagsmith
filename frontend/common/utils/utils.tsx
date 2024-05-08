@@ -11,6 +11,7 @@ import {
   Project as ProjectType,
   ProjectFlag,
   SegmentCondition,
+  Tag,
 } from 'common/types/responses'
 import flagsmith from 'flagsmith'
 import { ReactNode } from 'react'
@@ -377,10 +378,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     )
     return !!found
   },
+
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
-
   getSDKEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
 
@@ -487,6 +488,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
+
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (
@@ -519,7 +521,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (typeof x !== 'number') return ''
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   },
-
   openChat() {
     // @ts-ignore
     if (typeof $crisp !== 'undefined') {
@@ -536,6 +537,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   removeElementFromArray(array: any[], index: number) {
     return array.slice(0, index).concat(array.slice(index + 1))
   },
+
   renderWithPermission(permission: boolean, name: string, el: ReactNode) {
     return permission ? (
       el
@@ -550,6 +552,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return ''
     }
     return `${value}`
+  },
+  tagDisabled: (tag: Tag | undefined) => {
+    const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
+    return tag?.type === 'STALE' && !hasStaleFlagsPermission
   },
   validateRule(rule: SegmentCondition) {
     if (!rule) return false

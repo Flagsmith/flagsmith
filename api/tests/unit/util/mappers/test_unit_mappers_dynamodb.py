@@ -8,7 +8,7 @@ from environments.dynamodb.constants import (
 from util.mappers import dynamodb
 from util.mappers.engine import map_feature_state_to_engine
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
     from environments.identities.models import Identity
