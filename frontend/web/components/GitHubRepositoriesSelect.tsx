@@ -1,6 +1,5 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect } from 'react'
 import { Repository } from 'common/types/responses'
-import Button from './base/forms/Button'
 import { useCreateGithubRepositoryMutation } from 'common/services/useGithubRepository'
 
 export type GitHubRepositoriesSelectType = {
@@ -44,8 +43,8 @@ const GitHubRepositoriesSelect: FC<GitHubRepositoriesSelectType> = ({
           createGithubRepository({
             body: {
               project: projectId,
-              repository_name: repoData[0],
-              repository_owner: repoData[1],
+              repository_name: repoData[1],
+              repository_owner: repoData[0],
             },
             github_id: githubId,
             organisation_id: organisationId,

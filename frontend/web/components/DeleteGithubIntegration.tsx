@@ -1,7 +1,5 @@
 import React, { FC } from 'react'
 import Button from './base/forms/Button'
-import GithubRepositoriesTable from './GithubRepositoriesTable'
-import DeleteGithubIntegracion from './DeleteGithubIntegracion'
 import { useDeleteGithubIntegrationMutation } from 'common/services/useGithubIntegration'
 
 type DeleteGithubIntegrationType = {
