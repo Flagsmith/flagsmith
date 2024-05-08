@@ -33,7 +33,7 @@ const OrganisationsPage: FC<OrganisationsPageType> = ({ router }) => {
             <PanelSearch
               id='organisation-list'
               className='no-pad panel-projects'
-              listClassName='row mt-n2 gy-4'
+              listClassName='row mt-n2 gy-3'
               title='Organisations'
               filterRow={(item: Organisation, search: string) =>
                 item.name.toLowerCase().indexOf(search) > -1

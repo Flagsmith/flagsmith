@@ -104,7 +104,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                   <PanelSearch
                     id='projects-list'
                     className='no-pad panel-projects'
-                    listClassName='row mt-n2 gy-4'
+                    listClassName='row mt-n2 gy-3'
                     title='Projects'
                     header={
                       <div className='fs-small mb-2 lh-sm'>
@@ -181,17 +181,20 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                     }}
                     renderNoResults={
                       <div>
-                        <h5 className='mt-4 mb-2'>Projects</h5>
-                        <div className='container-mw-700 mb-4'>
-                          <p className='fs-small lh-sm mb-0'>
-                            You do not have access to any projects within this
-                            Organisation. If this is unexpected please contact a
-                            member of the Project who has Administrator
-                            privileges. Users can be added to Projects from the
-                            Project settings menu.
-                          </p>
-                        </div>
-
+                        {!canCreateProject && (
+                          <>
+                            <h5 className='mt-4 mb-2'>Projects</h5>
+                            <div className='container-mw-700 mb-4'>
+                              <p className='fs-small lh-sm mb-0'>
+                                You do not have access to any projects within
+                                this Organisation. If this is unexpected please
+                                contact a member of the Project who has
+                                Administrator privileges. Users can be added to
+                                Projects from the Project settings menu.
+                              </p>
+                            </div>
+                          </>
+                        )}
                         {Utils.renderWithPermission(
                           canCreateProject,
                           Constants.organisationPermissions(
