@@ -39,16 +39,24 @@ def enable_v2_versioning(environment_id: int) -> None:
 def disable_v2_versioning(environment_id: int) -> None:
     from environments.models import Environment
     from features.models import FeatureState
+    from features.versioning.models import EnvironmentFeatureVersion
 
     environment = Environment.objects.get(id=environment_id)
 
-    queryset = get_environment_flags_queryset(environment)
+    latest_feature_states = get_environment_flags_queryset(environment)
 
+    # delete any feature states associated with older versions
     FeatureState.objects.filter(identity_id__isnull=True).exclude(
-        id__in=[fs.id for fs in queryset]
+        id__in=[fs.id for fs in latest_feature_states]
     ).delete()
 
-    queryset.update(version=1, live_from=timezone.now())
+    # update the latest feature states to be the latest version according
+    # to the old versioning system
+    latest_feature_states.update(
+        version=1, live_from=timezone.now(), environment_feature_version=None
+    )
+
+    EnvironmentFeatureVersion.objects.filter(environment=environment).delete()
 
     environment.use_v2_feature_versioning = False
     environment.save()
