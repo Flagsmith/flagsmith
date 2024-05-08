@@ -24,7 +24,7 @@ environment_feature_version_webhook_schema = (
 
 
 @register_task_handler()
-def enable_v2_versioning(environment_id: int):
+def enable_v2_versioning(environment_id: int) -> None:
     from environments.models import Environment
 
     environment = Environment.objects.get(id=environment_id)
@@ -32,6 +32,25 @@ def enable_v2_versioning(environment_id: int):
     _create_initial_feature_versions(environment)
 
     environment.use_v2_feature_versioning = True
+    environment.save()
+
+
+@register_task_handler()
+def disable_v2_versioning(environment_id: int) -> None:
+    from environments.models import Environment
+    from features.models import FeatureState
+
+    environment = Environment.objects.get(id=environment_id)
+
+    queryset = get_environment_flags_queryset(environment)
+
+    FeatureState.objects.filter(identity_id__isnull=True).exclude(
+        id__in=[fs.id for fs in queryset]
+    ).delete()
+
+    queryset.update(version=1, live_from=timezone.now())
+
+    environment.use_v2_feature_versioning = False
     environment.save()
 
 
