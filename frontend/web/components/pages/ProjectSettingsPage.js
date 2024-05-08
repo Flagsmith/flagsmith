@@ -20,6 +20,7 @@ import ImportPage from 'components/import-export/ImportPage'
 import FeatureExport from 'components/import-export/FeatureExport'
 import ProjectUsage from 'components/ProjectUsage'
 import ProjectStore from 'common/stores/project-store'
+import Tooltip from 'components/Tooltip'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -154,7 +155,8 @@ const ProjectSettingsPage = class extends Component {
   }
 
   render() {
-    const { name } = this.state
+    const { name, stale_flags_limit_days } = this.state
+    const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
 
     return (
       <div className='app-container container'>
@@ -163,6 +165,15 @@ const ProjectSettingsPage = class extends Component {
           onSave={this.onSave}
         >
           {({ deleteProject, editProject, isLoading, isSaving, project }) => {
+            if (
+              !this.state.stale_flags_limit_days &&
+              project?.stale_flags_limit_days
+            ) {
+              this.state.stale_flags_limit_days = project.stale_flags_limit_days
+            }
+            if (!this.state.name && project?.name) {
+              this.state.name = project.name
+            }
             if (
               !this.state.populatedProjectState &&
               project?.feature_name_regex
@@ -181,16 +192,21 @@ const ProjectSettingsPage = class extends Component {
               e.preventDefault()
               !isSaving &&
                 name &&
-                editProject(Object.assign({}, project, { name }))
+                editProject(
+                  Object.assign({}, project, { name, stale_flags_limit_days }),
+                )
             }
 
             const featureRegexEnabled =
               typeof this.state.feature_name_regex === 'string'
+
+            const hasVersioning =
+              Utils.getFlagsmithHasFeature('feature_versioning')
             return (
               <div>
                 <PageTitle title={'Project Settings'} />
                 {
-                  <Tabs className='mt-0' uncontrolled>
+                  <Tabs urlParam='tab' className='mt-0' uncontrolled>
                     <TabItem tabLabel='General'>
                       <div className='mt-4'>
                         <JSONReference
@@ -200,14 +216,13 @@ const ProjectSettingsPage = class extends Component {
                         />
                         <label>Project Name</label>
                         <FormGroup>
-                          <form onSubmit={saveProject}>
-                            <Row className='align-items-start col-md-8'>
+                          <form className='col-md-6' onSubmit={saveProject}>
+                            <Row className='align-items-start'>
                               <Flex className='ml-0'>
                                 <Input
                                   ref={(e) => (this.input = e)}
-                                  defaultValue={project.name}
                                   value={this.state.name}
-                                  inputClassName='input--wide'
+                                  inputClassName='full-width'
                                   name='proj-name'
                                   onChange={(e) =>
                                     this.setState({
@@ -220,15 +235,54 @@ const ProjectSettingsPage = class extends Component {
                                   placeholder='My Project Name'
                                 />
                               </Flex>
+                            </Row>
+                            {!!hasVersioning && (
+                              <Tooltip
+                                title={
+                                  <div>
+                                    <label className='mt-4'>
+                                      Days before a feature is marked as stale{' '}
+                                      <Icon name='info-outlined' />
+                                    </label>
+                                    <div style={{ width: 80 }} className='ml-0'>
+                                      <Input
+                                        disabled={!hasStaleFlagsPermission}
+                                        ref={(e) => (this.input = e)}
+                                        value={
+                                          this.state.stale_flags_limit_days
+                                        }
+                                        onChange={(e) =>
+                                          this.setState({
+                                            stale_flags_limit_days: parseInt(
+                                              Utils.safeParseEventValue(e),
+                                            ),
+                                          })
+                                        }
+                                        isValid={!!stale_flags_limit_days}
+                                        type='number'
+                                        placeholder='Number of Days'
+                                      />
+                                    </div>
+                                  </div>
+                                }
+                              >
+                                {`${
+                                  !hasStaleFlagsPermission
+                                    ? 'This feature is available with our enterprise plan. '
+                                    : ''
+                                }If no changes have been made to a feature in any environment within this threshold the feature will be tagged as stale. You will need to enable feature versioning in your environments for stale features to be detected.`}
+                              </Tooltip>
+                            )}
+                            <div className='text-right'>
                               <Button
                                 type='submit'
                                 id='save-proj-btn'
                                 disabled={isSaving || !name}
                                 className='ml-3'
                               >
-                                {isSaving ? 'Updating' : 'Update Name'}
+                                {isSaving ? 'Updating' : 'Update'}
                               </Button>
-                            </Row>
+                            </div>
                           </form>
                         </FormGroup>
                       </div>

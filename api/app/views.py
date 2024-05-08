@@ -47,7 +47,7 @@ def project_overrides(request):
         "fpr": "FIRST_PROMOTER_ID",
         "headway": "HEADWAY_API_KEY",
         "hideInviteLinks": "DISABLE_INVITE_LINKS",
-        "linkedin_api_key": "LINKEDIN_API_KEY",
+        "linkedinPartnerTracking": "LINKEDIN_PARTNER_TRACKING",
         "maintenance": "MAINTENANCE_MODE",
         "mixpanel": "MIXPANEL_API_KEY",
         "preventEmailPassword": "PREVENT_EMAIL_PASSWORD",
@@ -55,6 +55,7 @@ def project_overrides(request):
         "sentry": "SENTRY_API_KEY",
         "useSecureCookies": "USE_SECURE_COOKIES",
         "cookieSameSite": "COOKIE_SAME_SITE",
+        "githubAppURL": "GITHUB_APP_URL",
     }
 
     override_data = {

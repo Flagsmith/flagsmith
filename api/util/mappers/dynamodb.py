@@ -22,7 +22,7 @@ from util.mappers.engine import (
     map_identity_to_engine,
 )
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from flag_engine.identities.models import IdentityModel
 
     from environments.identities.models import Identity

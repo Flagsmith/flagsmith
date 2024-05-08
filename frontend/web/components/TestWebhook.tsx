@@ -23,7 +23,7 @@ const stringifyWithSpaces = (str: string) => {
 }
 
 const signPayload = async (body: string, secret: string): Promise<string> => {
-  if(!secret) {
+  if (!secret) {
     return ''
   }
   const enc = new TextEncoder()

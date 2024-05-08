@@ -30,6 +30,10 @@ runs:
         password: ${{ inputs.github_token }}
 
     - name: Bake Compose
-      working-directory: frontend
-      run: depot bake -f docker-compose-e2e-tests.yml --load
-      shell: bash
+      uses: nick-fields/retry@v3
+      with:
+        shell: bash
+        command: cd frontend && depot bake -f docker-compose-e2e-tests.yml --load
+        max_attempts: 2
+        retry_on: error
+        timeout_minutes: 10

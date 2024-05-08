@@ -255,6 +255,16 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         return self.plan == FREE_PLAN_ID
 
     @hook(AFTER_SAVE, when="plan", has_changed=True)
+    def update_api_limit_access_block(self):
+        if not getattr(self.organisation, "api_limit_access_block", None):
+            return
+
+        self.organisation.api_limit_access_block.delete()
+        self.organisation.stop_serving_flags = False
+        self.organisation.block_access_to_admin = False
+        self.organisation.save()
+
+    @hook(AFTER_SAVE, when="plan", has_changed=True)
     def update_hubspot_active_subscription(self):
         if not settings.ENABLE_HUBSPOT_LEAD_TRACKING:
             return
@@ -400,13 +410,6 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
         add_single_seat(self.subscription_id)
 
-    def get_api_call_overage(self):
-        subscription_info = self.organisation.subscription_information_cache
-        overage = (
-            subscription_info.api_calls_30d - subscription_info.allowed_30d_api_calls
-        )
-        return overage if overage > 0 else 0
-
     def is_in_trial(self) -> bool:
         return self.subscription_id == TRIAL_SUBSCRIPTION_ID
 
@@ -464,6 +467,15 @@ class OranisationAPIUsageNotification(models.Model):
         validators=[MinValueValidator(75), MaxValueValidator(120)],
     )
     notified_at = models.DateTimeField(null=True)
+
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)
+
+
+class APILimitAccessBlock(models.Model):
+    organisation = models.OneToOneField(
+        Organisation, on_delete=models.CASCADE, related_name="api_limit_access_block"
+    )
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)

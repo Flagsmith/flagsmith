@@ -45,6 +45,7 @@
             <option value="subscription_information_cache__api_calls_24h" {% if sort_field == "subscription_information_cache__api_calls_24h" %}selected{% endif %}>24h API calls</option>
             <option value="subscription_information_cache__api_calls_7d" {% if sort_field == "subscription_information_cache__api_calls_7d" %}selected{% endif %}>7d API calls</option>
             <option value="subscription_information_cache__api_calls_30d" {% if sort_field == "subscription_information_cache__api_calls_30d" or not sort_field %}selected{% endif %}>30d API calls</option>
+            <option value="overage" {% if sort_field == "overage"%}selected{% endif %}>Overage</option>
           </select>
           <select name="sort_direction" id="sort-direction" class="custom-select m-1">
             <option value="DESC" {% if not sort_direction or sort_direction == "DESC" %}selected{% endif %}>Descending</option>
@@ -91,7 +92,7 @@
               <td>{{org.subscription_information_cache.api_calls_24h|intcomma|default:0}}</td>
               <td>{{org.subscription_information_cache.api_calls_7d|intcomma|default:0}}</td>
               <td><span class="{% if org.subscription_information_cache.api_calls_30d > org.subscription_information_cache.allowed_30d_api_calls %}badge badge-danger{% endif %}">{{org.subscription_information_cache.api_calls_30d|intcomma|default:0}}</span></td>
-              <td><span {% if org.subscription.get_api_call_overage > 0 %}class="badge badge-danger"{% endif %}>{{org.subscription.get_api_call_overage|intcomma}}</span></td>
+              <td><span class="{% if org.overage > 0 %}badge badge-danger{% endif %}">{{org.overage|intcomma}}</span></td>
             </tr>
             {% endfor %}
           </tbody>

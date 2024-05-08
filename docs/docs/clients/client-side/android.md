@@ -6,7 +6,7 @@ slug: /clients/android
 ---
 
 This SDK can be used for Android applications written in Kotlin. The source code for the client is available on
-[Github](https://github.com/Flagsmith/flagsmith-kotlin-android-client/).
+[GitHub](https://github.com/Flagsmith/flagsmith-kotlin-android-client/).
 
 ## Installation
 

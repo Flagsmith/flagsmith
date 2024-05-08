@@ -14,6 +14,7 @@ from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
 from pytest_django.fixtures import SettingsWrapper
+from pytest_lazyfixture import lazy_fixture
 from pytest_mock import MockerFixture
 from pytz import UTC
 from rest_framework import status
@@ -110,8 +111,12 @@ def test_create_new_orgnisation_returns_403_with_non_superuser(
     )
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_should_update_organisation_data(
-    admin_client: APIClient,
+    client: APIClient,
     organisation: Organisation,
 ) -> None:
     # Given
@@ -120,7 +125,7 @@ def test_should_update_organisation_data(
     data = {"name": new_organisation_name, "restrict_project_create_to_admin": True}
 
     # When
-    response = admin_client.put(url, data=data)
+    response = client.put(url, data=data)
 
     # Then
     organisation.refresh_from_db()
@@ -325,16 +330,20 @@ def test_can_invite_user_as_user(
     assert Invite.objects.get(email=invited_email).role == OrganisationRole.USER.name
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("staff_client")],
+)
 def test_user_can_get_projects_for_an_organisation(
     organisation: Organisation,
-    staff_client: APIClient,
+    client: APIClient,
     project: Project,
 ) -> None:
     # Given
     url = reverse("api-v1:organisations:organisation-projects", args=[organisation.pk])
 
     # When
-    response = staff_client.get(url)
+    response = client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -423,9 +432,13 @@ def test_update_subscription_gets_subscription_data_from_chargebee(
     assert organisation.subscription.customer_id == customer_id
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_delete_organisation(
     organisation: Organisation,
-    admin_client: APIClient,
+    client: APIClient,
     project: Project,
     environment: Environment,
     feature: Feature,
@@ -435,7 +448,7 @@ def test_delete_organisation(
     url = reverse("api-v1:organisations:organisation-detail", args=[organisation.id])
 
     # When
-    response = admin_client.delete(url)
+    response = client.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -1797,3 +1810,66 @@ def test_doesnt_retrieve_stale_api_usage_notifications(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert len(response.data["results"]) == 0
+
+
+def test_non_organisation_user_cannot_remove_user_from_organisation(
+    staff_user: FFAdminUser, organisation: Organisation, api_client: APIClient
+) -> None:
+    # Given
+    another_organisation = Organisation.objects.create(name="another organisation")
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(another_organisation)
+    api_client.force_authenticate(another_user)
+
+    url = reverse(
+        "api-v1:organisations:organisation-remove-users", args=[organisation.id]
+    )
+
+    data = [{"id": staff_user.id}]
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_non_admin_user_cannot_remove_user_from_organisation(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    staff_client: APIClient,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-remove-users", args=[organisation.id]
+    )
+
+    data = [{"id": admin_user.id}]
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_validation_error_if_non_numeric_organisation_id(
+    staff_client: APIClient,
+) -> None:
+    # Given
+    url = reverse("api-v1:organisations:organisation-remove-users", args=["foo"])
+
+    data = []
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST

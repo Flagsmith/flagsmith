@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo, useRef, useState } from 'react'
+import React, { FC, useMemo, useState } from 'react'
 import TableFilter from './TableFilter'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
@@ -7,7 +7,7 @@ import Tag from 'components/tags/Tag'
 import TableFilterItem from './TableFilterItem'
 import Constants from 'common/constants'
 import { TagStrategy } from 'common/types/responses'
-import { AsyncStorage } from 'polyfill-react-native'
+import TagContent from 'components/tags/TagContent'
 
 type TableFilterType = {
   projectId: string
@@ -148,6 +148,10 @@ const TableTagFilter: FC<TableFilterType> = ({
             {filteredTags?.map((tag) => (
               <TableFilterItem
                 onClick={() => {
+                  const disabled = Utils.tagDisabled(tag)
+                  if (disabled) {
+                    return
+                  }
                   if (isLoading) {
                     return
                   }
@@ -167,7 +171,12 @@ const TableTagFilter: FC<TableFilterType> = ({
                       className='px-2 py-2 mr-1'
                       tag={tag}
                     />
-                    <div className='ml-2'>{tag.label}</div>
+                    <div
+                      style={{ width: 150 }}
+                      className='ml-2 text-nowrap text-overflow'
+                    >
+                      <TagContent tag={tag} />
+                    </div>
                   </Row>
                 }
                 key={tag.id}
