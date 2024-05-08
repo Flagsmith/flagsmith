@@ -350,6 +350,7 @@ export const editRemoteConfig = async (
   value: string | number | boolean,
   toggleFeature: boolean = false,
   mvs: MultiVariate[] = [],
+  isChangeRequest = false
 ) => {
   const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`
   await gotoFeatures()

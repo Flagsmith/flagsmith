@@ -260,6 +260,9 @@ const EnvironmentSettingsPage = class extends Component {
                 })
               }, 10)
             }
+            const changeRequestsEnabled = Utils.changeRequestsEnabled(
+              this.state.minimum_change_request_approvals,
+            )
             const onEnableVersioning = () => {
               openConfirm({
                 body: 'This will allow you to attach versions to updating feature values and segment overrides. Note: this may take several minutes to process',
@@ -481,12 +484,14 @@ const EnvironmentSettingsPage = class extends Component {
                           <Row className='mb-2'>
                             <Switch
                               className='float-right'
+                              data-test={
+                                changeRequestsEnabled
+                                  ? `disable-change-requests`
+                                  : 'enable-change-requests'
+                              }
                               disabled={!has4EyesPermission}
                               checked={
-                                has4EyesPermission &&
-                                Utils.changeRequestsEnabled(
-                                  this.state.minimum_change_request_approvals,
-                                )
+                                has4EyesPermission && changeRequestsEnabled
                               }
                               onChange={(v) =>
                                 this.setState(
