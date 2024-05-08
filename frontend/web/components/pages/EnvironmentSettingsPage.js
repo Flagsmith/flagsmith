@@ -729,50 +729,6 @@ const EnvironmentSettingsPage = class extends Component {
                         </div>
                       </div>
                     </TabItem>
-                    <TabItem tabLabel='SDK Keys'>
-                      <FormGroup className='mt-4'>
-                        <h5 className='mb-5'>Client-side Environment Key</h5>
-                        <div className='col-md-6'>
-                          <p className='fs-small lh-sm mb-0'>
-                            Use this key to initialise{' '}
-                            <Button
-                              theme='text'
-                              href='https://docs.flagsmith.com/clients/overview#client-side-sdks'
-                              target='__blank'
-                            >
-                              Client-side
-                            </Button>{' '}
-                            SDKs.
-                          </p>
-                          <Row>
-                            <Flex>
-                              <Input
-                                value={this.props.match.params.environmentId}
-                                inputClassName='input input--wide'
-                                type='text'
-                                title={<h3>Client-side Environment Key</h3>}
-                                placeholder='Client-side Environment Key'
-                              />
-                            </Flex>
-                            <Button
-                              onClick={() => {
-                                navigator.clipboard.writeText(
-                                  this.props.match.params.environmentId,
-                                )
-                                toast('Copied')
-                              }}
-                              className='ml-2 btn-with-icon'
-                            >
-                              <Icon name='copy' width={20} fill='#656D7B' />
-                            </Button>
-                          </Row>
-                        </div>
-                      </FormGroup>
-                      <hr className='py-0 my-4' />
-                      <ServerSideSDKKeys
-                        environmentId={this.props.match.params.environmentId}
-                      />
-                    </TabItem>
                     <TabItem tabLabel='Permissions'>
                       <FormGroup>
                         <EditPermissions

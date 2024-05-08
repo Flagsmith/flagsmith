@@ -7,7 +7,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { Link, NavLink } from 'react-router-dom'
 import { IonIcon } from '@ionic/react'
-import { createOutline } from 'ionicons/icons'
+import { code, createOutline } from 'ionicons/icons'
 import EnvironmentDropdown from 'components/EnvironmentDropdown'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
@@ -224,7 +224,23 @@ const HomeAside: FC<HomeAsideType> = ({
                                         Identities
                                       </NavLink>,
                                     )}
-
+                                    <NavLink
+                                      id='sdk-keys-link'
+                                      exact
+                                      to={`/project/${project.id}/environment/${environment.api_key}/sdk-keys`}
+                                    >
+                                      <span className='mr-2'>
+                                        <IonIcon
+                                          icon={code}
+                                          color={
+                                            manageIdentityPermission
+                                              ? '#9DA4AE'
+                                              : '#696969'
+                                          }
+                                        />
+                                      </span>
+                                      SDK Keys
+                                    </NavLink>
                                     {environmentAdmin && (
                                       <NavLink
                                         id='env-settings-link'

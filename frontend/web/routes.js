@@ -37,6 +37,7 @@ import OrganisationUsagePage from './components/pages/OrganisationUsagePage'
 import OrganisationsPage from './components/pages/OrganisationsPage'
 import UsersAndPermissionsPage from './components/pages/UsersAndPermissionsPage'
 import ProjectRedirectPage from './components/pages/ProjectRedirectPage'
+import SDKKeysPage from './components/SDKKeysPage'
 
 export default (
   <App>
@@ -90,6 +91,11 @@ export default (
         path='/project/:projectId/environment/:environmentId/settings'
         exact
         component={EnvironmentSettingsPage}
+      />
+      <Route
+        path='/project/:projectId/environment/:environmentId/sdk-keys'
+        exact
+        component={SDKKeysPage}
       />
       <Route
         path='/project/:projectId/integrations'
