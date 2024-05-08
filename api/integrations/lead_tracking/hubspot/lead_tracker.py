@@ -42,12 +42,6 @@ class HubspotLeadTracker(LeadTracker):
         ):
             return False
 
-        if any(
-            org.is_paid
-            for org in user.organisations.select_related("subscription").all()
-        ):
-            return False
-
         return True
 
     def create_lead(self, user: FFAdminUser, organisation: Organisation = None) -> None:
