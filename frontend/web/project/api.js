@@ -91,7 +91,7 @@ global.API = {
     }
 
     flagsmith
-      .identify(user.email, {
+      .identify(user.id, {
         email: user.email,
         organisations: user.organisations
           ? user.organisations.map((o) => `"${o.id}"`).join(',')
