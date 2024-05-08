@@ -106,12 +106,14 @@ nav a {
   border-right:  1px solid $hr-border-color;
 }
 .collapsible__content {
-  svg {
+  svg, ion-icon {
+    text-align: center;
     width: 16px;
     height: 16px;
+    color: $body-color;
+    opacity: 0.6;
     path {
       fill: $body-color;
-      opacity: 0.6;
     }
   }
   ion-icon {
@@ -137,6 +139,8 @@ nav a {
   padding-right: 4px;
   margin-right: 10px;
   line-height: 32px;
+  display: flex;
+  align-items: center;
   border-radius: $border-radius;
   &.active {
     background-color: $primary-alfa-8;

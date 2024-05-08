@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useEffect } from 'react'
 import ProjectStore from 'common/stores/project-store'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import Utils from 'common/utils/utils'
@@ -34,6 +34,11 @@ const HomeAside: FC<HomeAsideType> = ({
   history,
   projectId,
 }) => {
+  useEffect(() => {
+    if (environmentId) {
+      AppActions.getChangeRequests(environmentId, {})
+    }
+  }, [environmentId])
   const environment: Environment | null =
     environmentId === 'create'
       ? null
@@ -181,7 +186,7 @@ const HomeAside: FC<HomeAsideType> = ({
                                       </span>
                                       Change Requests{' '}
                                       {changeRequests ? (
-                                        <span className='unread d-inline'>
+                                        <span className='ms-1 unread d-inline'>
                                           {changeRequests}
                                         </span>
                                       ) : null}
@@ -230,16 +235,7 @@ const HomeAside: FC<HomeAsideType> = ({
                                       exact
                                       to={`/project/${project.id}/environment/${environment.api_key}/sdk-keys`}
                                     >
-                                      <span className='mr-2'>
-                                        <IonIcon
-                                          icon={code}
-                                          color={
-                                            manageIdentityPermission
-                                              ? '#9DA4AE'
-                                              : '#696969'
-                                          }
-                                        />
-                                      </span>
+                                      <IonIcon className='mr-2' icon={code} />
                                       SDK Keys
                                     </NavLink>
                                     {environmentAdmin && (
