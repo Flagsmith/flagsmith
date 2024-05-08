@@ -548,7 +548,7 @@ const CreateFlag = class extends Component {
           feature: projectFlag.id,
           metadata: { status: status },
           type:
-            externalResourceType === 'Github Issue'
+            externalResourceType === Constants.githubType.githubIssue
               ? 'GITHUB_ISSUE'
               : 'GITHUB_PR',
           url: featureExternalResource,
@@ -636,10 +636,6 @@ const CreateFlag = class extends Component {
           projectFlag?.id && (
             <>
               <FormGroup className='mt-4 setting'>
-                <label className='cols-sm-2 control-label'>
-                  {' '}
-                  GitHub Repositories
-                </label>
                 <MyRepositoriesSelect
                   githubId={githubId}
                   orgId={AccountStore.getOrganisation().id}
@@ -666,15 +662,16 @@ const CreateFlag = class extends Component {
                             this.setState({ externalResourceType: v.label })
                           }
                           options={[
-                            { id: 1, type: 'Github Issue' },
-                            { id: 2, type: 'Github PR' },
+                            { id: 1, type: Constants.githubType.githubIssue },
+                            { id: 2, type: Constants.githubType.githubPR },
                           ].map((e) => {
                             return { label: e.type, value: e.id }
                           })}
                         />
                       </div>
                       <Flex className='ml-4'>
-                        {externalResourceType == 'Github Issue' ? (
+                        {externalResourceType ==
+                        Constants.githubType.githubIssue ? (
                           <MyIssueSelect
                             orgId={AccountStore.getOrganisation().id}
                             onChange={(v) =>
@@ -686,7 +683,8 @@ const CreateFlag = class extends Component {
                             repoOwner={repoOwner}
                             repoName={repoName}
                           />
-                        ) : externalResourceType == 'Github PR' ? (
+                        ) : externalResourceType ==
+                          Constants.githubType.githubPR ? (
                           <MyPullRequestsSelect
                             orgId={AccountStore.getOrganisation().id}
                             onChange={(v) =>
@@ -701,8 +699,10 @@ const CreateFlag = class extends Component {
                           <></>
                         )}
                       </Flex>
-                      {(externalResourceType == 'Github Issue' ||
-                        externalResourceType == 'Github PR') && (
+                      {(externalResourceType ==
+                        Constants.githubType.githubIssue ||
+                        externalResourceType ==
+                          Constants.githubType.githubPR) && (
                         <Button
                           className='text-right'
                           theme='primary'

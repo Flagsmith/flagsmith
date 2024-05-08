@@ -103,7 +103,7 @@ export type ExternalResource = {
   url: string
   type: string
   project: number
-  status: null | string
+  metadata: null | { status: string }
   feature: number
 }
 

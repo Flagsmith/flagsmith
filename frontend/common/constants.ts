@@ -429,6 +429,10 @@ export default {
       'TRAITS_ID': 150,
     },
   },
+  githubType: {
+    githubIssue: 'GitHub Issue',
+    githubPR: 'Github PR',
+  },
   modals: {
     'PAYMENT': 'Payment Modal',
   },

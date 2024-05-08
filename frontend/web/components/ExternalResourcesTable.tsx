@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect } from 'react'
 import PanelSearch from './PanelSearch'
 import Button from './base/forms/Button'
 import Icon from './Icon'
@@ -7,6 +7,8 @@ import {
   useDeleteExternalResourceMutation,
 } from 'common/services/useExternalResource'
 import { ExternalResource } from 'common/types/responses'
+import Constants from 'common/constants'
+import Tooltip from './Tooltip'
 
 export type ExternalResourcesTableType = {
   featureId: string
@@ -38,10 +40,7 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
       items={data?.results}
       header={
         <Row className='table-header'>
-          <Flex className='table-column px-3' style={{ 'minWidth': '280px' }}>
-            URL
-          </Flex>
-          <Flex className='table-column pl-1'>Type</Flex>
+          <Flex className='table-column px-3'>Type</Flex>
           <div className='table-column text-center' style={{ width: '80px' }}>
             Status
           </div>
@@ -53,20 +52,40 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
       renderRow={(v: ExternalResource) => (
         <Row className='list-item' key={v.id}>
           <Flex className='table-column px-3'>
+            <div className='font-weight-medium mb-1'>
+              {v.type === 'GITHUB_ISSUE'
+                ? Constants.githubType.githubIssue
+                : Constants.githubType.githubPR}
+            </div>
+          </Flex>
+          <Flex className='table-column px-3'>
             <Button
               theme='text'
               href={`${v.url}`}
               target='_blank'
               className='fw-normal'
             >
-              <p className='fs-small'>{v.url}</p>
+              <Tooltip
+                title={
+                  <Row>
+                    {`#${v.url.replace(/\D/g, '')}`}{' '}
+                    <div className='ml-1 mb-1'>
+                      <Icon
+                        name='open-external-link'
+                        width={14}
+                        fill='#6837fc'
+                      />
+                    </div>
+                  </Row>
+                }
+                place='right'
+              >
+                {`${v.url}`}
+              </Tooltip>
             </Button>
           </Flex>
-          <Flex className='table-column px-3'>
-            <div className='font-weight-medium mb-1'>{v.type}</div>
-          </Flex>
           <div className='table-column text-center' style={{ width: '80px' }}>
-            <div className='font-weight-medium mb-1'>{v.status}</div>
+            <div className='font-weight-medium mb-1'>{v.metadata?.status}</div>
           </div>
           <div className='table-column text-center' style={{ width: '80px' }}>
             <Button
