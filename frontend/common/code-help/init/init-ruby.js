@@ -8,6 +8,9 @@ $flagsmith = Flagsmith::Client.new(
     environment_key: '${envId}'
 )
 
+// Load the environment's flags locally
+$flags = $flagsmith.get_environment_flags
+
 // Check for a feature
 $is_enabled = $flags.is_feature_enabled('${customFeature || FEATURE_NAME}')
 
