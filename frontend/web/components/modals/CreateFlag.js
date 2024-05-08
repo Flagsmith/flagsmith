@@ -836,7 +836,9 @@ const CreateFlag = class extends Component {
                   <Tooltip
                     title={
                       <Row>
-                        <span className={'mr-1'}>{isEdit ? 'ID' : 'ID*'}</span>
+                        <span className={'mr-1'}>
+                          {isEdit ? 'ID / Name' : 'ID / Name*'}
+                        </span>
                         <Icon name='info-outlined' />
                       </Row>
                     }
