@@ -628,7 +628,7 @@ const App = class extends Component {
                                   id='project-settings-link'
                                   to={`/project/${projectId}/settings`}
                                 >
-                                  Settings
+                                  Project Settings
                                 </NavSubLink>
                               )
                             }
@@ -675,7 +675,7 @@ const App = class extends Component {
                                   AccountStore.getOrganisation().id
                                 }/settings`}
                               >
-                                Settings
+                                Organisation Settings
                               </NavSubLink>
                             )}
                           </>

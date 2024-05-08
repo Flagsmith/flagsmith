@@ -253,7 +253,7 @@ const HomeAside: FC<HomeAsideType> = ({
                                             fill='#9DA4AE'
                                           />
                                         </span>
-                                        Settings
+                                        Environment Settings
                                       </NavLink>
                                     )}
                                   </div>
