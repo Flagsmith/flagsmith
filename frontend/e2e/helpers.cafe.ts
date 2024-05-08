@@ -350,7 +350,8 @@ export const editRemoteConfig = async (
   value: string | number | boolean,
   toggleFeature: boolean = false,
   mvs: MultiVariate[] = [],
-  isChangeRequest = false
+  isChangeRequest = false,
+  changeRequestName = ''
 ) => {
   const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`
   await gotoFeatures()
@@ -367,6 +368,9 @@ export const editRemoteConfig = async (
       }),
   )
   await click(byId('update-feature-btn'))
+  if(isChangeRequest) {
+
+  }
   if(value) {
     await waitForElementVisible(byId(`feature-value-${index}`))
     await assertTextContent(byId(`feature-value-${index}`), expectedValue)
