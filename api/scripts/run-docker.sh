@@ -34,7 +34,7 @@ function run_task_processor() {
     if [[ -n "$ANALYTICS_DATABASE_URL" || -n "$DJANGO_DB_NAME_ANALYTICS" ]]; then
         python manage.py waitfordb --waitfor 30 --migrations --database analytics
     fi
-    RUN_BY_PROCESSOR=1 python manage.py runprocessor \
+    RUN_BY_PROCESSOR=1 exec python manage.py runprocessor \
       --sleepintervalms ${TASK_PROCESSOR_SLEEP_INTERVAL:-500} \
       --graceperiodms ${TASK_PROCESSOR_GRACE_PERIOD_MS:-20000} \
       --numthreads ${TASK_PROCESSOR_NUM_THREADS:-5} \
