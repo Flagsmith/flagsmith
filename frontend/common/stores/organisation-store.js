@@ -50,6 +50,7 @@ const controller = {
               .then((res) => createSampleUser(res, envName, project))
           }),
         ).then((res) => {
+          window.lintrk?.('track', { conversion_id: 16798346 })
           project.environments = res
           store.model.projects = store.model.projects.concat(project)
           getStore().dispatch(projectService.util.invalidateTags(['Project']))
