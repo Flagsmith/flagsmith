@@ -35,8 +35,8 @@ npm i flagsmith --save
 The React Native SDK shares the exact same implementation of Flagsmith, however, the defaults for some underlying
 libraries (e.g. AsyncStorage) use React Native compatible implementations.
 
-When you initialise the Flagsmith SDK in React Native, you will need to provide an implementation of AsyncStorage in order to utilise
-analytics and caching. See [here](/clients/javascript#initialisation-options).
+When you initialise the Flagsmith SDK in React Native, you will need to provide an implementation of AsyncStorage in
+order to utilise analytics and caching. See [here](/clients/javascript#initialisation-options).
 
 :::
 

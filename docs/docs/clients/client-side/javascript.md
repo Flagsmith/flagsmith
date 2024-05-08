@@ -34,8 +34,8 @@ npm i flagsmith --save
 The React Native SDK shares the exact same implementation of Flagsmith, however, the defaults for some underlying
 libraries (e.g. AsyncStorage) use React Native compatible implementations.
 
-When you initialise the Flagsmith SDK in React Native, you will need to provide an implementation of AsyncStorage in order to utilise
-analytics and caching. See [here](/clients/javascript#initialisation-options).
+When you initialise the Flagsmith SDK in React Native, you will need to provide an implementation of AsyncStorage in
+order to utilise analytics and caching. See [here](/clients/javascript#initialisation-options).
 
 :::
 
@@ -238,7 +238,7 @@ All function and property types can be seen
 ### Initialisation options
 
 | Property                                                                                    |                                                                                                                    Description                                                                                                                    | Required |                                         Default Value |
-|---------------------------------------------------------------------------------------------| :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | -------: | ----------------------------------------------------: |
+| ------------------------------------------------------------------------------------------- | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | -------: | ----------------------------------------------------: |
 | `environmentID: string`                                                                     |                                                                          Defines which project environment you wish to get flags for. _example ACME Project - Staging._                                                                           |  **YES** |                                                  null |
 | `onChange?: (previousFlags:IFlags, params:IRetrieveInfo, loadingState:LoadingState)=> void` |                                           Your callback function for when the flags are retrieved `(previousFlags,{isFromServer:true/false,flagsChanged: true/false, traitsChanged:true/false})=>{...}`                                           |  **YES** |                                                  null |
 | `onError?: (res:{message:string}) => void`                                                  |                                                                                         Callback function on failure to retrieve flags. `(error)=>{...}`                                                                                          |          |                                                  null |
