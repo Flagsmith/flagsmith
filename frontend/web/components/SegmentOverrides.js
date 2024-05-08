@@ -677,7 +677,7 @@ class TheComponent extends Component {
                             take priority.{' '}
                             <a
                               target='_blank'
-                              href='https://docs.flagsmith.com/basic-features/managing-segments'
+                              href='https://docs.flagsmith.com/basic-features/segments'
                               rel='noreferrer'
                             >
                               Check the Docs for more details

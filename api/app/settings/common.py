@@ -125,6 +125,7 @@ INSTALLED_APPS = [
     "permissions",
     "projects.tags",
     "api_keys",
+    "features.feature_external_resources",
     # 2FA
     "trench",
     # health check plugins
@@ -147,6 +148,7 @@ INSTALLED_APPS = [
     "integrations.dynatrace",
     "integrations.flagsmith",
     "integrations.launch_darkly",
+    "integrations.github",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -483,6 +485,7 @@ if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 
 SWAGGER_SETTINGS = {
+    "DEFAULT_AUTO_SCHEMA_CLASS": "api.openapi.PydanticResponseCapableSwaggerAutoSchema",
     "SHOW_REQUEST_HEADERS": True,
     "SECURITY_DEFINITIONS": {
         "Private": {
@@ -871,9 +874,9 @@ DISABLE_ANALYTICS_FEATURES = env.bool(
 FLAGSMITH_ANALYTICS = env.bool("FLAGSMITH_ANALYTICS", default=False)
 FLAGSMITH_ON_FLAGSMITH_API_URL = env("FLAGSMITH_ON_FLAGSMITH_API_URL", default=None)
 FLAGSMITH_ON_FLAGSMITH_API_KEY = env("FLAGSMITH_ON_FLAGSMITH_API_KEY", default=None)
+LINKEDIN_PARTNER_TRACKING = env("LINKEDIN_PARTNER_TRACKING", default=False)
 GOOGLE_ANALYTICS_API_KEY = env("GOOGLE_ANALYTICS_API_KEY", default=None)
 HEADWAY_API_KEY = env("HEADWAY_API_KEY", default=None)
-LINKEDIN_API_KEY = env("LINKEDIN_API_KEY", default=None)
 CRISP_CHAT_API_KEY = env("CRISP_CHAT_API_KEY", default=None)
 MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
 SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
@@ -887,6 +890,10 @@ RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS"
 # Slack Integration
 SLACK_CLIENT_ID = env.str("SLACK_CLIENT_ID", default="")
 SLACK_CLIENT_SECRET = env.str("SLACK_CLIENT_SECRET", default="")
+# GitHub integrations
+GITHUB_PEM = env.str("GITHUB_PEM", default="")
+GITHUB_APP_ID: int = env.int("GITHUB_APP_ID", default=0)
+
 
 # MailerLite
 MAILERLITE_BASE_URL = env.str(
@@ -1037,30 +1044,13 @@ ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
 HUBSPOT_IGNORE_DOMAINS = env.list("HUBSPOT_IGNORE_DOMAINS", [])
 HUBSPOT_IGNORE_DOMAINS_REGEX = env("HUBSPOT_IGNORE_DOMAINS_REGEX", "")
 HUBSPOT_IGNORE_ORGANISATION_DOMAINS = env.list(
-    "HUBSPOT_IGNORE_ORGANISATION_DOMAINS",
-    [
-        "126.com",
-        "163.com",
-        "aol.com",
-        "att.net",
-        "comcast.net",
-        "gmail.com",
-        "gmx.com",
-        "hotmail.com",
-        "icloud.com",
-        "live.com",
-        "mail.com",
-        "mail.ru",
-        "outlook.co.uk",
-        "outlook.com",
-        "protonmail.com",
-        "qq.com",
-        "sina.com",
-        "yahoo.com",
-        "yandex.com",
-        "zoho.com",
-    ],
+    "HUBSPOT_IGNORE_ORGANISATION_DOMAINS", []
 )
+
+# Number of minutes to wait for a user that has signed up to
+# join or create an organisation before creating a lead in
+# hubspot without a Flagsmith organisation.
+CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES = 30
 
 # List of plan ids that support seat upgrades
 AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
@@ -1102,6 +1092,12 @@ FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID = env.int(
 )
 FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID = env.int(
     "FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID",
+    default=None,
+)
+
+# The URL used to install the GitHub integration
+GITHUB_APP_URL = env.int(
+    "GITHUB_APP_URL",
     default=None,
 )
 

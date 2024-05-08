@@ -6,7 +6,7 @@ slug: /clients/javascript
 ---
 
 This library can be used with pure JavaScript, React (and all other popular frameworks/libraries) and React Native
-projects. The source code for the client is available on [Github](https://github.com/flagsmith/flagsmith-js-client).
+projects. The source code for the client is available on [GitHub](https://github.com/flagsmith/flagsmith-js-client).
 
 Example applications for a variety of JavaScript frameworks such as React, Vue and Angular, as well as React Native, can
 be found here:

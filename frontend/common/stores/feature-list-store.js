@@ -44,6 +44,7 @@ const controller = {
       createdFirstFeature = true
       flagsmith.setTrait('first_feature', 'true')
       API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
+      window.lintrk?.('track', { conversion_id: 16798354 });
     }
 
     data
@@ -94,7 +95,7 @@ const controller = {
               _.keyBy(environmentFeatures.results, 'feature'),
           }
           store.model.lastSaved = new Date().valueOf()
-          store.saved(true)
+          store.saved(flag.name)
         }),
       )
       .catch((e) => API.ajaxHandler(store, e))

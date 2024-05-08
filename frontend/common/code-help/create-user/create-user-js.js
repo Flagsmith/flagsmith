@@ -14,10 +14,11 @@ module.exports = (
 // Option 1: initialise with an identity and traits
 ${LIB_NAME}.init({
     environmentID: "${envId}",
-    identity:${userId || USER_ID},
-    traits:{${TRAIT_NAME}: 21}},
-    onChange: (oldFlags, params) => {...}
+    identity: "${userId || USER_ID}",
+    traits: { "${TRAIT_NAME}": 21 },
+    onChange: (oldFlags, params) => { /* ... */ },
 });
+
 // Option 2: identify after initialising
-${LIB_NAME}.identify("${userId || USER_ID}", {${TRAIT_NAME}: 21);
+${LIB_NAME}.identify("${userId || USER_ID}", { "${TRAIT_NAME}": 21 });
 `

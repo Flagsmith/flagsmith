@@ -326,6 +326,7 @@ export const createRemoteConfig = async (
   await click(byId('create-feature-btn'))
   await waitForElementVisible(byId(`feature-value-${index}`))
   await assertTextContent(byId(`feature-value-${index}`), expectedValue)
+  await closeModal()
 }
 
 export const createOrganisationAndProject = async (organisationName:string,projectName:string) =>{
@@ -389,6 +390,7 @@ export const createFeature = async (
   }
   await click(byId('create-feature-btn'))
   await waitForElementVisible(byId(`feature-item-${index}`))
+  await closeModal()
 }
 
 export const deleteFeature = async (index: number, name: string) => {
@@ -459,6 +461,18 @@ export const waitAndRefresh = async (waitFor = 3000) => {
   logUsingLastSection(`Waiting for ${waitFor}ms, then refreshing.`)
   await t.wait(waitFor)
   await t.eval(() => location.reload())
+}
+
+export const refreshUntilElementVisible = async (selector: string, maxRetries=20) => {
+  const element = Selector(selector);
+  const isElementVisible = async () => await element.exists && await element.visible;
+  let retries = 0;
+  while (retries < maxRetries && !(await isElementVisible())) {
+    await t.eval(() => location.reload()); // Reload the page
+    await t.wait(3000);
+    retries++;
+  }
+  return t.scrollIntoView(element)
 }
 
 export default {}

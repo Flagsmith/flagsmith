@@ -1,7 +1,7 @@
 import json
 import uuid
 from datetime import date, datetime, timedelta
-from unittest import TestCase, mock
+from unittest import mock
 
 import pytest
 import pytz
@@ -12,9 +12,10 @@ from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
-from pytest_lazyfixture import lazy_fixture
+from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 from rest_framework import status
-from rest_framework.test import APIClient, APITestCase
+from rest_framework.test import APIClient
 
 from audit.constants import (
     FEATURE_DELETED_MESSAGE,
@@ -31,17 +32,11 @@ from environments.permissions.constants import (
 )
 from environments.permissions.models import UserEnvironmentPermission
 from features.feature_types import MULTIVARIATE
-from features.models import (
-    Feature,
-    FeatureSegment,
-    FeatureState,
-    FeatureStateValue,
-)
+from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import BOOLEAN, INTEGER, STRING
 from features.versioning.models import EnvironmentFeatureVersion
 from organisations.models import Organisation, OrganisationRole
-from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
 from projects.permissions import CREATE_FEATURE, VIEW_PROJECT
 from projects.tags.models import Tag
@@ -51,7 +46,6 @@ from tests.types import (
     WithProjectPermissionsCallable,
 )
 from users.models import FFAdminUser, UserPermissionGroup
-from util.tests import Helper
 from webhooks.webhooks import WebhookEventType
 
 # patch this function as it's triggering extra threads and causing errors
@@ -62,572 +56,570 @@ two_hours_ago = now - timedelta(hours=2)
 one_hour_ago = now - timedelta(hours=1)
 
 
-@pytest.mark.django_db
-class ProjectFeatureTestCase(TestCase):
-    project_features_url = "/api/v1/projects/%s/features/"
-    project_feature_detail_url = "/api/v1/projects/%s/features/%d/"
-    post_template = '{ "name": "%s", "project": %d, "initial_value": "%s" }'
-
-    def setUp(self):
-        self.client = APIClient()
-        self.user = Helper.create_ffadminuser()
-        self.client.force_authenticate(user=self.user)
-
-        self.organisation = Organisation.objects.create(name="Test Org")
-
-        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
-
-        self.project = Project.objects.create(
-            name="Test project", organisation=self.organisation
-        )
-        self.project2 = Project.objects.create(
-            name="Test project2", organisation=self.organisation
-        )
-        self.environment_1 = Environment.objects.create(
-            name="Test environment 1", project=self.project
-        )
-        self.environment_2 = Environment.objects.create(
-            name="Test environment 2", project=self.project
-        )
-
-        self.tag_one = Tag.objects.create(
-            label="Test Tag",
-            color="#fffff",
-            description="Test Tag description",
-            project=self.project,
-        )
-        self.tag_two = Tag.objects.create(
-            label="Test Tag2",
-            color="#fffff",
-            description="Test Tag2 description",
-            project=self.project,
-        )
-        self.tag_other_project = Tag.objects.create(
-            label="Wrong Tag",
-            color="#fffff",
-            description="Test Tag description",
-            project=self.project2,
-        )
-
-    def test_owners_is_read_only_for_feature_create(self):
-        # Given - set up data
-        default_value = "This is a value"
-        data = {
-            "name": "test feature",
-            "initial_value": default_value,
-            "project": self.project.id,
-            "owners": [
-                {
-                    "id": 2,
-                    "email": "fake_user@mail.com",
-                    "first_name": "fake",
-                    "last_name": "user",
-                }
-            ],
-        }
-        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
-
-        # When
-        response = self.client.post(
-            url, data=json.dumps(data), content_type="application/json"
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_201_CREATED
-        assert len(response.json()["owners"]) == 1
-        assert response.json()["owners"][0]["id"] == self.user.id
-        assert response.json()["owners"][0]["email"] == self.user.email
-
-    @mock.patch("features.views.trigger_feature_state_change_webhooks")
-    def test_feature_state_webhook_triggered_when_feature_deleted(
-        self, mocked_trigger_fs_change_webhook
-    ):
-        # Given
-        feature = Feature.objects.create(name="test feature", project=self.project)
-        feature_states = list(feature.feature_states.all())
-        # When
-        self.client.delete(
-            self.project_feature_detail_url % (self.project.id, feature.id)
-        )
-        # Then
-        mock_calls = [
-            mock.call(fs, WebhookEventType.FLAG_DELETED) for fs in feature_states
-        ]
-        mocked_trigger_fs_change_webhook.has_calls(mock_calls)
-
-    def test_remove_owners_only_remove_specified_owners(self):
-        # Given
-        user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")
-        user_3 = FFAdminUser.objects.create_user(email="user3@mail.com")
-        feature = Feature.objects.create(name="Test Feature", project=self.project)
-        feature.owners.add(user_2, user_3)
-
-        url = reverse(
-            "api-v1:projects:project-features-remove-owners",
-            args=[self.project.id, feature.id],
-        )
-        data = {"user_ids": [user_2.id]}
-        # When
-        json_response = self.client.post(
-            url, data=json.dumps(data), content_type="application/json"
-        ).json()
-        assert len(json_response["owners"]) == 1
-        assert json_response["owners"][0] == {
-            "id": user_3.id,
-            "email": user_3.email,
-            "first_name": user_3.first_name,
-            "last_name": user_3.last_name,
-            "last_login": None,
-        }
-
-    def test_audit_log_created_when_feature_state_created_for_identity(self):
-        # Given
-        feature = Feature.objects.create(name="Test feature", project=self.project)
-        identity = Identity.objects.create(
-            identifier="test-identifier", environment=self.environment_1
-        )
-        url = reverse(
-            "api-v1:environments:identity-featurestates-list",
-            args=[self.environment_1.api_key, identity.id],
-        )
-        data = {"feature": feature.id, "enabled": True}
-
-        # When
-        self.client.post(url, data=json.dumps(data), content_type="application/json")
-
-        # Then
-        assert (
-            AuditLog.objects.filter(
-                related_object_type=RelatedObjectType.FEATURE_STATE.name
-            ).count()
-            == 1
-        )
-
-        # and
-        expected_log_message = IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
-            feature.name,
-            identity.identifier,
-        )
-        audit_log = AuditLog.objects.get(
-            related_object_type=RelatedObjectType.FEATURE_STATE.name
-        )
-        assert audit_log.log == expected_log_message
-
-    def test_audit_log_created_when_feature_state_updated_for_identity(self):
-        # Given
-        feature = Feature.objects.create(name="Test feature", project=self.project)
-        identity = Identity.objects.create(
-            identifier="test-identifier", environment=self.environment_1
-        )
-        feature_state = FeatureState.objects.create(
-            feature=feature,
-            environment=self.environment_1,
-            identity=identity,
-            enabled=True,
-        )
-        url = reverse(
-            "api-v1:environments:identity-featurestates-detail",
-            args=[self.environment_1.api_key, identity.id, feature_state.id],
-        )
-        data = {"feature": feature.id, "enabled": False}
-
-        # When
-        self.client.put(url, data=json.dumps(data), content_type="application/json")
-
-        # Then
-        assert (
-            AuditLog.objects.filter(
-                related_object_type=RelatedObjectType.FEATURE_STATE.name
-            ).count()
-            == 1
-        )
-
-        # and
-        expected_log_message = IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
-            feature.name,
-            identity.identifier,
-        )
-        audit_log = AuditLog.objects.get(
-            related_object_type=RelatedObjectType.FEATURE_STATE.name
-        )
-        assert audit_log.log == expected_log_message
-
-    def test_audit_log_created_when_feature_state_deleted_for_identity(self):
-        # Given
-        feature = Feature.objects.create(name="Test feature", project=self.project)
-        identity = Identity.objects.create(
-            identifier="test-identifier", environment=self.environment_1
-        )
-        feature_state = FeatureState.objects.create(
-            feature=feature,
-            environment=self.environment_1,
-            identity=identity,
-            enabled=True,
-        )
-        url = reverse(
-            "api-v1:environments:identity-featurestates-detail",
-            args=[self.environment_1.api_key, identity.id, feature_state.id],
-        )
-
-        # When
-        self.client.delete(url)
-
-        # Then
-        assert (
-            AuditLog.objects.filter(
-                log=IDENTITY_FEATURE_STATE_DELETED_MESSAGE
-                % (
-                    feature.name,
-                    identity.identifier,
-                )
-            ).count()
-            == 1
-        )
-
-    def test_when_add_tags_from_different_project_on_feature_create_then_failed(self):
-        # Given - set up data
-        feature_name = "test feature"
-        data = {
-            "name": feature_name,
-            "project": self.project.id,
-            "initial_value": "test",
-            "tags": [self.tag_other_project.id],
-        }
-
-        # When
-        response = self.client.post(
-            self.project_features_url % self.project.id,
-            data=json.dumps(data),
-            content_type="application/json",
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-        # check no feature was created successfully
-        assert (
-            Feature.objects.filter(name=feature_name, project=self.project.id).count()
-            == 0
-        )
-
-    def test_when_add_tags_on_feature_update_then_success(self):
-        # Given - set up data
-        feature = Feature.objects.create(project=self.project, name="test feature")
-        data = {
-            "name": feature.name,
-            "project": self.project.id,
-            "tags": [self.tag_one.id],
-        }
-
-        # When
-        response = self.client.put(
-            self.project_feature_detail_url % (self.project.id, feature.id),
-            data=json.dumps(data),
-            content_type="application/json",
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-
-        # check feature was created successfully
-        check_feature = Feature.objects.filter(
-            name=feature.name, project=self.project.id
-        ).first()
-
-        # check tags added
-        assert check_feature.tags.count() == 1
-
-    def test_when_add_tags_from_different_project_on_feature_update_then_failed(self):
-        # Given - set up data
-        feature = Feature.objects.create(project=self.project, name="test feature")
-        data = {
-            "name": feature.name,
-            "project": self.project.id,
-            "tags": [self.tag_other_project.id],
-        }
-
-        # When
-        response = self.client.put(
-            self.project_feature_detail_url % (self.project.id, feature.id),
-            data=json.dumps(data),
-            content_type="application/json",
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-        # check feature was created successfully
-        check_feature = Feature.objects.filter(
-            name=feature.name, project=self.project.id
-        ).first()
-
-        # check tags not added
-        assert check_feature.tags.count() == 0
-
-    def test_list_features_is_archived_filter(self):
-        # Firstly, let's setup the initial data
-        feature = Feature.objects.create(name="test_feature", project=self.project)
-        archived_feature = Feature.objects.create(
-            name="archived_feature", project=self.project, is_archived=True
-        )
-        base_url = reverse(
-            "api-v1:projects:project-features-list", args=[self.project.id]
-        )
-        # Next, let's test true filter
-        url = f"{base_url}?is_archived=true"
-        response = self.client.get(url)
-        assert len(response.json()["results"]) == 1
-        assert response.json()["results"][0]["id"] == archived_feature.id
-
-        # Finally, let's test false filter
-        url = f"{base_url}?is_archived=false"
-        response = self.client.get(url)
-        assert len(response.json()["results"]) == 1
-        assert response.json()["results"][0]["id"] == feature.id
-
-    def test_put_feature_does_not_update_feature_states(self):
-        # Given
-        feature = Feature.objects.create(
-            name="test_feature", project=self.project, default_enabled=False
-        )
-        url = reverse(
-            "api-v1:projects:project-features-detail",
-            args=[self.project.id, feature.id],
-        )
-        data = model_to_dict(feature)
-        data["default_enabled"] = True
-
-        # When
-        response = self.client.put(
-            url, data=json.dumps(data), content_type="application/json"
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-
-        assert all(fs.enabled is False for fs in feature.feature_states.all())
-
-    @mock.patch("features.views.get_multiple_event_list_for_feature")
-    def test_get_influx_data(self, mock_get_event_list):
-        # Given
-        feature = Feature.objects.create(name="test_feature", project=self.project)
-        base_url = reverse(
-            "api-v1:projects:project-features-get-influx-data",
-            args=[self.project.id, feature.id],
-        )
-        url = f"{base_url}?environment_id={self.environment_1.id}"
-
-        mock_get_event_list.return_value = [
+def test_project_owners_is_read_only_for_feature_create(
+    project: Project,
+    admin_client_original: APIClient,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    default_value = "This is a value"
+    data = {
+        "name": "test feature",
+        "initial_value": default_value,
+        "project": project.id,
+        "owners": [
             {
-                feature.name: 1,
-                "datetime": datetime(2021, 2, 26, 12, 0, 0, tzinfo=pytz.UTC),
+                "id": 2,
+                "email": "fake_user@mail.com",
+                "first_name": "fake",
+                "last_name": "user",
             }
-        ]
+        ],
+    }
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
 
-        # When
-        response = self.client.get(url)
+    # When
+    response = admin_client_original.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
-        # Then
-        assert response.status_code == status.HTTP_200_OK
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert len(response.json()["owners"]) == 1
+    assert response.json()["owners"][0]["id"] == admin_user.id
+    assert response.json()["owners"][0]["email"] == admin_user.email
 
-        mock_get_event_list.assert_called_once_with(
-            feature_name=feature.name,
-            environment_id=str(self.environment_1.id),  # provided as a GET param
-            period="24h",  # this is the default but can be provided as a GET param
-            aggregate_every="24h",  # this is the default but can be provided as a GET param
-        )
 
-    def test_regular_user_cannot_create_mv_options_when_creating_feature(self):
-        # Given
-        user = FFAdminUser.objects.create(email="regularuser@project.com")
-        user.add_organisation(self.organisation)
-        user_project_permission = UserProjectPermission.objects.create(
-            user=user, project=self.project
-        )
-        permissions = PermissionModel.objects.filter(
-            key__in=[VIEW_PROJECT, CREATE_FEATURE]
-        )
-        user_project_permission.permissions.add(*permissions)
-        client = APIClient()
-        client.force_authenticate(user)
+@mock.patch("features.views.trigger_feature_state_change_webhooks")
+def test_feature_state_webhook_triggered_when_feature_deleted(
+    mocked_trigger_fs_change_webhook: mock.MagicMock,
+    project: Project,
+    feature: Feature,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    feature_states = list(feature.feature_states.all())
+    url = reverse(
+        "api-v1:projects:project-features-detail", args=[project.id, feature.id]
+    )
 
-        data = {
-            "name": "test_feature",
-            "default_enabled": True,
-            "multivariate_options": [{"type": "unicode", "string_value": "test-value"}],
+    # When
+    admin_client_new.delete(url)
+
+    # Then
+    mock_calls = [mock.call(fs, WebhookEventType.FLAG_DELETED) for fs in feature_states]
+    mocked_trigger_fs_change_webhook.assert_has_calls(mock_calls)
+
+
+def test_remove_owners_only_remove_specified_owners(
+    feature: Feature,
+    project: Project,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")
+    user_3 = FFAdminUser.objects.create_user(email="user3@mail.com")
+    feature.owners.add(user_2, user_3)
+
+    url = reverse(
+        "api-v1:projects:project-features-remove-owners",
+        args=[project.id, feature.id],
+    )
+    data = {"user_ids": [user_2.id]}
+
+    # When
+    json_response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    ).json()
+    assert len(json_response["owners"]) == 1
+    assert json_response["owners"][0] == {
+        "id": user_3.id,
+        "email": user_3.email,
+        "first_name": user_3.first_name,
+        "last_name": user_3.last_name,
+        "last_login": None,
+    }
+
+
+def test_audit_log_created_when_feature_state_created_for_identity(
+    feature: Feature,
+    project: Project,
+    identity: Identity,
+    environment: Environment,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:identity-featurestates-list",
+        args=[environment.api_key, identity.id],
+    )
+    data = {"feature": feature.id, "enabled": True}
+
+    # When
+    admin_client_new.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.FEATURE_STATE.name
+        ).count()
+        == 1
+    )
+
+    expected_log_message = IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
+        feature.name,
+        identity.identifier,
+    )
+    audit_log = AuditLog.objects.get(
+        related_object_type=RelatedObjectType.FEATURE_STATE.name
+    )
+    assert audit_log.log == expected_log_message
+
+
+def test_audit_log_created_when_feature_state_updated_for_identity(
+    feature: Feature,
+    project: Project,
+    environment: Environment,
+    identity: Identity,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        identity=identity,
+        enabled=True,
+    )
+    url = reverse(
+        "api-v1:environments:identity-featurestates-detail",
+        args=[environment.api_key, identity.id, feature_state.id],
+    )
+    data = {"feature": feature.id, "enabled": False}
+
+    # When
+    admin_client_new.put(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.FEATURE_STATE.name
+        ).count()
+        == 1
+    )
+
+    expected_log_message = IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
+        feature.name,
+        identity.identifier,
+    )
+    audit_log = AuditLog.objects.get(
+        related_object_type=RelatedObjectType.FEATURE_STATE.name
+    )
+    assert audit_log.log == expected_log_message
+
+
+def test_audit_log_created_when_feature_state_deleted_for_identity(
+    feature: Feature,
+    project: Project,
+    environment: Environment,
+    identity: Identity,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        identity=identity,
+        enabled=True,
+    )
+    url = reverse(
+        "api-v1:environments:identity-featurestates-detail",
+        args=[environment.api_key, identity.id, feature_state.id],
+    )
+
+    # When
+    admin_client_new.delete(url)
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            log=IDENTITY_FEATURE_STATE_DELETED_MESSAGE
+            % (
+                feature.name,
+                identity.identifier,
+            )
+        ).count()
+        == 1
+    )
+
+
+def test_when_add_tags_from_different_project_on_feature_create_then_failed(
+    project: Project,
+    admin_client_new: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    project2 = Project.objects.create(name="Test project2", organisation=organisation)
+    tag_other_project = Tag.objects.create(
+        label="Wrong Tag",
+        color="#fffff",
+        description="Test Tag description",
+        project=project2,
+    )
+    feature_name = "test feature"
+    data = {
+        "name": feature_name,
+        "project": project.id,
+        "initial_value": "test",
+        "tags": [tag_other_project.id],
+    }
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # When
+    response = admin_client_new.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    # Check that no features were created successfully.
+    assert Feature.objects.filter(name=feature_name, project=project.id).count() == 0
+
+
+def test_when_add_tags_on_feature_update_then_success(
+    project: Project,
+    feature: Feature,
+    tag_one: Tag,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    data = {
+        "name": feature.name,
+        "project": project.id,
+        "tags": [tag_one.id],
+    }
+
+    url = reverse(
+        "api-v1:projects:project-features-detail", args=[project.id, feature.id]
+    )
+
+    # When
+    response = admin_client_new.put(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    # check feature was created successfully
+    check_feature = Feature.objects.filter(
+        name=feature.name, project=project.id
+    ).first()
+
+    # check tags added
+    assert check_feature.tags.count() == 1
+
+
+def test_when_add_tags_from_different_project_on_feature_update_then_failed(
+    feature: Feature,
+    project: Project,
+    admin_client_new: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    project2 = Project.objects.create(name="Test project2", organisation=organisation)
+    tag_other_project = Tag.objects.create(
+        label="Wrong Tag",
+        color="#fffff",
+        description="Test Tag description",
+        project=project2,
+    )
+
+    data = {
+        "name": feature.name,
+        "project": project.id,
+        "tags": [tag_other_project.id],
+    }
+    url = reverse(
+        "api-v1:projects:project-features-detail", args=[project.id, feature.id]
+    )
+
+    # When
+    response = admin_client_new.put(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    # check feature was created successfully
+    check_feature = Feature.objects.filter(
+        name=feature.name, project=project.id
+    ).first()
+
+    # check tags not added
+    assert check_feature.tags.count() == 0
+
+
+def test_list_features_is_archived_filter(
+    feature: Feature,
+    project: Project,
+    admin_client_new: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    archived_feature = Feature.objects.create(
+        name="archived_feature", project=project, is_archived=True
+    )
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # First test the filter set to true.
+    url = f"{base_url}?is_archived=true"
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert len(response.json()["results"]) == 1
+    assert response.json()["results"][0]["id"] == archived_feature.id
+
+    # Finally test the filter set to false.
+    url = f"{base_url}?is_archived=false"
+    response = admin_client_new.get(url)
+    assert len(response.json()["results"]) == 1
+    assert response.json()["results"][0]["id"] == feature.id
+
+
+def test_put_feature_does_not_update_feature_states(
+    feature: Feature,
+    project: Project,
+    admin_client_new: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    feature.default_enabled = False
+    feature.save()
+
+    url = reverse(
+        "api-v1:projects:project-features-detail",
+        args=[project.id, feature.id],
+    )
+    data = model_to_dict(feature)
+    data["default_enabled"] = True
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert all(fs.enabled is False for fs in feature.feature_states.all())
+
+
+@mock.patch("features.views.get_multiple_event_list_for_feature")
+def test_get_project_features_influx_data(
+    mock_get_event_list: mock.MagicMock,
+    feature: Feature,
+    project: Project,
+    environment: Environment,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    base_url = reverse(
+        "api-v1:projects:project-features-get-influx-data",
+        args=[project.id, feature.id],
+    )
+    url = f"{base_url}?environment_id={environment.id}"
+
+    mock_get_event_list.return_value = [
+        {
+            feature.name: 1,
+            "datetime": datetime(2021, 2, 26, 12, 0, 0, tzinfo=pytz.UTC),
         }
-        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
+    ]
 
-        # When
-        response = client.post(
-            url, data=json.dumps(data), content_type="application/json"
-        )
+    # When
+    response = admin_client_new.get(url)
 
-        # Then
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    def test_regular_user_cannot_create_mv_options_when_updating_feature(self):
-        # Given
-        user = FFAdminUser.objects.create(email="regularuser@project.com")
-        user.add_organisation(self.organisation)
-        user_project_permission = UserProjectPermission.objects.create(
-            user=user, project=self.project
-        )
-        permissions = PermissionModel.objects.filter(
-            key__in=[VIEW_PROJECT, CREATE_FEATURE]
-        )
-        user_project_permission.permissions.add(*permissions)
-        client = APIClient()
-        client.force_authenticate(user)
-
-        feature = Feature.objects.create(
-            project=self.project,
-            name="a_feature",
-            default_enabled=True,
-        )
-
-        data = {
-            "name": feature.name,
-            "default_enabled": feature.default_enabled,
-            "multivariate_options": [{"type": "unicode", "string_value": "test-value"}],
-        }
-        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
-
-        # When
-        response = client.post(
-            url, data=json.dumps(data), content_type="application/json"
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    def test_regular_user_can_update_feature_description(self):
-        # Given
-        user = FFAdminUser.objects.create(email="regularuser@project.com")
-        user.add_organisation(self.organisation)
-        user_project_permission = UserProjectPermission.objects.create(
-            user=user, project=self.project
-        )
-        permissions = PermissionModel.objects.filter(
-            key__in=[VIEW_PROJECT, CREATE_FEATURE]
-        )
-        user_project_permission.permissions.add(*permissions)
-        client = APIClient()
-        client.force_authenticate(user)
-
-        feature = Feature.objects.create(
-            project=self.project,
-            name="a_feature",
-            default_enabled=True,
-        )
-
-        data = {
-            "name": feature.name,
-            "default_enabled": feature.default_enabled,
-            "description": "a description",
-        }
-
-        url = reverse(
-            "api-v1:projects:project-features-detail",
-            args=[self.project.id, feature.id],
-        )
-
-        # When
-        response = client.put(
-            url, data=json.dumps(data), content_type="application/json"
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-
-        feature.refresh_from_db()
-        assert feature.description == data["description"]
-
-    @mock.patch("environments.models.environment_wrapper")
-    def test_create_feature_only_triggers_write_to_dynamodb_once_per_environment(
-        self, mock_dynamo_environment_wrapper
-    ):
-        # Given
-        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
-        data = {"name": "Test feature flag", "type": "FLAG", "project": self.project.id}
-
-        self.project.enable_dynamo_db = True
-        self.project.save()
-
-        mock_dynamo_environment_wrapper.is_enabled = True
-        mock_dynamo_environment_wrapper.reset_mock()
-
-        # When
-        self.client.post(url, data=data)
-
-        # Then
-        mock_dynamo_environment_wrapper.write_environments.assert_called_once()
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mock_get_event_list.assert_called_once_with(
+        feature_name=feature.name,
+        environment_id=str(environment.id),  # provided as a GET param
+        period="24h",  # this is the default but can be provided as a GET param
+        aggregate_every="24h",  # this is the default but can be provided as a GET param
+    )
 
 
-@pytest.mark.django_db
-class SDKFeatureStatesTestCase(APITestCase):
-    def setUp(self) -> None:
-        self.environment_fs_value = "environment"
-        self.identity_fs_value = "identity"
-        self.segment_fs_value = "segment"
+def test_regular_user_cannot_create_mv_options_when_creating_feature(
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+    project: Project,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT, CREATE_FEATURE])
+    data = {
+        "name": "test_feature",
+        "default_enabled": True,
+        "multivariate_options": [{"type": "unicode", "string_value": "test-value"}],
+    }
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
 
-        self.organisation = Organisation.objects.create(name="Test organisation")
-        self.project = Project.objects.create(
-            name="Test project", organisation=self.organisation
-        )
-        self.environment = Environment.objects.create(
-            name="Test environment", project=self.project
-        )
-        self.feature = Feature.objects.create(
-            name="Test feature",
-            project=self.project,
-            initial_value=self.environment_fs_value,
-        )
-        segment = Segment.objects.create(name="Test segment", project=self.project)
-        feature_segment = FeatureSegment.objects.create(
-            segment=segment,
-            feature=self.feature,
-            environment=self.environment,
-        )
-        segment_feature_state = FeatureState.objects.create(
-            feature=self.feature,
-            feature_segment=feature_segment,
-            environment=self.environment,
-        )
-        FeatureStateValue.objects.filter(feature_state=segment_feature_state).update(
-            string_value=self.segment_fs_value
-        )
-        identity = Identity.objects.create(
-            identifier="test", environment=self.environment
-        )
-        identity_feature_state = FeatureState.objects.create(
-            identity=identity, environment=self.environment, feature=self.feature
-        )
-        FeatureStateValue.objects.filter(feature_state=identity_feature_state).update(
-            string_value=self.identity_fs_value
-        )
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
-        self.url = reverse("api-v1:flags")
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    detail = "User must be project admin to modify / create MV options."
+    assert response.json()["detail"] == detail
 
-        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
 
-    def test_get_flags(self):
-        # Given - setup data which includes a single feature overridden by a segment and an identity
+def test_regular_user_cannot_create_mv_options_when_updating_feature(
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+    project: Project,
+    feature: Feature,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT, CREATE_FEATURE])
 
-        # When - we get flags
-        response = self.client.get(self.url)
+    feature.default_enabled = True
+    feature.save()
 
-        # Then - we only get a single flag back and that is the environment default
-        assert response.status_code == status.HTTP_200_OK
-        response_json = response.json()
-        assert len(response_json) == 1
-        assert response_json[0]["feature"]["id"] == self.feature.id
-        assert response_json[0]["feature_state_value"] == self.environment_fs_value
-        # refresh the last_updated_at
-        self.environment.refresh_from_db()
-        assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
-            self.environment.updated_at.timestamp()
-        )
+    data = {
+        "name": feature.name,
+        "default_enabled": feature.default_enabled,
+        "multivariate_options": [{"type": "unicode", "string_value": "test-value"}],
+    }
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    detail = "User must be project admin to modify / create MV options."
+    assert response.json()["detail"] == detail
+
+
+def test_regular_user_can_update_feature_description(
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+    project: Project,
+    feature: Feature,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT, CREATE_FEATURE])
+    feature.default_enabled = True
+    feature.save()
+    new_description = "a new description"
+    data = {
+        "name": feature.name,
+        "default_enabled": feature.default_enabled,
+        "description": new_description,
+    }
+
+    url = reverse(
+        "api-v1:projects:project-features-detail",
+        args=[project.id, feature.id],
+    )
+
+    # When
+    response = staff_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    feature.refresh_from_db()
+    assert feature.description == new_description
+
+
+@mock.patch("environments.models.environment_wrapper")
+def test_create_feature_only_triggers_write_to_dynamodb_once_per_environment(
+    mock_dynamo_environment_wrapper: mock.MagicMock,
+    project: Project,
+    admin_client_new: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    project.enable_dynamo_db = True
+    project.save()
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": "Test feature flag", "type": "FLAG", "project": project.id}
+
+    mock_dynamo_environment_wrapper.is_enabled = True
+    mock_dynamo_environment_wrapper.reset_mock()
+
+    # When
+    admin_client_new.post(url, data=data)
+
+    # Then
+    mock_dynamo_environment_wrapper.write_environments.assert_called_once()
+
+
+def test_get_flags_for_environment_response(
+    api_client: APIClient,
+    environment: Environment,
+    project: Project,
+    identity: Identity,
+) -> None:
+    # Given
+    url = reverse("api-v1:flags")
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    environment_fs_value = "environment"
+    feature = Feature.objects.create(
+        name="Test feature",
+        project=project,
+        initial_value=environment_fs_value,
+    )
+
+    segment = Segment.objects.create(name="Test segment", project=project)
+    feature_segment = FeatureSegment.objects.create(
+        segment=segment,
+        feature=feature,
+        environment=environment,
+    )
+
+    FeatureState.objects.create(
+        feature=feature,
+        feature_segment=feature_segment,
+        environment=environment,
+    )
+    FeatureState.objects.create(
+        identity=identity, environment=environment, feature=feature
+    )
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    # We only get a single flag back and that is the environment default
+    response_json = response.json()
+    assert len(response_json) == 1
+    assert response_json[0]["feature"]["id"] == feature.id
+    assert response_json[0]["feature_state_value"] == environment_fs_value
+
+    # Check that headers set the refreshed last_updated_at.
+    environment.refresh_from_db()
+    assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
+        environment.updated_at.timestamp()
+    )
 
 
 @pytest.mark.parametrize(
@@ -642,13 +634,13 @@ class SDKFeatureStatesTestCase(APITestCase):
     ),
 )
 def test_get_flags_hide_disabled_flags(
-    environment_value,
-    project_value,
-    disabled_flag_returned,
-    project,
-    environment,
-    api_client,
-):
+    environment_value: bool | None,
+    project_value: bool,
+    disabled_flag_returned: bool,
+    project: Project,
+    environment: Environment,
+    api_client: APIClient,
+) -> None:
     # Given
     project.hide_disabled_flags = project_value
     project.save()
@@ -670,7 +662,11 @@ def test_get_flags_hide_disabled_flags(
     assert len(response.json()) == (2 if disabled_flag_returned else 1)
 
 
-def test_get_flags_hide_sensitive_data(api_client, environment, feature):
+def test_get_flags_hide_sensitive_data(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+) -> None:
     # Given
     environment.hide_sensitive_data = True
     environment.save()
@@ -739,18 +735,19 @@ def test_get_flags__server_key_only_feature__server_key_auth__return_expected(
     assert response.json()
 
 
-@pytest.mark.parametrize(
-    "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
-)
-def test_get_feature_states_by_uuid(client, environment, feature, feature_state):
+def test_get_feature_states_by_uuid(
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+) -> None:
     # Given
     url = reverse(
         "api-v1:features:get-feature-state-by-uuid", args=[feature_state.uuid]
     )
 
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -759,28 +756,31 @@ def test_get_feature_states_by_uuid(client, environment, feature, feature_state)
     assert response_json["uuid"] == str(feature_state.uuid)
 
 
-@pytest.mark.parametrize(
-    "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
-)
-def test_deleted_features_are_not_listed(client, project, environment, feature):
+def test_deleted_features_are_not_listed(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+) -> None:
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
     feature.delete()
 
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["count"] == 0
 
 
-@pytest.mark.parametrize(
-    "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
-)
-def test_get_feature_evaluation_data(project, feature, environment, mocker, client):
+def test_get_feature_evaluation_data(
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    mocker: MockerFixture,
+    admin_client_new: APIClient,
+) -> None:
     # Given
     base_url = reverse(
         "api-v1:projects:project-features-get-evaluation-data",
@@ -795,7 +795,7 @@ def test_get_feature_evaluation_data(project, feature, environment, mocker, clie
         FeatureEvaluationData(count=10, day=date.today() - timedelta(days=1)),
     ]
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -878,7 +878,12 @@ def test_create_segment_override_staff(
     assert response.data["feature_segment"]["segment"] == segment.id
 
 
-def test_create_segment_override(admin_client, feature, segment, environment):
+def test_create_segment_override(
+    admin_client_new: APIClient,
+    feature: Feature,
+    segment: Segment,
+    environment: Environment,
+) -> None:
     # Given
     url = reverse(
         "api-v1:environments:create-segment-override",
@@ -894,7 +899,7 @@ def test_create_segment_override(admin_client, feature, segment, environment):
     }
 
     # When
-    response = admin_client.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -910,7 +915,10 @@ def test_create_segment_override(admin_client, feature, segment, environment):
 
 
 def test_get_flags_is_not_throttled_by_user_throttle(
-    api_client, environment, feature, settings
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    settings: SettingsWrapper,
 ):
     # Given
     settings.REST_FRAMEWORK = {"DEFAULT_THROTTLE_RATES": {"user": "1/minute"}}
@@ -930,7 +938,7 @@ def test_list_feature_states_from_simple_view_set(
     environment: Environment,
     feature: Feature,
     admin_user: FFAdminUser,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     django_assert_num_queries: DjangoAssertNumQueries,
 ) -> None:
     # Given
@@ -974,7 +982,7 @@ def test_list_feature_states_from_simple_view_set(
 
     # When
     with django_assert_num_queries(9):
-        response = admin_client.get(url)
+        response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -984,8 +992,12 @@ def test_list_feature_states_from_simple_view_set(
 
 
 def test_list_feature_states_nested_environment_view_set(
-    environment, project, feature, admin_client, django_assert_num_queries
-):
+    environment: Environment,
+    project: Project,
+    feature: Feature,
+    admin_client_new: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:
     # Given
     base_url = reverse(
         "api-v1:environments:environment-featurestates-list",
@@ -1017,7 +1029,7 @@ def test_list_feature_states_nested_environment_view_set(
 
     # When
     with django_assert_num_queries(8):
-        response = admin_client.get(base_url)
+        response = admin_client_new.get(base_url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -1026,13 +1038,12 @@ def test_list_feature_states_nested_environment_view_set(
     assert response_json["count"] == 3
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_environment_feature_states_filter_using_feature_name(
-    environment, project, feature, client
-):
+    environment: Environment,
+    project: Project,
+    feature: Feature,
+    admin_client_new: APIClient,
+) -> None:
     # Given
     Feature.objects.create(name="another_feature", project=project)
     base_url = reverse(
@@ -1042,7 +1053,7 @@ def test_environment_feature_states_filter_using_feature_name(
     url = f"{base_url}?feature_name={feature.name}"
 
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -1050,13 +1061,11 @@ def test_environment_feature_states_filter_using_feature_name(
     assert response.json()["results"][0]["feature"] == feature.id
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_environment_feature_states_filter_to_show_identity_override_only(
-    environment, feature, client
-):
+    environment: Environment,
+    feature: Feature,
+    admin_client_new: APIClient,
+) -> None:
     # Given
     FeatureState.objects.get(environment=environment, feature=feature)
 
@@ -1073,25 +1082,19 @@ def test_environment_feature_states_filter_to_show_identity_override_only(
     url = base_url + "?anyIdentity&feature=" + str(feature.id)
 
     # When
-    res = client.get(url)
+    res = admin_client_new.get(url)
 
     # Then
     assert res.status_code == status.HTTP_200_OK
-
-    # and
     assert len(res.json().get("results")) == 1
-
-    # and
     assert res.json()["results"][0]["identity"]["identifier"] == identifier
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_environment_feature_states_only_returns_latest_versions(
-    environment, feature, client
-):
+    environment: Environment,
+    feature: Feature,
+    admin_client_new: APIClient,
+) -> None:
     # Given
     feature_state = FeatureState.objects.get(environment=environment, feature=feature)
     feature_state_v2 = feature_state.clone(
@@ -1104,7 +1107,7 @@ def test_environment_feature_states_only_returns_latest_versions(
     )
 
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -1114,13 +1117,11 @@ def test_environment_feature_states_only_returns_latest_versions(
     assert response_json["results"][0]["id"] == feature_state_v2.id
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_environment_feature_states_does_not_return_null_versions(
-    environment, feature, client
-):
+    environment: Environment,
+    feature: Feature,
+    admin_client_new: APIClient,
+) -> None:
     # Given
     feature_state = FeatureState.objects.get(environment=environment, feature=feature)
 
@@ -1132,7 +1133,7 @@ def test_environment_feature_states_does_not_return_null_versions(
     )
 
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -1144,19 +1145,17 @@ def test_environment_feature_states_does_not_return_null_versions(
     # Feature tests
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_create_feature_default_is_archived_is_false(client, project):
-    # Given - set up data
+def test_create_feature_default_is_archived_is_false(
+    admin_client_new: APIClient, project: Project
+) -> None:
+    # Given
     data = {
         "name": "test feature",
     }
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
 
     # When
-    response = client.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     ).json()
 
@@ -1164,11 +1163,11 @@ def test_create_feature_default_is_archived_is_false(client, project):
     assert response["is_archived"] is False
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_update_feature_is_archived(client, project, feature):
+def test_update_feature_is_archived(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+) -> None:
     # Given
     feature = Feature.objects.create(name="test feature", project=project)
     url = reverse(
@@ -1178,19 +1177,17 @@ def test_update_feature_is_archived(client, project, feature):
     data = {"name": "test feature", "is_archived": True}
 
     # When
-    response = client.put(url, data=data).json()
+    response = admin_client_new.put(url, data=data).json()
 
     # Then
     assert response["is_archived"] is True
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_should_create_feature_states_when_feature_created(
-    client, project, environment
-):
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+) -> None:
     # Given - set up data
     environment_2 = Environment.objects.create(
         name="Test environment 2", project=project
@@ -1204,7 +1201,9 @@ def test_should_create_feature_states_when_feature_created(
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
 
     # When
-    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
@@ -1221,14 +1220,13 @@ def test_should_create_feature_states_when_feature_created(
 
 
 @pytest.mark.parametrize("default_value", [(12), (True), ("test")])
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_should_create_feature_states_with_value_when_feature_created(
-    client, project, environment, default_value
-):
-    # Given - set up data
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    default_value: int | bool | str,
+) -> None:
+    # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
     data = {
         "name": "test feature",
@@ -1237,7 +1235,9 @@ def test_should_create_feature_states_with_value_when_feature_created(
     }
 
     # When
-    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
@@ -1252,13 +1252,12 @@ def test_should_create_feature_states_with_value_when_feature_created(
     assert feature_state.get_feature_state_value() == default_value
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_should_delete_feature_states_when_feature_deleted(
-    client, project, feature, environment
-):
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+) -> None:
     # Given
     url = reverse(
         "api-v1:projects:project-features-detail",
@@ -1266,7 +1265,7 @@ def test_should_delete_feature_states_when_feature_deleted(
     )
 
     # When
-    response = client.delete(url)
+    response = admin_client_new.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -1284,11 +1283,9 @@ def test_should_delete_feature_states_when_feature_deleted(
     )
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_create_feature_returns_201_if_name_matches_regex(client, project):
+def test_create_feature_returns_201_if_name_matches_regex(
+    admin_client_new: APIClient, project: Project
+) -> None:
     # Given
     project.feature_name_regex = "^[a-z_]{18}$"
     project.save()
@@ -1300,15 +1297,13 @@ def test_create_feature_returns_201_if_name_matches_regex(client, project):
     data = {"name": feature_name, "type": "FLAG", "project": project.id}
 
     # When
-    response = client.post(url, data=data)
+    response = admin_client_new.post(url, data=data)
     assert response.status_code == status.HTTP_201_CREATED
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_create_feature_returns_400_if_name_does_not_matches_regex(client, project):
+def test_create_feature_returns_400_if_name_does_not_matches_regex(
+    admin_client_new: APIClient, project: Project
+) -> None:
     # Given
     project.feature_name_regex = "^[a-z]{18}$"
     project.save()
@@ -1320,7 +1315,7 @@ def test_create_feature_returns_400_if_name_does_not_matches_regex(client, proje
     data = {"name": feature_name, "type": "FLAG", "project": project.id}
 
     # When
-    response = client.post(url, data=data)
+    response = admin_client_new.post(url, data=data)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
         response.json()["name"][0]
@@ -1328,21 +1323,20 @@ def test_create_feature_returns_400_if_name_does_not_matches_regex(client, proje
     )
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_audit_log_created_when_feature_created(client, project, environment):
+def test_audit_log_created_when_feature_created(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+) -> None:
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
     data = {"name": "Test feature flag", "type": "FLAG", "project": project.id}
 
     # When
-    response = client.post(url, data=data)
+    response = admin_client_new.post(url, data=data)
     feature_id = response.json()["id"]
 
     # Then
-
     # Audit log exists for the feature
     assert (
         AuditLog.objects.filter(
@@ -1359,11 +1353,9 @@ def test_audit_log_created_when_feature_created(client, project, environment):
     ).count() == len(project.environments.all())
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_audit_log_created_when_feature_updated(client, project, feature):
+def test_audit_log_created_when_feature_updated(
+    admin_client_new: APIClient, project: Project, feature: Feature
+) -> None:
     # Given
     url = reverse(
         "api-v1:projects:project-features-detail",
@@ -1376,7 +1368,7 @@ def test_audit_log_created_when_feature_updated(client, project, feature):
     }
 
     # When
-    client.put(url, data=data)
+    admin_client_new.put(url, data=data)
 
     # Then
     assert (
@@ -1387,11 +1379,11 @@ def test_audit_log_created_when_feature_updated(client, project, feature):
     )
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_audit_logs_created_when_feature_deleted(client, project, feature):
+def test_audit_logs_created_when_feature_deleted(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+) -> None:
     # Given
     url = reverse(
         "api-v1:projects:project-features-detail",
@@ -1400,7 +1392,7 @@ def test_audit_logs_created_when_feature_deleted(client, project, feature):
     feature_states_ids = list(feature.feature_states.values_list("id", flat=True))
 
     # When
-    client.delete(url)
+    admin_client_new.delete(url)
 
     # Then
     # Audit log exists for the feature
@@ -1417,11 +1409,12 @@ def test_audit_logs_created_when_feature_deleted(client, project, feature):
     ).count() == len(feature_states_ids)
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_should_create_tags_when_feature_created(client, project, tag_one, tag_two):
+def test_should_create_tags_when_feature_created(
+    admin_client_new: APIClient,
+    project: Project,
+    tag_one: Tag,
+    tag_two: Tag,
+) -> None:
     # Given - set up data
     default_value = "Test"
     feature_name = "Test feature"
@@ -1435,7 +1428,7 @@ def test_should_create_tags_when_feature_created(client, project, tag_one, tag_t
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
 
     # When
-    response = client.post(
+    response = admin_client_new.post(
         url,
         data=json.dumps(data),
         content_type="application/json",
@@ -1452,11 +1445,9 @@ def test_should_create_tags_when_feature_created(client, project, tag_one, tag_t
     assert list(feature.tags.all()) == [tag_one, tag_two]
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_add_owners_fails_if_user_not_found(client, project):
+def test_add_owners_fails_if_user_not_found(
+    admin_client_new: APIClient, project: Project
+) -> None:
     # Given
     feature = Feature.objects.create(name="Test Feature", project=project)
 
@@ -1470,18 +1461,21 @@ def test_add_owners_fails_if_user_not_found(client, project):
     data = {"user_ids": [user_1.id, user_2.id]}
 
     # When
-    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.data == ["Some users not found"]
     assert feature.owners.filter(id__in=[user_1.id, user_2.id]).count() == 0
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_add_owners_adds_owner(staff_user, admin_user, client, project):
+def test_add_owners_adds_owner(
+    staff_user: FFAdminUser,
+    admin_user: FFAdminUser,
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
     # Given
     feature = Feature.objects.create(name="Test Feature", project=project)
     UserProjectPermission.objects.create(
@@ -1495,7 +1489,9 @@ def test_add_owners_adds_owner(staff_user, admin_user, client, project):
     data = {"user_ids": [staff_user.id, admin_user.id]}
 
     # When
-    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     json_response = response.json()
     # Then
@@ -1516,11 +1512,10 @@ def test_add_owners_adds_owner(staff_user, admin_user, client, project):
     }
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_add_group_owners_adds_group_owner(client, project):
+def test_add_group_owners_adds_group_owner(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
     # Given
     feature = Feature.objects.create(name="Test Feature", project=project)
     user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
@@ -1543,7 +1538,7 @@ def test_add_group_owners_adds_group_owner(client, project):
     data = {"group_ids": [group_1.id, group_2.id]}
 
     # When
-    json_response = client.post(
+    json_response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     ).json()
 
@@ -1559,11 +1554,10 @@ def test_add_group_owners_adds_group_owner(client, project):
     }
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_remove_group_owners_removes_group_owner(client, project):
+def test_remove_group_owners_removes_group_owner(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
     # Given
     feature = Feature.objects.create(name="Test Feature", project=project)
     user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
@@ -1589,7 +1583,7 @@ def test_remove_group_owners_removes_group_owner(client, project):
     data = {"group_ids": [group_1.id]}
 
     # When
-    json_response = client.post(
+    json_response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     ).json()
 
@@ -1601,11 +1595,10 @@ def test_remove_group_owners_removes_group_owner(client, project):
     }
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_remove_group_owners_when_nonexistent(client, project):
+def test_remove_group_owners_when_nonexistent(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
     # Given
     feature = Feature.objects.create(name="Test Feature", project=project)
     user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
@@ -1629,7 +1622,7 @@ def test_remove_group_owners_when_nonexistent(client, project):
     data = {"group_ids": [group_1.id]}
 
     # When
-    json_response = client.post(
+    json_response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     ).json()
 
@@ -1637,11 +1630,10 @@ def test_remove_group_owners_when_nonexistent(client, project):
     assert len(json_response["group_owners"]) == 0
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_add_group_owners_with_wrong_org_group(client, project):
+def test_add_group_owners_with_wrong_org_group(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
     # Given
     feature = Feature.objects.create(name="Test Feature", project=project)
     user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
@@ -1668,24 +1660,26 @@ def test_add_group_owners_with_wrong_org_group(client, project):
     data = {"group_ids": [group_1.id, group_2.id]}
 
     # When
-    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert response.status_code == 400
     response.json() == {"non_field_errors": ["Some groups not found"]}
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_list_features_return_tags(client, project, feature):
+def test_list_features_return_tags(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+) -> None:
     # Given
     Feature.objects.create(name="test_feature", project=project)
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
 
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -1735,11 +1729,10 @@ def test_list_features_group_owners(
     }
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_project_admin_can_create_mv_options_when_creating_feature(client, project):
+def test_project_admin_can_create_mv_options_when_creating_feature(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
     # Given
     data = {
         "name": "test_feature",
@@ -1749,7 +1742,9 @@ def test_project_admin_can_create_mv_options_when_creating_feature(client, proje
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
 
     # When
-    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
@@ -1758,16 +1753,16 @@ def test_project_admin_can_create_mv_options_when_creating_feature(client, proje
     assert len(response_json["multivariate_options"]) == 1
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_get_feature_by_uuid(client, project, feature):
+def test_get_feature_by_uuid(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+) -> None:
     # Given
     url = reverse("api-v1:features:get-feature-by-uuid", args=[feature.uuid])
 
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -1775,28 +1770,29 @@ def test_get_feature_by_uuid(client, project, feature):
     assert response.json()["uuid"] == str(feature.uuid)
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_get_feature_by_uuid_returns_404_if_feature_does_not_exists(client, project):
+def test_get_feature_by_uuid_returns_404_if_feature_does_not_exists(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
     # Given
     url = reverse("api-v1:features:get-feature-by-uuid", args=[uuid.uuid4()])
 
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_update_feature_state_value_triggers_dynamo_rebuild(
-    client, project, environment, feature, feature_state, settings, mocker
-):
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
     # Given
     project.enable_dynamo_db = True
     project.save()
@@ -1810,7 +1806,7 @@ def test_update_feature_state_value_triggers_dynamo_rebuild(
     )
 
     # When
-    response = client.patch(
+    response = admin_client_new.patch(
         url,
         data=json.dumps({"feature_state_value": "new value"}),
         content_type="application/json",
@@ -1821,13 +1817,12 @@ def test_update_feature_state_value_triggers_dynamo_rebuild(
     mock_dynamo_environment_wrapper.write_environments.assert_called_once()
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_create_segment_overrides_creates_correct_audit_log_messages(
-    client, feature, segment, environment
-):
+    admin_client_new: APIClient,
+    feature: Feature,
+    segment: Segment,
+    environment: Environment,
+) -> None:
     # Given
     another_segment = Segment.objects.create(
         name="Another segment", project=segment.project
@@ -1839,7 +1834,7 @@ def test_create_segment_overrides_creates_correct_audit_log_messages(
     # When
     # we create 2 segment overrides for the feature
     for _segment in (segment, another_segment):
-        feature_segment_response = client.post(
+        feature_segment_response = admin_client_new.post(
             feature_segments_url,
             data={
                 "feature": feature.id,
@@ -1849,7 +1844,7 @@ def test_create_segment_overrides_creates_correct_audit_log_messages(
         )
         assert feature_segment_response.status_code == status.HTTP_201_CREATED
         feature_segment_id = feature_segment_response.json()["id"]
-        feature_state_response = client.post(
+        feature_state_response = admin_client_new.post(
             feature_states_url,
             data={
                 "feature": feature.id,
@@ -1878,20 +1873,16 @@ def test_create_segment_overrides_creates_correct_audit_log_messages(
     )
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_list_features_provides_information_on_number_of_overrides(
-    feature,
-    segment,
-    segment_featurestate,
-    identity,
-    identity_featurestate,
-    project,
-    environment,
-    client,
-):
+    feature: Feature,
+    segment: Segment,
+    segment_featurestate: FeatureState,
+    identity: Identity,
+    identity_featurestate: FeatureState,
+    project: Project,
+    environment: Environment,
+    admin_client_new: APIClient,
+) -> None:
     # Given
     url = "%s?environment=%d" % (
         reverse("api-v1:projects:project-features-list", args=[project.id]),
@@ -1899,7 +1890,7 @@ def test_list_features_provides_information_on_number_of_overrides(
     )
 
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -1910,13 +1901,64 @@ def test_list_features_provides_information_on_number_of_overrides(
     assert response_json["results"][0]["num_identity_overrides"] == 1
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
-    dynamo_enabled_project, dynamo_enabled_project_environment_one, client
+def test_list_features_provides_correct_information_on_number_of_overrides_based_on_version(
+    feature: Feature,
+    segment: Segment,
+    project: Project,
+    environment_v2_versioning: Environment,
+    admin_client_new: APIClient,
+    admin_user: FFAdminUser,
 ):
+    # Given
+    url = "%s?environment=%d" % (
+        reverse("api-v1:projects:project-features-list", args=[project.id]),
+        environment_v2_versioning.id,
+    )
+
+    # let's create a new version with a segment override
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            environment=environment_v2_versioning,
+            segment=segment,
+        ),
+        environment_feature_version=version_2,
+    )
+    version_2.publish(admin_user)
+
+    # and now let's create a new version which removes the segment override
+    version_3 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    FeatureState.objects.filter(
+        environment_feature_version=version_3,
+        feature_segment__segment=segment,
+    ).delete()
+    version_3.publish(admin_user)
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+
+    # The number of segment overrides in the latest version should be 0
+    assert response_json["results"][0]["num_segment_overrides"] == 0
+
+
+def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
+    dynamo_enabled_project: Project,
+    dynamo_enabled_project_environment_one: Environment,
+    admin_client_new: APIClient,
+) -> None:
     # Given
     feature = Feature.objects.create(
         name="test_feature", project=dynamo_enabled_project
@@ -1942,7 +1984,7 @@ def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
     )
 
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -1954,8 +1996,13 @@ def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
 
 
 def test_create_segment_override_reaching_max_limit(
-    admin_client, feature, segment, project, environment, settings
-):
+    admin_client_new: APIClient,
+    feature: Feature,
+    segment: Segment,
+    project: Project,
+    environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
     # Given
     project.max_segment_overrides_allowed = 1
     project.save()
@@ -1972,7 +2019,7 @@ def test_create_segment_override_reaching_max_limit(
     }
 
     # Now, crate the first override
-    response = admin_client.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -1980,7 +2027,7 @@ def test_create_segment_override_reaching_max_limit(
 
     # Then
     # Try to create another override
-    response = admin_client.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -1991,11 +2038,11 @@ def test_create_segment_override_reaching_max_limit(
     assert environment.feature_segments.count() == 1
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_create_feature_reaching_max_limit(client, project, settings):
+def test_create_feature_reaching_max_limit(
+    admin_client_new: APIClient,
+    project: Project,
+    settings: SettingsWrapper,
+) -> None:
     # Given
     project.max_features_allowed = 1
     project.save()
@@ -2003,12 +2050,16 @@ def test_create_feature_reaching_max_limit(client, project, settings):
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
 
     # Now, crate the first feature
-    response = client.post(url, data={"name": "test_feature", "project": project.id})
+    response = admin_client_new.post(
+        url, data={"name": "test_feature", "project": project.id}
+    )
     assert response.status_code == status.HTTP_201_CREATED
 
     # Then
     # Try to create another feature
-    response = client.post(url, data={"name": "second_feature", "project": project.id})
+    response = admin_client_new.post(
+        url, data={"name": "second_feature", "project": project.id}
+    )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
         response.json()["project"]
@@ -2016,13 +2067,12 @@ def test_create_feature_reaching_max_limit(client, project, settings):
     )
 
 
-@pytest.mark.parametrize(
-    "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
-)
 def test_create_segment_override_using_environment_viewset(
-    client, environment, feature, feature_segment
-):
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_segment: FeatureSegment,
+) -> None:
     # Given
     url = reverse(
         "api-v1:environments:environment-featurestates-list",
@@ -2039,20 +2089,22 @@ def test_create_segment_override_using_environment_viewset(
     }
 
     # When
-    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     response.json()["feature_state_value"] == new_value
 
 
-@pytest.mark.parametrize(
-    "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
-)
 def test_cannot_create_feature_state_for_feature_from_different_project(
-    client, environment, project_two_feature, feature_segment, project_two
-):
+    admin_client_new: APIClient,
+    environment: Environment,
+    project_two_feature: Feature,
+    feature_segment: FeatureSegment,
+    project_two: Project,
+) -> None:
     # Given
     url = reverse(
         "api-v1:environments:environment-featurestates-list",
@@ -2069,20 +2121,22 @@ def test_cannot_create_feature_state_for_feature_from_different_project(
     }
 
     # When
-    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json()["feature"][0] == "Feature does not exist in project"
 
 
-@pytest.mark.parametrize(
-    "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
-)
 def test_create_feature_state_environment_is_read_only(
-    client, environment, feature, feature_segment, environment_two
-):
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_segment: FeatureSegment,
+    environment_two: Environment,
+) -> None:
     # Given
     url = reverse(
         "api-v1:environments:environment-featurestates-list",
@@ -2098,20 +2152,21 @@ def test_create_feature_state_environment_is_read_only(
     }
 
     # When
-    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["environment"] == environment.id
 
 
-@pytest.mark.parametrize(
-    "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
-)
 def test_cannot_create_feature_state_of_feature_from_different_project(
-    client, environment, project_two_feature, feature_segment
-):
+    admin_client_new: APIClient,
+    environment: Environment,
+    project_two_feature: Feature,
+    feature_segment: FeatureSegment,
+) -> None:
     # Given
     url = reverse(
         "api-v1:environments:environment-featurestates-list",
@@ -2128,20 +2183,22 @@ def test_cannot_create_feature_state_of_feature_from_different_project(
     }
 
     # When
-    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json()["feature"][0] == "Feature does not exist in project"
 
 
-@pytest.mark.parametrize(
-    "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
-)
 def test_create_feature_state_environment_field_is_read_only(
-    client, environment, feature, feature_segment, environment_two
-):
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_segment: FeatureSegment,
+    environment_two: Environment,
+) -> None:
     # Given
     url = reverse(
         "api-v1:environments:environment-featurestates-list",
@@ -2157,20 +2214,22 @@ def test_create_feature_state_environment_field_is_read_only(
     }
 
     # When
-    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["environment"] == environment.id
 
 
-@pytest.mark.parametrize(
-    "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
-)
 def test_cannot_update_environment_of_a_feature_state(
-    client, environment, feature, feature_state, environment_two
-):
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    environment_two: Environment,
+) -> None:
     # Given
     url = reverse(
         "api-v1:environments:environment-featurestates-detail",
@@ -2188,7 +2247,9 @@ def test_cannot_update_environment_of_a_feature_state(
     }
 
     # When
-    response = client.put(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then - it did not change the environment field on the feature state
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -2198,13 +2259,14 @@ def test_cannot_update_environment_of_a_feature_state(
     )
 
 
-@pytest.mark.parametrize(
-    "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
-)
 def test_cannot_update_feature_of_a_feature_state(
-    client, environment, feature_state, feature, identity, project
-):
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    identity: Identity,
+    project: Project,
+) -> None:
     # Given
     another_feature = Feature.objects.create(
         name="another_feature", project=project, initial_value="initial_value"
@@ -2220,7 +2282,9 @@ def test_cannot_update_feature_of_a_feature_state(
     }
 
     # When
-    response = client.put(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert another_feature.feature_states.count() == 1
@@ -2632,13 +2696,16 @@ def test_list_features_with_feature_state(
 
 def test_list_features_with_filter_by_value_search_string_and_int(
     staff_client: APIClient,
+    staff_user: FFAdminUser,
     project: Project,
     feature: Feature,
     with_project_permissions: WithProjectPermissionsCallable,
-    environment: Environment,
+    environment_v2_versioning: Environment,
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])
+    environment = environment_v2_versioning
+
     feature2 = Feature.objects.create(
         name="another_feature", project=project, initial_value="initial_value"
     )
@@ -2654,9 +2721,32 @@ def test_list_features_with_filter_by_value_search_string_and_int(
         project=project,
     )
 
-    feature_state1 = feature.feature_states.filter(environment=environment).first()
+    environment_feature_version1 = EnvironmentFeatureVersion.objects.create(
+        environment=environment,
+        feature=feature,
+    )
+
+    feature_state1 = FeatureState.objects.filter(
+        environment_feature_version=environment_feature_version1
+    ).first()
     feature_state1.enabled = True
     feature_state1.save()
+
+    # Create a secondary feature state that will be versioned in the past.
+    environment_feature_version1b = EnvironmentFeatureVersion.objects.create(
+        environment=environment,
+        feature=feature,
+    )
+
+    feature_state1b = FeatureState.objects.filter(
+        environment_feature_version=environment_feature_version1b
+    ).first()
+    feature_state1b.enabled = False
+    feature_state1b.save()
+
+    environment_feature_version1b.publish(staff_user)
+
+    environment_feature_version1.publish(staff_user)
 
     feature_state_value1 = feature_state1.feature_state_value
     feature_state_value1.string_value = None
@@ -2878,7 +2968,7 @@ def test_feature_list_last_modified_values(
         Feature.objects.create(name=f"feature_{i}", project=project)
 
     # When
-    with django_assert_num_queries(16):  # TODO: reduce this number of queries!
+    with django_assert_num_queries(18):  # TODO: reduce this number of queries!
         response = staff_client.get(url)
 
     # Then

@@ -5,10 +5,13 @@ from unittest.mock import MagicMock
 import pytest
 from django.core.mail.message import EmailMultiAlternatives
 from django.utils import timezone
+from freezegun.api import FrozenDateTimeFactory
 from pytest_mock import MockerFixture
 
 from organisations.chargebee.metadata import ChargebeeObjMetadata
+from organisations.constants import API_USAGE_GRACE_PERIOD
 from organisations.models import (
+    APILimitAccessBlock,
     OranisationAPIUsageNotification,
     Organisation,
     OrganisationRole,
@@ -16,6 +19,7 @@ from organisations.models import (
     UserOrganisation,
 )
 from organisations.subscriptions.constants import (
+    CHARGEBEE,
     FREE_PLAN_ID,
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
@@ -26,8 +30,10 @@ from organisations.tasks import (
     ALERT_EMAIL_SUBJECT,
     finish_subscription_cancellation,
     handle_api_usage_notifications,
+    restrict_use_due_to_api_limit_grace_period_over,
     send_org_over_limit_alert,
     send_org_subscription_cancelled_alert,
+    unrestrict_after_api_limit_grace_period_is_stale,
 )
 from users.models import FFAdminUser
 
@@ -452,3 +458,194 @@ def test_handle_api_usage_notifications_above_100(
         == 1
     )
     assert OranisationAPIUsageNotification.objects.first() == api_usage_notification
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_restrict_use_due_to_api_limit_grace_period_over(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    # Given
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
+    now = timezone.now()
+    organisation2 = Organisation.objects.create(name="Org #2")
+    organisation3 = Organisation.objects.create(name="Org #3")
+    organisation4 = Organisation.objects.create(name="Org #4")
+    organisation5 = Organisation.objects.create(name="Org #5")
+
+    organisation5.subscription.plan = "scale-up-v2"
+    organisation5.subscription.payment_method = CHARGEBEE
+    organisation5.subscription.subscription_id = "subscription-id"
+    organisation5.subscription.save()
+
+    OranisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation,
+        percent_usage=100,
+    )
+    OranisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation,
+        percent_usage=120,
+    )
+    OranisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation2,
+        percent_usage=100,
+    )
+
+    # Should be ignored, since percent usage is less than 100.
+    OranisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation3,
+        percent_usage=90,
+    )
+
+    # Should be ignored, since not on a free plan.
+    OranisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation5,
+        percent_usage=120,
+    )
+
+    now = now + timedelta(days=API_USAGE_GRACE_PERIOD + 1)
+    freezer.move_to(now)
+
+    # Should be ignored, since the notify period is too recent.
+    OranisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation3,
+        percent_usage=120,
+    )
+
+    # When
+    restrict_use_due_to_api_limit_grace_period_over()
+
+    # Then
+    organisation.refresh_from_db()
+    organisation2.refresh_from_db()
+    organisation3.refresh_from_db()
+    organisation4.refresh_from_db()
+    organisation5.refresh_from_db()
+
+    # Organisation without breaching 100 percent usage is ok.
+    assert organisation3.stop_serving_flags is False
+    assert organisation3.block_access_to_admin is False
+    assert getattr(organisation3, "api_limit_access_block", None) is None
+
+    # Organisation which is still in the grace period is ok.
+    assert organisation4.stop_serving_flags is False
+    assert organisation4.block_access_to_admin is False
+    assert getattr(organisation4, "api_limit_access_block", None) is None
+
+    # Organisation which is not on the free plan is ok.
+    assert organisation5.stop_serving_flags is False
+    assert organisation5.block_access_to_admin is False
+    assert getattr(organisation5, "api_limit_access_block", None) is None
+
+    # Organisations that breached 100 are blocked.
+    assert organisation.stop_serving_flags is True
+    assert organisation.block_access_to_admin is True
+    assert organisation.api_limit_access_block
+    assert organisation2.stop_serving_flags is True
+    assert organisation2.block_access_to_admin is True
+    assert organisation2.api_limit_access_block
+
+    # Organisations that change their subscription are unblocked.
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+    organisation.refresh_from_db()
+    assert organisation.stop_serving_flags is False
+    assert organisation.block_access_to_admin is False
+    assert getattr(organisation, "api_limit_access_block", None) is None
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_unrestrict_after_api_limit_grace_period_is_stale(
+    organisation: Organisation,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    # Given
+    now = timezone.now()
+    organisation2 = Organisation.objects.create(name="Org #2")
+    organisation3 = Organisation.objects.create(name="Org #3")
+    organisation4 = Organisation.objects.create(name="Org #4")
+
+    organisation.stop_serving_flags = True
+    organisation.block_access_to_admin = True
+    organisation.save()
+
+    organisation2.stop_serving_flags = True
+    organisation2.block_access_to_admin = True
+    organisation2.save()
+
+    organisation3.stop_serving_flags = True
+    organisation3.block_access_to_admin = True
+    organisation3.save()
+
+    organisation4.stop_serving_flags = True
+    organisation4.block_access_to_admin = True
+    organisation4.save()
+
+    # Create access blocks for the first three, excluding the 4th.
+    APILimitAccessBlock.objects.create(organisation=organisation)
+    APILimitAccessBlock.objects.create(organisation=organisation2)
+    APILimitAccessBlock.objects.create(organisation=organisation3)
+
+    OranisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation,
+        percent_usage=100,
+    )
+    OranisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation,
+        percent_usage=120,
+    )
+    OranisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation2,
+        percent_usage=100,
+    )
+
+    now = now + timedelta(days=32)
+    freezer.move_to(now)
+
+    # Exclude the organisation since there's a recent notification.
+    OranisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation3,
+        percent_usage=120,
+    )
+
+    # When
+    unrestrict_after_api_limit_grace_period_is_stale()
+
+    # Then
+    organisation.refresh_from_db()
+    organisation2.refresh_from_db()
+    organisation3.refresh_from_db()
+    organisation4.refresh_from_db()
+
+    # Organisations with stale notifications revert to access.
+    assert organisation.stop_serving_flags is False
+    assert organisation.block_access_to_admin is False
+    assert organisation2.stop_serving_flags is False
+    assert organisation2.block_access_to_admin is False
+    assert getattr(organisation, "api_limit_access_block", None) is None
+    assert getattr(organisation2, "api_limit_access_block", None) is None
+
+    # Organisations with recent API usage notifications are blocked.
+    assert organisation3.stop_serving_flags is True
+    assert organisation3.block_access_to_admin is True
+    assert organisation3.api_limit_access_block
+
+    # Organisations without api limit access blocks stay blocked.
+    assert organisation4.stop_serving_flags is True
+    assert organisation4.block_access_to_admin is True
+    assert getattr(organisation4, "api_limit_access_block", None) is None

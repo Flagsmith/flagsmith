@@ -142,6 +142,10 @@
                 {
                     "name": "ENABLE_API_USAGE_ALERTING",
                     "value": "True"
+                },
+                {
+                    "name": "GITHUB_APP_ID",
+                    "value": "811209"
                 }
             ],
             "secrets": [
@@ -192,6 +196,10 @@
                 {
                     "name": "INFLUXDB_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:INFLUXDB_TOKEN::"
+                },
+                {
+                    "name": "GITHUB_PEM",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:GITHUB_PEM-Bfoaql"
                 }
             ],
             "logConfiguration": {
