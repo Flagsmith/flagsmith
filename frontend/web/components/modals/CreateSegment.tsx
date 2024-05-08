@@ -345,32 +345,28 @@ const CreateSegment: FC<CreateSegmentType> = ({
         </div>
       )}
 
-      {!isEdit && (
-        <div className='mb-3'>
-          <label htmlFor='segmentID'>ID</label>
-          <Flex>
-            <Input
-              data-test='segmentID'
-              name='id'
-              id='segmentID'
-              readOnly={isEdit}
-              maxLength={SEGMENT_ID_MAXLENGTH}
-              value={name}
-              onChange={(e: InputEvent) =>
-                setName(
-                  Format.enumeration
-                    .set(Utils.safeParseEventValue(e))
-                    .toLowerCase(),
-                )
-              }
-              isValid={name && name.length}
-              type='text'
-              title={isEdit ? 'ID' : 'ID*'}
-              placeholder='E.g. power_users'
-            />
-          </Flex>
-        </div>
-      )}
+      <div className='mb-3'>
+        <label htmlFor='segmentID'>Name*</label>
+        <Flex>
+          <Input
+            data-test='segmentID'
+            name='id'
+            id='segmentID'
+            maxLength={SEGMENT_ID_MAXLENGTH}
+            value={name}
+            onChange={(e: InputEvent) =>
+              setName(
+                Format.enumeration
+                  .set(Utils.safeParseEventValue(e))
+                  .toLowerCase(),
+              )
+            }
+            isValid={name && name.length}
+            type='text'
+            placeholder='E.g. power_users'
+          />
+        </Flex>
+      </div>
       {!condensed && (
         <InputGroup
           className='mb-3'
