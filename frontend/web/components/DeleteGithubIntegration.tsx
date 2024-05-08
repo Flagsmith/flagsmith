@@ -1,14 +1,16 @@
 import React, { FC } from 'react'
 import Button from './base/forms/Button'
+import GithubRepositoriesTable from './GithubRepositoriesTable'
+import DeleteGithubIntegracion from './DeleteGithubIntegracion'
 import { useDeleteGithubIntegrationMutation } from 'common/services/useGithubIntegration'
 
-type DeleteGithubIntegracionType = {
+type DeleteGithubIntegrationType = {
   organisationId: string
   githubId: string
   onConfirm: () => void
 }
 
-const DeleteGithubIntegracion: FC<DeleteGithubIntegracionType> = ({
+const DeleteGithubIntegration: FC<DeleteGithubIntegrationType> = ({
   githubId,
   onConfirm,
   organisationId,
@@ -18,6 +20,7 @@ const DeleteGithubIntegracion: FC<DeleteGithubIntegracionType> = ({
   return (
     <Button
       id='delete-integration'
+      theme='danger'
       data-test='delete-integration'
       onClick={() =>
         openConfirm({
@@ -51,4 +54,4 @@ const DeleteGithubIntegracion: FC<DeleteGithubIntegracionType> = ({
   )
 }
 
-export default DeleteGithubIntegracion
+export default DeleteGithubIntegration

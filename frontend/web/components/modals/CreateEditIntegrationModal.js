@@ -9,7 +9,7 @@ import GithubRepositoriesTable from 'components/GithubRepositoriesTable'
 import classNames from 'classnames'
 import { getStore } from 'common/store'
 import { getGithubRepos } from 'common/services/useGithub'
-import DeleteGithubIntegracion from 'components/DeleteGithubIntegracion'
+import DeleteGithubIntegration from 'components/DeleteGithubIntegration'
 
 const GITHUB_INSTALLATION_UPDATE = 'update'
 
@@ -250,7 +250,7 @@ const CreateEditIntegration = class extends Component {
                   >
                     Manage available GitHub Repositories
                   </Button>
-                  <DeleteGithubIntegracion
+                  <DeleteGithubIntegration
                     githubId={this.props.githubMeta.githubId}
                     organisationId={AccountStore.getOrganisation().id}
                     onConfirm={() => {

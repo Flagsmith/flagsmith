@@ -65,6 +65,12 @@ class Integration extends Component {
           this.setState({
             reFetchgithubId: res?.data?.results[0]?.id,
           })
+          history.replaceState(
+            {},
+            null,
+            `${document.location.pathname}/github/`,
+          )
+          this.add()
         })
       }
     })
@@ -271,11 +277,13 @@ class IntegrationList extends Component {
               return allItems
             })
           }
-          return _data
-            .get(
-              `${Project.api}projects/${this.props.projectId}/integrations/${key}/`,
-            )
-            .catch(() => {})
+          if (key !== 'github') {
+            return _data
+              .get(
+                `${Project.api}projects/${this.props.projectId}/integrations/${key}/`,
+              )
+              .catch(() => {})
+          }
         }
       }),
     ).then((res) => {

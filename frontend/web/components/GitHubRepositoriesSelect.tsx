@@ -27,9 +27,6 @@ const GitHubRepositoriesSelect: FC<GitHubRepositoriesSelectType> = ({
     { isSuccess: isSuccessCreatedGithubRepository },
   ] = useCreateGithubRepositoryMutation()
 
-  const [repositoryName, setRepositoryName] = useState('')
-  const [repositoryOwner, setRepositoryOwner] = useState('')
-
   useEffect(() => {
     if (isSuccessCreatedGithubRepository) {
       toast('Repository linked with the Project correctly')
@@ -44,8 +41,15 @@ const GitHubRepositoriesSelect: FC<GitHubRepositoriesSelectType> = ({
         disabled={disabled}
         onChange={(r: repoSelectValue) => {
           const repoData = r.value.split('/')
-          setRepositoryName(repoData[0])
-          setRepositoryOwner(repoData[1])
+          createGithubRepository({
+            body: {
+              project: projectId,
+              repository_name: repoData[0],
+              repository_owner: repoData[1],
+            },
+            github_id: githubId,
+            organisation_id: organisationId,
+          })
         }}
         options={repositories?.map((r: Repository) => {
           return {
@@ -54,25 +58,6 @@ const GitHubRepositoriesSelect: FC<GitHubRepositoriesSelectType> = ({
           }
         })}
       />
-      <div className='text-right mt-2'>
-        <Button
-          theme='primary'
-          disabled={false}
-          onClick={() => {
-            createGithubRepository({
-              body: {
-                project: projectId,
-                repository_name: repositoryName,
-                repository_owner: repositoryOwner,
-              },
-              github_id: githubId,
-              organisation_id: organisationId,
-            })
-          }}
-        >
-          Add Repository
-        </Button>
-      </div>
     </div>
   )
 }

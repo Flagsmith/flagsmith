@@ -15,17 +15,28 @@ const MyGitHubRepositoriesSelect: FC<MyGitHubRepositoriesSelectType> = ({
   organisationId,
   projectId,
 }) => {
-  const { data } = useGetGithubReposQuery({
+  const { data, isFetching } = useGetGithubReposQuery({
     installation_id: installationId,
     organisation_id: organisationId,
   })
+
+  console.log('DEBUG: data:', data)
+
   return (
-    <GitHubRepositoriesSelect
-      githubId={githubId}
-      organisationId={organisationId}
-      projectId={projectId}
-      repositories={data?.repositories}
-    />
+    <>
+      {isFetching ? (
+        <div className='text-center'>
+          <Loader />
+        </div>
+      ) : (
+        <GitHubRepositoriesSelect
+          githubId={githubId}
+          organisationId={organisationId}
+          projectId={projectId}
+          repositories={data?.repositories}
+        />
+      )}
+    </>
   )
 }
 
