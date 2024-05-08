@@ -252,7 +252,7 @@ def test_identity_clone_flag_states_from(
 
     assert response[3]["feature"]["id"] == mv_feature.id
     assert response[3]["enabled"] == source_mv_feature_state.enabled
-    assert response[3]["feature_state_value"] == mv_variant_1.string_value
+    assert response[3]["feature_state_value"] == mv_variant_1.value
     assert (
         response[3]["multivariate_feature_state_values"][0][
             "multivariate_feature_option"

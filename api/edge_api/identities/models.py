@@ -256,5 +256,6 @@ class EdgeIdentity:
                 feature=feature_in_source.feature,
                 feature_state_value=feature_in_source.feature_state_value,
                 enabled=feature_in_source.enabled,
+                multivariate_feature_state_values=feature_in_source.multivariate_feature_state_values,
             )
             self.add_feature_override(feature_state_target)
