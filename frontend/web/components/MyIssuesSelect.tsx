@@ -6,7 +6,7 @@ type MyIssuesSelectType = {
   orgId: string
   repoOwner: string
   repoName: string
-  onChange: () => void
+  onChange: (v: string) => void
 }
 
 const MyIssuesSelect: FC<MyIssuesSelectType> = ({

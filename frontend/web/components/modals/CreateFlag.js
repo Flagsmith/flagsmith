@@ -647,79 +647,13 @@ const CreateFlag = class extends Component {
                     })
                   }}
                 />
-                {repoName && repoOwner && (
-                  <>
-                    <label className='cols-sm-2 control-label mt-4'>
-                      {' '}
-                      Link GitHub Issue Pull-Request
-                    </label>
-                    <Row className='cols-md-2 role-list'>
-                      <div style={{ width: '200px' }}>
-                        <Select
-                          size='select-md'
-                          placeholder={'Select Type'}
-                          onChange={(v) =>
-                            this.setState({ externalResourceType: v.label })
-                          }
-                          options={[
-                            { id: 1, type: Constants.githubType.githubIssue },
-                            { id: 2, type: Constants.githubType.githubPR },
-                          ].map((e) => {
-                            return { label: e.type, value: e.id }
-                          })}
-                        />
-                      </div>
-                      <Flex className='ml-4'>
-                        {externalResourceType ==
-                        Constants.githubType.githubIssue ? (
-                          <MyIssueSelect
-                            orgId={AccountStore.getOrganisation().id}
-                            onChange={(v) =>
-                              this.setState({
-                                featureExternalResource: v,
-                                status: 'open',
-                              })
-                            }
-                            repoOwner={repoOwner}
-                            repoName={repoName}
-                          />
-                        ) : externalResourceType ==
-                          Constants.githubType.githubPR ? (
-                          <MyPullRequestsSelect
-                            orgId={AccountStore.getOrganisation().id}
-                            onChange={(v) =>
-                              this.setState({
-                                featureExternalResource: v,
-                              })
-                            }
-                            repoOwner={repoOwner}
-                            repoName={repoName}
-                          />
-                        ) : (
-                          <></>
-                        )}
-                      </Flex>
-                      {(externalResourceType ==
-                        Constants.githubType.githubIssue ||
-                        externalResourceType ==
-                          Constants.githubType.githubPR) && (
-                        <Button
-                          className='text-right'
-                          theme='primary'
-                          onClick={() => {
-                            _createExternalResourse()
-                          }}
-                        >
-                          Link
-                        </Button>
-                      )}
-                    </Row>
-                  </>
-                )}
               </FormGroup>
               <ExternalResourcesTable
                 featureId={projectFlag.id}
                 projectId={`${this.props.projectId}`}
+                organisationId={AccountStore.getOrganisation().id}
+                repoOwner={repoOwner}
+                repoName={repoName}
               />
             </>
           )}
