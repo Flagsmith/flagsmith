@@ -1,4 +1,5 @@
 import datetime
+from unittest.mock import ANY
 
 import simplejson as json
 from django.core.serializers.json import DjangoJSONEncoder
@@ -7,10 +8,14 @@ from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from environments.models import Environment
+from environments.permissions.constants import UPDATE_FEATURE_STATE
 from features.feature_external_resources.models import FeatureExternalResource
-from features.models import Feature
+from features.models import Feature, FeatureState
+from features.serializers import FeatureStateSerializerBasic
 from integrations.github.models import GithubConfiguration, GithubRepository
 from projects.models import Project
+from tests.types import WithEnvironmentPermissionsCallable
 
 _django_json_encoder_default = DjangoJSONEncoder().default
 
@@ -66,6 +71,7 @@ def test_create_feature_external_resource(
         url, data=feature_external_resource_data, format="json"
     )
 
+    # Then
     github_request_mock.assert_called_with(
         "https://api.github.com/repos/repoowner/repo-name/issues/35/comments",
         json={
@@ -77,7 +83,6 @@ def test_create_feature_external_resource(
         },
         timeout=10,
     )
-    # Then
     assert response.status_code == status.HTTP_201_CREATED
     # assert that the payload has been save to the database
     feature_external_resources = FeatureExternalResource.objects.filter(
@@ -85,7 +90,6 @@ def test_create_feature_external_resource(
         type=feature_external_resource_data["type"],
         url=feature_external_resource_data["url"],
     ).all()
-
     assert len(feature_external_resources) == 1
     assert feature_external_resources[0].metadata == json.dumps(
         feature_external_resource_data["metadata"], default=_django_json_encoder_default
@@ -300,3 +304,51 @@ def test_get_feature_external_resource(
     assert response.data["id"] == feature_external_resource.id
     assert response.data["type"] == feature_external_resource.type
     assert response.data["url"] == feature_external_resource.url
+
+
+def test_create_github_comment_on_feature_state_updated(
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    feature_external_resource: FeatureExternalResource,
+    feature: Feature,
+    project: Project,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mocker,
+    environment: Environment,
+) -> None:
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])
+    feature_state = FeatureState.objects.get(
+        feature=feature, environment=environment.id
+    )
+    mock_generate_token = mocker.patch(
+        "integrations.github.github.generate_token",
+    )
+    mock_generate_token.return_value = "mocked_token"
+    github_request_mock = mocker.patch(
+        "requests.post", side_effect=mocked_requests_post
+    )
+
+    payload = dict(FeatureStateSerializerBasic(instance=feature_state).data)
+
+    payload["enabled"] = not feature_state.enabled
+    url = reverse(
+        viewname="api-v1:environments:environment-featurestates-detail",
+        kwargs={"environment_api_key": environment.api_key, "pk": feature_state.id},
+    )
+
+    # When
+    response = staff_client.put(path=url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    github_request_mock.assert_called_with(
+        "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
+        json=ANY,
+        headers={
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": "Bearer mocked_token",
+        },
+        timeout=10,
+    )
