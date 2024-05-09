@@ -6,6 +6,7 @@ import InputGroup from 'components/base/forms/InputGroup'
 import ProjectFilter from 'components/ProjectFilter'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
+import AppActions from 'common/dispatcher/app-actions'
 import { useCreateGithubIntegrationMutation } from 'common/services/useGithubIntegration'
 import { useCreateGithubRepositoryMutation } from 'common/services/useGithubRepository'
 import { useGetGithubReposQuery } from 'common/services/useGithub'
@@ -47,7 +48,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
       installation_id: installationId,
       organisation_id: organisation,
     },
-    { skip: !installationId },
+    { skip: !installationId || !organisation },
   )
 
   const [createGithubIntegration] = useCreateGithubIntegrationMutation()
@@ -72,6 +73,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
     ) {
       window.location.href = `${baseUrl}/`
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSuccessCreatedGithubRepository])
 
   useEffect(() => {
@@ -124,7 +126,9 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
             <label>Select your Flagsmith Organisation</label>
             <OrganisationSelect
               onChange={(organisationId: string) => {
-                setOrganisation(organisationId)
+                setOrganisation(`${organisationId}`)
+                AppActions.selectOrganisation(organisationId)
+                AppActions.getOrganisation(organisationId)
               }}
               showSettings={false}
               firstOrganisation
@@ -170,7 +174,13 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
             </div>
             <Button
               theme='primary'
-              disabled={!project || !installationId || !repositoryName}
+              disabled={
+                !(
+                  Object.entries(project).length &&
+                  installationId &&
+                  repositoryName
+                )
+              }
               onClick={() => {
                 {
                   const newProjects = [...projects]
