@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.113.0](https://github.com/Flagsmith/flagsmith/compare/v2.112.0...v2.113.0) (2024-05-09)
+
+
+### Features
+
+* Block access after seven days notice of API overage ([#3714](https://github.com/Flagsmith/flagsmith/issues/3714)) ([e2cb7eb](https://github.com/Flagsmith/flagsmith/commit/e2cb7eb003513a218e60c9d926988a8adaa0d565))
+* versioned segment override change request ([#3790](https://github.com/Flagsmith/flagsmith/issues/3790)) ([cf320b7](https://github.com/Flagsmith/flagsmith/commit/cf320b7d030db0819ba784146da7e42220b154cf))
+
+
+### Bug Fixes
+
+* codehelp docs links ([#3900](https://github.com/Flagsmith/flagsmith/issues/3900)) ([5f7d3cd](https://github.com/Flagsmith/flagsmith/commit/5f7d3cd6a604c439ba586614065c8da605dc06f1))
+* **docker:** Run Task Processor entrypoint with PID 1 ([#3889](https://github.com/Flagsmith/flagsmith/issues/3889)) ([79f4ef7](https://github.com/Flagsmith/flagsmith/commit/79f4ef7bbec47dcc1e315b3db7ae625b1bb91e38))
+* Ensure flags are set in code example ([#3901](https://github.com/Flagsmith/flagsmith/issues/3901)) ([fa46ba7](https://github.com/Flagsmith/flagsmith/commit/fa46ba75aa050af6c05a2fe3925c2fed873687b8))
+* send all users on paid subscriptions to hubspot ([#3902](https://github.com/Flagsmith/flagsmith/issues/3902)) ([0c79870](https://github.com/Flagsmith/flagsmith/commit/0c798702a313e86d62c1c4e9c7af019969eae117))
+
 ## [2.112.0](https://github.com/Flagsmith/flagsmith/compare/v2.111.1...v2.112.0) (2024-05-07)
 
 
