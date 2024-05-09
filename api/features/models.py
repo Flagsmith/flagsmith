@@ -74,7 +74,7 @@ from features.value_types import (
     STRING,
 )
 from features.versioning.models import EnvironmentFeatureVersion
-from organisations.models import Organisation
+from integrations.github.models import GithubConfiguration
 from projects.models import Project
 from projects.tags.models import Tag
 
@@ -1007,10 +1007,8 @@ class FeatureState(
             and self.environment.project.github_project.exists()
             and self.environment.project.organisation.github_config.exists()
         ):
-            github_configuration = (
-                Organisation.objects.prefetch_related("github_config")
-                .get(id=self.environment.project.organisation_id)
-                .github_config.first()
+            github_configuration = GithubConfiguration.objects.get(
+                organisation_id=self.environment.project.organisation_id
             )
             feature_states = []
             feature_states.append(self)

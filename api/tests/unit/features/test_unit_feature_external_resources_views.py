@@ -13,9 +13,11 @@ from environments.permissions.constants import UPDATE_FEATURE_STATE
 from features.feature_external_resources.models import FeatureExternalResource
 from features.models import Feature, FeatureState
 from features.serializers import FeatureStateSerializerBasic
+from integrations.github.github import GithubData
 from integrations.github.models import GithubConfiguration, GithubRepository
 from projects.models import Project
 from tests.types import WithEnvironmentPermissionsCallable
+from webhooks.webhooks import WebhookEventType
 
 _django_json_encoder_default = DjangoJSONEncoder().default
 
@@ -330,6 +332,27 @@ def test_create_github_comment_on_feature_state_updated(
         "requests.post", side_effect=mocked_requests_post
     )
 
+    feature_state_value = feature_state.get_feature_state_value()
+    feature_env_data = {}
+    feature_env_data["feature_state_value"] = feature_state_value
+    feature_env_data["feature_state_value_type"] = (
+        feature_state.get_feature_state_value_type(feature_state_value)
+    )
+    feature_env_data["environment_name"] = environment.name
+    feature_env_data["feature_value"] = feature_state.enabled
+
+    mock_generate_data = mocker.patch(
+        "integrations.github.github.generate_data",
+        return_value=GithubData(
+            installation_id=github_configuration.installation_id,
+            feature_id=feature.id,
+            feature_name=feature.name,
+            type=feature_external_resource.type,
+            feature_states=[feature_env_data],
+            url=feature_external_resource.url,
+        ),
+    )
+
     payload = dict(FeatureStateSerializerBasic(instance=feature_state).data)
 
     payload["enabled"] = not feature_state.enabled
@@ -351,4 +374,11 @@ def test_create_github_comment_on_feature_state_updated(
             "Authorization": "Bearer mocked_token",
         },
         timeout=10,
+    )
+    mock_generate_data.assert_called_with(
+        github_configuration=github_configuration,
+        feature_id=feature.id,
+        feature_name=feature.name,
+        type=WebhookEventType.FLAG_UPDATED.value,
+        feature_states=[feature_state],
     )
