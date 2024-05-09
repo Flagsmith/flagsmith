@@ -92,6 +92,7 @@ def _iter_paginated_overrides(
         for item in identity_wrapper.iter_all_items_paginated(
             environment_api_key=environment_api_key,
             capacity_budget=capacity_budget,
+            projection_expression="environment_api_key, identifier, identity_features, identity_uuid",
         ):
             identity = IdentityModel.model_validate(item)
             for feature_state in identity.identity_features:

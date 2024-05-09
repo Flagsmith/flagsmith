@@ -129,6 +129,7 @@ def test_migrate_environments_to_v2__capacity_budget_exceeded__returns_expected(
     mocked_dynamodb_identity_wrapper.iter_all_items_paginated.assert_called_once_with(
         environment_api_key=environment.api_key,
         capacity_budget=expected_capacity_budget,
+        projection_expression="environment_api_key, identifier, identity_features, identity_uuid",
     )
 
     assert result.status == EdgeV2MigrationStatus.INCOMPLETE

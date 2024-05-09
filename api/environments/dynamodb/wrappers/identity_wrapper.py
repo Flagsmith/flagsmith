@@ -112,7 +112,7 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         self,
         environment_api_key: str,
         limit: int = IDENTITIES_PAGINATION_LIMIT,
-        projection_expression: str = None,
+        projection_expression: str | None = None,
         capacity_budget: Decimal = Decimal("Inf"),
     ) -> typing.Generator[dict, None, None]:
         last_evaluated_key = "initial"
