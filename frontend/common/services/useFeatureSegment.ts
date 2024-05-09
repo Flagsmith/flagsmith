@@ -17,6 +17,15 @@ export const featureSegmentService = service
           url: `features/feature-segments/${query.id}/`,
         }),
       }),
+      getFeatureSegment: builder.query<
+        Res['featureSegment'],
+        Req['getFeatureSegment']
+      >({
+        providesTags: (res) => [{ id: res?.id, type: 'FeatureSegment' }],
+        query: (query: Req['getFeatureSegment']) => ({
+          url: `features/feature-segments/${query.id}/`,
+        }),
+      }),
       // END OF ENDPOINTS
     }),
   })
@@ -35,10 +44,22 @@ export async function deleteFeatureSegment(
     ),
   )
 }
+export async function getFeatureSegment(
+  store: any,
+  data: Req['getFeatureSegment'],
+  options?: Parameters<
+    typeof featureSegmentService.endpoints.getFeatureSegment.initiate
+  >[1],
+) {
+  return store.dispatch(
+    featureSegmentService.endpoints.getFeatureSegment.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
   useDeleteFeatureSegmentMutation,
+  useGetFeatureSegmentQuery,
   // END OF EXPORTS
 } = featureSegmentService
 

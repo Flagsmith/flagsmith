@@ -150,11 +150,6 @@ const FeaturesPage = class extends Component {
         : this.state.tags.join(','),
     value_search: this.state.value_search ? this.state.value_search : undefined,
   })
-
-  onSave = (isCreate) => {
-    toast(`${isCreate ? 'Created' : 'Updated'} Feature`)
-  }
-
   onError = (error) => {
     // Kick user back out to projects
     this.setState({ error })

@@ -4,13 +4,25 @@ import ProjectStore from './project-store'
 import { createAndSetFeatureVersion } from 'common/services/useFeatureVersion'
 import { updateSegmentPriorities } from 'common/services/useSegmentPriority'
 import OrganisationStore from './organisation-store'
-
+import {
+  Approval,
+  Environment,
+  FeatureState,
+  MultivariateOption,
+  ProjectFlag,
+} from 'common/types/responses'
+import Utils from 'common/utils/utils'
+import Actions from 'common/dispatcher/action-constants'
+import Project from 'common/project'
 const Dispatcher = require('common/dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
 const { createSegmentOverride } = require('../services/useSegmentOverride')
 const { getStore } = require('../store')
-
+import flagsmith from 'flagsmith'
+import API from 'project/api'
+import segmentOverrides from 'components/SegmentOverrides'
+import { Req } from 'common/types/requests'
 let createdFirstFeature = false
 const PAGE_SIZE = 200
 function recursivePageGet(url, parentRes) {
@@ -29,6 +41,26 @@ function recursivePageGet(url, parentRes) {
     }
     return Promise.resolve(response)
   })
+}
+
+const convertSegmentOverrideToFeatureState = (
+  override,
+  i,
+  changeRequest?: Req['createChangeRequest'],
+) => {
+  return {
+    enabled: override.enabled,
+    feature_segment: {
+      id: override.id,
+      priority: i,
+      segment: override.segment,
+      uuid: override.uuid,
+    },
+    feature_state_value: override.value,
+    id: override.id,
+    live_from: changeRequest?.live_from,
+    toRemove: override.toRemove,
+  } as Partial<FeatureState>
 }
 const controller = {
   createFlag(projectId, environmentId, flag) {
@@ -95,7 +127,7 @@ const controller = {
               _.keyBy(environmentFeatures.results, 'feature'),
           }
           store.model.lastSaved = new Date().valueOf()
-          store.saved(flag.name)
+          store.saved({ createdFlag: flag.name })
         }),
       )
       .catch((e) => API.ajaxHandler(store, e))
@@ -319,7 +351,6 @@ const controller = {
               Object.assign({}, environmentFlag, {
                 enabled: flag.default_enabled,
                 feature_state_value: flag.initial_value,
-                hide_from_client: flag.hide_from_client,
               }),
             )
           })
@@ -399,33 +430,41 @@ const controller = {
           store.model.lastSaved = new Date().valueOf()
         }
         onComplete && onComplete()
-        store.saved()
+        store.saved({})
       })
     })
   },
   editFeatureStateChangeRequest: async (
-    projectId,
-    environmentId,
-    flag,
-    projectFlag,
-    environmentFlag,
-    segmentOverrides,
-    changeRequest,
-    commit,
+    projectId: string,
+    environmentId: string,
+    flag: ProjectFlag,
+    projectFlag: ProjectFlag,
+    environmentFlag: FeatureState,
+    segmentOverrides: any,
+    changeRequest: Req['createChangeRequest'],
+    commit: boolean,
+    mode: 'VALUE' | 'SEGMENT',
   ) => {
     store.saving()
     API.trackEvent(Constants.events.EDIT_FEATURE)
-    const env = ProjectStore.getEnvironment(environmentId)
+    const env: Environment = ProjectStore.getEnvironment(environmentId) as any
     let environment_feature_versions = []
     if (env.use_v2_feature_versioning) {
-      const featureStates = [
-        Object.assign({}, environmentFlag, {
-          enabled: flag.default_enabled,
-          feature_state_value: flag.initial_value,
-          hide_from_client: flag.hide_from_client,
-          live_from: flag.live_from,
-        }),
-      ]
+      let featureStates
+      if (mode === 'SEGMENT') {
+        featureStates = segmentOverrides?.map((override: any, i: number) =>
+          convertSegmentOverrideToFeatureState(override, i, changeRequest),
+        )
+      } else {
+        featureStates = [
+          Object.assign({}, environmentFlag, {
+            enabled: flag.default_enabled,
+            feature_state_value: flag.initial_value,
+            live_from: flag.live_from,
+          }),
+        ]
+      }
+
       const version = await createAndSetFeatureVersion(getStore(), {
         environmentId: env.id,
         featureId: projectFlag.id,
@@ -456,7 +495,7 @@ const controller = {
           return keys.includes('group')
         })
 
-        let req = {
+        const req = {
           approvals: userApprovals,
           environment_feature_versions,
           feature_states: !env.use_v2_feature_versioning
@@ -533,10 +572,7 @@ const controller = {
       })
 
     Promise.all([prom]).then(() => {
-      store.saved()
-      if (typeof closeModal !== 'undefined') {
-        closeModal()
-      }
+      store.saved({ changeRequest: true, isCreate: true })
     })
   },
   editVersionedFeatureState: (
@@ -553,21 +589,9 @@ const controller = {
 
     if (mode !== 'VALUE') {
       // Create a new version with segment overrides
-      const featureStates = segmentOverrides?.map((override, i) => {
-        return {
-          enabled: override.enabled,
-          feature_segment: {
-            id: override.id,
-            priority: i,
-            segment: override.segment,
-            uuid: override.uuid,
-          },
-          feature_state_value: override.value,
-          hide_from_client: flag.hide_from_client,
-          id: override.id,
-          toRemove: override.toRemove,
-        }
-      })
+      const featureStates = segmentOverrides?.map(
+        convertSegmentOverrideToFeatureState,
+      )
       prom = ProjectStore.getEnvironmentIdFromKeyAsync(
         projectId,
         environmentId,
@@ -614,7 +638,6 @@ const controller = {
             const data = Object.assign({}, environmentFlag, {
               enabled: flag.default_enabled,
               feature_state_value: flag.initial_value,
-              hide_from_client: flag.hide_from_client,
             })
             return createAndSetFeatureVersion(getStore(), {
               environmentId: res,
@@ -650,7 +673,7 @@ const controller = {
         store.model.lastSaved = new Date().valueOf()
       }
       onComplete && onComplete()
-      store.saved()
+      store.saved({})
     })
   },
   getFeatureUsage(projectId, environmentId, flag, period) {
@@ -800,7 +823,7 @@ const controller = {
           (f) => f.id !== flag.id,
         )
         store.model.lastSaved = new Date().valueOf()
-        store.saved()
+        store.saved({})
       })
   },
   searchFeatures: _.throttle(
@@ -898,12 +921,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       )
       break
     case Actions.CREATE_FLAG:
-      controller.createFlag(
-        action.projectId,
-        action.environmentId,
-        action.flag,
-        action.segmentOverrides,
-      )
+      controller.createFlag(action.projectId, action.environmentId, action.flag)
       break
     case Actions.EDIT_ENVIRONMENT_FLAG:
       controller.editFeatureState(
@@ -927,6 +945,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
         action.segmentOverrides,
         action.changeRequest,
         action.commit,
+        action.mode,
       )
       break
     case Actions.EDIT_FEATURE:
