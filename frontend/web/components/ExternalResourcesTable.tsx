@@ -51,9 +51,7 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
     <Row className='list-item' key={externalResource?.id}>
       <Flex className='table-column mt-1'>
         <Row className='font-weight-medium'>
-          {externalResource?.type === 'GITHUB_ISSUE'
-            ? Constants.githubType.githubIssue
-            : Constants.githubType.githubPR}
+          {Constants.resourceTypes[externalResource?.type].label}
           <Button
             theme='text'
             href={`${externalResource?.url}`}
@@ -99,7 +97,7 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
   )
 }
 
-const PermanentRow: FC<PermanentRowType> = ({
+const AddExternalResourceRow: FC<PermanentRowType> = ({
   featureId,
   organisationId,
   projectId,
@@ -111,6 +109,9 @@ const PermanentRow: FC<PermanentRowType> = ({
     useState<string>('')
 
   const [createExternalResource] = useCreateExternalResourceMutation()
+  const githubTypes = Object.values(Constants.resourceTypes).filter(
+    (v) => v.type === 'GITHUB',
+  )
   return (
     <Row className='list-item'>
       <Flex className='table-column px-3'>
@@ -118,24 +119,23 @@ const PermanentRow: FC<PermanentRowType> = ({
           size='select-md'
           placeholder={'Select Type'}
           onChange={(v: GitHubStatusType) => setExternalResourceType(v.label)}
-          options={[
-            { id: 1, type: Constants.githubType.githubIssue },
-            { id: 2, type: Constants.githubType.githubPR },
-          ].map((e) => {
-            return { label: e.type, value: e.id }
+          options={githubTypes.map((e) => {
+            return { label: e.label, value: e.id }
           })}
         />
       </Flex>
       <Flex className='table-column px-3'>
         <Flex className='ml-4'>
-          {externalResourceType == Constants.githubType.githubIssue ? (
+          {externalResourceType ==
+          Constants.resourceTypes.GITHUB_ISSUE.label ? (
             <MyIssuesSelect
               orgId={organisationId}
               onChange={(v) => setFeatureExternalResource(v)}
               repoOwner={repoOwner}
               repoName={repoName}
             />
-          ) : externalResourceType == Constants.githubType.githubPR ? (
+          ) : externalResourceType ==
+            Constants.resourceTypes.GITHUB_PR.label ? (
             <MyGithubPullRequests
               orgId={organisationId}
               onChange={(v) => setFeatureExternalResource(v)}
@@ -156,10 +156,7 @@ const PermanentRow: FC<PermanentRowType> = ({
               body: {
                 feature: parseInt(featureId),
                 metadata: { status },
-                type:
-                  externalResourceType === Constants.githubType.githubIssue
-                    ? 'GITHUB_ISSUE'
-                    : 'GITHUB_PR',
+                type: Constants.resourceTypes[externalResourceType],
                 url: featureExternalResource,
               },
               feature_id: featureId,
@@ -167,7 +164,7 @@ const PermanentRow: FC<PermanentRowType> = ({
             })
           }}
         >
-          <Icon name='plus' width={30} fill='#656D7B' />
+          <Icon name='plus' width={20} fill='#656D7B' />
         </Button>
       </div>
     </Row>
@@ -196,7 +193,7 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
             projectId={projectId}
             externalResource={v}
           />
-          <PermanentRow
+          <AddExternalResourceRow
             key='permanent-row'
             featureId={featureId}
             projectId={projectId}
@@ -207,7 +204,6 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
         </>
       )
     } else {
-      // Renderizar los elementos dinámicos normales
       return (
         <ExternalResourceRow
           key={v.id}

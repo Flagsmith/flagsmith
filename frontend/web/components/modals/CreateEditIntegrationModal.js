@@ -228,6 +228,7 @@ const CreateEditIntegration = class extends Component {
                     installationId={this.props.githubMeta.installationId}
                     organisationId={AccountStore.getOrganisation().id}
                     projectId={this.props.projectId}
+                    openGitHubWinInstallations={this.openGitHubWinInstallations}
                   />
                 </div>
               </>

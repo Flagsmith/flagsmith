@@ -35,11 +35,8 @@ import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
 import Button from 'components/base/forms/Button'
 import { getGithubIntegration } from 'common/services/useGithubIntegration'
-import { createExternalResource } from 'common/services/useExternalResource'
 import { getStore } from 'common/store'
 import { removeUserOverride } from 'components/RemoveUserOverride'
-import MyIssueSelect from 'components/MyIssuesSelect'
-import MyPullRequestsSelect from 'components/MyPullRequestsSelect'
 import MyRepositoriesSelect from 'components/MyRepositoriesSelect'
 import ExternalResourcesTable from 'components/ExternalResourcesTable'
 
@@ -508,8 +505,6 @@ const CreateFlag = class extends Component {
       description,
       enabledIndentity,
       enabledSegment,
-      externalResourceType,
-      featureExternalResource,
       githubId,
       hasIntegrationWithGithub,
       hide_from_client,
@@ -519,7 +514,6 @@ const CreateFlag = class extends Component {
       name,
       repoName,
       repoOwner,
-      status,
     } = this.state
     const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID
 
@@ -542,21 +536,6 @@ const CreateFlag = class extends Component {
     const existingChangeRequest = this.props.changeRequest
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
-    const _createExternalResourse = () => {
-      createExternalResource(getStore(), {
-        body: {
-          feature: projectFlag.id,
-          metadata: { status: status },
-          type:
-            externalResourceType === Constants.githubType.githubIssue
-              ? 'GITHUB_ISSUE'
-              : 'GITHUB_PR',
-          url: featureExternalResource,
-        },
-        feature_id: projectFlag.id,
-        project_id: `${this.props.projectId}`,
-      })
-    }
     let regexValid = true
     try {
       if (!isEdit && name && regex) {

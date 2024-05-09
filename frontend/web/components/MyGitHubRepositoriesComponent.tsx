@@ -12,11 +12,13 @@ type MyGitHubRepositoriesComponentType = {
   organisationId: string
   projectId: string
   githubId: string
+  openGitHubWinInstallations: () => void
 }
 
 const MyGitHubRepositoriesComponent: FC<MyGitHubRepositoriesComponentType> = ({
   githubId,
   installationId,
+  openGitHubWinInstallations,
   organisationId,
   projectId,
 }) => {
@@ -76,7 +78,7 @@ const MyGitHubRepositoriesComponent: FC<MyGitHubRepositoriesComponentType> = ({
               className='mr-3'
               id='open-github-win-installations-btn'
               data-test='open-github-win-installations-btn'
-              // onClick={this.openGitHubWinInstallations}
+              onClick={openGitHubWinInstallations}
               size='small'
             >
               Manage available GitHub Repositories
