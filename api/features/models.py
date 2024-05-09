@@ -1013,13 +1013,23 @@ class FeatureState(
             feature_states = []
             feature_states.append(self)
 
-            feature_data: GithubData = generate_data(
-                github_configuration=github_configuration,
-                feature_id=self.feature.id,
-                feature_name=self.feature.name,
-                type=WebhookEventType.FLAG_UPDATED.value,
-                feature_states=feature_states,
-            )
+            if self.deleted_at is None:
+                feature_data: GithubData = generate_data(
+                    github_configuration=github_configuration,
+                    feature_id=self.feature.id,
+                    feature_name=self.feature.name,
+                    type=WebhookEventType.FLAG_UPDATED.value,
+                    feature_states=feature_states,
+                )
+
+            if self.deleted_at is not None:
+                feature_data: GithubData = generate_data(
+                    github_configuration=github_configuration,
+                    feature_id=self.feature.id,
+                    feature_name=self.feature.name,
+                    type=WebhookEventType.FLAG_DELETED.value,
+                    feature_states=feature_states,
+                )
 
             call_github_app_webhook_for_feature_state.delay(
                 args=(asdict(feature_data),),

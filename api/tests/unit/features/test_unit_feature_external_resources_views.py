@@ -1,6 +1,6 @@
 import datetime
-from unittest.mock import ANY
 
+import pytest
 import simplejson as json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.urls import reverse
@@ -77,7 +77,7 @@ def test_create_feature_external_resource(
     github_request_mock.assert_called_with(
         "https://api.github.com/repos/repoowner/repo-name/issues/35/comments",
         json={
-            "body": f"### This pull request is linked to a Flagsmith Feature (feature_with_value):\n**Test Environment**\n- [ ] Disabled\nunicode\n```value```\n\nLast Updated {datetime_now.strftime('%dth %b %Y %I:%M%p')}"  # noqa E501
+            "body": f"### This pull request is linked to a Flagsmith Feature (`feature_with_value`):\n**Test Environment**\n- [ ] Disabled\nunicode\n```value```\n\nLast Updated {datetime_now.strftime('%dth %b %Y %I:%M%p')}"  # noqa E501
         },
         headers={
             "Accept": "application/vnd.github.v3+json",
@@ -249,7 +249,7 @@ def test_delete_feature_external_resource(
     github_request_mock.assert_called_with(
         "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
         json={
-            "body": "### The feature flag Test Feature1 was unlinked from the issue/PR"
+            "body": "### The feature flag `Test Feature1` was unlinked from the issue/PR"
         },
         headers={
             "Accept": "application/vnd.github.v3+json",
@@ -308,16 +308,23 @@ def test_get_feature_external_resource(
     assert response.data["url"] == feature_external_resource.url
 
 
-def test_create_github_comment_on_feature_state_updated(
+@pytest.mark.parametrize(
+    "event_type",
+    [
+        ("update"),
+        ("delete"),
+    ],
+)
+def test_create_github_comment_on_feature_state_updated(  # noqa: C901
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     feature_external_resource: FeatureExternalResource,
     feature: Feature,
-    project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
     mocker,
     environment: Environment,
+    event_type: str,
 ) -> None:
     # Given
     with_environment_permissions([UPDATE_FEATURE_STATE])
@@ -331,6 +338,15 @@ def test_create_github_comment_on_feature_state_updated(
     github_request_mock = mocker.patch(
         "requests.post", side_effect=mocked_requests_post
     )
+
+    mock_generate_body_comment = mocker.patch(
+        "integrations.github.tasks.generate_body_comment",
+    )
+
+    if event_type == "update":
+        mock_generate_body_comment.return_value = "Flag updated"
+    elif event_type == "delete":
+        mock_generate_body_comment.return_value = "Flag deleted"
 
     feature_state_value = feature_state.get_feature_state_value()
     feature_env_data = {}
@@ -362,23 +378,51 @@ def test_create_github_comment_on_feature_state_updated(
     )
 
     # When
-    response = staff_client.put(path=url, data=payload, format="json")
+    if event_type == "update":
+        response = staff_client.put(path=url, data=payload, format="json")
+    elif event_type == "delete":
+        response = staff_client.delete(path=url)
 
     # Then
-    assert response.status_code == status.HTTP_200_OK
-    github_request_mock.assert_called_with(
-        "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
-        json=ANY,
-        headers={
-            "Accept": "application/vnd.github.v3+json",
-            "Authorization": "Bearer mocked_token",
-        },
-        timeout=10,
-    )
-    mock_generate_data.assert_called_with(
-        github_configuration=github_configuration,
-        feature_id=feature.id,
-        feature_name=feature.name,
-        type=WebhookEventType.FLAG_UPDATED.value,
-        feature_states=[feature_state],
-    )
+    if event_type == "update":
+        assert response.status_code == status.HTTP_200_OK
+    elif event_type == "delete":
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    if event_type == "update":
+        github_request_mock.assert_called_with(
+            "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
+            json={"body": "Flag updated"},
+            headers={
+                "Accept": "application/vnd.github.v3+json",
+                "Authorization": "Bearer mocked_token",
+            },
+            timeout=10,
+        )
+    elif event_type == "delete":
+        github_request_mock.assert_called_with(
+            "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
+            json={"body": "Flag deleted"},
+            headers={
+                "Accept": "application/vnd.github.v3+json",
+                "Authorization": "Bearer mocked_token",
+            },
+            timeout=10,
+        )
+        if event_type == "update":
+            mock_generate_data.assert_called_with(
+                github_configuration=github_configuration,
+                feature_id=feature.id,
+                feature_name=feature.name,
+                type=WebhookEventType.FLAG_UPDATED.value,
+                feature_states=[feature_state],
+            )
+
+        elif event_type == "update":
+            mock_generate_data.assert_called_with(
+                github_configuration=github_configuration,
+                feature_id=feature.id,
+                feature_name=feature.name,
+                type=WebhookEventType.FLAG_UPDATED.value,
+                feature_states=[feature_state],
+            )
