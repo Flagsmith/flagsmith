@@ -1,5 +1,4 @@
 @import '../variables';
-@import '../new/variables-new';
 
 .btn,
 button.btn {
@@ -84,18 +83,18 @@ button.btn {
   }
 
   &-secondary {
-    color: $text-icon-dark;
+    color: $body-color;
     background-color: $btn-secondary-bg;
 
     &:hover,
     &:focus {
       background-color: $btn-secondary-hover-bg;
-      color: $text-icon-dark;
+      color: $body-color;
     }
 
     &.btn:active {
       background-color: $btn-secondary-active-bg;
-      color: $text-icon-dark;
+      color: $body-color;
     }
   }
   &-success {
@@ -147,7 +146,7 @@ button.btn {
     &:hover,&:focus {
       background-color: $bg-light300;
       path {
-        fill: $body-text;
+        fill: $body-color;
       }
     }
   }
@@ -174,7 +173,7 @@ button.btn {
       background-color: $basic-alpha-8 !important;
       svg {
         path {
-          fill: $text-icon-dark;
+          fill: $body-color;
         }
       }
     }
@@ -202,9 +201,9 @@ button.btn {
   &--with-icon {
     background: none !important;
     &.primary {
-      color: $bt-brand-primary-dark-desaturated-lighter;
+      color: $primary;
       path {
-        fill: $bt-brand-primary-dark-desaturated-lighter;
+        fill: $primary;
       }
     }
     box-shadow: none;
@@ -215,9 +214,9 @@ button.btn {
     &:hover,
     &:focus {
       background: none !important;
-      color: darken($bt-brand-secondary, 10) !important;
+      color: darken($success, 10) !important;
       path {
-        fill: darken($bt-brand-secondary, 10) !important;
+        fill: darken($success, 10) !important;
       }
       box-shadow: none !important;
     }
@@ -236,7 +235,7 @@ button.btn {
   }
   &-project {
     background-color: $bg-light200;
-    color: $text-icon-dark;
+    color: $body-color;
     padding: 0px 8px;
     width: 100%;
     height: 76px;
@@ -245,7 +244,7 @@ button.btn {
       background-color: transparent;
       border: 1px dashed $basic-alpha-24;
       &:disabled {
-        color: $body-text;
+        color: $body-color;
       }
       &:hover {
         background-color: transparent;
@@ -267,7 +266,7 @@ button.btn {
     &.btn:active,
     &.btn:focus {
       background-color: $bg-light200;
-      color: $text-icon-dark;
+      color: $body-color;
       & .btn-project-letter {
         background-color: $primary;
       }
@@ -330,7 +329,7 @@ button.btn {
     background: transparent;
   }
   &.dark-link {
-    color: $text-icon-dark;
+    color: $body-color;
     font-weight: bold;
   }
   &.btn-with-icon {
@@ -393,14 +392,14 @@ $add-btn-size: 34px;
       background-color: $primary;
     }
     &.btn-icon {
-      color: $body-text-dark;
+      color: $body-color-dark;
       path {
         fill: $text-muted;
       }
       &:hover,&:focus {
         background-color: $bg-dark300;
         path {
-          fill: $body-text-dark;
+          fill: $body-color-dark;
         }
       }
     }
@@ -458,9 +457,9 @@ $add-btn-size: 34px;
       &:hover,
       &:focus {
         background: none !important;
-        color: $dark-highlight3 !important;
+        color: $bg-light200 !important;
         path {
-          fill: $dark-highlight3 !important;
+          fill: $bg-light200 !important;
         }
       }
     }

@@ -1,5 +1,7 @@
-import { PureComponent } from 'react'
+import React, { PureComponent } from 'react'
 import Icon from './Icon'
+import { IonIcon } from '@ionic/react'
+import { chevronDown, chevronForward, createOutline } from 'ionicons/icons'
 
 const cn = require('classnames')
 
@@ -36,22 +38,19 @@ const Collapsible = class extends PureComponent {
         })}
         ref={this.ref}
       >
-        <div
-          className='collapsible__header ml-5 mr-3'
-          onClick={this.props.onClick}
-        >
-          <Row space className='no-wrap clickable'>
+        <div className='collapsible-title mx-3' onClick={this.props.onClick}>
+          <div className='flex-row'>
+            <IonIcon
+              className='fs-small me-2 text-muted'
+              icon={
+                this.props.active || this.props.isProjectSelect
+                  ? chevronDown
+                  : chevronForward
+              }
+            />
+
             <div>{this.props.title}</div>
-            <div className='align-self-start'>
-              <Icon
-                name={
-                  this.props.active || this.props.isProjectSelect
-                    ? 'chevron-down'
-                    : 'chevron-right'
-                }
-              />
-            </div>
-          </Row>
+          </div>
         </div>
         {this.props.active ? (
           <div className='collapsible__content'>{this.props.children}</div>

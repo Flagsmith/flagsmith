@@ -31,6 +31,13 @@ import GitHubSetupPage from './components/pages/GitHubSetupPage'
 import AuditLogItemPage from './components/pages/AuditLogItemPage'
 import FeatureHistoryPage from './components/pages/FeatureHistoryPage'
 import Utils from 'common/utils/utils'
+import ProjectsPage from './components/ProjectsPage'
+import OrganisationSettingsRedirectPage from './components/pages/OrganisationSettingsRedirectPage'
+import OrganisationUsagePage from './components/pages/OrganisationUsagePage'
+import OrganisationsPage from './components/pages/OrganisationsPage'
+import UsersAndPermissionsPage from './components/pages/UsersAndPermissionsPage'
+import ProjectRedirectPage from './components/pages/ProjectRedirectPage'
+import SDKKeysPage from './components/SDKKeysPage'
 
 export default (
   <App>
@@ -86,6 +93,11 @@ export default (
         component={EnvironmentSettingsPage}
       />
       <Route
+        path='/project/:projectId/environment/:environmentId/sdk-keys'
+        exact
+        component={SDKKeysPage}
+      />
+      <Route
         path='/project/:projectId/integrations'
         exact
         component={IntegrationsPage}
@@ -115,11 +127,7 @@ export default (
         exact
         component={ProjectSettingsPage}
       />
-      <Route
-        path='/project/:projectId/environment/:environmentId/compare'
-        exact
-        component={ComparePage}
-      />
+      <Route path='/project/:projectId/compare' exact component={ComparePage} />
       <Route
         path='/project/:projectId/environment/:environmentId/history'
         exact
@@ -131,25 +139,46 @@ export default (
         component={ProjectSettingsPage}
       />
       <Route
-        path='/project/:projectId/environment/:environmentId/segments'
+        path='/project/:projectId/permissions'
+        exact
+        component={ProjectSettingsPage}
+      />
+      <Route
+        path='/project/:projectId/segments'
         exact
         component={SegmentsPage}
       />
       <Route
-        path='/project/:projectId/environment/:environmentId/organisation-settings'
+        path='/organisation/:organisationId/settings'
         exact
         component={OrganisationSettingsPage}
       />
       <Route
+        path='/organisation/:organisationId/permissions'
+        exact
+        component={UsersAndPermissionsPage}
+      />
+      <Route
+        path='/organisation/:organisationId/usage'
+        exact
+        component={OrganisationUsagePage}
+      />
+      <Route
         path='/organisation-settings'
         exact
-        component={OrganisationSettingsPage}
+        component={OrganisationSettingsRedirectPage}
+      />
+      <Route
+        path='/organisation/:organisationId/projects'
+        exact
+        component={ProjectsPage}
       />
       <Route
         path='/project/:projectId/environment/:environmentId/account'
         exact
         component={AccountSettingsPage}
       />
+      <Route path='/project/:projectId' exact component={ProjectRedirectPage} />
       <Route path='/account' exact component={AccountSettingsPage} />
       <Route
         path='/project/:projectId/environment/:environmentId/audit-log'
@@ -161,6 +190,7 @@ export default (
         exact
         component={AuditLogPage}
       />
+      <Route path='/organisations' exact component={OrganisationsPage} />
       <Route
         path='/project/:projectId/environment/:environmentId/audit-log/:id'
         exact

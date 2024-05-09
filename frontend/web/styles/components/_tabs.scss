@@ -64,7 +64,7 @@
     box-shadow: none;
     flex: 1;
     background-color: transparent;
-    color: $text-icon-dark;
+    color: $body-color;
     &:hover {
       background-color: transparent;
       box-shadow: none;
@@ -72,7 +72,7 @@
     &.btn:active {
       box-shadow: none;
       background: transparent;
-      color: $text-icon-dark;
+      color: $body-color;
     }
     min-height: 34px;
     font-weight: $tab-btn-font-weight;

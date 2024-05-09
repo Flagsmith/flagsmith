@@ -6,7 +6,7 @@ textarea {
   outline: none;
   border: 1px solid $input-border-color;
   border-radius: $border-radius;
-  color: $text-icon-dark;
+  color: $body-color;
   line-height: $line-height-lg;
   padding: $input-padding;
   font-weight: $input-font-weight;
@@ -167,13 +167,13 @@ textarea {
   textarea:-webkit-autofill,
   select:-webkit-autofill {
     background-color: $input-bg-dark;
-    color: $body-text-dark;
+    color: $body-color-dark;
   }
 }
 .dark textarea {
   background-color: $input-bg-dark;
-  color: $body-text-dark;
-  border-color: $bt-input-border-dark;
+  color: $body-color-dark;
+  border-color: $input-bg-dark;
   &::placeholder {
     color: $input-placeholder-color-dark !important;
   }
@@ -226,7 +226,7 @@ textarea {
   padding: 2px;
   border-radius: $border-radius;
   color: white;
-  background-color: $bt-brand-primary;
+  background-color: $primary;
   &::-webkit-calendar-picker-indicator {
     filter: invert(48%) sepia(13%) saturate(0%) hue-rotate(130deg)
       brightness(200%) contrast(80%);
@@ -238,7 +238,7 @@ textarea {
     padding: 2px;
     border-radius: $border-radius;
     color: white;
-    background-color: $bt-brand-primary-dark;
+    background-color: $primary900;
     &::-webkit-calendar-picker-indicator {
       filter: invert(48%) sepia(13%) saturate(0%) hue-rotate(130deg)
         brightness(200%) contrast(80%);
@@ -249,17 +249,17 @@ textarea {
 .dark {
   .MuiFormControl-root > div {
     &:hover:before {
-      border-color: $bt-input-border-dark !important;
+      border-color: $input-bg-dark !important;
     }
     &:before {
-      border-color: $bt-input-border-dark;
+      border-color: $input-bg-dark;
     }
     &:before {
-      border-color: $bt-input-border-dark;
+      border-color: $input-bg-dark;
     }
   }
   .MuiInputBase-input {
-    color: $body-text-dark;
+    color: $body-color-dark;
   }
   .MuiChip-root {
     color: $dark-highlight-color;
@@ -268,11 +268,11 @@ textarea {
     &:hover {
       background: $panel-bg-dark;
       svg {
-        color: $dark-color;
+        color: $hr-border-color;
       }
     }
     svg {
-      color: $panel-bg-darker;
+      color: $primary900;
     }
   }
 }

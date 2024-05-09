@@ -1883,20 +1883,20 @@ const CreateFlag = class extends Component {
                                 {!identity && (
                                   <div className='text-right mb-3'>
                                     {project.prevent_flag_defaults ? (
-                                      <p className='text-right modal-caption fs-small lh-sm'>
+                                      <InfoMessage className='text-right modal-caption fs-small lh-sm'>
                                         This will create the feature for{' '}
                                         <strong>all environments</strong>, you
                                         can edit this feature per environment
                                         once the feature's enabled state and
                                         environment once the feature is created.
-                                      </p>
+                                      </InfoMessage>
                                     ) : (
-                                      <p className='text-right modal-caption fs-small lh-sm'>
+                                      <InfoMessage className='text-right modal-caption fs-small lh-sm'>
                                         This will create the feature for{' '}
                                         <strong>all environments</strong>, you
                                         can edit this feature per environment
                                         once the feature is created.
-                                      </p>
+                                      </InfoMessage>
                                     )}
 
                                     <Button
