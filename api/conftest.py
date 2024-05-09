@@ -336,11 +336,13 @@ def with_environment_permissions(
     """
 
     def _with_environment_permissions(
-        permission_keys: list[str], environment_id: int | None = None
+        permission_keys: list[str],
+        environment_id: int | None = None,
+        admin: bool = False,
     ) -> UserEnvironmentPermission:
         environment_id = environment_id or environment.id
         uep, __ = UserEnvironmentPermission.objects.get_or_create(
-            environment_id=environment_id, user=staff_user
+            environment_id=environment_id, user=staff_user, defaults={"admin": admin}
         )
         uep.permissions.add(*permission_keys)
 

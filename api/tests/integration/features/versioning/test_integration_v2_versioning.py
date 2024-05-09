@@ -196,7 +196,7 @@ def test_v2_versioning(
     # still behave the same
     verify_consistent_responses(num_expected_flags=2)
 
-    # finally, let's publish the new version and verify that we get a different response
+    # now, let's publish the new version and verify that we get a different response
     publish_ef_version_url = reverse(
         "api-v1:versioning:environment-feature-versions-publish",
         args=[environment, feature, ef_version_uuid],
@@ -236,6 +236,45 @@ def test_v2_versioning(
         identity_response_standard_feature_data["feature_state_value"]
         == "v2-segment-override-value"
     )
+
+    # finally, let's test that we can revert the v2 versioning, and we still get the
+    # same response
+    disable_versioning_url = reverse(
+        "api-v1:environments:environment-disable-v2-versioning",
+        args=[environment_api_key],
+    )
+    environment_update_response = admin_client.post(disable_versioning_url)
+    assert environment_update_response.status_code == status.HTTP_202_ACCEPTED
+
+    time.sleep(0.5)
+
+    environment_flags_response_after_revert = get_environment_flags_response_json(
+        num_expected_flags=2
+    )
+    identity_flags_response_after_revert = get_identity_flags_response_json(
+        num_expected_flags=2
+    )
+
+    # Verify that the environment flags have the same state / value
+    environment_flag_tuples_pre_revert = {
+        (f["enabled"], f["feature_state_value"], f["feature"]["id"])
+        for f in environment_flags_response_json_after_publish
+    }
+    environment_flag_tuples_post_revert = {
+        (f["enabled"], f["feature_state_value"], f["feature"]["id"])
+        for f in environment_flags_response_after_revert
+    }
+    assert environment_flag_tuples_pre_revert == environment_flag_tuples_post_revert
+
+    identity_flag_tuples_pre_revert = {
+        (f["enabled"], f["feature_state_value"], f["feature"]["id"])
+        for f in identity_flags_response_json_after_publish["flags"]
+    }
+    identity_flag_tuples_post_revert = {
+        (f["enabled"], f["feature_state_value"], f["feature"]["id"])
+        for f in identity_flags_response_after_revert["flags"]
+    }
+    assert identity_flag_tuples_pre_revert == identity_flag_tuples_post_revert
 
 
 def test_v2_versioning_mv_feature(

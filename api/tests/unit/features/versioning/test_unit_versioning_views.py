@@ -582,3 +582,25 @@ def test_filter_versions_by_is_live(
     assert not_live_versions_response_json["results"][0]["uuid"] == str(
         unpublished_environment_feature_version.uuid
     )
+
+
+def test_disable_v2_versioning_returns_bad_request_if_not_using_v2_versioning(
+    environment: Environment,
+    staff_client: "APIClient",
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-disable-v2-versioning",
+        args=[environment.api_key],
+    )
+
+    with_environment_permissions(
+        permission_keys=[], environment_id=environment.id, admin=True
+    )
+
+    # When
+    response = staff_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST

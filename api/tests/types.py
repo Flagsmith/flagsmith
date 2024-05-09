@@ -11,5 +11,5 @@ WithOrganisationPermissionsCallable = Callable[
     [list[str], int | None], UserOrganisationPermission
 ]
 WithEnvironmentPermissionsCallable = Callable[
-    [list[str], int | None], UserEnvironmentPermission
+    [list[str], int | None, bool], UserEnvironmentPermission
 ]

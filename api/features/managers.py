@@ -37,7 +37,14 @@ class FeatureStateManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
                 environment
             )
             latest_version_uuids = [efv.uuid for efv in latest_versions]
-            qs_filter &= Q(environment_feature_version__uuid__in=latest_version_uuids)
+
+            # Note that since identity overrides aren't part of the versioning system,
+            # we need to make sure we also return them here. We can still then subsequently
+            # filter them out with the `additional_filters` if needed.
+            qs_filter &= Q(
+                Q(environment_feature_version__uuid__in=latest_version_uuids)
+                | Q(identity__isnull=False)
+            )
         else:
             qs_filter &= Q(
                 live_from__isnull=False,
