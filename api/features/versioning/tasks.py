@@ -38,7 +38,7 @@ def enable_v2_versioning(environment_id: int) -> None:
 @register_task_handler()
 def disable_v2_versioning(environment_id: int) -> None:
     from environments.models import Environment
-    from features.models import FeatureState
+    from features.models import FeatureSegment, FeatureState
     from features.versioning.models import EnvironmentFeatureVersion
 
     environment = Environment.objects.get(id=environment_id)
@@ -50,10 +50,13 @@ def disable_v2_versioning(environment_id: int) -> None:
         id__in=[fs.id for fs in latest_feature_states]
     ).delete()
 
-    # update the latest feature states to be the latest version according
-    # to the old versioning system
+    # update the latest feature states (and respective feature segments) to be the
+    # latest version according to the old versioning system
     latest_feature_states.update(
         version=1, live_from=timezone.now(), environment_feature_version=None
+    )
+    FeatureSegment.objects.filter(environment=environment).update(
+        environment_feature_version=None
     )
 
     EnvironmentFeatureVersion.objects.filter(environment=environment).delete()
