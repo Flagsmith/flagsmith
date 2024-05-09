@@ -23,7 +23,7 @@ following languages:
 - [Go](https://github.com/open-feature/go-sdk-contrib/tree/main/providers/flagsmith)
 - [Java](https://github.com/open-feature/java-sdk-contrib/tree/main/providers/flagsmith)
 - [.Net](https://github.com/open-feature/dotnet-sdk-contrib/tree/main/src/OpenFeature.Contrib.Providers.Flagsmith)
-- [Javascript/Web](https://github.com/Flagsmith/js-sdk-contrib)
+- [JavaScript/Web](https://github.com/open-feature/js-sdk-contrib/tree/main/libs/providers/flagsmith-client)
 
 ### Beta Providers
 
