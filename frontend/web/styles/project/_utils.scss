@@ -17,9 +17,6 @@
         }
     }
 }
-.bg-secondary {
-    background-color: $bt-brand-secondary;
-}
 .clearfix { display: inline-block; }
 /* start commented backslash hack \*/
 * html .clearfix { height: 1%; }
@@ -52,17 +49,29 @@
 .float-left{
     float:left;
 }
-
+.left-0 {
+    left: 0 !important;
+}
+.max-w-auto {
+  max-width: none !important;
+}
+.top-form-item {
+    top: 30px;
+}
+.border-left-1 {
+    border-left: 1px solid $hr-border-color !important;
+}
+.border-bottom-1 {
+    border-bottom: 1px solid $hr-border-color !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
 .margin-top{
     margin-top:20px;
 }
 
 .margin-bottom{
     margin-bottom:20px;
-}
-
-.no-mb{
-    margin-bottom:0;
 }
 
 .text-left{
@@ -72,7 +81,6 @@
 .link-style{
     text-decoration: underline;
 }
-
 
 .disable-transitions {
     .modal-dialog {
@@ -110,7 +118,7 @@
 .signup-icon {
     width: 64px;
     path {
-        fill: $bt-brand-primary;
+        fill: $primary;
     }
 }
 
@@ -126,11 +134,11 @@
 }
 
 .text-primary {
-    color: $bt-brand-primary !important;
+    color: $primary !important;
 }
 
 .text-primary {
-    color: $bt-brand-primary !important;
+    color: $primary !important;
 }
 
 .unread {
@@ -150,15 +158,6 @@
     position: relative;
     bottom: -1px;
 }
-.aside__environment-list-item.active {
-    .unread {
-        background-color: rgba(0,0,0,.2);
-    }
-}
-.aside__environment-list-item.disabled {
-    color:#696969;
-    pointer-events: none;
-  }
 
 .justify-content-end {
     justify-content: flex-end;
@@ -169,7 +168,7 @@
 }
 
 .bg-primary {
-    background: $bt-brand-primary !important;
+    background: $primary !important;
 }
 .dark {
     .text-body {
@@ -179,7 +178,7 @@
         }
     }
     .bg-primary {
-        background: $bt-brand-primary-dark !important;
+        background: $primary900 !important;
     }
 }
 
@@ -187,7 +186,7 @@
     text-decoration: none;
     &:hover {
         text-decoration: none;
-        color: $bt-brand-primary-dark
+        color: $primary900
     }
 }
 

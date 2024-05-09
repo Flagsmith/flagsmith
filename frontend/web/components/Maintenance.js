@@ -14,7 +14,7 @@ const HomePage = class extends React.Component {
   }
 
   render = () => (
-    <div className='fullscreen-container maintenance fullscreen-container__grey justify-content-center'>
+    <div className='fullscreen-container maintenance justify-content-center'>
       <div className='col-md-6 mt-5' id='sign-up'>
         <h1>Maintenance</h1>
         We are currently undergoing some scheduled maintenance of the admin

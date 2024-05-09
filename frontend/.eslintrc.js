@@ -60,7 +60,6 @@ module.exports = {
     'Radio': true,
     'React': true,
     'ReactDOM': true,
-    'RemoveIcon': true,
     'RequiredElement': true,
     'RequiredFunc': true,
     'RequiredObject': true,

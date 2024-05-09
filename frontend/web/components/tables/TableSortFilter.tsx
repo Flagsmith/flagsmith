@@ -38,7 +38,7 @@ const TableSortFilter: FC<TableFilterType> = ({
           return (
             <a
               key={i}
-              className='popover-bt__list-item'
+              className='table-filter-item'
               href='#'
               onClick={(e) => {
                 e.preventDefault()

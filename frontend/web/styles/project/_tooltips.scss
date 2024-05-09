@@ -6,7 +6,7 @@ $shadow-dark: 0 4px 4px 0 #00000029;
   max-width: 400px;
   font-family: $btn-font-family;
   font-size: $font-size-sm;
-  color: $body-text !important;
+  color: $body-color !important;
   text-transform: none;
   text-wrap: wrap;
   &.show {
@@ -74,39 +74,39 @@ $shadow-dark: 0 4px 4px 0 #00000029;
 
 .dark {
   .__react_component_tooltip {
-    background-color: $text-icon-dark;
+    background-color: $body-color;
     color: white !important;
     box-shadow: $shadow-dark;
 
     &.place-top {
       &:after {
         box-shadow: $shadow-dark;
-        border-top-color: $text-icon-dark;
-        background-color: $text-icon-dark;
+        border-top-color: $body-color;
+        background-color: $body-color;
       }
     }
 
     &.place-bottom {
       &:after {
         box-shadow: $shadow-dark;
-        border-bottom-color: $text-icon-dark;
-        background-color: $text-icon-dark;
+        border-bottom-color: $body-color;
+        background-color: $body-color;
       }
     }
 
     &.place-right {
       &:after {
         box-shadow: $shadow-dark;
-        border-right-color: $text-icon-dark;
-        background-color: $text-icon-dark;
+        border-right-color: $body-color;
+        background-color: $body-color;
       }
     }
 
     &.place-left {
       &:after {
         box-shadow: $shadow-dark;
-        border-left-color: $text-icon-dark;
-        background-color: $text-icon-dark;
+        border-left-color: $body-color;
+        background-color: $body-color;
       }
     }
   }
@@ -131,7 +131,7 @@ $shadow-dark: 0 4px 4px 0 #00000029;
 
 .dark {
   .recharts-tooltip-header {
-    color: $text-icon-dark;
+    color: $body-color;
   }
 
   .xAxis {

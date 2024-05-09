@@ -1,7 +1,6 @@
 import { PureComponent } from 'react'
 import Select from 'react-select'
 import Button from 'components/base/forms/Button'
-import RemoveIcon from 'components/RemoveIcon'
 import Paging from 'components/Paging'
 import ToggleChip from 'components/ToggleChip'
 import Input from 'components/base/forms/Input'
@@ -29,7 +28,6 @@ window.ProjectProvider = ProjectProvider
 window.Paging = Paging
 
 // Useful components
-window.Gif = require('../components/base/Gif')
 window.Row = require('../components/base/grid/Row')
 window.Flex = require('../components/base/grid/Flex')
 window.Column = require('../components/base/grid/Column')
@@ -82,7 +80,6 @@ window.Loader = class extends PureComponent {
 window.Tooltip = Tooltip
 
 global.ToggleChip = ToggleChip
-global.RemoveIcon = RemoveIcon
 global.Select = class extends PureComponent {
   static displayName = 'Select'
 
@@ -105,7 +102,11 @@ global.Select = class extends PureComponent {
             <a
               key={index}
               onClick={() => props.onChange(option)}
-              data-test={`${props['data-test']}-option-${index}`}
+              data-test={
+                this.props.dataTest
+                  ? this.props.dataTest(option)
+                  : `${props['data-test']}-option-${index}`
+              }
             >
               .
             </a>

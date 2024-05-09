@@ -18,6 +18,7 @@ export default async function () {
   log('Get Invite url')
   await t.navigateTo('http://localhost:3000/organisation-settings')
   await Selector(byId('organisation-name')).value
+  await click(byId('users-and-permissions'))
   const inviteLink = await Selector(byId('invite-link')).value
   log('Accept invite')
   await t.navigateTo(inviteLink)

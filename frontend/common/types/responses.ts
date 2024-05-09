@@ -323,6 +323,7 @@ export type githubIntegration = {
 export type User = {
   id: number
   email: string
+  last_login?: string
   first_name: string
   last_name: string
   role: 'ADMIN' | 'USER'
@@ -555,6 +556,7 @@ export type Invite = {
   email: string
   date_created: string
   invited_by: User
+  link: string
   permission_groups: number[]
 }
 

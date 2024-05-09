@@ -7,6 +7,7 @@ import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import { Link } from 'react-router-dom'
+import Constants from 'common/constants'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -73,7 +74,7 @@ const ChangeRequestsPage = class extends Component {
                   <InfoMessage>
                     Schedule feature state changes with a Change Request flow
                     with our{' '}
-                    <Link to='/organisation-settings'>Start-up plan</Link>. Find
+                    <Link to={Constants.upgradeURL}>Start-up plan</Link>. Find
                     out more{' '}
                     <Button
                       theme='text'

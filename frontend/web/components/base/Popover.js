@@ -19,9 +19,9 @@ const Popover = class extends React.Component {
 
   render() {
     const classNames = cn(
+      'inline-modal inline-modal--sm',
       {
-        popover: true,
-        show: this.state.isActive,
+        'd-none': !this.state.isActive,
       },
       this.props.contentClassName,
       this.props.className,
@@ -35,7 +35,7 @@ const Popover = class extends React.Component {
       >
         <div className={this.props.className}>
           {this.props.renderTitle(this.toggle, this.state.isActive)}
-          <div className='popover-inner'>
+          <div>
             <div className={`${classNames}`}>
               {this.props.children(this.toggle)}
             </div>

@@ -1,228 +1,380 @@
-@import 'new/variables-new';
-//Fonts
-$font-family: 'OpenSans', sans-serif;
-$font-family-header: 'OpenSans', sans-serif;
+@import '~bootstrap/scss/mixins';
+@import '~bootstrap/scss/functions';
+@import '~bootstrap/scss/variables';
 
-$dark-bg-0: #232533;
-$dark-bg-2: #1a1c26;
-$dark-bg-5: #1a1c26;
-$dark-bg-10: #252836;
-$dark-bg-15: #323242;
-$dark-bg-20: #3a3d4a;
-$dark-bg-50: #b3b3b3;
-$dark-highlight: #424b72;
-$dark-highlight2: $dark-bg-20;
-$dark-highlight3: #f18e7f;
+// Colors
+$white-alpha-8: rgba(255, 255, 255, 0.08);
+$white-alpha-16: rgba(255, 255, 255, 0.16);
+$white-alpha-24: rgba(255, 255, 255, 0.24);
+$white-alpha-32: rgba(255, 255, 255, 0.32);
+$white-alpha-48: rgba(255, 255, 255, 0.48);
+$black-alpha-8: rgba(0, 0, 0, 0.08);
+$black-alpha-16: rgba(0, 0, 0, 0.16);
+$black-alpha-32: rgba(0, 0, 0, 0.32);
 
+// Backgrounds
+$bg-dark500: #101628;
+$bg-dark400: #15192b;
+$bg-dark300: #161d30;
+$bg-dark200: #202839;
+$bg-dark100: #2d3443;
+$bg-light100: #ffffff;
+$bg-light200: #fafafb;
+$bg-light300: #eff1f4;
+$bg-light500: #e0e3e9;
+
+// Body
 $dark-highlight-color: #e1e1e1;
-$dark-color: #747484;
+$body-bg-dark: $bg-dark500;
+$body-color-dark: white;
+$body-color: #1a2634;
+$text-icon-light: #ffffff;
+$text-icon-grey: #656d7b;
+$text-icon-light-grey: rgba(157, 164, 174, 1);
+$text-muted: $text-icon-grey;
 
-$button-bg-dark: $dark-bg-0;
-$button-bg-dark-hover: darken($button-bg-dark, 1);
-
-// COLORS
-
-$bt-brand-primary: #7b51fb;
-$bt-brand-primary-faint: #1d0d4d;
-//$bt-brand-primary-faint: #003100;
-$bt-brand-primary-light: lighten($bt-brand-primary, 5);
-
-$bt-brand-primary-dark: #1e0d26;
-$bt-brand-primary-dark-alt: #17103a;
-$bt-brand-primary-dark-desaturated: #202040;
-$bt-brand-primary-dark-desaturated-light: #38386d;
-$bt-brand-primary-dark-desaturated-lighter: #4e51be;
-$bt-brand-primary-dark-desaturated-lighter-dark: #131216;
-
-$bt-brand-faint: #f8f8f7;
-$bt-brand-faint-alt: #f5f1ed;
-$bt-brand-faint-alt-darken: #dfd8cc;
-$bt-brand-faint-alt-dark: #1b1924;
-$bt-brand-faint-hover: #f8f2f8;
-$bt-brand-faint-hover-dark: #242230;
-
-$bt-brand-4: #f6d46e;
-$bt-brand-tertiary: #f18e7f;
-$bt-brand-tertiary-dark: $dark-highlight3;
-$bt-brand-secondary: #00a696;
-$bt-brand-secondary-faint: #2d9189;
-$bt-brand-secondary-faint-dark: #12776d;
-$bt-brand-secondary-light: lighten($bt-brand-secondary, 40);
-$bt-brand-secondary-hover: darken($bt-brand-secondary, 5);
-$bt-brand-secondary-active: $bt-brand-secondary-hover;
-
-$bt-brand-red: #f2576e;
-$bt-brand-yellow: #fdfddd;
-
-//Body
-$body-text-faint: #717186;
-$body-text-faint-dark: darken(#e3e3e3, 10);
+// Header
 $header-color: #1e0d26; // for headers and labels
-$header-color-dark: #d2d2d2; // for headers and labels
-$bt-link-color: $bt-brand-primary-dark; // for headers and labels
-$bt-link-color-dark: $dark-highlight-color; // for headers and labels
-$bt-link-color-hover: lighten($header-color, 10); // for headers and labels
+$header-color-dark: $text-icon-light;
 
-//Navbar
-$nav-link-color: $header-color; // navbar link
-$nav-link-color-dark: darken($header-color-dark, 10); // navbar link
-$nav-link-color-hover: $bt-brand-primary; //
-$nav-link-color-active: $bt-brand-primary-dark;
-$nav-link-color-hover-dark: $bt-brand-primary-dark-desaturated-light; //
+// Other colors
+$primary: #6837fc;
+$primary400: #906af6;
+$primary600: #4e25db;
+$primary700: #3919b7;
+$primary900: #1d113e;
 
-$nav-link-color-active-dark: $bt-brand-primary-dark-desaturated-light;
-$navbar-height: 5rem;
-$navbar-background: transparent;
-$nav-icon-color: $bt-brand-primary;
-$nav-icon-color-dark: $dark-highlight;
+$danger: #ef4d56;
+$danger400: #f57c78;
 
-$bt-input-border: #d9d9e9;
-$bt-input-border-dark: $input-bg-dark;
-$bt-input-border-active: $input-bg-dark;
+$success: #27ab95;
+$success400: #56ccad;
+$success600: #13787b;
 
-$body-bg: #fff;
+$info: #0aaddf;
+$warning: #ff9f43;
 
+$secondary400: #fae392;
+$secondary500: #f7d56e;
+$secondary600: #d4b050;
+$secondary: #fae392;
 
-$butter-bar-bg: #fdf1dd;
-$butter-bar-bg-dark: $dark-bg-10;
+// Links and Anchors
+$link-color: $primary;
+$anchor-color: $primary900;
+$anchor-color-dark: $text-icon-light;
+$anchor-color-hover: lighten($header-color, 10);
+$anchor-color-dark: $dark-highlight-color;
 
-$bt-gradient-text: $body-text;
-$bt-gradient-start: $bt-brand-faint-alt;
-$bt-gradient-end: #fff;
+// Alerts
+$success-solid-alert: rgba(238, 248, 247);
+$info-solid-alert: rgba(236, 249, 252);
+$warning-solid-alert: rgba(255, 248, 240);
+$danger-solid-alert: rgba(254, 239, 241);
+$success-solid-dark-alert: rgba(17, 32, 46);
+$info-solid-dark-alert: rgba(15, 32, 52);
+$warning-solid-dark-alert: rgba(34, 31, 39);
+$danger-solid-dark-alert: rgba(34, 23, 40);
 
-//Panel
-$panel-heading-height: 50px;
+// Alphas
+$info-alfa-8: rgba(10, 173, 223, 0.08);
+$info-alfa-24: rgba(10, 173, 223, 0.24);
+$danger-alfa-8: rgba(255, 66, 75, 0.08);
+$danger-alfa-16: rgba(255, 66, 75, 0.16);
+$warning-alfa-8: rgba(255, 159, 0, 0.08);
+$primary-alfa-8: rgba(149, 108, 255, 0.08);
+$primary-alfa-16: rgba(149, 108, 255, 0.16);
+$primary-alfa-24: rgba(149, 108, 255, 0.24);
+$primary-alfa-32: rgba(149, 108, 255, 0.32);
+$basic-alpha-8: rgba(101, 109, 123, 0.08);
+$basic-alpha-16: rgba(101, 109, 123, 0.16);
+$basic-alpha-24: rgba(101, 109, 123, 0.24);
+$basic-alpha-32: rgba(101, 109, 123, 0.32);
+$basic-alpha-48: rgba(101, 109, 123, 0.48);
+$secondary-alfa-16: rgba(247, 213, 110, 0.16);
+$success-alfa-8: rgba(39, 171, 149, 0.08);
+$success-alfa-16: rgba(39, 171, 149, 0.16);
+
+// Border radius
+$border-radius-sm: 4px;
+$border-radius: 6px;
+$border-radius-lg: 8px;
+$border-radius-xlg: 10px;
+
+//Buttons
+$btn-line-height-xsm: 32px;
+$btn-line-height-sm: 40px;
+$btn-line-height: 44px;
+$btn-line-height-lg: 56px;
+
+$btn-padding-y: 0;
+$btn-font-weight: 700;
+$btn-border-radius: $border-radius;
+$btn-font-size: $font-size-base;
+$btn-padding-x: 20px; // todo, $spacer PR should change this to $spacer*5
+$btn-padding-y-sm: 0;
+$btn-padding-x-sm: 16px;
+$btn-font-size-sm: 14px;
+$btn-padding-y-lg: 0;
+$btn-padding-x-lg: 24px;
+$btn-font-size-lg: 18px;
+$btn-border-radius-sm: $border-radius;
+$btn-border-radius-lg: $border-radius-lg;
+$btn-disabled-opacity: 0.32;
+$btn-hover-bg: $primary600;
+$btn-hover-bg-dark: $primary400;
+$btn-active-bg: $primary700;
+$btn-secondary-bg: $basic-alpha-8;
+$btn-secondary-bg-dark: $white-alpha-8;
+$btn-secondary-hover-bg: $basic-alpha-16;
+$btn-secondary-hover-bg-dark: $white-alpha-16;
+$btn-secondary-active-bg: $basic-alpha-24;
+$btn-secondary-active-bg-dark: $white-alpha-24;
+$btn-outline-hover-bg: $primary-alfa-8;
+$btn-outline-hover-bg-dark: $basic-alpha-8;
+$btn-outline-focus-bg-dark: $primary-alfa-8;
+$btn-outline-active-bg: $primary-alfa-16;
+$btn-danger-hover: #cd384d;
+$btn-danger-active: #ac2646;
+$btn-border-width: 0;
+
+$link-hover-color: $primary;
+//HR
+$hr-border-color: $basic-alpha-16;
+$hr-opacity: 1;
+//todo: replace with bootstrap 5.3 dark mode theme
+.dark hr {
+  border-color: $basic-alpha-16;
+}
+
+//Modal
+$modal-content-color: $text-icon-grey;
+$modal-content-color-dark: $text-icon-light;
+$modal-sm: 500px;
+$modal-md: 620px;
+$modal-lg: 900px;
+$modal-bg-dark: $bg-dark400;
+$modal-border-radius: 18px;
+$modal-footer-border-width: 0;
+$modal-backdrop-bg: rgba(0, 0, 0, 0.870588);
+$modal-header-padding-x: $spacer * 1.5;
+$modal-header-padding-y: $spacer;
+$modal-header-border-width: 0;
+$modal-body-padding-y: $spacer * 1.5;
+$modal-body-padding-x: $spacer * 1.5;
+$modal-footer-margin-between: 0;
+
+//Breakpoints
+$grid-breakpoints: (
+        xs: 0,
+        sm: 544px,
+        md: 768px,
+        lg: 992px,
+        xl: 1200px,
+        xxl: 1400px,
+);
+
+$container-max-widths: (
+        sm: 576px,
+        md: 720px,
+        lg: 940px,
+        xl: 1140px,
+        xxl: 1200px,
+);
+
+//Typography
+$font-family-base: 'OpenSans', sans-serif;
+$font-size-sm: 0.875rem;
+$line-height-base: 1.375;
+$line-height-sm: 20px;
+$line-height-lg: 24px;
+$line-height-xlg: 28px;
+$line-height-xsm: 18px;
+$line-height-xxsm: 16px;
+$font-sm: 14px;
+$font-caption: 13px;
+$font-caption-sm: 12px;
+$font-caption-xs: 11px;
+$font-sizes: (
+        small: $font-sm,
+        caption: $font-caption,
+        captionSmall: $font-caption-sm,
+        captionXSmall: $font-caption-xs,
+);
+$font-size-base: 14px;
+$h1-font-size: 42px;
+$h1-line-height: 46px;
+$h2-font-size: 34px;
+$h2-line-height: 40px;
+$h3-font-size: 30px;
+$h3-line-height: 40px;
+$h4-font-size: 24px;
+$h4-line-height: 32px;
+$h5-font-size: 20px;
+$h5-line-height: 30px;
+$h6-font-size: 16px;
+$h6-line-height: 24px;
+
+//Input
+$input-bg: #fff;
+$input-bg-dark: $bg-dark300;
+$input-bg-alt: #f7f7f7;
+$input-color-dark: $text-icon-light-grey;
+$input-border-radius: $border-radius;
+$input-height: 44px;
+$input-height-sm: 42px;
+$input-height-xsm: 34px;
+$input-height-xxsm: 32px;
+$input-height-lg: 58px;
+$input-line-height: 24px;
+$input-font-size: $font-size-base;
+$input-font-weight: 500;
+$input-border-color: $basic-alpha-16;
+$input-border-color-dark: $bg-dark400;
+$input-focus-border-color-dark: $primary;
+$input-hover-border-color-dark: $white-alpha-8;
+$input-placeholder-color: $text-icon-light-grey;
+$input-padding: 12px 12px 12px 16px;
+$input-padding-sm: 8px 12px 8px 14px;
+$input-padding-xsm: 6px 8px;
+$input-padding-lg: 16px 12px 16px 20px;
+$textarea-height: 120px;
+$textarea-height-sm: 100px;
+$textarea-height-xsm: 86px;
+$textarea-height-lg: 128px;
+$input-border-highlight-color: $primary400;
+$input-placeholder-color-dark: $text-icon-light-grey;
+
+//Switch
+$switch-height: 24px;
+$switch-width: 41px;
+$switch-border-radius: 100px;
+$switch-bg: $basic-alpha-24;
+$switch-bg-dark: $white-alpha-24;
+$switch-hover-bg: $basic-alpha-48;
+$switch-hover-bg-dark: $white-alpha-48;
+$switch-disabled-bg: $basic-alpha-32;
+$switch-disabled-bg-dark: $white-alpha-48;
+$switch-disabled-opacity-dark: 0.48;
+$switch-checked-hover-bg: $primary600;
+$switcher-width: 18px;
+$switch-dark-mode-height: 40px;
+$switch-dark-mode-width: 72px;
+$switch-dark-mode-bg: $bg-light300;
+$switch-dark-mode-bg-dark: $bg-dark300;
+$switcher-checked-dark-mode-bg: $bg-dark200;
+$switcher-dark-mode-width: 32px;
+
+//Checkbox
+$checkbox-width: 20px;
+$checkbox-border-color: rgba(101, 109, 123, 0.24);
+$checkbox-border-color-dark: rgba(255, 255, 255, 0.24);
+$checkbox-focus-bg: rgba(149, 108, 255, 0.08);
+$checkbox-focus-border-color: $primary400;
+$checkbox-hover-border-color: $primary;
+$checkbox-checked-hover-border-color: $primary600;
+
+//Alert
+$alert-success-bg: $success-alfa-8;
+$alert-success-border-color: $success;
+$alert-info-bg: $info-solid-alert;
+$alert-info-border-color: $info;
+$alert-danger-bg: $danger-solid-alert;
+$alert-warning-bg: $warning-solid-alert;
+$alert-danger-border-color: $danger;
+$alert-warning-border-color: $warning;
+$alert-color: $text-icon-grey;
+$alert-font-weight: 500;
+$alert-font-size: $font-sm;
+$alert-line-height: $line-height-sm;
+$alert-color-dark: $white-alpha-48;
+$alert-announcement-close-btn: $text-icon-light-grey;
+
+//Tabs
+$tab-btn-line-height: 42px;
+$tab-btn-font-weight: 500;
+$tab-btn-active-font-weight: 600;
+$tab-btn-counter-value-bg: $danger;
+$tab-btn-counter-value-font-size: $font-caption-sm;
+$tab-btn-counter-value-width: 20px;
+$pill-bg: $bg-light300;
+$tab-line-color: $primary;
+
+//CodeHelp
+$code-btn-bg: $secondary-alfa-16;
+$code-btn-description-color: $secondary600;
+$code-color: $text-icon-light;
+$code-bg: $bg-dark200;
+
+//Panels
+$panel-border-color: $basic-alpha-16;
+$panel-border-color-dark: $white-alpha-16;
+$panel-border-radius: $border-radius-lg;
+$panel-table-header-bc: $bg-light200;
+$panel-table-header-color: $text-icon-grey;
+$panel-table-header-color-muted: $text-icon-light-grey;
+$panel-table-header-font-size: $font-caption;
+$panel-table-header-line-height: $line-height-xsm;
+$panel-table-header-min-height: 44px;
+$panel-list-item-min-height: 72px;
+$panel-list-item-color: $body-color;
+$panel-list-item-sub-font-size: $font-caption;
+$panel-list-item-sub-line-height: $line-height-xsm;
+$panel-list-item-sub-color: $text-icon-grey;
+$panel-grey-background: $bg-light200;
+$panel-grey-background-dark: $bg-dark300;
 $panel-bg: white;
-$panel-bg-dark: $dark-bg-10;
-$panel-bg-darker: $dark-bg-5;
-$panel-heading-bg: $bt-brand-primary-dark;
-$panel-heading-bg-dark: $dark-bg-10;
+$panel-bg-dark: $bg-dark400;
 $panel-heading-color: white;
 $panel-heading-color-dark: $header-color-dark;
-$panel-heading-border: 1px solid $bt-brand-primary-dark;
-$panel-heading-border-dark: 1px solid transparent;
-
-$bt-code-background: $dark-bg-0;
-$bt-code-background-dark: $dark-bg-0;
-
-//
-$panel-icon-color: $bt-brand-primary-dark;
-$panel-icon-border-color: #fff;
-$panel-icon-background-color: #fff;
-
-$panel-icon-border-color-dark: $dark-bg-20;
-$panel-icon-background-color-dark: $dark-bg-20;
-$panel-icon-color-dark: $dark-bg-50;
+$panel-heading-border: 1px solid $primary900;
 
 // Code help e.g. installing the SDK
-$btn-code-button-background-hover: darken($bt-brand-faint-alt, 2);
-$btn-code-button-background: $bt-brand-faint-alt;
-$btn-code-button-background-dark-hover: lighten($panel-heading-bg-dark, 2);
-$btn-code-button-background-dark: $panel-heading-bg-dark;
-$btn-code-button-border: $bt-brand-faint-alt;
 $btn-code-button-color: $header-color;
-$btn-code-button-color-dark: $dark-highlight-color;
-$btn-code-button-color-alt: $bt-brand-tertiary;
-$btn-code-button-color-alt-dark: $dark-color;
 $btn-color: white;
 $btn-color-dark: #d9d9d9;
 
-//Nav
+$scrollbar-track: $white-alpha-16;
+$scrollbar-thumb: $bg-light300;
+$scrollbar-thumb-hover: $bg-light300;
 
-$pagination-color: #333;
+$scrollbar-track-dark: $basic-alpha-16;
+$scrollbar-thumb-dark: $bg-dark300;
+$scrollbar-thumb-dark-hover: $bg-dark300;
 
-//BUTTONS
-$btn-height: 44px;
-$btn-secondary-bg: rgb(240, 240, 240);
-$btn-default-color: white;
-$hover-bg: rgb(240, 240, 240);
-$hover-color: inherits;
+$theme-colors: (
+        light200: $bg-light200,
+        primary: $primary,
+        danger: $danger,
+        success: $success,
+        info: $info,
+        warning: $warning,
+        dark: $body-color,
+  // add any additional color below
+);
+.dark {
+  .bg-light200 {
+    background-color: $body-bg-dark !important;
+  }
+}
+.bg-faint {
+  background-color: #fafafa;
+}
 
-//Panel Dark
-$panel-alt-heading-bg: #fff;
-$panel-alt-heading-color: #fff;
+.dark .bg-faint {
+  background-color: $bg-dark300;
+}
 
-$tab-active-color: $header-color;
-$tab-active-color-dark: $header-color-dark;
+$butter-bar-bg: $secondary-alfa-16;
+$butter-bar-bg-dark: $bg-dark400;
 
-//SCAFFOLDING
-$mobile-portrait: 320px;
-$mobile-landscape: 480px;
-$tablet-portrait: 768px;
-$tablet-landscape: 1024px;
+//Fonts
+$font-family: 'OpenSans', sans-serif;
+$font-family-header: 'OpenSans', sans-serif;
 
 //GRID
 $input-padding-x: 0.75rem !default;
 $input-padding-y: 1rem !default;
 
-$border-radius-default: 8px;
 //TRANSITIONS
 $button-transition: background-color 400ms cubic-bezier(0.23, 1, 0.32, 1);
-//Hero
-$hero-bg: white;
-
-
-$bold: 400;
-
-$card-default: 0 2px 13px 0 rgba(34, 53, 74, 0.1);
-$card-default-dark: 0 6px 13px 0 rgba(0, 0, 0, 0.1);
-
-$aside-base-background: $bt-brand-faint-alt;
-$aside-base-background-dark: $dark-bg-0;
-$aside-logo: $bt-brand-primary-dark-desaturated-lighter;
-// active project and environment
-$aside-base-highlight: $bt-brand-primary-dark-desaturated-lighter;
-$aside-base-highlight-alt: $bt-brand-faint-alt-darken;
-$aside-base-highlight-alt-color: white;
-$aside-base-highlight-dark: $bt-brand-primary-dark-desaturated-lighter;
-$aside-base-highlight-color: white;
-$aside-base-highlight-color-dark: white;
-// active project and environment
-$aside-base-link: $bt-brand-faint-alt;
-$aside-base-link-dark: $dark-bg-10;
-$aside-base-link-color: $body-text-faint;
-$aside-base-link-color-dark: $body-text-faint-dark;
-// Environment link
-$aside-nav-color-dark:$body-text-dark;
-$aside-nav-inactive-color:transparentize($header-color,0.0);
-$aside-nav-inactive-color-dark:transparentize($body-text-dark, 0.25);
-$aside-nav-inactive-hover-color:transparentize($header-color, 0.25);
-$aside-nav-inactive-hover-color-dark:transparentize($header-color-dark, 0.25);
-// Background of other links e.g. acreate environment/organisation
-$aside-link-alt-color: $bt-brand-secondary-faint;
-$aside-link-alt-color-dark: $dark-highlight-color;
-$aside-add-color: white;
-$aside-add-color-dark: white;
-
-
-// Shadows
-$aside-box-shadow: 0 6px 13px 0
-  transparentize($bt-brand-primary-dark-desaturated-light, 0.75); // Box shadow right menu
-$aside-box-shadow-dark: 0 6px 16px 0 rgba(0, 0, 0, 0.25); // Box shadow right menu
-$aside-project-link-active-box-shadow: none;
-
-// Backgrounds
-$aside-left-bg:$bt-brand-primary-dark-alt; // main aside menu
-$aside-left-bg-dark:$dark-bg-5; // main aside menu
-$aside-left-color:white; // main aside menu
-$aside-left-color-dark:white; // main aside menu
-$aside-left-color-active:white; // main aside menu
-$aside-left-color-active-dark:white; // main aside menu
-
-// project link
-$aside-project-link-color: $aside-base-link-color;
-$aside-project-link-color-dark: $aside-base-link-color-dark;
-$aside-project-link: $aside-base-link;
-$aside-project-link-dark: $aside-base-link-dark;
-// project link active
-$aside-project-link-active: $aside-base-highlight;
-$aside-project-link-active-dark: $aside-base-highlight-dark;
-$aside-project-link-color-active: $aside-base-highlight-color;
-$aside-project-link-color-active-dark: $aside-base-highlight-color-dark;
-
-// Active environment link
-$aside-nav-collapse-border:$aside-base-highlight-alt;
-$aside-nav-collapse-border-dark:$aside-base-highlight-dark;
-
-
-

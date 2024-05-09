@@ -19,7 +19,7 @@ import { useGetGroupSummariesQuery } from 'common/services/useGroupSummary'
 type UserGroupListType = {
   noTitle?: boolean
   orgId: string
-  projectId: string | boolean
+  projectId?: string | boolean
   showRemove?: boolean
   onClick: (group: UserGroup) => void
   onEditPermissions?: (group: UserGroup) => void

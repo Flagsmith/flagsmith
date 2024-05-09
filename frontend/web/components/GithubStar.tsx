@@ -1,10 +1,8 @@
 import React, { FC, useEffect, useState } from 'react'
 import Utils, { planNames } from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
-import Button from './base/forms/Button'
 import { IonIcon } from '@ionic/react'
-import { starOutline } from 'ionicons/icons'
-import Icon from './Icon'
+import { logoGithub } from 'ionicons/icons'
 
 type GithubStarType = {}
 
@@ -36,11 +34,11 @@ const GithubStar: FC<GithubStarType> = ({}) => {
         style={{ width: 90 }}
         target='_blank'
         href='https://github.com/flagsmith/flagsmith'
-        className='btn btn-sm btn-with-icon text-body me-2'
+        className='btn btn-sm btn-with-icon text-body'
         rel='noreferrer'
       >
         <div className='d-flex flex-row justify-content-center align-items-center'>
-          <Icon name='github' width={20} fill='#9DA4AE' />
+          <IonIcon style={{ fontSize: 16 }} icon={logoGithub} />
           <div className='ms-1'>{stars}</div>
         </div>
       </a>

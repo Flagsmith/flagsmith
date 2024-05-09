@@ -13,9 +13,6 @@
     border: none;
     .panel-heading {
       background-color: transparent;
-      .panel-icon {
-        display: none;
-      }
     }
   }
 }
@@ -38,7 +35,7 @@
     h4,
     h5,
     h6 {
-      color: $text-icon-dark;
+      color: $body-color;
       margin: 0;
     }
 
@@ -53,10 +50,10 @@
     padding-bottom: 2px;
 
     .title {
-      color: $text-icon-dark;
+      color: $body-color;
       font-family: $font-family-header;
       .subtitle {
-        color: $text-icon-dark;
+        color: $body-color;
         font-weight: normal;
         text-transform: none;
       }
@@ -84,7 +81,7 @@
 .dark {
   .panel {
     .icon {
-      color: $dark-color;
+      color: $hr-border-color;
     }
     .panel-content {
       background-color: transparent;
@@ -103,7 +100,7 @@
       }
 
       .chip {
-        background-color: $panel-bg-darker;
+        background-color: $primary900;
       }
     }
     .panel-heading {
@@ -122,9 +119,6 @@
         }
       }
       color: $text-icon-light;
-      .ion-ios-information-circle {
-        color: $panel-icon-background-color;
-      }
     }
     a {
       color: $dark-highlight-color;
@@ -137,13 +131,6 @@
     }
     .list-item:hover a,.btn-link {
       color: $primary !important;
-    }
-    .panel-icon {
-      background-color: $panel-icon-background-color-dark;
-      border-color: $panel-icon-background-color-dark;
-      .icon {
-        color: $panel-icon-color-dark;
-      }
     }
 
     &.panel-integrations {
@@ -202,8 +189,8 @@ a.text-white {
           border-top: none;
         }
         &:last-of-type {
-          border-bottom-left-radius: $border-radius-default;
-          border-bottom-right-radius: $border-radius-default;
+          border-bottom-left-radius: $border-radius;
+          border-bottom-right-radius: $border-radius;
         }
         &:first-of-type {
           border-bottom-left-radius: 0;

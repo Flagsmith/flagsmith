@@ -66,7 +66,7 @@
 .react-diff-1n5o7vh-diff-container pre {
   font-family: $font-family-monospace;
   font-size: $font-caption !important;
-  color: $body-text !important;
+  color: $body-color !important;
 }
 .react-diff-1fxlvce-diff-removed {
   background-color: $danger-alfa-8 !important;
@@ -77,6 +77,6 @@
 
 .dark {
   .react-diff-1n5o7vh-diff-container pre {
-    color: $body-text-dark !important;
+    color: $body-color-dark !important;
   }
 }

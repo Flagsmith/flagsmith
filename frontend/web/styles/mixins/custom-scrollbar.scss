@@ -7,16 +7,16 @@
   }
   /* Track */
   &::-webkit-scrollbar-track {
-    background-color: $bt-scrollbar-track;
+    background-color: $white-alpha-16;
   }
   /* Handle */
   &::-webkit-scrollbar-thumb {
     background-clip: content-box;
     border: 3px solid transparent;
-    background-color: $bt-scrollbar-thumb;
+    background-color: $scrollbar-thumb;
     border-radius: $border-radius;
     &:hover {
-      background-color: $bt-scrollbar-thumb-hover;
+      background-color: $scrollbar-thumb-hover;
     }
   }
 }
@@ -29,16 +29,16 @@
   }
   /* Track */
   &::-webkit-scrollbar-track {
-    background-color: $bt-scrollbar-track-dark;
+    background-color: $scrollbar-track-dark;
   }
   /* Handle */
   &::-webkit-scrollbar-thumb {
     background-clip: content-box;
     border: 3px solid transparent;
-    background-color: $bt-scrollbar-thumb-dark;
+    background-color: $scrollbar-thumb-dark;
     border-radius: $border-radius;
     &:hover {
-      background-color: $bt-scrollbar-thumb-dark-hover;
+      background-color: $scrollbar-thumb-dark-hover;
     }
   }
 }

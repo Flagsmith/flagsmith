@@ -721,6 +721,15 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
               </Row>
             </div>
           )}
+          {!hasRbacPermission && (
+            <span>
+              Role-based access is not available on our Free Plan. Please visit{' '}
+              <a href='https://flagsmith.com/pricing/' className='text-primary'>
+                our Pricing Page
+              </a>{' '}
+              for more information on our licensing options.
+            </span>
+          )}
           <PanelSearch
             filterRow={(item: AvailablePermission, search) => {
               const name = Format.enumeration.get(item.key).toLowerCase()

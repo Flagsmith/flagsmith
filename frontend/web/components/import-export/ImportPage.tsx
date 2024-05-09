@@ -160,7 +160,7 @@ const ImportPage: FC<ImportPageType> = ({
               <PanelSearch
                 id='projects-list'
                 className='no-pad panel-projects'
-                listClassName='row mt-n2 gy-4'
+                listClassName='row mt-n2 gy-3'
                 title='LaunchDarkly Projects'
                 items={projects}
                 renderRow={(

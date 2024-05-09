@@ -15,12 +15,13 @@ import { useGetGroupsQuery } from 'common/services/useGroup'
 type OrganisationProviderType = {
   onRemoveProject?: () => void
   onSave?: (data: { environmentId: number; projectId: number }) => void
-  id?: number
+  id?: number | string
   children: (props: {
     createProject: typeof AppActions.createProject
     invalidateInviteLink: typeof AppActions.invalidateInviteLink
     inviteLinks: InviteLink[] | null
     invites: Invite[] | null
+    error: any
     isLoading: boolean
     isSaving: boolean
     name: string
@@ -28,7 +29,7 @@ type OrganisationProviderType = {
     groups: UserGroupSummary[] | null
     projects: Project[] | null
     subscriptionMeta: SubscriptionMeta | null
-    users: User[] | null
+    users: User[]
   }) => ReactNode
 }
 
@@ -76,6 +77,7 @@ const OrganisationProvider: FC<OrganisationProviderType> = ({
     <>
       {children({
         createProject: AppActions.createProject,
+        error: AccountStore.error,
         groups: groups?.results || [],
         invalidateInviteLink: AppActions.invalidateInviteLink,
         inviteLinks: OrganisationStore.getInviteLinks(),

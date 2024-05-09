@@ -13,6 +13,7 @@ import PageTitle from 'components/PageTitle'
 import { timeOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import Utils from 'common/utils/utils'
+import Constants from 'common/constants'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -83,7 +84,7 @@ const ChangeRequestsPage = class extends Component {
             <div className='mt-2'>
               <InfoMessage>
                 View and manage your feature changes with a Change Request flow
-                with our <Link to='/organisation-settings'>Scale-up plan</Link>.
+                with our <Link to={Constants.upgradeURL}>Scale-up plan</Link>.
                 Find out more{' '}
                 <Button
                   theme='text'

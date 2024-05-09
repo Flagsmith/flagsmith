@@ -33,7 +33,6 @@ declare global {
   const FormGroup: typeof Component
   const Select: typeof _Select
   const Column: typeof Component
-  const RemoveIcon: typeof Component
   const Loader: typeof Component
   const E2E: boolean
   const DYNATRACE_URL: string | undefined

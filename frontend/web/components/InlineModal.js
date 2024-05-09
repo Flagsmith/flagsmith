@@ -16,6 +16,7 @@ class InlineModal extends PureComponent {
     isOpen: propTypes.bool,
     onBack: propTypes.func,
     onClose: propTypes.func,
+    relativeToParent: propTypes.bool,
     showBack: propTypes.bool,
     title: propTypes.string,
   }
@@ -29,7 +30,7 @@ class InlineModal extends PureComponent {
   render() {
     // const { props } = this;
     return (
-      <div className='relative'>
+      <div className={this.props.relativeToParent ? '' : 'relative'}>
         {this.props.isOpen && (
           <div className={cx('inline-modal', this.props.className)}>
             {(!!this.props.title || !this.props.hideClose) && (

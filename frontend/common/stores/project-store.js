@@ -91,6 +91,7 @@ const controller = {
     data.put(`${Project.api}projects/${project.id}/`, project).then((res) => {
       store.model = Object.assign(store.model, res)
       getStore().dispatch(projectService.util.invalidateTags(['Project']))
+      AppActions.refreshOrganisation()
       store.saved()
     })
   },

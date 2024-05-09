@@ -6,6 +6,8 @@
 @import "project/segments";
 
 .butter-bar {
+  margin-top: 8px;
+  margin-bottom: 4px;
   background-color: $butter-bar-bg;
   text-align: center;
   line-height: 44px;
@@ -25,19 +27,6 @@
   color: $header-color-dark;
 }
 
-.alert-butter-bar{
-  background-color: $bt-brand-red;
-  color: $header-color-dark;
-  text-align: center;
-  line-height: 44px;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  >* { // since the markdown can be <p we need to reset any styling
-    display: inline-block;
-    margin: 0;
-  }
-}
 
 bold, strong {
   font-weight: bold;
@@ -56,28 +45,14 @@ bold, strong {
 .value-editor {
   &.disabled {
     code {
-      background: $text-icon-light !important;
-      color: $text-icon-light-grey;
-      border: 1px solid $basic-alpha-8;
+      cursor: not-allowed;
+      opacity: 0.5;
     }
     .select-language {
       display: none;
     }
   }
 }
-.dark {
-  .value-editor {
-    &.disabled {
-      code {
-        cursor: not-allowed;
-        color: $dark-color;
-        background: $dark-bg-20 !important;
-      }
-    }
-  }
-}
-
-
 
 .faint-lg {
   color: $text-muted;
@@ -99,38 +74,8 @@ bold, strong {
   cursor: default;
 }
 
-.gif {
-  position: relative;
-  cursor: pointer;
-
-  ion {
-    box-shadow: 0 7px 8px -4px rgba(0, 0, 0, 0.2), 0 13px 19px 2px rgba(0, 0, 0, 0.14), 0 5px 24px 4px rgba(0, 0, 0, 0.12);
-    height: 64px;
-    line-height: 64px;
-    border-radius: 32px;
-    width: 64px;
-    background: $bt-brand-faint-alt;
-    display: inline-block;
-    position: absolute;
-    font-size: 1.5em;
-  }
-
-  &.playing {
-    ion {
-      display: none;
-    }
-  }
-
-  &:hover {
-    ion {
-      color: #999;
-    }
-  }
-}
-
-
 .maintenance {
-  background: $bt-brand-primary-dark-desaturated-light;
+  background: $bg-dark400;
 
   h1 {
     font-weight: 400;
@@ -165,13 +110,13 @@ body, html {
 body.dark {
   background-color: $bg-dark500;
   a {
-    color: $bt-link-color-dark;
+    color: $anchor-color-dark;
 
   }
 }
 
 a {
-  color: $bt-link-color;
+  color: $anchor-color;
   font-weight: 500;
   cursor: pointer;
 }
@@ -245,9 +190,6 @@ input:disabled {
     }
   }
 
-  &.pulse {
-    background-color: $bt-brand-primary;
-  }
 
   &.slideOut {
     padding: 0;
@@ -265,7 +207,6 @@ input:disabled {
 
 .bottom-banner {
   position: fixed;
-  left: $aside-width+20px;
   bottom: 20px;
   margin: auto;
   height: 44px;

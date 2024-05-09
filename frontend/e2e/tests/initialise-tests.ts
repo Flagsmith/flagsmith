@@ -26,6 +26,7 @@ export default async function () {
   await waitForElementVisible(byId('features-page'))
 
   log('Hide disabled flags')
+  await click('#project-link')
   await click('#project-settings-link')
   await click(byId('js-sdk-settings'))
   await click(byId('js-hide-disabled-flags'))

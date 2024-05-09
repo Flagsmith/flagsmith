@@ -243,6 +243,13 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return 'UPDATE_FEATURE_STATE'
   },
+  canCreateOrganisation() {
+    return (
+      !Utils.getFlagsmithHasFeature('disable_create_org') &&
+      (!Project.superUserCreateOnly ||
+        (Project.superUserCreateOnly && AccountStore.isSuper()))
+    )
+  },
   getManageFeaturePermissionDescription(isChangeRequest: boolean) {
     if (isChangeRequest) {
       return 'Create Change Request'
@@ -254,6 +261,13 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getManageUserPermissionDescription() {
     return 'Manage Identities'
+  },
+  getOrganisationHomePage(id?: string) {
+    const orgId = id || AccountStore.getOrganisation()?.id
+    if (!orgId) {
+      return `/organisations`
+    }
+    return `/organisation/${orgId}/projects`
   },
   getPermissionList(
     isAdmin: boolean,
@@ -285,6 +299,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         .map((item) => `${Format.enumeration.get(item)}`),
     }
   },
+
   getPlanName: (plan: string) => {
     if (plan && plan.includes('scale-up')) {
       return planNames.scaleUp

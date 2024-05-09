@@ -78,8 +78,6 @@ const TableTagFilter: FC<TableFilterType> = ({
                   styles={{
                     control: (base) => ({
                       ...base,
-                      '&:hover': { borderColor: '$bt-brand-secondary' },
-                      border: '1px solid $bt-brand-secondary',
                       height: 18,
                     }),
                   }}
