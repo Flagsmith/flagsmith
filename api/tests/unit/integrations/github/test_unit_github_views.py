@@ -438,12 +438,24 @@ def test_verify_github_webhook_payload() -> None:
     assert result is True
 
 
-def test_verify_github_webhook_payload_returns_error_response_on_failure() -> None:
+def test_verify_github_webhook_payload_returns_false_on_bad_signature() -> None:
     # When
     result = github_webhook_payload_is_valid(
         payload_body=WEBHOOK_PAYLOAD.encode("utf-8"),
         secret_token=WEBHOOK_SECRET,
         signature_header="sha1=757107ea0eb2509fc211221cce984b8a37570b6d7586c22c46f4379c8b043e18",
+    )
+
+    # Then
+    assert result is False
+
+
+def test_verify_github_webhook_payload_returns_false_on_no_signature_header() -> None:
+    # When
+    result = github_webhook_payload_is_valid(
+        payload_body=WEBHOOK_PAYLOAD.encode("utf-8"),
+        secret_token=WEBHOOK_SECRET,
+        signature_header=None,
     )
 
     # Then
@@ -470,3 +482,70 @@ def test_github_webhook_delete_installation(
     # Then
     assert response.status_code == 200
     assert not GithubConfiguration.objects.filter(installation_id=1234567).exists()
+
+
+def test_github_webhook_fails_on_signature_header_missing(
+    github_configuration: GithubConfiguration,
+) -> None:
+    # Given
+    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
+    url = reverse("api-v1:github-webhook")
+
+    # When
+    client = APIClient()
+    response = client.post(
+        path=url,
+        data=WEBHOOK_PAYLOAD,
+        content_type="application/json",
+        HTTP_X_GITHUB_EVENT="installation",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {"error": "Invalid signature"}
+    assert GithubConfiguration.objects.filter(installation_id=1234567).exists()
+
+
+def test_github_webhook_fails_on_bad_signature_header_missing(
+    github_configuration: GithubConfiguration,
+) -> None:
+    # Given
+    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
+    url = reverse("api-v1:github-webhook")
+
+    # When
+    client = APIClient()
+    response = client.post(
+        path=url,
+        data=WEBHOOK_PAYLOAD,
+        content_type="application/json",
+        HTTP_X_HUB_SIGNATURE="sha1=757107ea0eb2509fc211221cce984b8a37570b6d7586c22c46f4379c8b043e18",
+        HTTP_X_GITHUB_EVENT="installation",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert GithubConfiguration.objects.filter(installation_id=1234567).exists()
+    assert response.json() == {"error": "Invalid signature"}
+
+
+def test_github_webhook_bypass_event(
+    github_configuration: GithubConfiguration,
+) -> None:
+    # Given
+    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
+    url = reverse("api-v1:github-webhook")
+
+    # When
+    client = APIClient()
+    response = client.post(
+        path=url,
+        data=WEBHOOK_PAYLOAD,
+        content_type="application/json",
+        HTTP_X_HUB_SIGNATURE=WEBHOOK_SIGNATURE,
+        HTTP_X_GITHUB_EVENT="installation_repositories",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert GithubConfiguration.objects.filter(installation_id=1234567).exists()
