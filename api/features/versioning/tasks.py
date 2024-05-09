@@ -44,10 +44,14 @@ def disable_v2_versioning(environment_id: int) -> None:
     environment = Environment.objects.get(id=environment_id)
 
     latest_feature_states = get_environment_flags_queryset(environment)
+    latest_feature_state_ids = [fs.id for fs in latest_feature_states]
 
-    # delete any feature states associated with older versions
+    # delete any feature states and feature segments associated with older versions
     FeatureState.objects.filter(identity_id__isnull=True).exclude(
-        id__in=[fs.id for fs in latest_feature_states]
+        id__in=latest_feature_state_ids
+    ).delete()
+    FeatureSegment.objects.exclude(
+        feature_states__id__in=latest_feature_state_ids
     ).delete()
 
     # update the latest feature states (and respective feature segments) to be the
@@ -55,9 +59,9 @@ def disable_v2_versioning(environment_id: int) -> None:
     latest_feature_states.update(
         version=1, live_from=timezone.now(), environment_feature_version=None
     )
-    FeatureSegment.objects.filter(environment=environment).update(
-        environment_feature_version=None
-    )
+    FeatureSegment.objects.filter(
+        feature_states__id__in=latest_feature_state_ids
+    ).update(environment_feature_version=None)
 
     EnvironmentFeatureVersion.objects.filter(environment=environment).delete()
 
