@@ -409,20 +409,20 @@ def test_create_github_comment_on_feature_state_updated(  # noqa: C901
             },
             timeout=10,
         )
-        if event_type == "update":
-            mock_generate_data.assert_called_with(
-                github_configuration=github_configuration,
-                feature_id=feature.id,
-                feature_name=feature.name,
-                type=WebhookEventType.FLAG_UPDATED.value,
-                feature_states=[feature_state],
-            )
+    if event_type == "update":
+        mock_generate_data.assert_called_with(
+            github_configuration=github_configuration,
+            feature_id=feature.id,
+            feature_name=feature.name,
+            type=WebhookEventType.FLAG_UPDATED.value,
+            feature_states=[feature_state],
+        )
 
-        elif event_type == "update":
-            mock_generate_data.assert_called_with(
-                github_configuration=github_configuration,
-                feature_id=feature.id,
-                feature_name=feature.name,
-                type=WebhookEventType.FLAG_UPDATED.value,
-                feature_states=[feature_state],
-            )
+    elif event_type == "delete":
+        mock_generate_data.assert_called_with(
+            github_configuration=github_configuration,
+            feature_id=feature.id,
+            feature_name=feature.name,
+            type=WebhookEventType.FLAG_DELETED.value,
+            feature_states=[feature_state],
+        )
