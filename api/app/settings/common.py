@@ -893,7 +893,7 @@ SLACK_CLIENT_SECRET = env.str("SLACK_CLIENT_SECRET", default="")
 # GitHub integrations
 GITHUB_PEM = env.str("GITHUB_PEM", default="")
 GITHUB_APP_ID: int = env.int("GITHUB_APP_ID", default=0)
-
+GITHUB_WEBHOOK_SECRET = env.str("GITHUB_WEBHOOK_SECRET", default="")
 
 # MailerLite
 MAILERLITE_BASE_URL = env.str(
