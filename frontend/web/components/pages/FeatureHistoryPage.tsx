@@ -15,8 +15,6 @@ import {
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
 import FeatureVersion from 'components/FeatureVersion'
-import { IonIcon } from '@ionic/react'
-import { chevronDown } from 'ionicons/icons'
 import InlineModal from 'components/InlineModal'
 import TableFilterItem from 'components/tables/TableFilterItem'
 import moment from 'moment'

@@ -11,11 +11,14 @@ type DiffSegment = {
   diff: TDiffSegment
 }
 
-const widths = [80, 105]
+const widths = [200, 80, 105]
 const DiffSegment: FC<DiffSegment> = ({ diff }) => {
   return (
     <div className={'flex-row list-item list-item-sm'}>
-      <div style={{ width: widths[0] }} className='table-column text-center'>
+      <div style={{ width: widths[0] }} className='fw-semibold table-column'>
+        {diff.segment?.name}
+      </div>
+      <div style={{ width: widths[1] }} className='table-column text-center'>
         <DiffString
           oldValue={diff.created ? diff.newPriority : diff.oldPriority}
           newValue={diff.deleted ? diff.oldPriority : diff.newPriority}
@@ -27,7 +30,7 @@ const DiffSegment: FC<DiffSegment> = ({ diff }) => {
           newValue={diff.deleted ? diff.oldValue : diff.newValue}
         />
       </div>
-      <div style={{ width: widths[1] }} className='table-column'>
+      <div style={{ width: widths[2] }} className='table-column'>
         <DiffEnabled
           oldValue={diff.created ? diff.newEnabled : diff.oldEnabled}
           newValue={diff.deleted ? diff.oldEnabled : diff.newEnabled}
@@ -64,10 +67,13 @@ const DiffSegments: FC<DiffSegmentsType> = ({ diffs }) => {
   const tableHeader = (
     <Row className='table-header mt-4'>
       <div style={{ width: widths[0] }} className='table-column'>
+        Segment
+      </div>
+      <div style={{ width: widths[1] }} className='table-column'>
         Priority
       </div>
       <div className='table-column flex-fill'>Value</div>
-      <div style={{ width: widths[1] }} className='table-column'>
+      <div style={{ width: widths[2] }} className='table-column'>
         Enabled
       </div>
     </Row>

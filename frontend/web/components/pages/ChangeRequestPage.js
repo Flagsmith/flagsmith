@@ -16,15 +16,11 @@ import MyGroupsSelect from 'components/MyGroupsSelect'
 import { getMyGroups } from 'common/services/useMyGroup'
 import { getStore } from 'common/store'
 import PageTitle from 'components/PageTitle'
-import Icon from 'components/Icon'
 import { close } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
-import { useGetSegmentsQuery } from 'common/services/useSegment'
-import DiffFeature from 'components/diff/DiffFeature'
 import Breadcrumb from 'components/Breadcrumb'
 import SettingsButton from 'components/SettingsButton'
-
-const labelWidth = 120
+import DiffChangeRequest from 'components/diff/DiffChangeRequest'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -275,7 +271,7 @@ const ChangeRequestsPage = class extends Component {
     const environment = ProjectStore.getEnvironment(
       this.props.match.params.environmentId,
     )
-
+    const isVersioned = environment?.use_v2_feature_versioning
     const minApprovals = environment.minimum_change_request_approvals || 0
     const isYourChangeRequest = changeRequest.user === AccountStore.getUser().id
 
@@ -323,14 +319,19 @@ const ChangeRequestsPage = class extends Component {
                         >
                           Delete
                         </Button>
-                        <Button
-                          onClick={() =>
-                            this.editChangeRequest(projectFlag, environmentFlag)
-                          }
-                          className='ml-2'
-                        >
-                          Edit
-                        </Button>
+                        {!isVersioned && (
+                          <Button
+                            onClick={() =>
+                              this.editChangeRequest(
+                                projectFlag,
+                                environmentFlag,
+                              )
+                            }
+                            className='ml-2'
+                          >
+                            Edit
+                          </Button>
+                        )}
                       </Row>
                     )
                   }
@@ -476,12 +477,9 @@ const ChangeRequestsPage = class extends Component {
                         }
                         className='no-pad mb-2'
                       >
-                        <div className='search-list change-request-list'>
+                        <div className='search-list col-md-8 change-request-list'>
                           <Row className='list-item change-request-item px-4'>
-                            <div
-                              className='font-weight-medium mr-3'
-                              style={{ width: labelWidth }}
-                            >
+                            <div className='font-weight-medium mr-3'>
                               Feature:
                             </div>
 
@@ -502,29 +500,11 @@ const ChangeRequestsPage = class extends Component {
                           </Row>
                         </div>
                       </Panel>
-                      {environmentFlag && changeRequest ? (
-                        <DiffFeature
-                          noChangesMessage={
-                            'This change request contains no changes.'
-                          }
-                          tabTheme={'pill'}
-                          oldState={[
-                            {
-                              ...environmentFlag,
-                              feature_state_value: Utils.valueToFeatureState(
-                                environmentFlag.feature_state_value,
-                              ),
-                            },
-                          ]}
-                          newState={[changeRequest.feature_states[0]]}
-                          featureId={projectFlag.id}
-                          projectId={this.props.match.params.projectId}
-                        />
-                      ) : (
-                        <div className='text-center'>
-                          <Loader />
-                        </div>
-                      )}
+                      <DiffChangeRequest
+                        changeRequest={changeRequest}
+                        feature={projectFlag.id}
+                        projectId={this.props.match.params.projectId}
+                      />
                     </div>
                   </div>
                 </div>
@@ -558,7 +538,7 @@ const ChangeRequestsPage = class extends Component {
                         by {committedBy.first_name} {committedBy.last_name}
                       </div>
                     ) : (
-                      <Row className='text-right'>
+                      <Row className='text-right col-md-8'>
                         <Flex />
                         {!isYourChangeRequest &&
                           Utils.renderWithPermission(
