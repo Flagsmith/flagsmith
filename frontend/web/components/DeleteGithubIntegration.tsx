@@ -38,7 +38,7 @@ const DeleteGithubIntegration: FC<DeleteGithubIntegrationType> = ({
               github_integration_id: githubId,
               organisation_id: organisationId,
             }).then(() => {
-              window.location.reload()
+              closeModal()
             })
           },
           title: 'Remove your Github Integration',
