@@ -1,5 +1,3 @@
-import hashlib
-import hmac
 import json
 import re
 from functools import wraps
@@ -16,6 +14,7 @@ from rest_framework.response import Response
 from integrations.github.client import generate_token
 from integrations.github.constants import GITHUB_API_URL, GITHUB_API_VERSION
 from integrations.github.exceptions import DuplicateGitHubIntegration
+from integrations.github.helpers import github_webhook_payload_is_valid
 from integrations.github.models import GithubConfiguration, GithubRepository
 from integrations.github.permissions import HasPermissionToGithubConfiguration
 from integrations.github.serializers import (
@@ -25,24 +24,6 @@ from integrations.github.serializers import (
 )
 from organisations.models import Organisation
 from organisations.permissions.permissions import GithubIsAdminOrganisation
-
-
-def github_webhook_payload_is_valid(
-    payload_body: bytes, secret_token: str, signature_header: str
-) -> bool:
-    """Verify that the payload was sent from GitHub by validating SHA256.
-    Raise and return 403 if not authorized.
-    """
-    if not signature_header:
-        return False
-    hash_object = hmac.new(
-        secret_token.encode("utf-8"), msg=payload_body, digestmod=hashlib.sha1
-    )
-    expected_signature = "sha1=" + hash_object.hexdigest()
-    if not hmac.compare_digest(expected_signature, signature_header):
-        return False
-
-    return True
 
 
 def github_auth_required(func):
