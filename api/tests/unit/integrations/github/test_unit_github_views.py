@@ -1,4 +1,7 @@
+import json
+
 import pytest
+from django.conf import settings
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from pytest_mock import MockerFixture
@@ -7,8 +10,13 @@ from rest_framework.test import APIClient
 
 from features.feature_external_resources.models import FeatureExternalResource
 from integrations.github.models import GithubConfiguration, GithubRepository
+from integrations.github.views import github_webhook_payload_is_valid
 from organisations.models import Organisation
 from projects.models import Project
+
+WEBHOOK_PAYLOAD = json.dumps({"installation": {"id": 1234567}, "action": "deleted"})
+WEBHOOK_SIGNATURE = "sha1=57a1426e19cdab55dd6d0c191743e2958e50ccaa"
+WEBHOOK_SECRET = "secret-key"
 
 
 def test_get_github_configuration(
@@ -416,3 +424,49 @@ def test_cannot_fetch_issues_or_prs_when_does_not_have_permissions(
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_verify_github_webhook_payload() -> None:
+    # When
+    result = github_webhook_payload_is_valid(
+        payload_body=WEBHOOK_PAYLOAD.encode("utf-8"),
+        secret_token=WEBHOOK_SECRET,
+        signature_header=WEBHOOK_SIGNATURE,
+    )
+
+    # Then
+    assert result is True
+
+
+def test_verify_github_webhook_payload_returns_error_response_on_failure() -> None:
+    # When
+    result = github_webhook_payload_is_valid(
+        payload_body=WEBHOOK_PAYLOAD.encode("utf-8"),
+        secret_token=WEBHOOK_SECRET,
+        signature_header="sha1=757107ea0eb2509fc211221cce984b8a37570b6d7586c22c46f4379c8b043e18",
+    )
+
+    # Then
+    assert result is False
+
+
+def test_github_webhook_delete_installation(
+    github_configuration: GithubConfiguration,
+) -> None:
+    # Given
+    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
+    url = reverse("api-v1:github-webhook")
+
+    # When
+    client = APIClient()
+    response = client.post(
+        path=url,
+        data=WEBHOOK_PAYLOAD,
+        content_type="application/json",
+        HTTP_X_HUB_SIGNATURE=WEBHOOK_SIGNATURE,
+        HTTP_X_GITHUB_EVENT="installation",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert not GithubConfiguration.objects.filter(installation_id=1234567).exists()

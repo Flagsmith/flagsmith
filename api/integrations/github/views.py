@@ -1,3 +1,6 @@
+import hashlib
+import hmac
+import json
 import re
 from functools import wraps
 
@@ -8,7 +11,7 @@ from django.http import JsonResponse
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from integrations.github.client import generate_token
@@ -23,6 +26,22 @@ from integrations.github.serializers import (
 )
 from organisations.models import Organisation
 from organisations.permissions.permissions import GithubIsAdminOrganisation
+
+
+def github_webhook_payload_is_valid(payload_body, secret_token, signature_header):
+    """Verify that the payload was sent from GitHub by validating SHA256.
+    Raise and return 403 if not authorized.
+    """
+    if not signature_header:
+        return False
+    hash_object = hmac.new(
+        secret_token.encode("utf-8"), msg=payload_body, digestmod=hashlib.sha1
+    )
+    expected_signature = "sha1=" + hash_object.hexdigest()
+    if not hmac.compare_digest(expected_signature, signature_header):
+        return False
+
+    return True
 
 
 def github_auth_required(func):
@@ -204,3 +223,27 @@ def fetch_repositories(request, organisation_pk: int):
         return Response(data)
     except requests.RequestException as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def github_webhook(request) -> JsonResponse:
+    # Validate payload signature
+    secret = settings.GITHUB_WEBHOOK_SECRET
+    signature = request.headers.get("X-Hub-Signature")
+    github_event = request.headers.get("x-github-event")
+    payload = request.body
+    if github_webhook_payload_is_valid(
+        payload_body=payload, secret_token=secret, signature_header=signature
+    ):
+        data = json.loads(payload.decode("utf-8"))
+        # handle GitHub Webhook "installation" event with action type "deleted"
+        if github_event == "installation" and data["action"] == "deleted":
+            GithubConfiguration.objects.filter(
+                installation_id=data["installation"]["id"]
+            ).delete()
+            return JsonResponse({"detail": "Event processed"}, status=200)
+        else:
+            return JsonResponse({"detail": "Event bypassed"}, status=200)
+    else:
+        return JsonResponse({"error": "Invalid signature"}, status=400)
