@@ -467,8 +467,10 @@ const ProjectSettingsPage = class extends Component {
                             Existing Core API endpoints will continue to work
                             whilst the migration takes place. Find out more{' '}
                             <a
+                              target='_blank'
                               href='https://docs.flagsmith.com/advanced-use/edge-api'
                               className='btn-link'
+                              rel='noreferrer'
                             >
                               here
                             </a>
@@ -536,15 +538,26 @@ const ProjectSettingsPage = class extends Component {
                             <p className='fs-small lh-sm mb-0'>
                               Pushes realtime updates to client-side SDKs when
                               features and segment overrides are adjusted in the
-                              dashboard.{' '}
+                              dashboard.
                               {!Utils.getPlansPermission('REALTIME') && (
                                 <>
                                   This feature is available with our{' '}
                                   <Link to={Constants.upgradeURL}>
                                     enterprise plan
                                   </Link>
+                                  .
                                 </>
-                              )}
+                              )}{' '}
+                              Find out more{' '}
+                              <a
+                                target='_blank'
+                                href='https://docs.flagsmith.com/advanced-use/real-time-flags#how-it-works'
+                                className='btn-link'
+                                rel='noreferrer'
+                              >
+                                here
+                              </a>
+                              .
                             </p>
                           </FormGroup>
                         )}
