@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.db.models import Q
 from django.utils import timezone
+from pytest_django import DjangoAssertNumQueries
 
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -18,7 +19,9 @@ from users.models import FFAdminUser
 
 
 def test_get_environment_flags_queryset_returns_only_latest_versions(
-    feature, environment
+    feature: Feature,
+    environment: Environment,
+    django_assert_num_queries: DjangoAssertNumQueries,
 ):
     # Given
     feature_state_v1 = FeatureState.objects.get(
@@ -31,7 +34,11 @@ def test_get_environment_flags_queryset_returns_only_latest_versions(
     feature_state_v1.clone(env=environment, as_draft=True)  # draft feature state
 
     # When
-    feature_states = get_environment_flags_queryset(environment=environment)
+    with django_assert_num_queries(2):
+        feature_states = get_environment_flags_queryset(environment=environment)
+
+        # trigger the queryset to execute and ensure the number of queries is correct
+        list(feature_states)
 
     # Then
     assert feature_states.count() == 1
@@ -115,6 +122,7 @@ def test_get_environment_flags_v2_versioning_returns_latest_live_versions_of_fea
     environment_v2_versioning: Environment,
     feature: Feature,
     admin_user: FFAdminUser,
+    django_assert_num_queries: DjangoAssertNumQueries,
 ) -> None:
     # Given
     # a second feature with its corresponding environment feature version
@@ -139,10 +147,11 @@ def test_get_environment_flags_v2_versioning_returns_latest_live_versions_of_fea
     environment_feature_1_version_2.publish(admin_user)
 
     # When
-    environment_feature_states = get_environment_flags_list(
-        environment=environment_v2_versioning,
-        additional_filters=Q(feature_segment=None, identity=None),
-    )
+    with django_assert_num_queries(2):
+        environment_feature_states = get_environment_flags_list(
+            environment=environment_v2_versioning,
+            additional_filters=Q(feature_segment=None, identity=None),
+        )
 
     # Then
     assert set(environment_feature_states) == {
