@@ -7,9 +7,9 @@
     &--grey {
       background: $panel-grey-background-dark;
       .panel {
-        background-color: $panel-bg-darker;
+        background-color: $primary900;
         .panel-content {
-          background-color: $panel-bg-darker;
+          background-color: $primary900;
         }
       }
     }
@@ -61,7 +61,7 @@
   }
 
   &__segments-achievements {
-    border: 1px solid $bt-brand-primary !important;
+    border: 1px solid $primary !important;
   }
 }
 .dark {
@@ -106,7 +106,7 @@
   select:-webkit-autofill,
   select:-webkit-autofill:hover,
   select:-webkit-autofill:focus {
-    -webkit-text-fill-color: $body-text-dark;
+    -webkit-text-fill-color: $body-color-dark;
     -webkit-box-shadow: 0 0 0px 1000px $input-bg-dark inset;
     transition: background-color 5000s ease-in-out 0s;
   }

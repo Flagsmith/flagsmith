@@ -81,8 +81,6 @@ const IdentitySelect: FC<IdentitySelectType> = ({
         styles={{
           control: (base: any) => ({
             ...base,
-            '&:hover': { borderColor: '$bt-brand-secondary' },
-            border: '1px solid $bt-brand-secondary',
           }),
         }}
       />

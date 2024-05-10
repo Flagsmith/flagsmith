@@ -1,40 +1,61 @@
-.navbar {
-  background-color: $navbar-background;
-  padding-right: 2rem;
-  padding-left: 2rem;
-  //background: linear-gradient(to right, $bt-brand-secondary-light, #1d2d3e);
-  &.homepage {
-    position: absolute;
-    left: 0;
-    right: 0;
-  }
-  z-index: 10;
-  .ion {
-    font-size: 18px;
-    color: $nav-icon-color;
-  }
-}
 
-.navbar-right nav {
-  display: flex;
-  .nav-link {
-    display: flex;
-    align-items: center;
+nav a {
+  font-weight: 500;
+  &.active {
+    font-weight: bold;
   }
 }
+.nav-sub-link {
+  padding-bottom: 10px;
+  color: $body-color;
+  &-inner {
+    padding: 4px;
+    border-radius: $border-radius;
 
-@media screen and (min-width: 768px) and (max-width: 991px) {
-  .container {
-    max-width: 748px !important;
+    &:hover {
+      color: $body-color;
+      background-color: $primary-alfa-8;
+    }
+  }
+  svg {
+    width: 14px;
+    height: 14px;
+    opacity: 0.6;
+    path {
+      fill: $body-color;
+    }
+  }
+  ion-icon {
+    opacity: 0.6;
+    font-size: $font-size-base;
+  }
+  &.active {
+    border-bottom:2px solid $primary;
   }
 }
-.navbar-brand img {
-  margin-bottom: 6px;
-  margin-right: 20px;
+.breadcrumb-link {
+  padding: 4px 8px 4px 8px;
+  border-radius: $border-radius;
+  &:hover,&.hovered {
+    color: $body-color;
+    background-color: $primary-alfa-8;
+  }
 }
-.org-nav {
-  .nav-link {
-    margin-right: 0;
+.dark {
+  .breadcrumb-link:hover, .breadcrumb-link.hovered {
+    color: $body-color-dark;
+  }
+  .nav-sub-link {
+    &-inner {
+      &:hover {
+        color: $body-color-dark;
+      }
+    }
+    svg {
+      path {
+        fill: $body-color-dark;
+      }
+    }
   }
 }
 .dark-mode {
@@ -80,142 +101,58 @@
     }
   }
 }
-.dark {
-  .navbar {
-    background-color: $nav-background-dark;
-    .btn-with-icon {
-      background-color: $bg-dark200;
-      svg {
-          path {
-            fill: $nav-icon-color-dark;
-          }
-        }
-      &:hover,
-      &:active,
-      &:disabled {
-        background-color: $bg-dark200 !important;
-        svg {
-          path {
-            fill: $primary;
-          }
-        }
-      }
+
+.border-right {
+  border-right:  1px solid $hr-border-color;
+}
+.collapsible__content {
+  svg, ion-icon {
+    text-align: center;
+    width: 16px;
+    height: 16px;
+    color: $body-color;
+    opacity: 0.6;
+    path {
+      fill: $body-color;
     }
   }
-
-  .nav-link {
-    color: $nav-link-color-dark;
-    svg {
-      path {
-        fill: $nav-icon-color-dark;
-      }
-    }
-    &.active {
-      color: $nav-link-color-active-dark;
-      svg {
-        path {
-          fill: $text-icon-light;
-        }
-      }
-    }
-    &:hover {
-      svg {
-        path {
-          fill: $primary;
-        }
-      }
-    }
+  ion-icon {
+    font-size: $font-size-base;
   }
 }
-.nav-link {
-  text-wrap: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 30em;
-  img {
-    max-height: 21px;
-  }
-  svg {
-    vertical-align: sub;
-  }
-  padding: 0;
-  font-weight: 500;
-  margin-right: 1rem;
-  color: $nav-link-color;
-  @include transition(opacity, 200ms);
-  &:hover {
-    color: $primary;
-    svg {
-      path {
-        fill: $primary;
-      }
-    }
-  }
-  &.nav-faint {
-    opacity: 0.5;
-    &.navbar-brand {
-      opacity: 1;
-    }
-  }
-  &.active {
-    color: $text-icon-dark;
-    svg {
-      path {
-        fill: $text-icon-dark;
-      }
-    }
+  .collapsible-title {
+    line-height: 32px;
+    cursor: pointer;
+    border-radius: $border-radius;
     &:hover {
       color: $primary;
-      svg {
-        path {
-          fill: $primary;
-        }
+      background-color: $primary-alfa-8;
+    }
+  }
+  .collapsible.active {
+    .collapsible-title {
+      pointer-events: none;
+    }
+  }
+.collapsible__content a {
+  padding-left: 12px;
+  padding-right: 4px;
+  margin-right: 10px;
+  line-height: 32px;
+  display: flex;
+  align-items: center;
+  border-radius: $border-radius;
+  &.active {
+    background-color: $primary-alfa-8;
+  }
+}
+.dark {
+  .collapsible__content {
+    svg {
+      path {
+        fill: $body-color-dark;
       }
-    }
-  }
-  &.disabled-link {
-    opacity: 0.32;
-    pointer-events: none;
-  }
-}
-
-.service-status {
-  font-size: 14px;
-
-  .uptime-badge {
-    display: block;
-    font-size: 14px;
-    margin-bottom: 5px;
-    color: #f1f1f1 !important;
-    text-decoration: none !important;
-
-    .label {
-      display: inline-block;
-      background: linear-gradient(#5e5e5e, #4c4c4c);
-      padding: 2px 5px;
-      border-radius: $border-radius-sm 0 0 $border-radius-sm;
-    }
-
-    .success {
-      display: inline-block;
-      background: linear-gradient(#5bc870, #4e9c4e);
-      border-radius: 0 $border-radius-sm $border-radius-sm 0;
-      padding: 2px 5px;
-    }
-
-    .error {
-      display: inline-block;
-      background: linear-gradient(#dab32a, #cca417);
-      border-radius: 0 $border-radius-sm $border-radius-sm 0;
-      padding: 2px 5px;
-    }
-  }
-}
-
-@media screen and (min-width: 992px) and (max-width: 1200px) {
-  .navbar-nav {
-    .nav-link {
-      font-size: 0.95em !important;
+      opacity: 0.3;
     }
   }
 }

@@ -103,6 +103,7 @@ export const getLogger = () =>
   })
 
 export const gotoTraits = async () => {
+  await click('#features-link')
   await click('#users-link')
   await click(byId('user-item-0'))
   await waitForElementVisible('#add-trait')
@@ -219,6 +220,7 @@ export const saveFeatureSegments = async () => {
 }
 
 export const goToUser = async (index: number) => {
+  await click('#features-link')
   await click('#users-link')
   await click(byId(`user-item-${index}`))
 }
@@ -331,6 +333,7 @@ export const createRemoteConfig = async (
 
 export const createOrganisationAndProject = async (organisationName:string,projectName:string) =>{
   log('Create Organisation')
+  await click(byId('home-link'))
   await click(byId('create-organisation-btn'))
   await setText('[name="orgName"]', organisationName)
   await click('#create-org-btn')
