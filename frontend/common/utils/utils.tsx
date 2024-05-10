@@ -75,6 +75,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return 0
   },
 
+  canCreateOrganisation() {
+    return (
+      !Utils.getFlagsmithHasFeature('disable_create_org') &&
+      (!Project.superUserCreateOnly ||
+        (Project.superUserCreateOnly && AccountStore.isSuper()))
+    )
+  },
+
   changeRequestsEnabled(value: number | null | undefined) {
     return typeof value === 'number'
   },
@@ -97,7 +105,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       />
     ) : null
   },
-
   escapeHtml(html: string) {
     const text = document.createTextNode(html)
     const p = document.createElement('p')
@@ -243,13 +250,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return 'UPDATE_FEATURE_STATE'
   },
-  canCreateOrganisation() {
-    return (
-      !Utils.getFlagsmithHasFeature('disable_create_org') &&
-      (!Project.superUserCreateOnly ||
-        (Project.superUserCreateOnly && AccountStore.isSuper()))
-    )
-  },
   getManageFeaturePermissionDescription(isChangeRequest: boolean) {
     if (isChangeRequest) {
       return 'Create Change Request'
@@ -327,7 +327,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     const isScaleupOrGreater = planName !== planNames.startup
     const isEnterprise = planName === planNames.enterprise
-
+    const isSaas = Utils.isSaas()
     switch (permission) {
       case 'FLAG_OWNERS': {
         valid = isScaleupOrGreater
@@ -365,6 +365,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         valid = isScaleupOrGreater
         break
       }
+      case 'REALTIME': {
+        valid = isEnterprise && isSaas
+        break
+      }
       case 'STALE_FLAGS': {
         valid = isEnterprise
         break
@@ -375,7 +379,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return valid
   },
-
   getPlansPermission: (permission: string) => {
     const isOrgPermission = permission !== '2FA'
     const plans = isOrgPermission
@@ -397,6 +400,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
+
   getSDKEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
 
@@ -405,7 +409,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return Project.api
   },
-
   getShouldHideIdentityOverridesTab(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (!Utils.getIsEdge()) {
@@ -514,6 +517,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
+
+  isSaas: () => global.flagsmithVersion?.backend?.is_saas,
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },
