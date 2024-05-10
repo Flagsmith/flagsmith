@@ -40,7 +40,7 @@ class Integration extends Component {
     const childWindow = window.open(
       `${Project.githubAppURL}`,
       '_blank',
-      'height=600,width=800,status=yes,toolbar=no,menubar=no,addressbar=no',
+      'height=700%,width=800%,status=yes,toolbar=no,menubar=no,addressbar=no',
     )
 
     childWindow.localStorage.setItem(

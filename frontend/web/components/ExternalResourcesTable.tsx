@@ -11,7 +11,7 @@ import { ExternalResource } from 'common/types/responses'
 import Constants from 'common/constants'
 import Tooltip from './Tooltip'
 import MyIssuesSelect from './MyIssuesSelect'
-import MyGithubPullRequests from './MyPullRequestsSelect'
+import MyPullRequestsSelect from './MyPullRequestsSelect'
 
 export type ExternalResourcesTableType = {
   featureId: string
@@ -49,7 +49,7 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
   }, [isDeleted])
   return (
     <Row className='list-item' key={externalResource?.id}>
-      <Flex className='table-column mt-1'>
+      <Flex className='table-column'>
         <Row className='font-weight-medium'>
           {Constants.resourceTypes[externalResource?.type].label}
           <Button
@@ -114,7 +114,7 @@ const AddExternalResourceRow: FC<PermanentRowType> = ({
   )
   return (
     <Row className='list-item'>
-      <Flex className='table-column px-3'>
+      <Flex className='table-column' style={{ maxWidth: '170px' }}>
         <Select
           size='select-md'
           placeholder={'Select Type'}
@@ -136,7 +136,7 @@ const AddExternalResourceRow: FC<PermanentRowType> = ({
             />
           ) : externalResourceType ==
             Constants.resourceTypes.GITHUB_PR.label ? (
-            <MyGithubPullRequests
+            <MyPullRequestsSelect
               orgId={organisationId}
               onChange={(v) => setFeatureExternalResource(v)}
               repoOwner={repoOwner}
@@ -232,7 +232,7 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
   return (
     <>
       <PanelSearch
-        className='no-pad'
+        className='no-pad overflow-visible'
         title='Linked Issues and Pull Requests'
         items={
           data?.results.length

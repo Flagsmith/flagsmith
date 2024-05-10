@@ -28,7 +28,7 @@ const GithubRepositoriesTable: FC<GithubRepositoriesTableType> = ({
   return (
     <div className='mb-3'>
       <PanelSearch
-        className='no-pad mb-4'
+        className='no-pad mb-4 mt-2'
         title='Repositories'
         items={repos}
         header={
