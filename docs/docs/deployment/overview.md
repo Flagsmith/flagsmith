@@ -202,7 +202,6 @@ The list of the flags and remote config we're currently using in production is b
 | `plan_based_access`                         | Controls rbac and 2f based on plans                                                                                                            | None                                              |
 | `saml`                                      | Enables SAML authentication                                                                                                                    | [See](/system-administration/authentication/SAML) |
 | `segment_operators`                         | Determines what rules are shown when creating a segment                                                                                        | [See Below](#segment_operators)                   |
-| `show_role_management`                      | Show role management tab in OrganisationalSettingsPage                                                                                         | None                                              |
 | `sso_idp`                                   | For self hosted, this will automatically redirect to the pre configured IdP                                                                    | None                                              |
 | `verify_seats_limit_for_invite_links`       | Determines whether to show los invite links                                                                                                    | None                                              |
 
