@@ -44,8 +44,6 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
   const [repositoryOwner, setRepositoryOwner] = useState<string>('')
   const [repositories, setRepositories] = useState<any>([])
 
-  console.log('DEBUG: projects:', projects)
-
   const { data: repos, isSuccess: reposLoaded } = useGetGithubReposQuery(
     {
       installation_id: installationId,
