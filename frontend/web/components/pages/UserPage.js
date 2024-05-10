@@ -320,9 +320,6 @@ const UserPage = class extends Component {
   render() {
     const { actualFlags } = this.state
     const { environmentId, projectId } = this.props.match.params
-    const enabledStateFilter = Utils.getFlagsmithHasFeature(
-      'feature_enabled_state_filter',
-    )
     const preventAddTrait = !AccountStore.getOrganisation().persist_trait_data
     return (
       <div className='app-container container'>
@@ -535,30 +532,27 @@ const UserPage = class extends Component {
                                                 )
                                               }}
                                             />
-                                            {enabledStateFilter && (
-                                              <TableValueFilter
-                                                className='me-4'
-                                                useLocalStorage
-                                                value={{
-                                                  enabled:
-                                                    this.state.is_enabled,
-                                                  valueSearch:
-                                                    this.state.value_search,
-                                                }}
-                                                onChange={({
-                                                  enabled,
-                                                  valueSearch,
-                                                }) => {
-                                                  this.setState(
-                                                    {
-                                                      is_enabled: enabled,
-                                                      value_search: valueSearch,
-                                                    },
-                                                    this.filter,
-                                                  )
-                                                }}
-                                              />
-                                            )}
+                                            <TableValueFilter
+                                              className='me-4'
+                                              useLocalStorage
+                                              value={{
+                                                enabled: this.state.is_enabled,
+                                                valueSearch:
+                                                  this.state.value_search,
+                                              }}
+                                              onChange={({
+                                                enabled,
+                                                valueSearch,
+                                              }) => {
+                                                this.setState(
+                                                  {
+                                                    is_enabled: enabled,
+                                                    value_search: valueSearch,
+                                                  },
+                                                  this.filter,
+                                                )
+                                              }}
+                                            />
                                             <TableOwnerFilter
                                               title={'Owners'}
                                               className={'me-4'}

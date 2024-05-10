@@ -219,9 +219,6 @@ const FeaturesPage = class extends Component {
   render() {
     const { environmentId, projectId } = this.props.match.params
     const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
-    const enabledStateFilter = Utils.getFlagsmithHasFeature(
-      'feature_enabled_state_filter',
-    )
     const environment = ProjectStore.getEnvironment(environmentId)
     return (
       <div
@@ -426,31 +423,29 @@ const FeaturesPage = class extends Component {
                                             }
                                           }}
                                         />
-                                        {enabledStateFilter && (
-                                          <TableValueFilter
-                                            title={'State'}
-                                            className={'me-4'}
-                                            projectId={projectId}
-                                            useLocalStorage
-                                            value={{
-                                              enabled: this.state.is_enabled,
-                                              valueSearch:
-                                                this.state.value_search,
-                                            }}
-                                            onChange={({
-                                              enabled,
-                                              valueSearch,
-                                            }) => {
-                                              this.setState(
-                                                {
-                                                  is_enabled: enabled,
-                                                  value_search: valueSearch,
-                                                },
-                                                this.filter,
-                                              )
-                                            }}
-                                          />
-                                        )}
+                                        <TableValueFilter
+                                          title={'State'}
+                                          className={'me-4'}
+                                          projectId={projectId}
+                                          useLocalStorage
+                                          value={{
+                                            enabled: this.state.is_enabled,
+                                            valueSearch:
+                                              this.state.value_search,
+                                          }}
+                                          onChange={({
+                                            enabled,
+                                            valueSearch,
+                                          }) => {
+                                            this.setState(
+                                              {
+                                                is_enabled: enabled,
+                                                value_search: valueSearch,
+                                              },
+                                              this.filter,
+                                            )
+                                          }}
+                                        />
                                         <TableOwnerFilter
                                           title={'Owners'}
                                           className={'me-4'}
