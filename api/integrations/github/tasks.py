@@ -31,7 +31,10 @@ def send_post_request(data: CallGithubData) -> None:
     installation_id = data.github_data.installation_id
     body = generate_body_comment(feature_name, event_type, feature_states)
 
-    if event_type == WebhookEventType.FLAG_UPDATED.value:
+    if (
+        event_type == WebhookEventType.FLAG_UPDATED.value
+        or event_type == WebhookEventType.FLAG_DELETED.value
+    ):
         for resource in data.feature_external_resources:
             url = resource.get("url")
             pathname = urlparse(url).path
@@ -61,7 +64,36 @@ def send_post_request(data: CallGithubData) -> None:
 @register_task_handler()
 def call_github_app_webhook_for_feature_state(event_data: dict[str, Any]) -> None:
 
+    from features.feature_external_resources.models import (
+        FeatureExternalResource,
+    )
+
     github_event_data = GithubData.from_dict(event_data)
+
+    def generate_feature_external_resources(
+        feature_external_resources: FeatureExternalResource,
+    ) -> list[dict[str, Any]]:
+        return [
+            {
+                "type": resource.type,
+                "url": resource.url,
+            }
+            for resource in feature_external_resources
+        ]
+
+    if github_event_data.type == WebhookEventType.FLAG_DELETED.value:
+        feature_external_resources = generate_feature_external_resources(
+            FeatureExternalResource.objects.filter(
+                feature_id=github_event_data.feature_id
+            )
+        )
+        data = CallGithubData(
+            event_type=github_event_data.type,
+            github_data=github_event_data,
+            feature_external_resources=feature_external_resources,
+        )
+        send_post_request(data)
+        return
 
     if (
         github_event_data.type
@@ -76,14 +108,9 @@ def call_github_app_webhook_for_feature_state(event_data: dict[str, Any]) -> Non
         return
 
     feature = Feature.objects.get(id=github_event_data.feature_id)
-    feature_external_resources = feature.external_resources.all()
-    feature_external_resources = [
-        {
-            "type": resource.type,
-            "url": resource.url,
-        }
-        for resource in feature_external_resources
-    ]
+    feature_external_resources = generate_feature_external_resources(
+        feature.external_resources.all()
+    )
     data = CallGithubData(
         event_type=github_event_data.type,
         github_data=github_event_data,
