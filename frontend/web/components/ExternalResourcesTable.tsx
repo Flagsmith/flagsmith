@@ -151,16 +151,20 @@ const AddExternalResourceRow: FC<PermanentRowType> = ({
         <Button
           className='text-right btn-with-icon'
           theme='primary'
+          disabled={!externalResourceType || !featureExternalResource}
           onClick={() => {
             createExternalResource({
               body: {
                 feature: parseInt(featureId),
-                metadata: { status },
-                type: Constants.resourceTypes[externalResourceType],
+                metadata: { status: 'open' },
+                type: externalResourceType.toUpperCase().replace(/\s+/g, '_'),
                 url: featureExternalResource,
               },
               feature_id: featureId,
               project_id: projectId,
+            }).then(() => {
+              setExternalResourceType('')
+              setFeatureExternalResource('')
             })
           }}
         >
@@ -182,7 +186,6 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
     feature_id: featureId,
     project_id: projectId,
   })
-
   const renderRowWithPermanentRow = (v: ExternalResource, index: number) => {
     if (index === (data?.results.length || 0) - 1) {
       return (
@@ -194,7 +197,7 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
             externalResource={v}
           />
           <AddExternalResourceRow
-            key='permanent-row'
+            key='add-external-key'
             featureId={featureId}
             projectId={projectId}
             organisationId={organisationId}
@@ -203,7 +206,7 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
           />
         </>
       )
-    } else {
+    } else if (v.type !== 'permanent') {
       return (
         <ExternalResourceRow
           key={v.id}
@@ -216,20 +219,29 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
   }
 
   return (
-    <PanelSearch
-      className='no-pad'
-      title='Linked Issues and Pull Requests'
-      items={data?.results}
-      header={
-        <Row className='table-header'>
-          <Flex className='table-column px-3'>Type</Flex>
-          <div className='table-column text-center' style={{ width: '240px' }}>
-            Status
-          </div>
-        </Row>
-      }
-      renderRow={renderRowWithPermanentRow}
-    />
+    <>
+      <PanelSearch
+        className='no-pad'
+        title='Linked Issues and Pull Requests'
+        items={
+          data?.results.length
+            ? data?.results
+            : [{ id: 'add-external-key', type: 'permanent' }]
+        }
+        header={
+          <Row className='table-header'>
+            <Flex className='table-column px-3'>Type</Flex>
+            <div
+              className='table-column text-center'
+              style={{ width: '240px' }}
+            >
+              Status
+            </div>
+          </Row>
+        }
+        renderRow={renderRowWithPermanentRow}
+      />
+    </>
   )
 }
 

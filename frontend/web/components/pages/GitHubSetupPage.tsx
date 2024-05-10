@@ -20,9 +20,10 @@ type GitHubSetupPageType = {
   location: Location
 }
 
-type projectType = {
+type ProjectType = {
   id: string
   name: string
+  repo: string
 }
 
 type repoType = {
@@ -38,10 +39,12 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
     localStorage?.githubIntegrationSetupFromFlagsmith
   const [organisation, setOrganisation] = useState<string>('')
   const [project, setProject] = useState<any>({})
-  const [projects, setProjects] = useState<projectType[]>([])
+  const [projects, setProjects] = useState<ProjectType[]>([])
   const [repositoryName, setRepositoryName] = useState<string>('')
   const [repositoryOwner, setRepositoryOwner] = useState<string>('')
   const [repositories, setRepositories] = useState<any>([])
+
+  console.log('DEBUG: projects:', projects)
 
   const { data: repos, isSuccess: reposLoaded } = useGetGithubReposQuery(
     {
@@ -182,11 +185,13 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
                 )
               }
               onClick={() => {
-                {
-                  const newProjects = [...projects]
-                  newProjects.push(project)
-                  setProjects(newProjects)
+                const newProjects = [...projects]
+                const projectWithRepo = {
+                  ...project,
+                  repo: repositoryName,
                 }
+                newProjects.push(projectWithRepo)
+                setProjects(newProjects)
               }}
             >
               Add Project
@@ -199,6 +204,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
             header={
               <Row className='table-header'>
                 <Flex className='table-column px-3'>Project</Flex>
+                <Flex className='table-column px-3'>Repository</Flex>
                 <div
                   className='table-column text-center'
                   style={{ width: '80px' }}
@@ -207,10 +213,13 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
                 </div>
               </Row>
             }
-            renderRow={(v: projectType) => (
-              <Row className='list-item' key={v.value}>
+            renderRow={(v: ProjectType) => (
+              <Row className='list-item' key={v.id}>
                 <Flex className='table-column px-3'>
                   <div className='font-weight-medium mb-1'>{v.name}</div>
+                </Flex>
+                <Flex className='table-column px-3'>
+                  <div className='font-weight-medium mb-1'>{v.repo}</div>
                 </Flex>
                 <div
                   className='table-column  text-center'
@@ -219,7 +228,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
                   <Button
                     onClick={() => {
                       setProjects(
-                        projects.filter((p: projectType) => p.id !== v.id),
+                        projects.filter((p: ProjectType) => p.repo !== v.repo),
                       )
                     }}
                     className='btn btn-with-icon'

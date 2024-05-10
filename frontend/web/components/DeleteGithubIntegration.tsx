@@ -5,12 +5,10 @@ import { useDeleteGithubIntegrationMutation } from 'common/services/useGithubInt
 type DeleteGithubIntegrationType = {
   organisationId: string
   githubId: string
-  onConfirm: () => void
 }
 
 const DeleteGithubIntegration: FC<DeleteGithubIntegrationType> = ({
   githubId,
-  onConfirm,
   organisationId,
 }) => {
   const [deleteGithubIntegration] = useDeleteGithubIntegrationMutation()
