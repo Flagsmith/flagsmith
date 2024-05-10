@@ -30,6 +30,7 @@ import TableOwnerFilter from 'components/tables/TableOwnerFilter'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableValueFilter from 'components/tables/TableValueFilter'
 import Format from 'common/utils/format'
+import InfoMessage from 'components/InfoMessage'
 const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
@@ -324,7 +325,7 @@ const UserPage = class extends Component {
     )
     const preventAddTrait = !AccountStore.getOrganisation().persist_trait_data
     return (
-      <div className='app-container container mt-1'>
+      <div className='app-container container'>
         <Permission
           level='environment'
           permission={Utils.getManageUserPermission()}
@@ -361,31 +362,6 @@ const UserPage = class extends Component {
                         </div>
                       ) : (
                         <>
-                          <nav aria-label='breadcrumb'>
-                            <ol className='breadcrumb mb-2 py-1"'>
-                              <li className='breadcrumb-item fs-small lh-sm'>
-                                <Link
-                                  className='fw-normal'
-                                  to={`/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/users`}
-                                >
-                                  Identities
-                                </Link>
-                              </li>
-                              <li
-                                className='breadcrumb-item active fs-small lh-sm text-muted'
-                                aria-current='page'
-                                style={{ opacity: 0.6 }}
-                              >
-                                <IdentifierString
-                                  value={
-                                    (identity &&
-                                      identity.identity.identifier) ||
-                                    this.props.match.params.id
-                                  }
-                                />
-                              </li>
-                            </ol>
-                          </nav>
                           <PageTitle
                             title={
                               <IdentifierString
@@ -399,10 +375,6 @@ const UserPage = class extends Component {
                             View and manage feature states and traits for this
                             user.
                             <br />
-                            Overriding features here will take priority over any
-                            segment override. Any features that are not
-                            overridden for this user will fallback to any
-                            segment overrides or the environment defaults.
                           </PageTitle>
                           <div className='row'>
                             <div className='col-md-12'>
@@ -412,7 +384,21 @@ const UserPage = class extends Component {
                                     id='user-features-list'
                                     className='no-pad overflow-visible'
                                     itemHeight={70}
-                                    title='Features'
+                                    title={
+                                      <div>
+                                        Features
+                                        <div className='fw-normal mt-2 fs-medium'>
+                                          <InfoMessage>
+                                            Overriding features here will take
+                                            priority over any segment override.
+                                            Any features that are not overridden
+                                            for this user will fallback to any
+                                            segment overrides or the environment
+                                            defaults.
+                                          </InfoMessage>
+                                        </div>
+                                      </div>
+                                    }
                                     renderFooter={() => (
                                       <>
                                         <JSONReference

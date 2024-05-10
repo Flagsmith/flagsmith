@@ -19,7 +19,6 @@ from django_lifecycle import (
     AFTER_DELETE,
     AFTER_SAVE,
     AFTER_UPDATE,
-    BEFORE_UPDATE,
     LifecycleModel,
     hook,
 )
@@ -44,7 +43,6 @@ from environments.dynamodb import (
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
-from features.versioning.exceptions import FeatureVersioningError
 from metadata.models import Metadata
 from projects.models import IdentityOverridesV2MigrationStatus, Project
 from segments.models import Segment
@@ -149,10 +147,6 @@ class Environment(
     def clear_environment_cache(self):
         # TODO: this could rebuild the cache itself (using an async task)
         environment_cache.delete(self.initial_value("api_key"))
-
-    @hook(BEFORE_UPDATE, when="use_v2_feature_versioning", was=True, is_now=False)
-    def validate_use_v2_feature_versioning(self):
-        raise FeatureVersioningError("Cannot revert from v2 feature versioning.")
 
     @hook(AFTER_DELETE)
     def delete_from_dynamo(self):
