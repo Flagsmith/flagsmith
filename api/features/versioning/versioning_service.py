@@ -14,9 +14,6 @@ def get_environment_flags_queryset(
     """
     Get a queryset of the latest live versions of an environments' feature states
     """
-    if environment.use_v2_feature_versioning:
-        return _get_feature_states_queryset(environment, feature_name)
-
     feature_states_list = get_environment_flags_list(environment, feature_name)
     return FeatureState.objects.filter(id__in=[fs.id for fs in feature_states_list])
 
@@ -39,6 +36,29 @@ def get_environment_flags_list(
     feature states. The logic to grab the latest version is then handled in python
     by building a dictionary. Returns a list of FeatureState objects.
     """
+    return list(
+        get_environment_flags_dict(
+            environment,
+            feature_name,
+            additional_filters,
+            additional_select_related_args,
+            additional_prefetch_related_args,
+        ).values()
+    )
+
+
+def get_environment_flags_dict(
+    environment: Environment,
+    feature_name: str = None,
+    additional_filters: Q = None,
+    additional_select_related_args: typing.Iterable[str] = None,
+    additional_prefetch_related_args: typing.Iterable[
+        typing.Union[str, Prefetch]
+    ] = None,
+    key_function: typing.Callable[[FeatureState], tuple] = None,
+) -> dict[tuple | str | int, FeatureState]:
+    key_function = key_function or _get_distinct_key
+
     feature_states = _get_feature_states_queryset(
         environment,
         feature_name,
@@ -47,24 +67,17 @@ def get_environment_flags_list(
         additional_prefetch_related_args,
     )
 
-    if environment.use_v2_feature_versioning:
-        return list(feature_states)
-
-    # Build up a dictionary in the form
-    # {(feature_id, feature_segment_id, identity_id): feature_state}
-    # and only keep the latest version for each feature.
+    # Build up a dictionary keyed off the relevant unique attributes as defined
+    # by the provided key function and only keep the highest priority feature state
+    # for each feature.
     feature_states_dict = {}
     for feature_state in feature_states:
-        key = (
-            feature_state.feature_id,
-            getattr(feature_state.feature_segment, "segment_id", None),
-            feature_state.identity_id,
-        )
+        key = key_function(feature_state)
         current_feature_state = feature_states_dict.get(key)
         if not current_feature_state or feature_state > current_feature_state:
             feature_states_dict[key] = feature_state
 
-    return list(feature_states_dict.values())
+    return feature_states_dict
 
 
 def get_current_live_environment_feature_version(
@@ -113,3 +126,13 @@ def _get_feature_states_queryset(
         queryset = queryset.filter(feature__name__iexact=feature_name)
 
     return queryset
+
+
+def _get_distinct_key(
+    feature_state: FeatureState,
+) -> tuple[int, int | None, int | None]:
+    return (
+        feature_state.feature_id,
+        getattr(feature_state.feature_segment, "segment_id", None),
+        feature_state.identity_id,
+    )
