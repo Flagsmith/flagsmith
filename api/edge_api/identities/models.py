@@ -18,6 +18,7 @@ from environments.dynamodb import DynamoIdentityWrapper
 from environments.models import Environment
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from features.versioning.versioning_service import get_environment_flags_dict
 from users.models import FFAdminUser
 from util.mappers import map_engine_identity_to_identity_document
 
@@ -80,40 +81,33 @@ class EdgeIdentity:
         )
         django_environment = Environment.objects.get(api_key=self.environment_api_key)
 
-        q = (
-            Q(version__isnull=False)
-            & Q(identity__isnull=True)
-            & (
-                Q(feature_segment__segment__id__in=segment_ids)
-                | Q(feature_segment__isnull=True)
+        feature_states: dict[str, FeatureState | FeatureStateModel] = (
+            get_environment_flags_dict(
+                environment=django_environment,
+                additional_filters=(
+                    Q(identity__isnull=True)
+                    & (
+                        Q(feature_segment__segment__id__in=segment_ids)
+                        | Q(feature_segment__isnull=True)
+                    )
+                ),
+                additional_select_related_args=[
+                    "feature",
+                    "feature_segment",
+                    "feature_segment__segment",
+                    "feature_state_value",
+                ],
+                additional_prefetch_related_args=[
+                    Prefetch(
+                        "multivariate_feature_state_values",
+                        queryset=MultivariateFeatureStateValue.objects.select_related(
+                            "multivariate_feature_option"
+                        ),
+                    )
+                ],
+                key_function=lambda fs: fs.feature.name,
             )
         )
-        environment_and_segment_feature_states = (
-            django_environment.feature_states.select_related(
-                "feature",
-                "feature_segment",
-                "feature_segment__segment",
-                "feature_state_value",
-            )
-            .prefetch_related(
-                Prefetch(
-                    "multivariate_feature_state_values",
-                    queryset=MultivariateFeatureStateValue.objects.select_related(
-                        "multivariate_feature_option"
-                    ),
-                )
-            )
-            .filter(q)
-        )
-
-        feature_states = {}
-        for feature_state in environment_and_segment_feature_states:
-            feature_name = feature_state.feature.name
-            if (
-                feature_name not in feature_states
-                or feature_state > feature_states[feature_name]
-            ):
-                feature_states[feature_name] = feature_state
 
         identity_feature_states = self.feature_overrides
         identity_feature_names = set()

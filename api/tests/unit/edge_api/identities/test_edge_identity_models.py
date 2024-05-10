@@ -9,7 +9,9 @@ from freezegun import freeze_time
 from pytest_mock import MockerFixture
 
 from edge_api.identities.models import EdgeIdentity
-from features.models import FeatureSegment, FeatureState, FeatureStateValue
+from environments.models import Environment
+from features.models import Feature, FeatureSegment, FeatureState
+from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
 from segments.models import Segment
 
@@ -38,15 +40,8 @@ def test_get_all_feature_states_for_edge_identity_uses_segment_priorities(
     segment_override_p1 = FeatureState.objects.create(
         feature=feature, environment=environment, feature_segment=feature_segment_p1
     )
-    segment_override_p2 = FeatureState.objects.create(
+    FeatureState.objects.create(
         feature=feature, environment=environment, feature_segment=feature_segment_p2
-    )
-
-    FeatureStateValue.objects.filter(feature_state=segment_override_p1).update(
-        string_value="p1"
-    )
-    FeatureStateValue.objects.filter(feature_state=segment_override_p2).update(
-        string_value="p2"
     )
 
     identity_model = mocker.MagicMock(
@@ -479,3 +474,43 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_up
             "identifier": edge_identity_model.identifier,
         }
     )
+
+
+def test_get_all_feature_states_post_v2_versioning_migration(
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    segment: Segment,
+    segment_featurestate: FeatureState,
+    edge_identity_model: EdgeIdentity,
+    mocker: MockerFixture,
+) -> None:
+    """
+    Specific test to reproduce an issue seen after migrating our staging environment to
+    v2 versioning.
+    """
+
+    # Given
+    # Multiple versions (old style versioning) of a given environment feature state and segment override
+    # to simulate the fact that we will be left with feature states that do NOT have a feature version
+    # (because only the latest versions get migrated to v2 versioning).
+    feature_state.clone(env=environment, live_from=timezone.now(), version=2)
+    v2_segment_override = segment_featurestate.clone(
+        env=environment, live_from=timezone.now(), version=2
+    )
+
+    enable_v2_versioning(environment.id)
+
+    edge_identity_dynamo_wrapper_mock = mocker.patch(
+        "edge_api.identities.models.EdgeIdentity.dynamo_wrapper",
+    )
+    edge_identity_dynamo_wrapper_mock.get_segment_ids.return_value = [segment.id]
+
+    # When
+    feature_states, identity_override_feature_names = (
+        edge_identity_model.get_all_feature_states()
+    )
+
+    # Then
+    assert len(feature_states) == 1
+    assert feature_states[0] == v2_segment_override
