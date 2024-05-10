@@ -6,6 +6,7 @@ import shortuuid
 from django.utils import timezone
 from flag_engine.features.models import FeatureModel, FeatureStateModel
 from freezegun import freeze_time
+from pytest_django import DjangoAssertNumQueries
 from pytest_mock import MockerFixture
 
 from edge_api.identities.models import EdgeIdentity
@@ -484,6 +485,7 @@ def test_get_all_feature_states_post_v2_versioning_migration(
     segment_featurestate: FeatureState,
     edge_identity_model: EdgeIdentity,
     mocker: MockerFixture,
+    django_assert_num_queries: DjangoAssertNumQueries,
 ) -> None:
     """
     Specific test to reproduce an issue seen after migrating our staging environment to
@@ -507,9 +509,10 @@ def test_get_all_feature_states_post_v2_versioning_migration(
     edge_identity_dynamo_wrapper_mock.get_segment_ids.return_value = [segment.id]
 
     # When
-    feature_states, identity_override_feature_names = (
-        edge_identity_model.get_all_feature_states()
-    )
+    with django_assert_num_queries(4):
+        feature_states, identity_override_feature_names = (
+            edge_identity_model.get_all_feature_states()
+        )
 
     # Then
     assert len(feature_states) == 1
