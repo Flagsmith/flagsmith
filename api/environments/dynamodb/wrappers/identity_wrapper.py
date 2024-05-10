@@ -105,6 +105,7 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         if projection_expression:
             query_kwargs["ProjectionExpression"] = projection_expression
         if return_consumed_capacity:
+            # Use `TOTAL` because we don't need per-index/per-table consumed capacity
             query_kwargs["ReturnConsumedCapacity"] = "TOTAL"
         return self.query_items(**query_kwargs)
 
