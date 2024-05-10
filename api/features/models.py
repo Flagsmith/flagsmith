@@ -547,7 +547,10 @@ class FeatureState(
     @property
     def is_live(self) -> bool:
         if self.environment.use_v2_feature_versioning:
-            return self.environment_feature_version.is_live
+            return (
+                self.environment_feature_version is not None
+                and self.environment_feature_version.is_live
+            )
         else:
             return (
                 self.version is not None
