@@ -81,16 +81,18 @@ class EdgeIdentity:
         )
         django_environment = Environment.objects.get(api_key=self.environment_api_key)
 
+        # since identity overrides are included in the document retrieved from dynamo,
+        # we only want to retrieve the environment default and (relevant) segment overrides
+        # from the ORM.
+        additional_filters = Q(identity__isnull=True) & (
+            Q(feature_segment__segment__id__in=segment_ids)
+            | Q(feature_segment__isnull=True)
+        )
+
         feature_states: dict[str, FeatureState | FeatureStateModel] = (
             get_environment_flags_dict(
                 environment=django_environment,
-                additional_filters=(
-                    Q(identity__isnull=True)
-                    & (
-                        Q(feature_segment__segment__id__in=segment_ids)
-                        | Q(feature_segment__isnull=True)
-                    )
-                ),
+                additional_filters=additional_filters,
                 additional_select_related_args=[
                     "feature",
                     "feature_segment",
@@ -105,10 +107,17 @@ class EdgeIdentity:
                         ),
                     )
                 ],
+                # since we only want to retrieve the highest priority feature state,
+                # we key off the feature name instead of the default
+                # (feature_id, segment_id, identity_id). This will give us only e.g.
+                # the highest priority matching segment override for a given feature.
                 key_function=lambda fs: fs.feature.name,
             )
         )
 
+        # Since the identity overrides are the highest priority, we can now iterate
+        # over the dictionary and replace any feature states with those that have
+        # an identity override, stored against the identity in dynamo.
         identity_feature_states = self.feature_overrides
         identity_feature_names = set()
         for identity_feature_state in identity_feature_states:
