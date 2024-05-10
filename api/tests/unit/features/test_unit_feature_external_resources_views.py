@@ -339,15 +339,6 @@ def test_create_github_comment_on_feature_state_updated(  # noqa: C901
         "requests.post", side_effect=mocked_requests_post
     )
 
-    mock_generate_body_comment = mocker.patch(
-        "integrations.github.tasks.generate_body_comment",
-    )
-
-    if event_type == "update":
-        mock_generate_body_comment.return_value = "Flag updated"
-    elif event_type == "delete":
-        mock_generate_body_comment.return_value = "Flag deleted"
-
     feature_state_value = feature_state.get_feature_state_value()
     feature_env_data = {}
     feature_env_data["feature_state_value"] = feature_state_value
@@ -356,18 +347,23 @@ def test_create_github_comment_on_feature_state_updated(  # noqa: C901
     )
     feature_env_data["environment_name"] = environment.name
     feature_env_data["feature_value"] = feature_state.enabled
+    if event_type == "update":
+        mock_generate_data = mocker.patch(
+            "integrations.github.github.generate_data",
+            return_value=GithubData(
+                installation_id=github_configuration.installation_id,
+                feature_id=feature.id,
+                feature_name=feature.name,
+                type=feature_external_resource.type,
+                feature_states=[feature_env_data],
+                url=feature_external_resource.url,
+            ),
+        )
 
-    mock_generate_data = mocker.patch(
-        "integrations.github.github.generate_data",
-        return_value=GithubData(
-            installation_id=github_configuration.installation_id,
-            feature_id=feature.id,
-            feature_name=feature.name,
-            type=feature_external_resource.type,
-            feature_states=[feature_env_data],
-            url=feature_external_resource.url,
-        ),
-    )
+        mocker.patch(
+            "integrations.github.tasks.generate_body_comment",
+            return_value="Flag updated",
+        )
 
     payload = dict(FeatureStateSerializerBasic(instance=feature_state).data)
 
@@ -402,7 +398,7 @@ def test_create_github_comment_on_feature_state_updated(  # noqa: C901
     elif event_type == "delete":
         github_request_mock.assert_called_with(
             "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
-            json={"body": "Flag deleted"},
+            json={"body": "### The Feature Flag `Test Feature1` was deleted"},
             headers={
                 "Accept": "application/vnd.github.v3+json",
                 "Authorization": "Bearer mocked_token",
@@ -415,14 +411,5 @@ def test_create_github_comment_on_feature_state_updated(  # noqa: C901
             feature_id=feature.id,
             feature_name=feature.name,
             type=WebhookEventType.FLAG_UPDATED.value,
-            feature_states=[feature_state],
-        )
-
-    elif event_type == "delete":
-        mock_generate_data.assert_called_with(
-            github_configuration=github_configuration,
-            feature_id=feature.id,
-            feature_name=feature.name,
-            type=WebhookEventType.FLAG_DELETED.value,
             feature_states=[feature_state],
         )
