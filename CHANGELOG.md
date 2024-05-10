@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.114.0](https://github.com/Flagsmith/flagsmith/compare/v2.113.0...v2.114.0) (2024-05-10)
+
+
+### Features
+
+* add endpoint to revert v2 versioning ([#3897](https://github.com/Flagsmith/flagsmith/issues/3897)) ([da9e051](https://github.com/Flagsmith/flagsmith/commit/da9e051e72a1d50532fbf688d693980880f395c1))
+* Implement GitHub Webhook ([#3906](https://github.com/Flagsmith/flagsmith/issues/3906)) ([9303267](https://github.com/Flagsmith/flagsmith/commit/9303267a078ecfb6788df51a8b3ff5fb83f67e8d))
+
+
+### Bug Fixes
+
+* Disable segment override diffs for non versioned environments ([#3914](https://github.com/Flagsmith/flagsmith/issues/3914)) ([e5b4313](https://github.com/Flagsmith/flagsmith/commit/e5b4313231bb3f882e2f61512933d9bb127c1a4d))
+* Move call to GitHub integration tasks out from trigger_feature_state_change_webhooks ([#3905](https://github.com/Flagsmith/flagsmith/issues/3905)) ([dec9afa](https://github.com/Flagsmith/flagsmith/commit/dec9afab22019297e18ef6efb01c3398abeb9746))
+
 ## [2.113.0](https://github.com/Flagsmith/flagsmith/compare/v2.112.0...v2.113.0) (2024-05-09)
 
 
