@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 import pytz
+from django.utils import timezone
 from flag_engine.environments.integrations.models import IntegrationModel
 from flag_engine.environments.models import (
     EnvironmentAPIKeyModel,
@@ -32,6 +33,7 @@ from pytest_mock import MockerFixture
 
 from environments.models import Environment
 from features.models import FeatureSegment, FeatureState
+from features.versioning.tasks import enable_v2_versioning
 from integrations.common.models import IntegrationsModel
 from integrations.dynatrace.models import DynatraceConfiguration
 from integrations.mixpanel.models import MixpanelConfiguration
@@ -533,3 +535,44 @@ def test_map_environment_to_engine__returns_correct_feature_state_for_different_
     # Then
     assert len(result.feature_states) == 1
     assert result.feature_states[0].django_id == v15_feature_state.id
+
+
+def test_map_environment_to_engine_following_migration_to_v2_versioning(
+    environment: Environment,
+    feature: "Feature",
+    feature_state: FeatureState,
+    segment: Segment,
+    segment_featurestate: FeatureState,
+) -> None:
+    """
+    Specific test to reproduce an issue seen after migrating our staging environment to
+    v2 versioning.
+    """
+
+    # Given
+    # Multiple versions (old style versioning) of a given environment feature state and segment override
+    # to simulate the fact that we will be left with feature states that do NOT have a feature version
+    # (because only the latest versions get migrated to v2 versioning).
+    v2_environment_feature_state = feature_state.clone(
+        env=environment, live_from=timezone.now(), version=2
+    )
+    v2_segment_override = segment_featurestate.clone(
+        env=environment, live_from=timezone.now(), version=2
+    )
+
+    enable_v2_versioning(environment.id)
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    assert result
+
+    assert len(result.feature_states) == 1
+    assert result.feature_states[0].django_id == v2_environment_feature_state.id
+
+    assert len(result.project.segments) == 1
+    assert len(result.project.segments[0].feature_states) == 1
+    assert (
+        result.project.segments[0].feature_states[0].django_id == v2_segment_override.id
+    )
