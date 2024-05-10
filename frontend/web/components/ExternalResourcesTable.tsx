@@ -215,6 +215,17 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
           externalResource={v}
         />
       )
+    } else if (v.type === 'permanent') {
+      return (
+        <AddExternalResourceRow
+          key='add-external-key'
+          featureId={featureId}
+          projectId={projectId}
+          organisationId={organisationId}
+          repoName={repoName}
+          repoOwner={repoOwner}
+        />
+      )
     }
   }
 
