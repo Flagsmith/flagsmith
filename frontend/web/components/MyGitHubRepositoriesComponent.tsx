@@ -86,9 +86,6 @@ const MyGitHubRepositoriesComponent: FC<MyGitHubRepositoriesComponentType> = ({
             <DeleteGithubIntegration
               githubId={githubId}
               organisationId={organisationId}
-              onConfirm={() => {
-                closeModal()
-              }}
             />
           </div>
         </>

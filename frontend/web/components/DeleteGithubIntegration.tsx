@@ -19,29 +19,40 @@ const DeleteGithubIntegration: FC<DeleteGithubIntegrationType> = ({
       theme='danger'
       data-test='delete-integration'
       onClick={() =>
-        openConfirm({
-          body: (
-            <>
-              <div>
-                Are you sure you want to remove your GitHub integration?
-              </div>
-              <div>
-                If you proceed, you will need to uninstall the application from
-                your GitHub organization in order to integrate it again.
-              </div>
-            </>
-          ),
-          onYes: () => {
-            deleteGithubIntegration({
-              github_integration_id: githubId,
-              organisation_id: organisationId,
-            }).then(() => {
-              closeModal()
-            })
-          },
-          title: 'Remove your Github Integration',
-          yesText: 'Confirm',
-        })
+        openModal2(
+          'Delete Github Integration',
+          <div>
+            <div>Are you sure you want to remove your GitHub integration?</div>
+            <div>
+              If you proceed, you will need to uninstall the application from
+              your GitHub organization in order to integrate it again.
+            </div>
+            <div className='text-right'>
+              <Button
+                className='mr-2'
+                onClick={() => {
+                  closeModal2()
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                theme='danger'
+                onClick={() => {
+                  deleteGithubIntegration({
+                    github_integration_id: githubId,
+                    organisation_id: organisationId,
+                  }).then(() => {
+                    closeModal2()
+                    closeModal()
+                  })
+                }}
+              >
+                Delete
+              </Button>
+            </div>
+          </div>,
+        )
       }
       size='small'
     >
