@@ -559,16 +559,13 @@ const ProjectSettingsPage = class extends Component {
                         />
                       </TabItem>
                     )}
-                    {!!ProjectStore.getEnvs()?.length &&
-                      Utils.getFlagsmithHasFeature(
-                        'flagsmith_import_export',
-                      ) && (
-                        <TabItem tabLabel='Export'>
-                          <FeatureExport
-                            projectId={this.props.match.params.projectId}
-                          />
-                        </TabItem>
-                      )}
+                    {!!ProjectStore.getEnvs()?.length && (
+                      <TabItem tabLabel='Export'>
+                        <FeatureExport
+                          projectId={this.props.match.params.projectId}
+                        />
+                      </TabItem>
+                    )}
                   </Tabs>
                 }
               </div>

@@ -396,7 +396,6 @@ const store = Object.assign({}, BaseStore, {
     }
 
     return (
-      Utils.getFlagsmithHasFeature('force_2fa') &&
       store.getOrganisations() &&
       store.getOrganisations().find((o) => o.force_2fa)
     )
