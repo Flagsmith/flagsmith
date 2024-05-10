@@ -501,6 +501,7 @@ const ChangeRequestsPage = class extends Component {
                         </div>
                       </Panel>
                       <DiffChangeRequest
+                        isVersioned={isVersioned}
                         changeRequest={changeRequest}
                         feature={projectFlag.id}
                         projectId={this.props.match.params.projectId}
