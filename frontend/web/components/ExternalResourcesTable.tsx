@@ -27,7 +27,9 @@ type ExternalResourceRowType = {
   externalResource: ExternalResource
 }
 
-type PermanentRowType = ExternalResourcesTableType
+type AddExternalResourceRowType = ExternalResourcesTableType & {
+  linkedExternalResources?: ExternalResource[]
+}
 
 type GitHubStatusType = {
   value: number
@@ -97,8 +99,9 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
   )
 }
 
-const AddExternalResourceRow: FC<PermanentRowType> = ({
+const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
   featureId,
+  linkedExternalResources,
   organisationId,
   projectId,
   repoName,
@@ -133,6 +136,7 @@ const AddExternalResourceRow: FC<PermanentRowType> = ({
               onChange={(v) => setFeatureExternalResource(v)}
               repoOwner={repoOwner}
               repoName={repoName}
+              linkedExternalResources={linkedExternalResources!}
             />
           ) : externalResourceType ==
             Constants.resourceTypes.GITHUB_PR.label ? (
@@ -141,6 +145,7 @@ const AddExternalResourceRow: FC<PermanentRowType> = ({
               onChange={(v) => setFeatureExternalResource(v)}
               repoOwner={repoOwner}
               repoName={repoName}
+              linkedExternalResources={linkedExternalResources!}
             />
           ) : (
             <></>
@@ -163,6 +168,7 @@ const AddExternalResourceRow: FC<PermanentRowType> = ({
               feature_id: featureId,
               project_id: projectId,
             }).then(() => {
+              toast('External Resource Added')
               setExternalResourceType('')
               setFeatureExternalResource('')
             })
@@ -203,6 +209,7 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
             organisationId={organisationId}
             repoName={repoName}
             repoOwner={repoOwner}
+            linkedExternalResources={data?.results}
           />
         </>
       )
