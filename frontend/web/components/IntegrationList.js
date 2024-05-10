@@ -398,7 +398,11 @@ class IntegrationList extends Component {
       JSON.parse(Utils.getFlagsmithValue('integration_data'))
     return (
       <div>
-        <div>
+        <div
+          onFocus={() => {
+            this.fetchGithubIntegration()
+          }}
+        >
           {this.props.integrations &&
           !this.state.isLoading &&
           this.state.activeIntegrations &&
