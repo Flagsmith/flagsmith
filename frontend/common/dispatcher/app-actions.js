@@ -146,6 +146,7 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     segmentOverrides,
     changeRequest,
     commit,
+    mode,
   ) {
     Dispatcher.handleViewAction({
       actionType: Actions.EDIT_ENVIRONMENT_FLAG_CHANGE_REQUEST,
@@ -154,6 +155,7 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       environmentFlag,
       environmentId,
       flag,
+      mode,
       projectFlag,
       projectId,
       segmentOverrides,

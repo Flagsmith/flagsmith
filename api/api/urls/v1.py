@@ -10,6 +10,7 @@ from environments.identities.traits.views import SDKTraits
 from environments.identities.views import SDKIdentities
 from environments.sdk.views import SDKEnvironmentAPIView
 from features.views import SDKFeatureStates
+from integrations.github.views import github_webhook
 from organisations.views import chargebee_webhook
 
 schema_view = get_schema_view(
@@ -44,6 +45,8 @@ urlpatterns = [
     url(r"^metadata/", include("metadata.urls")),
     # Chargebee webhooks
     url(r"cb-webhook/", chargebee_webhook, name="chargebee-webhook"),
+    # GitHub integration webhook
+    url(r"github-webhook/", github_webhook, name="github-webhook"),
     # Client SDK urls
     url(r"^flags/$", SDKFeatureStates.as_view(), name="flags"),
     url(r"^identities/$", SDKIdentities.as_view(), name="sdk-identities"),
