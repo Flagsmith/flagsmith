@@ -556,9 +556,22 @@ def test_map_environment_to_engine_following_migration_to_v2_versioning(
     v2_environment_feature_state = feature_state.clone(
         env=environment, live_from=timezone.now(), version=2
     )
+    v2_environment_feature_state.enabled = True
+    v2_environment_feature_state_value = "v2"
+    v2_environment_feature_state.feature_state_value.string_value = (
+        v2_environment_feature_state_value
+    )
+    v2_environment_feature_state.save()
+    v2_environment_feature_state.feature_state_value.save()
+
     v2_segment_override = segment_featurestate.clone(
         env=environment, live_from=timezone.now(), version=2
     )
+    v2_segment_override.enabled = True
+    v2_segment_override_value = "v2-override"
+    v2_segment_override.feature_state_value.string_value = v2_segment_override_value
+    v2_segment_override.save()
+    v2_segment_override.feature_state_value.save()
 
     enable_v2_versioning(environment.id)
 
@@ -569,10 +582,19 @@ def test_map_environment_to_engine_following_migration_to_v2_versioning(
     assert result
 
     assert len(result.feature_states) == 1
-    assert result.feature_states[0].django_id == v2_environment_feature_state.id
+    mapped_environment_feature_state = result.feature_states[0]
+
+    assert mapped_environment_feature_state.django_id == v2_environment_feature_state.id
+    assert mapped_environment_feature_state.enabled is True
+    assert (
+        mapped_environment_feature_state.feature_state_value
+        == v2_environment_feature_state_value
+    )
 
     assert len(result.project.segments) == 1
     assert len(result.project.segments[0].feature_states) == 1
-    assert (
-        result.project.segments[0].feature_states[0].django_id == v2_segment_override.id
-    )
+
+    mapped_segment_override = result.project.segments[0].feature_states[0]
+    assert mapped_segment_override.django_id == v2_segment_override.id
+    assert mapped_segment_override.enabled is True
+    assert mapped_segment_override.feature_state_value == v2_segment_override_value
