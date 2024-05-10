@@ -7,11 +7,13 @@ type DiffChangeRequestType = {
   changeRequest: ChangeRequest | null
   feature: number
   projectId: string
+  isVersioned: boolean
 }
 
 const DiffChangeRequest: FC<DiffChangeRequestType> = ({
   changeRequest,
   feature,
+  isVersioned,
   projectId,
 }) => {
   const { data, isLoading } = useGetFeatureStatesQuery(
@@ -36,6 +38,7 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
     <div className='col-md-8'>
       <DiffFeature
         featureId={feature}
+        disableSegments={!isVersioned}
         projectId={projectId}
         newState={changeRequest.feature_states}
         oldState={data?.results || []}
