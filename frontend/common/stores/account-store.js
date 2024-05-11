@@ -302,11 +302,13 @@ const controller = {
       store.model = user
       if (user && user.organisations) {
         store.organisation = user.organisations[0]
-        const cookiedID = API.getCookie('organisation')
-        const pathID = matchPath(document.location.pathname, {
-          path: '/organisation/:organisationId',
-          strict: false,
-        })?.params?.organisationId
+        const cookiedID = parseInt(API.getCookie('organisation'))
+        const pathID = parseInt(
+          matchPath(document.location.pathname, {
+            path: '/organisation/:organisationId',
+            strict: false,
+          })?.params?.organisationId,
+        )
         const orgId = pathID || cookiedID
         if (orgId) {
           const foundOrganisation = user.organisations.find(
