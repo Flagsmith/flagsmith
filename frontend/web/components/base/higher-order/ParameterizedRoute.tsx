@@ -2,7 +2,7 @@ import NotFoundPage from 'components/pages/NotFoundPage'
 import React from 'react'
 import { RouteComponentProps, Route } from 'react-router-dom'
 
-interface ParameterizedRouteProps {
+type ParameterizedRouteType = {
   component: React.ComponentType<any>
   [key: string]: any
 }
@@ -10,7 +10,7 @@ interface ParameterizedRouteProps {
 export const ParameterizedRoute = ({
   component: Component,
   ...props
-}: ParameterizedRouteProps) => {
+}: ParameterizedRouteType) => {
   const { organisationId, projectId } = props.computedMatch.params
 
   const parsedOrganisationId = organisationId && parseInt(organisationId)
@@ -31,7 +31,7 @@ export const ParameterizedRoute = ({
   return (
     <Route
       {...props}
-      component={(componentProps: RouteComponentProps) => (
+      render={(componentProps: RouteComponentProps) => (
         <Component
           {...componentProps}
           match={{
