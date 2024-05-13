@@ -33,7 +33,7 @@ function getEnvironmentId() {
   })
 
   const environmentId = get(match, 'params.environmentId')
-  return environmentId
+  return environmentId || null
 }
 function getOrganisationId() {
   const location = document.location
