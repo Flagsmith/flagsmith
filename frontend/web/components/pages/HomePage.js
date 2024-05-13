@@ -162,7 +162,7 @@ const HomePage = class extends React.Component {
     const disableOauthRegister = Utils.getFlagsmithHasFeature(
       'disable_oauth_registration',
     )
-    const oauthClasses = 'col-12 col-md-4'
+    const oauthClasses = 'col-12 col-xl-4'
 
     if ((!isSignup || !disableOauthRegister) && !disableSignup) {
       if (Utils.getFlagsmithValue('oauth_github')) {
@@ -170,7 +170,7 @@ const HomePage = class extends React.Component {
           <div className={oauthClasses}>
             <Button
               theme='secondary'
-              className='full-width flex-row justify-content-center align-items-center'
+              className='w-100'
               key='github'
               iconLeft='github'
               href={JSON.parse(Utils.getFlagsmithValue('oauth_github')).url}
@@ -190,7 +190,7 @@ const HomePage = class extends React.Component {
               }
             >
               <GoogleButton
-                className='full-width flex-row justify-content-center align-items-center'
+                className='w-100'
                 onSuccess={(e) => {
                   document.location = `${document.location.origin}/oauth/google?code=${e.access_token}`
                 }}
@@ -227,6 +227,7 @@ const HomePage = class extends React.Component {
                 }
               }}
               key='single-sign-on'
+              className='w-100'
             >
               Single Sign-On
             </Button>
@@ -309,7 +310,9 @@ const HomePage = class extends React.Component {
                                 ) => (
                                   <>
                                     {!!oauths.length && (
-                                      <div className='row mb-4'>{oauths}</div>
+                                      <div className='d-flex flex-column flex-xl-row gap-2 mb-4'>
+                                        {oauths}
+                                      </div>
                                     )}
                                     {!preventEmailPassword && (
                                       <form

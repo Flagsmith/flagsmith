@@ -12,6 +12,7 @@ import {
   Project as ProjectType,
   ProjectFlag,
   SegmentCondition,
+  Tag,
 } from 'common/types/responses'
 import flagsmith from 'flagsmith'
 import { ReactNode } from 'react'
@@ -75,6 +76,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return 0
   },
 
+  canCreateOrganisation() {
+    return (
+      !Utils.getFlagsmithHasFeature('disable_create_org') &&
+      (!Project.superUserCreateOnly ||
+        (Project.superUserCreateOnly && AccountStore.isSuper()))
+    )
+  },
+
   changeRequestsEnabled(value: number | null | undefined) {
     return typeof value === 'number'
   },
@@ -97,7 +106,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       />
     ) : null
   },
-
   escapeHtml(html: string) {
     const text = document.createTextNode(html)
     const p = document.createElement('p')
@@ -172,7 +180,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         description: projectFlag.description,
         enabled: false,
         feature_state_value: projectFlag.initial_value,
-        hide_from_client: false,
         is_archived: projectFlag.is_archived,
         is_server_key_only: projectFlag.is_server_key_only,
         multivariate_options: projectFlag.multivariate_options,
@@ -186,7 +193,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         description: projectFlag.description,
         enabled: identityFlag.enabled,
         feature_state_value: identityFlag.feature_state_value,
-        hide_from_client: environmentFlag.hide_from_client,
         is_archived: projectFlag.is_archived,
         is_server_key_only: projectFlag.is_server_key_only,
         multivariate_options: projectFlag.multivariate_options,
@@ -198,7 +204,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       description: projectFlag.description,
       enabled: environmentFlag.enabled,
       feature_state_value: environmentFlag.feature_state_value,
-      hide_from_client: environmentFlag.hide_from_client,
       is_archived: projectFlag.is_archived,
       is_server_key_only: projectFlag.is_server_key_only,
       multivariate_options: projectFlag.multivariate_options.map((v) => {
@@ -261,6 +266,13 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getManageUserPermissionDescription() {
     return 'Manage Identities'
   },
+  getOrganisationHomePage(id?: string) {
+    const orgId = id || AccountStore.getOrganisation()?.id
+    if (!orgId) {
+      return `/organisations`
+    }
+    return `/organisation/${orgId}/projects`
+  },
   getPermissionList(
     isAdmin: boolean,
     permissions: string[] | undefined | null,
@@ -291,6 +303,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         .map((item) => `${Format.enumeration.get(item)}`),
     }
   },
+
   getPlanName: (plan: string) => {
     if (plan && plan.includes('scale-up')) {
       return planNames.scaleUp
@@ -318,7 +331,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     const isScaleupOrGreater = planName !== planNames.startup
     const isEnterprise = planName === planNames.enterprise
-
+    const isSaas = Utils.isSaas()
     switch (permission) {
       case 'FLAG_OWNERS': {
         valid = isScaleupOrGreater
@@ -356,6 +369,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         valid = isScaleupOrGreater
         break
       }
+      case 'REALTIME': {
+        valid = isEnterprise && isSaas
+        break
+      }
       case 'STALE_FLAGS': {
         valid = isEnterprise
         break
@@ -366,7 +383,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return valid
   },
-
   getPlansPermission: (permission: string) => {
     const isOrgPermission = permission !== '2FA'
     const plans = isOrgPermission
@@ -384,6 +400,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     )
     return !!found
   },
+
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
@@ -396,7 +413,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return Project.api
   },
-
   getShouldHideIdentityOverridesTab(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (!Utils.getIsEdge()) {
@@ -494,6 +510,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
+
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (
@@ -504,6 +521,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
+
+  isSaas: () => global.flagsmithVersion?.backend?.is_saas,
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },
@@ -538,7 +557,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (typeof x !== 'number') return ''
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   },
-
   openChat() {
     // @ts-ignore
     if (typeof $crisp !== 'undefined') {
@@ -555,6 +573,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   removeElementFromArray(array: any[], index: number) {
     return array.slice(0, index).concat(array.slice(index + 1))
   },
+
   renderWithPermission(permission: boolean, name: string, el: ReactNode) {
     return permission ? (
       el
@@ -569,6 +588,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return ''
     }
     return `${value}`
+  },
+
+  tagDisabled: (tag: Tag | undefined) => {
+    const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
+    return tag?.type === 'STALE' && !hasStaleFlagsPermission
   },
 
   validateMetadataType(type: string, value: any) {

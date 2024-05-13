@@ -72,7 +72,7 @@
 .pricing-cta {
   width: 80%;
   min-width: 170px;
-  background: $bt-brand-secondary;
+  background: $success;
   margin: 0 auto;
   height: 40px;
   border-radius: 25px;
@@ -100,7 +100,7 @@
 }
 .dark {
   .featured {
-    color: $text-icon-dark;
+    color: $body-color;
   }
   .pricing-panel {
     background-color: $bg-dark300;

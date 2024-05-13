@@ -13,6 +13,7 @@ from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pytest_django.plugin import blocking_manager_key
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
+from urllib3.connectionpool import HTTPConnectionPool
 from xdist import get_xdist_worker_id
 
 from api_keys.models import MasterAPIKey
@@ -62,6 +63,7 @@ from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
+from tests.test_helpers import fix_issue_3869
 from tests.types import (
     WithEnvironmentPermissionsCallable,
     WithOrganisationPermissionsCallable,
@@ -77,6 +79,10 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=False,
         help="Enable CI mode",
     )
+
+
+def pytest_sessionstart(session: pytest.Session) -> None:
+    fix_issue_3869()
 
 
 @pytest.hookimpl(trylast=True)
@@ -113,6 +119,38 @@ def django_db_setup(request: pytest.FixtureRequest) -> None:
     for db_settings in settings.DATABASES.values():
         test_db_name = f'{TEST_DATABASE_PREFIX}{db_settings["NAME"]}_{test_db_suffix}'
         db_settings["NAME"] = test_db_name
+
+
+@pytest.fixture(autouse=True)
+def restrict_http_requests(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    This fixture prevents all tests from performing HTTP requests to
+    any host than `localhost`.
+
+    Any external request attempt leads to `RuntimeError` with a helpful message
+    pointing developers to the `responses` fixture.
+    """
+    allowed_hosts = {"localhost"}
+    original_urlopen = HTTPConnectionPool.urlopen
+
+    def urlopen_mock(
+        self,
+        method: str,
+        url: str,
+        *args,
+        **kwargs,
+    ) -> HTTPConnectionPool.ResponseCls:
+        if self.host in allowed_hosts:
+            return original_urlopen(self, method, url, *args, **kwargs)
+
+        raise RuntimeError(
+            f"Blocked {method} request to {self.scheme}://{self.host}{url}. "
+            "Use `responses` fixture to mock the response!"
+        )
+
+    monkeypatch.setattr(
+        "urllib3.connectionpool.HTTPConnectionPool.urlopen", urlopen_mock
+    )
 
 
 trait_key = "key1"
@@ -298,11 +336,13 @@ def with_environment_permissions(
     """
 
     def _with_environment_permissions(
-        permission_keys: list[str], environment_id: int | None = None
+        permission_keys: list[str],
+        environment_id: int | None = None,
+        admin: bool = False,
     ) -> UserEnvironmentPermission:
         environment_id = environment_id or environment.id
         uep, __ = UserEnvironmentPermission.objects.get_or_create(
-            environment_id=environment_id, user=staff_user
+            environment_id=environment_id, user=staff_user, defaults={"admin": admin}
         )
         uep.permissions.add(*permission_keys)
 
@@ -364,6 +404,7 @@ def with_project_permissions(
 @pytest.fixture()
 def environment_v2_versioning(environment):
     enable_v2_versioning(environment.id)
+    environment.refresh_from_db()
     return environment
 
 

@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo, useRef, useState } from 'react'
+import React, { FC, useMemo, useState } from 'react'
 import TableFilter from './TableFilter'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
@@ -7,7 +7,6 @@ import Tag from 'components/tags/Tag'
 import TableFilterItem from './TableFilterItem'
 import Constants from 'common/constants'
 import { TagStrategy } from 'common/types/responses'
-import { AsyncStorage } from 'polyfill-react-native'
 import TagContent from 'components/tags/TagContent'
 
 type TableFilterType = {
@@ -53,8 +52,6 @@ const TableTagFilter: FC<TableFilterType> = ({
                 styles={{
                   control: (base) => ({
                     ...base,
-                    '&:hover': { borderColor: '$bt-brand-secondary' },
-                    border: '1px solid $bt-brand-secondary',
                     height: 18,
                   }),
                 }}
@@ -149,6 +146,10 @@ const TableTagFilter: FC<TableFilterType> = ({
             {filteredTags?.map((tag) => (
               <TableFilterItem
                 onClick={() => {
+                  const disabled = Utils.tagDisabled(tag)
+                  if (disabled) {
+                    return
+                  }
                   if (isLoading) {
                     return
                   }

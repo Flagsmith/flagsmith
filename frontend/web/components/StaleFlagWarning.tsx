@@ -20,7 +20,6 @@ const StaleFlagWarning: FC<StaleFlagWarningType> = ({ projectFlag }) => {
   }
   const created_date = projectFlag?.created_date
   const daysAgo = created_date && moment().diff(moment(created_date), 'days')
-  console.log(ProjectStore.model)
   const suggestStale =
     daysAgo >=
     ((ProjectStore.model as Project | null)?.stale_flags_limit_days || 30)

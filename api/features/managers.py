@@ -8,6 +8,8 @@ from django.utils import timezone
 from ordered_model.models import OrderedModelManager
 from softdelete.models import SoftDeleteManager
 
+from features.versioning.models import EnvironmentFeatureVersion
+
 if typing.TYPE_CHECKING:
     from environments.models import Environment
     from features.models import FeatureState
@@ -31,10 +33,17 @@ class FeatureStateManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
 
         qs_filter = Q(environment=environment, deleted_at__isnull=True)
         if environment.use_v2_feature_versioning:
+            latest_versions = EnvironmentFeatureVersion.objects.get_latest_versions(
+                environment
+            )
+            latest_version_uuids = [efv.uuid for efv in latest_versions]
+
+            # Note that since identity overrides aren't part of the versioning system,
+            # we need to make sure we also return them here. We can still then subsequently
+            # filter them out with the `additional_filters` if needed.
             qs_filter &= Q(
-                environment_feature_version__isnull=False,
-                environment_feature_version__published_at__isnull=False,
-                environment_feature_version__live_from__lte=now,
+                Q(environment_feature_version__uuid__in=latest_version_uuids)
+                | Q(identity__isnull=False)
             )
         else:
             qs_filter &= Q(

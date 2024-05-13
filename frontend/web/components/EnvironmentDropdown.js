@@ -37,4 +37,4 @@ const EnvironmentSelect = class extends Component {
 
 EnvironmentSelect.propTypes = {}
 
-module.exports = ConfigProvider(EnvironmentSelect)
+export default ConfigProvider(EnvironmentSelect)

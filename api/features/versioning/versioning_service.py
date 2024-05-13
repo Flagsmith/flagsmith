@@ -36,10 +36,78 @@ def get_environment_flags_list(
     feature states. The logic to grab the latest version is then handled in python
     by building a dictionary. Returns a list of FeatureState objects.
     """
+    return list(
+        get_environment_flags_dict(
+            environment,
+            feature_name,
+            additional_filters,
+            additional_select_related_args,
+            additional_prefetch_related_args,
+        ).values()
+    )
+
+
+def get_environment_flags_dict(
+    environment: Environment,
+    feature_name: str = None,
+    additional_filters: Q = None,
+    additional_select_related_args: typing.Iterable[str] = None,
+    additional_prefetch_related_args: typing.Iterable[
+        typing.Union[str, Prefetch]
+    ] = None,
+    key_function: typing.Callable[[FeatureState], tuple] = None,
+) -> dict[tuple | str | int, FeatureState]:
+    key_function = key_function or _get_distinct_key
+
+    feature_states = _get_feature_states_queryset(
+        environment,
+        feature_name,
+        additional_filters,
+        additional_select_related_args,
+        additional_prefetch_related_args,
+    )
+
+    # Build up a dictionary keyed off the relevant unique attributes as defined
+    # by the provided key function and only keep the highest priority feature state
+    # for each feature.
+    feature_states_dict = {}
+    for feature_state in feature_states:
+        key = key_function(feature_state)
+        current_feature_state = feature_states_dict.get(key)
+        if not current_feature_state or feature_state > current_feature_state:
+            feature_states_dict[key] = feature_state
+
+    return feature_states_dict
+
+
+def get_current_live_environment_feature_version(
+    environment_id: int, feature_id: int
+) -> EnvironmentFeatureVersion | None:
+    return (
+        EnvironmentFeatureVersion.objects.filter(
+            environment_id=environment_id,
+            feature_id=feature_id,
+            published_at__isnull=False,
+            live_from__lte=timezone.now(),
+        )
+        .order_by("-live_from")
+        .first()
+    )
+
+
+def _get_feature_states_queryset(
+    environment: "Environment",
+    feature_name: str = None,
+    additional_filters: Q = None,
+    additional_select_related_args: typing.Iterable[str] = None,
+    additional_prefetch_related_args: typing.Iterable[
+        typing.Union[str, Prefetch]
+    ] = None,
+) -> QuerySet[FeatureState]:
     additional_select_related_args = additional_select_related_args or tuple()
     additional_prefetch_related_args = additional_prefetch_related_args or tuple()
 
-    feature_states = (
+    queryset = (
         FeatureState.objects.get_live_feature_states(
             environment=environment, additional_filters=additional_filters
         )
@@ -55,35 +123,16 @@ def get_environment_flags_list(
     )
 
     if feature_name:
-        feature_states = feature_states.filter(feature__name__iexact=feature_name)
+        queryset = queryset.filter(feature__name__iexact=feature_name)
 
-    # Build up a dictionary in the form
-    # {(feature_id, feature_segment_id, identity_id): feature_state}
-    # and only keep the latest version for each feature.
-    feature_states_dict = {}
-    for feature_state in feature_states:
-        key = (
-            feature_state.feature_id,
-            getattr(feature_state.feature_segment, "segment_id", None),
-            feature_state.identity_id,
-        )
-        current_feature_state = feature_states_dict.get(key)
-        if not current_feature_state or feature_state > current_feature_state:
-            feature_states_dict[key] = feature_state
-
-    return list(feature_states_dict.values())
+    return queryset
 
 
-def get_current_live_environment_feature_version(
-    environment_id: int, feature_id: int
-) -> EnvironmentFeatureVersion | None:
+def _get_distinct_key(
+    feature_state: FeatureState,
+) -> tuple[int, int | None, int | None]:
     return (
-        EnvironmentFeatureVersion.objects.filter(
-            environment_id=environment_id,
-            feature_id=feature_id,
-            published_at__isnull=False,
-            live_from__lte=timezone.now(),
-        )
-        .order_by("-live_from")
-        .first()
+        feature_state.feature_id,
+        getattr(feature_state.feature_segment, "segment_id", None),
+        feature_state.identity_id,
     )

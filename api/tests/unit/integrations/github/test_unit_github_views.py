@@ -1,4 +1,7 @@
+import json
+
 import pytest
+from django.conf import settings
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from pytest_mock import MockerFixture
@@ -7,16 +10,17 @@ from rest_framework.test import APIClient
 
 from features.feature_external_resources.models import FeatureExternalResource
 from integrations.github.models import GithubConfiguration, GithubRepository
+from integrations.github.views import github_webhook_payload_is_valid
 from organisations.models import Organisation
 from projects.models import Project
 
+WEBHOOK_PAYLOAD = json.dumps({"installation": {"id": 1234567}, "action": "deleted"})
+WEBHOOK_SIGNATURE = "sha1=57a1426e19cdab55dd6d0c191743e2958e50ccaa"
+WEBHOOK_SECRET = "secret-key"
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
+
 def test_get_github_configuration(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
 ) -> None:
     # Given
@@ -25,17 +29,13 @@ def test_get_github_configuration(
         kwargs={"organisation_pk": organisation.id},
     )
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
     # Then
     assert response.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_create_github_configuration(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
 ) -> None:
     # Given
@@ -47,17 +47,61 @@ def test_create_github_configuration(
         kwargs={"organisation_pk": organisation.id},
     )
     # When
-    response = client.post(url, data)
+    response = admin_client_new.post(url, data)
     # Then
     assert response.status_code == status.HTTP_201_CREATED
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
+def test_cannot_create_github_configuration_due_to_unique_constraint(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+) -> None:
+    # Given
+    data = {
+        "installation_id": 1234567,
+    }
+    url = reverse(
+        "api-v1:organisations:integrations-github-list",
+        kwargs={"organisation_pk": organisation.id},
+    )
+    # When
+    response = admin_client_new.post(url, data)
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    assert (
+        "Duplication error. The GitHub integration already created"
+        in response.json()["detail"]
+    )
+
+
+def test_cannot_create_github_configuration_when_the_organization_already_has_an_integration(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+) -> None:
+    # Given
+    data = {
+        "installation_id": 7654321,
+    }
+    url = reverse(
+        "api-v1:organisations:integrations-github-list",
+        kwargs={"organisation_pk": organisation.id},
+    )
+    # When
+    response = admin_client_new.post(url, data)
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    assert (
+        "Duplication error. The GitHub integration already created"
+        in response.json()["detail"]
+    )
+
+
 def test_delete_github_configuration(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
@@ -71,17 +115,13 @@ def test_delete_github_configuration(
         ],
     )
     # When
-    response = client.delete(url)
+    response = admin_client_new.delete(url)
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_get_github_repository(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
 ):
@@ -91,17 +131,13 @@ def test_get_github_repository(
         args=[organisation.id, github_configuration.id],
     )
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
     # Then
     assert response.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_create_github_repository(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     project: Project,
@@ -119,7 +155,7 @@ def test_create_github_repository(
         args=[organisation.id, github_configuration.id],
     )
     # When
-    response = client.post(url, data)
+    response = admin_client_new.post(url, data)
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
@@ -151,12 +187,8 @@ def test_cannot_create_github_repository_when_does_not_have_permissions(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_cannot_create_github_repository_due_to_unique_constraint(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     project: Project,
@@ -176,22 +208,18 @@ def test_cannot_create_github_repository_due_to_unique_constraint(
     )
 
     # When
-    response = client.post(url, data)
+    response = admin_client_new.post(url, data)
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     assert (
-        "Duplication error. The Github repository already linked" in response.json()[0]
+        "Duplication error. The GitHub repository already linked" in response.json()[0]
     )
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_github_delete_repository(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
     feature_external_resource: FeatureExternalResource,
     github_configuration: GithubConfiguration,
@@ -210,7 +238,7 @@ def test_github_delete_repository(
     for feature in github_repository.project.features.all():
         assert FeatureExternalResource.objects.filter(feature=feature).exists()
     # When
-    response = client.delete(url)
+    response = admin_client_new.delete(url)
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
     for feature in github_repository.project.features.all():
@@ -232,12 +260,8 @@ def mocked_requests_get(*args, **kwargs):
     return MockResponse(json_data={"data": "data"}, status_code=200)
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_fetch_pull_requests(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
@@ -255,7 +279,7 @@ def test_fetch_pull_requests(
     data = {"repo_owner": "owner", "repo_name": "repo"}
 
     # When
-    response = client.get(url, data=data)
+    response = admin_client_new.get(url, data=data)
     response_json = response.json()
 
     # Then
@@ -273,12 +297,8 @@ def test_fetch_pull_requests(
     )
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_fetch_issue(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
@@ -293,7 +313,7 @@ def test_fetch_issue(
     url = reverse("api-v1:organisations:get-github-issues", args=[organisation.id])
     data = {"repo_owner": "owner", "repo_name": "repo"}
     # When
-    response = client.get(url, data=data)
+    response = admin_client_new.get(url, data=data)
 
     # Then
     assert response.status_code == 200
@@ -311,12 +331,8 @@ def test_fetch_issue(
     )
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
 def test_fetch_repositories(
-    client: APIClient,
+    admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
@@ -332,7 +348,7 @@ def test_fetch_repositories(
         "api-v1:organisations:get-github-installation-repos", args=[organisation.id]
     )
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == 200
@@ -408,3 +424,128 @@ def test_cannot_fetch_issues_or_prs_when_does_not_have_permissions(
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_verify_github_webhook_payload() -> None:
+    # When
+    result = github_webhook_payload_is_valid(
+        payload_body=WEBHOOK_PAYLOAD.encode("utf-8"),
+        secret_token=WEBHOOK_SECRET,
+        signature_header=WEBHOOK_SIGNATURE,
+    )
+
+    # Then
+    assert result is True
+
+
+def test_verify_github_webhook_payload_returns_false_on_bad_signature() -> None:
+    # When
+    result = github_webhook_payload_is_valid(
+        payload_body=WEBHOOK_PAYLOAD.encode("utf-8"),
+        secret_token=WEBHOOK_SECRET,
+        signature_header="sha1=757107ea0eb2509fc211221cce984b8a37570b6d7586c22c46f4379c8b043e18",
+    )
+
+    # Then
+    assert result is False
+
+
+def test_verify_github_webhook_payload_returns_false_on_no_signature_header() -> None:
+    # When
+    result = github_webhook_payload_is_valid(
+        payload_body=WEBHOOK_PAYLOAD.encode("utf-8"),
+        secret_token=WEBHOOK_SECRET,
+        signature_header=None,
+    )
+
+    # Then
+    assert result is False
+
+
+def test_github_webhook_delete_installation(
+    github_configuration: GithubConfiguration,
+) -> None:
+    # Given
+    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
+    url = reverse("api-v1:github-webhook")
+
+    # When
+    client = APIClient()
+    response = client.post(
+        path=url,
+        data=WEBHOOK_PAYLOAD,
+        content_type="application/json",
+        HTTP_X_HUB_SIGNATURE=WEBHOOK_SIGNATURE,
+        HTTP_X_GITHUB_EVENT="installation",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert not GithubConfiguration.objects.filter(installation_id=1234567).exists()
+
+
+def test_github_webhook_fails_on_signature_header_missing(
+    github_configuration: GithubConfiguration,
+) -> None:
+    # Given
+    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
+    url = reverse("api-v1:github-webhook")
+
+    # When
+    client = APIClient()
+    response = client.post(
+        path=url,
+        data=WEBHOOK_PAYLOAD,
+        content_type="application/json",
+        HTTP_X_GITHUB_EVENT="installation",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {"error": "Invalid signature"}
+    assert GithubConfiguration.objects.filter(installation_id=1234567).exists()
+
+
+def test_github_webhook_fails_on_bad_signature_header_missing(
+    github_configuration: GithubConfiguration,
+) -> None:
+    # Given
+    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
+    url = reverse("api-v1:github-webhook")
+
+    # When
+    client = APIClient()
+    response = client.post(
+        path=url,
+        data=WEBHOOK_PAYLOAD,
+        content_type="application/json",
+        HTTP_X_HUB_SIGNATURE="sha1=757107ea0eb2509fc211221cce984b8a37570b6d7586c22c46f4379c8b043e18",
+        HTTP_X_GITHUB_EVENT="installation",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert GithubConfiguration.objects.filter(installation_id=1234567).exists()
+    assert response.json() == {"error": "Invalid signature"}
+
+
+def test_github_webhook_bypass_event(
+    github_configuration: GithubConfiguration,
+) -> None:
+    # Given
+    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
+    url = reverse("api-v1:github-webhook")
+
+    # When
+    client = APIClient()
+    response = client.post(
+        path=url,
+        data=WEBHOOK_PAYLOAD,
+        content_type="application/json",
+        HTTP_X_HUB_SIGNATURE=WEBHOOK_SIGNATURE,
+        HTTP_X_GITHUB_EVENT="installation_repositories",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert GithubConfiguration.objects.filter(installation_id=1234567).exists()

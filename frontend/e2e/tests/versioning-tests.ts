@@ -9,7 +9,6 @@ import {
     editRemoteConfig,
     log,
     login, refreshUntilElementVisible,
-    waitAndRefresh,
     waitForElementVisible
 } from "../helpers.cafe";
 import { E2E_USER, PASSWORD } from '../config';

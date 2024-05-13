@@ -46,21 +46,23 @@ const getGithubLink = (key) => {
 const getDocsLink = (key) => {
   switch (key) {
     case '.NET':
-      return 'https://docs.flagsmith.com/clients/dotnet/'
+      return 'https://docs.flagsmith.com/clients/server-side?language=dotnet'
+    case 'curl':
+      return 'https://docs.flagsmith.com/clients/rest'
     case 'Flutter':
       return 'https://docs.flagsmith.com/clients/flutter/'
     case 'Go':
-      return 'https://docs.flagsmith.com/clients/go/'
+      return 'https://docs.flagsmith.com/clients/server-side?language=go'
     case 'Java':
-      return 'https://docs.flagsmith.com/clients/java/'
+      return 'https://docs.flagsmith.com/clients/server-side?language=java'
     case 'JavaScript':
       return 'https://docs.flagsmith.com/clients/javascript/'
     case 'Node JS':
-      return 'https://docs.flagsmith.com/clients/node/'
+      return 'https://docs.flagsmith.com/clients/server-side?language=nodejs'
     case 'PHP':
-      return 'https://docs.flagsmith.com/clients/php/'
+      return 'https://docs.flagsmith.com/clients/server-side?language=php'
     case 'Python':
-      return 'https://docs.flagsmith.com/clients/python/'
+      return 'https://docs.flagsmith.com/clients/server-side?language=python'
     case 'REST':
       return null
     case 'React':
@@ -68,9 +70,9 @@ const getDocsLink = (key) => {
     case 'React Native':
       return 'https://docs.flagsmith.com/clients/react'
     case 'Ruby':
-      return 'https://docs.flagsmith.com/clients/ruby/'
+      return 'https://docs.flagsmith.com/clients/server-side?language=ruby'
     case 'Rust':
-      return 'https://docs.flagsmith.com/clients/rust/'
+      return 'https://docs.flagsmith.com/clients/server-side?language=rust'
     case 'iOS':
       return 'https://docs.flagsmith.com/clients/ios/'
     case 'Next.js':
@@ -178,9 +180,7 @@ const CodeHelp = class extends Component {
                       styles={{
                         control: (base) => ({
                           ...base,
-                          '&:hover': { borderColor: '$bt-brand-secondary' },
                           alignSelf: 'flex-end',
-                          border: '1px solid $bt-brand-secondary',
                           width: 200,
                         }),
                       }}
