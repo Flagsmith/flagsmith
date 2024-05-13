@@ -13,7 +13,7 @@ const OrganisationSettingsRedirectPage: FC<
   useEffect(() => {
     if (AccountStore.getOrganisation()) {
       router.history.replace(
-        `/organisation/${AccountStore.getOrganisation().id}/settings${
+        `/organisation/${AccountStore.getOrganisationId()}/settings${
           document.location.search
         }`,
       )

@@ -52,13 +52,13 @@ const ProjectSettingsPage = class extends Component {
     if (Utils.getFlagsmithHasFeature('show_role_management')) {
       getRoles(
         getStore(),
-        { organisation_id: AccountStore.getOrganisation().id },
+        { organisation_id: AccountStore.getOrganisationId() },
         { forceRefetch: true },
       ).then((roles) => {
         getRolesProjectPermissions(
           getStore(),
           {
-            organisation_id: AccountStore.getOrganisation().id,
+            organisation_id: AccountStore.getOrganisationId(),
             project_id: this.props.match.params.projectId,
             role_id: roles.data.results[0].id,
           },

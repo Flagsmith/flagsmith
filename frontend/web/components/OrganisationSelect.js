@@ -10,9 +10,9 @@ const OrganisationSelect = class extends Component {
 
   componentDidMount() {
     if (localStorage.lastEnv) {
-      const orgId = JSON.parse(localStorage.lastEnv).orgId
-      if (this.props.firstOrganisation && orgId) {
-        this.props.onChange(orgId)
+      const organisationId = JSON.parse(localStorage.lastEnv).organisationId
+      if (this.props.firstOrganisation && organisationId) {
+        this.props.onChange(organisationId)
       }
     }
   }
@@ -26,7 +26,7 @@ const OrganisationSelect = class extends Component {
               <Select
                 value={{
                   label: AccountStore.getOrganisation().name,
-                  value: AccountStore.getOrganisation().id,
+                  value: AccountStore.getOrganisationId(),
                 }}
                 onChange={({ value }) => {
                   this.props.onChange && this.props.onChange(value)

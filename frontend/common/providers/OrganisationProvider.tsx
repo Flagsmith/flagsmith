@@ -41,7 +41,7 @@ const OrganisationProvider: FC<OrganisationProviderType> = ({
 }) => {
   const [_, setUpdate] = useState(Date.now())
   const { data: groups } = useGetGroupsQuery(
-    { orgId: id!, page: 1 },
+    { organisationId: id!, page: 1 },
     { skip: !id },
   )
   useEffect(() => {

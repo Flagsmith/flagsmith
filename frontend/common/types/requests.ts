@@ -28,14 +28,14 @@ export type CreateVersionFeatureState = {
 export type Req = {
   getSegments: PagedRequest<{
     q?: string
-    projectId: number | string
+    projectId: number
     identity?: number
     include_feature_specific?: boolean
   }>
-  deleteSegment: { projectId: number | string; id: number }
-  updateSegment: { projectId: number | string; segment: Segment }
+  deleteSegment: { projectId: number; id: number }
+  updateSegment: { projectId: number; segment: Segment }
   createSegment: {
-    projectId: number | string
+    projectId: number
     segment: Omit<Segment, 'id' | 'uuid' | 'project'>
   }
   getAuditLogs: PagedRequest<{
@@ -45,14 +45,14 @@ export type Req = {
   }>
   getOrganisations: {}
   getProjects: {
-    organisationId: string
+    organisationId: number
   }
   getEnvironments: {
-    projectId: string
+    projectId: number
   }
   getOrganisationUsage: {
-    organisationId: string
-    projectId?: string
+    organisationId: number
+    projectId?: number
     environmentId?: string
   }
   deleteIdentity: {
@@ -78,16 +78,16 @@ export type Req = {
   getPermission: { id: string; level: PermissionLevel }
   getAvailablePermissions: { level: PermissionLevel }
   getTag: { id: string }
-  updateTag: { projectId: string; tag: Tag }
+  updateTag: { projectId: number; tag: Tag }
   deleteTag: {
     id: number
-    projectId: string
+    projectId: number
   }
   getTags: {
-    projectId: string
+    projectId: number
   }
-  createTag: { projectId: string; tag: Omit<Tag, 'id'> }
-  getSegment: { projectId: string; id: string }
+  createTag: { projectId: number; tag: Omit<Tag, 'id'> }
+  getSegment: { projectId: number; id: string }
   updateAccount: Account
   deleteAccount: {
     current_password: string
@@ -97,20 +97,20 @@ export type Req = {
   createGroupAdmin: {
     group: number | string
     user: number | string
-    orgId: number | string
+    organisationId: number
   }
   deleteGroupAdmin: {
-    orgId: number | string
+    organisationId: number
     group: number | string
     user: number | string
   }
   getGroups: PagedRequest<{
-    orgId: number
+    organisationId: number
   }>
-  deleteGroup: { id: number | string; orgId: number | string }
-  getGroup: { id: string; orgId: string }
+  deleteGroup: { id: number | string; organisationId: number }
+  getGroup: { id: string; organisationId: number }
   getMyGroups: PagedRequest<{
-    orgId: string
+    organisationId: number
   }>
   createSegmentOverride: {
     environmentId: string
@@ -233,7 +233,7 @@ export type Req = {
     id: string
   }
   getFeatureExports: {
-    projectId: string
+    projectId: number
   }
   createFlagsmithProjectImport: {
     environment_id: number | string
@@ -241,7 +241,7 @@ export type Req = {
     file: File
   }
   getFeatureImports: {
-    projectId: string
+    projectId: number
   }
   getLaunchDarklyProjectImport: { project_id: string; import_id: string }
   getLaunchDarklyProjectsImport: { project_id: string }
@@ -308,7 +308,7 @@ export type Req = {
     committed?: boolean
   }>
   getGroupSummaries: {
-    orgId: string
+    organisationId: number
   }
   getExternalResources: { project_id: string; feature_id: string }
   deleteExternalResource: {
@@ -381,12 +381,12 @@ export type Req = {
     data: { name: string }
   }
   getAuditLogItem: {
-    projectId: string
+    projectId: number
     id: string
   }
   getProject: { id: string }
   createGroup: {
-    orgId: string
+    organisationId: number
     data: Omit<UserGroup, 'id' | 'users'>
     users: UserGroup['users']
     usersToAddAdmin: number[] | null
@@ -401,7 +401,7 @@ export type Req = {
     }
   }
   updateGroup: Req['createGroup'] & {
-    orgId: string
+    organisationId: number
     data: UserGroup
     users: UserGroup['users']
 

@@ -1,5 +1,5 @@
 import data from 'common/data/base/_data'
-
+import Project from 'common/project'
 export default (WrappedComponent) => {
   class HOC extends React.Component {
     static displayName = 'withWebhooks'
@@ -7,9 +7,9 @@ export default (WrappedComponent) => {
     getWebhooks = () =>
       data
         .get(
-          `${Project.api}organisations/${
-            AccountStore.getOrganisation().id
-          }/webhooks/`,
+          `${
+            Project.api
+          }organisations/${AccountStore.getOrganisationId()}/webhooks/`,
         )
         .then((webhooks) => {
           this.setState({
@@ -22,9 +22,11 @@ export default (WrappedComponent) => {
       this.setState({ webhooksLoading: true })
       return data
         .delete(
-          `${Project.api}organisations/${
-            AccountStore.getOrganisation().id
-          }/webhooks/${webhook.id}/`,
+          `${
+            Project.api
+          }organisations/${AccountStore.getOrganisationId()}/webhooks/${
+            webhook.id
+          }/`,
         )
         .then(() => {
           this.getWebhooks()
@@ -35,9 +37,11 @@ export default (WrappedComponent) => {
       this.setState({ webhooksLoading: true })
       return data
         .put(
-          `${Project.api}organisations/${
-            AccountStore.getOrganisation().id
-          }/webhooks/${webhook.id}/`,
+          `${
+            Project.api
+          }organisations/${AccountStore.getOrganisationId()}/webhooks/${
+            webhook.id
+          }/`,
           webhook,
         )
         .then(() => {
@@ -49,9 +53,9 @@ export default (WrappedComponent) => {
       this.setState({ webhooksLoading: true })
       return data
         .post(
-          `${Project.api}organisations/${
-            AccountStore.getOrganisation().id
-          }/webhooks/`,
+          `${
+            Project.api
+          }organisations/${AccountStore.getOrganisationId()}/webhooks/`,
           webhook,
         )
         .then(() => {

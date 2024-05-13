@@ -9,7 +9,7 @@ import firstpromoter from 'project/firstPromoter'
 
 const PaymentButton = (props) => {
   const activeSubscription = AccountStore.getOrganisationPlan(
-    AccountStore.getOrganisation().id,
+    AccountStore.getOrganisationId(),
   )
 
   if (
@@ -23,7 +23,7 @@ const PaymentButton = (props) => {
             hostedPage() {
               return _data.post(
                 `${Project.api}organisations/${
-                  AccountStore.getOrganisation().id
+                  AccountStore.getOrganisationId()
                 }/get-hosted-page-url-for-subscription-upgrade/`,
                 {
                   plan_id: props['data-cb-plan-id'],

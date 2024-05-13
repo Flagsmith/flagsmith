@@ -52,12 +52,12 @@ const ChangeRequestsPage = class extends Component {
       this.props.match.params.projectId,
       this.props.match.params.environmentId,
     )
-    AppActions.getOrganisation(AccountStore.getOrganisation().id)
-    getMyGroups(getStore(), { orgId: AccountStore.getOrganisation().id }).then(
-      (res) => {
-        this.setState({ groups: res?.data?.results || [] })
-      },
-    )
+    AppActions.getOrganisation(AccountStore.getOrganisationId())
+    getMyGroups(getStore(), {
+      organisationId: AccountStore.getOrganisationId(),
+    }).then((res) => {
+      this.setState({ groups: res?.data?.results || [] })
+    })
   }
 
   removeOwner = (id, isUser = true) => {
@@ -451,7 +451,7 @@ const ChangeRequestsPage = class extends Component {
                                 ))}
                             </Row>
                             <MyGroupsSelect
-                              orgId={AccountStore.getOrganisation().id}
+                              organisationId={AccountStore.getOrganisationId()}
                               groups={orgGroups}
                               value={
                                 ownerGroups && ownerGroups.map((v) => v.id)

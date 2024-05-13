@@ -3,7 +3,7 @@ import { useGetGithubIssuesQuery } from 'common/services/useGithub'
 import IssueSelect from './IssueSelect'
 
 type MyIssuesSelectType = {
-  orgId: string
+  organisationId: number
   repoOwner: string
   repoName: string
   onChange: () => void
@@ -11,12 +11,12 @@ type MyIssuesSelectType = {
 
 const MyIssuesSelect: FC<MyIssuesSelectType> = ({
   onChange,
-  orgId,
+  organisationId,
   repoName,
   repoOwner,
 }) => {
   const { data } = useGetGithubIssuesQuery({
-    organisation_id: orgId,
+    organisation_id: organisationId,
     repo_name: repoName,
     repo_owner: repoOwner,
   })

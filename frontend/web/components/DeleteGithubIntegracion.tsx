@@ -3,7 +3,7 @@ import Button from './base/forms/Button'
 import { useDeleteGithubIntegrationMutation } from 'common/services/useGithubIntegration'
 
 type DeleteGithubIntegracionType = {
-  organisationId: string
+  organisationId: number
   githubId: string
   onConfirm: () => void
 }

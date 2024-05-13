@@ -68,7 +68,7 @@ class TheComponent extends Component {
                 Assigned groups
               </SettingsButton>
               <ConnectedGroupSelect
-                orgId={AccountStore.getOrganisation()?.id}
+                organisationId={AccountStore.getOrganisationId()}
                 showValues={hasPermission}
                 groups={groups}
                 value={this.state.groupOwners}

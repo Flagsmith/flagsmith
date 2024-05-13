@@ -85,7 +85,7 @@ const OrganisationWrapper = class extends Component<OrganisationWrapperType> {
               const project = ProjectStore.model as Project | null
               if (
                 project &&
-                project?.organisation !== AccountStore.getOrganisation()?.id
+                project?.organisation !== AccountStore.getOrganisationId()
               ) {
                 // @ts-ignore
                 AccountStore.organisation =

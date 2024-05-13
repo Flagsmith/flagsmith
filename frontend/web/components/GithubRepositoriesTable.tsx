@@ -10,7 +10,7 @@ import { GithubRepository } from 'common/types/responses'
 
 export type GithubRepositoriesTableType = {
   githubId: string
-  organisationId: string
+  organisationId: number
 }
 
 const GithubRepositoriesTable: FC<GithubRepositoriesTableType> = ({

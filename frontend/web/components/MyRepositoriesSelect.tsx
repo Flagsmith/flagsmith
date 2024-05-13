@@ -4,18 +4,18 @@ import RepositoriesSelect from './RepositoriesSelect'
 
 type MyRepositoriesSelectType = {
   githubId: string
-  orgId: string
+  organisationId: number
   onChange: () => void
 }
 
 const MyRepositoriesSelect: FC<MyRepositoriesSelectType> = ({
   githubId,
   onChange,
-  orgId,
+  organisationId,
 }) => {
   const { data } = useGetGithubRepositoriesQuery({
     github_id: githubId,
-    organisation_id: orgId,
+    organisation_id: organisationId,
   })
   return <RepositoriesSelect repositories={data?.results} onChange={onChange} />
 }

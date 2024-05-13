@@ -3,7 +3,7 @@ import { useGetGithubPullsQuery } from 'common/services/useGithub'
 import PullRequestSelect from './PullRequestSelect'
 
 type MyGithubPullRequestSelectType = {
-  orgId: string
+  organisationId: number
   repoOwner: string
   repoName: string
   onChange: (value: string) => void
@@ -11,12 +11,12 @@ type MyGithubPullRequestSelectType = {
 
 const MyGithubPullRequests: FC<MyGithubPullRequestSelectType> = ({
   onChange,
-  orgId,
+  organisationId,
   repoName,
   repoOwner,
 }) => {
   const { data } = useGetGithubPullsQuery({
-    organisation_id: orgId,
+    organisation_id: organisationId,
     repo_name: repoName,
     repo_owner: repoOwner,
   })

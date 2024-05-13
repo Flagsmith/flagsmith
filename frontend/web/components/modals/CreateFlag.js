@@ -185,7 +185,7 @@ const CreateFlag = class extends Component {
 
     if (Utils.getFlagsmithHasFeature('github_integration')) {
       getGithubIntegration(getStore(), {
-        organisation_id: AccountStore.getOrganisation().id,
+        organisation_id: AccountStore.getOrganisationId(),
       }).then((res) => {
         this.setState({
           githubId: res?.data?.results[0]?.id,
@@ -636,7 +636,7 @@ const CreateFlag = class extends Component {
                 </label>
                 <MyRepositoriesSelect
                   githubId={githubId}
-                  orgId={AccountStore.getOrganisation().id}
+                  organisationId={AccountStore.getOrganisationId()}
                   onChange={(v) => {
                     const repoData = v.split('/')
                     this.setState({
@@ -670,7 +670,7 @@ const CreateFlag = class extends Component {
                       <Flex className='ml-4'>
                         {externalResourceType == 'Github Issue' ? (
                           <MyIssueSelect
-                            orgId={AccountStore.getOrganisation().id}
+                            organisationId={AccountStore.getOrganisationId()}
                             onChange={(v) =>
                               this.setState({
                                 featureExternalResource: v,
@@ -682,7 +682,7 @@ const CreateFlag = class extends Component {
                           />
                         ) : externalResourceType == 'Github PR' ? (
                           <MyPullRequestsSelect
-                            orgId={AccountStore.getOrganisation().id}
+                            organisationId={AccountStore.getOrganisationId()}
                             onChange={(v) =>
                               this.setState({
                                 featureExternalResource: v.value,

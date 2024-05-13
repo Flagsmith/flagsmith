@@ -18,7 +18,7 @@ import { useGetGroupSummariesQuery } from 'common/services/useGroupSummary'
 
 type UserGroupListType = {
   noTitle?: boolean
-  orgId: string
+  organisationId: number
   projectId?: string | boolean
   showRemove?: boolean
   onClick: (group: UserGroup) => void
@@ -31,7 +31,7 @@ type UserGroupsRowType = {
   name: string
   permissionSummary?: ReactNode
   group: UserGroup
-  orgId: string
+  organisationId: number
   showRemove?: boolean
   onClick: (group: UserGroup) => void
   onEditPermissions?: (group: UserGroup) => void
@@ -43,7 +43,7 @@ const UserGroupsRow: FC<UserGroupsRowType> = ({
   name,
   onClick,
   onEditPermissions,
-  orgId,
+  organisationId,
   permissionSummary,
   showRemove,
 }) => {
@@ -60,7 +60,7 @@ const UserGroupsRow: FC<UserGroupsRowType> = ({
         </div>
       ),
       destructive: true,
-      onYes: () => deleteGroup({ id, orgId }),
+      onYes: () => deleteGroup({ id, organisationId }),
       title: 'Delete Group',
       yesText: 'Confirm',
     })
@@ -71,7 +71,7 @@ const UserGroupsRow: FC<UserGroupsRowType> = ({
     } else {
       openModal(
         'Edit Group',
-        <CreateGroup isEdit orgId={orgId} group={group} />,
+        <CreateGroup isEdit organisationId={organisationId} group={group} />,
         'side-modal',
       )
     }
@@ -137,17 +137,17 @@ const UserGroupList: FC<UserGroupListType> = ({
   noTitle,
   onClick,
   onEditPermissions,
-  orgId,
+  organisationId,
   projectId,
   showRemove,
 }) => {
   const [page, setPage] = useState(1)
   const { data: userGroups, isLoading } = useGetGroupSummariesQuery(
     {
-      orgId: `${orgId}`,
+      organisationId: organisationId,
     },
     {
-      skip: !orgId,
+      skip: !organisationId,
     },
   )
   const { data: userGroupsPermission, isLoading: userGroupPermissionLoading } =
@@ -233,7 +233,7 @@ const UserGroupList: FC<UserGroupListType> = ({
                 name={userPermissionGroup.name}
                 onClick={onClick}
                 onEditPermissions={onEditPermissions}
-                orgId={orgId}
+                organisationId={organisationId}
                 permissionSummary={
                   <PermissionsSummaryList
                     permissions={permissions}
@@ -254,7 +254,7 @@ const UserGroupList: FC<UserGroupListType> = ({
                 name={name}
                 onClick={onClick}
                 onEditPermissions={onEditPermissions}
-                orgId={orgId}
+                organisationId={organisationId}
                 showRemove={showRemove}
               />
             )

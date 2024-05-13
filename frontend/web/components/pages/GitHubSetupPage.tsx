@@ -83,7 +83,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
         body: {
           installation_id: installationId,
         },
-        organisation_id: JSON.parse(localStorage.lastEnv).orgId,
+        organisation_id: JSON.parse(localStorage.lastEnv).organisationId,
       }).then(async (res) => {
         if (res?.data && githubIntegrationSetupFromFlagsmithValue) {
           const dataToSend = {
@@ -123,7 +123,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
           <div className='mr-4 mb-4'>
             <label>Select your Flagsmith Organisation</label>
             <OrganisationSelect
-              onChange={(organisationId: string) => {
+              onChange={(organisationId: number) => {
                 setOrganisation(organisationId)
               }}
               showSettings={false}

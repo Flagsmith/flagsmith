@@ -41,7 +41,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
   // @ts-ignore
   const environmentId = `${env?.id}`
   const { data: users } = useGetUsersQuery({
-    organisationId: AccountStore.getOrganisation().id,
+    organisationId: AccountStore.getOrganisationId(),
   })
   const [page, setPage] = useState(1)
   const { data } = useGetFeatureVersionsQuery(

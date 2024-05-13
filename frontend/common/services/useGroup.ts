@@ -20,7 +20,7 @@ export const groupService = service
           const { data, error } = await baseQuery({
             body: query.data,
             method: 'POST',
-            url: `organisations/${query.orgId}/groups/`,
+            url: `organisations/${query.organisationId}/groups/`,
           })
           if (error) {
             return { error }
@@ -30,7 +30,7 @@ export const groupService = service
             const { error } = await baseQuery({
               body: { user_ids: query.users.map((u) => u.id) },
               method: 'POST',
-              url: `organisations/${query.orgId}/groups/${data.id}/`,
+              url: `organisations/${query.organisationId}/groups/${data.id}/`,
             })
           }
           // Make the admins
@@ -38,7 +38,7 @@ export const groupService = service
             (query.usersToAddAdmin || []).map((v) =>
               createGroupAdmin(getStore(), {
                 group: data.id,
-                orgId: query.orgId,
+                organisationId: query.organisationId,
                 user: v,
               }),
             ),
@@ -57,7 +57,7 @@ export const groupService = service
         query: (query: Req['createGroupAdmin']) => ({
           body: {},
           method: 'POST',
-          url: `organisations/${query.orgId}/groups/${query.group}/users/${query.user}/make-admin`,
+          url: `organisations/${query.organisationId}/groups/${query.group}/users/${query.user}/make-admin`,
         }),
       }),
       deleteGroup: builder.mutation<Res['groups'], Req['deleteGroup']>({
@@ -69,7 +69,7 @@ export const groupService = service
         query: (query: Req['deleteGroup']) => ({
           body: query,
           method: 'DELETE',
-          url: `organisations/${query.orgId}/groups/${query.id}/`,
+          url: `organisations/${query.organisationId}/groups/${query.id}/`,
         }),
       }),
       deleteGroupAdmin: builder.mutation<
@@ -83,19 +83,19 @@ export const groupService = service
         query: (query: Req['deleteGroupAdmin']) => ({
           body: {},
           method: 'POST',
-          url: `organisations/${query.orgId}/groups/${query.group}/users/${query.user}/remove-admin`,
+          url: `organisations/${query.organisationId}/groups/${query.group}/users/${query.user}/remove-admin`,
         }),
       }),
       getGroup: builder.query<Res['group'], Req['getGroup']>({
         providesTags: (res) => [{ id: res?.id, type: 'Group' }],
         query: (query: Req['getGroup']) => ({
-          url: `organisations/${query.orgId}/groups/${query.id}/`,
+          url: `organisations/${query.organisationId}/groups/${query.id}/`,
         }),
       }),
       getGroups: builder.query<Res['groups'], Req['getGroups']>({
         providesTags: [{ id: 'LIST', type: 'Group' }],
-        query: ({ orgId, ...rest }) => ({
-          url: `organisations/${orgId}/groups/?${Utils.toParam({ ...rest })}`,
+        query: ({ organisationId, ...rest }) => ({
+          url: `organisations/${organisationId}/groups/?${Utils.toParam({ ...rest })}`,
         }),
       }),
       updateGroup: builder.mutation<Res['group'], Req['updateGroup']>({
@@ -109,7 +109,7 @@ export const groupService = service
           const { data, error } = await baseQuery({
             body: query.data,
             method: 'PUT',
-            url: `organisations/${query.orgId}/groups/${query.data.id}`,
+            url: `organisations/${query.organisationId}/groups/${query.data.id}`,
           })
           if (error) {
             return { error }
@@ -119,14 +119,14 @@ export const groupService = service
             await baseQuery({
               body: { user_ids: query.data.users.map((u) => u.id) },
               method: 'POST',
-              url: `organisations/${query.orgId}/groups/${data.id}/add-users/`,
+              url: `organisations/${query.organisationId}/groups/${data.id}/add-users/`,
             })
           }
           if (query.usersToRemove?.length) {
             await baseQuery({
               body: { user_ids: query.usersToRemove },
               method: 'POST',
-              url: `organisations/${query.orgId}/groups/${data.id}/remove-users/`,
+              url: `organisations/${query.organisationId}/groups/${data.id}/remove-users/`,
             })
           }
           // Make the admins
@@ -134,7 +134,7 @@ export const groupService = service
             (query.usersToAddAdmin || []).map((v) =>
               createGroupAdmin(getStore(), {
                 group: data.id,
-                orgId: query.orgId,
+                organisationId: query.organisationId,
                 user: v,
               }),
             ),
@@ -144,7 +144,7 @@ export const groupService = service
             (query.usersToRemoveAdmin || []).map((v) =>
               deleteGroupAdmin(getStore(), {
                 group: data.id,
-                orgId: query.orgId,
+                organisationId: query.organisationId,
                 user: v,
               }),
             ),

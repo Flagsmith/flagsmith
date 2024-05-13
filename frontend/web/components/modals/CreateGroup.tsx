@@ -32,10 +32,10 @@ const widths = [80, 80]
 type CreateGroupType = {
   roles?: Role[]
   group: UserGroupSummary
-  orgId: string
+  organisationId: number
 }
 
-const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
+const CreateGroup: FC<CreateGroupType> = ({ group, organisationId, roles }) => {
   const [edited, setEdited] = useState(false)
   const [externalId, setExternalId] = useState('')
   const [name, setName] = useState('')
@@ -54,8 +54,8 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
   >([])
 
   const { data: groupData } = useGetGroupQuery(
-    { id: `${group?.id}`, orgId },
-    { skip: !group || !orgId },
+    { id: `${group?.id}`, organisationId },
+    { skip: !group || !organisationId },
   )
   const onClosing = useCallback(() => {
     if (edited) {
@@ -103,7 +103,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
     }
   }, [group])
 
-  if (!orgId) {
+  if (!organisationId) {
     return null
   }
 
@@ -140,7 +140,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       }
       updateGroup({
         data,
-        orgId,
+        organisationId,
         users: users as any,
         usersToAddAdmin: (usersToAddAdmin || []).map((user) => user.id),
         usersToRemove: getUsersToRemove(groupData.users).map((v) => v.id),
@@ -159,7 +159,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       }
       createGroup({
         data,
-        orgId,
+        organisationId,
         users: users as any,
         usersToAddAdmin: (usersToAddAdmin || []).map((user) => user.id),
       }).then((data) => {
@@ -442,7 +442,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       {!!groupData && (
         <PermissionsTabs
           uncontrolled
-          orgId={AccountStore.getOrganisation()?.id}
+          organisationId={AccountStore.getOrganisationId()}
           group={group}
         />
       )}

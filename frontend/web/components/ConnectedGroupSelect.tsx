@@ -5,16 +5,16 @@ import { IonIcon } from '@ionic/react'
 import { close } from 'ionicons/icons' // we need this to make JSX compile
 
 type ConnectedGroupSelectType = GroupSelectType & {
-  orgId: string
+  organisationId: number
   showValues?: boolean
 }
 
 const ConnectedGroupSelect: FC<ConnectedGroupSelectType> = ({
-  orgId,
+  organisationId,
   showValues,
   ...props
 }) => {
-  const { data } = useGetGroupSummariesQuery({ orgId })
+  const { data } = useGetGroupSummariesQuery({ organisationId })
   return (
     <>
       {!!showValues && (

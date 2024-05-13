@@ -263,11 +263,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return 'Manage Identities'
   },
   getOrganisationHomePage(id?: string) {
-    const orgId = id || AccountStore.getOrganisation()?.id
-    if (!orgId) {
+    const organisationId = id || AccountStore.getOrganisationId()
+    if (!organisationId) {
       return `/organisations`
     }
-    return `/organisation/${orgId}/projects`
+    return `/organisation/${organisationId}/projects`
   },
   getPermissionList(
     isAdmin: boolean,

@@ -484,7 +484,7 @@ const CreateRole: FC<CreateRoleType> = ({
               </SettingsButton>
               {showGroupSelect && organisationId && (
                 <MyGroupsSelect
-                  orgId={organisationId}
+                  organisationId={organisationId}
                   value={groupsAdded && groupsAdded.map((v) => v.id)}
                   onAdd={addUserOrGroup}
                   onRemove={removeUserOrGroup}
@@ -520,7 +520,7 @@ const CreateRole: FC<CreateRoleType> = ({
               value={userGroupTab}
               onChange={changeSubTab}
               role={role}
-              orgId={AccountStore.getOrganisation()?.id}
+              organisationId={AccountStore.getOrganisationId()}
             />
           </div>
         </TabItem>

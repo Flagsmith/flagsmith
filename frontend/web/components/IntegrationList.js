@@ -58,7 +58,7 @@ class Integration extends Component {
         getGithubIntegration(
           getStore(),
           {
-            organisation_id: AccountStore.getOrganisation().id,
+            organisation_id: AccountStore.getOrganisationId(),
           },
           { forceRefetch: true },
         ).then((res) => {
@@ -226,7 +226,7 @@ class IntegrationList extends Component {
     this.fetch()
     if (Utils.getFlagsmithHasFeature('github_integration')) {
       getGithubIntegration(getStore(), {
-        organisation_id: AccountStore.getOrganisation().id,
+        organisation_id: AccountStore.getOrganisationId(),
       }).then((res) => {
         this.setState({
           githubId: res?.data?.results[0]?.id,

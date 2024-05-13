@@ -231,13 +231,13 @@ const CreateEditIntegration = class extends Component {
                   <MyGitHubRepositoriesSelect
                     githubId={this.props.githubMeta.githubId}
                     installationId={this.props.githubMeta.installationId}
-                    organisationId={AccountStore.getOrganisation().id}
+                    organisationId={AccountStore.getOrganisationId()}
                     projectId={this.props.projectId}
                   />
                 </div>
                 <GithubRepositoriesTable
                   githubId={this.props.githubMeta.githubId}
-                  organisationId={AccountStore.getOrganisation().id}
+                  organisationId={AccountStore.getOrganisationId()}
                 />
                 <div className='text-right mt-2'>
                   <Button
@@ -252,7 +252,7 @@ const CreateEditIntegration = class extends Component {
                   </Button>
                   <DeleteGithubIntegracion
                     githubId={this.props.githubMeta.githubId}
-                    organisationId={AccountStore.getOrganisation().id}
+                    organisationId={AccountStore.getOrganisationId()}
                     onConfirm={() => {
                       closeModal()
                     }}

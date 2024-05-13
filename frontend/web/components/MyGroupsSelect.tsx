@@ -3,13 +3,13 @@ import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
 import GroupSelect, { GroupSelectType } from './GroupSelect' // we need this to make JSX compile
 
 type MyGroupsSelectType = Omit<GroupSelectType, 'groups'> & {
-  orgId: string | number
+  organisationId: number
 }
 
-const MyGroupsSelect: FC<MyGroupsSelectType> = ({ orgId, ...props }) => {
+const MyGroupsSelect: FC<MyGroupsSelectType> = ({ organisationId, ...props }) => {
   const { data } = useGetMyGroupsQuery(
-    { orgId: `${orgId}`, page_size: 1 },
-    { skip: !orgId },
+    { organisationId: `${organisationId}`, page_size: 1 },
+    { skip: !organisationId },
   )
   return <GroupSelect {...props} groups={data?.results} />
 }

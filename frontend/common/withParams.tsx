@@ -44,7 +44,7 @@ function getOrganisationId() {
     path: '/organisation/:organisationId',
     strict: false,
   })
-  const storeId = AccountStore.getOrganisation()?.id
+  const storeId = AccountStore.getOrganisationId()
   const organisationId = get(match, 'params.organisationId')
   return organisationId
     ? parseInt(organisationId)

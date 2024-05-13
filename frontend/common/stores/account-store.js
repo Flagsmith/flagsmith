@@ -307,14 +307,14 @@ const controller = {
           path: '/organisation/:organisationId',
           strict: false,
         })?.params?.organisationId
-        const orgId = pathID || cookiedID
-        if (orgId) {
+        const organisationId = pathID || cookiedID
+        if (organisationId) {
           const foundOrganisation = user.organisations.find(
-            (v) => `${v.id}` === orgId,
+            (v) => `${v.id}` === organisationId,
           )
           if (foundOrganisation) {
             store.organisation = foundOrganisation
-            AppActions.getOrganisation(orgId)
+            AppActions.getOrganisation(organisationId)
           }
         }
       }
@@ -414,6 +414,7 @@ const store = Object.assign({}, BaseStore, {
   getOrganisation() {
     return store.organisation
   },
+  getOrganisationId: () => AccountStore.getOrganisationId() || null,
   getOrganisationPlan(id) {
     const organisations = store.getOrganisations()
     const organisation = organisations && organisations.find((v) => v.id === id)

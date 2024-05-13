@@ -10,20 +10,20 @@ type TableFilterType = {
   className?: string
   isLoading?: boolean
   projectId: string
-  orgId: string | undefined
+  organisationId: number | undefined
 }
 
 const TableGroupsFilter: FC<TableFilterType> = ({
   className,
   isLoading,
   onChange,
-  orgId,
+  organisationId,
   projectId,
   value,
 }) => {
   const { data } = useGetGroupSummariesQuery(
-    { orgId: orgId! },
-    { skip: !orgId },
+    { organisationId: organisationId! },
+    { skip: !organisationId },
   )
   const groups = useMemo(() => {
     return sortBy(

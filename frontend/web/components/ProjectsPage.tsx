@@ -6,7 +6,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 type ProjectsPageType = {
   match: {
     params: {
-      organisationId: string
+      organisationId: number
     }
   }
 }

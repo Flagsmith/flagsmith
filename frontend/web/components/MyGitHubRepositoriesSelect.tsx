@@ -4,7 +4,7 @@ import GitHubRepositoriesSelect from './GitHubRepositoriesSelect'
 
 type MyGitHubRepositoriesSelectType = {
   installationId: string
-  organisationId: string
+  organisationId: number
   projectId: string
   githubId: string
 }

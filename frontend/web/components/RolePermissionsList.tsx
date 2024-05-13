@@ -28,7 +28,7 @@ type RolePermissionsListProps = {
   ref?: Ref<any>
   level: PermissionLevel
   filter: string
-  orgId?: string
+  organisationId: number | null
   user?: User
   group?: UserGroupSummary
 }
@@ -81,7 +81,7 @@ const PermissionsSummary: FC<PermissionsSummaryType> = ({
 }
 
 const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
-  ({ filter, group, level, mainItems, orgId, role, user }, ref) => {
+  ({ filter, group, level, mainItems, organisationId, role, user }) => {
     const [expandedItems, setExpandedItems] = useState<(string | number)[]>([])
 
     const mainItemsFiltered =
@@ -127,7 +127,7 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
                   <PermissionsSummary
                     level={level}
                     levelId={mainItem.id}
-                    organisationId={orgId}
+                    organisationId={organisationId}
                     role={role}
                   />
                 </div>

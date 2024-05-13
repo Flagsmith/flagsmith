@@ -52,14 +52,14 @@ const EnvironmentSettingsPage = class extends Component {
       this.setState({ env })
       getRoles(
         getStore(),
-        { organisation_id: AccountStore.getOrganisation().id },
+        { organisation_id: AccountStore.getOrganisationId() },
         { forceRefetch: true },
       ).then((roles) => {
         getRolesEnvironmentPermissions(
           getStore(),
           {
             env_id: env.id,
-            organisation_id: AccountStore.getOrganisation().id,
+            organisation_id: AccountStore.getOrganisationId(),
             role_id: roles.data.results[0].id,
           },
           { forceRefetch: true },

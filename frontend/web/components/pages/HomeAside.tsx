@@ -270,7 +270,7 @@ const HomeAside: FC<HomeAsideType> = ({
                       'lastEnv',
                       JSON.stringify({
                         environmentId: environment,
-                        orgId: AccountStore.getOrganisation().id,
+                        organisationId: AccountStore.getOrganisationId(),
                         projectId: projectId,
                       }),
                     )

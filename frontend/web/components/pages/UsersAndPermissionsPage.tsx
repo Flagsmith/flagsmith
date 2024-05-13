@@ -66,7 +66,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   subscriptionMeta,
   users,
 }) => {
-  const orgId = AccountStore.getOrganisation().id
+  const organisationId = AccountStore.getOrganisationId()
 
   const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
   const verifySeatsLimit = Utils.getFlagsmithHasFeature(
@@ -86,7 +86,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
       <CreateGroup
         roles={roles}
         isEdit
-        orgId={AccountStore.getOrganisation().id}
+        organisationId={AccountStore.getOrganisationId()}
         group={group}
       />,
       'side-modal',
@@ -105,7 +105,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
     openModal(
       'Edit Organisation Permissions',
       <div className='p-4'>
-        <PermissionsTabs uncontrolled user={user} orgId={organisationId} />
+        <PermissionsTabs uncontrolled user={user} organisationId={organisationId} />
       </div>,
       'p-0 side-modal',
     )
@@ -702,7 +702,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                               onClick={() =>
                                 openModal(
                                   'Create Group',
-                                  <CreateGroup orgId={organisation.id} />,
+                                  <CreateGroup organisationId={organisation.id} />,
                                   'side-modal',
                                 )
                               }
@@ -720,7 +720,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                         <UserGroupList
                           showRemove
                           onClick={editGroup}
-                          orgId={`${organisation.id}`}
+                          organisationId={`${organisation.id}`}
                         />
                       </div>
                     </TabItem>
@@ -760,7 +760,7 @@ const UsersAndPermissionsPage: FC<UsersAndPermissionsPageType> = ({
   return (
     <AccountProvider>
       {({ organisation }: { organisation: Organisation | null }) => (
-        <OrganisationProvider id={AccountStore.getOrganisation()?.id}>
+        <OrganisationProvider id={AccountStore.getOrganisationId()}>
           {({
             error,
             invalidateInviteLink,

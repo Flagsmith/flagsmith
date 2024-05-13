@@ -582,7 +582,7 @@ const UserPage = class extends Component {
                                                 title={'Groups'}
                                                 className={'me-4'}
                                                 projectId={projectId}
-                                                orgId={
+                                                organisationId={
                                                   AccountStore.getOrganisation()
                                                     ?.id
                                                 }

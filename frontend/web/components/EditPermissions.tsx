@@ -863,7 +863,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           level !== 'project' && (
             <div className='px-4'>
               <MyRoleSelect
-                orgId={id}
+                organisationId={id}
                 level={level}
                 value={rolesSelected?.map((v) => v.role)}
                 onAdd={addRole}
@@ -1104,7 +1104,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
             <div className={tabClassName}>
               <UserGroupList
                 noTitle
-                orgId={AccountStore.getOrganisation().id}
+                organisationId={AccountStore.getOrganisationId()}
                 projectId={level === 'project' && id}
                 onClick={(group: UserGroup) => editGroupPermissions(group)}
               />

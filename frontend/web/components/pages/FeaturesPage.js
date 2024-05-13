@@ -106,7 +106,7 @@ const FeaturesPage = class extends Component {
       'lastEnv',
       JSON.stringify({
         environmentId: params.environmentId,
-        orgId: AccountStore.getOrganisation().id,
+        organisationId: AccountStore.getOrganisationId(),
         projectId: params.projectId,
       }),
     )
@@ -474,8 +474,8 @@ const FeaturesPage = class extends Component {
                                             title={'Groups'}
                                             className={'me-4'}
                                             projectId={projectId}
-                                            orgId={
-                                              AccountStore.getOrganisation()?.id
+                                            organisationId={
+                                              AccountStore.getOrganisationId()
                                             }
                                             useLocalStorage
                                             value={this.state.group_owners}

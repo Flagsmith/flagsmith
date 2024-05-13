@@ -21,7 +21,7 @@ import {
 import InfoMessage from './InfoMessage'
 
 type OrganisationUsageType = {
-  organisationId: string
+  organisationId: number
 }
 type LegendItemType = {
   title: string

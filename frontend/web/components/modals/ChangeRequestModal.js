@@ -31,7 +31,7 @@ const ChangeRequestModal = class extends Component {
   }
 
   componentDidMount() {
-    getMyGroups(getStore(), { orgId: AccountStore.getOrganisation().id }).then(
+    getMyGroups(getStore(), { organisationId: AccountStore.getOrganisationId() }).then(
       (res) => {
         this.setState({ groups: res?.data?.results || [] })
       },
@@ -255,7 +255,7 @@ const ChangeRequestModal = class extends Component {
                 )}
               {!this.props.changeRequest && (
                 <MyGroupsSelect
-                  orgId={AccountStore.getOrganisation().id}
+                  organisationId={AccountStore.getOrganisationId()}
                   value={this.state.approvals.map((v) => v.group)}
                   onAdd={this.addOwner}
                   onRemove={this.removeOwner}

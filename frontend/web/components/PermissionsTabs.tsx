@@ -16,7 +16,7 @@ import ProjectFilter from './ProjectFilter'
 import OrganisationStore from 'common/stores/organisation-store'
 
 type PermissionsTabsType = {
-  orgId?: number
+  organisationId?: number
   group?: UserGroupSummary
   user?: User
   role?: Role | undefined
@@ -29,7 +29,7 @@ type PermissionsTabsType = {
 const PermissionsTabs: FC<PermissionsTabsType> = ({
   group,
   onChange,
-  orgId,
+  organisationId,
   role,
   tabRef,
   uncontrolled,
@@ -51,7 +51,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
     }
   }, [project, projectData])
 
-  if (!orgId) {
+  if (!organisationId) {
     return
   }
 
@@ -67,7 +67,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
         tabLabel={<Row className='justify-content-center'>Organisation</Row>}
       >
         <EditPermissionsModal
-          id={orgId}
+          id={organisationId}
           group={group}
           isGroup={!!group}
           user={user}
@@ -94,7 +94,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
         <RolePermissionsList
           user={user}
           group={group}
-          orgId={orgId}
+          organisationId={organisationId}
           filter={searchProject}
           mainItems={projectData}
           role={role}
@@ -121,7 +121,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
         </Row>
         <div className='mb-2' style={{ width: 250 }}>
           <ProjectFilter
-            organisationId={orgId}
+            organisationId={organisationId}
             onChange={setProject}
             value={project}
           />
@@ -129,7 +129,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
         {environments.length > 0 && (
           <RolePermissionsList
             user={user}
-            orgId={orgId}
+            organisationId={organisationId}
             group={group}
             filter={searchEnv}
             mainItems={(environments || [])?.map((v) => {

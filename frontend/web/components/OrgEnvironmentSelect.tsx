@@ -10,7 +10,7 @@ import Input from './base/forms/Input'
 import Button from './base/forms/Button'
 
 type OrgProjectSelectType = {
-  organisationId?: string | null
+  organisationId: number | null
   onOrganisationChange: (id: string | null) => void
   projectId?: string | null
   onProjectChange: (id: string | null) => void

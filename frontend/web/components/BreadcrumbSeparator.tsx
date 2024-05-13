@@ -154,8 +154,8 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   const [organisationSearch, setOrganisationSearch] = useState('')
   const [projectSearch, setProjectSearch] = useState('')
 
-  const [activeOrganisation, setActiveOrganisation] = useState<string>(
-    `${AccountStore.getOrganisation()?.id}`,
+  const [activeOrganisation, setActiveOrganisation] = useState<number>(
+    AccountStore.getOrganisationId(),
   )
   const [hoveredOrganisation, setHoveredOrganisation] = useState<Organisation>(
     AccountStore.getOrganisation(),
@@ -167,10 +167,10 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   useEffect(() => {
     const onChangeAccountStore = () => {
       if (
-        AccountStore.getOrganisation()?.id !== activeOrganisation &&
-        !!AccountStore.getOrganisation()?.id
+        AccountStore.getOrganisationId() !== activeOrganisation &&
+        !!AccountStore.getOrganisationId()
       ) {
-        setActiveOrganisation(AccountStore.getOrganisation()?.id)
+        setActiveOrganisation(AccountStore.getOrganisationId())
         setHoveredOrganisation(AccountStore.getOrganisation())
       }
     }
@@ -183,7 +183,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
 
   const { data: projects } = useGetProjectsQuery(
     {
-      organisationId: `${hoveredOrganisation?.id}`,
+      organisationId: hoveredOrganisation?.id,
     },
     {
       skip: !hoveredOrganisation,
@@ -247,7 +247,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   }
   const goProject = (project: Project) => {
     getEnvironments(getStore(), {
-      projectId: `${project.id}`,
+      projectId: project.id,
     }).then((res: { data: PagedResponse<Environment> }) => {
       router.history.push(`/project/${project.id}`)
       setOpen(false)

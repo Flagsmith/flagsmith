@@ -72,14 +72,14 @@ const App = class extends Component {
 
   getOrganisationUsage = () => {
     if (
-      AccountStore.getOrganisation()?.id &&
-      this.state.activeOrganisation !== AccountStore.getOrganisation().id
+      AccountStore.getOrganisationId() &&
+      this.state.activeOrganisation !== AccountStore.getOrganisationId()
     ) {
       getOrganisationUsage(getStore(), {
-        organisationId: AccountStore.getOrganisation()?.id,
+        organisationId: AccountStore.getOrganisationId(),
       }).then((res) => {
         this.setState({
-          activeOrganisation: AccountStore.getOrganisation().id,
+          activeOrganisation: AccountStore.getOrganisationId(),
         })
       })
     }
@@ -173,7 +173,7 @@ const App = class extends Component {
           if (res) {
             const lastEnv = JSON.parse(res)
             const lastOrg = _.find(AccountStore.getUser().organisations, {
-              id: lastEnv.orgId,
+              id: lastEnv.organisationId,
             })
             if (!lastOrg) {
               this.context.router.history.replace('/select-organistion')
@@ -320,7 +320,7 @@ const App = class extends Component {
                   <Fragment>
                     {user && (
                       <OrganisationLimit
-                        id={AccountStore.getOrganisation()?.id}
+                        id={AccountStore.getOrganisationId()}
                       />
                     )}
                     {user && showBanner && (
@@ -590,9 +590,7 @@ const App = class extends Component {
                               data-test='users-and-permissions'
                               icon={<UsersIcon />}
                               id='permissions-link'
-                              to={`/organisation/${
-                                AccountStore.getOrganisation().id
-                              }/permissions`}
+                              to={`/organisation/${AccountStore.getOrganisationId()}/permissions`}
                             >
                               Users and Permissions
                             </NavSubLink>
@@ -601,9 +599,7 @@ const App = class extends Component {
                                 <NavSubLink
                                   icon={statsChart}
                                   id='permissions-link'
-                                  to={`/organisation/${
-                                    AccountStore.getOrganisation().id
-                                  }/usage`}
+                                  to={`/organisation/${AccountStore.getOrganisationId()}/usage`}
                                 >
                                   Usage
                                 </NavSubLink>
@@ -613,9 +609,7 @@ const App = class extends Component {
                               <NavSubLink
                                 icon={<SettingsIcon />}
                                 id='org-settings-link'
-                                to={`/organisation/${
-                                  AccountStore.getOrganisation().id
-                                }/settings`}
+                                to={`/organisation/${AccountStore.getOrganisationId()}/settings`}
                               >
                                 Organisation Settings
                               </NavSubLink>

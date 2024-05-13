@@ -40,10 +40,10 @@ const OrganisationSettingsPage = class extends Component {
     if (!AccountStore.getOrganisation()) {
       return
     }
-    AppActions.getOrganisation(AccountStore.getOrganisation().id)
+    AppActions.getOrganisation(AccountStore.getOrganisationId())
     this.props.getWebhooks()
 
-    this.getOrganisationPermissions(AccountStore.getOrganisation().id)
+    this.getOrganisationPermissions(AccountStore.getOrganisationId())
   }
 
   componentDidMount = () => {
@@ -218,7 +218,7 @@ const OrganisationSettingsPage = class extends Component {
         >
           {({ isSaving, organisation }, { deleteOrganisation }) =>
             !!organisation && (
-              <OrganisationProvider id={AccountStore.getOrganisation()?.id}>
+              <OrganisationProvider id={AccountStore.getOrganisationId()}>
                 {({ name, subscriptionMeta }) => {
                   const isAWS =
                     AccountStore.getPaymentMethod() === 'AWS_MARKETPLACE'

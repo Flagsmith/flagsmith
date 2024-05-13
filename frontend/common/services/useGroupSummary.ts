@@ -12,7 +12,7 @@ export const groupSummaryService = service
       >({
         providesTags: [{ id: 'LIST', type: 'GroupSummary' }],
         query: (query) => ({
-          url: `organisations/${query.orgId}/groups/summaries/`,
+          url: `organisations/${query.organisationId}/groups/summaries/`,
         }),
       }),
       // END OF ENDPOINTS

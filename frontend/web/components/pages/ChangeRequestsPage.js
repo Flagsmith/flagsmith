@@ -42,7 +42,7 @@ const ChangeRequestsPage = class extends Component {
     AppActions.getChangeRequests(this.props.match.params.environmentId, {
       live_from_after: this.state.live_after,
     })
-    AppActions.getOrganisation(AccountStore.getOrganisation().id)
+    AppActions.getOrganisation(AccountStore.getOrganisationId())
   }
 
   render() {

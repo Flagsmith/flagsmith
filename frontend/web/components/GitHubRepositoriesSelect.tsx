@@ -6,7 +6,7 @@ import { useCreateGithubRepositoryMutation } from 'common/services/useGithubRepo
 export type GitHubRepositoriesSelectType = {
   disabled?: boolean
   repositories: Repository[] | undefined
-  organisationId: string
+  organisationId: number
   projectId: string
   githubId: string
 }
