@@ -1,4 +1,5 @@
 from .chargebee import (  # noqa
+    add_1000_api_calls,
     add_1000_api_calls_scale_up,
     add_1000_api_calls_start_up,
     add_single_seat,

@@ -4,9 +4,11 @@ from unittest import mock
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from chargebee import APIError
+from pytest_mock import MockerFixture
 from pytz import UTC
 
 from organisations.chargebee import (
+    add_1000_api_calls,
     add_single_seat,
     extract_subscription_metadata,
     get_customer_id_from_subscription_id,
@@ -19,7 +21,10 @@ from organisations.chargebee import (
     get_subscription_metadata_from_id,
 )
 from organisations.chargebee.chargebee import cancel_subscription
-from organisations.chargebee.constants import ADDITIONAL_SEAT_ADDON_ID
+from organisations.chargebee.constants import (
+    ADDITIONAL_API_SCALE_UP_ADDON_ID,
+    ADDITIONAL_SEAT_ADDON_ID,
+)
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.subscriptions.exceptions import (
     CannotCancelChargebeeSubscription,
@@ -595,3 +600,20 @@ def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(
         == "Failed to add additional seat to CB subscription for subscription id: %s"
         % subscription_id
     )
+
+
+def test_add_1000_api_calls_when_count_is_empty(mocker: MockerFixture) -> None:
+    # Given
+    subscription_mock = mocker.patch("chargebee.Subscription.update")
+
+    # When
+    result = add_1000_api_calls(
+        addon_id=ADDITIONAL_API_SCALE_UP_ADDON_ID,
+        subscription_id="subscription23",
+        count=0,
+        invoice_immediately=True,
+    )
+
+    # Then
+    assert result is None
+    subscription_mock.assert_not_called()
