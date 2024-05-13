@@ -9,7 +9,7 @@ Flagsmith allows certain Entities within a Project to have Metadata of different
 
 - **[Features](/basic-features/managing-features#use-metadata)**.
 - **[Environment](/system-administration/environment-settings#use-metadata)**.
-- **[Segments](/basic-features/managing-features#use-metadata)**.
+- **[Segments](/basic-features/segments#use-metadata)**.
 
 ## Metadata Fields
 
