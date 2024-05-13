@@ -396,7 +396,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     )
     return !!found
   },
-
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
@@ -409,6 +408,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return Project.api
   },
+
   getShouldHideIdentityOverridesTab(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (!Utils.getIsEdge()) {
@@ -422,7 +422,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         !project.show_edge_identity_overrides_for_feature)
     )
   },
-
   getShouldSendIdentityToTraits(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (project && project.use_edge_identities) {
@@ -519,6 +518,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   isSaas: () => global.flagsmithVersion?.backend?.is_saas,
+
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },
@@ -553,7 +553,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       zE('messenger', 'open')
     }
   },
-
   removeElementFromArray(array: any[], index: number) {
     return array.slice(0, index).concat(array.slice(index + 1))
   },
@@ -567,11 +566,26 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       </Tooltip>
     )
   },
+
   sanitiseDiffString: (value: FlagsmithValue) => {
     if (value === undefined || value == null) {
       return ''
     }
     return `${value}`
+  },
+  setClipboard: (
+    message: string,
+    successString = 'Clipboard set',
+    errorString = 'Could not set clipboard',
+  ) => {
+    navigator.clipboard
+      .writeText(message)
+      .then((res) => {
+        toast(successString)
+      })
+      .catch((res) => {
+        toast(errorString, 'danger')
+      })
   },
   tagDisabled: (tag: Tag | undefined) => {
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')

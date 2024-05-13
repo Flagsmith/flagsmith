@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
-import { Clipboard } from 'polyfill-react-native'
 import Icon from './Icon'
 import { logoGithub, document } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
@@ -93,11 +92,7 @@ const CodeHelp = class extends Component {
   }
 
   copy = (s) => {
-    const res = Clipboard.setString(s)
-    toast(
-      res ? 'Clipboard set' : 'Could not set clipboard :(',
-      res ? '' : 'danger',
-    )
+    Utils.setClipboard(s)
   }
 
   render() {
