@@ -46,11 +46,7 @@ function getOrganisationId() {
   })
   const storeId = AccountStore.getOrganisationId()
   const organisationId = get(match, 'params.organisationId')
-  return organisationId
-    ? parseInt(organisationId)
-    : storeId
-    ? parseInt(storeId)
-    : null
+  return organisationId ? parseInt(organisationId) : storeId
 }
 export type WithParamsProps = {
   organisationId: number | null

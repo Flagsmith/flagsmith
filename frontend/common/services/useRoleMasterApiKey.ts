@@ -19,7 +19,7 @@ export const roleMasterApiKeyService = service
         query: (query: Req['createRoleMasterApiKey']) => ({
           body: query.body,
           method: 'POST',
-          url: `organisations/${query.org_id}/roles/${query.role_id}/master-api-keys/`,
+          url: `organisations/${query.organisationId}/roles/${query.role_id}/master-api-keys/`,
         }),
       }),
       deleteRoleMasterApiKey: builder.mutation<
@@ -32,7 +32,7 @@ export const roleMasterApiKeyService = service
         ],
         query: (query: Req['deleteRoleMasterApiKey']) => ({
           method: 'DELETE',
-          url: `organisations/${query.org_id}/roles/${query.role_id}/master-api-keys/${query.id}/`,
+          url: `organisations/${query.organisationId}/roles/${query.role_id}/master-api-keys/${query.id}/`,
         }),
       }),
       getRoleMasterApiKey: builder.query<
@@ -41,7 +41,7 @@ export const roleMasterApiKeyService = service
       >({
         providesTags: (res) => [{ id: res?.id, type: 'RoleMasterApiKey' }],
         query: (query: Req['getRoleMasterApiKey']) => ({
-          url: `organisations/${query.org_id}/roles/${query.role_id}/master-api-keys/${query.prefix}/`,
+          url: `organisations/${query.organisationId}/roles/${query.role_id}/master-api-keys/${query.prefix}/`,
         }),
       }),
       updateRoleMasterApiKey: builder.mutation<
@@ -55,7 +55,7 @@ export const roleMasterApiKeyService = service
         query: (query: Req['updateRoleMasterApiKey']) => ({
           body: query,
           method: 'PUT',
-          url: `organisations/${query.org_id}/roles/${query.role_id}/master-api-keys/${id}/`,
+          url: `organisations/${query.organisationId}/roles/${query.role_id}/master-api-keys/${id}/`,
         }),
       }),
       // END OF ENDPOINTS

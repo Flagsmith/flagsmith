@@ -17,7 +17,7 @@ export const groupWithRoleService = service
         query: (query: Req['deleteGroupWithRole']) => ({
           body: query,
           method: 'DELETE',
-          url: `organisations/${query.org_id}/groups/${query.group_id}/roles/${query.role_id}/`,
+          url: `organisations/${query.organisationId}/groups/${query.group_id}/roles/${query.role_id}/`,
         }),
       }),
       getGroupWithRole: builder.query<
@@ -29,7 +29,7 @@ export const groupWithRoleService = service
           return tags
         },
         query: (query: Req['getGroupWithRole']) => ({
-          url: `organisations/${query.org_id}/groups/${query.group_id}/roles/`,
+          url: `organisations/${query.organisationId}/groups/${query.group_id}/roles/`,
         }),
       }),
       // END OF ENDPOINTS

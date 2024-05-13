@@ -172,7 +172,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
     const { data: userWithRolesData, isSuccess: userWithRolesDataSuccesfull } =
       useGetUserWithRolesQuery(
         {
-          org_id: id,
+          organisationId: id,
           user_id: parseInt(`${user?.id}`),
         },
         { skip: level !== 'organisation' || !user?.id },
@@ -184,7 +184,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
     } = useGetGroupWithRoleQuery(
       {
         group_id: parseInt(`${group?.id}`),
-        org_id: id,
+        organisationId: id,
       },
       { skip: level !== 'organisation' || !group?.id },
     )
@@ -589,7 +589,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         if (user) {
           if (isEditUserPermission) {
             deleteUserWithRoles({
-              org_id: id,
+              organisationId: id,
               role_id: roleId,
               user_id: user?.id,
             }).then(onRoleRemoved as any)
@@ -605,7 +605,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           if (isEditGroupPermission) {
             deleteGroupWithRoles({
               group_id: group?.id,
-              org_id: id,
+              organisationId: id,
               role_id: roleId,
             }).then(onRoleRemoved as any)
           } else if (roleSelected) {

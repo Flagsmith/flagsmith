@@ -57,7 +57,7 @@ export class CreateAPIKey extends PureComponent {
             this.state.roles.map((role) =>
               createRoleMasterApiKey(getStore(), {
                 body: { master_api_key: res.id },
-                org_id: AccountStore.getOrganisationId(),
+                organisationId: AccountStore.getOrganisationId(),
                 role_id: role.id,
               }).then(() => {
                 toast('Role API Key was Created')
@@ -77,7 +77,7 @@ export class CreateAPIKey extends PureComponent {
         name: this.state.name,
         revoked: false,
       },
-      org_id: AccountStore.getOrganisationId(),
+      organisationId: AccountStore.getOrganisationId(),
       prefix: prefix,
     }).then(() => {
       this.props.onSuccess()
@@ -86,7 +86,7 @@ export class CreateAPIKey extends PureComponent {
 
   getApiKeyByPrefix = (prefix) => {
     getMasterAPIKeyWithMasterAPIKeyRoles(getStore(), {
-      org_id: AccountStore.getOrganisationId(),
+      organisationId: AccountStore.getOrganisationId(),
       prefix: prefix,
     }).then((res) => {
       this.setState({
@@ -95,7 +95,7 @@ export class CreateAPIKey extends PureComponent {
         name: res.data.name,
       })
       getRolesMasterAPIKeyWithMasterAPIKeyRoles(getStore(), {
-        org_id: AccountStore.getOrganisationId(),
+        organisationId: AccountStore.getOrganisationId(),
         prefix: prefix,
       }).then((rolesData) => {
         this.setState({
@@ -109,7 +109,7 @@ export class CreateAPIKey extends PureComponent {
     const roleSelected = this.state.roles.find((item) => item.id === roleId)
     if (isEdit) {
       deleteMasterAPIKeyWithMasterAPIKeyRoles(getStore(), {
-        org_id: AccountStore.getOrganisationId(),
+        organisationId: AccountStore.getOrganisationId(),
         prefix: this.props.prefix,
         role_id: roleSelected.id,
       }).then(() => {
@@ -125,7 +125,7 @@ export class CreateAPIKey extends PureComponent {
     if (isEdit) {
       createRoleMasterApiKey(getStore(), {
         body: { master_api_key: this.props.masterAPIKey },
-        org_id: AccountStore.getOrganisationId(),
+        organisationId: AccountStore.getOrganisationId(),
         role_id: role.id,
       }).then((res) => {
         toast('Role API Key was added')

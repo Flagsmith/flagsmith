@@ -10,7 +10,7 @@ export const userWithRolesService = service
         invalidatesTags: [{ type: 'RolesUser' }],
         query: (query: Req['deleteUserWithRole']) => ({
           method: 'DELETE',
-          url: `organisations/${query.org_id}/users/${query.user_id}/roles/${query.role_id}/`,
+          url: `organisations/${query.organisationId}/users/${query.user_id}/roles/${query.role_id}/`,
         }),
       }),
       getUserWithRoles: builder.query<
@@ -19,11 +19,11 @@ export const userWithRolesService = service
       >({
         providesTags: (result, error, req) => {
           return result
-            ? [{ id: `${req.user_id}-${req.org_id}`, type: 'RolesUser' }]
+            ? [{ id: `${req.user_id}-${req.organisationId}`, type: 'RolesUser' }]
             : []
         },
         query: (query: Req['getUserWithRoles']) => ({
-          url: `organisations/${query.org_id}/users/${query.user_id}/roles/`,
+          url: `organisations/${query.organisationId}/users/${query.user_id}/roles/`,
         }),
       }),
       // END OF ENDPOINTS

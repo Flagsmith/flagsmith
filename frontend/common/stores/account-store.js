@@ -414,7 +414,7 @@ const store = Object.assign({}, BaseStore, {
   getOrganisation() {
     return store.organisation
   },
-  getOrganisationId: () => AccountStore.getOrganisationId() || null,
+  getOrganisationId: () => AccountStore.getOrganisation()?.id || null,
   getOrganisationPlan(id) {
     const organisations = store.getOrganisations()
     const organisation = organisations && organisations.find((v) => v.id === id)

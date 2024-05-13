@@ -15,7 +15,7 @@ export const masterAPIKeyWithMasterAPIKeyRoleService = service
         invalidatesTags: ['MasterAPIKeyWithMasterAPIKeyRole'],
         query: (query: Req['deleteMasterAPIKeyWithMasterAPIKeyRoles']) => ({
           method: 'DELETE',
-          url: `organisations/${query.org_id}/master-api-keys/${query.prefix}/roles/${query.role_id}/detach-roles-from-master-api-key/`,
+          url: `organisations/${query.organisationId}/master-api-keys/${query.prefix}/roles/${query.role_id}/detach-roles-from-master-api-key/`,
         }),
       }),
       getMasterAPIKeyWithMasterAPIKeyRoles: builder.query<
@@ -26,7 +26,7 @@ export const masterAPIKeyWithMasterAPIKeyRoleService = service
           { id: res?.id, type: 'MasterAPIKeyWithMasterAPIKeyRole' },
         ],
         query: (query: Req['getMasterAPIKeyWithMasterAPIKeyRoles']) => ({
-          url: `organisations/${query.org_id}/master-api-keys/${query.prefix}/`,
+          url: `organisations/${query.organisationId}/master-api-keys/${query.prefix}/`,
         }),
       }),
       getRolesMasterAPIKeyWithMasterAPIKeyRoles: builder.query<
@@ -37,7 +37,7 @@ export const masterAPIKeyWithMasterAPIKeyRoleService = service
           { id: res?.id, type: 'MasterAPIKeyWithMasterAPIKeyRole' },
         ],
         query: (query: Req['getMasterAPIKeyWithMasterAPIKeyRoles']) => ({
-          url: `organisations/${query.org_id}/master-api-keys/${query.prefix}/roles/`,
+          url: `organisations/${query.organisationId}/master-api-keys/${query.prefix}/roles/`,
         }),
       }),
       updateMasterAPIKeyWithMasterAPIKeyRoles: builder.mutation<
@@ -48,7 +48,7 @@ export const masterAPIKeyWithMasterAPIKeyRoleService = service
         query: (query: Req['updateMasterAPIKeyWithMasterAPIKeyRoles']) => ({
           body: query.body,
           method: 'PUT',
-          url: `organisations/${query.org_id}/master-api-keys/${query.prefix}/`,
+          url: `organisations/${query.organisationId}/master-api-keys/${query.prefix}/`,
         }),
       }),
       // END OF ENDPOINTS
