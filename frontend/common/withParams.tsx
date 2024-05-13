@@ -3,8 +3,6 @@ import get from 'lodash/get'
 import AccountStore from './stores/account-store'
 import { withRouter } from 'react-router-dom'
 import { FC } from 'react'
-import { Project } from './types/responses'
-import AsyncStorage from './async-storage'
 
 function getProjectId() {
   const location = document.location
