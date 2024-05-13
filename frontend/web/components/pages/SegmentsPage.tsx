@@ -53,7 +53,9 @@ const HowToUseSegmentsMessage = () => (
 )
 
 const SegmentsPage: FC<SegmentsPageType> = (props) => {
-  const { environmentId, projectId } = props.match.params
+  const { projectId } = props.match.params
+  const environmentId =
+    ProjectStore.getEnvironment()?.api_key || 'ENVIRONMENT_API_KEY'
   const preselect = useRef(Utils.fromParam().id)
   const hasNoOperators = !Utils.getFlagsmithValue('segment_operators')
 
@@ -82,7 +84,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   useEffect(() => {
     if (error) {
       // Kick user back out to projects
-      props.router.history.replace('/organisation-settings')
+      props.router.history.replace(Utils.getOrganisationHomePage())
     }
   }, [error, props.router.history])
   const newSegment = () => {
@@ -187,12 +189,20 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         }
         title={'Segments'}
       >
-        Create and manage groups of users with similar traits. Segments can be
-        used to override features within the features page for any environment.{' '}
+        Create and manage groups of users with similar{' '}
+        <Button
+          theme='text'
+          href='https://docs.flagsmith.com/basic-features/managing-identities#identity-traits'
+          target='_blank'
+        >
+          traits
+        </Button>
+        . Segments can be used to override features within the features page for
+        any environment.{' '}
         <Button
           theme='text'
           target='_blank'
-          href='https://docs.flagsmith.com/basic-features/managing-segments'
+          href='https://docs.flagsmith.com/basic-features/segments'
           className='fw-normal'
         >
           Learn more.
@@ -322,37 +332,14 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                 <FormGroup className='mt-4'>
                   <CodeHelp
                     title='Using segments'
-                    snippets={Constants.codeHelp.USER_TRAITS(environmentId)}
+                    snippets={Constants.codeHelp.USER_TRAITS(
+                      environmentId || 'ENVIRONMENT_KEY',
+                    )}
                   />
                 </FormGroup>
               </div>
             ) : (
               <div>
-                <h3>Target groups of users with segments.</h3>
-                <FormGroup>
-                  <Panel icon='ion-ios-globe' title='1. creating a segment'>
-                    <p>
-                      You can create a segment that targets{' '}
-                      <Button
-                        theme='text'
-                        href='https://docs.flagsmith.com/basic-features/managing-identities#identity-traits'
-                        target='_blank'
-                      >
-                        User Traits
-                      </Button>
-                      . As user's traits are updated they will automatically be
-                      added to the segments based on the rules you create.{' '}
-                      <Button
-                        theme='text'
-                        href='https://docs.flagsmith.com/basic-features/managing-segments'
-                        target='_blank'
-                      >
-                        Check out the documentation on Segments
-                      </Button>
-                      .
-                    </p>
-                  </Panel>
-                </FormGroup>
                 <FormGroup className='text-center'>
                   {renderWithPermission(
                     manageSegmentsPermission,

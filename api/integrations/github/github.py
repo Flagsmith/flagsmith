@@ -9,6 +9,7 @@ from django.conf import settings
 from features.models import FeatureState, FeatureStateValue
 from integrations.github.client import generate_token
 from integrations.github.constants import (
+    DELETED_FEATURE_TEXT,
     GITHUB_API_URL,
     LAST_UPDATED_FEATURE_TEXT,
     LINK_FEATURE_TEXT,
@@ -55,7 +56,7 @@ def post_comment_to_github(
             url, json=payload, headers=headers, timeout=10
         )
 
-        return response.json() if response.status_code == 200 else None
+        return response.json() if response.status_code == 201 else None
     except requests.RequestException as e:
         logger.error(f" {e}")
         return None
@@ -70,6 +71,9 @@ def generate_body_comment(
     is_update = event_type == WebhookEventType.FLAG_UPDATED.value
     is_removed = event_type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
     delete_text = UNLINKED_FEATURE_TEXT % (name,)
+
+    if event_type == WebhookEventType.FLAG_DELETED.value:
+        return DELETED_FEATURE_TEXT % (name,)
 
     if is_removed:
         return delete_text

@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 import pytz
+from django.utils import timezone
 from flag_engine.environments.integrations.models import IntegrationModel
 from flag_engine.environments.models import (
     EnvironmentAPIKeyModel,
@@ -32,6 +33,7 @@ from pytest_mock import MockerFixture
 
 from environments.models import Environment
 from features.models import FeatureSegment, FeatureState
+from features.versioning.tasks import enable_v2_versioning
 from integrations.common.models import IntegrationsModel
 from integrations.dynatrace.models import DynatraceConfiguration
 from integrations.mixpanel.models import MixpanelConfiguration
@@ -40,7 +42,7 @@ from integrations.webhook.models import WebhookConfiguration
 from segments.models import Segment, SegmentRule
 from util.mappers import engine
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from environments.identities import Identity, Trait
     from environments.models import EnvironmentAPIKey
     from features.models import Feature
@@ -533,3 +535,66 @@ def test_map_environment_to_engine__returns_correct_feature_state_for_different_
     # Then
     assert len(result.feature_states) == 1
     assert result.feature_states[0].django_id == v15_feature_state.id
+
+
+def test_map_environment_to_engine_following_migration_to_v2_versioning(
+    environment: Environment,
+    feature: "Feature",
+    feature_state: FeatureState,
+    segment: Segment,
+    segment_featurestate: FeatureState,
+) -> None:
+    """
+    Specific test to reproduce an issue seen after migrating our staging environment to
+    v2 versioning.
+    """
+
+    # Given
+    # Multiple versions (old style versioning) of a given environment feature state and segment override
+    # to simulate the fact that we will be left with feature states that do NOT have a feature version
+    # (because only the latest versions get migrated to v2 versioning).
+    v2_environment_feature_state = feature_state.clone(
+        env=environment, live_from=timezone.now(), version=2
+    )
+    v2_environment_feature_state.enabled = True
+    v2_environment_feature_state_value = "v2"
+    v2_environment_feature_state.feature_state_value.string_value = (
+        v2_environment_feature_state_value
+    )
+    v2_environment_feature_state.save()
+    v2_environment_feature_state.feature_state_value.save()
+
+    v2_segment_override = segment_featurestate.clone(
+        env=environment, live_from=timezone.now(), version=2
+    )
+    v2_segment_override.enabled = True
+    v2_segment_override_value = "v2-override"
+    v2_segment_override.feature_state_value.string_value = v2_segment_override_value
+    v2_segment_override.save()
+    v2_segment_override.feature_state_value.save()
+
+    enable_v2_versioning(environment.id)
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    assert result
+
+    assert len(result.feature_states) == 1
+    mapped_environment_feature_state = result.feature_states[0]
+
+    assert mapped_environment_feature_state.django_id == v2_environment_feature_state.id
+    assert mapped_environment_feature_state.enabled is True
+    assert (
+        mapped_environment_feature_state.feature_state_value
+        == v2_environment_feature_state_value
+    )
+
+    assert len(result.project.segments) == 1
+    assert len(result.project.segments[0].feature_states) == 1
+
+    mapped_segment_override = result.project.segments[0].feature_states[0]
+    assert mapped_segment_override.django_id == v2_segment_override.id
+    assert mapped_segment_override.enabled is True
+    assert mapped_segment_override.feature_state_value == v2_segment_override_value

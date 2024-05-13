@@ -21,6 +21,7 @@ import FeatureExport from 'components/import-export/FeatureExport'
 import ProjectUsage from 'components/ProjectUsage'
 import ProjectStore from 'common/stores/project-store'
 import Tooltip from 'components/Tooltip'
+import { Link } from 'react-router-dom'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -110,6 +111,13 @@ const ProjectSettingsPage = class extends Component {
     editProject({
       ...project,
       prevent_flag_defaults: !project.prevent_flag_defaults,
+    })
+  }
+
+  toggleRealtimeUpdates = (project, editProject) => {
+    editProject({
+      ...project,
+      enable_realtime_updates: !project.enable_realtime_updates,
     })
   }
 
@@ -459,8 +467,10 @@ const ProjectSettingsPage = class extends Component {
                             Existing Core API endpoints will continue to work
                             whilst the migration takes place. Find out more{' '}
                             <a
+                              target='_blank'
                               href='https://docs.flagsmith.com/advanced-use/edge-api'
                               className='btn-link'
+                              rel='noreferrer'
                             >
                               here
                             </a>
@@ -481,7 +491,7 @@ const ProjectSettingsPage = class extends Component {
                             onClick={() =>
                               this.confirmRemove(project, () => {
                                 this.context.router.history.replace(
-                                  '/organisation-settings',
+                                  Utils.getOrganisationHomePage(),
                                 )
                                 deleteProject(this.props.match.params.projectId)
                               })
@@ -502,6 +512,55 @@ const ProjectSettingsPage = class extends Component {
                       data-test='js-sdk-settings'
                       tabLabel='SDK Settings'
                     >
+                      {Utils.isSaas() &&
+                        Utils.getFlagsmithHasFeature('realtime_setting') && (
+                          <FormGroup className='mt-4 col-md-6'>
+                            <Row className='mb-2'>
+                              <Switch
+                                data-test='js-prevent-flag-defaults'
+                                disabled={
+                                  isSaving ||
+                                  !Utils.getPlansPermission('REALTIME')
+                                }
+                                onChange={() =>
+                                  this.toggleRealtimeUpdates(
+                                    project,
+                                    editProject,
+                                  )
+                                }
+                                checked={project.enable_realtime_updates}
+                              />
+                              <h5 className='mb-0 ml-3'>
+                                Enable Realtime Updates
+                              </h5>
+                            </Row>
+
+                            <p className='fs-small lh-sm mb-0'>
+                              Pushes realtime updates to client-side SDKs when
+                              features and segment overrides are adjusted in the
+                              dashboard.
+                              {!Utils.getPlansPermission('REALTIME') && (
+                                <>
+                                  This feature is available with our{' '}
+                                  <Link to={Constants.upgradeURL}>
+                                    enterprise plan
+                                  </Link>
+                                  .
+                                </>
+                              )}{' '}
+                              Find out more{' '}
+                              <a
+                                target='_blank'
+                                href='https://docs.flagsmith.com/advanced-use/real-time-flags#how-it-works'
+                                className='btn-link'
+                                rel='noreferrer'
+                              >
+                                here
+                              </a>
+                              .
+                            </p>
+                          </FormGroup>
+                        )}
                       <div className='mt-4'>
                         <form onSubmit={saveProject}>
                           <FormGroup className='mt-4 col-md-6'>

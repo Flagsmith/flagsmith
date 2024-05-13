@@ -1,9 +1,11 @@
 import React, { FC, useMemo } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import { Props } from 'react-select/lib/Select'
 
-export type EnvironmentSelectType = {
+export type EnvironmentSelectType = Partial<Props> & {
   projectId: string
   value?: string
+  label?: string
   onChange: (value: string) => void
   showAll?: boolean
   readOnly?: boolean
@@ -14,11 +16,13 @@ export type EnvironmentSelectType = {
 const EnvironmentSelect: FC<EnvironmentSelectType> = ({
   idField = 'api_key',
   ignore,
+  label,
   onChange,
   projectId,
   readOnly,
   showAll,
   value,
+  ...rest
 }) => {
   const { data } = useGetEnvironmentsQuery({ projectId: `${projectId}` })
   const foundValue = useMemo(
@@ -45,11 +49,14 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
   return (
     <div>
       <Select
+        {...rest}
         value={
           foundValue
             ? { label: foundValue.name, value: `${foundValue.id}` }
             : {
-                label: showAll ? 'All Environments' : 'Select an Environment',
+                label:
+                  label ||
+                  (showAll ? 'All Environments' : 'Select an Environment'),
                 value: '',
               }
         }
