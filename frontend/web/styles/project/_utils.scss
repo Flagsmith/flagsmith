@@ -18,9 +18,9 @@
     }
 }
 .bg-required {
-    background-color: $bt-brand-red;
-    color: $bt-brand-faint;
-    border-color: $bt-brand-red;
+    background-color: $danger;
+    color: $bg-light300;
+    border-color: $danger;
 }
 .clearfix { display: inline-block; }
 /* start commented backslash hack \*/
