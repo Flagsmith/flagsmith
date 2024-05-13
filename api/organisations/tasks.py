@@ -386,7 +386,12 @@ def unrestrict_after_api_limit_grace_period_is_stale() -> None:
         organisation.api_limit_access_block.delete()
 
 
-if settings.ENABLE_API_USAGE_ALERTING:
+def register_recurring_tasks() -> None:
+    """
+    Helper function to get codecov coverage.
+    """
+    assert settings.ENABLE_API_USAGE_ALERTING
+
     register_recurring_task(
         run_every=timedelta(hours=12),
     )(handle_api_usage_notifications)
@@ -402,3 +407,7 @@ if settings.ENABLE_API_USAGE_ALERTING:
     register_recurring_task(
         run_every=timedelta(hours=12),
     )(unrestrict_after_api_limit_grace_period_is_stale)
+
+
+if settings.ENABLE_API_USAGE_ALERTING:
+    register_recurring_tasks()  # pragma: no cover
