@@ -5,7 +5,13 @@ import uuid
 import pytest
 from core.constants import BOOLEAN, INTEGER, STRING
 from django.urls import reverse
-from flag_engine.features.models import FeatureModel, FeatureStateModel
+from flag_engine.features.models import (
+    FeatureModel,
+    FeatureStateModel,
+    MultivariateFeatureOptionModel,
+    MultivariateFeatureStateValueList,
+    MultivariateFeatureStateValueModel,
+)
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
@@ -18,6 +24,7 @@ from edge_api.identities.models import (
     IdentityModel,
 )
 from features.models import Feature
+from features.multivariate.models import MultivariateFeatureOption
 from projects.models import Project
 from tests.integration.helpers import create_mv_option_with_api
 from util.mappers.engine import map_feature_to_engine
@@ -1082,9 +1089,24 @@ def test_edge_identity_clone_flag_states_from(
         project
     )
 
+    mv_feature = Feature.objects.create(
+        type="MULTIVARIATE",
+        name="mv_feature",
+        initial_value="foo",
+        project=project,
+    )
+
+    mv_variant_1 = MultivariateFeatureOption.objects.create(
+        feature=mv_feature,
+        default_percentage_allocation=0,
+        type=STRING,
+        string_value="bar",
+    )
+
     feature_model_1: FeatureModel = map_feature_to_engine(feature=feature_1)
     feature_model_2: FeatureModel = map_feature_to_engine(feature=feature_2)
     feature_model_3: FeatureModel = map_feature_to_engine(feature=feature_3)
+    mv_feature_model: FeatureModel = map_feature_to_engine(feature=mv_feature)
 
     source_identity: EdgeIdentity = create_identity(identifier="source_identity")
     target_identity: EdgeIdentity = create_identity(identifier="target_identity")
@@ -1105,6 +1127,21 @@ def test_edge_identity_clone_flag_states_from(
         feature_state_value=source_feature_state_2_value,
     )
 
+    source_mv_feature_state = FeatureStateModel(
+        feature=mv_feature_model,
+        environment_id=dynamo_enabled_environment,
+        enabled=True,
+        multivariate_feature_state_values=MultivariateFeatureStateValueList(),
+    )
+    source_mv_feature_state.multivariate_feature_state_values.append(
+        MultivariateFeatureStateValueModel(
+            multivariate_feature_option=MultivariateFeatureOptionModel(
+                value=mv_variant_1.value
+            ),
+            percentage_allocation=100,
+        )
+    )
+
     target_feature_state_2_value = "Target Identity value for feature 2"
     target_feature_state_2 = FeatureStateModel(
         feature=feature_model_2,
@@ -1122,6 +1159,7 @@ def test_edge_identity_clone_flag_states_from(
     # Add feature states for features 1 and 2 to source identity
     source_identity.add_feature_override(feature_state=source_feature_state_1)
     source_identity.add_feature_override(feature_state=source_feature_state_2)
+    source_identity.add_feature_override(feature_state=source_mv_feature_state)
 
     # Add feature states for features 2 and 3 to target identity.
     target_identity.add_feature_override(feature_state=target_feature_state_2)
@@ -1156,7 +1194,7 @@ def test_edge_identity_clone_flag_states_from(
     response = clone_identity_feature_states_response.json()
 
     # Target identity contains only the 2 cloned overridden features states and 1 environment feature state
-    assert len(response) == 3
+    assert len(response) == 4
 
     assert response[0]["feature"]["id"] == feature_1.id
     assert response[0]["enabled"] == source_feature_state_1.enabled
@@ -1172,3 +1210,14 @@ def test_edge_identity_clone_flag_states_from(
     assert response[2]["enabled"] == feature_3.default_enabled
     assert response[2]["feature_state_value"] == feature_3.initial_value
     assert response[2]["overridden_by"] is None
+
+    assert response[3]["feature"]["id"] == mv_feature.id
+    assert response[3]["enabled"] == source_mv_feature_state.enabled
+    assert response[3]["feature_state_value"] == mv_variant_1.value
+    assert (
+        response[3]["multivariate_feature_state_values"][0][
+            "multivariate_feature_option"
+        ]["value"]
+        == mv_variant_1.value
+    )
+    assert response[3]["overridden_by"] == "IDENTITY"

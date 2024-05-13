@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from core.constants import STRING
 from django.test import Client
 from django.urls import reverse
 from rest_framework import status
@@ -12,6 +13,10 @@ from environments.permissions.constants import (
     VIEW_ENVIRONMENT,
 )
 from features.models import Feature, FeatureState, FeatureStateValue
+from features.multivariate.models import (
+    MultivariateFeatureOption,
+    MultivariateFeatureStateValue,
+)
 from projects.models import Project
 from tests.unit.environments.helpers import get_environment_user_client
 
@@ -136,6 +141,20 @@ def test_identity_clone_flag_states_from(
         project
     )
 
+    mv_feature = Feature.objects.create(
+        type="MULTIVARIATE",
+        name="mv_feature",
+        initial_value="foo",
+        project=project,
+    )
+
+    mv_variant_1 = MultivariateFeatureOption.objects.create(
+        feature=mv_feature,
+        default_percentage_allocation=0,
+        type=STRING,
+        string_value="bar",
+    )
+
     source_identity: Identity = Identity.objects.create(
         identifier="source_identity", environment=environment
     )
@@ -163,6 +182,18 @@ def test_identity_clone_flag_states_from(
     source_feature_state_2_value = "Source Identity for feature value 2"
     FeatureStateValue.objects.filter(feature_state=source_feature_state_2).update(
         string_value=source_feature_state_2_value
+    )
+
+    source_mv_feature_state: FeatureState = FeatureState.objects.create(
+        feature=mv_feature,
+        environment=environment,
+        identity=source_identity,
+        enabled=True,
+    )
+    MultivariateFeatureStateValue.objects.create(
+        feature_state=source_mv_feature_state,
+        multivariate_feature_option=mv_variant_1,
+        percentage_allocation=100,
     )
 
     target_feature_state_2: FeatureState = FeatureState.objects.create(
@@ -201,7 +232,7 @@ def test_identity_clone_flag_states_from(
     response = clone_identity_feature_states_response.json()
 
     # Target identity contains only the 2 cloned overridden features states and 1 environment feature state
-    assert len(response) == 3
+    assert len(response) == 4
 
     # Assert cloned data is correct
     assert response[0]["feature"]["id"] == feature_1.id
@@ -218,6 +249,17 @@ def test_identity_clone_flag_states_from(
     assert response[2]["enabled"] == feature_3.default_enabled
     assert response[2]["feature_state_value"] == feature_3.initial_value
     assert response[2]["overridden_by"] is None
+
+    assert response[3]["feature"]["id"] == mv_feature.id
+    assert response[3]["enabled"] == source_mv_feature_state.enabled
+    assert response[3]["feature_state_value"] == mv_variant_1.value
+    assert (
+        response[3]["multivariate_feature_state_values"][0][
+            "multivariate_feature_option"
+        ]["value"]
+        == mv_variant_1.value
+    )
+    assert response[3]["overridden_by"] == "IDENTITY"
 
     # Target identity feature 3 override has been removed
     assert not FeatureState.objects.filter(
