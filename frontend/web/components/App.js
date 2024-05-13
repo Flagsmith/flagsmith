@@ -25,7 +25,7 @@ import OrganisationLimit from './OrganisationLimit'
 import GithubStar from './GithubStar'
 import Tooltip from './Tooltip'
 import classNames from 'classnames'
-import { apps, gitBranch, gitCompare, home, statsChart } from 'ionicons/icons';
+import { apps, gitBranch, gitCompare, home, statsChart } from 'ionicons/icons'
 import NavSubLink from './NavSubLink'
 import SettingsIcon from './svg/SettingsIcon'
 import UsersIcon from './svg/UsersIcon'
@@ -35,6 +35,7 @@ import SegmentsIcon from './svg/SegmentsIcon'
 import AuditLogIcon from './svg/AuditLogIcon'
 import Permission from 'common/providers/Permission'
 import HomeAside from './pages/HomeAside'
+import withParams from 'common/withParams'
 
 const App = class extends Component {
   static propTypes = {
@@ -48,8 +49,6 @@ const App = class extends Component {
   state = {
     activeOrganisation: 0,
     asideIsVisible: !isMobile,
-    lastEnvironmentId: '',
-    lastProjectId: '',
     pin: '',
     showAnnouncement: true,
   }
@@ -59,58 +58,16 @@ const App = class extends Component {
     ES6Component(this)
   }
 
-  getProjectId = (props) => {
-    const { location } = props
-    const pathname = location.pathname
-
-    const match = matchPath(pathname, {
-      exact: false,
-      path: '/project/:projectId/environment/:environmentId',
-      strict: false,
-    })
-    const match2 = matchPath(pathname, {
-      exact: false,
-      path: '/project/:projectId',
-      strict: false,
-    })
-    const projectId =
-      _.get(match, 'params.projectId') || _.get(match2, 'params.projectId')
-    return projectId
-  }
-  getEnvironmentId = (props) => {
-    const { location } = props
-    const pathname = location.pathname
-
-    const match = matchPath(pathname, {
-      exact: false,
-      path: '/project/:projectId/environment/:environmentId',
-      strict: false,
-    })
-
-    const environmentId = _.get(match, 'params.environmentId')
-    return environmentId
-  }
-
   componentDidMount = () => {
     getBuildVersion()
-    this.state.projectId = this.getProjectId(this.props)
-    if (this.state.projectId) {
-      AppActions.getProject(this.state.projectId)
+    if (this.props.projectId) {
+      AppActions.getProject(this.props.projectId)
     }
     this.listenTo(OrganisationStore, 'change', () => this.forceUpdate())
     this.listenTo(ProjectStore, 'change', () => this.forceUpdate())
     this.listenTo(AccountStore, 'change', this.getOrganisationUsage)
     this.getOrganisationUsage()
     window.addEventListener('scroll', this.handleScroll)
-    AsyncStorage.getItem('lastEnv').then((res) => {
-      if (res) {
-        const lastEnv = JSON.parse(res)
-        this.setState({
-          lastEnvironmentId: lastEnv.environmentId,
-          lastProjectId: lastEnv.projectId,
-        })
-      }
-    })
   }
 
   getOrganisationUsage = () => {
@@ -140,25 +97,15 @@ const App = class extends Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.location.pathname !== this.props.location.pathname) {
-      const newProjectId = this.getProjectId(this.props)
-      if (this.state.projectId !== newProjectId && !!newProjectId) {
-        this.state.projectId = newProjectId
-        AppActions.getProject(this.state.projectId)
+      const newProjectId = this.props.projectId
+      if (prevProps.projectId !== newProjectId && !!newProjectId) {
+        AppActions.getProject(this.props.projectId)
       }
 
       if (isMobile) {
         this.setState({ asideIsVisible: false })
       }
       this.hideMobileNav()
-      AsyncStorage.getItem('lastEnv').then((res) => {
-        if (res) {
-          const { environmentId, projectId } = JSON.parse(res)
-          this.setState({
-            lastEnvironmentId: environmentId,
-            lastProjectId: projectId,
-          })
-        }
-      })
     }
   }
 
@@ -289,15 +236,12 @@ const App = class extends Component {
     ) {
       document.body.classList.add('dark')
     }
-    const { location } = this.props
+    const { environmentId, location, projectId } = this.props
     const pathname = location.pathname
-    const { asideIsVisible, lastEnvironmentId, lastProjectId } = this.state
-    const projectId = this.getProjectId(this.props)
-    const environmentId = this.getEnvironmentId(this.props)
+    const { asideIsVisible } = this.state
     const isCreateEnvironment = environmentId === 'create'
     const isCreateOrganisation = document.location.pathname === '/create'
-    const storageHasParams = lastEnvironmentId || lastProjectId
-    const pageHasAside = environmentId || projectId || storageHasParams
+    const pageHasAside = environmentId || projectId
     const isHomepage =
       pathname === '/' ||
       pathname === '/login' ||
@@ -563,9 +507,7 @@ const App = class extends Component {
                             icon={gitBranch}
                             className={environmentId ? 'active' : ''}
                             id={`features-link`}
-                            to={`/project/${projectId}/environment/${
-                              lastEnvironmentId || environmentId
-                            }/features`}
+                            to={`/project/${projectId}/environment/${environmentId}/features`}
                           >
                             Environments
                           </NavSubLink>
@@ -619,7 +561,7 @@ const App = class extends Component {
                           <Permission
                             level='project'
                             permission='ADMIN'
-                            id={this.props.projectId}
+                            id={projectId}
                           >
                             {({ permission }) =>
                               permission && (
@@ -684,15 +626,6 @@ const App = class extends Component {
                     </div>
                   )}
                   <hr className='my-0 py-0' />
-                  {/*{!isHomepage && (*/}
-                  {/*  <Aside*/}
-                  {/*    projectId={projectId || lastProjectId}*/}
-                  {/*    environmentId={environmentId || lastEnvironmentId}*/}
-                  {/*    toggleAside={this.toggleAside}*/}
-                  {/*    asideIsVisible={asideIsVisible}*/}
-                  {/*    disabled={!pageHasAside}*/}
-                  {/*  />*/}
-                  {/*)}*/}
                   {environmentId && !isCreateEnvironment ? (
                     <div className='d-flex'>
                       <HomeAside
@@ -720,7 +653,7 @@ App.propTypes = {
   location: RequiredObject,
 }
 
-export default withRouter(ConfigProvider(App))
+export default withParams(ConfigProvider(App))
 
 if (E2E) {
   const e2e = document.getElementsByClassName('e2e')
