@@ -16,7 +16,9 @@ const ProjectsPage: FC<ProjectsPageType> = ({ match }) => {
       {() => {
         return (
           <div className='app-container container'>
-            <ProjectManageWidget organisationId={match.params.organisationId} />
+            <ProjectManageWidget
+              organisationId={parseInt(match.params.organisationId)}
+            />
           </div>
         )
       }}
