@@ -2,6 +2,7 @@ import Constants from 'common/constants'
 import { projectService } from 'common/services/useProject'
 import { getStore } from 'common/store'
 import sortBy from 'lodash/sortBy'
+import AsyncStorage from 'common/async-storage';
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')

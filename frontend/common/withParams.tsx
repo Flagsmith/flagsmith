@@ -3,6 +3,8 @@ import get from 'lodash/get'
 import AccountStore from './stores/account-store'
 import { withRouter } from 'react-router-dom'
 import { FC } from 'react'
+import { Project } from './types/responses'
+import AsyncStorage from './async-storage'
 
 function getProjectId() {
   const location = document.location
@@ -22,7 +24,7 @@ function getProjectId() {
   return projectId ? parseInt(projectId) : null
 }
 
-function getEnvironmentId() {
+export function getEnvironmentId() {
   const location = document.location
   const pathname = location.pathname
 

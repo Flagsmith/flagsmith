@@ -31,6 +31,7 @@ import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableValueFilter from 'components/tables/TableValueFilter'
 import Format from 'common/utils/format'
 import InfoMessage from 'components/InfoMessage'
+import AsyncStorage from 'common/async-storage'
 const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =

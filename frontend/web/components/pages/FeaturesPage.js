@@ -23,6 +23,7 @@ import EnvironmentDocumentCodeHelp from 'components/EnvironmentDocumentCodeHelp'
 import TableOwnerFilter from 'components/tables/TableOwnerFilter'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableValueFilter from 'components/tables/TableValueFilter'
+import AsyncStorage from 'common/async-storage'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
