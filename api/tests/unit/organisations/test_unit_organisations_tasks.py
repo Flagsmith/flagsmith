@@ -1,11 +1,12 @@
 import uuid
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pytest
 from django.core.mail.message import EmailMultiAlternatives
 from django.utils import timezone
 from freezegun.api import FrozenDateTimeFactory
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from organisations.chargebee.metadata import ChargebeeObjMetadata
@@ -32,6 +33,7 @@ from organisations.tasks import (
     charge_for_api_call_count_overages,
     finish_subscription_cancellation,
     handle_api_usage_notifications,
+    register_recurring_tasks,
     restrict_use_due_to_api_limit_grace_period_over,
     send_org_over_limit_alert,
     send_org_subscription_cancelled_alert,
@@ -526,6 +528,97 @@ def test_charge_for_api_call_count_overages_scale_up(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_charge_for_api_call_count_overages_with_not_covered_plan(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=10_000,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+
+    # This plan name is what this test hinges on.
+    organisation.subscription.plan = "some-plan-not-covered-by-usage"
+
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
+    mock_chargebee_update = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+    )
+
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 12_005
+    assert OrganisationAPIBilling.objects.count() == 0
+
+    # When
+    charge_for_api_call_count_overages()
+
+    # Then
+    mock_chargebee_update.assert_not_called()
+    assert OrganisationAPIBilling.objects.count() == 0
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_charge_for_api_call_count_overages_sub_1_api_usage_ratio(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=10_000,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
+    mock_chargebee_update = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+    )
+
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 2_000
+    assert OrganisationAPIBilling.objects.count() == 0
+
+    # When
+    charge_for_api_call_count_overages()
+
+    # Then
+    mock_chargebee_update.assert_not_called()
+    assert OrganisationAPIBilling.objects.count() == 0
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_charge_for_api_call_count_overages_start_up(
     organisation: Organisation,
     mocker: MockerFixture,
@@ -875,3 +968,20 @@ def test_unrestrict_after_api_limit_grace_period_is_stale(
     assert organisation4.stop_serving_flags is True
     assert organisation4.block_access_to_admin is True
     assert getattr(organisation4, "api_limit_access_block", None) is None
+
+
+def test_recurring_tasks(mocker: MockerFixture, settings: SettingsWrapper) -> None:
+    # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
+    register_task_mock = mocker.patch("organisations.tasks.register_recurring_task")
+
+    # When
+    register_recurring_tasks()
+
+    # Then
+    register_task_mock.call_args_list == [
+        call(run_every=timedelta(seconds=43200)),
+        call(run_every=timedelta(seconds=1800)),
+        call(run_every=timedelta(seconds=43200)),
+        call(run_every=timedelta(seconds=43200)),
+    ]
