@@ -31,8 +31,8 @@ const FeatureListProvider = class extends React.Component {
       })
     })
 
-    this.listenTo(FeatureListStore, 'saved', (isCreate) => {
-      this.props.onSave && this.props.onSave(isCreate)
+    this.listenTo(FeatureListStore, 'saved', (data) => {
+      this.props.onSave && this.props.onSave(data)
     })
 
     this.listenTo(FeatureListStore, 'problem', () => {
@@ -174,7 +174,7 @@ const FeatureListProvider = class extends React.Component {
       }),
       () => {
         FeatureListStore.isSaving = false
-        FeatureListStore.trigger('saved')
+        FeatureListStore.trigger('saved', {})
         FeatureListStore.trigger('change')
       },
     )
@@ -189,6 +189,7 @@ const FeatureListProvider = class extends React.Component {
     segmentOverrides,
     changeRequest,
     commit,
+    mode,
   ) => {
     AppActions.editFeatureMv(
       projectId,
@@ -220,6 +221,7 @@ const FeatureListProvider = class extends React.Component {
           segmentOverrides,
           changeRequest,
           commit,
+          mode,
         )
       },
     )

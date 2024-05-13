@@ -17,7 +17,10 @@ from environments.permissions.permissions import (
     NestedEnvironmentPermissions,
 )
 from environments.sdk.schemas import SDKEnvironmentDocumentModel
-from features.versioning.tasks import enable_v2_versioning
+from features.versioning.tasks import (
+    disable_v2_versioning,
+    enable_v2_versioning,
+)
 from permissions.permissions_calculator import get_environment_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
@@ -214,6 +217,18 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
                 data={"detail": "Environment already using v2 versioning."},
             )
         enable_v2_versioning.delay(kwargs={"environment_id": environment.id})
+        return Response(status=status.HTTP_202_ACCEPTED)
+
+    @swagger_auto_schema(request_body=no_body, responses={202: ""})
+    @action(detail=True, methods=["POST"], url_path="disable-v2-versioning")
+    def disable_v2_versioning(self, request: Request, api_key: str) -> Response:
+        environment = self.get_object()
+        if environment.use_v2_feature_versioning is False:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"detail": "Environment is not using v2 versioning."},
+            )
+        disable_v2_versioning.delay(kwargs={"environment_id": environment.id})
         return Response(status=status.HTTP_202_ACCEPTED)
 
 

@@ -39,7 +39,7 @@ const Permission: FC<PermissionType> = ({
       {children({
         isLoading,
         permission: hasPermission || AccountStore.isAdmin(),
-      }) || <div />}
+      }) || null}
     </>
   )
 }

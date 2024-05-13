@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import Button from 'components/base/forms/Button'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
-import ModalHR from './ModalHR'
 import Icon from 'components/Icon'
 import { add } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
@@ -202,4 +201,4 @@ const InviteUsers = class extends Component {
 
 InviteUsers.propTypes = {}
 
-module.exports = ConfigProvider(InviteUsers)
+export default ConfigProvider(InviteUsers)

@@ -52,7 +52,6 @@ const CreateFlag = class extends Component {
       description,
       enabled,
       feature_state_value,
-      hide_from_client,
       is_archived,
       is_server_key_only,
       multivariate_options,
@@ -82,7 +81,6 @@ const CreateFlag = class extends Component {
       externalResources: [],
       githubId: '',
       hasIntegrationWithGithub: false,
-      hide_from_client,
       identityVariations:
         this.props.identityFlag &&
         this.props.identityFlag.multivariate_feature_state_values
@@ -272,7 +270,6 @@ const CreateFlag = class extends Component {
       default_enabled,
       description,
       environmentFlag,
-      hide_from_client,
       initial_value,
       is_archived,
       is_server_key_only,
@@ -313,7 +310,6 @@ const CreateFlag = class extends Component {
           {
             default_enabled,
             description,
-            hide_from_client,
             initial_value,
             is_archived,
             is_server_key_only,
@@ -512,7 +508,6 @@ const CreateFlag = class extends Component {
       featureExternalResource,
       githubId,
       hasIntegrationWithGithub,
-      hide_from_client,
       initial_value,
       isEdit,
       multivariate_options,
@@ -527,12 +522,11 @@ const CreateFlag = class extends Component {
     const Provider = identity ? IdentityProvider : FeatureListProvider
     const environmentVariations = this.props.environmentVariations
     const environment = ProjectStore.getEnvironment(this.props.environmentId)
+    const isVersioned = !!environment?.use_v2_feature_versioning
     const is4Eyes =
       !!environment &&
       Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)
     const canSchedule = Utils.getPlansPermission('SCHEDULE_FLAGS')
-    const is4EyesSegmentOverrides =
-      is4Eyes && Utils.getFlagsmithHasFeature('4eyes_segment_overrides') //
     const project = ProjectStore.model
     const caseSensitive = project?.only_allow_lower_case_feature_names
     const regex = project?.feature_name_regex
@@ -773,32 +767,6 @@ const CreateFlag = class extends Component {
             </Row>
           </FormGroup>
         )}
-
-        {!identity && Utils.getFlagsmithHasFeature('hide_flag') && (
-          <FormGroup className='mb-5 setting'>
-            <Row>
-              <Switch
-                data-test='toggle-feature-button'
-                defaultChecked={hide_from_client}
-                checked={hide_from_client}
-                onChange={(hide_from_client) =>
-                  this.setState({ hide_from_client })
-                }
-                className='ml-0'
-              />
-              <Tooltip
-                title={
-                  <label className='cols-sm-2 control-label mb-0 ml-3'>
-                    Hide from SDKs <Icon name='info-outlined' />
-                  </label>
-                }
-                place='top'
-              >
-                {Constants.strings.HIDE_FROM_SDKS_DESCRIPTION}
-              </Tooltip>
-            </Row>
-          </FormGroup>
-        )}
       </>
     )
 
@@ -836,7 +804,9 @@ const CreateFlag = class extends Component {
                   <Tooltip
                     title={
                       <Row>
-                        <span className={'mr-1'}>{isEdit ? 'ID' : 'ID*'}</span>
+                        <span className={'mr-1'}>
+                          {isEdit ? 'ID / Name' : 'ID / Name*'}
+                        </span>
                         <Icon name='info-outlined' />
                       </Row>
                     }
@@ -891,7 +861,6 @@ const CreateFlag = class extends Component {
           >
             <Feature
               readOnly={noPermissions}
-              hide_from_client={hide_from_client}
               multivariate_options={multivariate_options}
               environmentVariations={environmentVariations}
               isEdit={isEdit}
@@ -1012,6 +981,7 @@ const CreateFlag = class extends Component {
                                 title,
                               },
                               !is4Eyes,
+                              'VALUE',
                             )
                           },
                         )
@@ -1043,7 +1013,76 @@ const CreateFlag = class extends Component {
               const saveFeatureSegments = () => {
                 this.setState({ segmentsChanged: false })
 
-                this.save(editFeatureSegments, isSaving)
+                if (is4Eyes && isVersioned && !identity) {
+                  openModal2(
+                    this.props.changeRequest
+                      ? 'Update Change Request'
+                      : 'New Change Request',
+                    <ChangeRequestModal
+                      showAssignees={is4Eyes}
+                      changeRequest={this.props.changeRequest}
+                      onSave={({
+                        approvals,
+                        description,
+                        live_from,
+                        title,
+                      }) => {
+                        closeModal2()
+                        this.save(
+                          (
+                            projectId,
+                            environmentId,
+                            flag,
+                            projectFlag,
+                            environmentFlag,
+                            segmentOverrides,
+                          ) => {
+                            createChangeRequest(
+                              projectId,
+                              environmentId,
+                              flag,
+                              projectFlag,
+                              environmentFlag,
+                              segmentOverrides,
+                              {
+                                approvals,
+                                description,
+                                featureStateId:
+                                  this.props.changeRequest &&
+                                  this.props.changeRequest.feature_states[0].id,
+                                id:
+                                  this.props.changeRequest &&
+                                  this.props.changeRequest.id,
+                                live_from,
+                                multivariate_options: this.props
+                                  .multivariate_options
+                                  ? this.props.multivariate_options.map((v) => {
+                                      const matching =
+                                        this.state.multivariate_options.find(
+                                          (m) =>
+                                            m.id ===
+                                            v.multivariate_feature_option,
+                                        )
+                                      return {
+                                        ...v,
+                                        percentage_allocation:
+                                          matching.default_percentage_allocation,
+                                      }
+                                    })
+                                  : this.state.multivariate_options,
+                                title,
+                              },
+                              !is4Eyes,
+                              'SEGMENT',
+                            )
+                          },
+                        )
+                      }}
+                    />,
+                  )
+                } else {
+                  this.save(editFeatureSegments, isSaving)
+                }
               }
 
               const onCreateFeature = () => {
@@ -1390,8 +1429,7 @@ const CreateFlag = class extends Component {
                                           {!this.state.showCreateSegment && (
                                             <div>
                                               <p className='text-right mt-4 fs-small lh-sm modal-caption'>
-                                                {is4Eyes &&
-                                                is4EyesSegmentOverrides
+                                                {is4Eyes && isVersioned
                                                   ? 'This will create a change request for the environment'
                                                   : 'This will update the segment overrides for the environment'}{' '}
                                                 <strong>
@@ -1432,6 +1470,41 @@ const CreateFlag = class extends Component {
                                                         permission:
                                                           manageSegmentsOverrides,
                                                       }) => {
+                                                        if (
+                                                          isVersioned &&
+                                                          is4Eyes
+                                                        ) {
+                                                          return Utils.renderWithPermission(
+                                                            savePermission,
+                                                            Utils.getManageFeaturePermissionDescription(
+                                                              is4Eyes,
+                                                              identity,
+                                                            ),
+                                                            <Button
+                                                              onClick={
+                                                                saveFeatureSegments
+                                                              }
+                                                              type='button'
+                                                              data-test='update-feature-segments-btn'
+                                                              id='update-feature-segments-btn'
+                                                              disabled={
+                                                                isSaving ||
+                                                                !name ||
+                                                                invalid ||
+                                                                !savePermission
+                                                              }
+                                                            >
+                                                              {isSaving
+                                                                ? existingChangeRequest
+                                                                  ? 'Updating Change Request'
+                                                                  : 'Creating Change Request'
+                                                                : existingChangeRequest
+                                                                ? 'Update Change Request'
+                                                                : 'Create Change Request'}
+                                                            </Button>,
+                                                          )
+                                                        }
+
                                                         return Utils.renderWithPermission(
                                                           manageSegmentsOverrides,
                                                           Constants.environmentPermissions(
@@ -1810,20 +1883,20 @@ const CreateFlag = class extends Component {
                                 {!identity && (
                                   <div className='text-right mb-3'>
                                     {project.prevent_flag_defaults ? (
-                                      <p className='text-right modal-caption fs-small lh-sm'>
+                                      <InfoMessage className='text-right modal-caption fs-small lh-sm'>
                                         This will create the feature for{' '}
                                         <strong>all environments</strong>, you
                                         can edit this feature per environment
                                         once the feature's enabled state and
                                         environment once the feature is created.
-                                      </p>
+                                      </InfoMessage>
                                     ) : (
-                                      <p className='text-right modal-caption fs-small lh-sm'>
+                                      <InfoMessage className='text-right modal-caption fs-small lh-sm'>
                                         This will create the feature for{' '}
                                         <strong>all environments</strong>, you
                                         can edit this feature per environment
                                         once the feature is created.
-                                      </p>
+                                      </InfoMessage>
                                     )}
 
                                     <Button
@@ -1921,27 +1994,39 @@ const FeatureProvider = (WrappedComponent) => {
 
     componentDidMount() {
       ES6Component(this)
-      this.listenTo(FeatureListStore, 'saved', (createdFlag) => {
-        if (createdFlag) {
-          const projectFlag = FeatureListStore.getProjectFlags()?.find?.(
-            (flag) => flag.name === createdFlag,
+      this.listenTo(
+        FeatureListStore,
+        'saved',
+        ({ changeRequest, createdFlag, isCreate } = {}) => {
+          toast(
+            `${createdFlag || isCreate ? 'Created' : 'Updated'} ${
+              changeRequest ? 'Change Request' : 'Feature'
+            }`,
           )
-          window.history.replaceState(
-            {},
-            `${document.location.pathname}?feature=${projectFlag.id}`,
-          )
-          const envFlags = FeatureListStore.getEnvironmentFlags()
-          const newEnvironmentFlag = envFlags?.[projectFlag.id] || {}
-          setModalTitle(`Edit Feature ${projectFlag.name}`)
-          this.setState({
-            environmentFlag: {
-              ...this.state.environmentFlag,
-              ...(newEnvironmentFlag || {}),
-            },
-            projectFlag,
-          })
-        }
-      })
+          if (createdFlag) {
+            const projectFlag = FeatureListStore.getProjectFlags()?.find?.(
+              (flag) => flag.name === createdFlag,
+            )
+            window.history.replaceState(
+              {},
+              `${document.location.pathname}?feature=${projectFlag.id}`,
+            )
+            const envFlags = FeatureListStore.getEnvironmentFlags()
+            const newEnvironmentFlag = envFlags?.[projectFlag.id] || {}
+            setModalTitle(`Edit Feature ${projectFlag.name}`)
+            this.setState({
+              environmentFlag: {
+                ...this.state.environmentFlag,
+                ...(newEnvironmentFlag || {}),
+              },
+              projectFlag,
+            })
+          }
+          if (changeRequest) {
+            closeModal()
+          }
+        },
+      )
     }
 
     render() {

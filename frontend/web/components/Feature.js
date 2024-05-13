@@ -35,7 +35,6 @@ export default class Feature extends PureComponent {
       environmentFlag,
       environmentVariations,
       error,
-      hide_from_client,
       identity,
       isEdit,
       multivariate_options,
@@ -47,7 +46,6 @@ export default class Feature extends PureComponent {
     } = this.props
 
     const enabledString = isEdit ? 'Enabled' : 'Enabled by default'
-    const disabled = hide_from_client
     const controlPercentage = Utils.calculateControl(multivariate_options)
     const valueString = identity
       ? 'User override'
@@ -69,8 +67,8 @@ export default class Feature extends PureComponent {
                 <Switch
                   data-test='toggle-feature-button'
                   defaultChecked={checked}
-                  disabled={disabled || readOnly}
-                  checked={!disabled && checked}
+                  disabled={readOnly}
+                  checked={checked}
                   onChange={onCheckedChange}
                   className='ml-0'
                 />
@@ -98,7 +96,7 @@ export default class Feature extends PureComponent {
                     typeof value === 'undefined' || value === null ? '' : value
                   }`}
                   onChange={onValueChange}
-                  disabled={hide_from_client || readOnly}
+                  disabled={readOnly}
                   placeholder="e.g. 'big' "
                 />
               }

@@ -29,7 +29,6 @@ const OrganisationSelect = class extends Component {
                   value: AccountStore.getOrganisation().id,
                 }}
                 onChange={({ value }) => {
-                  API.setCookie('organisation', `${value}`)
                   this.props.onChange && this.props.onChange(value)
                 }}
                 options={
