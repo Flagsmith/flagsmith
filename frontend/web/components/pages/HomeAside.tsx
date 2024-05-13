@@ -12,15 +12,13 @@ import EnvironmentDropdown from 'components/EnvironmentDropdown'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Icon from 'components/Icon'
-// @ts-ignore
-import { AsyncStorage } from 'polyfill-react-native'
+import AsyncStorage from 'common/async-storage'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
 import { RouterChildContext } from 'react-router'
 import Constants from 'common/constants'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import { components } from 'react-select'
-import Button from 'components/base/forms/Button'
 import SettingsIcon from 'components/svg/SettingsIcon'
 
 type HomeAsideType = {

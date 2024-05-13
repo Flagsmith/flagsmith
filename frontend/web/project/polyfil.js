@@ -1,17 +1,7 @@
 import Promise from 'promise-polyfill'
 import 'whatwg-fetch'
-import {
-  AppState,
-  AsyncStorage,
-  Clipboard,
-  NetInfo,
-} from 'polyfill-react-native'
 import Switch from 'components/Switch'
 
-window.AppState = AppState
-window.NetInfo = NetInfo
-window.Clipboard = Clipboard
-window.AsyncStorage = AsyncStorage
 window.Switch = Switch
 
 // To add to window

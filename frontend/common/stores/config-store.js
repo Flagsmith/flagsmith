@@ -43,7 +43,6 @@ const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
 
 flagsmith
   .init({
-    AsyncStorage,
     api: Project.flagsmithClientAPI,
     cacheFlags: true,
     enableAnalytics: Project.flagsmithAnalytics,

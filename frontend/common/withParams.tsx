@@ -22,7 +22,7 @@ function getProjectId() {
   return projectId ? parseInt(projectId) : null
 }
 
-function getEnvironmentId() {
+export function getEnvironmentId() {
   const location = document.location
   const pathname = location.pathname
 

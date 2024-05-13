@@ -20,7 +20,6 @@ module.exports = {
     'Actions': true,
     'Any': true,
     'AppActions': true,
-    'AsyncStorage': true,
     'Button': true,
     'ButtonLink': true,
     'ButtonOutline': true,

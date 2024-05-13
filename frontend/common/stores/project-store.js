@@ -6,6 +6,7 @@ import Utils from 'common/utils/utils'
 import { getStore } from 'common/store'
 import { projectService } from 'common/services/useProject'
 import { environmentService } from 'common/services/useEnvironment'
+import AsyncStorage from 'common/async-storage'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')

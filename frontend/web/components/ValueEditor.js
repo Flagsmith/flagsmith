@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import cx from 'classnames'
 import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import { Clipboard } from 'polyfill-react-native'
 import Icon from './Icon'
 
 const toml = require('toml')
@@ -197,11 +196,7 @@ class ValueEditor extends Component {
           </span>
           <span
             onMouseDown={() => {
-              const res = Clipboard.setString(this.props.value)
-              toast(
-                res ? 'Clipboard set' : 'Could not set clipboard :(',
-                res ? '' : 'danger',
-              )
+              Utils.setClipboard(this.props.value)
             }}
             className={cx('txt primary')}
           >

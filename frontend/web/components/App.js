@@ -1,6 +1,5 @@
 import React, { Component, Fragment } from 'react'
-import { matchPath } from 'react-router'
-import { Link, withRouter } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import amplitude from 'amplitude-js'
 import NavLink from 'react-router-dom/NavLink'
 import TwoFactorPrompt from './SimpleTwoFactor/prompt'
@@ -25,7 +24,7 @@ import OrganisationLimit from './OrganisationLimit'
 import GithubStar from './GithubStar'
 import Tooltip from './Tooltip'
 import classNames from 'classnames'
-import { apps, gitBranch, gitCompare, home, statsChart } from 'ionicons/icons'
+import { apps, gitBranch, gitCompare, statsChart } from 'ionicons/icons'
 import NavSubLink from './NavSubLink'
 import SettingsIcon from './svg/SettingsIcon'
 import UsersIcon from './svg/UsersIcon'
@@ -36,6 +35,7 @@ import AuditLogIcon from './svg/AuditLogIcon'
 import Permission from 'common/providers/Permission'
 import HomeAside from './pages/HomeAside'
 import withParams from 'common/withParams'
+import AsyncStorage from 'common/async-storage'
 
 const App = class extends Component {
   static propTypes = {
@@ -160,43 +160,39 @@ const App = class extends Component {
         API.setRedirect('')
         this.context.router.history.replace(redirect)
       } else {
-        AsyncStorage.getItem('lastEnv').then((res) => {
-          if (
-            this.props.location.search.includes('github-redirect') &&
-            Utils.getFlagsmithHasFeature('github_integration')
-          ) {
-            this.context.router.history.replace(
-              `/github-setup${this.props.location.search}`,
-            )
-            return
-          }
-          if (res) {
-            const lastEnv = JSON.parse(res)
-            const lastOrg = _.find(AccountStore.getUser().organisations, {
+        if (
+          this.props.location.search.includes('github-redirect') &&
+          Utils.getFlagsmithHasFeature('github_integration')
+        ) {
+          this.context.router.history.replace(
+            `/github-setup${this.props.location.search}`,
+          )
+          return
+        }
+        const lastEnvString = AsyncStorage.getItemSync('lastEnv')
+        if (lastEnvString) {
+          const lastEnv = JSON.parse(lastEnvString)
+          const lastOrg = _.find(AccountStore.getUser().organisations, {
               id: lastEnv.organisationId,
-            })
-            if (!lastOrg) {
-              this.context.router.history.replace('/select-organistion')
-              return
-            }
-
-            const org = AccountStore.getOrganisation()
-            if (
-              !org ||
-              (org.id !== lastOrg.id && this.getEnvironmentId(this.props))
-            ) {
-              AppActions.selectOrganisation(lastOrg.id)
-              AppActions.getOrganisation(lastOrg.id)
-            }
-
-            this.context.router.history.replace(
-              `/project/${lastEnv.projectId}/environment/${lastEnv.environmentId}/features`,
-            )
+          })
+          if (!lastOrg) {
+            this.context.router.history.replace('/select-organistion')
             return
           }
 
-          this.context.router.history.replace(Utils.getOrganisationHomePage())
-        })
+          const org = AccountStore.getOrganisation()
+          if (!org || org.id !== lastOrg.id) {
+            AppActions.selectOrganisation(lastOrg.id)
+            AppActions.getOrganisation(lastOrg.id)
+          }
+
+          this.context.router.history.replace(
+            `/project/${lastEnv.projectId}/environment/${lastEnv.environmentId}/features`,
+          )
+          return
+        }
+
+        this.context.router.history.replace(Utils.getOrganisationHomePage())
       }
     }
 
@@ -227,6 +223,15 @@ const App = class extends Component {
   closeAnnouncement = (announcementId) => {
     this.setState({ showAnnouncement: false })
     flagsmith.setTrait(`dismissed_announcement`, announcementId)
+  }
+
+  getLastEnvironmentId(project) {
+    const lastEnvString =
+      this.props.environmentId || AsyncStorage.getItemSync('lastEnv')
+    if (project?.environments?.find((v) => v.api_key === lastEnvString)) {
+      return lastEnvString
+    }
+    return project?.environments?.[0]?.api_key || null
   }
 
   render() {
@@ -261,6 +266,7 @@ const App = class extends Component {
       return <Maintenance />
     }
     const activeProject = OrganisationStore.getProject(projectId)
+    const firstEnvironment = this.getLastEnvironmentId(activeProject)
     const projectNotLoaded =
       !activeProject && document.location.href.includes('project/')
 
@@ -507,7 +513,11 @@ const App = class extends Component {
                             icon={gitBranch}
                             className={environmentId ? 'active' : ''}
                             id={`features-link`}
-                            to={`/project/${projectId}/environment/${environmentId}/features`}
+                            to={
+                              firstEnvironment
+                                ? `/project/${projectId}/environment/${firstEnvironment}/features`
+                                : `/project/${projectId}/environment/create`
+                            }
                           >
                             Environments
                           </NavSubLink>

@@ -14,8 +14,8 @@ import InfoMessage from 'components/InfoMessage'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import AccountProvider from 'common/providers/AccountProvider'
 import PanelSearch from 'components/PanelSearch'
-// @ts-ignore
-import { AsyncStorage } from 'polyfill-react-native'
+import AsyncStorage from 'common/async-storage'
+
 import {
   Environment,
   FeatureListProviderActions,
