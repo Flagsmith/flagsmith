@@ -1,11 +1,11 @@
-import { matchPath } from 'react-router'
+import Constants from 'common/constants'
+import dataRelay from 'data-relay'
+import { sortBy } from 'lodash'
+import { getOrganisationIdFromPath } from 'common/withParams'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
-import Constants from 'common/constants'
-import dataRelay from 'data-relay'
-import { sortBy } from 'lodash'
 
 const controller = {
   acceptInvite: (id) => {
@@ -303,16 +303,11 @@ const controller = {
       if (user && user.organisations) {
         store.organisation = user.organisations[0]
         const cookiedID = parseInt(API.getCookie('organisation'))
-        const pathID = parseInt(
-          matchPath(document.location.pathname, {
-            path: '/organisation/:organisationId',
-            strict: false,
-          })?.params?.organisationId,
-        )
+        const pathID = getOrganisationIdFromPath()
         const organisationId = pathID || cookiedID
         if (organisationId) {
           const foundOrganisation = user.organisations.find(
-            (v) => `${v.id}` === organisationId,
+            (v) => v.id === parseInt(`${organisationId}`),
           )
           if (foundOrganisation) {
             store.organisation = foundOrganisation

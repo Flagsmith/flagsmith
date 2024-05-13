@@ -35,7 +35,7 @@ function getEnvironmentId() {
   const environmentId = get(match, 'params.environmentId')
   return environmentId || null
 }
-function getOrganisationId() {
+export function getOrganisationIdFromPath() {
   const location = document.location
   const pathname = location.pathname
 
@@ -44,7 +44,7 @@ function getOrganisationId() {
     path: '/organisation/:organisationId',
     strict: false,
   })
-  const storeId = AccountStore.getOrganisationId()
+  const storeId = AccountStore.getOrganisationIdFromPath()
   const organisationId = get(match, 'params.organisationId')
   return organisationId ? parseInt(organisationId) : storeId
 }
@@ -55,7 +55,7 @@ export type WithParamsProps = {
 }
 export default function withParams(WrappedComponent: any) {
   const HOC: FC<WithParamsProps> = (props) => {
-    const organisationId = getOrganisationId()
+    const organisationId = getOrganisationIdFromPath()
     const projectId = getProjectId()
 
     const environmentId = getEnvironmentId()
