@@ -307,7 +307,7 @@ const controller = {
           path: '/organisation/:organisationId',
           strict: false,
         })?.params?.organisationId
-        const orgId = pathID || cookiedID
+        const orgId = parseInt(pathID || cookiedID) || undefined
         if (orgId) {
           const foundOrganisation = user.organisations.find(
             (v) => `${v.id}` === orgId,
