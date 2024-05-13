@@ -4,6 +4,7 @@ from unittest import mock
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from chargebee import APIError
+from chargebee.api_error import APIError as ChargebeeAPIError
 from pytest_mock import MockerFixture
 from pytz import UTC
 
@@ -28,6 +29,8 @@ from organisations.chargebee.constants import (
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.subscriptions.exceptions import (
     CannotCancelChargebeeSubscription,
+    UpgradeAPIUsageError,
+    UpgradeAPIUsagePaymentFailure,
     UpgradeSeatsError,
 )
 
@@ -617,3 +620,57 @@ def test_add_1000_api_calls_when_count_is_empty(mocker: MockerFixture) -> None:
     # Then
     assert result is None
     subscription_mock.assert_not_called()
+
+
+def test_add_1000_api_calls_when_chargebee_api_error_has_error_code(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    chargebee_mock = mocker.patch("organisations.chargebee.chargebee.chargebee")
+    chargebee_response_data = {
+        "message": "Subscription cannot be created as the payment collection failed. Gateway Error: Card declined.",
+        "type": "payment",
+        "api_error_code": "payment_processing_failed",
+        "param": "item_id",
+        "error_code": "DeprecatedField",
+    }
+
+    chargebee_mock.Subscription.update.side_effect = ChargebeeAPIError(
+        http_code=400, json_obj=chargebee_response_data
+    )
+
+    # When / Then
+    with pytest.raises(UpgradeAPIUsagePaymentFailure):
+        add_1000_api_calls(
+            addon_id=ADDITIONAL_API_SCALE_UP_ADDON_ID,
+            subscription_id="subscription23",
+            count=1,
+            invoice_immediately=True,
+        )
+
+
+def test_add_1000_api_calls_when_chargebee_api_error_has_no_error_code(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    chargebee_mock = mocker.patch("organisations.chargebee.chargebee.chargebee")
+    chargebee_response_data = {
+        "message": "Some massive data failure",
+        "api_error_code": "halt_and_catch_fire",
+        "type": "failure",
+        "param": "item_id",
+        "error_code": "DeprecatedField",
+    }
+
+    chargebee_mock.Subscription.update.side_effect = ChargebeeAPIError(
+        http_code=400, json_obj=chargebee_response_data
+    )
+
+    # When / Then
+    with pytest.raises(UpgradeAPIUsageError):
+        add_1000_api_calls(
+            addon_id=ADDITIONAL_API_SCALE_UP_ADDON_ID,
+            subscription_id="subscription23",
+            count=1,
+            invoice_immediately=True,
+        )
