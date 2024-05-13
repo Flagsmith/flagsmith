@@ -474,9 +474,7 @@ const FeaturesPage = class extends Component {
                                             title={'Groups'}
                                             className={'me-4'}
                                             projectId={projectId}
-                                            organisationId={
-                                              AccountStore.getOrganisationId()
-                                            }
+                                            organisationId={AccountStore.getOrganisationId()}
                                             useLocalStorage
                                             value={this.state.group_owners}
                                             onChange={(group_owners) => {

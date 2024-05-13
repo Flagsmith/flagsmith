@@ -22,9 +22,9 @@ const PaymentButton = (props) => {
           Chargebee.getInstance().openCheckout({
             hostedPage() {
               return _data.post(
-                `${Project.api}organisations/${
-                  AccountStore.getOrganisationId()
-                }/get-hosted-page-url-for-subscription-upgrade/`,
+                `${
+                  Project.api
+                }organisations/${AccountStore.getOrganisationId()}/get-hosted-page-url-for-subscription-upgrade/`,
                 {
                   plan_id: props['data-cb-plan-id'],
                 },

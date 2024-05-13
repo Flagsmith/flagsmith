@@ -31,11 +31,11 @@ const ChangeRequestModal = class extends Component {
   }
 
   componentDidMount() {
-    getMyGroups(getStore(), { organisationId: AccountStore.getOrganisationId() }).then(
-      (res) => {
-        this.setState({ groups: res?.data?.results || [] })
-      },
-    )
+    getMyGroups(getStore(), {
+      organisationId: AccountStore.getOrganisationId(),
+    }).then((res) => {
+      this.setState({ groups: res?.data?.results || [] })
+    })
   }
 
   addOwner = (id, isUser = true) => {

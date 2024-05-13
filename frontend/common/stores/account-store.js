@@ -423,22 +423,11 @@ const store = Object.assign({}, BaseStore, {
     }
     return null
   },
-  getOrganisationRole(id) {
-    return (
-      store.model &&
-      store.model.organisations &&
-      _.get(
-        _.find(store.model.organisations, (org) =>
-          id
-            ? org.id === id
-            : org.id === (store.organisation && store.organisation.id),
-        ),
-        'role',
-      )
-    )
+  getOrganisationRole(id = store.getOrganisationId()) {
+    return store.getOrganisations()?.find((org) => org.id === id)?.role
   },
   getOrganisations() {
-    return store.model && store.model.organisations
+    return store.model?.organisations
   },
   getPaymentMethod() {
     return store.organisation?.subscription?.payment_method
@@ -446,9 +435,7 @@ const store = Object.assign({}, BaseStore, {
   getPlans() {
     if (!store.model) return []
     return _.filter(
-      store.model.organisations.map(
-        (org) => org.subscription && org.subscription.plan,
-      ),
+      store.model.organisations.map((org) => org.subscription?.plan),
       (plan) => !!plan,
     )
   },
