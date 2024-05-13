@@ -208,16 +208,30 @@ export type Req = {
   getEnvironment: { id: string }
   getSubscriptionMetadata: { id: string }
   getRoleMasterApiKey: { organisationId: number; role_id: number; id: string }
-  updateRoleMasterApiKey: { organisationId: number; role_id: number; id: string }
-  deleteRoleMasterApiKey: { organisationId: number; role_id: number; id: string }
+  updateRoleMasterApiKey: {
+    organisationId: number
+    role_id: number
+    id: string
+  }
+  deleteRoleMasterApiKey: {
+    organisationId: number
+    role_id: number
+    id: string
+  }
   createRoleMasterApiKey: { organisationId: number; role_id: number }
-  getMasterAPIKeyWithMasterAPIKeyRoles: { organisationId: number; prefix: string }
+  getMasterAPIKeyWithMasterAPIKeyRoles: {
+    organisationId: number
+    prefix: string
+  }
   deleteMasterAPIKeyWithMasterAPIKeyRoles: {
     organisationId: number
     prefix: string
     role_id: number
   }
-  getRolesMasterAPIKeyWithMasterAPIKeyRoles: { organisationId: number; prefix: string }
+  getRolesMasterAPIKeyWithMasterAPIKeyRoles: {
+    organisationId: number
+    prefix: string
+  }
   createLaunchDarklyProjectImport: {
     project_id: string
     body: {
@@ -246,9 +260,17 @@ export type Req = {
   getLaunchDarklyProjectImport: { project_id: string; import_id: string }
   getLaunchDarklyProjectsImport: { project_id: string }
   getUserWithRoles: { organisationId: number; user_id: number }
-  deleteUserWithRole: { organisationId: number; user_id: number; role_id: number }
+  deleteUserWithRole: {
+    organisationId: number
+    user_id: number
+    role_id: number
+  }
   getGroupWithRole: { organisationId: number; group_id: number }
-  deleteGroupWithRole: { organisationId: number; group_id: number; role_id: number }
+  deleteGroupWithRole: {
+    organisationId: number
+    group_id: number
+    role_id: number
+  }
   createAndSetFeatureVersion: {
     environmentId: number
     featureId: number
