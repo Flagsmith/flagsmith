@@ -96,7 +96,12 @@ const controller = {
     })
   },
   getProject: (id, cb, force) => {
-    if (force) {
+    if (!id) {
+      if (!getIsWidget()) {
+        !force && AsyncStorage.removeItem('lastEnv')
+        document.location.href = '/404'
+      }
+    } else if (force) {
       store.loading()
 
       return Promise.all([
