@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import requests
 from core.helpers import get_current_site_url
 from django.conf import settings
+from django.utils.formats import get_format
 
 from features.models import FeatureState, FeatureStateValue
 from integrations.github.client import generate_token
@@ -15,7 +16,6 @@ from integrations.github.constants import (
     FEATURE_TABLE_HEADER,
     FEATURE_TABLE_ROW,
     GITHUB_API_URL,
-    LAST_UPDATED_FEATURE_TEXT,
     LINK_FEATURE_TITLE,
     LINK_SEGMENT_TITLE,
     UNLINKED_FEATURE_TEXT,
@@ -86,8 +86,8 @@ def generate_body_comment(
     if is_removed:
         return delete_text
 
-    last_updated_string = LAST_UPDATED_FEATURE_TEXT % (
-        datetime.datetime.now().strftime("%dth %b %Y %I:%M%p")
+    last_updated_string = datetime.datetime.now().strftime(
+        get_format("DATETIME_INPUT_FORMATS")[0]
     )
 
     result = UPDATED_FEATURE_TEXT % (name) if is_update else LINK_FEATURE_TITLE % (name)
@@ -97,7 +97,6 @@ def generate_body_comment(
 
     for v in feature_states:
         feature_value = v.get("feature_state_value")
-        feature_value_type = v.get("feature_state_value_type")
         tab = "segment-overrides" if v.get("segment_name") is not None else "value"
         environment_link_url = FEATURE_ENVIRONMENT_URL % (
             get_current_site_url(),
@@ -113,9 +112,8 @@ def generate_body_comment(
         table_row = FEATURE_TABLE_ROW % (
             v["environment_name"],
             environment_link_url,
-            "✅ Enabled" if v["feature_value"] else "❌ Disabled",
-            feature_value if feature_value else "",
-            feature_value_type,
+            "✅ Enabled" if v["enabled"] else "❌ Disabled",
+            f"`{feature_value}`" if feature_value else "",
             last_updated_string,
         )
         result += table_row
@@ -152,7 +150,7 @@ def generate_data(
                 feature_env_data["feature_state_value_type"] = feature_state_value_type
             if type is not WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
                 feature_env_data["environment_name"] = feature_state.environment.name
-                feature_env_data["feature_value"] = feature_state.enabled
+                feature_env_data["enabled"] = feature_state.enabled
                 feature_env_data["environment_api_key"] = (
                     feature_state.environment.api_key
                 )

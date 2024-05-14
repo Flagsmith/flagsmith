@@ -59,11 +59,11 @@ def test_create_feature_external_resource(
     expected_comment_body = (
         "**Flagsmith feature linked:** `feature_with_value`\n"
         + "Default Values:\n"
-        + "| Environment | Enabled | Value | Type | Updated (UTC) |\n"
-        + "| :--- | :----- | :------ | :------- | :------ |\n"
+        + "| Environment | Enabled | Value | Last Updated (UTC) |\n"
+        + "| :--- | :----- | :------ | :------ |\n"
         + f"| [Test Environment](https://example.com/project/{project.id}/"
         + f"environment/{environment.api_key}/features?feature={feature_with_value.id}&tab=value) "
-        + "| ❌ Disabled | `value` | unicode | Last Updated 01th Jan 2024 12:00AM |\n"
+        + "| ❌ Disabled | `value` | 2024-01-01 00:00:00 |\n"
     )
 
     feature_external_resource_data = {
