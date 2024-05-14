@@ -35,7 +35,7 @@ import PermissionsTabs from 'components/PermissionsTabs'
 import sortBy from 'lodash/sortBy'
 import UserAction from 'components/UserAction'
 import Icon from 'components/Icon'
-import RolesTable from 'components/RolesTable';
+import RolesTable from 'components/RolesTable'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -161,7 +161,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
     (overSeats && (!verifySeatsLimit || !autoSeats)) ||
     (!autoSeats && usedSeats)
   return (
-    <div className="app-container container">
+    <div className='app-container container'>
       <JSONReference
         showNamesButton
         className='mt-4'
@@ -724,25 +724,23 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                         />
                       </div>
                     </TabItem>
-                    {Utils.getFlagsmithHasFeature('show_role_management') && (
-                      <TabItem tabLabel='Roles'>
-                        {hasRbacPermission ? (
-                          <>
-                            <RolesTable
-                              organisationId={organisation.id}
-                              users={users}
-                            />
-                          </>
-                        ) : (
-                          <div className='mt-4'>
-                            <InfoMessage>
-                              To use <strong>role</strong> features you have to
-                              upgrade your plan.
-                            </InfoMessage>
-                          </div>
-                        )}
-                      </TabItem>
-                    )}
+                    <TabItem tabLabel='Roles'>
+                      {hasRbacPermission ? (
+                        <>
+                          <RolesTable
+                            organisationId={organisation.id}
+                            users={users}
+                          />
+                        </>
+                      ) : (
+                        <div className='mt-4'>
+                          <InfoMessage>
+                            To use <strong>role</strong> features you have to
+                            upgrade your plan.
+                          </InfoMessage>
+                        </div>
+                      )}
+                    </TabItem>
                   </Tabs>
                 </div>
               )}

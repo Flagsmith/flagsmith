@@ -16,7 +16,7 @@ const Blocked = class extends React.Component {
 
   render = () => (
     <div className='fullscreen-container maintenance fullscreen-container__grey justify-content-center dark'>
-      {!Utils.getFlagsmithHasFeature('payments_on_blocked_page') ? (
+      {!Utils.isSaas() ? (
         <div className='col-md-6 mt-5' id='sign-up'>
           <h1>Please get in touch</h1>
           Your organisation has been disabled. Please get in touch so we can

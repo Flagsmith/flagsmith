@@ -299,36 +299,33 @@ const OrganisationSettingsPage = class extends Component {
                                   </form>
                                 </div>
                                 <hr className='mt-0 mb-4' />
-                                {Utils.getFlagsmithHasFeature('force_2fa') && (
-                                  <div className='col-md-6'>
-                                    <Row className='mt-4 mb-2'>
-                                      {!force2faPermission ? (
-                                        <Tooltip
-                                          title={
-                                            <Switch
-                                              checked={organisation.force_2fa}
-                                              onChange={this.save2FA}
-                                            />
-                                          }
-                                        >
-                                          To access this feature please upgrade
-                                          your account to scaleup or higher."
-                                        </Tooltip>
-                                      ) : (
-                                        <Switch
-                                          checked={organisation.force_2fa}
-                                          onChange={this.save2FA}
-                                        />
-                                      )}
-                                      <h5 className='mb-0 ml-3'>Enforce 2FA</h5>
-                                    </Row>
-                                    <p className='fs-small lh-sm'>
-                                      Enabling this setting forces users within
-                                      the organisation to setup 2 factor
-                                      security.
-                                    </p>
-                                  </div>
-                                )}
+                                <div className='col-md-6'>
+                                  <Row className='mt-4 mb-2'>
+                                    {!force2faPermission ? (
+                                      <Tooltip
+                                        title={
+                                          <Switch
+                                            checked={organisation.force_2fa}
+                                            onChange={this.save2FA}
+                                          />
+                                        }
+                                      >
+                                        To access this feature please upgrade
+                                        your account to scaleup or higher."
+                                      </Tooltip>
+                                    ) : (
+                                      <Switch
+                                        checked={organisation.force_2fa}
+                                        onChange={this.save2FA}
+                                      />
+                                    )}
+                                    <h5 className='mb-0 ml-3'>Enforce 2FA</h5>
+                                  </Row>
+                                  <p className='fs-small lh-sm'>
+                                    Enabling this setting forces users within
+                                    the organisation to setup 2 factor security.
+                                  </p>
+                                </div>
                                 {Utils.getFlagsmithHasFeature(
                                   'restrict_project_create_to_admin',
                                 ) && (

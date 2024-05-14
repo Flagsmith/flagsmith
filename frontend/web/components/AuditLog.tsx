@@ -120,19 +120,16 @@ const AuditLog: FC<AuditLogType> = (props) => {
         <Flex className='table-column fs-small ln-sm'>{log}</Flex>
       </Row>
     )
-    return Utils.getFlagsmithHasFeature('audit_log_detail') ? (
+    return (
       <Link
         className='fw-normal d-flex align-items-center flex-row list-item list-item-sm link-unstyled clickable'
         to={`/project/${props.projectId}/environment/${props.match.params.environmentId}/audit-log/${id}`}
       >
         {inner}
       </Link>
-    ) : (
-      <Row className='list-item list-item-sm' key={created_date}>
-        {inner}
-      </Row>
     )
   }
+
   const { env: envFilter } = Utils.fromParam()
 
   const hasRbacPermission = Utils.getPlansPermission('AUDIT')
