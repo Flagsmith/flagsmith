@@ -109,7 +109,7 @@ export const groupService = service
           const { data, error } = await baseQuery({
             body: query.data,
             method: 'PUT',
-            url: `organisations/${query.orgId}/groups/${query.data.id}`,
+            url: `organisations/${query.orgId}/groups/${query.data.id}/`,
           })
           if (error) {
             return { error }
