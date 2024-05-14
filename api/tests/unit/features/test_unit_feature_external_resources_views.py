@@ -1,10 +1,8 @@
-import datetime
-
 import pytest
 import simplejson as json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.urls import reverse
-from freezegun import freeze_time
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -37,24 +35,28 @@ def mocked_requests_post(*args, **kwargs):
     return MockResponse(json_data={"data": "data"}, status_code=200)
 
 
-@freeze_time("2024-01-01")
 def test_create_feature_external_resource(
     admin_client_new: APIClient,
     feature_with_value: Feature,
     project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
-    mocker,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     mock_generate_token = mocker.patch(
         "integrations.github.github.generate_token",
     )
+
     mock_generate_token.return_value = "mocked_token"
     github_request_mock = mocker.patch(
         "requests.post", side_effect=mocked_requests_post
     )
-    datetime_now = datetime.datetime.now()
+
+    mocker.patch(
+        "integrations.github.tasks.generate_body_comment",
+        return_value="Flag linked",
+    )
 
     feature_external_resource_data = {
         "type": "GITHUB_ISSUE",
@@ -76,9 +78,7 @@ def test_create_feature_external_resource(
     # Then
     github_request_mock.assert_called_with(
         "https://api.github.com/repos/repoowner/repo-name/issues/35/comments",
-        json={
-            "body": f"### This pull request is linked to a Flagsmith Feature (`feature_with_value`):\n**Test Environment**\n- [ ] Disabled\nunicode\n```value```\n\nLast Updated {datetime_now.strftime('%dth %b %Y %I:%M%p')}"  # noqa E501
-        },
+        json={"body": "Flag linked"},
         headers={
             "Accept": "application/vnd.github.v3+json",
             "Authorization": "Bearer mocked_token",
@@ -320,9 +320,10 @@ def test_create_github_comment_on_feature_state_updated(  # noqa: C901
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     feature_external_resource: FeatureExternalResource,
     feature: Feature,
+    project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
-    mocker,
+    mocker: MockerFixture,
     environment: Environment,
     event_type: str,
 ) -> None:
@@ -412,4 +413,5 @@ def test_create_github_comment_on_feature_state_updated(  # noqa: C901
             feature_name=feature.name,
             type=WebhookEventType.FLAG_UPDATED.value,
             feature_states=[feature_state],
+            project_id=project.id,
         )
