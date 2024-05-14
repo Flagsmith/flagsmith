@@ -130,6 +130,7 @@ def test_migrate_environments_to_v2__capacity_budget_exceeded__returns_expected(
         environment_api_key=environment.api_key,
         capacity_budget=expected_capacity_budget,
         projection_expression="environment_api_key, identifier, identity_features, identity_uuid",
+        overrides_only=True,
     )
 
     assert result.status == EdgeV2MigrationStatus.INCOMPLETE

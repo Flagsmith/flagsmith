@@ -4,7 +4,7 @@ from contextlib import suppress
 from decimal import Decimal
 from typing import Iterable
 
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Attr, Key
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from flag_engine.environments.models import EnvironmentModel
@@ -20,6 +20,7 @@ from .base import BaseDynamoWrapper
 from .environment_wrapper import DynamoEnvironmentWrapper
 
 if typing.TYPE_CHECKING:
+    from boto3.dynamodb.conditions import ConditionBase
     from mypy_boto3_dynamodb.type_defs import (
         QueryInputRequestTypeDef,
         QueryOutputTableTypeDef,
@@ -91,17 +92,20 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         environment_api_key: str,
         limit: int,
         start_key: dict[str, "TableAttributeValueTypeDef"] | None = None,
+        filter_expression: "ConditionBase | str | None" = None,
         projection_expression: str | None = None,
         return_consumed_capacity: bool = False,
     ) -> "QueryOutputTableTypeDef":
-        filter_expression = Key("environment_api_key").eq(environment_api_key)
+        key_condition_expression = Key("environment_api_key").eq(environment_api_key)
         query_kwargs: "QueryInputRequestTypeDef" = {
             "IndexName": "environment_api_key-identifier-index",
-            "KeyConditionExpression": filter_expression,
+            "KeyConditionExpression": key_condition_expression,
             "Limit": limit,
         }
         if start_key:
             query_kwargs["ExclusiveStartKey"] = start_key
+        if filter_expression:
+            query_kwargs["FilterExpression"] = filter_expression
         if projection_expression:
             query_kwargs["ProjectionExpression"] = projection_expression
         if return_consumed_capacity:
@@ -115,6 +119,7 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         limit: int = IDENTITIES_PAGINATION_LIMIT,
         projection_expression: str | None = None,
         capacity_budget: Decimal = Decimal("Inf"),
+        overrides_only: bool = False,
     ) -> typing.Generator[dict, None, None]:
         last_evaluated_key = "initial"
         get_all_items_kwargs = {
@@ -123,6 +128,8 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
             "projection_expression": projection_expression,
             "return_consumed_capacity": capacity_budget != Decimal("Inf"),
         }
+        if overrides_only:
+            get_all_items_kwargs["filter_expression"] = Attr("identity_features").ne([])
         capacity_spent = 0
         while last_evaluated_key:
             if capacity_spent >= capacity_budget:
