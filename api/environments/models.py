@@ -386,7 +386,6 @@ class Environment(
                         "identity",
                         "identity__environment",
                     ).prefetch_related(
-                        "identity__identity_traits",
                         Prefetch(
                             "identity__identity_features",
                             queryset=FeatureState.objects.select_related(

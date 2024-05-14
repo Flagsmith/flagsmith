@@ -42,7 +42,7 @@ def map_environment_to_sdk_document(environment: "Environment") -> SDKDocument:
 
     # Prepare relationships.
     engine_environment.identity_overrides = [
-        map_identity_to_engine(identity)
+        map_identity_to_engine(identity, with_traits=False)
         for identity in identities_with_overrides.values()
     ]
 
