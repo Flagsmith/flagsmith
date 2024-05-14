@@ -1,17 +1,17 @@
 import uuid
-from unittest import TestCase, mock
-
-import pytest
+from unittest import mock
 
 from environments.identities.models import Identity
 from environments.models import Environment
-from environments.permissions.models import UserEnvironmentPermission
-from organisations.models import Organisation
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
 from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
 from segments.permissions import SegmentPermissions
+from tests.types import (
+    WithEnvironmentPermissionsCallable,
+    WithProjectPermissionsCallable,
+)
 from users.models import FFAdminUser
 
 mock_request = mock.MagicMock()
@@ -20,121 +20,153 @@ mock_view = mock.MagicMock()
 segment_permissions = SegmentPermissions()
 
 
-@pytest.mark.django_db
-class SegmentPermissionsTestCase(TestCase):
-    def setUp(self) -> None:
-        organisation = Organisation.objects.create(name="Test org")
-        self.project = Project.objects.create(
-            name="Test project", organisation=organisation
+def test_staff_user_has_permission(staff_user: FFAdminUser, project: Project) -> None:
+    # Given
+    mock_request = mock.MagicMock()
+    mock_request.user = staff_user
+    mock_request.query_params = {}
+    mock_view = mock.MagicMock()
+    mock_view.kwargs = {"project_pk": project.id}
+    segment_permissions = SegmentPermissions()
+
+    # When
+    results = []
+    for action in ("list", "create"):
+        mock_view.action = action
+        results.append(segment_permissions.has_permission(mock_request, mock_view))
+
+    # Then
+    assert all(results)
+
+
+def test_project_admin_has_object_permission(
+    staff_user: FFAdminUser,
+    project: Project,
+    with_project_permissions: WithProjectPermissionsCallable,
+    segment: Segment,
+) -> None:
+    # Given
+    with_project_permissions(admin=True)
+    mock_request = mock.MagicMock()
+    mock_request.user = staff_user
+    mock_request.query_params = {}
+    mock_view = mock.MagicMock()
+    mock_view.kwargs = {"project_pk": project.id}
+    segment_permissions = SegmentPermissions()
+
+    # When
+    results = []
+    for action in ("update", "destroy", "retrieve"):
+        mock_view.action = action
+        results.append(
+            segment_permissions.has_object_permission(mock_request, mock_view, segment)
         )
-        self.segment = Segment.objects.create(name="Test segment", project=self.project)
 
-        self.project_admin = FFAdminUser.objects.create(email="project_admin@test.com")
-        mock_view.kwargs = {"project_pk": self.project.id}
+    # Then
+    assert all(results)
 
-        mock_request.query_params = {}
 
-        self.project_user = FFAdminUser.objects.create(email="user@test.com")
+def test_project_user_has_list_permission(
+    project: Project,
+    staff_user: FFAdminUser,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    mock_request = mock.MagicMock()
+    mock_request.user = staff_user
+    mock_request.query_params = {}
+    mock_view = mock.MagicMock()
+    mock_view.kwargs = {"project_pk": project.id}
+    mock_view.detail = False
+    with_project_permissions([VIEW_PROJECT])
+    segment_permissions = SegmentPermissions()
 
-        user_project_permissions = UserProjectPermission.objects.create(
-            project=self.project, user=self.project_user
-        )
-        user_project_permissions.add_permission(VIEW_PROJECT)
+    # When
+    mock_view.action = "list"
+    result = segment_permissions.has_permission(mock_request, mock_view)
 
-    def test_project_admin_has_permission(self):
-        # Given
-        mock_request.user = self.project_admin
+    # Then
+    assert result is True
 
-        # When
-        results = []
-        for action in ("list", "create"):
-            mock_view.action = action
-            results.append(segment_permissions.has_permission(mock_request, mock_view))
 
-        # then
-        assert all(results)
+def test_project_user_has_no_create_permission(
+    project: Project,
+    staff_user: FFAdminUser,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    mock_request = mock.MagicMock()
+    mock_request.user = staff_user
+    mock_request.query_params = {}
+    mock_view = mock.MagicMock()
+    mock_view.kwargs = {"project_pk": project.id}
+    mock_view.detail = False
+    with_project_permissions([VIEW_PROJECT])
+    segment_permissions = SegmentPermissions()
 
-    def test_project_admin_has_object_permission(self):
-        # Given
-        UserProjectPermission.objects.create(
-            user=self.project_admin, project=self.project, admin=True
-        )
-        mock_request.user = self.project_admin
+    # When
+    mock_view.action = "create"
+    result = segment_permissions.has_permission(mock_request, mock_view)
 
-        # When
-        results = []
-        for action in ("update", "destroy", "retrieve"):
-            mock_view.action = action
-            results.append(
-                segment_permissions.has_object_permission(
-                    mock_request, mock_view, self.segment
-                )
-            )
+    # Then
+    assert result is False
 
-        # then
-        assert all(results)
 
-    def test_project_user_has_list_permission(self):
-        # Given
-        mock_request.user = self.project_user
-        mock_view.detail = False
+def test_project_user_has_object_permission(
+    project: Project,
+    staff_user: FFAdminUser,
+    with_project_permissions: WithProjectPermissionsCallable,
+    segment: Segment,
+) -> None:
+    # Given
+    mock_request = mock.MagicMock()
+    mock_request.user = staff_user
+    mock_request.query_params = {}
+    mock_view = mock.MagicMock()
+    mock_view.kwargs = {"project_pk": project.id}
+    with_project_permissions([VIEW_PROJECT])
+    segment_permissions = SegmentPermissions()
 
-        # When
-        mock_view.action = "list"
-        result = segment_permissions.has_permission(mock_request, mock_view)
+    # When
+    for action, expected_result in (
+        ("retrieve", True),
+        ("destroy", False),
+        ("update", False),
+        ("partial_update", False),
+    ):
+        mock_view.action = action
 
         # Then
-        assert result
-
-    def test_project_user_has_no_create_permission(self):
-        # Given
-        mock_request.user = self.project_user
-        mock_view.detail = False
-
-        # When
-        mock_view.action = "create"
-        result = segment_permissions.has_permission(mock_request, mock_view)
-
-        # Then
-        assert not result
-
-    def test_project_user_has_object_permission(self):
-        # Given
-        mock_request.user = self.project_user
-
-        # When
-        for action, expected_result in (
-            ("retrieve", True),
-            ("destroy", False),
-            ("update", False),
-            ("partial_update", False),
-        ):
-            mock_view.action = action
-            # Then
-            assert (
-                segment_permissions.has_object_permission(
-                    mock_request, mock_view, self.segment
-                )
-                == expected_result
-            )
-
-    def test_environment_admin_can_get_segments_for_an_identity(self):
-        # Given
-        environment = Environment.objects.create(
-            name="Test environment", project=self.project
+        assert (
+            segment_permissions.has_object_permission(mock_request, mock_view, segment)
+            == expected_result
         )
-        identity = Identity.objects.create(identifier="test", environment=environment)
-        user = FFAdminUser.objects.create(email="environment_admin@test.com")
-        UserEnvironmentPermission.objects.create(
-            user=user, admin=True, environment=environment
-        )
-        mock_request.query_params["identity"] = identity.id
 
-        # When
-        result = segment_permissions.has_permission(mock_request, mock_view)
 
-        # Then
-        assert result
+def test_environment_admin_can_get_segments_for_an_identity(
+    project: Project,
+    staff_user: FFAdminUser,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    segment: Segment,
+    environment: Environment,
+    identity: Identity,
+) -> None:
+    # Given
+    mock_request = mock.MagicMock()
+    mock_request.user = staff_user
+    mock_request.query_params = {}
+    mock_view = mock.MagicMock()
+    mock_view.kwargs = {"project_pk": project.id}
+    with_environment_permissions(admin=True)
+    identity = Identity.objects.create(identifier="test", environment=environment)
+    mock_request.query_params["identity"] = identity.id
+    segment_permissions = SegmentPermissions()
+
+    # When
+    result = segment_permissions.has_permission(mock_request, mock_view)
+
+    # Then
+    assert result
 
 
 def test_user_with_view_project_permission_can_list_segments_for_an_identity(
