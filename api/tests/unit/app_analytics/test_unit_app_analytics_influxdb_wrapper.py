@@ -14,6 +14,7 @@ from app_analytics.influxdb_wrapper import (
     get_feature_evaluation_data,
     get_multiple_event_list_for_feature,
     get_multiple_event_list_for_organisation,
+    get_top_organisations,
     get_usage_data,
 )
 from django.conf import settings
@@ -374,3 +375,67 @@ def test_get_event_list_for_organisation_with_date_stop_set_to_now_and_previousl
     # Then
     assert dataset == {"resource23": [23], "resource24": [24]}
     assert labels == ["2023-01-18", "2023-01-17"]
+
+
+@pytest.mark.parametrize("limit", ["10", ""])
+def test_get_top_organisations(
+    limit: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch("app_analytics.influxdb_wrapper.range_bucket_mappings")
+
+    record_mock1 = mock.MagicMock()
+    record_mock1.values = {"organisation": "123-TestOrg"}
+    record_mock1.get_value.return_value = 23
+
+    record_mock2 = mock.MagicMock()
+    record_mock2.values = {"organisation": "456-TestCorp"}
+    record_mock2.get_value.return_value = 43
+
+    result = mock.MagicMock()
+    result.records = [record_mock1, record_mock2]
+
+    influx_mock = mocker.patch(
+        "app_analytics.influxdb_wrapper.InfluxDBWrapper.influx_query_manager"
+    )
+
+    influx_mock.return_value = [result]
+
+    # When
+    dataset = get_top_organisations(date_start="-30d", limit=limit)
+
+    # Then
+    assert dataset == {123: 23, 456: 43}
+
+
+def test_get_top_organisations_value_error(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch("app_analytics.influxdb_wrapper.range_bucket_mappings")
+
+    record_mock1 = mock.MagicMock()
+    record_mock1.values = {"organisation": "BadData-TestOrg"}
+    record_mock1.get_value.return_value = 23
+
+    record_mock2 = mock.MagicMock()
+    record_mock2.values = {"organisation": "456-TestCorp"}
+    record_mock2.get_value.return_value = 43
+
+    result = mock.MagicMock()
+    result.records = [record_mock1, record_mock2]
+
+    influx_mock = mocker.patch(
+        "app_analytics.influxdb_wrapper.InfluxDBWrapper.influx_query_manager"
+    )
+
+    influx_mock.return_value = [result]
+
+    # When
+    dataset = get_top_organisations(date_start="-30d")
+
+    # Then
+    # The wrongly typed data does not stop the remaining data
+    # from being returned.
+    assert dataset == {456: 43}
