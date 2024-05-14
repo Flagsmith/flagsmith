@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.114.1](https://github.com/Flagsmith/flagsmith/compare/v2.114.0...v2.114.1) (2024-05-14)
+
+
+### Bug Fixes
+
+* Add multivariate values when cloning identities ([#3894](https://github.com/Flagsmith/flagsmith/issues/3894)) ([92e3e9f](https://github.com/Flagsmith/flagsmith/commit/92e3e9f55c25855cd0d1b7b7333184ab54385846))
+* Organisation id not numeric in organisation settings ([#3929](https://github.com/Flagsmith/flagsmith/issues/3929)) ([9e3746b](https://github.com/Flagsmith/flagsmith/commit/9e3746bd7dce9a8d2eac6bf616a73f2dd1f5b54e))
+* **versioning:** fix exception getting feature states for edge identity post v2 versioning migration ([#3916](https://github.com/Flagsmith/flagsmith/issues/3916)) ([132ef77](https://github.com/Flagsmith/flagsmith/commit/132ef77ee0d50c618c23431e3ea1b60aec3e5bf4))
+* **versioning:** handle mapping of environment to engine post v2 versioning migration ([#3913](https://github.com/Flagsmith/flagsmith/issues/3913)) ([75acd12](https://github.com/Flagsmith/flagsmith/commit/75acd12c632a9fe8b4a5af5a48a33d18a406e9d4))
+
 ## [2.114.0](https://github.com/Flagsmith/flagsmith/compare/v2.113.0...v2.114.0) (2024-05-10)
 
 
