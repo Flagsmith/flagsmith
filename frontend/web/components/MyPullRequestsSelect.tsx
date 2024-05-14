@@ -30,7 +30,7 @@ const MyGithubPullRequests: FC<MyGithubPullRequestSelectType> = ({
     if (data) {
       setExtenalResourcesSelect(
         data.filter((pr: PullRequest) => {
-          const same = linkedExternalResources.some(
+          const same = linkedExternalResources?.some(
             (r) => pr.html_url === r.url,
           )
           return !same

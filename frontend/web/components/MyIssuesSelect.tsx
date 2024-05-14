@@ -30,7 +30,9 @@ const MyIssuesSelect: FC<MyIssuesSelectType> = ({
     if (data) {
       setExtenalResourcesSelect(
         data.filter((i: Issue) => {
-          const same = linkedExternalResources.some((r) => i.html_url === r.url)
+          const same = linkedExternalResources?.some(
+            (r) => i.html_url === r.url,
+          )
           return !same
         }),
       )
