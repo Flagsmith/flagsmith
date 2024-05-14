@@ -35,6 +35,7 @@ import SegmentsIcon from './svg/SegmentsIcon'
 import AuditLogIcon from './svg/AuditLogIcon'
 import Permission from 'common/providers/Permission'
 import HomeAside from './pages/HomeAside'
+import ScrollToTop from './ScrollToTop';
 
 const App = class extends Component {
   static propTypes = {
@@ -710,6 +711,7 @@ const App = class extends Component {
             )
           }}
         </AccountProvider>
+        <ScrollToTop/>
       </Provider>
     )
   }
