@@ -35,15 +35,13 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
     )
   }
   return (
-    <div className='col-md-8'>
-      <DiffFeature
-        featureId={feature}
-        disableSegments={!isVersioned}
-        projectId={projectId}
-        newState={changeRequest.feature_states}
-        oldState={data?.results || []}
-      />
-    </div>
+    <DiffFeature
+      featureId={feature}
+      disableSegments={!isVersioned}
+      projectId={projectId}
+      newState={changeRequest.feature_states}
+      oldState={data?.results || []}
+    />
   )
 }
 
