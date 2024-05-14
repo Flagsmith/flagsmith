@@ -337,7 +337,7 @@ def with_environment_permissions(
     """
 
     def _with_environment_permissions(
-        permission_keys: list[str],
+        permission_keys: list[str] | None = None,
         environment_id: int | None = None,
         admin: bool = False,
     ) -> UserEnvironmentPermission:
@@ -345,7 +345,8 @@ def with_environment_permissions(
         uep, __ = UserEnvironmentPermission.objects.get_or_create(
             environment_id=environment_id, user=staff_user, defaults={"admin": admin}
         )
-        uep.permissions.add(*permission_keys)
+        if permission_keys:
+            uep.permissions.add(*permission_keys)
 
         return uep
 
@@ -385,7 +386,7 @@ def with_project_permissions(
     """
 
     def _with_project_permissions(
-        permission_keys: list[str] = None,
+        permission_keys: list[str] | None = None,
         project_id: typing.Optional[int] = None,
         admin: bool = False,
     ) -> UserProjectPermission:
