@@ -255,7 +255,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   }
   const [hoveredSection, setHoveredSection] = useState(focus)
   const { permission: canCreateProject } = useHasPermission({
-    id: hoveredOrganisation,
+    id: hoveredOrganisation?.id,
     level: 'organisation',
     permission: Utils.getCreateProjectPermission(hoveredOrganisation),
   })
