@@ -2,6 +2,7 @@ import pytest
 import simplejson as json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.urls import reverse
+from freezegun import freeze_time
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -35,9 +36,11 @@ def mocked_requests_post(*args, **kwargs):
     return MockResponse(json_data={"data": "data"}, status_code=200)
 
 
+@freeze_time("2024-01-01")
 def test_create_feature_external_resource(
     admin_client_new: APIClient,
     feature_with_value: Feature,
+    environment: Environment,
     project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
@@ -53,9 +56,14 @@ def test_create_feature_external_resource(
         "requests.post", side_effect=mocked_requests_post
     )
 
-    mocker.patch(
-        "integrations.github.tasks.generate_body_comment",
-        return_value="Flag linked",
+    expected_comment_body = (
+        "**Flagsmith feature linked:** `feature_with_value`\n"
+        + "Default Values:\n"
+        + "| Environment | Enabled | Value | Type | Updated (UTC) |\n"
+        + "| :--- | :----- | :------ | :------- | :------ |\n"
+        + f"| [Test Environment](https://example.com/project/{project.id}/"
+        + f"environment/{environment.api_key}/features?feature={feature_with_value.id}&tab=value) "
+        + "| ❌ Disabled | `value` | unicode | Last Updated 01th Jan 2024 12:00AM |\n"
     )
 
     feature_external_resource_data = {
@@ -78,7 +86,7 @@ def test_create_feature_external_resource(
     # Then
     github_request_mock.assert_called_with(
         "https://api.github.com/repos/repoowner/repo-name/issues/35/comments",
-        json={"body": "Flag linked"},
+        json={"body": f"{expected_comment_body}"},
         headers={
             "Accept": "application/vnd.github.v3+json",
             "Authorization": "Bearer mocked_token",
