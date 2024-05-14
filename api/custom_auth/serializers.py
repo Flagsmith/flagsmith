@@ -40,7 +40,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
                     UniqueValidator(
                         queryset=FFAdminUser.objects.all(),
                         lookup="iexact",
-                        message="Invalid email address.",
+                        message="Email already exists. Please log in.",
                     )
                 ]
             }
