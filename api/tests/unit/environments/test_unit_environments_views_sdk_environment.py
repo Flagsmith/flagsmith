@@ -1,4 +1,4 @@
-import typing
+from typing import TYPE_CHECKING
 
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.urls import reverse
@@ -19,7 +19,7 @@ from features.models import (
 from features.multivariate.models import MultivariateFeatureOption
 from segments.models import Condition, Segment, SegmentRule
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from pytest_django import DjangoAssertNumQueries
 
     from organisations.models import Organisation
