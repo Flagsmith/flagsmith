@@ -116,16 +116,16 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return null
     }
 
-    if (typeof featureState.integer_value === 'number') {
-      return Utils.getTypedValue(featureState.integer_value)
+    switch (featureState.type) {
+      case 'bool':
+        return featureState.boolean_value
+      case 'float':
+        return featureState.float_value
+      case 'int':
+        return featureState.integer_value
+      default:
+        return featureState.string_value
     }
-    if (typeof featureState.float_value === 'number') {
-      return Utils.getTypedValue(featureState.float_value)
-    }
-
-    return Utils.getTypedValue(
-      featureState.string_value || featureState.boolean_value,
-    )
   },
   findOperator(
     operator: SegmentCondition['operator'],
