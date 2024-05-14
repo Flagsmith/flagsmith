@@ -2,7 +2,6 @@ import pytest
 import simplejson as json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.urls import reverse
-from freezegun import freeze_time
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -36,10 +35,10 @@ def mocked_requests_post(*args, **kwargs):
     return MockResponse(json_data={"data": "data"}, status_code=200)
 
 
-@freeze_time("2024-01-01")
 def test_create_feature_external_resource(
     admin_client_new: APIClient,
     feature_with_value: Feature,
+    segment_featurestate_and_feature_with_value: FeatureState,
     environment: Environment,
     project: Project,
     github_configuration: GithubConfiguration,
@@ -56,14 +55,23 @@ def test_create_feature_external_resource(
         "requests.post", side_effect=mocked_requests_post
     )
 
+    feature_state = FeatureState.objects.filter(feature=feature_with_value).first()
+
     expected_comment_body = (
         "**Flagsmith feature linked:** `feature_with_value`\n"
-        + "Default Values:\n"
-        + "| Environment | Enabled | Value | Last Updated (UTC) |\n"
-        + "| :--- | :----- | :------ | :------ |\n"
-        + f"| [Test Environment](https://example.com/project/{project.id}/"
-        + f"environment/{environment.api_key}/features?feature={feature_with_value.id}&tab=value) "
-        + "| ❌ Disabled | `value` | 2024-01-01 00:00:00 |\n"
+        "Default Values:\n"
+        "| Environment | Enabled | Value | Last Updated (UTC) |\n"
+        "| :--- | :----- | :------ | :------ |\n"
+        f"| [Test Environment](https://example.com/project/{project.id}/"
+        f"environment/{environment.api_key}/features?feature={feature_with_value.id}&tab=value) "
+        f"| ❌ Disabled | `value` | {feature_state.updated_at} |\n"
+        "\n"
+        "Segment `segment` values:\n"
+        "| Environment | Enabled | Value | Last Updated (UTC) |\n"
+        "| :--- | :----- | :------ | :------ |\n"
+        f"| [Test Environment](https://example.com/project/{project.id}/"
+        f"environment/{environment.api_key}/features?feature={feature_with_value.id}&tab=segment-overrides) "
+        f"| ❌ Disabled | `value` | {segment_featurestate_and_feature_with_value.updated_at} |\n"
     )
 
     feature_external_resource_data = {

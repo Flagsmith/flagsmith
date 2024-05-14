@@ -1,4 +1,3 @@
-import datetime
 import logging
 import typing
 from dataclasses import dataclass
@@ -6,7 +5,6 @@ from dataclasses import dataclass
 import requests
 from core.helpers import get_current_site_url
 from django.conf import settings
-from django.utils.formats import get_format
 
 from features.models import FeatureState, FeatureStateValue
 from integrations.github.client import generate_token
@@ -86,10 +84,6 @@ def generate_body_comment(
     if is_removed:
         return delete_text
 
-    last_updated_string = datetime.datetime.now().strftime(
-        get_format("DATETIME_INPUT_FORMATS")[0]
-    )
-
     result = UPDATED_FEATURE_TEXT % (name) if is_update else LINK_FEATURE_TITLE % (name)
     last_segment_name = ""
     if len(feature_states) > 0 and not feature_states[0].get("segment_name"):
@@ -114,7 +108,7 @@ def generate_body_comment(
             environment_link_url,
             "✅ Enabled" if v["enabled"] else "❌ Disabled",
             f"`{feature_value}`" if feature_value else "",
-            last_updated_string,
+            v["last_updated"],
         )
         result += table_row
 
@@ -151,6 +145,7 @@ def generate_data(
             if type is not WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
                 feature_env_data["environment_name"] = feature_state.environment.name
                 feature_env_data["enabled"] = feature_state.enabled
+                feature_env_data["last_updated"] = feature_state.updated_at
                 feature_env_data["environment_api_key"] = (
                     feature_state.environment.api_key
                 )
