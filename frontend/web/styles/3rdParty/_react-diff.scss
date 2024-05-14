@@ -22,6 +22,9 @@
   justify-content: center;
   display: flex;
   align-items: center;
+  >* {
+    margin: 0;
+  }
   &.react-diff-marker--added {
     background-color: $success-alfa-16 !important;
 
