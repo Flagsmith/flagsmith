@@ -1,5 +1,3 @@
-from core.helpers import get_current_site_url
-
 GITHUB_API_URL = "https://api.github.com/"
 GITHUB_API_VERSION = "2022-11-28"
 
@@ -13,6 +11,4 @@ UNLINKED_FEATURE_TEXT = "### The feature flag `%s` was unlinked from the issue/P
 UPDATED_FEATURE_TEXT = "Flagsmith Feature `%s` has been updated:\n"
 LAST_UPDATED_FEATURE_TEXT = "Last Updated %s"
 DELETED_FEATURE_TEXT = "### The Feature Flag `%s` was deleted"
-FEATURE_ENVIRONMENT_URL = (
-    get_current_site_url() + "/project/%s/environment/%s/features?feature=%s&tab=%s"
-)
+FEATURE_ENVIRONMENT_URL = "%s/project/%s/environment/%s/features?feature=%s&tab=%s"

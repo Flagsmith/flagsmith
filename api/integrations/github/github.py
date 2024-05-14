@@ -4,6 +4,7 @@ import typing
 from dataclasses import dataclass
 
 import requests
+from core.helpers import get_current_site_url
 from django.conf import settings
 
 from features.models import FeatureState, FeatureStateValue
@@ -99,6 +100,7 @@ def generate_body_comment(
         feature_value_type = v.get("feature_state_value_type")
         tab = "segment-overrides" if v.get("segment_name") is not None else "value"
         environment_link_url = FEATURE_ENVIRONMENT_URL % (
+            get_current_site_url(),
             project_id,
             v.get("environment_api_key"),
             feature_id,
