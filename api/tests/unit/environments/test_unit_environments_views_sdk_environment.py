@@ -1,19 +1,36 @@
+from typing import TYPE_CHECKING
+
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.urls import reverse
 from flag_engine.segments.constants import EQUAL
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
 from features.feature_types import MULTIVARIATE
-from features.models import Feature, FeatureSegment, FeatureState
+from features.models import (
+    STRING,
+    Feature,
+    FeatureSegment,
+    FeatureState,
+    FeatureStateValue,
+)
 from features.multivariate.models import MultivariateFeatureOption
 from segments.models import Condition, Segment, SegmentRule
 
+if TYPE_CHECKING:
+    from pytest_django import DjangoAssertNumQueries
+
+    from organisations.models import Organisation
+    from projects.models import Project
+
 
 def test_get_environment_document(
-    organisation_one, organisation_one_project_one, django_assert_num_queries
-):
+    organisation_one: "Organisation",
+    organisation_one_project_one: "Project",
+    django_assert_num_queries: "DjangoAssertNumQueries",
+) -> None:
     # Given
     project = organisation_one_project_one
 
@@ -57,6 +74,21 @@ def test_get_environment_document(
             enabled=True,
         )
 
+        # Add identity overrides
+        identity = Identity.objects.create(
+            environment=environment,
+            identifier=f"identity_{i}",
+        )
+        identity_feature_state = FeatureState.objects.create(
+            identity=identity,
+            feature=feature,
+            environment=environment,
+        )
+        FeatureStateValue.objects.filter(feature_state=identity_feature_state).update(
+            string_value="overridden",
+            type=STRING,
+        )
+
     for i in range(10):
         mv_feature = Feature.objects.create(
             name=f"mv_feature_{i}", project=project, type=MULTIVARIATE
@@ -76,7 +108,7 @@ def test_get_environment_document(
     url = reverse("api-v1:environment-document")
 
     # When
-    with django_assert_num_queries(13):
+    with django_assert_num_queries(15):
         response = client.get(url)
 
     # Then
@@ -88,8 +120,9 @@ def test_get_environment_document(
 
 
 def test_get_environment_document_fails_with_invalid_key(
-    organisation_one, organisation_one_project_one
-):
+    organisation_one: "Organisation",
+    organisation_one_project_one: "Project",
+) -> None:
     # Given
     project = organisation_one_project_one
 

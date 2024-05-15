@@ -1,5 +1,6 @@
 from typing import Type, TypedDict
 
+from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
 from integrations.amplitude.amplitude import AmplitudeWrapper
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 from integrations.heap.heap import HeapWrapper
@@ -16,12 +17,23 @@ class IntegrationConfig(TypedDict):
 
 IDENTITY_INTEGRATIONS: list[IntegrationConfig] = [
     {"relation_name": "amplitude_config", "wrapper": AmplitudeWrapper},
-    {"relation_name": "segment_config", "wrapper": SegmentWrapper},
     {"relation_name": "heap_config", "wrapper": HeapWrapper},
     {"relation_name": "mixpanel_config", "wrapper": MixpanelWrapper},
-    {"relation_name": "webhook_config", "wrapper": WebhookWrapper},
     {"relation_name": "rudderstack_config", "wrapper": RudderstackWrapper},
+    {"relation_name": "segment_config", "wrapper": SegmentWrapper},
+    {"relation_name": "webhook_config", "wrapper": WebhookWrapper},
 ]
+
+assert set(IDENTITY_INTEGRATIONS_RELATION_NAMES) == (
+    _configured_integrations := {
+        integration_config["relation_name"]
+        for integration_config in IDENTITY_INTEGRATIONS
+    }
+), (
+    "Check that `environments.constants.IDENTITY_INTEGRATIONS_RELATION_NAMES` and "
+    "`integration.integration.IDENTITY_INTEGRATIONS` contain the same values. \n"
+    f"Unconfigured integrations: {set(IDENTITY_INTEGRATIONS_RELATION_NAMES) - _configured_integrations}"
+)
 
 
 def identify_integrations(identity, all_feature_states, trait_models=None):
