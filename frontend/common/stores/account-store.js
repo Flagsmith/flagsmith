@@ -372,6 +372,7 @@ const controller = {
           store.model.organisations[idx] = res
           try {
             if (res && res.subscription && res.subscription.plan) {
+              API.trackEvent(Constants.events.UPGRADE(res.subscription.plan))
               API.postEvent(res.subscription.plan, 'chargebee')
             }
           } catch (e) {}
