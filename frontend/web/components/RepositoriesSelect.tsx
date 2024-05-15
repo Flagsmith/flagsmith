@@ -21,8 +21,8 @@ const RepositoriesSelect: FC<RepositoriesSelectType> = ({
         onChange={(v: any) => onChange(v?.value)}
         options={repositories?.map((i: GithubRepository) => {
           return {
-            label: `${i.repository_owner} - ${i.repository_name}`,
-            value: `${i.repository_owner}/${i.repository_name}`,
+            label: `${i.repository_name} - ${i.repository_owner}`,
+            value: `${i.repository_name}/${i.repository_owner}`,
           }
         })}
       />
