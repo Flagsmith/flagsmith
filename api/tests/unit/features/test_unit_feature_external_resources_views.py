@@ -22,12 +22,12 @@ _django_json_encoder_default = DjangoJSONEncoder().default
 
 
 def expected_default_body(
-    project_id,
-    environment_api_key,
-    feature_id,
-    feature_state_updated_at,
-    feature_state_enabled="❌ Disabled",
-    feature_state_value="`value`",
+    project_id: str,
+    environment_api_key: str,
+    feature_id: str,
+    feature_state_updated_at: str,
+    feature_state_enabled: str = "❌ Disabled",
+    feature_state_value: str = "`value`",
 ) -> str:
     return (
         "| Environment | Enabled | Value | Last Updated (UTC) |\n"
@@ -39,12 +39,12 @@ def expected_default_body(
 
 
 def expected_segment_comment_body(
-    project_id,
-    environment_api_key,
-    feature_id,
-    segment_override_updated_at,
-    segment_override_enabled,
-    segment_override_value,
+    project_id: str,
+    environment_api_key: str,
+    feature_id: str,
+    segment_override_updated_at: str,
+    segment_override_enabled: str,
+    segment_override_value: str,
 ) -> str:
     return (
         "Segment `segment` values:\n"
