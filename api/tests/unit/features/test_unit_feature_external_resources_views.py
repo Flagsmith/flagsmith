@@ -1,7 +1,7 @@
-import pytest
 import simplejson as json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.urls import reverse
+from django.utils.formats import get_format
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -10,14 +10,50 @@ from environments.models import Environment
 from environments.permissions.constants import UPDATE_FEATURE_STATE
 from features.feature_external_resources.models import FeatureExternalResource
 from features.models import Feature, FeatureState
-from features.serializers import FeatureStateSerializerBasic
-from integrations.github.github import GithubData
+from features.serializers import (
+    FeatureStateSerializerBasic,
+    WritableNestedFeatureStateSerializer,
+)
 from integrations.github.models import GithubConfiguration, GithubRepository
 from projects.models import Project
 from tests.types import WithEnvironmentPermissionsCallable
-from webhooks.webhooks import WebhookEventType
 
 _django_json_encoder_default = DjangoJSONEncoder().default
+
+
+def expected_default_body(
+    project_id: str,
+    environment_api_key: str,
+    feature_id: str,
+    feature_state_updated_at: str,
+    feature_state_enabled: str = "❌ Disabled",
+    feature_state_value: str = "`value`",
+) -> str:
+    return (
+        "| Environment | Enabled | Value | Last Updated (UTC) |\n"
+        "| :--- | :----- | :------ | :------ |\n"
+        f"| [Test Environment](https://example.com/project/{project_id}/"
+        f"environment/{environment_api_key}/features?feature={feature_id}&tab=value) "
+        f"| {feature_state_enabled} | {feature_state_value} | {feature_state_updated_at} |\n"
+    )
+
+
+def expected_segment_comment_body(
+    project_id: str,
+    environment_api_key: str,
+    feature_id: str,
+    segment_override_updated_at: str,
+    segment_override_enabled: str,
+    segment_override_value: str,
+) -> str:
+    return (
+        "Segment `segment` values:\n"
+        "| Environment | Enabled | Value | Last Updated (UTC) |\n"
+        "| :--- | :----- | :------ | :------ |\n"
+        f"| [Test Environment](https://example.com/project/{project_id}/"
+        f"environment/{environment_api_key}/features?feature={feature_id}&tab=segment-overrides) "
+        f"| {segment_override_enabled} | {segment_override_value} | {segment_override_updated_at} |\n"
+    )
 
 
 def mocked_requests_post(*args, **kwargs):
@@ -56,22 +92,33 @@ def test_create_feature_external_resource(
     )
 
     feature_state = FeatureState.objects.filter(feature=feature_with_value).first()
+    feature_state_updated_at = feature_state.updated_at.strftime(
+        get_format("DATETIME_INPUT_FORMATS")[0]
+    )
+    segment_override_updated_at = (
+        segment_featurestate_and_feature_with_value.updated_at.strftime(
+            get_format("DATETIME_INPUT_FORMATS")[0]
+        )
+    )
 
     expected_comment_body = (
         "**Flagsmith feature linked:** `feature_with_value`\n"
-        "Default Values:\n"
-        "| Environment | Enabled | Value | Last Updated (UTC) |\n"
-        "| :--- | :----- | :------ | :------ |\n"
-        f"| [Test Environment](https://example.com/project/{project.id}/"
-        f"environment/{environment.api_key}/features?feature={feature_with_value.id}&tab=value) "
-        f"| ❌ Disabled | `value` | {feature_state.updated_at} |\n"
-        "\n"
-        "Segment `segment` values:\n"
-        "| Environment | Enabled | Value | Last Updated (UTC) |\n"
-        "| :--- | :----- | :------ | :------ |\n"
-        f"| [Test Environment](https://example.com/project/{project.id}/"
-        f"environment/{environment.api_key}/features?feature={feature_with_value.id}&tab=segment-overrides) "
-        f"| ❌ Disabled | `value` | {segment_featurestate_and_feature_with_value.updated_at} |\n"
+        + "Default Values:\n"
+        + expected_default_body(
+            project.id,
+            environment.api_key,
+            feature_with_value.id,
+            feature_state_updated_at,
+        )
+        + "\n"
+        + expected_segment_comment_body(
+            project.id,
+            environment.api_key,
+            feature_with_value.id,
+            segment_override_updated_at,
+            "❌ Disabled",
+            "`value`",
+        )
     )
 
     feature_external_resource_data = {
@@ -324,14 +371,7 @@ def test_get_feature_external_resource(
     assert response.data["url"] == feature_external_resource.url
 
 
-@pytest.mark.parametrize(
-    "event_type",
-    [
-        ("update"),
-        ("delete"),
-    ],
-)
-def test_create_github_comment_on_feature_state_updated(  # noqa: C901
+def test_create_github_comment_on_feature_state_updated(
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     feature_external_resource: FeatureExternalResource,
@@ -341,7 +381,6 @@ def test_create_github_comment_on_feature_state_updated(  # noqa: C901
     github_repository: GithubRepository,
     mocker: MockerFixture,
     environment: Environment,
-    event_type: str,
 ) -> None:
     # Given
     with_environment_permissions([UPDATE_FEATURE_STATE])
@@ -356,31 +395,21 @@ def test_create_github_comment_on_feature_state_updated(  # noqa: C901
         "requests.post", side_effect=mocked_requests_post
     )
 
-    feature_state_value = feature_state.get_feature_state_value()
-    feature_env_data = {}
-    feature_env_data["feature_state_value"] = feature_state_value
-    feature_env_data["feature_state_value_type"] = (
-        feature_state.get_feature_state_value_type(feature_state_value)
+    feature_state_updated_at = feature_state.updated_at.strftime(
+        get_format("DATETIME_INPUT_FORMATS")[0]
     )
-    feature_env_data["environment_name"] = environment.name
-    feature_env_data["feature_value"] = feature_state.enabled
-    if event_type == "update":
-        mock_generate_data = mocker.patch(
-            "integrations.github.github.generate_data",
-            return_value=GithubData(
-                installation_id=github_configuration.installation_id,
-                feature_id=feature.id,
-                feature_name=feature.name,
-                type=feature_external_resource.type,
-                feature_states=[feature_env_data],
-                url=feature_external_resource.url,
-            ),
-        )
 
-        mocker.patch(
-            "integrations.github.tasks.generate_body_comment",
-            return_value="Flag updated",
+    expected_body_comment = (
+        "Flagsmith Feature `Test Feature1` has been updated:\n"
+        + expected_default_body(
+            project.id,
+            environment.api_key,
+            feature.id,
+            feature_state_updated_at,
+            "✅ Enabled",
+            "",
         )
+    )
 
     payload = dict(FeatureStateSerializerBasic(instance=feature_state).data)
 
@@ -391,43 +420,126 @@ def test_create_github_comment_on_feature_state_updated(  # noqa: C901
     )
 
     # When
-    if event_type == "update":
-        response = staff_client.put(path=url, data=payload, format="json")
-    elif event_type == "delete":
-        response = staff_client.delete(path=url)
+    response = staff_client.put(path=url, data=payload, format="json")
 
     # Then
-    if event_type == "update":
-        assert response.status_code == status.HTTP_200_OK
-    elif event_type == "delete":
-        assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.status_code == status.HTTP_200_OK
 
-    if event_type == "update":
-        github_request_mock.assert_called_with(
-            "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
-            json={"body": "Flag updated"},
-            headers={
-                "Accept": "application/vnd.github.v3+json",
-                "Authorization": "Bearer mocked_token",
-            },
-            timeout=10,
+    github_request_mock.assert_called_with(
+        "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
+        json={"body": expected_body_comment},
+        headers={
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": "Bearer mocked_token",
+        },
+        timeout=10,
+    )
+
+
+def test_create_github_comment_on_feature_was_deleted(
+    admin_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    feature_external_resource: FeatureExternalResource,
+    feature: Feature,
+    project: Project,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_generate_token = mocker.patch(
+        "integrations.github.github.generate_token",
+    )
+    mock_generate_token.return_value = "mocked_token"
+
+    github_request_mock = mocker.patch(
+        "requests.post", side_effect=mocked_requests_post
+    )
+
+    url = reverse(
+        viewname="api-v1:projects:project-features-detail",
+        kwargs={"project_pk": project.id, "pk": feature.id},
+    )
+
+    # When
+    response = admin_client.delete(path=url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    github_request_mock.assert_called_with(
+        "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
+        json={"body": "### The Feature Flag `Test Feature1` was deleted"},
+        headers={
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": "Bearer mocked_token",
+        },
+        timeout=10,
+    )
+
+
+def test_create_github_comment_on_segment_override_updated(
+    feature_with_value: Feature,
+    segment_featurestate_and_feature_with_value: FeatureState,
+    feature_with_value_external_resource: FeatureExternalResource,
+    project: Project,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mocker: MockerFixture,
+    environment: Environment,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    feature_state = segment_featurestate_and_feature_with_value
+    mock_generate_token = mocker.patch(
+        "integrations.github.github.generate_token",
+    )
+    mock_generate_token.return_value = "mocked_token"
+    github_request_mock = mocker.patch(
+        "requests.post", side_effect=mocked_requests_post
+    )
+
+    payload = dict(WritableNestedFeatureStateSerializer(instance=feature_state).data)
+
+    payload["enabled"] = not feature_state.enabled
+    payload["feature_state_value"]["string_value"] = "new value"
+
+    url = reverse(
+        viewname="api-v1:features:featurestates-detail",
+        kwargs={"pk": feature_state.id},
+    )
+
+    segment_override_updated_at = (
+        segment_featurestate_and_feature_with_value.updated_at.strftime(
+            get_format("DATETIME_INPUT_FORMATS")[0]
         )
-    elif event_type == "delete":
-        github_request_mock.assert_called_with(
-            "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
-            json={"body": "### The Feature Flag `Test Feature1` was deleted"},
-            headers={
-                "Accept": "application/vnd.github.v3+json",
-                "Authorization": "Bearer mocked_token",
-            },
-            timeout=10,
+    )
+
+    expected_comment_body = (
+        "Flagsmith Feature `feature_with_value` has been updated:\n"
+        + "\n"
+        + expected_segment_comment_body(
+            project.id,
+            environment.api_key,
+            feature_with_value.id,
+            segment_override_updated_at,
+            "✅ Enabled",
+            "`new value`",
         )
-    if event_type == "update":
-        mock_generate_data.assert_called_with(
-            github_configuration=github_configuration,
-            feature_id=feature.id,
-            feature_name=feature.name,
-            type=WebhookEventType.FLAG_UPDATED.value,
-            feature_states=[feature_state],
-            project_id=project.id,
-        )
+    )
+
+    # When
+    response = admin_client.put(path=url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    github_request_mock.assert_called_with(
+        "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
+        json={"body": expected_comment_body},
+        headers={
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": "Bearer mocked_token",
+        },
+        timeout=10,
+    )

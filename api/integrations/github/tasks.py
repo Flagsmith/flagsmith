@@ -27,7 +27,7 @@ def send_post_request(data: CallGithubData) -> None:
     feature_id = data.github_data.feature_id
     project_id = data.github_data.project_id
     event_type = data.event_type
-    feature_states = feature_states = (
+    feature_states = (
         data.github_data.feature_states if data.github_data.feature_states else None
     )
     installation_id = data.github_data.installation_id
