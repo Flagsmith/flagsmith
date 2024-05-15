@@ -975,6 +975,17 @@ def feature_external_resource(feature: Feature) -> FeatureExternalResource:
 
 
 @pytest.fixture()
+def feature_with_value_external_resource(
+    feature_with_value: Feature,
+) -> FeatureExternalResource:
+    return FeatureExternalResource.objects.create(
+        url="https://github.com/userexample/example-project-repo/issues/11",
+        type="GITHUB_ISSUE",
+        feature=feature_with_value,
+    )
+
+
+@pytest.fixture()
 def github_configuration(organisation: Organisation) -> GithubConfiguration:
     return GithubConfiguration.objects.create(
         organisation=organisation, installation_id=1234567

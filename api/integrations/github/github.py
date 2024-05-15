@@ -5,8 +5,9 @@ from dataclasses import dataclass
 import requests
 from core.helpers import get_current_site_url
 from django.conf import settings
+from django.utils.formats import get_format
 
-from features.models import FeatureState, FeatureStateValue
+from features.models import Feature, FeatureState, FeatureStateValue
 from integrations.github.client import generate_token
 from integrations.github.constants import (
     DELETED_FEATURE_TEXT,
@@ -89,26 +90,29 @@ def generate_body_comment(
     if len(feature_states) > 0 and not feature_states[0].get("segment_name"):
         result += FEATURE_TABLE_HEADER
 
-    for v in feature_states:
-        feature_value = v.get("feature_state_value")
-        tab = "segment-overrides" if v.get("segment_name") is not None else "value"
+    for fs in feature_states:
+        feature_value = fs.get("feature_state_value")
+        tab = "segment-overrides" if fs.get("segment_name") is not None else "value"
         environment_link_url = FEATURE_ENVIRONMENT_URL % (
             get_current_site_url(),
             project_id,
-            v.get("environment_api_key"),
+            fs.get("environment_api_key"),
             feature_id,
             tab,
         )
-        if v.get("segment_name") is not None and v["segment_name"] != last_segment_name:
-            result += "\n" + LINK_SEGMENT_TITLE % (v["segment_name"])
-            last_segment_name = v["segment_name"]
+        if (
+            fs.get("segment_name") is not None
+            and fs["segment_name"] != last_segment_name
+        ):
+            result += "\n" + LINK_SEGMENT_TITLE % (fs["segment_name"])
+            last_segment_name = fs["segment_name"]
             result += FEATURE_TABLE_HEADER
         table_row = FEATURE_TABLE_ROW % (
-            v["environment_name"],
+            fs["environment_name"],
             environment_link_url,
-            "✅ Enabled" if v["enabled"] else "❌ Disabled",
+            "✅ Enabled" if fs["enabled"] else "❌ Disabled",
             f"`{feature_value}`" if feature_value else "",
-            v["last_updated"],
+            fs["last_updated"],
         )
         result += table_row
 
@@ -121,31 +125,28 @@ def check_not_none(value: any) -> bool:
 
 def generate_data(
     github_configuration: GithubConfiguration,
-    feature_id: int,
-    feature_name: str,
+    feature: Feature,
     type: str,
     feature_states: (
         typing.Union[list[FeatureState], list[FeatureStateValue]] | None
     ) = None,
     url: str | None = None,
-    project_id: int | None = None,
 ) -> GithubData:
-
     if feature_states:
         feature_states_list = []
         for feature_state in feature_states:
             feature_state_value = feature_state.get_feature_state_value()
-            feature_state_value_type = feature_state.get_feature_state_value_type(
-                feature_state_value
-            )
             feature_env_data = {}
+
             if check_not_none(feature_state_value):
                 feature_env_data["feature_state_value"] = feature_state_value
-                feature_env_data["feature_state_value_type"] = feature_state_value_type
+
             if type is not WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
                 feature_env_data["environment_name"] = feature_state.environment.name
                 feature_env_data["enabled"] = feature_state.enabled
-                feature_env_data["last_updated"] = feature_state.updated_at
+                feature_env_data["last_updated"] = feature_state.updated_at.strftime(
+                    get_format("DATETIME_INPUT_FORMATS")[0]
+                )
                 feature_env_data["environment_api_key"] = (
                     feature_state.environment.api_key
                 )
@@ -159,8 +160,8 @@ def generate_data(
             feature_states_list.append(feature_env_data)
 
     return GithubData(
-        feature_id=feature_id,
-        feature_name=feature_name,
+        feature_id=feature.id,
+        feature_name=feature.name,
         installation_id=github_configuration.installation_id,
         type=type,
         url=(
@@ -169,5 +170,5 @@ def generate_data(
             else None
         ),
         feature_states=feature_states_list if feature_states else None,
-        project_id=project_id,
+        project_id=feature.project_id,
     )
