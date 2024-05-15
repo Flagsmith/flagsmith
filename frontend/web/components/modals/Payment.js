@@ -12,10 +12,7 @@ const PaymentButton = (props) => {
     AccountStore.getOrganisation().id,
   )
 
-  if (
-    Utils.getFlagsmithHasFeature('upgrade_subscription') &&
-    activeSubscription
-  ) {
+  if (activeSubscription) {
     return (
       <a
         onClick={() => {

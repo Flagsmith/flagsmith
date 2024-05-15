@@ -342,6 +342,12 @@ export default {
       'category': 'Organisation',
       'event': 'Updated user role',
     },
+    UPGRADE: (plan: string) => {
+      return {
+        'category': 'Upgrade',
+        'event': `Upgrade ${plan}`,
+      }
+    },
     'VIEW_FEATURE': { 'category': 'Features', 'event': 'Feature viewed' },
     'VIEW_SEGMENT': { 'category': 'Segment', 'event': 'Segment viewed' },
     'VIEW_USER_FEATURE': {
