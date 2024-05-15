@@ -25,7 +25,7 @@ import OrganisationLimit from './OrganisationLimit'
 import GithubStar from './GithubStar'
 import Tooltip from './Tooltip'
 import classNames from 'classnames'
-import { apps, gitBranch, gitCompare, home, statsChart } from 'ionicons/icons';
+import { apps, gitBranch, gitCompare, statsChart } from 'ionicons/icons'
 import NavSubLink from './NavSubLink'
 import SettingsIcon from './svg/SettingsIcon'
 import UsersIcon from './svg/UsersIcon'
@@ -35,7 +35,7 @@ import SegmentsIcon from './svg/SegmentsIcon'
 import AuditLogIcon from './svg/AuditLogIcon'
 import Permission from 'common/providers/Permission'
 import HomeAside from './pages/HomeAside'
-import ScrollToTop from './ScrollToTop';
+import ScrollToTop from './ScrollToTop'
 
 const App = class extends Component {
   static propTypes = {
@@ -443,7 +443,6 @@ const App = class extends Component {
                                       src='/static/images/nav-logo.png'
                                     />
                                   </Link>
-
                                   {!(
                                     isOrganisationSelect || isCreateOrganisation
                                   ) && (
@@ -711,7 +710,7 @@ const App = class extends Component {
             )
           }}
         </AccountProvider>
-        <ScrollToTop/>
+        <ScrollToTop />
       </Provider>
     )
   }
