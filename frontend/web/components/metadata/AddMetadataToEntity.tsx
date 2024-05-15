@@ -34,6 +34,7 @@ type AddMetadataToEntityType = {
   entity: number | string
   envName?: string
   onChange?: (m: CustomMetadataField[]) => void
+  setHasMetadataRequired?: (b: boolean) => void
 }
 
 const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
@@ -44,6 +45,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
   onChange,
   organisationId,
   projectId,
+  setHasMetadataRequired,
 }) => {
   const { data: metadataFieldList, isSuccess: metadataFieldListLoaded } =
     useGetMetadataFieldListQuery({
@@ -158,6 +160,9 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
           })
           // Determine if isRequiredFor should be true or false based on is_required_for array
           const isRequiredFor = !!matchingItem?.is_required_for.length
+          if (isRequiredFor) {
+            setHasMetadataRequired?.()
+          }
           // Return the metadata field with additional metadata model field information including isRequiredFor
           return {
             ...meta,

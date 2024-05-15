@@ -85,6 +85,7 @@ const CreateFlag = class extends Component {
       featureContentType: {},
       githubId: '',
       hasIntegrationWithGithub: false,
+      hasMetadataRequired: false,
       identityVariations:
         this.props.identityFlag &&
         this.props.identityFlag.multivariate_feature_state_values
@@ -617,6 +618,11 @@ const CreateFlag = class extends Component {
                   entityId={projectFlag?.id}
                   entityContentType={featureContentType?.id}
                   entity={featureContentType?.model}
+                  setHasMetadataRequired={(b) => {
+                    this.setState({
+                      hasMetadataRequired: true,
+                    })
+                  }}
                   onChange={(m) => {
                     this.setState({
                       metadata: m,
@@ -1159,6 +1165,9 @@ const CreateFlag = class extends Component {
                     >
                       {({ permission: projectAdmin }) => {
                         this.state.skipSaveProjectFeature = !createFeature
+                        const _hasMetadataRequired =
+                          this.state.hasMetadataRequired &&
+                          !this.state.metadata.length
                         return (
                           <div id='create-feature-modal'>
                             {isEdit && !identity ? (
@@ -1901,7 +1910,10 @@ const CreateFlag = class extends Component {
                                             data-test='update-feature-btn'
                                             id='update-feature-btn'
                                             disabled={
-                                              isSaving || !name || invalid
+                                              isSaving ||
+                                              !name ||
+                                              invalid ||
+                                              _hasMetadataRequired
                                             }
                                           >
                                             {isSaving
@@ -1962,7 +1974,8 @@ const CreateFlag = class extends Component {
                                         !name ||
                                         invalid ||
                                         !regexValid ||
-                                        featureLimitAlert.percentage >= 100
+                                        featureLimitAlert.percentage >= 100 ||
+                                        _hasMetadataRequired
                                       }
                                     >
                                       {isSaving ? 'Creating' : 'Create Feature'}
