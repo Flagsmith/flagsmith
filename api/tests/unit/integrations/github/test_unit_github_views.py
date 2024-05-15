@@ -28,9 +28,6 @@ def mocked_requests_delete(*args, **kwargs):
         def raise_for_status(self) -> None:
             pass
 
-        def json(self):
-            return self.json_data
-
     return MockResponse(json_data={"data": "data"}, status_code=204)
 
 

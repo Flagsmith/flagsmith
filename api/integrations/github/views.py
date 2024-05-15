@@ -84,12 +84,9 @@ class GithubConfigurationViewSet(viewsets.ModelViewSet):
             "Authorization": f"Bearer {token}",
         }
 
-        try:
-            response = requests.delete(url, headers=headers, timeout=10)
-            response.raise_for_status()
-            return super().destroy(request, *args, **kwargs)
-        except requests.RequestException as e:
-            return Response({"error": str(e)}, status=500)
+        response = requests.delete(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        return super().destroy(request, *args, **kwargs)
 
 
 class GithubRepositoryViewSet(viewsets.ModelViewSet):

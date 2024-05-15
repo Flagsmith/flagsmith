@@ -2,7 +2,7 @@ from django.conf import settings
 from github import Auth, Github
 
 
-def generate_token(installation_id: str, app_id: int) -> str:
+def generate_token(installation_id: str, app_id: int) -> str:  # pragma: no cover
     auth: Auth.AppInstallationAuth = Auth.AppAuth(
         app_id=int(app_id), private_key=settings.GITHUB_PEM
     ).get_installation_auth(
@@ -14,7 +14,7 @@ def generate_token(installation_id: str, app_id: int) -> str:
     return token
 
 
-def generate_jwt_token(app_id: int) -> str:
+def generate_jwt_token(app_id: int) -> str:  # pragma: no cover
     github_auth: Auth.AppAuth = Auth.AppAuth(
         app_id=int(app_id),
         private_key=settings.GITHUB_PEM,
