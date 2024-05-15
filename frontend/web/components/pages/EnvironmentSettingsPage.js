@@ -22,6 +22,8 @@ import { getRolesEnvironmentPermissions } from 'common/services/useRolePermissio
 import AccountStore from 'common/stores/account-store'
 import { Link } from 'react-router-dom'
 import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersioning'
+import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
+import { getSupportedContentType } from 'common/services/useSupportedContentType'
 import EnvironmentVersioningListener from 'components/EnvironmentVersioningListener'
 
 const showDisabledFlagOptions = [
@@ -39,7 +41,12 @@ const EnvironmentSettingsPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = { env: {}, roles: [] }
+    this.state = {
+      env: {},
+      environmentContentType: {},
+      roles: [],
+      showMetadataList: false,
+    }
     AppActions.getProject(this.props.match.params.projectId)
   }
 
@@ -74,6 +81,20 @@ const EnvironmentSettingsPage = class extends Component {
         this.setState({ roles: matchingItems })
       })
     })
+
+    if (Utils.getFlagsmithHasFeature('enable_metadata')) {
+      getSupportedContentType(getStore(), {
+        organisation_id: AccountStore.getOrganisation().id,
+      }).then((res) => {
+        const environmentContentType = Utils.getContentType(
+          res.data,
+          'model',
+          'environment',
+        )
+        this.setState({ environmentContentType: environmentContentType })
+      })
+    }
+    this.props.getWebhooks()
   }
 
   onSave = () => {
@@ -231,6 +252,7 @@ const EnvironmentSettingsPage = class extends Component {
       },
     } = this
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
+    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
 
     return (
       <div className='app-container container'>
@@ -869,6 +891,34 @@ const EnvironmentSettingsPage = class extends Component {
                         )}
                       </FormGroup>
                     </TabItem>
+                    {metadataEnable &&
+                      this.state.environmentContentType?.id && (
+                        <TabItem tabLabel='Metadata'>
+                          <FormGroup className='mt-5 setting'>
+                            <InputGroup
+                              title={'Metadata'}
+                              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} environments`}
+                              tooltipPlace='right'
+                              component={
+                                <AddMetadataToEntity
+                                  organisationId={
+                                    AccountStore.getOrganisation().id
+                                  }
+                                  projectId={this.props.match.params.projectId}
+                                  entityId={env.api_key || ''}
+                                  envName={env.name}
+                                  entityContentType={
+                                    this.state.environmentContentType.id
+                                  }
+                                  entity={
+                                    this.state.environmentContentType.model
+                                  }
+                                />
+                              }
+                            />
+                          </FormGroup>
+                        </TabItem>
+                      )}
                   </Tabs>
                 )}
               </>

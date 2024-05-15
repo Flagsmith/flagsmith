@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react'
 import Icon from './Icon'
 import Button from './base/forms/Button'
 import Format from 'common/utils/format'
-import Constants from 'common/constants';
+import Constants from 'common/constants'
 
 export default class ErrorMessage extends PureComponent {
   static displayName = 'ErrorMessage'

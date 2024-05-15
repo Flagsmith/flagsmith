@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 import Icon from './Icon'
 import Button from './base/forms/Button'
-import Constants from 'common/constants';
+import Constants from 'common/constants'
 
 type WarningMessageType = {
   warningMessage: string

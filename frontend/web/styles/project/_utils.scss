@@ -17,6 +17,11 @@
         }
     }
 }
+.bg-required {
+    background-color: $danger;
+    color: $bg-light300;
+    border-color: $danger;
+}
 .clearfix { display: inline-block; }
 /* start commented backslash hack \*/
 * html .clearfix { height: 1%; }

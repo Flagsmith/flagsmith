@@ -2,7 +2,7 @@ import { FC, useEffect } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { RouterChildContext } from 'react-router'
 import Utils from 'common/utils/utils'
-import ConfigProvider from 'common/providers/ConfigProvider';
+import ConfigProvider from 'common/providers/ConfigProvider'
 
 type ProjectRedirectPageType = {
   router: RouterChildContext['router']
