@@ -12,3 +12,12 @@ def generate_token(installation_id: str, app_id: int) -> str:
     Github(auth=auth)
     token = auth.token
     return token
+
+
+def generate_jwt_token(app_id: int) -> str:
+    github_auth: Auth.AppAuth = Auth.AppAuth(
+        app_id=int(app_id),
+        private_key=settings.GITHUB_PEM,
+    )
+    token = github_auth.create_jwt()
+    return token

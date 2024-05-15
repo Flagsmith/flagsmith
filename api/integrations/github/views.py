@@ -11,7 +11,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from integrations.github.client import generate_token
+from integrations.github.client import generate_jwt_token, generate_token
 from integrations.github.constants import GITHUB_API_URL, GITHUB_API_VERSION
 from integrations.github.exceptions import DuplicateGitHubIntegration
 from integrations.github.helpers import github_webhook_payload_is_valid
@@ -70,6 +70,26 @@ class GithubConfigurationViewSet(viewsets.ModelViewSet):
         except IntegrityError as e:
             if re.search(r"Key \(organisation_id\)=\(\d+\) already exists", str(e)):
                 raise DuplicateGitHubIntegration
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        installation_id = instance.installation_id
+        token = generate_jwt_token(settings.GITHUB_APP_ID)
+
+        url = f"{GITHUB_API_URL}app/installations/{installation_id}"
+
+        headers = {
+            "X-GitHub-Api-Version": GITHUB_API_VERSION,
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": f"Bearer {token}",
+        }
+
+        try:
+            response = requests.delete(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            return super().destroy(request, *args, **kwargs)
+        except requests.RequestException as e:
+            return Response({"error": str(e)}, status=500)
 
 
 class GithubRepositoryViewSet(viewsets.ModelViewSet):
