@@ -45,6 +45,11 @@ const EnvironmentSettingsPage = class extends Component {
 
   componentDidMount = () => {
     API.trackPage(Constants.pages.ENVIRONMENT_SETTINGS)
+    this.getEnvironment()
+    this.props.getWebhooks()
+  }
+
+  getEnvironment = () => {
     const env = ProjectStore.getEnvs().find(
       (v) => v.api_key === this.props.match.params.environmentId,
     )
@@ -69,8 +74,6 @@ const EnvironmentSettingsPage = class extends Component {
         this.setState({ roles: matchingItems })
       })
     })
-
-    this.props.getWebhooks()
   }
 
   onSave = () => {
@@ -82,6 +85,12 @@ const EnvironmentSettingsPage = class extends Component {
       this.props.match.params.projectId !== prevProps.match.params.projectId
     ) {
       AppActions.getProject(this.props.match.params.projectId)
+    }
+    if (
+      this.props.match.params.environmentId !==
+      prevProps.match.params.environmentId
+    ) {
+      this.getEnvironment()
     }
   }
 
@@ -236,8 +245,10 @@ const EnvironmentSettingsPage = class extends Component {
               api_key: this.props.match.params.environmentId,
             })
             if (
-              env &&
-              typeof this.state.minimum_change_request_approvals === 'undefined'
+              (env &&
+                typeof this.state.minimum_change_request_approvals ===
+                  'undefined') ||
+              this.state.env?.api_key !== this.props.match.params.environmentId
             ) {
               setTimeout(() => {
                 this.setState({
