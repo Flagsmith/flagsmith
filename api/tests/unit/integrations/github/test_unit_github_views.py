@@ -130,6 +130,11 @@ def test_delete_github_configuration(
             github_configuration.id,
         ],
     )
+
+    mock_generate_token = mocker.patch(
+        "integrations.github.views.generate_jwt_token",
+    )
+    mock_generate_token.return_value = "mocked_token"
     mocker.patch("requests.delete", side_effect=mocked_requests_delete)
 
     # When
