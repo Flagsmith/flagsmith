@@ -138,6 +138,35 @@ class Feature(
         # TODO: after upgrade to Django 4.0 use UniqueConstraint()
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
+    @hook(AFTER_SAVE)
+    def create_github_comment(self) -> None:
+        from integrations.github.github import GithubData, generate_data
+        from integrations.github.tasks import (
+            call_github_app_webhook_for_feature_state,
+        )
+        from webhooks.webhooks import WebhookEventType
+
+        if (
+            self.external_resources.exists()
+            and self.project.github_project.exists()
+            and self.project.organisation.github_config.exists()
+            and self.deleted_at
+        ):
+            github_configuration = GithubConfiguration.objects.get(
+                organisation_id=self.project.organisation_id
+            )
+
+            feature_data: GithubData = generate_data(
+                github_configuration=github_configuration,
+                feature=self,
+                type=WebhookEventType.FLAG_DELETED.value,
+                feature_states=[],
+            )
+
+            call_github_app_webhook_for_feature_state.delay(
+                args=(asdict(feature_data),),
+            )
+
     @hook(AFTER_CREATE)
     def create_feature_states(self):
         FeatureState.create_initial_feature_states_for_feature(feature=self)
@@ -1003,49 +1032,6 @@ class FeatureState(
             )
 
             target_feature_state.save()
-
-    @hook(AFTER_SAVE)
-    def create_github_comment(self) -> None:
-        from integrations.github.github import GithubData, generate_data
-        from integrations.github.tasks import (
-            call_github_app_webhook_for_feature_state,
-        )
-        from webhooks.webhooks import WebhookEventType
-
-        if (
-            not self.identity_id
-            and self.feature.external_resources.exists()
-            and self.environment.project.github_project.exists()
-            and self.environment.project.organisation.github_config.exists()
-        ):
-            github_configuration = GithubConfiguration.objects.get(
-                organisation_id=self.environment.project.organisation_id
-            )
-            feature_states = []
-            feature_states.append(self)
-
-            if self.deleted_at is None:
-                feature_data: GithubData = generate_data(
-                    github_configuration=github_configuration,
-                    feature_id=self.feature.id,
-                    feature_name=self.feature.name,
-                    type=WebhookEventType.FLAG_UPDATED.value,
-                    feature_states=feature_states,
-                    project_id=self.environment.project_id,
-                )
-
-            if self.deleted_at is not None:
-                feature_data: GithubData = generate_data(
-                    github_configuration=github_configuration,
-                    feature_id=self.feature.id,
-                    feature_name=self.feature.name,
-                    type=WebhookEventType.FLAG_DELETED.value,
-                    feature_states=feature_states,
-                )
-
-            call_github_app_webhook_for_feature_state.delay(
-                args=(asdict(feature_data),),
-            )
 
 
 class FeatureStateValue(
