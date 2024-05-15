@@ -99,7 +99,7 @@ const CreateFlag = class extends Component {
       isEdit: !!this.props.projectFlag,
       is_archived,
       is_server_key_only,
-      metadata,
+      metadata: [],
       multivariate_options: _.cloneDeep(multivariate_options),
       name,
       period: 30,
@@ -332,7 +332,8 @@ const CreateFlag = class extends Component {
             is_server_key_only,
             metadata:
               !this.props.projectFlag?.metadata ||
-              this.props.projectFlag.metadata !== this.state.metadata
+              (this.props.projectFlag.metadata !== this.state.metadata &&
+                this.state.metadata.length)
                 ? this.state.metadata
                 : this.props.projectFlag.metadata,
             multivariate_options: this.state.multivariate_options,
@@ -2046,6 +2047,7 @@ const FeatureProvider = (WrappedComponent) => {
     }
 
     componentDidMount() {
+      // toast update feature
       ES6Component(this)
       this.listenTo(
         FeatureListStore,
