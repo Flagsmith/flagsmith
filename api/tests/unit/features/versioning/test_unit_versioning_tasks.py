@@ -12,6 +12,7 @@ from features.versioning.tasks import (
 from features.versioning.versioning_service import (
     get_environment_flags_queryset,
 )
+from projects.models import Project
 from segments.models import Segment
 from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType
@@ -37,6 +38,7 @@ def test_enable_v2_versioning(
 
 def test_disable_v2_versioning(
     environment_v2_versioning: Environment,
+    project: Project,
     feature: Feature,
     segment: Segment,
     staff_user: FFAdminUser,
@@ -85,6 +87,21 @@ def test_disable_v2_versioning(
         environment=environment_v2_versioning,
     )
 
+    # Finally, let's create another environment and confirm its
+    # feature states are unaffected.
+    unaffected_environment = Environment.objects.create(
+        name="Unaffected environment", project=project
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=unaffected_environment,
+        feature_segment=FeatureSegment.objects.create(
+            segment=segment,
+            feature=feature,
+            environment=unaffected_environment,
+        ),
+    )
+
     # When
     disable_v2_versioning(environment_v2_versioning.id)
     environment_v2_versioning.refresh_from_db()
@@ -113,6 +130,9 @@ def test_disable_v2_versioning(
         latest_feature_states.filter(feature=feature, identity=identity).first().enabled
         is True
     )
+
+    assert unaffected_environment.feature_states.count() == 2
+    assert unaffected_environment.feature_segments.count() == 1
 
 
 def test_trigger_update_version_webhooks(
