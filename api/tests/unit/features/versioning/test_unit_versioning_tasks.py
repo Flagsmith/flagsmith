@@ -133,7 +133,7 @@ def test_trigger_update_version_webhooks(
 
     # Then
     mock_call_environment_webhooks.assert_called_once_with(
-        environment=environment_v2_versioning,
+        environment=environment_v2_versioning.id,
         data={
             "uuid": str(version.uuid),
             "feature": {"id": feature.id, "name": feature.name},
