@@ -52,32 +52,31 @@ const EnvironmentSettingsPage = class extends Component {
 
   componentDidMount = () => {
     API.trackPage(Constants.pages.ENVIRONMENT_SETTINGS)
-    if (Utils.getFlagsmithHasFeature('show_role_management')) {
-      const env = ProjectStore.getEnvs().find(
-        (v) => v.api_key === this.props.match.params.environmentId,
-      )
-      this.setState({ env })
-      getRoles(
+    const env = ProjectStore.getEnvs().find(
+      (v) => v.api_key === this.props.match.params.environmentId,
+    )
+    this.setState({ env })
+    getRoles(
+      getStore(),
+      { organisation_id: AccountStore.getOrganisation().id },
+      { forceRefetch: true },
+    ).then((roles) => {
+      getRolesEnvironmentPermissions(
         getStore(),
-        { organisation_id: AccountStore.getOrganisation().id },
+        {
+          env_id: env.id,
+          organisation_id: AccountStore.getOrganisation().id,
+          role_id: roles.data.results[0].id,
+        },
         { forceRefetch: true },
-      ).then((roles) => {
-        getRolesEnvironmentPermissions(
-          getStore(),
-          {
-            env_id: env.id,
-            organisation_id: AccountStore.getOrganisation().id,
-            role_id: roles.data.results[0].id,
-          },
-          { forceRefetch: true },
-        ).then((res) => {
-          const matchingItems = roles.data.results.filter((item1) =>
-            res.data.results.some((item2) => item2.role === item1.id),
-          )
-          this.setState({ roles: matchingItems })
-        })
+      ).then((res) => {
+        const matchingItems = roles.data.results.filter((item1) =>
+          res.data.results.some((item2) => item2.role === item1.id),
+        )
+        this.setState({ roles: matchingItems })
       })
-    }
+    })
+
     if (Utils.getFlagsmithHasFeature('enable_metadata')) {
       getSupportedContentType(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,
@@ -90,7 +89,6 @@ const EnvironmentSettingsPage = class extends Component {
         this.setState({ environmentContentType: environmentContentType })
       })
     }
-
     this.props.getWebhooks()
   }
 

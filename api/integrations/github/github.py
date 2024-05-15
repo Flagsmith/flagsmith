@@ -1,18 +1,21 @@
-import datetime
 import logging
 import typing
 from dataclasses import dataclass
 
 import requests
+from core.helpers import get_current_site_url
 from django.conf import settings
 
 from features.models import FeatureState, FeatureStateValue
 from integrations.github.client import generate_token
 from integrations.github.constants import (
     DELETED_FEATURE_TEXT,
+    FEATURE_ENVIRONMENT_URL,
+    FEATURE_TABLE_HEADER,
+    FEATURE_TABLE_ROW,
     GITHUB_API_URL,
-    LAST_UPDATED_FEATURE_TEXT,
-    LINK_FEATURE_TEXT,
+    LINK_FEATURE_TITLE,
+    LINK_SEGMENT_TITLE,
     UNLINKED_FEATURE_TEXT,
     UPDATED_FEATURE_TEXT,
 )
@@ -28,8 +31,9 @@ class GithubData:
     feature_id: int
     feature_name: str
     type: str
-    feature_states: typing.List[dict[str, typing.Any]] = None
-    url: str = None
+    feature_states: typing.List[dict[str, typing.Any]] | None = None
+    url: str | None = None
+    project_id: int | None = None
 
     @classmethod
     def from_dict(cls, data_dict: dict) -> "GithubData":
@@ -65,6 +69,8 @@ def post_comment_to_github(
 def generate_body_comment(
     name: str,
     event_type: str,
+    project_id: int,
+    feature_id: int,
     feature_states: typing.List[typing.Dict[str, typing.Any]],
 ) -> str:
 
@@ -78,25 +84,34 @@ def generate_body_comment(
     if is_removed:
         return delete_text
 
-    last_updated_string = LAST_UPDATED_FEATURE_TEXT % (
-        datetime.datetime.now().strftime("%dth %b %Y %I:%M%p")
-    )
-    updated_text = UPDATED_FEATURE_TEXT % (name)
+    result = UPDATED_FEATURE_TEXT % (name) if is_update else LINK_FEATURE_TITLE % (name)
+    last_segment_name = ""
+    if len(feature_states) > 0 and not feature_states[0].get("segment_name"):
+        result += FEATURE_TABLE_HEADER
 
-    result = updated_text if is_update else LINK_FEATURE_TEXT % (name)
-
-    # if feature_states is None:
     for v in feature_states:
         feature_value = v.get("feature_state_value")
-        feature_value_type = v.get("feature_state_value_type")
+        tab = "segment-overrides" if v.get("segment_name") is not None else "value"
+        environment_link_url = FEATURE_ENVIRONMENT_URL % (
+            get_current_site_url(),
+            project_id,
+            v.get("environment_api_key"),
+            feature_id,
+            tab,
+        )
+        if v.get("segment_name") is not None and v["segment_name"] != last_segment_name:
+            result += "\n" + LINK_SEGMENT_TITLE % (v["segment_name"])
+            last_segment_name = v["segment_name"]
+            result += FEATURE_TABLE_HEADER
+        table_row = FEATURE_TABLE_ROW % (
+            v["environment_name"],
+            environment_link_url,
+            "✅ Enabled" if v["enabled"] else "❌ Disabled",
+            f"`{feature_value}`" if feature_value else "",
+            v["last_updated"],
+        )
+        result += table_row
 
-        feature_value_string = f"\n{feature_value_type}\n```{feature_value if feature_value else 'No value.'}```\n\n"
-
-        result += f"**{v['environment_name']}{' - ' + v['segment_name'] if v.get('segment_name') else ''}**\n"
-        result += f"- [{'x' if v['feature_value'] else ' '}] {'Enabled' if v['feature_value'] else 'Disabled'}"
-        result += feature_value_string
-
-    result += last_updated_string
     return result
 
 
@@ -109,8 +124,11 @@ def generate_data(
     feature_id: int,
     feature_name: str,
     type: str,
-    feature_states: typing.Union[list[FeatureState], list[FeatureStateValue]] = None,
-    url: str = None,
+    feature_states: (
+        typing.Union[list[FeatureState], list[FeatureStateValue]] | None
+    ) = None,
+    url: str | None = None,
+    project_id: int | None = None,
 ) -> GithubData:
 
     if feature_states:
@@ -126,7 +144,11 @@ def generate_data(
                 feature_env_data["feature_state_value_type"] = feature_state_value_type
             if type is not WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
                 feature_env_data["environment_name"] = feature_state.environment.name
-                feature_env_data["feature_value"] = feature_state.enabled
+                feature_env_data["enabled"] = feature_state.enabled
+                feature_env_data["last_updated"] = feature_state.updated_at
+                feature_env_data["environment_api_key"] = (
+                    feature_state.environment.api_key
+                )
             if (
                 hasattr(feature_state, "feature_segment")
                 and feature_state.feature_segment is not None
@@ -147,4 +169,5 @@ def generate_data(
             else None
         ),
         feature_states=feature_states_list if feature_states else None,
+        project_id=project_id,
     )

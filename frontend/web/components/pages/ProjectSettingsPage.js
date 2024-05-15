@@ -52,28 +52,26 @@ const ProjectSettingsPage = class extends Component {
 
   componentDidMount = () => {
     API.trackPage(Constants.pages.PROJECT_SETTINGS)
-    if (Utils.getFlagsmithHasFeature('show_role_management')) {
-      getRoles(
+    getRoles(
+      getStore(),
+      { organisation_id: AccountStore.getOrganisation().id },
+      { forceRefetch: true },
+    ).then((roles) => {
+      getRolesProjectPermissions(
         getStore(),
-        { organisation_id: AccountStore.getOrganisation().id },
+        {
+          organisation_id: AccountStore.getOrganisation().id,
+          project_id: this.props.match.params.projectId,
+          role_id: roles.data.results[0].id,
+        },
         { forceRefetch: true },
-      ).then((roles) => {
-        getRolesProjectPermissions(
-          getStore(),
-          {
-            organisation_id: AccountStore.getOrganisation().id,
-            project_id: this.props.match.params.projectId,
-            role_id: roles.data.results[0].id,
-          },
-          { forceRefetch: true },
-        ).then((res) => {
-          const matchingItems = roles.data.results.filter((item1) =>
-            res.data.results.some((item2) => item2.role === item1.id),
-          )
-          this.setState({ roles: matchingItems })
-        })
+      ).then((res) => {
+        const matchingItems = roles.data.results.filter((item1) =>
+          res.data.results.some((item2) => item2.role === item1.id),
+        )
+        this.setState({ roles: matchingItems })
       })
-    }
+    })
   }
 
   onSave = () => {
@@ -631,16 +629,13 @@ const ProjectSettingsPage = class extends Component {
                         />
                       </TabItem>
                     )}
-                    {!!ProjectStore.getEnvs()?.length &&
-                      Utils.getFlagsmithHasFeature(
-                        'flagsmith_import_export',
-                      ) && (
-                        <TabItem tabLabel='Export'>
-                          <FeatureExport
-                            projectId={this.props.match.params.projectId}
-                          />
-                        </TabItem>
-                      )}
+                    {!!ProjectStore.getEnvs()?.length && (
+                      <TabItem tabLabel='Export'>
+                        <FeatureExport
+                          projectId={this.props.match.params.projectId}
+                        />
+                      </TabItem>
+                    )}
                   </Tabs>
                 }
               </div>

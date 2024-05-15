@@ -333,18 +333,16 @@ const CreateSegment: FC<CreateSegmentType> = ({
               </Button>
             </div>
           )}
-          {!readOnly && Utils.getFlagsmithHasFeature('not_operator') && (
-            <div onClick={() => addRule('NONE')} className='text-center'>
-              <Button
-                theme='outline'
-                className='ml-2 btn--outline-danger'
-                data-test='add-rule'
-                type='button'
-              >
-                Add AND NOT Condition
-              </Button>
-            </div>
-          )}
+          <div onClick={() => addRule('NONE')} className='text-center'>
+            <Button
+              theme='outline'
+              className='ml-2 btn--outline-danger'
+              data-test='add-rule'
+              type='button'
+            >
+              Add AND NOT Condition
+            </Button>
+          </div>
         </Row>
       </div>
     </div>

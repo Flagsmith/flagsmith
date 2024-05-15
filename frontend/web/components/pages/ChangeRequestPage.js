@@ -347,167 +347,144 @@ const ChangeRequestsPage = class extends Component {
                     : 'Unknown user'}
                 </PageTitle>
                 <p className='mt-2'>{changeRequest.description}</p>
-                <div className='row'>
-                  <div className='col-md-12'>
-                    {isScheduled && (
-                      <div className='col-md-6 mb-4'>
-                        <InfoMessage icon='calendar' title='Scheduled Change'>
-                          This feature change{' '}
-                          {changeRequest?.committedAt
-                            ? 'is scheduled to'
-                            : 'will'}{' '}
-                          go live at{' '}
-                          {scheduledDate.format('Do MMM YYYY hh:mma')}
-                          {changeRequest?.committed_at
-                            ? ' unless it is edited or deleted'
-                            : ' if it is approved and published'}
-                          .
-                          {!!changeRequest?.committedAt &&
-                            'You can still edit / remove the change request before this date.'}
-                        </InfoMessage>
-                      </div>
-                    )}
-                    <InputGroup
-                      className='col-md-6'
-                      component={
-                        <>
-                          {!Utils.getFlagsmithHasFeature(
-                            'disable_users_as_reviewers',
-                          ) && (
-                            <div className='mb-4'>
-                              <SettingsButton
-                                onClick={() =>
-                                  this.setState({ showUsers: true })
-                                }
-                              >
-                                Assigned users
-                              </SettingsButton>
-                              <Row className='mt-2'>
-                                {ownerUsers.length !== 0 &&
-                                  ownerUsers.map((u) => (
-                                    <Row
-                                      key={u.id}
-                                      onClick={() => this.removeOwner(u.id)}
-                                      className='chip'
-                                      style={{
-                                        marginBottom: 4,
-                                        marginTop: 4,
-                                      }}
-                                    >
-                                      <span className='font-weight-bold'>
-                                        {u.first_name} {u.last_name}
-                                      </span>
-                                      <span className='chip-icon ion'>
-                                        <IonIcon icon={close} />
-                                      </span>
-                                    </Row>
-                                  ))}
-                              </Row>
-                              <UserSelect
-                                users={orgUsers}
-                                value={
-                                  ownerUsers && ownerUsers.map((v) => v.id)
-                                }
-                                onAdd={this.addOwner}
-                                onRemove={this.removeOwner}
-                                isOpen={this.state.showUsers}
-                                onToggle={() =>
-                                  this.setState({
-                                    showUsers: !this.state.showUsers,
-                                  })
-                                }
-                              />
-                            </div>
-                          )}
-                          <div className='mb-4'>
-                            <SettingsButton
-                              onClick={() =>
-                                this.setState({ showGroups: true })
-                              }
-                            >
-                              Assigned groups
-                            </SettingsButton>
-                            <Row className='mt-2'>
-                              {!!ownerGroups?.length &&
-                                ownerGroups.map((g) => (
-                                  <Row
-                                    key={g.id}
-                                    onClick={() =>
-                                      this.removeOwner(g.id, false)
-                                    }
-                                    className='chip'
-                                    style={{
-                                      marginBottom: 4,
-                                      marginTop: 4,
-                                    }}
-                                  >
-                                    <span className='font-weight-bold'>
-                                      {g.name}
-                                    </span>
-                                    <span className='chip-icon ion'>
-                                      <IonIcon icon={close} />
-                                    </span>
-                                  </Row>
-                                ))}
-                            </Row>
-                            <MyGroupsSelect
-                              orgId={AccountStore.getOrganisation().id}
-                              groups={orgGroups}
-                              value={
-                                ownerGroups && ownerGroups.map((v) => v.id)
-                              }
-                              onAdd={this.addOwner}
-                              onRemove={this.removeOwner}
-                              isOpen={this.state.showGroups}
-                              onToggle={() =>
-                                this.setState({
-                                  showGroups: !this.state.showGroups,
-                                })
-                              }
-                            />
-                          </div>
-                        </>
-                      }
-                    />
-
-                    <div>
-                      <Panel
-                        title={
-                          isScheduled ? 'Scheduled Change' : 'Change Request'
-                        }
-                        className='no-pad mb-2'
-                      >
-                        <div className='search-list col-md-8 change-request-list'>
-                          <Row className='list-item change-request-item px-4'>
-                            <div className='font-weight-medium mr-3'>
-                              Feature:
-                            </div>
-
-                            <a
-                              target='_blank'
-                              className='btn-link font-weight-medium'
-                              href={`/project/${
-                                this.props.match.params.projectId
-                              }/environment/${
-                                this.props.match.params.environmentId
-                              }/features?feature=${
-                                projectFlag && projectFlag.id
-                              }`}
-                              rel='noreferrer'
-                            >
-                              {projectFlag && projectFlag.name}
-                            </a>
-                          </Row>
-                        </div>
-                      </Panel>
-                      <DiffChangeRequest
-                        isVersioned={isVersioned}
-                        changeRequest={changeRequest}
-                        feature={projectFlag.id}
-                        projectId={this.props.match.params.projectId}
-                      />
-                    </div>
+                {isScheduled && (
+                  <div className='col-md-6 mb-4'>
+                    <InfoMessage icon='calendar' title='Scheduled Change'>
+                      This feature change{' '}
+                      {changeRequest?.committedAt ? 'is scheduled to' : 'will'}{' '}
+                      go live at {scheduledDate.format('Do MMM YYYY hh:mma')}
+                      {changeRequest?.committed_at
+                        ? ' unless it is edited or deleted'
+                        : ' if it is approved and published'}
+                      .
+                      {!!changeRequest?.committedAt &&
+                        'You can still edit / remove the change request before this date.'}
+                    </InfoMessage>
                   </div>
+                )}
+                <InputGroup
+                  className='col-md-6'
+                  component={
+                    <>
+                      {!Utils.getFlagsmithHasFeature(
+                        'disable_users_as_reviewers',
+                      ) && (
+                        <div className='mb-4'>
+                          <SettingsButton
+                            onClick={() => this.setState({ showUsers: true })}
+                          >
+                            Assigned users
+                          </SettingsButton>
+                          <Row className='mt-2'>
+                            {ownerUsers.length !== 0 &&
+                              ownerUsers.map((u) => (
+                                <Row
+                                  key={u.id}
+                                  onClick={() => this.removeOwner(u.id)}
+                                  className='chip'
+                                  style={{
+                                    marginBottom: 4,
+                                    marginTop: 4,
+                                  }}
+                                >
+                                  <span className='font-weight-bold'>
+                                    {u.first_name} {u.last_name}
+                                  </span>
+                                  <span className='chip-icon ion'>
+                                    <IonIcon icon={close} />
+                                  </span>
+                                </Row>
+                              ))}
+                          </Row>
+                          <UserSelect
+                            users={orgUsers}
+                            value={ownerUsers && ownerUsers.map((v) => v.id)}
+                            onAdd={this.addOwner}
+                            onRemove={this.removeOwner}
+                            isOpen={this.state.showUsers}
+                            onToggle={() =>
+                              this.setState({
+                                showUsers: !this.state.showUsers,
+                              })
+                            }
+                          />
+                        </div>
+                      )}
+                      <div className='mb-4'>
+                        <SettingsButton
+                          onClick={() => this.setState({ showGroups: true })}
+                        >
+                          Assigned groups
+                        </SettingsButton>
+                        <Row className='mt-2'>
+                          {!!ownerGroups?.length &&
+                            ownerGroups.map((g) => (
+                              <Row
+                                key={g.id}
+                                onClick={() => this.removeOwner(g.id, false)}
+                                className='chip'
+                                style={{
+                                  marginBottom: 4,
+                                  marginTop: 4,
+                                }}
+                              >
+                                <span className='font-weight-bold'>
+                                  {g.name}
+                                </span>
+                                <span className='chip-icon ion'>
+                                  <IonIcon icon={close} />
+                                </span>
+                              </Row>
+                            ))}
+                        </Row>
+                        <MyGroupsSelect
+                          orgId={AccountStore.getOrganisation().id}
+                          groups={orgGroups}
+                          value={ownerGroups && ownerGroups.map((v) => v.id)}
+                          onAdd={this.addOwner}
+                          onRemove={this.removeOwner}
+                          isOpen={this.state.showGroups}
+                          onToggle={() =>
+                            this.setState({
+                              showGroups: !this.state.showGroups,
+                            })
+                          }
+                        />
+                      </div>
+                    </>
+                  }
+                />
+
+                <div>
+                  <Panel
+                    title={isScheduled ? 'Scheduled Change' : 'Change Request'}
+                    className='no-pad mb-2'
+                  >
+                    <div className='search-list change-request-list'>
+                      <Row className='list-item change-request-item px-4'>
+                        <div className='font-weight-medium mr-3'>Feature:</div>
+
+                        <a
+                          target='_blank'
+                          className='btn-link font-weight-medium'
+                          href={`/project/${
+                            this.props.match.params.projectId
+                          }/environment/${
+                            this.props.match.params.environmentId
+                          }/features?feature=${projectFlag && projectFlag.id}`}
+                          rel='noreferrer'
+                        >
+                          {projectFlag && projectFlag.name}
+                        </a>
+                      </Row>
+                    </div>
+                  </Panel>
+                  <DiffChangeRequest
+                    isVersioned={isVersioned}
+                    changeRequest={changeRequest}
+                    feature={projectFlag.id}
+                    projectId={this.props.match.params.projectId}
+                  />
                 </div>
                 <JSONReference
                   className='mt-4'
@@ -539,7 +516,7 @@ const ChangeRequestsPage = class extends Component {
                         by {committedBy.first_name} {committedBy.last_name}
                       </div>
                     ) : (
-                      <Row className='text-right col-md-8'>
+                      <Row className='text-right mt-2'>
                         <Flex />
                         {!isYourChangeRequest &&
                           Utils.renderWithPermission(
@@ -575,10 +552,6 @@ const ChangeRequestsPage = class extends Component {
                       </Row>
                     )}
                   </Flex>
-                </Row>
-
-                <Row>
-                  <div style={{ minHeight: 300 }} />
                 </Row>
               </div>
             )}

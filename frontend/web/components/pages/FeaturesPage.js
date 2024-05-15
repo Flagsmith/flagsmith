@@ -219,11 +219,7 @@ const FeaturesPage = class extends Component {
   render() {
     const { environmentId, projectId } = this.props.match.params
     const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
-    const enabledStateFilter = Utils.getFlagsmithHasFeature(
-      'feature_enabled_state_filter',
-    )
     const environment = ProjectStore.getEnvironment(environmentId)
-    const ownersFilter = Utils.getFlagsmithHasFeature('owners_filter')
     return (
       <div
         data-test='features-page'
@@ -427,69 +423,63 @@ const FeaturesPage = class extends Component {
                                             }
                                           }}
                                         />
-                                        {enabledStateFilter && (
-                                          <TableValueFilter
-                                            title={'State'}
-                                            className={'me-4'}
-                                            projectId={projectId}
-                                            useLocalStorage
-                                            value={{
-                                              enabled: this.state.is_enabled,
-                                              valueSearch:
-                                                this.state.value_search,
-                                            }}
-                                            onChange={({
-                                              enabled,
-                                              valueSearch,
-                                            }) => {
-                                              this.setState(
-                                                {
-                                                  is_enabled: enabled,
-                                                  value_search: valueSearch,
-                                                },
-                                                this.filter,
-                                              )
-                                            }}
-                                          />
-                                        )}
-                                        {ownersFilter && (
-                                          <TableOwnerFilter
-                                            title={'Owners'}
-                                            className={'me-4'}
-                                            useLocalStorage
-                                            value={this.state.owners}
-                                            onChange={(owners) => {
-                                              FeatureListStore.isLoading = true
-                                              this.setState(
-                                                {
-                                                  owners: owners,
-                                                },
-                                                this.filter,
-                                              )
-                                            }}
-                                          />
-                                        )}
-                                        {ownersFilter && (
-                                          <TableGroupsFilter
-                                            title={'Groups'}
-                                            className={'me-4'}
-                                            projectId={projectId}
-                                            orgId={
-                                              AccountStore.getOrganisation()?.id
-                                            }
-                                            useLocalStorage
-                                            value={this.state.group_owners}
-                                            onChange={(group_owners) => {
-                                              FeatureListStore.isLoading = true
-                                              this.setState(
-                                                {
-                                                  group_owners: group_owners,
-                                                },
-                                                this.filter,
-                                              )
-                                            }}
-                                          />
-                                        )}
+                                        <TableValueFilter
+                                          title={'State'}
+                                          className={'me-4'}
+                                          projectId={projectId}
+                                          useLocalStorage
+                                          value={{
+                                            enabled: this.state.is_enabled,
+                                            valueSearch:
+                                              this.state.value_search,
+                                          }}
+                                          onChange={({
+                                            enabled,
+                                            valueSearch,
+                                          }) => {
+                                            this.setState(
+                                              {
+                                                is_enabled: enabled,
+                                                value_search: valueSearch,
+                                              },
+                                              this.filter,
+                                            )
+                                          }}
+                                        />
+                                        <TableOwnerFilter
+                                          title={'Owners'}
+                                          className={'me-4'}
+                                          useLocalStorage
+                                          value={this.state.owners}
+                                          onChange={(owners) => {
+                                            FeatureListStore.isLoading = true
+                                            this.setState(
+                                              {
+                                                owners: owners,
+                                              },
+                                              this.filter,
+                                            )
+                                          }}
+                                        />
+                                        <TableGroupsFilter
+                                          title={'Groups'}
+                                          className={'me-4'}
+                                          projectId={projectId}
+                                          orgId={
+                                            AccountStore.getOrganisation()?.id
+                                          }
+                                          useLocalStorage
+                                          value={this.state.group_owners}
+                                          onChange={(group_owners) => {
+                                            FeatureListStore.isLoading = true
+                                            this.setState(
+                                              {
+                                                group_owners: group_owners,
+                                              },
+                                              this.filter,
+                                            )
+                                          }}
+                                        />
                                         <TableFilterOptions
                                           title={'View'}
                                           className={'me-4'}

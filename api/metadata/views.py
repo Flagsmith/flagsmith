@@ -1,13 +1,14 @@
+from itertools import chain
+
 from django.contrib.contenttypes.models import ContentType
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from .models import (
-    METADATA_SUPPORTED_MODELS,
     SUPPORTED_REQUIREMENTS_MAPPING,
     MetadataField,
     MetadataModelField,
@@ -81,7 +82,13 @@ class MetaDataModelFieldViewSet(viewsets.ModelViewSet):
         url_path="supported-content-types",
     )
     def supported_content_types(self, request, organisation_pk=None):
-        qs = ContentType.objects.filter(model__in=METADATA_SUPPORTED_MODELS)
+        need_content_type_of = list(
+            chain.from_iterable(
+                (key, *value) for key, value in SUPPORTED_REQUIREMENTS_MAPPING.items()
+            )
+        )
+
+        qs = ContentType.objects.filter(model__in=need_content_type_of)
         serializer = ContentTypeSerializer(qs, many=True)
 
         return Response(serializer.data)
@@ -100,11 +107,16 @@ class MetaDataModelFieldViewSet(viewsets.ModelViewSet):
         serializer = SupportedRequiredForModelQuerySerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
 
-        qs = ContentType.objects.filter(
-            model__in=SUPPORTED_REQUIREMENTS_MAPPING.get(
-                serializer.data["model_name"], {}
-            ).keys()
+        supported_models = SUPPORTED_REQUIREMENTS_MAPPING.get(
+            serializer.data["model_name"], []
         )
+        if not supported_models:
+            return Response(
+                {"message": "No supported models found for the given model name."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        qs = ContentType.objects.filter(model__in=supported_models)
         serializer = ContentTypeSerializer(qs, many=True)
 
         return Response(serializer.data)

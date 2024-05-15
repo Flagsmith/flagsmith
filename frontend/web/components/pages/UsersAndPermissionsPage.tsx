@@ -724,25 +724,23 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                         />
                       </div>
                     </TabItem>
-                    {Utils.getFlagsmithHasFeature('show_role_management') && (
-                      <TabItem tabLabel='Roles'>
-                        {hasRbacPermission ? (
-                          <>
-                            <RolesTable
-                              organisationId={organisation.id}
-                              users={users}
-                            />
-                          </>
-                        ) : (
-                          <div className='mt-4'>
-                            <InfoMessage>
-                              To use <strong>role</strong> features you have to
-                              upgrade your plan.
-                            </InfoMessage>
-                          </div>
-                        )}
-                      </TabItem>
-                    )}
+                    <TabItem tabLabel='Roles'>
+                      {hasRbacPermission ? (
+                        <>
+                          <RolesTable
+                            organisationId={organisation.id}
+                            users={users}
+                          />
+                        </>
+                      ) : (
+                        <div className='mt-4'>
+                          <InfoMessage>
+                            To use <strong>role</strong> features you have to
+                            upgrade your plan.
+                          </InfoMessage>
+                        </div>
+                      )}
+                    </TabItem>
                   </Tabs>
                 </div>
               )}
