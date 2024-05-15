@@ -19,6 +19,21 @@ WEBHOOK_SIGNATURE = "sha1=57a1426e19cdab55dd6d0c191743e2958e50ccaa"
 WEBHOOK_SECRET = "secret-key"
 
 
+def mocked_requests_delete(*args, **kwargs):
+    class MockResponse:
+        def __init__(self, json_data, status_code):
+            self.json_data = json_data
+            self.status_code = status_code
+
+        def raise_for_status(self) -> None:
+            pass
+
+        def json(self):
+            return self.json_data
+
+    return MockResponse(json_data={"data": "data"}, status_code=204)
+
+
 def test_get_github_configuration(
     admin_client_new: APIClient,
     organisation: Organisation,
@@ -105,6 +120,7 @@ def test_delete_github_configuration(
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     url = reverse(
@@ -114,10 +130,13 @@ def test_delete_github_configuration(
             github_configuration.id,
         ],
     )
+    mocker.patch("requests.delete", side_effect=mocked_requests_delete)
+
     # When
     response = admin_client_new.delete(url)
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not GithubConfiguration.objects.filter(id=github_configuration.id).exists()
 
 
 def test_get_github_repository(
