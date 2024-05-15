@@ -310,7 +310,7 @@ const controller = {
         const orgId = parseInt(pathID || cookiedID) || undefined
         if (orgId) {
           const foundOrganisation = user.organisations.find(
-            (v) => `${v.id}` === orgId,
+            (v) => v.id === orgId,
           )
           if (foundOrganisation) {
             store.organisation = foundOrganisation
