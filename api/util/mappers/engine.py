@@ -24,7 +24,9 @@ from flag_engine.segments.models import (
     SegmentRuleModel,
 )
 
-if TYPE_CHECKING:
+from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
+
+if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import Identity, Trait
     from environments.models import Environment, EnvironmentAPIKey
     from features.models import Feature, FeatureSegment, FeatureState
@@ -174,6 +176,8 @@ def map_mv_option_to_engine(
 
 def map_environment_to_engine(
     environment: "Environment",
+    *,
+    with_integrations: bool = True,
 ) -> EnvironmentModel:
     """
     Maps Core API's `environments.models.Environment` model instance to the
@@ -215,22 +219,14 @@ def map_environment_to_engine(
     }
 
     # Read integrations.
-    integration_configs: dict[str, Optional["EnvironmentIntegrationModel"]] = {}
-    for attr_name in (
-        "amplitude_config",
-        "dynatrace_config",
-        "heap_config",
-        "mixpanel_config",
-        "rudderstack_config",
-        "segment_config",
-    ):
-        integration_config = getattr(environment, attr_name, None)
-        if integration_config and not integration_config.deleted:
-            integration_configs[attr_name] = integration_config
-
-    webhook_config: Optional["WebhookConfiguration"] = getattr(
-        environment, "webhook_config", None
-    )
+    integration_configs: dict[
+        str, "EnvironmentIntegrationModel | WebhookConfiguration | None"
+    ] = {}
+    if with_integrations:
+        for attr_name in IDENTITY_INTEGRATIONS_RELATION_NAMES:
+            integration_config = getattr(environment, attr_name, None)
+            if integration_config and not integration_config.deleted:
+                integration_configs[attr_name] = integration_config
 
     # No reading from ORM past this point!
 
@@ -291,9 +287,6 @@ def map_environment_to_engine(
     amplitude_config_model = map_integration_to_engine(
         integration_configs.pop("amplitude_config", None),
     )
-    dynatrace_config_model = map_integration_to_engine(
-        integration_configs.pop("dynatrace_config", None),
-    )
     heap_config_model = map_integration_to_engine(
         integration_configs.pop("heap_config", None),
     )
@@ -306,13 +299,8 @@ def map_environment_to_engine(
     segment_config_model = map_integration_to_engine(
         integration_configs.pop("segment_config", None),
     )
-
-    webhook_config_model = (
-        map_webhook_config_to_engine(
-            webhook_config,
-        )
-        if webhook_config and not webhook_config.deleted
-        else None
+    webhook_config_model = map_webhook_config_to_engine(
+        integration_configs.pop("webhook_config", None),
     )
 
     return EnvironmentModel(
@@ -333,7 +321,6 @@ def map_environment_to_engine(
         #
         # Integrations:
         amplitude_config=amplitude_config_model,
-        dynatrace_config=dynatrace_config_model,
         heap_config=heap_config_model,
         mixpanel_config=mixpanel_config_model,
         rudderstack_config=rudderstack_config_model,

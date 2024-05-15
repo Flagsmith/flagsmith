@@ -12,6 +12,7 @@ from core.models import (
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
     ObjectDoesNotExist,
@@ -75,6 +76,7 @@ from features.value_types import (
 )
 from features.versioning.models import EnvironmentFeatureVersion
 from integrations.github.models import GithubConfiguration
+from metadata.models import Metadata
 from projects.models import Project
 from projects.tags.models import Tag
 
@@ -128,6 +130,8 @@ class Feature(
     related_object_type = RelatedObjectType.FEATURE
 
     objects = FeatureManager()
+
+    metadata = GenericRelation(Metadata)
 
     class Meta:
         # Note: uniqueness index is added in explicit SQL in the migrations (See 0005, 0050)
@@ -987,12 +991,17 @@ class FeatureState(
                 source_feature_id
             ].enabled
 
-            # Copy feature state value from source feature_state
+            if source_feature_state.feature.type == MULTIVARIATE:
+                mv_values = [
+                    mv_value.clone(feature_state=target_feature_state, persist=False)
+                    for mv_value in source_feature_state.multivariate_feature_state_values.all()
+                ]
+                MultivariateFeatureStateValue.objects.bulk_create(mv_values)
+
             target_feature_state.feature_state_value.copy_from(
                 source_feature_state.feature_state_value
             )
 
-            # Save changes to target feature_state
             target_feature_state.save()
 
     @hook(AFTER_SAVE)
@@ -1005,7 +1014,6 @@ class FeatureState(
 
         if (
             not self.identity_id
-            and not self.feature_segment
             and self.feature.external_resources.exists()
             and self.environment.project.github_project.exists()
             and self.environment.project.organisation.github_config.exists()
@@ -1023,6 +1031,7 @@ class FeatureState(
                     feature_name=self.feature.name,
                     type=WebhookEventType.FLAG_UPDATED.value,
                     feature_states=feature_states,
+                    project_id=self.environment.project_id,
                 )
 
             if self.deleted_at is not None:

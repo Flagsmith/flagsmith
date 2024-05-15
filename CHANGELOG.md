@@ -1,5 +1,35 @@
 # Changelog
 
+## [2.115.0](https://github.com/Flagsmith/flagsmith/compare/v2.114.1...v2.115.0) (2024-05-15)
+
+
+### Features
+
+* Add metadata fields to core entities (API) ([#3315](https://github.com/Flagsmith/flagsmith/issues/3315)) ([06eb8a4](https://github.com/Flagsmith/flagsmith/commit/06eb8a4754bf8afbff29974eb6e075953ca0352d))
+
+
+### Bug Fixes
+
+* add trailing slash to update group logic ([#3943](https://github.com/Flagsmith/flagsmith/issues/3943)) ([95b14d1](https://github.com/Flagsmith/flagsmith/commit/95b14d121d0a8d2419746ac5112b6ca78670f5d9))
+* changed the error message from custom_auth serializer ([#3924](https://github.com/Flagsmith/flagsmith/issues/3924)) ([185bd6a](https://github.com/Flagsmith/flagsmith/commit/185bd6a441af53fefec2426a891df0a1d140af58))
+* Create GitHub comment as table ([#3948](https://github.com/Flagsmith/flagsmith/issues/3948)) ([bf67b1d](https://github.com/Flagsmith/flagsmith/commit/bf67b1dc0ad3a34c38f8aabb8a5cfaf5f65863de))
+* Organisation ID is an object calling useHasPermission at organisation level ([#3950](https://github.com/Flagsmith/flagsmith/issues/3950)) ([1372917](https://github.com/Flagsmith/flagsmith/commit/13729173d0587c322272f603f1957908874f9375))
+* organisation id parsing ([#3954](https://github.com/Flagsmith/flagsmith/issues/3954)) ([aae116b](https://github.com/Flagsmith/flagsmith/commit/aae116bc6fd83837e6ead8bc681155c25149dcdc))
+* Scroll to top on path change ([#3926](https://github.com/Flagsmith/flagsmith/issues/3926)) ([1a2e793](https://github.com/Flagsmith/flagsmith/commit/1a2e793e9bb47922ad0c688c445a54d5ff2677db))
+* segment override link ([#3945](https://github.com/Flagsmith/flagsmith/issues/3945)) ([fc0cceb](https://github.com/Flagsmith/flagsmith/commit/fc0cceb40b881891878678c1c61cc0cc1148d090))
+* Validate and handle URL params ([#3932](https://github.com/Flagsmith/flagsmith/issues/3932)) ([7e1617f](https://github.com/Flagsmith/flagsmith/commit/7e1617f5bd4e754dbc7d17db957f4315c53c3fba))
+* **versioning:** prevent task from deleting all unrelated feature states / feature segments ([#3955](https://github.com/Flagsmith/flagsmith/issues/3955)) ([0ed5148](https://github.com/Flagsmith/flagsmith/commit/0ed5148183e21a74ad93aa9e0af47a08941cfed6))
+
+## [2.114.1](https://github.com/Flagsmith/flagsmith/compare/v2.114.0...v2.114.1) (2024-05-14)
+
+
+### Bug Fixes
+
+* Add multivariate values when cloning identities ([#3894](https://github.com/Flagsmith/flagsmith/issues/3894)) ([92e3e9f](https://github.com/Flagsmith/flagsmith/commit/92e3e9f55c25855cd0d1b7b7333184ab54385846))
+* Organisation id not numeric in organisation settings ([#3929](https://github.com/Flagsmith/flagsmith/issues/3929)) ([9e3746b](https://github.com/Flagsmith/flagsmith/commit/9e3746bd7dce9a8d2eac6bf616a73f2dd1f5b54e))
+* **versioning:** fix exception getting feature states for edge identity post v2 versioning migration ([#3916](https://github.com/Flagsmith/flagsmith/issues/3916)) ([132ef77](https://github.com/Flagsmith/flagsmith/commit/132ef77ee0d50c618c23431e3ea1b60aec3e5bf4))
+* **versioning:** handle mapping of environment to engine post v2 versioning migration ([#3913](https://github.com/Flagsmith/flagsmith/issues/3913)) ([75acd12](https://github.com/Flagsmith/flagsmith/commit/75acd12c632a9fe8b4a5af5a48a33d18a406e9d4))
+
 ## [2.114.0](https://github.com/Flagsmith/flagsmith/compare/v2.113.0...v2.114.0) (2024-05-10)
 
 

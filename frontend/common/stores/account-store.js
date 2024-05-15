@@ -307,10 +307,10 @@ const controller = {
           path: '/organisation/:organisationId',
           strict: false,
         })?.params?.organisationId
-        const orgId = pathID || cookiedID
+        const orgId = parseInt(pathID || cookiedID) || undefined
         if (orgId) {
           const foundOrganisation = user.organisations.find(
-            (v) => `${v.id}` === orgId,
+            (v) => v.id === orgId,
           )
           if (foundOrganisation) {
             store.organisation = foundOrganisation
@@ -372,6 +372,7 @@ const controller = {
           store.model.organisations[idx] = res
           try {
             if (res && res.subscription && res.subscription.plan) {
+              API.trackEvent(Constants.events.UPGRADE(res.subscription.plan))
               API.postEvent(res.subscription.plan, 'chargebee')
             }
           } catch (e) {}
@@ -396,7 +397,6 @@ const store = Object.assign({}, BaseStore, {
     }
 
     return (
-      Utils.getFlagsmithHasFeature('force_2fa') &&
       store.getOrganisations() &&
       store.getOrganisations().find((o) => o.force_2fa)
     )
