@@ -12,6 +12,7 @@ from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
+from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
 from users.serializers import (
     UserIdsSerializer,
@@ -296,17 +297,44 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         return getattr(instance, "last_modified_in_current_environment", None)
 
 
-class ListFeatureSerializer(CreateFeatureSerializer):
+class FeatureSerializerWithMetadata(SerializerWithMetadata, CreateFeatureSerializer):
+    metadata = MetadataSerializer(required=False, many=True)
+
+    class Meta(CreateFeatureSerializer.Meta):
+        fields = CreateFeatureSerializer.Meta.fields + ("metadata",)
+
+    def get_project(self, validated_data: dict = None) -> Project:
+        project = self.context.get("project")
+        if project:
+            return project
+        else:
+            raise serializers.ValidationError(
+                "Unable to retrieve project for metadata validation."
+            )
+
+
+class UpdateFeatureSerializerWithMetadata(FeatureSerializerWithMetadata):
+    """prevent users from changing certain values after creation"""
+
+    class Meta(FeatureSerializerWithMetadata.Meta):
+        read_only_fields = FeatureSerializerWithMetadata.Meta.read_only_fields + (
+            "default_enabled",
+            "initial_value",
+            "name",
+        )
+
+
+class ListFeatureSerializer(FeatureSerializerWithMetadata):
     # This exists purely to reduce the conflicts for the EE repository
     # which has some extra behaviour here to support Oracle DB.
     pass
 
 
-class UpdateFeatureSerializer(CreateFeatureSerializer):
+class UpdateFeatureSerializer(ListFeatureSerializer):
     """prevent users from changing certain values after creation"""
 
-    class Meta(CreateFeatureSerializer.Meta):
-        read_only_fields = CreateFeatureSerializer.Meta.read_only_fields + (
+    class Meta(ListFeatureSerializer.Meta):
+        read_only_fields = ListFeatureSerializer.Meta.read_only_fields + (
             "default_enabled",
             "initial_value",
             "name",
