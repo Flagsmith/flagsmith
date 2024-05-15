@@ -554,6 +554,29 @@ def segment_featurestate(feature_segment, feature, environment):
 
 
 @pytest.fixture()
+def feature_with_value_segment(
+    feature_with_value: Feature, segment: Segment, environment: Environment
+) -> FeatureSegment:
+    return FeatureSegment.objects.create(
+        feature=feature_with_value, segment=segment, environment=environment
+    )
+
+
+@pytest.fixture()
+def segment_featurestate_and_feature_with_value(
+    feature_with_value_segment: FeatureSegment,
+    feature_with_value: Feature,
+    environment: Environment,
+) -> FeatureState:
+    return FeatureState.objects.create(
+        feature_segment=feature_with_value_segment,
+        feature=feature_with_value,
+        environment=environment,
+        updated_at="2024-01-01 00:00:00",
+    )
+
+
+@pytest.fixture()
 def environment_api_key(environment):
     return EnvironmentAPIKey.objects.create(
         environment=environment, name="Test API Key"

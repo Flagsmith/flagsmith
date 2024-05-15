@@ -1014,7 +1014,6 @@ class FeatureState(
 
         if (
             not self.identity_id
-            and not self.feature_segment
             and self.feature.external_resources.exists()
             and self.environment.project.github_project.exists()
             and self.environment.project.organisation.github_config.exists()
@@ -1032,6 +1031,7 @@ class FeatureState(
                     feature_name=self.feature.name,
                     type=WebhookEventType.FLAG_UPDATED.value,
                     feature_states=feature_states,
+                    project_id=self.environment.project_id,
                 )
 
             if self.deleted_at is not None:
