@@ -2,6 +2,11 @@ import json
 from datetime import date, timedelta
 
 import pytest
+from app_analytics.constants import (
+    _90_DAY_PERIOD,
+    CURRENT_BILLING_PERIOD,
+    PREVIOUS_BILLING_PERIOD,
+)
 from app_analytics.dataclasses import UsageData
 from app_analytics.models import FeatureEvaluationRaw
 from app_analytics.views import SDKAnalyticsFlags
@@ -113,7 +118,7 @@ def test_get_usage_data__current_billing_period(
 ) -> None:
     # Given
     url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
-    url += "?period=current_billing_period"
+    url += f"?period={CURRENT_BILLING_PERIOD}"
 
     mocked_get_usage_data = mocker.patch(
         "app_analytics.analytics_db_service.get_usage_data_from_influxdb",
@@ -174,14 +179,14 @@ def test_get_usage_data__previous_billing_period(
 ) -> None:
     # Given
     url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
-    url += "?period=previous_billing_period"
+    url += f"?period={PREVIOUS_BILLING_PERIOD}"
 
     mocked_get_usage_data = mocker.patch(
         "app_analytics.analytics_db_service.get_usage_data_from_influxdb",
         autospec=True,
         return_value=[
-            UsageData(flags=10, day=date.today()),
-            UsageData(flags=10, day=date.today() - timedelta(days=1)),
+            UsageData(flags=10, day=date.today() - timedelta(days=29)),
+            UsageData(flags=10, day=date.today() - timedelta(days=30)),
         ],
     )
 
@@ -204,14 +209,14 @@ def test_get_usage_data__previous_billing_period(
     assert response.json() == [
         {
             "flags": 10,
-            "day": str(date.today()),
+            "day": str(date.today() - timedelta(days=29)),
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
         },
         {
             "flags": 10,
-            "day": str(date.today() - timedelta(days=1)),
+            "day": str(date.today() - timedelta(days=30)),
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
@@ -235,7 +240,7 @@ def test_get_usage_data__90_day_period(
 ) -> None:
     # Given
     url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
-    url += "?period=90_day_period"
+    url += f"?period={_90_DAY_PERIOD}"
 
     mocked_get_usage_data = mocker.patch(
         "app_analytics.analytics_db_service.get_usage_data_from_influxdb",
