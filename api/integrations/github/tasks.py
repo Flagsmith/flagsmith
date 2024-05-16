@@ -24,12 +24,16 @@ class CallGithubData:
 
 def send_post_request(data: CallGithubData) -> None:
     feature_name = data.github_data.feature_name
+    feature_id = data.github_data.feature_id
+    project_id = data.github_data.project_id
     event_type = data.event_type
-    feature_states = feature_states = (
+    feature_states = (
         data.github_data.feature_states if data.github_data.feature_states else None
     )
     installation_id = data.github_data.installation_id
-    body = generate_body_comment(feature_name, event_type, feature_states)
+    body = generate_body_comment(
+        feature_name, event_type, project_id, feature_id, feature_states
+    )
 
     if (
         event_type == WebhookEventType.FLAG_UPDATED.value

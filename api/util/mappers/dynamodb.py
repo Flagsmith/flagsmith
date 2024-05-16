@@ -48,6 +48,7 @@ def map_environment_to_environment_document(
         field_name: _map_value_to_document_value(value)
         for field_name, value in map_environment_to_engine(
             environment,
+            with_integrations=True,
         )
     }
 

@@ -31,11 +31,13 @@ import { setInterceptClose, setModalTitle } from './base/ModalDefault'
 import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
 import FeatureValue from 'components/FeatureValue'
+import { getStore } from 'common/store'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
 import Button from 'components/base/forms/Button'
+import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
+import { getSupportedContentType } from 'common/services/useSupportedContentType'
 import { getGithubIntegration } from 'common/services/useGithubIntegration'
-import { getStore } from 'common/store'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import MyRepositoriesSelect from 'components/MyRepositoriesSelect'
 import ExternalResourcesTable from 'components/ExternalResourcesTable'
@@ -51,6 +53,7 @@ const CreateFlag = class extends Component {
       feature_state_value,
       is_archived,
       is_server_key_only,
+      metadata,
       multivariate_options,
       name,
       tags,
@@ -76,8 +79,10 @@ const CreateFlag = class extends Component {
       environmentFlag: this.props.environmentFlag,
       externalResource: {},
       externalResources: [],
+      featureContentType: {},
       githubId: '',
       hasIntegrationWithGithub: false,
+      hasMetadataRequired: false,
       identityVariations:
         this.props.identityFlag &&
         this.props.identityFlag.multivariate_feature_state_values
@@ -92,6 +97,7 @@ const CreateFlag = class extends Component {
       isEdit: !!this.props.projectFlag,
       is_archived,
       is_server_key_only,
+      metadata: [],
       multivariate_options: _.cloneDeep(multivariate_options),
       name,
       period: 30,
@@ -178,6 +184,18 @@ const CreateFlag = class extends Component {
       this.state.environmentFlag
     ) {
       this.getFeatureUsage()
+    }
+    if (Utils.getFlagsmithHasFeature('enable_metadata')) {
+      getSupportedContentType(getStore(), {
+        organisation_id: AccountStore.getOrganisation().id,
+      }).then((res) => {
+        const featureContentType = Utils.getContentType(
+          res.data,
+          'model',
+          'feature',
+        )
+        this.setState({ featureContentType: featureContentType })
+      })
     }
 
     if (Utils.getFlagsmithHasFeature('github_integration')) {
@@ -310,6 +328,12 @@ const CreateFlag = class extends Component {
             initial_value,
             is_archived,
             is_server_key_only,
+            metadata:
+              !this.props.projectFlag?.metadata ||
+              (this.props.projectFlag.metadata !== this.state.metadata &&
+                this.state.metadata.length)
+                ? this.state.metadata
+                : this.props.projectFlag.metadata,
             multivariate_options: this.state.multivariate_options,
             name,
             tags: this.state.tags,
@@ -501,6 +525,7 @@ const CreateFlag = class extends Component {
       description,
       enabledIndentity,
       enabledSegment,
+      featureContentType,
       githubId,
       hasIntegrationWithGithub,
       initial_value,
@@ -531,6 +556,7 @@ const CreateFlag = class extends Component {
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
     let regexValid = true
+    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
     try {
       if (!isEdit && name && regex) {
         regexValid = name.match(new RegExp(regex))
@@ -538,7 +564,7 @@ const CreateFlag = class extends Component {
     } catch (e) {
       regexValid = false
     }
-    const Settings = (projectAdmin, createFeature) => (
+    const Settings = (projectAdmin, createFeature, featureContentType) => (
       <>
         {!identity && this.state.tags && (
           <FormGroup className='mb-5 setting'>
@@ -553,6 +579,34 @@ const CreateFlag = class extends Component {
                   onChange={(tags) =>
                     this.setState({ settingsChanged: true, tags })
                   }
+                />
+              }
+            />
+          </FormGroup>
+        )}
+        {metadataEnable && featureContentType?.id && (
+          <FormGroup className='mb-5 setting'>
+            <InputGroup
+              title={'Metadata'}
+              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} feature`}
+              tooltipPlace='right'
+              component={
+                <AddMetadataToEntity
+                  organisationId={AccountStore.getOrganisation().id}
+                  projectId={this.props.projectId}
+                  entityId={projectFlag?.id}
+                  entityContentType={featureContentType?.id}
+                  entity={featureContentType?.model}
+                  setHasMetadataRequired={(b) => {
+                    this.setState({
+                      hasMetadataRequired: true,
+                    })
+                  }}
+                  onChange={(m) => {
+                    this.setState({
+                      metadata: m,
+                    })
+                  }}
                 />
               }
             />
@@ -803,7 +857,9 @@ const CreateFlag = class extends Component {
             />
           </div>
         )}
-        {!isEdit && !identity && Settings(projectAdmin, createFeature)}
+        {!isEdit &&
+          !identity &&
+          Settings(projectAdmin, createFeature, featureContentType)}
       </>
     )
     return (
@@ -1022,6 +1078,9 @@ const CreateFlag = class extends Component {
                     >
                       {({ permission: projectAdmin }) => {
                         this.state.skipSaveProjectFeature = !createFeature
+                        const _hasMetadataRequired =
+                          this.state.hasMetadataRequired &&
+                          !this.state.metadata.length
                         return (
                           <div id='create-feature-modal'>
                             {isEdit && !identity ? (
@@ -1727,7 +1786,11 @@ const CreateFlag = class extends Component {
                                       </Row>
                                     }
                                   >
-                                    {Settings(projectAdmin, createFeature)}
+                                    {Settings(
+                                      projectAdmin,
+                                      createFeature,
+                                      featureContentType,
+                                    )}
                                     <JSONReference
                                       className='mb-3'
                                       showNamesButton
@@ -1760,7 +1823,10 @@ const CreateFlag = class extends Component {
                                             data-test='update-feature-btn'
                                             id='update-feature-btn'
                                             disabled={
-                                              isSaving || !name || invalid
+                                              isSaving ||
+                                              !name ||
+                                              invalid ||
+                                              _hasMetadataRequired
                                             }
                                           >
                                             {isSaving
@@ -1821,7 +1887,8 @@ const CreateFlag = class extends Component {
                                         !name ||
                                         invalid ||
                                         !regexValid ||
-                                        featureLimitAlert.percentage >= 100
+                                        featureLimitAlert.percentage >= 100 ||
+                                        _hasMetadataRequired
                                       }
                                     >
                                       {isSaving ? 'Creating' : 'Create Feature'}
@@ -1906,6 +1973,7 @@ const FeatureProvider = (WrappedComponent) => {
     }
 
     componentDidMount() {
+      // toast update feature
       ES6Component(this)
       this.listenTo(
         FeatureListStore,

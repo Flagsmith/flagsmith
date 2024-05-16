@@ -1,4 +1,5 @@
 import enum
+import typing
 from dataclasses import asdict, dataclass
 from datetime import datetime
 
@@ -6,6 +7,9 @@ import boto3
 from django.conf import settings
 from flag_engine.features.models import FeatureStateModel
 from pydantic import BaseModel
+
+if typing.TYPE_CHECKING:
+    from projects.models import EdgeV2MigrationStatus
 
 project_metadata_table = None
 
@@ -90,3 +94,9 @@ class IdentityOverrideV2(BaseModel):
 class IdentityOverridesV2Changeset:
     to_delete: list[IdentityOverrideV2]
     to_put: list[IdentityOverrideV2]
+
+
+@dataclass
+class EdgeV2MigrationResult:
+    identity_overrides_changeset: IdentityOverridesV2Changeset
+    status: "EdgeV2MigrationStatus"

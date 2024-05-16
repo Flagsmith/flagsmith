@@ -1197,3 +1197,19 @@ if SPLIT_TESTING_INSTALLED:
     INSTALLED_APPS += ("split_testing",)
 
 ENABLE_API_USAGE_ALERTING = env.bool("ENABLE_API_USAGE_ALERTING", default=False)
+
+# See DomainAuthMethods in flagsmith-auth-controller repository with auth_controller.models module
+GLOBAL_DOMAIN_AUTH_METHODS = env.dict(
+    "GLOBAL_DOMAIN_AUTH_METHODS",
+    {
+        "EP": True,  # Email / Password
+        "GO": True,  # Google
+        "GH": True,  # GitHub
+        "SAML": True,  # Security Assertion Markup Language
+    },
+)
+
+EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET = env.int(
+    "EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET",
+    default=0,
+)

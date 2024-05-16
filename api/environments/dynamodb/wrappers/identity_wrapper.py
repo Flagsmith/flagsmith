@@ -1,9 +1,10 @@
 import logging
 import typing
 from contextlib import suppress
+from decimal import Decimal
 from typing import Iterable
 
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Attr, Key
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from flag_engine.environments.models import EnvironmentModel
@@ -12,12 +13,14 @@ from flag_engine.segments.evaluator import get_identity_segments
 from rest_framework.exceptions import NotFound
 
 from environments.dynamodb.constants import IDENTITIES_PAGINATION_LIMIT
+from environments.dynamodb.wrappers.exceptions import CapacityBudgetExceeded
 from util.mappers import map_identity_to_identity_document
 
 from .base import BaseDynamoWrapper
 from .environment_wrapper import DynamoEnvironmentWrapper
 
 if typing.TYPE_CHECKING:
+    from boto3.dynamodb.conditions import ConditionBase
     from mypy_boto3_dynamodb.type_defs import (
         QueryInputRequestTypeDef,
         QueryOutputTableTypeDef,
@@ -89,37 +92,56 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         environment_api_key: str,
         limit: int,
         start_key: dict[str, "TableAttributeValueTypeDef"] | None = None,
-        projection_expression: str = None,
+        filter_expression: "ConditionBase | str | None" = None,
+        projection_expression: str | None = None,
+        return_consumed_capacity: bool = False,
     ) -> "QueryOutputTableTypeDef":
-        filter_expression = Key("environment_api_key").eq(environment_api_key)
+        key_condition_expression = Key("environment_api_key").eq(environment_api_key)
         query_kwargs: "QueryInputRequestTypeDef" = {
             "IndexName": "environment_api_key-identifier-index",
-            "KeyConditionExpression": filter_expression,
+            "KeyConditionExpression": key_condition_expression,
             "Limit": limit,
         }
-        if projection_expression:
-            query_kwargs["ProjectionExpression"] = projection_expression
-
         if start_key:
             query_kwargs["ExclusiveStartKey"] = start_key
+        if filter_expression:
+            query_kwargs["FilterExpression"] = filter_expression
+        if projection_expression:
+            query_kwargs["ProjectionExpression"] = projection_expression
+        if return_consumed_capacity:
+            # Use `TOTAL` because we don't need per-index/per-table consumed capacity
+            query_kwargs["ReturnConsumedCapacity"] = "TOTAL"
         return self.query_items(**query_kwargs)
 
     def iter_all_items_paginated(
         self,
         environment_api_key: str,
         limit: int = IDENTITIES_PAGINATION_LIMIT,
-        projection_expression: str = None,
+        projection_expression: str | None = None,
+        capacity_budget: Decimal = Decimal("Inf"),
+        overrides_only: bool = False,
     ) -> typing.Generator[dict, None, None]:
         last_evaluated_key = "initial"
         get_all_items_kwargs = {
             "environment_api_key": environment_api_key,
             "limit": limit,
             "projection_expression": projection_expression,
+            "return_consumed_capacity": capacity_budget != Decimal("Inf"),
         }
+        if overrides_only:
+            get_all_items_kwargs["filter_expression"] = Attr("identity_features").ne([])
+        capacity_spent = 0
         while last_evaluated_key:
+            if capacity_spent >= capacity_budget:
+                raise CapacityBudgetExceeded(
+                    capacity_budget=capacity_budget,
+                    capacity_spent=capacity_spent,
+                )
             query_response = self.get_all_items(
                 **get_all_items_kwargs,
             )
+            with suppress(KeyError):
+                capacity_spent += query_response["ConsumedCapacity"]["CapacityUnits"]
             for item in query_response["Items"]:
                 yield item
             if last_evaluated_key := query_response.get("LastEvaluatedKey"):

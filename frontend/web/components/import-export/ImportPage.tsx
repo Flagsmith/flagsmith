@@ -37,10 +37,6 @@ const ImportPage: FC<ImportPageType> = ({
   const [createLaunchDarklyProjectImport, { data, isSuccess }] =
     useCreateLaunchDarklyProjectImportMutation()
 
-  const hasFlagsmithImport = Utils.getFlagsmithHasFeature(
-    'flagsmith_import_export',
-  )
-
   const {
     data: status,
     isSuccess: statusLoaded,
@@ -231,20 +227,16 @@ const ImportPage: FC<ImportPageType> = ({
         </div>
       )}
       <div className='mt-4'>
-        {Utils.getFlagsmithHasFeature('flagsmith_import_export') ? (
-          <Tabs urlParam={'import'} theme='pill'>
-            <TabItem tabLabel={'Flagsmith'}>
-              <div className='mt-4'>
-                <FeatureImport projectId={projectId} />
-              </div>
-            </TabItem>
-            <TabItem tabLabel={'LaunchDarkly'}>
-              <div className='mt-4'>{launchDarklyImport}</div>
-            </TabItem>
-          </Tabs>
-        ) : (
-          launchDarklyImport
-        )}
+        <Tabs urlParam={'import'} theme='pill'>
+          <TabItem tabLabel={'Flagsmith'}>
+            <div className='mt-4'>
+              <FeatureImport projectId={projectId} />
+            </div>
+          </TabItem>
+          <TabItem tabLabel={'LaunchDarkly'}>
+            <div className='mt-4'>{launchDarklyImport}</div>
+          </TabItem>
+        </Tabs>
       </div>
     </>
   )
