@@ -454,9 +454,7 @@ const HomePage = class extends React.Component {
                           <React.Fragment>
                             <Card className='mb-3'>
                               {!!oauths.length && (
-                                <div className='row mb-4'>
-                                  {oauths}
-                                </div>
+                                <div className='row mb-4'>{oauths}</div>
                               )}
 
                               {!preventEmailPassword && (

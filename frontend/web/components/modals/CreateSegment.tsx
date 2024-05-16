@@ -2,9 +2,11 @@ import React, { FC, FormEvent, useEffect, useMemo, useState } from 'react'
 
 import Constants from 'common/constants'
 import useSearchThrottle from 'common/useSearchThrottle'
+import AccountStore from 'common/stores/account-store'
 import {
   EdgePagedResponse,
   Identity,
+  Metadata,
   Operator,
   Segment,
   SegmentRule,
@@ -39,6 +41,10 @@ import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
 import Permission from 'common/providers/Permission'
 import classNames from 'classnames'
+import AddMetadataToEntity, {
+  CustomMetadataField,
+} from 'components/metadata/AddMetadataToEntity'
+import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 
 type PageType = {
   number: number
@@ -131,17 +137,31 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [name, setName] = useState<Segment['name']>(segment.name)
   const [rules, setRules] = useState<Segment['rules']>(segment.rules)
   const [tab, setTab] = useState(0)
+  const [metadata, setMetadata] = useState<CustomMetadataField[]>(
+    segment.metadata,
+  )
+  const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
 
   const error = createError || updateError
-  const isLimitReached =
-    ProjectStore.getTotalSegments() >= ProjectStore.getMaxSegmentsAllowed()
+  const totalSegments = ProjectStore.getTotalSegments() ?? 0
+  const maxSegmentsAllowed = ProjectStore.getMaxSegmentsAllowed() ?? 0
+  const isLimitReached = totalSegments >= maxSegmentsAllowed
 
   const THRESHOLD = 90
   const segmentsLimitAlert = Utils.calculateRemainingLimitsPercentage(
-    ProjectStore.getTotalSegments(),
-    ProjectStore.getMaxSegmentsAllowed(),
+    totalSegments,
+    maxSegmentsAllowed,
     THRESHOLD,
   )
+  const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
+    organisation_id: AccountStore.getOrganisation().id,
+  })
+
+  const segmentContentType = useMemo(() => {
+    if (supportedContentTypes) {
+      return Utils.getContentType(supportedContentTypes, 'model', 'segment')
+    }
+  }, [supportedContentTypes])
 
   const addRule = (type = 'ANY') => {
     const newRules = cloneDeep(rules)
@@ -174,6 +194,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     const segmentData: Omit<Segment, 'id' | 'uuid'> = {
       description,
       feature: feature,
+      metadata: metadata as Metadata[],
       name,
       project: projectId,
       rules,
@@ -402,6 +423,27 @@ const CreateSegment: FC<CreateSegmentType> = ({
               : 'Show condition descriptions'}
           </span>
         </Row>
+        {metadataEnable && segmentContentType?.id && (
+          <FormGroup className='mb-5 setting'>
+            <InputGroup
+              title={'Metadata'}
+              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} segments`}
+              tooltipPlace='right'
+              component={
+                <AddMetadataToEntity
+                  organisationId={AccountStore.getOrganisation().id}
+                  projectId={projectId}
+                  entityId={`${segment.id}` || ''}
+                  entityContentType={segmentContentType?.id}
+                  entity={segmentContentType?.model}
+                  onChange={(m: CustomMetadataField[]) => {
+                    setMetadata(m)
+                  }}
+                />
+              }
+            />
+          </FormGroup>
+        )}
         <Flex className='mb-3'>
           <label className='cols-sm-2 control-label mb-1'>
             Include users when all of the following rules apply:

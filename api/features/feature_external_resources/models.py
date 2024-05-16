@@ -61,11 +61,10 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
                 feature_id=self.feature_id, identity_id__isnull=True
             )
             feature_data: GithubData = generate_data(
-                github_configuration,
-                self.feature_id,
-                self.feature.name,
-                WebhookEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
-                feature_states,
+                github_configuration=github_configuration,
+                feature=self.feature,
+                type=WebhookEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
+                feature_states=feature_states,
             )
 
             call_github_app_webhook_for_feature_state.delay(
@@ -84,8 +83,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
         ):
             feature_data: GithubData = generate_data(
                 github_configuration=github_configuration,
-                feature_id=self.feature_id,
-                feature_name=self.feature.name,
+                feature=self.feature,
                 type=WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
                 url=self.url,
             )

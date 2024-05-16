@@ -485,6 +485,7 @@ if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 
 SWAGGER_SETTINGS = {
+    "DEEP_LINKING": True,
     "DEFAULT_AUTO_SCHEMA_CLASS": "api.openapi.PydanticResponseCapableSwaggerAutoSchema",
     "SHOW_REQUEST_HEADERS": True,
     "SECURITY_DEFINITIONS": {
@@ -1197,3 +1198,19 @@ if SPLIT_TESTING_INSTALLED:
     INSTALLED_APPS += ("split_testing",)
 
 ENABLE_API_USAGE_ALERTING = env.bool("ENABLE_API_USAGE_ALERTING", default=False)
+
+# See DomainAuthMethods in flagsmith-auth-controller repository with auth_controller.models module
+GLOBAL_DOMAIN_AUTH_METHODS = env.dict(
+    "GLOBAL_DOMAIN_AUTH_METHODS",
+    {
+        "EP": True,  # Email / Password
+        "GO": True,  # Google
+        "GH": True,  # GitHub
+        "SAML": True,  # Security Assertion Markup Language
+    },
+)
+
+EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET = env.int(
+    "EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET",
+    default=0,
+)
