@@ -28,7 +28,7 @@ from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.models import EnvironmentFeatureVersion
 from organisations.models import Organisation, OrganisationRole
-from projects.models import IdentityOverridesV2MigrationStatus, Project
+from projects.models import EdgeV2MigrationStatus, Project
 from segments.models import Segment
 from util.mappers import map_environment_to_environment_document
 
@@ -500,9 +500,7 @@ def test_write_environments_to_dynamodb__project_environments_v2_migrated__call_
     mock_dynamo_env_v2_wrapper: Mock,
 ) -> None:
     # Given
-    dynamo_enabled_project.identity_overrides_v2_migration_status = (
-        IdentityOverridesV2MigrationStatus.COMPLETE
-    )
+    dynamo_enabled_project.edge_v2_migration_status = EdgeV2MigrationStatus.COMPLETE
     dynamo_enabled_project.save()
     mock_dynamo_env_v2_wrapper.is_enabled = True
 
@@ -527,9 +525,7 @@ def test_write_environments_to_dynamodb__project_environments_v2_migrated__wrapp
 ) -> None:
     # Given
     mock_dynamo_env_v2_wrapper.is_enabled = False
-    dynamo_enabled_project.identity_overrides_v2_migration_status = (
-        IdentityOverridesV2MigrationStatus.COMPLETE
-    )
+    dynamo_enabled_project.edge_v2_migration_status = EdgeV2MigrationStatus.COMPLETE
     dynamo_enabled_project.save()
 
     # When
@@ -540,10 +536,10 @@ def test_write_environments_to_dynamodb__project_environments_v2_migrated__wrapp
 
 
 @pytest.mark.parametrize(
-    "identity_overrides_v2_migration_status",
+    "edge_v2_migration_status",
     (
-        IdentityOverridesV2MigrationStatus.NOT_STARTED,
-        IdentityOverridesV2MigrationStatus.IN_PROGRESS,
+        EdgeV2MigrationStatus.NOT_STARTED,
+        EdgeV2MigrationStatus.IN_PROGRESS,
     ),
 )
 def test_write_environments_to_dynamodb__project_environments_v2_not_migrated__wrapper_not_called(
@@ -552,12 +548,10 @@ def test_write_environments_to_dynamodb__project_environments_v2_not_migrated__w
     dynamo_enabled_project_environment_two: Environment,
     mock_dynamo_env_wrapper: Mock,
     mock_dynamo_env_v2_wrapper: Mock,
-    identity_overrides_v2_migration_status: str,
+    edge_v2_migration_status: str,
 ) -> None:
     # Given
-    dynamo_enabled_project.identity_overrides_v2_migration_status = (
-        identity_overrides_v2_migration_status
-    )
+    dynamo_enabled_project.edge_v2_migration_status = edge_v2_migration_status
     dynamo_enabled_project.save()
     mock_dynamo_env_v2_wrapper.is_enabled = True
 

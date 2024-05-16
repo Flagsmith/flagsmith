@@ -11,7 +11,7 @@ from features.features_service import (
     get_overrides_data,
 )
 from features.models import Feature, FeatureSegment, FeatureState
-from projects.models import IdentityOverridesV2MigrationStatus
+from projects.models import EdgeV2MigrationStatus
 from util.mappers.engine import (
     map_feature_state_to_engine,
     map_identity_to_engine,
@@ -60,23 +60,23 @@ def distinct_identity_featurestate(
 
 
 @pytest.mark.parametrize(
-    "enable_dynamo_db, identity_overrides_v2_migration_status, expected_overrides_getter_name, expected_kwargs",
+    "enable_dynamo_db, edge_v2_migration_status, expected_overrides_getter_name, expected_kwargs",
     [
         (
             True,
-            IdentityOverridesV2MigrationStatus.NOT_STARTED,
+            EdgeV2MigrationStatus.NOT_STARTED,
             "get_core_overrides_data",
             {"skip_identity_overrides": True},
         ),
         (
             True,
-            IdentityOverridesV2MigrationStatus.IN_PROGRESS,
+            EdgeV2MigrationStatus.IN_PROGRESS,
             "get_core_overrides_data",
             {"skip_identity_overrides": True},
         ),
         (
             True,
-            IdentityOverridesV2MigrationStatus.COMPLETE,
+            EdgeV2MigrationStatus.COMPLETE,
             "get_edge_overrides_data",
             {},
         ),
@@ -92,7 +92,7 @@ def test_feature_get_overrides_data__call_expected(
     mocker: "MockerFixture",
     environment: "Environment",
     enable_dynamo_db: bool,
-    identity_overrides_v2_migration_status: str,
+    edge_v2_migration_status: str,
     expected_overrides_getter_name: str,
     expected_kwargs: dict[str, bool],
 ) -> None:
@@ -108,9 +108,7 @@ def test_feature_get_overrides_data__call_expected(
         ),
     }
     environment.project.enable_dynamo_db = enable_dynamo_db
-    environment.project.identity_overrides_v2_migration_status = (
-        identity_overrides_v2_migration_status
-    )
+    environment.project.edge_v2_migration_status = edge_v2_migration_status
 
     # When
     get_overrides_data(environment)
@@ -125,23 +123,21 @@ def test_feature_get_overrides_data__call_expected(
 
 
 @pytest.mark.parametrize(
-    "identity_overrides_v2_migration_status",
+    "edge_v2_migration_status",
     [
-        IdentityOverridesV2MigrationStatus.NOT_STARTED,
-        IdentityOverridesV2MigrationStatus.IN_PROGRESS,
+        EdgeV2MigrationStatus.NOT_STARTED,
+        EdgeV2MigrationStatus.IN_PROGRESS,
     ],
 )
 def test_feature_get_overrides_data__edge_project_not_migrated_to_v2__return_expected(
     environment: "Environment",
     distinct_identity_featurestate: FeatureState,
     distinct_segment_featurestate: FeatureState,
-    identity_overrides_v2_migration_status: str,
+    edge_v2_migration_status: str,
 ) -> None:
     # Given
     environment.project.enable_dynamo_db = True
-    environment.project.identity_overrides_v2_migration_status = (
-        identity_overrides_v2_migration_status
-    )
+    environment.project.edge_v2_migration_status = edge_v2_migration_status
 
     # When
     overrides_data = get_overrides_data(environment)

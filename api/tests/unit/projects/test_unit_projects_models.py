@@ -7,7 +7,7 @@ from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 
 from organisations.models import Organisation
-from projects.models import IdentityOverridesV2MigrationStatus, Project
+from projects.models import EdgeV2MigrationStatus, Project
 
 now = timezone.now()
 tomorrow = now + timedelta(days=1)
@@ -139,26 +139,27 @@ def test_environments_are_updated_in_dynamodb_when_project_id_updated(
 
 
 @pytest.mark.parametrize(
-    "identity_overrides_v2_migration_status, expected_value",
+    "edge_v2_migration_status, expected_value",
     (
-        (IdentityOverridesV2MigrationStatus.NOT_STARTED, False),
-        (IdentityOverridesV2MigrationStatus.IN_PROGRESS, False),
-        (IdentityOverridesV2MigrationStatus.COMPLETE, True),
+        (EdgeV2MigrationStatus.NOT_STARTED, False),
+        (EdgeV2MigrationStatus.IN_PROGRESS, False),
+        (EdgeV2MigrationStatus.COMPLETE, True),
+        (EdgeV2MigrationStatus.INCOMPLETE, False),
     ),
 )
 def test_show_edge_identity_overrides_for_feature(
-    identity_overrides_v2_migration_status: IdentityOverridesV2MigrationStatus,
+    edge_v2_migration_status: EdgeV2MigrationStatus,
     expected_value: bool,
 ):
     assert (
         Project(
-            identity_overrides_v2_migration_status=identity_overrides_v2_migration_status
+            edge_v2_migration_status=edge_v2_migration_status
         ).show_edge_identity_overrides_for_feature
         == expected_value
     )
 
 
-def test_create_project_sets_identity_overrides_v2_migration_status_if_edge_enabled(
+def test_create_project_sets_edge_v2_migration_status_if_edge_enabled(
     settings: SettingsWrapper, organisation: Organisation
 ) -> None:
     # Given
@@ -168,7 +169,4 @@ def test_create_project_sets_identity_overrides_v2_migration_status_if_edge_enab
     project = Project.objects.create(name="test", organisation=organisation)
 
     # Then
-    assert (
-        project.identity_overrides_v2_migration_status
-        == IdentityOverridesV2MigrationStatus.COMPLETE
-    )
+    assert project.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE

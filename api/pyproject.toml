@@ -28,6 +28,7 @@ exclude = '''
 # Regexes for lines to exclude from consideration
 exclude_also = [
   'if TYPE_CHECKING:',
+  'if typing.TYPE_CHECKING:',
   '@(abc\\.)?abstractmethod',
 ]
 
