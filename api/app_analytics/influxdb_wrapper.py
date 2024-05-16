@@ -142,7 +142,7 @@ def get_events_for_organisation(
 
 def get_event_list_for_organisation(
     organisation_id: int, date_start: str = "-30d", date_stop: str = "now()"
-) -> [dict[list[int]], list[str]]:
+) -> tuple[dict[str, list[int]], list[str]]:
     """
     Query influx db for usage for given organisation id
 
@@ -221,7 +221,7 @@ def get_multiple_event_list_for_organisation(
 
 def get_usage_data(
     organisation_id: int,
-    project_id: int = None,
+    project_id: int | None = None,
     environment_id: int | None = None,
     date_start: str = "-30d",
     date_stop: str = "now()",
@@ -239,7 +239,7 @@ def get_usage_data(
 def get_multiple_event_list_for_feature(
     environment_id: int,
     feature_name: str,
-    period: str = "30d",
+    date_start: str = "-30d",
     aggregate_every: str = "24h",
 ) -> list[dict]:
     """
@@ -260,15 +260,12 @@ def get_multiple_event_list_for_feature(
 
     :param environment_id: an id of the environment to get usage for
     :param feature_name: the name of the feature to get usage for
-    :param period: the influx time period to filter on, e.g. 30d, 7d, etc.
-      Note that "period" is tied to existing serializer logic. Prefer
-      "date_start" for new interfaces.
+    :param date_start: the influx time period to filter on, e.g. -30d, -7d, etc.
     :param aggregate_every: the influx time period to aggregate the data by, e.g. 24h
 
     :return: a list of dicts with feature and request count in a specific environment
     """
 
-    date_start = f"-{period}"
     results = InfluxDBWrapper.influx_query_manager(
         date_start=date_start,
         filters=f'|> filter(fn:(r) => r._measurement == "feature_evaluation") \
@@ -297,7 +294,9 @@ def get_feature_evaluation_data(
     feature_name: str, environment_id: int, period: str = "30d"
 ) -> typing.List[FeatureEvaluationData]:
     data = get_multiple_event_list_for_feature(
-        feature_name=feature_name, environment_id=environment_id, period=period
+        feature_name=feature_name,
+        environment_id=environment_id,
+        date_start=f"-{period}",
     )
     return FeatureEvaluationDataSchema(many=True).load(data)
 
