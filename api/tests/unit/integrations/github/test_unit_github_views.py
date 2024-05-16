@@ -1,6 +1,7 @@
 import json
 
 import pytest
+import responses
 from django.conf import settings
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
@@ -9,6 +10,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from features.feature_external_resources.models import FeatureExternalResource
+from integrations.github.constants import GITHUB_API_URL
 from integrations.github.models import GithubConfiguration, GithubRepository
 from integrations.github.views import github_webhook_payload_is_valid
 from organisations.models import Organisation
@@ -17,18 +19,6 @@ from projects.models import Project
 WEBHOOK_PAYLOAD = json.dumps({"installation": {"id": 1234567}, "action": "deleted"})
 WEBHOOK_SIGNATURE = "sha1=57a1426e19cdab55dd6d0c191743e2958e50ccaa"
 WEBHOOK_SECRET = "secret-key"
-
-
-def mocked_requests_delete(*args, **kwargs):
-    class MockResponse:
-        def __init__(self, json_data, status_code):
-            self.json_data = json_data
-            self.status_code = status_code
-
-        def raise_for_status(self) -> None:
-            pass
-
-    return MockResponse(json_data={"data": "data"}, status_code=204)
 
 
 def test_get_github_configuration(
@@ -112,6 +102,7 @@ def test_cannot_create_github_configuration_when_the_organization_already_has_an
     )
 
 
+@responses.activate
 def test_delete_github_configuration(
     admin_client_new: APIClient,
     organisation: Organisation,
@@ -129,16 +120,60 @@ def test_delete_github_configuration(
     )
 
     mock_generate_token = mocker.patch(
-        "integrations.github.views.generate_jwt_token",
+        "integrations.github.github.generate_jwt_token",
     )
     mock_generate_token.return_value = "mocked_token"
-    mocker.patch("requests.delete", side_effect=mocked_requests_delete)
+    responses.add(
+        method="DELETE",
+        url=f"{GITHUB_API_URL}app/installations/{github_configuration.installation_id}",
+        status=204,
+    )
+
+    # When
+    response = admin_client_new.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not GithubConfiguration.objects.filter(id=github_configuration.id).exists()
+
+
+@responses.activate
+def test_cannot_delete_github_configuration_when_delete_github_installation_response_was_404(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:integrations-github-detail",
+        args=[
+            organisation.id,
+            github_configuration.id,
+        ],
+    )
+
+    mock_generate_token = mocker.patch(
+        "integrations.github.github.generate_jwt_token",
+    )
+    mock_generate_token.return_value = "mocked_token"
+    responses.add(
+        method="DELETE",
+        url=f"{GITHUB_API_URL}app/installations/{github_configuration.installation_id}",
+        status=404,
+        json={"message": "not found"},
+    )
 
     # When
     response = admin_client_new.delete(url)
     # Then
-    assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert not GithubConfiguration.objects.filter(id=github_configuration.id).exists()
+    assert response.status_code == status.HTTP_502_BAD_GATEWAY
+    assert (
+        response.json()["detail"]
+        == "Failed to delete GitHub Installation. Github API returned status code: 404. Error returned: not found"
+    )
+    assert GithubConfiguration.objects.filter(id=github_configuration.id).exists()
 
 
 def test_get_github_repository(

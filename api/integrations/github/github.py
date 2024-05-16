@@ -8,13 +8,14 @@ from django.conf import settings
 from django.utils.formats import get_format
 
 from features.models import Feature, FeatureState, FeatureStateValue
-from integrations.github.client import generate_token
+from integrations.github.client import generate_jwt_token, generate_token
 from integrations.github.constants import (
     DELETED_FEATURE_TEXT,
     FEATURE_ENVIRONMENT_URL,
     FEATURE_TABLE_HEADER,
     FEATURE_TABLE_ROW,
     GITHUB_API_URL,
+    GITHUB_API_VERSION,
     LINK_FEATURE_TITLE,
     LINK_SEGMENT_TITLE,
     UNLINKED_FEATURE_TEXT,
@@ -172,3 +173,18 @@ def generate_data(
         feature_states=feature_states_list if feature_states else None,
         project_id=feature.project_id,
     )
+
+
+def delete_github_installation(installation_id: str):
+    token = generate_jwt_token(settings.GITHUB_APP_ID)
+
+    url = f"{GITHUB_API_URL}app/installations/{installation_id}"
+
+    headers = {
+        "X-GitHub-Api-Version": GITHUB_API_VERSION,
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"Bearer {token}",
+    }
+
+    response = requests.delete(url, headers=headers, timeout=10)
+    return response

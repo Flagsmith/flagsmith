@@ -11,9 +11,10 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from integrations.github.client import generate_jwt_token, generate_token
+from integrations.github.client import generate_token
 from integrations.github.constants import GITHUB_API_URL, GITHUB_API_VERSION
 from integrations.github.exceptions import DuplicateGitHubIntegration
+from integrations.github.github import delete_github_installation
 from integrations.github.helpers import github_webhook_payload_is_valid
 from integrations.github.models import GithubConfiguration, GithubRepository
 from integrations.github.permissions import HasPermissionToGithubConfiguration
@@ -72,20 +73,19 @@ class GithubConfigurationViewSet(viewsets.ModelViewSet):
                 raise DuplicateGitHubIntegration
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        installation_id = instance.installation_id
-        token = generate_jwt_token(settings.GITHUB_APP_ID)
-
-        url = f"{GITHUB_API_URL}app/installations/{installation_id}"
-
-        headers = {
-            "X-GitHub-Api-Version": GITHUB_API_VERSION,
-            "Accept": "application/vnd.github.v3+json",
-            "Authorization": f"Bearer {token}",
-        }
-
-        response = requests.delete(url, headers=headers, timeout=10)
-        response.raise_for_status()
+        github_response = delete_github_installation(self.get_object().installation_id)
+        if github_response.status_code != 204:
+            return Response(
+                data={
+                    "detail": (
+                        "Failed to delete GitHub Installation."
+                        f" Github API returned status code: {github_response.status_code}."
+                        f" Error returned: {github_response.json()['message']}"
+                    )
+                },
+                content_type="application/json",
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
         return super().destroy(request, *args, **kwargs)
 
 
