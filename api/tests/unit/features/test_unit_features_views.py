@@ -453,7 +453,7 @@ def test_get_project_features_influx_data(
     mock_get_event_list.assert_called_once_with(
         feature_name=feature.name,
         environment_id=str(environment.id),  # provided as a GET param
-        period="24h",  # this is the default but can be provided as a GET param
+        date_start="-24h",  # this is the default but can be provided as a GET param
         aggregate_every="24h",  # this is the default but can be provided as a GET param
     )
 
