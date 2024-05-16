@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from . import constants
+
 
 class UsageDataSerializer(serializers.Serializer):
     flags = serializers.IntegerField()
@@ -12,7 +14,17 @@ class UsageDataSerializer(serializers.Serializer):
 class UsageDataQuerySerializer(serializers.Serializer):
     project_id = serializers.IntegerField(required=False)
     environment_id = serializers.IntegerField(required=False)
-    period = serializers.CharField(required=False)
+    period = serializers.RegexField(
+        regex=r"^(%s)$"
+        % "|".join(
+            [
+                constants.CURRENT_BILLING_PERIOD,
+                constants.PREVIOUS_BILLING_PERIOD,
+                constants._90_DAY_PERIOD,
+            ]
+        ),
+        required=False,
+    )
 
 
 class UsageTotalCountSerializer(serializers.Serializer):
