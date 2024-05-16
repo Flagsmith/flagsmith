@@ -1208,3 +1208,8 @@ GLOBAL_DOMAIN_AUTH_METHODS = env.dict(
         "SAML": True,  # Security Assertion Markup Language
     },
 )
+
+EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET = env.int(
+    "EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET",
+    default=0,
+)
