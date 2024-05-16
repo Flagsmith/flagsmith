@@ -319,7 +319,7 @@ def test_get_feature_evaluation_data(mocker):
 
     # Then
     mocked_get_multiple_event_list_for_feature.assert_called_once_with(
-        feature_name=feature_name, environment_id=env_id, period="30d"
+        feature_name=feature_name, environment_id=env_id, date_start="-30d"
     )
 
     assert len(feature_evaluation_data) == 2
