@@ -94,6 +94,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     )
     edge_v2_migration_read_capacity_budget = models.IntegerField(
         null=True,
+        blank=True,
         default=None,
         help_text=(
             "[Edge V2 migration] Read capacity budget override. If project migration was finished with "
