@@ -120,7 +120,7 @@ def test_delete_github_configuration(
     )
 
     mock_generate_token = mocker.patch(
-        "integrations.github.github.generate_jwt_token",
+        "integrations.github.client.generate_jwt_token",
     )
     mock_generate_token.return_value = "mocked_token"
     responses.add(
@@ -155,7 +155,7 @@ def test_cannot_delete_github_configuration_when_delete_github_installation_resp
     )
 
     mock_generate_token = mocker.patch(
-        "integrations.github.github.generate_jwt_token",
+        "integrations.github.client.generate_jwt_token",
     )
     mock_generate_token.return_value = "mocked_token"
     responses.add(
@@ -284,7 +284,7 @@ def test_github_delete_repository(
 ) -> None:
     # Given
     mock_generate_token = mocker.patch(
-        "integrations.github.github.generate_token",
+        "integrations.github.client.generate_token",
     )
     mock_generate_token.return_value = "mocked_token"
     url = reverse(
@@ -313,7 +313,7 @@ def mocked_requests_get(*args, **kwargs):
         def json(self):
             return self.json_data
 
-    return MockResponse(json_data={"data": "data"}, status_code=200)
+    return MockResponse(json_data=["data"], status_code=200)
 
 
 def test_fetch_pull_requests(
@@ -326,7 +326,7 @@ def test_fetch_pull_requests(
 
     # Given
     mock_generate_token = mocker.patch(
-        "integrations.github.views.generate_token",
+        "integrations.github.client.generate_token",
     )
     mock_generate_token.return_value = "mocked_token"
     github_request_mock = mocker.patch("requests.get", side_effect=mocked_requests_get)
@@ -362,7 +362,7 @@ def test_fetch_issue(
 ) -> None:
     # Given
     mock_generate_token = mocker.patch(
-        "integrations.github.views.generate_token",
+        "integrations.github.client.generate_token",
     )
     mock_generate_token.return_value = "mocked_token"
     github_request_mock = mocker.patch("requests.get", side_effect=mocked_requests_get)
@@ -396,7 +396,7 @@ def test_fetch_repositories(
 ) -> None:
     # Given
     mock_generate_token = mocker.patch(
-        "integrations.github.views.generate_token",
+        "integrations.github.client.generate_token",
     )
     mock_generate_token.return_value = "mocked_token"
     github_request_mock = mocker.patch("requests.get", side_effect=mocked_requests_get)
@@ -404,7 +404,9 @@ def test_fetch_repositories(
         "api-v1:organisations:get-github-installation-repos", args=[organisation.id]
     )
     # When
-    response = admin_client_new.get(url)
+    response = admin_client_new.get(
+        url, data={"installation_id": github_configuration.installation_id}
+    )
 
     # Then
     assert response.status_code == 200
@@ -442,7 +444,7 @@ def test_fetch_issues_and_pull_requests_fails_with_status_400_when_integration_n
 ) -> None:
     # Given
     mock_generate_token = mocker.patch(
-        "integrations.github.views.generate_token",
+        "integrations.github.client.generate_token",
     )
     mock_generate_token.generate_token.return_value = "mocked_token"
     # When
@@ -470,7 +472,7 @@ def test_cannot_fetch_issues_or_prs_when_does_not_have_permissions(
 ) -> None:
     # Given
     mock_generate_token = mocker.patch(
-        "integrations.github.views.generate_token",
+        "integrations.github.client.generate_token",
     )
     mock_generate_token.generate_token.return_value = "mocked_token"
 

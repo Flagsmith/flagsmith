@@ -4,11 +4,8 @@ from typing import Any
 from urllib.parse import urlparse
 
 from features.models import Feature
-from integrations.github.github import (
-    GithubData,
-    generate_body_comment,
-    post_comment_to_github,
-)
+from integrations.github.client import post_comment_to_github
+from integrations.github.github import GithubData, generate_body_comment
 from task_processor.decorators import register_task_handler
 from webhooks.webhooks import WebhookEventType
 

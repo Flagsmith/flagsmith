@@ -83,7 +83,7 @@ def test_create_feature_external_resource(
 ) -> None:
     # Given
     mock_generate_token = mocker.patch(
-        "integrations.github.github.generate_token",
+        "integrations.github.client.generate_token",
     )
 
     mock_generate_token.return_value = "mocked_token"
@@ -294,7 +294,7 @@ def test_delete_feature_external_resource(
 ) -> None:
     # Given
     mock_generate_token = mocker.patch(
-        "integrations.github.github.generate_token",
+        "integrations.github.client.generate_token",
     )
     mock_generate_token.return_value = "mocked_token"
     github_request_mock = mocker.patch(
@@ -388,7 +388,7 @@ def test_create_github_comment_on_feature_state_updated(
         feature=feature, environment=environment.id
     )
     mock_generate_token = mocker.patch(
-        "integrations.github.github.generate_token",
+        "integrations.github.client.generate_token",
     )
     mock_generate_token.return_value = "mocked_token"
     github_request_mock = mocker.patch(
@@ -448,7 +448,7 @@ def test_create_github_comment_on_feature_was_deleted(
 ) -> None:
     # Given
     mock_generate_token = mocker.patch(
-        "integrations.github.github.generate_token",
+        "integrations.github.client.generate_token",
     )
     mock_generate_token.return_value = "mocked_token"
 
@@ -492,7 +492,7 @@ def test_create_github_comment_on_segment_override_updated(
     # Given
     feature_state = segment_featurestate_and_feature_with_value
     mock_generate_token = mocker.patch(
-        "integrations.github.github.generate_token",
+        "integrations.github.client.generate_token",
     )
     mock_generate_token.return_value = "mocked_token"
     github_request_mock = mocker.patch(
@@ -509,11 +509,13 @@ def test_create_github_comment_on_segment_override_updated(
         kwargs={"pk": feature_state.id},
     )
 
-    segment_override_updated_at = (
-        segment_featurestate_and_feature_with_value.updated_at.strftime(
-            get_format("DATETIME_INPUT_FORMATS")[0]
-        )
-    )
+    # When
+    response = admin_client.put(path=url, data=payload, format="json")
+
+    # Then
+    segment_override_updated_at = FeatureState.objects.get(
+        id=segment_featurestate_and_feature_with_value.id
+    ).updated_at.strftime(get_format("DATETIME_INPUT_FORMATS")[0])
 
     expected_comment_body = (
         "Flagsmith Feature `feature_with_value` has been updated:\n"
@@ -528,10 +530,6 @@ def test_create_github_comment_on_segment_override_updated(
         )
     )
 
-    # When
-    response = admin_client.put(path=url, data=payload, format="json")
-
-    # Then
     assert response.status_code == status.HTTP_200_OK
 
     github_request_mock.assert_called_with(

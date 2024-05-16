@@ -1,6 +1,7 @@
 import json
 import re
 from functools import wraps
+from typing import Any, Callable
 
 import requests
 from django.conf import settings
@@ -11,10 +12,13 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from integrations.github.client import generate_token
-from integrations.github.constants import GITHUB_API_URL, GITHUB_API_VERSION
+from integrations.github.client import (
+    ResourceType,
+    delete_github_installation,
+    fetch_github_repositories,
+    fetch_github_resource,
+)
 from integrations.github.exceptions import DuplicateGitHubIntegration
-from integrations.github.github import delete_github_installation
 from integrations.github.helpers import github_webhook_payload_is_valid
 from integrations.github.models import GithubConfiguration, GithubRepository
 from integrations.github.permissions import HasPermissionToGithubConfiguration
@@ -23,12 +27,10 @@ from integrations.github.serializers import (
     GithubRepositorySerializer,
     RepoQuerySerializer,
 )
-from organisations.models import Organisation
 from organisations.permissions.permissions import GithubIsAdminOrganisation
 
 
 def github_auth_required(func):
-
     @wraps(func)
     def wrapper(request, organisation_pk):
 
@@ -45,6 +47,31 @@ def github_auth_required(func):
         return func(request, organisation_pk)
 
     return wrapper
+
+
+def github_api_call_error_handler(
+    error: str | None = None,
+) -> Callable[..., Callable[..., Any]]:
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs) -> Response:
+            try:
+                return func(*args, **kwargs)
+            except requests.RequestException as e:
+                return Response(
+                    data={
+                        "detail": (
+                            f"{error or 'Failed to retrieve requested information from GitHub API.'}"
+                            f" Error: {str(e)}"
+                        )
+                    },
+                    content_type="application/json",
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
+
+        return wrapper
+
+    return decorator
 
 
 class GithubConfigurationViewSet(viewsets.ModelViewSet):
@@ -98,6 +125,15 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
     serializer_class = GithubRepositorySerializer
     model_class = GithubRepository
 
+    def dispatch(self, request, *args, **kwargs):
+        github_pk = kwargs.get("github_pk")
+        if github_pk is not None:
+            try:
+                int(github_pk)
+            except ValueError:
+                raise ValidationError({"github_pk": ["Must be an integer"]})
+        return super().dispatch(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         github_configuration_id = self.kwargs["github_pk"]
         serializer.save(github_configuration_id=github_configuration_id)
@@ -125,103 +161,62 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
 @github_auth_required
+@github_api_call_error_handler(error="Failed to retrieve GitHub pull requests.")
 def fetch_pull_requests(request, organisation_pk) -> Response:
-    organisation = Organisation.objects.get(id=organisation_pk)
-    github_configuration = GithubConfiguration.objects.get(
-        organisation=organisation, deleted_at__isnull=True
-    )
-    token = generate_token(
-        github_configuration.installation_id,
-        settings.GITHUB_APP_ID,
-    )
-
     query_serializer = RepoQuerySerializer(data=request.query_params)
     if not query_serializer.is_valid():
         return Response({"error": query_serializer.errors}, status=400)
 
-    repo_owner = query_serializer.validated_data.get("repo_owner")
-    repo_name = query_serializer.validated_data.get("repo_name")
+    repo_owner = str(query_serializer.validated_data.get("repo_owner"))
+    repo_name = str(query_serializer.validated_data.get("repo_name"))
 
-    url = f"{GITHUB_API_URL}repos/{repo_owner}/{repo_name}/pulls"
-
-    headers = {
-        "X-GitHub-Api-Version": GITHUB_API_VERSION,
-        "Accept": "application/vnd.github.v3+json",
-        "Authorization": f"Bearer {token}",
-    }
-
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        return Response(data)
-    except requests.RequestException as e:
-        return Response({"error": str(e)}, status=500)
+    return Response(
+        fetch_github_resource(
+            ResourceType.PULL_REQUESTS, organisation_pk, repo_owner, repo_name
+        ).json()
+    )
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
 @github_auth_required
+@github_api_call_error_handler(error="Failed to retrieve GitHub pull requests.")
 def fetch_issues(request, organisation_pk) -> Response:
-    organisation = Organisation.objects.get(id=organisation_pk)
-    github_configuration = GithubConfiguration.objects.get(
-        organisation=organisation, deleted_at__isnull=True
-    )
-    token = generate_token(
-        github_configuration.installation_id,
-        settings.GITHUB_APP_ID,
-    )
-
     query_serializer = RepoQuerySerializer(data=request.query_params)
     if not query_serializer.is_valid():
         return Response({"error": query_serializer.errors}, status=400)
 
-    repo_owner = query_serializer.validated_data.get("repo_owner")
-    repo_name = query_serializer.validated_data.get("repo_name")
+    repo_owner = str(query_serializer.validated_data.get("repo_owner"))
+    repo_name = str(query_serializer.validated_data.get("repo_name"))
 
-    url = f"{GITHUB_API_URL}repos/{repo_owner}/{repo_name}/issues"
+    response = fetch_github_resource(
+        ResourceType.ISSUES, organisation_pk, repo_owner, repo_name
+    ).json()
 
-    headers = {
-        "X-GitHub-Api-Version": GITHUB_API_VERSION,
-        "Accept": "application/vnd.github.v3+json",
-        "Authorization": f"Bearer {token}",
-    }
-
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        filtered_data = [issue for issue in data if "pull_request" not in issue]
+    if response is not None and isinstance(response, list):
+        filtered_data = [issue for issue in response if "pull_request" not in issue]
         return Response(filtered_data)
-    except requests.RequestException as e:
-        return Response({"error": str(e)}, status=500)
+    else:
+        return Response(
+            data={"detail": "Invalid response"},
+            content_type="application/json",
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, GithubIsAdminOrganisation])
+@github_api_call_error_handler(error="Failed to retrieve GitHub pull requests.")
 def fetch_repositories(request, organisation_pk: int) -> Response:
     installation_id = request.GET.get("installation_id")
 
-    token = generate_token(
-        installation_id,
-        settings.GITHUB_APP_ID,
-    )
-
-    url = f"{GITHUB_API_URL}installation/repositories"
-
-    headers = {
-        "X-GitHub-Api-Version": GITHUB_API_VERSION,
-        "Accept": "application/vnd.github.v3+json",
-        "Authorization": f"Bearer {token}",
-    }
-
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        return Response(data)
-    except requests.RequestException as e:
-        return Response({"error": str(e)}, status=500)
+    if not installation_id:
+        return Response(
+            data={"detail": "Missing installation_id parameter"},
+            content_type="application/json",
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    return Response(fetch_github_repositories(installation_id).json())
 
 
 @api_view(["POST"])

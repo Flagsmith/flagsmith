@@ -2,20 +2,15 @@ import logging
 import typing
 from dataclasses import dataclass
 
-import requests
 from core.helpers import get_current_site_url
-from django.conf import settings
 from django.utils.formats import get_format
 
 from features.models import Feature, FeatureState, FeatureStateValue
-from integrations.github.client import generate_jwt_token, generate_token
 from integrations.github.constants import (
     DELETED_FEATURE_TEXT,
     FEATURE_ENVIRONMENT_URL,
     FEATURE_TABLE_HEADER,
     FEATURE_TABLE_ROW,
-    GITHUB_API_URL,
-    GITHUB_API_VERSION,
     LINK_FEATURE_TITLE,
     LINK_SEGMENT_TITLE,
     UNLINKED_FEATURE_TEXT,
@@ -40,32 +35,6 @@ class GithubData:
     @classmethod
     def from_dict(cls, data_dict: dict) -> "GithubData":
         return cls(**data_dict)
-
-
-def post_comment_to_github(
-    installation_id: str, owner: str, repo: str, issue: str, body: str
-) -> typing.Optional[typing.Dict[str, typing.Any]]:
-    try:
-        token = generate_token(
-            installation_id,
-            settings.GITHUB_APP_ID,
-        )
-
-        url = f"{GITHUB_API_URL}repos/{owner}/{repo}/issues/{issue}/comments"
-        headers = {
-            "Accept": "application/vnd.github.v3+json",
-            "Authorization": f"Bearer {token}",
-        }
-
-        payload = {"body": body}
-        response = response = requests.post(
-            url, json=payload, headers=headers, timeout=10
-        )
-
-        return response.json() if response.status_code == 201 else None
-    except requests.RequestException as e:
-        logger.error(f" {e}")
-        return None
 
 
 def generate_body_comment(
@@ -173,18 +142,3 @@ def generate_data(
         feature_states=feature_states_list if feature_states else None,
         project_id=feature.project_id,
     )
-
-
-def delete_github_installation(installation_id: str):
-    token = generate_jwt_token(settings.GITHUB_APP_ID)
-
-    url = f"{GITHUB_API_URL}app/installations/{installation_id}"
-
-    headers = {
-        "X-GitHub-Api-Version": GITHUB_API_VERSION,
-        "Accept": "application/vnd.github.v3+json",
-        "Authorization": f"Bearer {token}",
-    }
-
-    response = requests.delete(url, headers=headers, timeout=10)
-    return response
