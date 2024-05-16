@@ -351,8 +351,12 @@ class FeatureViewSet(viewsets.ModelViewSet):
         query_serializer = GetInfluxDataQuerySerializer(data=request.query_params)
         query_serializer.is_valid(raise_exception=True)
 
+        date_start = f"-{query_serializer.data['period']}"
         events_list = get_multiple_event_list_for_feature(
-            feature_name=feature.name, **query_serializer.data
+            feature_name=feature.name,
+            date_start=date_start,
+            environment_id=query_serializer.data["environment_id"],
+            aggregate_every=query_serializer.data["aggregate_every"],
         )
         serializer = FeatureInfluxDataSerializer(instance={"events_list": events_list})
         return Response(serializer.data)
