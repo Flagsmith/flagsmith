@@ -154,8 +154,10 @@ def organisation_info(request, organisation_id):
         date_range = request.GET.get("date_range", "180d")
         context["date_range"] = date_range
 
+        date_start = f"-{date_range}"
+        date_stop = "now()"
         event_list, labels = get_event_list_for_organisation(
-            organisation_id, date_range
+            organisation_id, date_start, date_stop
         )
         context["event_list"] = event_list
         context["traits"] = mark_safe(json.dumps(event_list["traits"]))
