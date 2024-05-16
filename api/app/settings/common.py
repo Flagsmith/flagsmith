@@ -485,6 +485,7 @@ if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 
 SWAGGER_SETTINGS = {
+    "DEEP_LINKING": True,
     "DEFAULT_AUTO_SCHEMA_CLASS": "api.openapi.PydanticResponseCapableSwaggerAutoSchema",
     "SHOW_REQUEST_HEADERS": True,
     "SECURITY_DEFINITIONS": {
