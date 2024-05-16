@@ -33,6 +33,7 @@ from pytest_mock import MockerFixture
 
 from environments.models import Environment
 from features.models import FeatureSegment, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import enable_v2_versioning
 from integrations.common.models import IntegrationsModel
 from integrations.dynatrace.models import DynatraceConfiguration
@@ -40,6 +41,7 @@ from integrations.mixpanel.models import MixpanelConfiguration
 from integrations.segment.models import SegmentConfiguration
 from integrations.webhook.models import WebhookConfiguration
 from segments.models import Segment, SegmentRule
+from users.models import FFAdminUser
 from util.mappers import engine
 
 if TYPE_CHECKING:
@@ -598,3 +600,40 @@ def test_map_environment_to_engine_following_migration_to_v2_versioning(
     assert mapped_segment_override.django_id == v2_segment_override.id
     assert mapped_segment_override.enabled is True
     assert mapped_segment_override.feature_state_value == v2_segment_override_value
+
+
+def test_map_environment_to_engine_v2_versioning_segment_overrides(
+    environment_v2_versioning: Environment,
+    segment: Segment,
+    feature: "Feature",
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    # First, let's create a version that includes a segment override
+    v2 = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=v2,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=v2,
+        ),
+    )
+    v2.publish(staff_user)
+
+    # Now, let's create another new version which will also include the segment override
+    v3 = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+    v3.publish(staff_user)
+
+    # When
+    environment_model = engine.map_environment_to_engine(environment_v2_versioning)
+
+    # Then
+    assert len(environment_model.project.segments[0].feature_states) == 1

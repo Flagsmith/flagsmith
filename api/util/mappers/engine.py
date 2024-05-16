@@ -423,9 +423,18 @@ def _get_segment_feature_states(
     feature_states_by_segment_id = {}
     for segment in segments:
         segment_feature_states = feature_states_by_segment_id.setdefault(segment.pk, [])
+
+        # TODO: this is the issue - we're iterating over the feature segments
+        #  which we now have one of per environment feature version so we're
+        #  adding all the versions' feature states.
+        #  ---
+        #  some thoughts:
+        #   - each segment might have feature segments for multiple features
+        #   - each of these features might have multiple feature versions
         for feature_segment in segment.feature_segments.all():
             if feature_segment.environment_id != environment_id:
                 continue
+
             segment_feature_states += _get_prioritised_feature_states(
                 feature_segment.feature_states.all()
             )
