@@ -8,6 +8,10 @@ from app_analytics.analytics_db_service import (
     get_usage_data,
     get_usage_data_from_local_db,
 )
+from app_analytics.constants import (
+    CURRENT_BILLING_PERIOD,
+    PREVIOUS_BILLING_PERIOD,
+)
 from app_analytics.models import (
     APIUsageBucket,
     FeatureEvaluationBucket,
@@ -318,8 +322,8 @@ def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_loca
 @pytest.mark.parametrize(
     "period",
     [
-        "current_billing_period",
-        "previous_billing_period",
+        CURRENT_BILLING_PERIOD,
+        PREVIOUS_BILLING_PERIOD,
     ],
 )
 def test_get_usage_data_returns_empty_list_when_unset_subscription_information_cache(
@@ -344,11 +348,11 @@ def test_get_usage_data_returns_empty_list_when_unset_subscription_information_c
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_usage_data_returns_get_usage_data_from_local_db_with_set_period_starts_at_with_current_billing_period(
+def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_starts_at_with_current_billing_period(
     mocker: MockerFixture, settings: SettingsWrapper, organisation: Organisation
 ) -> None:
     # Given
-    period: str = "current_billing_period"
+    period: str = CURRENT_BILLING_PERIOD
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     mocked_get_usage_data_from_local_db = mocker.patch(
         "app_analytics.analytics_db_service.get_usage_data_from_local_db", autospec=True
@@ -381,7 +385,7 @@ def test_get_usage_data_returns_get_usage_data_from_local_db_with_set_period_sta
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_usage_data_returns_get_usage_data_from_local_db_with_set_period_starts_at_with_previous_billing_period(
+def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_starts_at_with_previous_billing_period(
     mocker: MockerFixture, settings: SettingsWrapper, organisation: Organisation
 ) -> None:
     # Given
