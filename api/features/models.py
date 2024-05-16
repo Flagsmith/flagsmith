@@ -625,7 +625,9 @@ class FeatureState(
             )
 
         clone.environment = env
-        clone.version = None if as_draft else version or self.version
+        clone.version = (
+            None if as_draft or environment_feature_version else version or self.version
+        )
         clone.live_from = live_from
         clone.environment_feature_version = environment_feature_version
         clone.save()
@@ -732,6 +734,7 @@ class FeatureState(
     def check_for_duplicate_feature_state(self):
         if self.version is None:
             return
+
         filter_ = Q(
             environment=self.environment,
             feature=self.feature,
