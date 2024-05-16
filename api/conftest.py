@@ -3,7 +3,6 @@ import typing
 
 import boto3
 import pytest
-from _pytest.fixtures import SubRequest
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
 from django.db.backends.base.creation import TEST_DATABASE_PREFIX
@@ -1013,7 +1012,7 @@ def github_repository(
     ]
 )
 def admin_client_new(
-    request: SubRequest,
+    request: pytest.FixtureRequest,
     admin_client_original: APIClient,
     admin_master_api_key_client: APIClient,
 ) -> APIClient:
