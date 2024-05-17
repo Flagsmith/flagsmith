@@ -35,10 +35,11 @@ project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
 
-class IdentityOverridesV2MigrationStatus(models.TextChoices):
+class EdgeV2MigrationStatus(models.TextChoices):
     NOT_STARTED = "NOT_STARTED", "Not Started"
     IN_PROGRESS = "IN_PROGRESS", "In Progress"
     COMPLETE = "COMPLETE", "Complete"
+    INCOMPLETE = "INCOMPLETE", "Incomplete (identity overrides skipped)"
 
 
 class Project(LifecycleModelMixin, SoftDeleteExportableModel):
@@ -82,12 +83,24 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         default=100,
         help_text="Max segments overrides allowed for any (one) environment within this project",
     )
-    identity_overrides_v2_migration_status = models.CharField(
+    edge_v2_migration_status = models.CharField(
         max_length=50,
-        choices=IdentityOverridesV2MigrationStatus.choices,
+        choices=EdgeV2MigrationStatus.choices,
         # Note that the default is actually set dynamically by a lifecycle hook on create
         # since we need to know whether edge is enabled or not.
-        default=IdentityOverridesV2MigrationStatus.NOT_STARTED,
+        default=EdgeV2MigrationStatus.NOT_STARTED,
+        db_column="identity_overrides_v2_migration_status",
+        help_text="[Edge V2 migration] Project migration status. Set to `IN_PROGRESS` to trigger migration start.",
+    )
+    edge_v2_migration_read_capacity_budget = models.IntegerField(
+        null=True,
+        blank=True,
+        default=None,
+        help_text=(
+            "[Edge V2 migration] Read capacity budget override. If project migration was finished with "
+            "`INCOMPLETE` status, you can set it to a higher value than `EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET` "
+            "setting before restarting the migration."
+        ),
     )
     stale_flags_limit_days = models.IntegerField(
         default=30,
@@ -114,6 +127,20 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
             .exists()
         )
 
+    # The following should be instance methods on `EdgeV2MigrationStatus`,
+    # but the field value is coerced to `str` in some code paths
+    # even when using `django-enum`:
+    @property
+    def edge_v2_environments_migrated(self) -> bool:
+        return self.edge_v2_migration_status in (
+            EdgeV2MigrationStatus.COMPLETE,
+            EdgeV2MigrationStatus.INCOMPLETE,
+        )
+
+    @property
+    def edge_v2_identity_overrides_migrated(self) -> bool:
+        return self.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE
+
     def get_segments_from_cache(self):
         segments = project_segments_cache.get(self.id)
 
@@ -139,11 +166,9 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         self.enable_dynamo_db = self.enable_dynamo_db or settings.EDGE_ENABLED
 
     @hook(BEFORE_CREATE)
-    def set_identity_overrides_v2_migration_status(self):
+    def set_edge_v2_migration_status(self):
         if settings.EDGE_ENABLED:
-            self.identity_overrides_v2_migration_status = (
-                IdentityOverridesV2MigrationStatus.COMPLETE
-            )
+            self.edge_v2_migration_status = EdgeV2MigrationStatus.COMPLETE
 
     @hook(AFTER_SAVE)
     def clear_environments_cache(self):
@@ -153,9 +178,9 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @hook(
         AFTER_SAVE,
-        when="identity_overrides_v2_migration_status",
+        when="edge_v2_migration_status",
         has_changed=True,
-        is_now=IdentityOverridesV2MigrationStatus.IN_PROGRESS,
+        is_now=EdgeV2MigrationStatus.IN_PROGRESS,
     )
     def trigger_environments_v2_migration(self) -> None:
         migrate_project_environments_to_v2.delay(kwargs={"project_id": self.id})
@@ -194,10 +219,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @property
     def show_edge_identity_overrides_for_feature(self) -> bool:
-        return (
-            self.identity_overrides_v2_migration_status
-            == IdentityOverridesV2MigrationStatus.COMPLETE
-        )
+        return self.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE
 
 
 class ProjectPermissionManager(models.Manager):

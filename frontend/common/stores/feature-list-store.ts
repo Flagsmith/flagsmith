@@ -3,6 +3,10 @@ import { getIsWidget } from 'components/pages/WidgetPage'
 import ProjectStore from './project-store'
 import { createAndSetFeatureVersion } from 'common/services/useFeatureVersion'
 import { updateSegmentPriorities } from 'common/services/useSegmentPriority'
+import {
+  createProjectFlag,
+  updateProjectFlag,
+} from 'common/services/useProjectFlag'
 import OrganisationStore from './organisation-store'
 import {
   Approval,
@@ -76,41 +80,42 @@ const controller = {
       createdFirstFeature = true
       flagsmith.setTrait('first_feature', 'true')
       API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
-      window.lintrk?.('track', { conversion_id: 16798354 });
+      window.lintrk?.('track', { conversion_id: 16798354 })
     }
 
-    data
-      .post(
-        `${Project.api}projects/${projectId}/features/`,
-        Object.assign({}, flag, {
-          initial_value:
-            typeof flag.initial_value !== 'undefined' &&
-            flag.initial_value !== null
-              ? `${flag.initial_value}`
-              : flag.initial_value,
-          multivariate_options: undefined,
-          project: projectId,
-          type:
-            flag.multivariate_options && flag.multivariate_options.length
-              ? 'MULTIVARIATE'
-              : 'STANDARD',
-        }),
-      )
+    createProjectFlag(getStore(), {
+      body: Object.assign({}, flag, {
+        initial_value:
+          typeof flag.initial_value !== 'undefined' &&
+          flag.initial_value !== null
+            ? `${flag.initial_value}`
+            : flag.initial_value,
+        multivariate_options: undefined,
+        project: projectId,
+        type:
+          flag.multivariate_options && flag.multivariate_options.length
+            ? 'MULTIVARIATE'
+            : 'STANDARD',
+      }),
+      project_id: projectId,
+    })
       .then((res) =>
         Promise.all(
           (flag.multivariate_options || []).map((v) =>
             data
               .post(
-                `${Project.api}projects/${projectId}/features/${res.id}/mv-options/`,
+                `${Project.api}projects/${projectId}/features/${res.data.id}/mv-options/`,
                 {
                   ...v,
-                  feature: res.id,
+                  feature: res.data.id,
                 },
               )
-              .then(() => res),
+              .then(() => res.data),
           ),
         ).then(() =>
-          data.get(`${Project.api}projects/${projectId}/features/${res.id}/`),
+          data.get(
+            `${Project.api}projects/${projectId}/features/${res.data.id}/`,
+          ),
         ),
       )
       .then(() =>
@@ -141,9 +146,11 @@ const controller = {
       })
       return
     }
-
-    data
-      .put(`${Project.api}projects/${projectId}/features/${flag.id}/`, flag)
+    updateProjectFlag(getStore(), {
+      body: flag,
+      feature_id: flag.id,
+      project_id: projectId,
+    })
       .then((res) => {
         // onComplete calls back preserving the order of multivariate_options with their updated ids
         if (onComplete) {
