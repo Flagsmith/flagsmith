@@ -11,3 +11,4 @@ UNLINKED_FEATURE_TEXT = "### The feature flag `%s` was unlinked from the issue/P
 UPDATED_FEATURE_TEXT = "Flagsmith Feature `%s` has been updated:\n"
 DELETED_FEATURE_TEXT = "### The Feature Flag `%s` was deleted"
 FEATURE_ENVIRONMENT_URL = "%s/project/%s/environment/%s/features?feature=%s&tab=%s"
+GITHUB_API_CALLS_TIMEOUT = 10
