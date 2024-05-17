@@ -117,21 +117,25 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return null
     }
 
-    if (
-      featureState.type === 'int' &&
-      typeof featureState.integer_value === 'number'
-    ) {
-      return Utils.getTypedValue(featureState.integer_value)
-    } else if (
-      featureState.type === 'float' &&
-      typeof featureState.float_value === 'number'
-    ) {
-      return Utils.getTypedValue(featureState.float_value)
-    } else if (featureState.type === 'bool') {
-      return Utils.getTypedValue(featureState.boolean_value)
-    } else {
-      return Utils.getTypedValue(featureState.string_value)
+    let value = null
+
+    //@ts-ignore value_type is the type key on core traits
+    switch (featureState.value_type || featureState.type) {
+      case 'bool':
+        value = featureState.boolean_value
+        break
+      case 'float':
+        value = featureState.float_value
+        break
+      case 'int':
+        value = featureState.integer_value
+        break
+      default:
+        value = featureState.string_value
+        break
     }
+
+    return value
   },
   findOperator(
     operator: SegmentCondition['operator'],
