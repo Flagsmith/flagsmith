@@ -201,8 +201,13 @@ def map_environment_to_engine(
     project_segment_feature_states_by_segment_id = _get_segment_feature_states(
         project_segments,
         environment.pk,
-        latest_environment_feature_versions=(
-            EnvironmentFeatureVersion.objects.get_latest_versions(environment)
+        latest_environment_feature_version_uuids=(
+            {
+                efv.uuid
+                for efv in EnvironmentFeatureVersion.objects.get_latest_versions(
+                    environment
+                )
+            }
             if environment.use_v2_feature_versioning
             else []
         ),
@@ -425,12 +430,9 @@ def _get_prioritised_feature_states(
 def _get_segment_feature_states(
     segments: Iterable["Segment"],
     environment_id: int,
-    latest_environment_feature_versions: (
-        Iterable["EnvironmentFeatureVersion"] | None
-    ) = None,
+    latest_environment_feature_version_uuids: Iterable["EnvironmentFeatureVersion"],
 ) -> Dict[int, List["FeatureState"]]:
     feature_states_by_segment_id = {}
-    latest_environment_feature_versions = latest_environment_feature_versions or []
 
     for segment in segments:
         segment_feature_states = feature_states_by_segment_id.setdefault(segment.pk, [])
@@ -440,9 +442,9 @@ def _get_segment_feature_states(
                 continue
 
             if (
-                latest_environment_feature_versions
-                and feature_segment.environment_feature_version
-                not in latest_environment_feature_versions
+                latest_environment_feature_version_uuids
+                and feature_segment.environment_feature_version_id
+                not in latest_environment_feature_version_uuids
             ):
                 continue
 
