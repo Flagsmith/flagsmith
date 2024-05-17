@@ -7,23 +7,19 @@ from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from environments.models import Environment
 from environments.permissions.constants import VIEW_ENVIRONMENT
-from features.models import FeatureSegment, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from projects.permissions import VIEW_PROJECT
+from segments.models import Segment
 from tests.types import (
     WithEnvironmentPermissionsCallable,
     WithProjectPermissionsCallable,
 )
-
-if typing.TYPE_CHECKING:
-    from rest_framework.test import APIClient
-
-    from features.models import Feature
-    from segments.models import Segment
-    from users.models import FFAdminUser
+from users.models import FFAdminUser
 
 now = timezone.now()
 tomorrow = now + timedelta(days=1)
@@ -196,10 +192,10 @@ def test_publish_feature_version(
 
 @pytest.mark.parametrize("live_from", (None, tomorrow))
 def test_publish_feature_version_using_master_api_key(
-    admin_master_api_key_client: "APIClient",
+    admin_master_api_key_client: APIClient,
     environment_v2_versioning: Environment,
-    feature: "Feature",
-    live_from: typing.Optional[datetime],
+    feature: Feature,
+    live_from: datetime | None,
 ) -> None:
     # Given
     # an unpublished version
