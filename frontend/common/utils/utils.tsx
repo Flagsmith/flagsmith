@@ -121,7 +121,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     switch (featureState.value_type || featureState.type) {
       case 'bool':
         return featureState.boolean_value
-        break
       case 'float':
         return featureState.float_value
       case 'int':
