@@ -125,23 +125,18 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
     serializer_class = GithubRepositorySerializer
     model_class = GithubRepository
 
-    def dispatch(self, request, *args, **kwargs):
-        github_pk = kwargs.get("github_pk")
-        if github_pk is not None:
-            try:
-                int(github_pk)
-            except ValueError:
-                raise ValidationError({"github_pk": ["Must be an integer"]})
-        return super().dispatch(request, *args, **kwargs)
-
     def perform_create(self, serializer):
         github_configuration_id = self.kwargs["github_pk"]
         serializer.save(github_configuration_id=github_configuration_id)
 
     def get_queryset(self):
-        return GithubRepository.objects.filter(
-            github_configuration=self.kwargs["github_pk"]
-        )
+        github_pk = self.kwargs.get("github_pk")
+        if github_pk is not None:
+            try:
+                int(github_pk)
+            except ValueError:
+                raise ValidationError({"github_pk": ["Must be an integer"]})
+            return GithubRepository.objects.filter(github_configuration=github_pk)
 
     def create(self, request, *args, **kwargs):
 

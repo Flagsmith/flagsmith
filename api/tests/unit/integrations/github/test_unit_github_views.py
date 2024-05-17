@@ -192,6 +192,23 @@ def test_get_github_repository(
     assert response.status_code == status.HTTP_200_OK
 
 
+def test_cannot_get_github_repository_when_github_pk_in_not_a_number(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+):
+    # Given
+    url = reverse(
+        "api-v1:organisations:repositories-list",
+        args=[organisation.id, "str"],
+    )
+    # When
+    response = admin_client_new.get(url)
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"github_pk": ["Must be an integer"]}
+
+
 def test_create_github_repository(
     admin_client_new: APIClient,
     organisation: Organisation,
@@ -339,7 +356,7 @@ def test_fetch_pull_requests(
     response_json = response.json()
 
     # Then
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert "data" in response_json
 
     github_request_mock.assert_called_with(
@@ -372,7 +389,7 @@ def test_fetch_issue(
     response = admin_client_new.get(url, data=data)
 
     # Then
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     response_json = response.json()
     assert "data" in response_json
 
@@ -409,7 +426,7 @@ def test_fetch_repositories(
     )
 
     # Then
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     response_json = response.json()
     assert "data" in response_json
 
@@ -452,7 +469,7 @@ def test_fetch_issues_and_pull_requests_fails_with_status_400_when_integration_n
     response = client.get(url)
 
     # Then
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.parametrize(
@@ -538,7 +555,7 @@ def test_github_webhook_delete_installation(
     )
 
     # Then
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert not GithubConfiguration.objects.filter(installation_id=1234567).exists()
 
 
@@ -559,7 +576,7 @@ def test_github_webhook_fails_on_signature_header_missing(
     )
 
     # Then
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {"error": "Invalid signature"}
     assert GithubConfiguration.objects.filter(installation_id=1234567).exists()
 
@@ -582,7 +599,7 @@ def test_github_webhook_fails_on_bad_signature_header_missing(
     )
 
     # Then
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert GithubConfiguration.objects.filter(installation_id=1234567).exists()
     assert response.json() == {"error": "Invalid signature"}
 
@@ -605,5 +622,82 @@ def test_github_webhook_bypass_event(
     )
 
     # Then
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert GithubConfiguration.objects.filter(installation_id=1234567).exists()
+
+
+@responses.activate
+def test_cannot_fetch_pull_requests_when_github_request_call_failed(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mocker,
+) -> None:
+
+    # Given
+    data = {"repo_owner": "owner", "repo_name": "repo"}
+    mock_generate_token = mocker.patch(
+        "integrations.github.client.generate_token",
+    )
+    mock_generate_token.return_value = "mocked_token"
+    responses.add(
+        method="GET",
+        url=f"{GITHUB_API_URL}repos/{data['repo_owner']}/{data['repo_name']}/pulls",
+        status=404,
+    )
+
+    url = reverse("api-v1:organisations:get-github-pulls", args=[organisation.id])
+    data = {"repo_owner": "owner", "repo_name": "repo"}
+
+    # When
+    response = admin_client_new.get(url, data=data)
+    response_json = response.json()
+
+    # Then
+    assert response.status_code == status.HTTP_502_BAD_GATEWAY
+    assert "Failed to retrieve GitHub pull requests." in response_json["detail"]
+
+
+@responses.activate
+def test_cannot_fetch_pull_when_the_github_response_was_invalid(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mocker,
+) -> None:
+    # Given
+    data = {"repo_owner": "owner", "repo_name": "repo"}
+    mock_generate_token = mocker.patch(
+        "integrations.github.client.generate_token",
+    )
+    mock_generate_token.return_value = "mocked_token"
+    responses.add(
+        method="GET",
+        url=f"{GITHUB_API_URL}repos/{data['repo_owner']}/{data['repo_name']}/pulls",
+        status=200,
+        json={"details": "invalid"},
+    )
+    url = reverse("api-v1:organisations:get-github-issues", args=[organisation.id])
+    data = {"repo_owner": "owner", "repo_name": "repo"}
+    # When
+    response = admin_client_new.get(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_502_BAD_GATEWAY
+
+
+def test_cannot_fetch_repositories_when_there_is_no_installation_id(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:get-github-installation-repos", args=[organisation.id]
+    )
+    # When
+    response = admin_client_new.get(url)
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"detail": "Missing installation_id parameter"}
