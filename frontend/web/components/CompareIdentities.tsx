@@ -161,7 +161,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
           refetch()
         })
       },
-      title: 'Clone Identity',
+      title: 'Clone Identity overrides',
       yesText: 'Confirm',
     })
   }
