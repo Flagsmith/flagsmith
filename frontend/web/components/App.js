@@ -76,7 +76,7 @@ const App = class extends Component {
     })
     const projectId =
       _.get(match, 'params.projectId') || _.get(match2, 'params.projectId')
-    return projectId
+    return !!projectId && parseInt(projectId)
   }
   getEnvironmentId = (props) => {
     const { location } = props
