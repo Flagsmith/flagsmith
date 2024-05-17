@@ -9,7 +9,7 @@ from rest_framework.test import APIClient
 from environments.models import Environment
 from environments.permissions.constants import UPDATE_FEATURE_STATE
 from features.feature_external_resources.models import FeatureExternalResource
-from features.models import Feature, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from features.serializers import (
     FeatureStateSerializerBasic,
     WritableNestedFeatureStateSerializer,
@@ -535,6 +535,49 @@ def test_create_github_comment_on_segment_override_updated(
     github_request_mock.assert_called_with(
         "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
         json={"body": expected_comment_body},
+        headers={
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": "Bearer mocked_token",
+        },
+        timeout=10,
+    )
+
+
+def test_create_github_comment_on_segment_override_deleted(
+    segment_featurestate_and_feature_with_value: FeatureState,
+    feature_with_value_segment: FeatureSegment,
+    feature_with_value_external_resource: FeatureExternalResource,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mocker: MockerFixture,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    mock_generate_token = mocker.patch(
+        "integrations.github.client.generate_token",
+    )
+    mock_generate_token.return_value = "mocked_token"
+    github_request_mock = mocker.patch(
+        "requests.post", side_effect=mocked_requests_post
+    )
+
+    url = reverse(
+        viewname="api-v1:features:feature-segment-detail",
+        kwargs={"pk": feature_with_value_segment.id},
+    )
+
+    # When
+    response = admin_client_new.delete(path=url, format="json")
+
+    # Then
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    github_request_mock.assert_called_with(
+        "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
+        json={
+            "body": "### The Segment Override `segment` for Feature Flag `feature_with_value` was deleted"
+        },
         headers={
             "Accept": "application/vnd.github.v3+json",
             "Authorization": "Bearer mocked_token",

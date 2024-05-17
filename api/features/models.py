@@ -24,6 +24,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import (
     AFTER_CREATE,
+    AFTER_DELETE,
     AFTER_SAVE,
     BEFORE_CREATE,
     BEFORE_SAVE,
@@ -220,6 +221,7 @@ def get_next_segment_priority(feature):
 
 
 class FeatureSegment(
+    LifecycleModelMixin,
     AbstractBaseExportableModel,
     OrderedModelBase,
     abstract_base_auditable_model_factory(["uuid"]),
@@ -406,6 +408,34 @@ class FeatureSegment(
 
     def _get_environment(self) -> "Environment":
         return self.environment
+
+    @hook(AFTER_DELETE)
+    def create_github_comment(self) -> None:
+        from integrations.github.github import GithubData, generate_data
+        from integrations.github.tasks import (
+            call_github_app_webhook_for_feature_state,
+        )
+        from webhooks.webhooks import WebhookEventType
+
+        if (
+            self.feature.external_resources.exists()
+            and self.feature.project.github_project.exists()
+            and self.feature.project.organisation.github_config.exists()
+        ):
+            github_configuration = GithubConfiguration.objects.get(
+                organisation_id=self.feature.project.organisation_id
+            )
+
+            feature_data: GithubData = generate_data(
+                github_configuration=github_configuration,
+                feature=self.feature,
+                type=WebhookEventType.SEGMENT_OVERRIDE_DELETED.value,
+                segment_name=self.segment.name,
+            )
+
+            call_github_app_webhook_for_feature_state.delay(
+                args=(asdict(feature_data),),
+            )
 
 
 class FeatureState(

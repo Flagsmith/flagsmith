@@ -28,8 +28,9 @@ def send_post_request(data: CallGithubData) -> None:
         data.github_data.feature_states if data.github_data.feature_states else None
     )
     installation_id = data.github_data.installation_id
+    segment_name: str | None = data.github_data.segment_name
     body = generate_body_comment(
-        feature_name, event_type, project_id, feature_id, feature_states
+        feature_name, event_type, project_id, feature_id, feature_states, segment_name
     )
 
     if (
@@ -82,7 +83,10 @@ def call_github_app_webhook_for_feature_state(event_data: dict[str, Any]) -> Non
             for resource in feature_external_resources
         ]
 
-    if github_event_data.type == WebhookEventType.FLAG_DELETED.value:
+    if (
+        github_event_data.type == WebhookEventType.FLAG_DELETED.value
+        or github_event_data.type == WebhookEventType.SEGMENT_OVERRIDE_DELETED.value
+    ):
         feature_external_resources = generate_feature_external_resources(
             FeatureExternalResource.objects.filter(
                 feature_id=github_event_data.feature_id

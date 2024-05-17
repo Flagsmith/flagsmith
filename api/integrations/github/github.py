@@ -8,6 +8,7 @@ from django.utils.formats import get_format
 from features.models import Feature, FeatureState, FeatureStateValue
 from integrations.github.constants import (
     DELETED_FEATURE_TEXT,
+    DELETED_SEGMENT_OVERRIDE_TEXT,
     FEATURE_ENVIRONMENT_URL,
     FEATURE_TABLE_HEADER,
     FEATURE_TABLE_ROW,
@@ -31,6 +32,7 @@ class GithubData:
     feature_states: typing.List[dict[str, typing.Any]] | None = None
     url: str | None = None
     project_id: int | None = None
+    segment_name: str | None = None
 
     @classmethod
     def from_dict(cls, data_dict: dict) -> "GithubData":
@@ -43,17 +45,23 @@ def generate_body_comment(
     project_id: int,
     feature_id: int,
     feature_states: typing.List[typing.Dict[str, typing.Any]],
+    segment_name: str | None = None,
 ) -> str:
 
     is_update = event_type == WebhookEventType.FLAG_UPDATED.value
     is_removed = event_type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
-    delete_text = UNLINKED_FEATURE_TEXT % (name,)
+    is_segment_override_deleted = (
+        event_type == WebhookEventType.SEGMENT_OVERRIDE_DELETED.value
+    )
 
     if event_type == WebhookEventType.FLAG_DELETED.value:
-        return DELETED_FEATURE_TEXT % (name,)
+        return DELETED_FEATURE_TEXT % (name)
 
     if is_removed:
-        return delete_text
+        return UNLINKED_FEATURE_TEXT % (name)
+
+    if is_segment_override_deleted and segment_name is not None:
+        return DELETED_SEGMENT_OVERRIDE_TEXT % (segment_name, name)
 
     result = UPDATED_FEATURE_TEXT % (name) if is_update else LINK_FEATURE_TITLE % (name)
     last_segment_name = ""
@@ -101,6 +109,7 @@ def generate_data(
         typing.Union[list[FeatureState], list[FeatureStateValue]] | None
     ) = None,
     url: str | None = None,
+    segment_name: str | None = None,
 ) -> GithubData:
     if feature_states:
         feature_states_list = []
@@ -141,4 +150,5 @@ def generate_data(
         ),
         feature_states=feature_states_list if feature_states else None,
         project_id=feature.project_id,
+        segment_name=segment_name,
     )
