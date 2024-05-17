@@ -452,7 +452,7 @@ export type FeatureStateValue = {
   float_value?: number | null
   integer_value?: boolean | null
   string_value: string
-  type: 'int' | 'unicode' | 'bool' | 'float'
+  type: string
 }
 
 export type MultivariateOption = {

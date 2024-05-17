@@ -147,7 +147,7 @@ const controller = {
             res.results.map((v) => ({
               id: v.id,
               trait_key: v.trait_key,
-              trait_value: `${Utils.featureStateToValue(v)}`,
+              trait_value: Utils.featureStateToValue(v),
             }))
         store.model = store.model || {}
         store.model.features = features && _.keyBy(features, (f) => f.feature)
