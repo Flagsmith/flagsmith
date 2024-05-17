@@ -99,20 +99,9 @@ class GithubConfigurationViewSet(viewsets.ModelViewSet):
             if re.search(r"Key \(organisation_id\)=\(\d+\) already exists", str(e)):
                 raise DuplicateGitHubIntegration
 
+    @github_api_call_error_handler(error="Failed to delete GitHub Installation.")
     def destroy(self, request, *args, **kwargs):
-        github_response = delete_github_installation(self.get_object().installation_id)
-        if github_response.status_code != 204:
-            return Response(
-                data={
-                    "detail": (
-                        "Failed to delete GitHub Installation."
-                        f" Github API returned status code: {github_response.status_code}."
-                        f" Error returned: {github_response.json()['message']}"
-                    )
-                },
-                content_type="application/json",
-                status=status.HTTP_502_BAD_GATEWAY,
-            )
+        delete_github_installation(self.get_object().installation_id)
         return super().destroy(request, *args, **kwargs)
 
 

@@ -88,6 +88,7 @@ def delete_github_installation(installation_id: str) -> requests.Response:
     url = f"{GITHUB_API_URL}app/installations/{installation_id}"
     headers = build_request_headers(installation_id, use_jwt=True)
     response = requests.delete(url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT)
+    response.raise_for_status()
     return response
 
 

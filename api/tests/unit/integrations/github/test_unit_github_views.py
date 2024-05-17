@@ -171,7 +171,7 @@ def test_cannot_delete_github_configuration_when_delete_github_installation_resp
     assert response.status_code == status.HTTP_502_BAD_GATEWAY
     assert (
         response.json()["detail"]
-        == "Failed to delete GitHub Installation. Github API returned status code: 404. Error returned: not found"
+        == "Failed to delete GitHub Installation. Error: 404 Client Error: Not Found for url: https://api.github.com/app/installations/1234567"  # noqa: E501
     )
     assert GithubConfiguration.objects.filter(id=github_configuration.id).exists()
 
