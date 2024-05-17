@@ -970,7 +970,9 @@ def test_unrestrict_after_api_limit_grace_period_is_stale(
     assert getattr(organisation4, "api_limit_access_block", None) is None
 
 
-def test_register_recurring_tasks(mocker: MockerFixture, settings: SettingsWrapper) -> None:
+def test_register_recurring_tasks(
+    mocker: MockerFixture, settings: SettingsWrapper
+) -> None:
     # Given
     settings.ENABLE_API_USAGE_ALERTING = True
     register_task_mock = mocker.patch("organisations.tasks.register_recurring_task")
@@ -979,9 +981,18 @@ def test_register_recurring_tasks(mocker: MockerFixture, settings: SettingsWrapp
     register_recurring_tasks()
 
     # Then
+    # Check when the tasks have been registered
     register_task_mock.call_args_list == [
         call(run_every=timedelta(seconds=43200)),
         call(run_every=timedelta(seconds=1800)),
         call(run_every=timedelta(seconds=43200)),
         call(run_every=timedelta(seconds=43200)),
+    ]
+
+    # And check which tasks were passed in
+    register_task_mock.return_value.call_args_list == [
+        call(handle_api_usage_notifications),
+        call(charge_for_api_call_count_overages),
+        call(restrict_use_due_to_api_limit_grace_period_over),
+        call(unrestrict_after_api_limit_grace_period_is_stale),
     ]
