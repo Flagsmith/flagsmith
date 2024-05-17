@@ -116,8 +116,8 @@ class EnvironmentFeatureVersion(
 
     def publish(
         self,
-        published_by: "FFAdminUser",
-        live_from: datetime.datetime = None,
+        published_by: typing.Union["FFAdminUser", None] = None,
+        live_from: datetime.datetime | None = None,
         persist: bool = True,
     ) -> None:
         now = timezone.now()
