@@ -630,6 +630,9 @@ def test_map_environment_to_engine_v2_versioning_segment_overrides(
     v3 = EnvironmentFeatureVersion.objects.create(
         feature=feature, environment=environment_v2_versioning
     )
+    v3_segment_override = FeatureState.objects.get(
+        feature_segment__segment=segment, environment_feature_version=v3
+    )
     v3.publish(staff_user)
 
     # When
@@ -637,3 +640,7 @@ def test_map_environment_to_engine_v2_versioning_segment_overrides(
 
     # Then
     assert len(environment_model.project.segments[0].feature_states) == 1
+    assert (
+        environment_model.project.segments[0].feature_states[0].django_id
+        == v3_segment_override.id
+    )
