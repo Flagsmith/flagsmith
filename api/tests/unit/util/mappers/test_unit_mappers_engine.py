@@ -609,30 +609,42 @@ def test_map_environment_to_engine_v2_versioning_segment_overrides(
     staff_user: FFAdminUser,
 ) -> None:
     # Given
-    # First, let's create a version that includes a segment override
+    # Another segment
+    another_segment = Segment.objects.create(
+        name="another_segment", project=feature.project
+    )
+
+    # First, let's create a version that includes 2 segment overrides
     v2 = EnvironmentFeatureVersion.objects.create(
         feature=feature, environment=environment_v2_versioning
     )
-    FeatureState.objects.create(
-        feature=feature,
-        environment=environment_v2_versioning,
-        environment_feature_version=v2,
-        feature_segment=FeatureSegment.objects.create(
+    for _segment in [segment, another_segment]:
+        FeatureState.objects.create(
             feature=feature,
-            segment=segment,
             environment=environment_v2_versioning,
             environment_feature_version=v2,
-        ),
-    )
+            feature_segment=FeatureSegment.objects.create(
+                feature=feature,
+                segment=_segment,
+                environment=environment_v2_versioning,
+                environment_feature_version=v2,
+            ),
+        )
     v2.publish(staff_user)
 
-    # Now, let's create another new version which will also include the segment override
+    # Now, let's create another new version which will keep one of the segment overrides
+    # and remove the other.
     v3 = EnvironmentFeatureVersion.objects.create(
         feature=feature, environment=environment_v2_versioning
     )
+
     v3_segment_override = FeatureState.objects.get(
         feature_segment__segment=segment, environment_feature_version=v3
     )
+    FeatureState.objects.filter(
+        feature_segment__segment=another_segment, environment_feature_version=v3
+    ).delete()
+
     v3.publish(staff_user)
 
     # When
