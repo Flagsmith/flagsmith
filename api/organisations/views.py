@@ -24,8 +24,8 @@ from rest_framework.throttling import ScopedRateThrottle
 from organisations.chargebee import webhook_event_types, webhook_handlers
 from organisations.exceptions import OrganisationHasNoPaidSubscription
 from organisations.models import (
-    OranisationAPIUsageNotification,
     Organisation,
+    OrganisationAPIUsageNotification,
     OrganisationRole,
     OrganisationWebhook,
 )
@@ -319,7 +319,7 @@ class OrganisationAPIUsageNotificationView(ListAPIView):
     def get_queryset(self):
         organisation = Organisation.objects.get(id=self.kwargs["organisation_pk"])
         if not hasattr(organisation, "subscription_information_cache"):
-            return OranisationAPIUsageNotification.objects.none()
+            return OrganisationAPIUsageNotification.objects.none()
         subscription_cache = organisation.subscription_information_cache
         billing_starts_at = subscription_cache.current_billing_term_starts_at
         now = timezone.now()
@@ -327,7 +327,7 @@ class OrganisationAPIUsageNotificationView(ListAPIView):
         month_delta = relativedelta(now, billing_starts_at).months
         period_starts_at = relativedelta(months=month_delta) + billing_starts_at
 
-        queryset = OranisationAPIUsageNotification.objects.filter(
+        queryset = OrganisationAPIUsageNotification.objects.filter(
             organisation_id=organisation.id,
             notified_at__gt=period_starts_at,
         )

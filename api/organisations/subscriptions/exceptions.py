@@ -22,6 +22,18 @@ class UpgradeSeatsPaymentFailure(APIException):
     )
 
 
+class UpgradeAPIUsageError(APIException):
+    default_detail = "Failed to upgrade API use in Chargebee"
+
+
+class UpgradeAPIUsagePaymentFailure(APIException):
+    status_code = 400
+    default_detail = (
+        "API usage upgrade has failed due to a payment issue. "
+        "If this persists, contact the organisation admin."
+    )
+
+
 class SubscriptionDoesNotSupportSeatUpgrade(APIException):
     status_code = 400
     default_detail = "Please Upgrade your plan to add additional seats/users"
