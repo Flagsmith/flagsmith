@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC, useEffect, useMemo } from 'react'
 import { useGetProjectsQuery } from 'common/services/useProject'
 
 export type ProjectFilterType = {
@@ -18,6 +18,15 @@ const ProjectFilter: FC<ProjectFilterType> = ({
     { organisationId: `${organisationId}` },
     { skip: isNaN(organisationId) },
   )
+
+  useEffect(() => {
+    if (data && data.length === 1) {
+      const project = data[0]
+      onChange(`${project.id}`, project.name)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data])
+
   const foundValue = useMemo(
     () => data?.find((project) => `${project.id}` === value),
     [value, data],

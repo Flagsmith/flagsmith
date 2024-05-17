@@ -111,8 +111,8 @@ export type ExternalResource = {
   id?: number
   url: string
   type: string
-  project: number
-  status: null | string
+  project?: number
+  metadata: null | { status: string }
   feature: number
 }
 
@@ -769,7 +769,7 @@ export type Res = {
   supportedContentType: ContentType[]
   externalResource: PagedResponse<ExternalResource>
   githubIntegrations: PagedResponse<githubIntegration>
-  githubRepository: PagedResponse<GithubRepository> | { data: { id: string } }
+  githubRepository: PagedResponse<GithubRepository>
   githubIssues: Issue[]
   githubPulls: PullRequest[]
   githubRepos: GithubPaginatedRepos<Repository>

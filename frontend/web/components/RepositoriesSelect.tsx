@@ -13,7 +13,7 @@ const RepositoriesSelect: FC<RepositoriesSelectType> = ({
   repositories,
 }) => {
   return (
-    <div style={{ width: '100%' }}>
+    <div>
       <Select
         size='select-md'
         placeholder={'Select Your Repository'}
@@ -21,8 +21,8 @@ const RepositoriesSelect: FC<RepositoriesSelectType> = ({
         onChange={(v: any) => onChange(v?.value)}
         options={repositories?.map((i: GithubRepository) => {
           return {
-            label: `${i.repository_owner} - ${i.repository_name}`,
-            value: `${i.repository_owner}/${i.repository_name}`,
+            label: `${i.repository_name} - ${i.repository_owner}`,
+            value: `${i.repository_name}/${i.repository_owner}`,
           }
         })}
       />

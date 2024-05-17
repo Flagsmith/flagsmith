@@ -435,6 +435,10 @@ export default {
       'TRAITS_ID': 150,
     },
   },
+  githubType: {
+    githubIssue: 'GitHub Issue',
+    githubPR: 'Github PR',
+  },
   modals: {
     'PAYMENT': 'Payment Modal',
   },
@@ -472,6 +476,10 @@ export default {
   ],
   projectPermissions: (perm: string) =>
     `To use this feature you need the <i>${perm}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`,
+  resourceTypes: {
+    GITHUB_ISSUE: { id: 1, label: 'GitHub Issue', type: 'GITHUB' },
+    GITHUB_PR: { id: 2, label: 'GitHub PR', type: 'GITHUB' },
+  },
   roles: {
     'ADMIN': 'Organisation Administrator',
     'USER': 'User',

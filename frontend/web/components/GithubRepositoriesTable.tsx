@@ -1,14 +1,12 @@
 import React, { FC, useEffect } from 'react'
-import {
-  useDeleteGithubRepositoryMutation,
-  useGetGithubRepositoriesQuery,
-} from 'common/services/useGithubRepository'
+import { useDeleteGithubRepositoryMutation } from 'common/services/useGithubRepository'
 import Button from './base/forms/Button'
 import Icon from './Icon'
 import PanelSearch from './PanelSearch'
 import { GithubRepository } from 'common/types/responses'
 
 export type GithubRepositoriesTableType = {
+  repos: GithubRepository[] | undefined
   githubId: string
   organisationId: string
 }
@@ -16,12 +14,8 @@ export type GithubRepositoriesTableType = {
 const GithubRepositoriesTable: FC<GithubRepositoriesTableType> = ({
   githubId,
   organisationId,
+  repos,
 }) => {
-  const { data } = useGetGithubRepositoriesQuery({
-    github_id: githubId,
-    organisation_id: organisationId,
-  })
-
   const [deleteGithubRepository, { isSuccess: isDeleted }] =
     useDeleteGithubRepositoryMutation()
 
@@ -34,9 +28,9 @@ const GithubRepositoriesTable: FC<GithubRepositoriesTableType> = ({
   return (
     <div className='mb-3'>
       <PanelSearch
-        className='no-pad mb-4'
+        className='no-pad mb-4 mt-2'
         title='Repositories'
-        items={data?.results}
+        items={repos}
         header={
           <Row className='table-header'>
             <Flex className='table-column px-3'>Repository</Flex>
