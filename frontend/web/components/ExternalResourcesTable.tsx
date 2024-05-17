@@ -154,7 +154,7 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
       </Flex>
       <div className='table-column text-center' style={{ width: '80px' }}>
         <Button
-          className='text-right btn-with-icon'
+          className='text-right'
           theme='primary'
           disabled={!externalResourceType || !featureExternalResource}
           onClick={() => {
@@ -174,7 +174,7 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
             })
           }}
         >
-          <Icon name='plus' width={20} fill='#656D7B' />
+          <Icon name='plus' width={20} fill='#fff' />
         </Button>
       </div>
     </Row>
