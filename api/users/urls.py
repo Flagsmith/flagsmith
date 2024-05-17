@@ -22,5 +22,5 @@ urlpatterns = [
     ),
 ]
 
-if settings.ALLOW_ADMIN_INITIATION_VIA_URL:
+if settings.ALLOW_ADMIN_INITIATION_VIA_URL:  # pragme: no cover
     urlpatterns.insert(0, re_path(r"^init/", AdminInitView.as_view()))

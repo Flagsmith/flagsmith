@@ -67,6 +67,6 @@ if settings.WORKFLOWS_LOGIC_INSTALLED:
         ]
     )
 
-if settings.SERVE_FE_ASSETS:
+if settings.SERVE_FE_ASSETS:  # pragma: no cover
     # add route to serve FE assets for any unrecognised paths
     urlpatterns.append(re_path(r"^.*$", views.index, name="index"))
