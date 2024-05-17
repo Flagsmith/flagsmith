@@ -1,4 +1,11 @@
-import React, { FC, FormEvent, useEffect, useMemo, useState } from 'react'
+import React, {
+  FC,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 
 import Constants from 'common/constants'
 import useSearchThrottle from 'common/useSearchThrottle'
@@ -45,6 +52,7 @@ import AddMetadataToEntity, {
   CustomMetadataField,
 } from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
+import { setInterceptClose } from './base/ModalDefault'
 
 type PageType = {
   number: number
@@ -191,6 +199,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   const save = (e: FormEvent) => {
     Utils.preventDefault(e)
+    setValueChanged(false)
     const segmentData: Omit<Segment, 'id' | 'uuid'> = {
       description,
       feature: feature,
@@ -219,6 +228,28 @@ const CreateSegment: FC<CreateSegmentType> = ({
     }
   }
 
+  const [valueChanged, setValueChanged] = useState(false)
+  const onClosing = useCallback(() => {
+    return new Promise((resolve) => {
+      if (valueChanged) {
+        openConfirm({
+          body: 'Closing this will discard your unsaved changes.',
+          noText: 'Cancel',
+          onNo: () => resolve(false),
+          onYes: () => resolve(true),
+          title: 'Discard changes',
+          yesText: 'Ok',
+        })
+      } else {
+        resolve(true)
+      }
+    })
+    return Promise.resolve(true)
+  }, [valueChanged, isEdit])
+  useEffect(() => {
+    setInterceptClose(onClosing)
+    return () => setInterceptClose(null)
+  }, [onClosing])
   const isValid = useMemo(() => {
     if (!rules[0]?.rules?.find((v) => !v.delete)) {
       return false
@@ -313,8 +344,14 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     data-test={`rule-${i}`}
                     rule={rule}
                     operators={operators}
-                    onRemove={() => removeRule(0, i)}
-                    onChange={(v: SegmentRule) => updateRule(0, i, v)}
+                    onRemove={() => {
+                      setValueChanged(true)
+                      removeRule(0, i)
+                    }}
+                    onChange={(v: SegmentRule) => {
+                      setValueChanged(true)
+                      updateRule(0, i, v)
+                    }}
                   />
                 </div>
               )
@@ -373,13 +410,14 @@ const CreateSegment: FC<CreateSegmentType> = ({
             id='segmentID'
             maxLength={SEGMENT_ID_MAXLENGTH}
             value={name}
-            onChange={(e: InputEvent) =>
+            onChange={(e: InputEvent) => {
+              setValueChanged(true)
               setName(
                 Format.enumeration
                   .set(Utils.safeParseEventValue(e))
                   .toLowerCase(),
               )
-            }
+            }}
             isValid={name && name.length}
             type='text'
             placeholder='E.g. power_users'
@@ -395,9 +433,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
             name: 'featureDesc',
             readOnly: !!identity || readOnly,
           }}
-          onChange={(e: InputEvent) =>
+          onChange={(e: InputEvent) => {
+            setValueChanged(true)
             setDescription(Utils.safeParseEventValue(e))
-          }
+          }}
           isValid={name && name.length}
           type='text'
           title='Description (optional)'
@@ -521,7 +560,15 @@ const CreateSegment: FC<CreateSegmentType> = ({
     <>
       {isEdit && !condensed ? (
         <Tabs value={tab} onChange={(tab: number) => setTab(tab)}>
-          <TabItem tabLabel='Rules'>
+          <TabItem
+            tabLabelString='Rules'
+            tabLabel={
+              <Row className='justify-content-center'>
+                Rules{' '}
+                {valueChanged && <div className='unread ml-2 px-1'>{'*'}</div>}
+              </Row>
+            }
+          >
             <div className='my-4'>{Tab1}</div>
           </TabItem>
           <TabItem tabLabel='Features'>
@@ -535,6 +582,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   const isReadOnly = !manageSegmentOverrides
                   return (
                     <AssociatedSegmentOverrides
+                      onUnsavedChange={() => {
+                        setValueChanged(true)
+                      }}
                       feature={segment.feature}
                       projectId={projectId}
                       id={segment.id}
