@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 from itertools import chain
 from typing import TYPE_CHECKING, Dict, List, Optional
+from uuid import UUID
 
 from flag_engine.environments.integrations.models import IntegrationModel
 from flag_engine.environments.models import (
@@ -430,7 +431,7 @@ def _get_prioritised_feature_states(
 def _get_segment_feature_states(
     segments: Iterable["Segment"],
     environment_id: int,
-    latest_environment_feature_version_uuids: Iterable["EnvironmentFeatureVersion"],
+    latest_environment_feature_version_uuids: Iterable[UUID],
 ) -> Dict[int, List["FeatureState"]]:
     feature_states_by_segment_id = {}
 
