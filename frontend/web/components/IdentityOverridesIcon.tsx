@@ -1,5 +1,4 @@
 import React, { FC, FormEvent } from 'react'
-import SegmentsIcon from './svg/SegmentsIcon'
 import Tooltip from './Tooltip'
 import UsersIcon from './svg/UsersIcon'
 

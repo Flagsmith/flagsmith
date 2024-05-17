@@ -58,7 +58,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
 }) => {
   const [leftId, setLeftId] = useState<IdentitySelectType['value']>()
   const [rightId, setRightId] = useState<IdentitySelectType['value']>()
-  const { data: projectFlags } = useGetProjectFlagsQuery({
+  const { data: projectFlags, refetch } = useGetProjectFlagsQuery({
     environment: ProjectStore.getEnvironmentIdFromKey(_environmentId),
     project: projectId,
   })
@@ -148,7 +148,6 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
           {'Any existing Identity overrides on '}
           <strong>{`${rightIdentityName}`}</strong> {'will be lost.'}
           <br />
-          {'The Multivariate values will not be cloned.'}
         </div>
       ),
       destructive: true,
@@ -159,9 +158,10 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
           identity_id: rightIdentityId,
         }).then(() => {
           toast('Identity overrides successfully cloned!')
+          refetch()
         })
       },
-      title: 'Clone Identity',
+      title: 'Clone Identity overrides',
       yesText: 'Confirm',
     })
   }
@@ -204,7 +204,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
           </div>
           <div className='mx-3'>
             <Icon
-              name='arrow-left'
+              name='arrow-right'
               width={20}
               fill={
                 Utils.getFlagsmithHasFeature('dark_mode') ? '#fff' : '#1A2634'
