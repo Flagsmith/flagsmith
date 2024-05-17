@@ -1,4 +1,5 @@
 import typing
+from dataclasses import asdict
 from datetime import datetime
 
 import django.core.exceptions
@@ -12,6 +13,10 @@ from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
+from integrations.github.github import GithubData, generate_data
+from integrations.github.models import GithubConfiguration
+from integrations.github.tasks import call_github_app_webhook_for_feature_state
+from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
 from users.serializers import (
     UserIdsSerializer,
@@ -21,6 +26,7 @@ from users.serializers import (
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
+from webhooks.webhooks import WebhookEventType
 
 from .constants import INTERSECTION, UNION
 from .feature_segments.serializers import (
@@ -296,17 +302,44 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         return getattr(instance, "last_modified_in_current_environment", None)
 
 
-class ListFeatureSerializer(CreateFeatureSerializer):
+class FeatureSerializerWithMetadata(SerializerWithMetadata, CreateFeatureSerializer):
+    metadata = MetadataSerializer(required=False, many=True)
+
+    class Meta(CreateFeatureSerializer.Meta):
+        fields = CreateFeatureSerializer.Meta.fields + ("metadata",)
+
+    def get_project(self, validated_data: dict = None) -> Project:
+        project = self.context.get("project")
+        if project:
+            return project
+        else:
+            raise serializers.ValidationError(
+                "Unable to retrieve project for metadata validation."
+            )
+
+
+class UpdateFeatureSerializerWithMetadata(FeatureSerializerWithMetadata):
+    """prevent users from changing certain values after creation"""
+
+    class Meta(FeatureSerializerWithMetadata.Meta):
+        read_only_fields = FeatureSerializerWithMetadata.Meta.read_only_fields + (
+            "default_enabled",
+            "initial_value",
+            "name",
+        )
+
+
+class ListFeatureSerializer(FeatureSerializerWithMetadata):
     # This exists purely to reduce the conflicts for the EE repository
     # which has some extra behaviour here to support Oracle DB.
     pass
 
 
-class UpdateFeatureSerializer(CreateFeatureSerializer):
+class UpdateFeatureSerializer(ListFeatureSerializer):
     """prevent users from changing certain values after creation"""
 
-    class Meta(CreateFeatureSerializer.Meta):
-        read_only_fields = CreateFeatureSerializer.Meta.read_only_fields + (
+    class Meta(ListFeatureSerializer.Meta):
+        read_only_fields = ListFeatureSerializer.Meta.read_only_fields + (
             "default_enabled",
             "initial_value",
             "name",
@@ -432,7 +465,32 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
 
     def save(self, **kwargs):
         try:
-            return super().save(**kwargs)
+            response = super().save(**kwargs)
+
+            feature_state = self.instance
+            if (
+                not feature_state.identity_id
+                and feature_state.feature.external_resources.exists()
+                and feature_state.environment.project.github_project.exists()
+                and feature_state.environment.project.organisation.github_config.exists()
+            ):
+                github_configuration = GithubConfiguration.objects.get(
+                    organisation_id=feature_state.environment.project.organisation_id
+                )
+                feature_states = []
+                feature_states.append(feature_state)
+                feature_data: GithubData = generate_data(
+                    github_configuration=github_configuration,
+                    feature=feature_state.feature,
+                    type=WebhookEventType.FLAG_UPDATED.value,
+                    feature_states=feature_states,
+                )
+
+                call_github_app_webhook_for_feature_state.delay(
+                    args=(asdict(feature_data),),
+                )
+
+            return response
         except django.core.exceptions.ValidationError as e:
             raise serializers.ValidationError(str(e))
 

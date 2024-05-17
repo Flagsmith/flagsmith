@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import ConfirmRemoveProject from 'components/modals/ConfirmRemoveProject'
 import ConfirmHideFlags from 'components/modals/ConfirmHideFlags'
+import MetadataPage from 'components/metadata/MetadataPage'
 import EditPermissions from 'components/EditPermissions'
 import Switch from 'components/Switch'
 import _data from 'common/data/base/_data'
@@ -32,7 +33,9 @@ const ProjectSettingsPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = { roles: [] }
+    this.state = {
+      roles: [],
+    }
     AppActions.getProject(this.props.match.params.projectId)
     this.getPermissions()
   }
@@ -49,28 +52,26 @@ const ProjectSettingsPage = class extends Component {
 
   componentDidMount = () => {
     API.trackPage(Constants.pages.PROJECT_SETTINGS)
-    if (Utils.getFlagsmithHasFeature('show_role_management')) {
-      getRoles(
+    getRoles(
+      getStore(),
+      { organisation_id: AccountStore.getOrganisation().id },
+      { forceRefetch: true },
+    ).then((roles) => {
+      getRolesProjectPermissions(
         getStore(),
-        { organisation_id: AccountStore.getOrganisation().id },
+        {
+          organisation_id: AccountStore.getOrganisation().id,
+          project_id: this.props.match.params.projectId,
+          role_id: roles.data.results[0].id,
+        },
         { forceRefetch: true },
-      ).then((roles) => {
-        getRolesProjectPermissions(
-          getStore(),
-          {
-            organisation_id: AccountStore.getOrganisation().id,
-            project_id: this.props.match.params.projectId,
-            role_id: roles.data.results[0].id,
-          },
-          { forceRefetch: true },
-        ).then((res) => {
-          const matchingItems = roles.data.results.filter((item1) =>
-            res.data.results.some((item2) => item2.role === item1.id),
-          )
-          this.setState({ roles: matchingItems })
-        })
+      ).then((res) => {
+        const matchingItems = roles.data.results.filter((item1) =>
+          res.data.results.some((item2) => item2.role === item1.id),
+        )
+        this.setState({ roles: matchingItems })
       })
-    }
+    })
   }
 
   onSave = () => {
@@ -165,6 +166,8 @@ const ProjectSettingsPage = class extends Component {
   render() {
     const { name, stale_flags_limit_days } = this.state
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
+
+    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
 
     return (
       <div className='app-container container'>
@@ -609,6 +612,14 @@ const ProjectSettingsPage = class extends Component {
                         roles={this.state.roles}
                       />
                     </TabItem>
+                    {metadataEnable && (
+                      <TabItem tabLabel='Metadata'>
+                        <MetadataPage
+                          organisationId={AccountStore.getOrganisation().id}
+                          projectId={this.props.match.params.projectId}
+                        />
+                      </TabItem>
+                    )}
                     {!!ProjectStore.getEnvs()?.length && (
                       <TabItem data-test='js-import-page' tabLabel='Import'>
                         <ImportPage
@@ -618,16 +629,13 @@ const ProjectSettingsPage = class extends Component {
                         />
                       </TabItem>
                     )}
-                    {!!ProjectStore.getEnvs()?.length &&
-                      Utils.getFlagsmithHasFeature(
-                        'flagsmith_import_export',
-                      ) && (
-                        <TabItem tabLabel='Export'>
-                          <FeatureExport
-                            projectId={this.props.match.params.projectId}
-                          />
-                        </TabItem>
-                      )}
+                    {!!ProjectStore.getEnvs()?.length && (
+                      <TabItem tabLabel='Export'>
+                        <FeatureExport
+                          projectId={this.props.match.params.projectId}
+                        />
+                      </TabItem>
+                    )}
                   </Tabs>
                 }
               </div>

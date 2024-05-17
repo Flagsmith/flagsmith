@@ -107,8 +107,8 @@ class FeatureViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         return {
             "list": ListFeatureSerializer,
-            "retrieve": CreateFeatureSerializer,
-            "create": CreateFeatureSerializer,
+            "retrieve": ListFeatureSerializer,
+            "create": ListFeatureSerializer,
             "update": UpdateFeatureSerializer,
             "partial_update": UpdateFeatureSerializer,
         }.get(self.action, ProjectFeatureSerializer)
@@ -131,7 +131,9 @@ class FeatureViewSet(viewsets.ModelViewSet):
                     ),
                 ),
             )
-            .prefetch_related("multivariate_options", "owners", "tags", "group_owners")
+            .prefetch_related(
+                "multivariate_options", "owners", "tags", "group_owners", "metadata"
+            )
         )
 
         query_serializer = FeatureQuerySerializer(data=self.request.query_params)

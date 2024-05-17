@@ -2,6 +2,7 @@ import AccountStore from 'common/stores/account-store'
 import ProjectStore from 'common/stores/project-store'
 import Project from 'common/project'
 import {
+  ContentType,
   FeatureState,
   FeatureStateValue,
   FlagsmithValue,
@@ -145,6 +146,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getApproveChangeRequestPermission() {
     return 'APPROVE_CHANGE_REQUEST'
+  },
+  getContentType(contentTypes: ContentType[], model: string, type: string) {
+    return contentTypes.find((c: ContentType) => c[model] === type) || null
   },
   getCreateProjectPermission(organisation: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {
@@ -416,10 +420,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
 
     return !!(
-      !Utils.getFlagsmithHasFeature('show_edge_identity_overrides') ||
-      (project &&
-        project.use_edge_identities &&
-        !project.show_edge_identity_overrides_for_feature)
+      project &&
+      project.use_edge_identities &&
+      !project.show_edge_identity_overrides_for_feature
     )
   },
 
@@ -522,6 +525,18 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },
+  isValidURL(value: any) {
+    const pattern = new RegExp(
+      '^(https?:\\/\\/)?' + // protocol
+        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+        '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+        '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+        '(\\#[-a-z\\d_]*)?$',
+      'i',
+    )
+    return !!pattern.test(value)
+  },
   loadScriptPromise(url: string) {
     return new Promise((resolve) => {
       const cb = function () {
@@ -573,13 +588,29 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return `${value}`
   },
+
   tagDisabled: (tag: Tag | undefined) => {
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
     return tag?.type === 'STALE' && !hasStaleFlagsPermission
   },
+
+  validateMetadataType(type: string, value: any) {
+    switch (type) {
+      case 'int': {
+        return Utils.isValidNumber(value)
+      }
+      case 'url': {
+        return Utils.isValidURL(value)
+      }
+      case 'bool': {
+        return value === 'true' || value === 'false'
+      }
+      default:
+        return true
+    }
+  },
   validateRule(rule: SegmentCondition) {
     if (!rule) return false
-
     if (rule.delete) {
       return true
     }
