@@ -43,7 +43,7 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
     (v) => v.type === 'GITHUB',
   )
   return (
-    <Row className='list-item'>
+    <Row>
       <Flex style={{ maxWidth: '170px' }}>
         <Select
           size='select-md'
@@ -119,16 +119,11 @@ const ExternalResourcesLinkTab: FC<ExternalResourcesLinkTabType> = ({
 
   return (
     <>
-      <ExternalResourcesTable
-        featureId={featureId}
-        projectId={projectId}
-        organisationId={organisationId}
-        repoOwner={repoOwner}
-        repoName={repoName}
-        setSelectedResources={(r: ExternalResource[]) =>
-          setSelectedResources(r)
-        }
-      />
+      <h5>GitHub Issues and Pull Requests linked</h5>
+      <label className='cols-sm-2 control-label'>
+        {' '}
+        Link new Issue / Pull Request{' '}
+      </label>
       <FormGroup>
         <MyRepositoriesSelect
           githubId={githubId}
@@ -150,6 +145,16 @@ const ExternalResourcesLinkTab: FC<ExternalResourcesLinkTabType> = ({
           />
         )}
       </FormGroup>
+      <ExternalResourcesTable
+        featureId={featureId}
+        projectId={projectId}
+        organisationId={organisationId}
+        repoOwner={repoOwner}
+        repoName={repoName}
+        setSelectedResources={(r: ExternalResource[]) =>
+          setSelectedResources(r)
+        }
+      />
     </>
   )
 }

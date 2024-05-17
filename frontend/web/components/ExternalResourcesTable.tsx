@@ -107,7 +107,6 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
 
   return (
     <>
-      <h5>GitHub Issues and Pull Requests linked</h5>
       <PanelSearch
         className='no-pad overflow-visible'
         items={data?.results}

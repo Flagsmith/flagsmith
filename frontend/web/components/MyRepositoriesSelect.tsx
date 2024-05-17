@@ -30,10 +30,6 @@ const MyRepositoriesSelect: FC<MyRepositoriesSelectType> = ({
     <div className='mt-4'>
       {!!data?.results.length && data?.results.length !== 1 && (
         <>
-          <label className='cols-sm-2 control-label'>
-            {' '}
-            Link new Issue / Pull Request{' '}
-          </label>
           <RepositoriesSelect
             repositories={data?.results}
             onChange={onChange}
