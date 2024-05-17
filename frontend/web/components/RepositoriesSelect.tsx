@@ -13,7 +13,7 @@ const RepositoriesSelect: FC<RepositoriesSelectType> = ({
   repositories,
 }) => {
   return (
-    <div style={{ width: '100%' }}>
+    <div>
       <Select
         size='select-md'
         placeholder={'Select Your Repository'}

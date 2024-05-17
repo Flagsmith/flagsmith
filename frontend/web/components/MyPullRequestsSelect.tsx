@@ -27,7 +27,7 @@ const MyGithubPullRequests: FC<MyGithubPullRequestSelectType> = ({
     useState<PullRequest[]>()
 
   useEffect(() => {
-    if (data) {
+    if (data && linkedExternalResources) {
       setExtenalResourcesSelect(
         data.filter((pr: PullRequest) => {
           const same = linkedExternalResources?.some(
@@ -38,7 +38,7 @@ const MyGithubPullRequests: FC<MyGithubPullRequestSelectType> = ({
       )
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data])
+  }, [data, linkedExternalResources])
   return (
     <PullRequestSelect
       pullRequest={extenalResourcesSelect}

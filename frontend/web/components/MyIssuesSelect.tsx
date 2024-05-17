@@ -27,7 +27,7 @@ const MyIssuesSelect: FC<MyIssuesSelectType> = ({
   })
 
   useEffect(() => {
-    if (data) {
+    if (data && linkedExternalResources) {
       setExtenalResourcesSelect(
         data.filter((i: Issue) => {
           const same = linkedExternalResources?.some(
@@ -38,7 +38,7 @@ const MyIssuesSelect: FC<MyIssuesSelectType> = ({
       )
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data])
+  }, [data, linkedExternalResources])
 
   return <IssueSelect issues={extenalResourcesSelect} onChange={onChange} />
 }

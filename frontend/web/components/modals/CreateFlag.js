@@ -39,8 +39,7 @@ import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
 import { getGithubIntegration } from 'common/services/useGithubIntegration'
 import { removeUserOverride } from 'components/RemoveUserOverride'
-import MyRepositoriesSelect from 'components/MyRepositoriesSelect'
-import ExternalResourcesTable from 'components/ExternalResourcesTable'
+import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -101,8 +100,6 @@ const CreateFlag = class extends Component {
       multivariate_options: _.cloneDeep(multivariate_options),
       name,
       period: 30,
-      repoName: '',
-      repoOwner: '',
       selectedIdentity: null,
       tags: tags || [],
     }
@@ -532,8 +529,6 @@ const CreateFlag = class extends Component {
       isEdit,
       multivariate_options,
       name,
-      repoName,
-      repoOwner,
     } = this.state
     const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID
 
@@ -658,32 +653,6 @@ const CreateFlag = class extends Component {
             placeholder="e.g. 'This determines what size the header is' "
           />
         </FormGroup>
-        {Utils.getFlagsmithHasFeature('github_integration') &&
-          hasIntegrationWithGithub &&
-          projectFlag?.id && (
-            <>
-              <FormGroup className='mt-4 setting'>
-                <MyRepositoriesSelect
-                  githubId={githubId}
-                  orgId={AccountStore.getOrganisation().id}
-                  onChange={(v) => {
-                    const repoData = v.split('/')
-                    this.setState({
-                      repoName: repoData[0],
-                      repoOwner: repoData[1],
-                    })
-                  }}
-                />
-              </FormGroup>
-              <ExternalResourcesTable
-                featureId={projectFlag.id}
-                projectId={`${this.props.projectId}`}
-                organisationId={AccountStore.getOrganisation().id}
-                repoOwner={repoOwner}
-                repoName={repoName}
-              />
-            </>
-          )}
 
         {!identity && (
           <FormGroup className='mb-5 mt-3 setting'>
@@ -1769,6 +1738,30 @@ const CreateFlag = class extends Component {
                                           View docs
                                         </a>
                                       </InfoMessage>
+                                    </TabItem>
+                                  )}
+                                {Utils.getFlagsmithHasFeature(
+                                  'github_integration',
+                                ) &&
+                                  hasIntegrationWithGithub &&
+                                  projectFlag?.id && (
+                                    <TabItem
+                                      data-test='external-resources-links'
+                                      tabLabelString='Links'
+                                      tabLabel={
+                                        <Row className='justify-content-center'>
+                                          Links{' '}
+                                        </Row>
+                                      }
+                                    >
+                                      <ExternalResourcesLinkTab
+                                        githubId={githubId}
+                                        organisationId={
+                                          AccountStore.getOrganisation().id
+                                        }
+                                        featureId={projectFlag.id}
+                                        projectId={`${this.props.projectId}`}
+                                      />
                                     </TabItem>
                                   )}
                                 {!existingChangeRequest && createFeature && (
