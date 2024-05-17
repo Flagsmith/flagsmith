@@ -187,16 +187,15 @@ def fetch_issues(request, organisation_pk) -> Response:
     response = fetch_github_resource(
         ResourceType.ISSUES, organisation_pk, repo_owner, repo_name
     ).json()
-
-    if response is not None and isinstance(response, list):
-        filtered_data = [issue for issue in response if "pull_request" not in issue]
-        return Response(filtered_data)
-    else:
-        return Response(
-            data={"detail": "Invalid response"},
-            content_type="application/json",
-            status=status.HTTP_502_BAD_GATEWAY,
-        )
+    if response is not None:
+        if isinstance(response, list):
+            filtered_data = [issue for issue in response if "pull_request" not in issue]
+            return Response(filtered_data)
+    return Response(
+        data={"detail": "Invalid response"},
+        content_type="application/json",
+        status=status.HTTP_502_BAD_GATEWAY,
+    )
 
 
 @api_view(["GET"])

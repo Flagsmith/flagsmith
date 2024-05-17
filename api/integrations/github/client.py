@@ -58,28 +58,23 @@ def generate_jwt_token(app_id: int) -> str:  # pragma: no cover
 
 def post_comment_to_github(
     installation_id: str, owner: str, repo: str, issue: str, body: str
-) -> typing.Optional[typing.Dict[str, typing.Any]]:
-    try:
-        token = generate_token(
-            installation_id,
-            settings.GITHUB_APP_ID,
-        )
+) -> typing.Dict[str, typing.Any]:
+    token = generate_token(
+        installation_id,
+        settings.GITHUB_APP_ID,
+    )
 
-        url = f"{GITHUB_API_URL}repos/{owner}/{repo}/issues/{issue}/comments"
-        headers = {
-            "Accept": "application/vnd.github.v3+json",
-            "Authorization": f"Bearer {token}",
-        }
+    url = f"{GITHUB_API_URL}repos/{owner}/{repo}/issues/{issue}/comments"
+    headers = {
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"Bearer {token}",
+    }
 
-        payload = {"body": body}
-        response = response = requests.post(
-            url, json=payload, headers=headers, timeout=10
-        )
-        response.raise_for_status()
-        return response.json() if response.status_code == 201 else None
-    except requests.RequestException as e:
-        logger.error(f" {e}")
-        return None
+    payload = {"body": body}
+    response = response = requests.post(url, json=payload, headers=headers, timeout=10)
+    response.raise_for_status()
+
+    return response.json()
 
 
 def delete_github_installation(installation_id: str) -> requests.Response:

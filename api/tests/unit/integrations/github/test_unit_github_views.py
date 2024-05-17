@@ -338,7 +338,7 @@ def test_fetch_pull_requests(
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
-    mocker,
+    mocker: MockerFixture,
 ) -> None:
 
     # Given
@@ -370,12 +370,12 @@ def test_fetch_pull_requests(
     )
 
 
-def test_fetch_issue(
+def test_fetch_issues(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
-    mocker,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     mock_generate_token = mocker.patch(
@@ -404,12 +404,36 @@ def test_fetch_issue(
     )
 
 
+def test_fetch_issues_returns_eror_on_bad_response_from_github(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_generate_token = mocker.patch(
+        "integrations.github.client.generate_token",
+    )
+    mock_generate_token.return_value = "mocked_token"
+    mocker.patch("requests.get", response="{}")
+    url = reverse("api-v1:organisations:get-github-issues", args=[organisation.id])
+    data = {"repo_owner": "owner", "repo_name": "repo"}
+    # When
+    response = admin_client_new.get(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_502_BAD_GATEWAY
+    response_json = response.json()
+    assert "Invalid response" in response_json["detail"]
+
+
 def test_fetch_repositories(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
-    mocker,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     mock_generate_token = mocker.patch(
