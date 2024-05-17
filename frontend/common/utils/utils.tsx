@@ -117,25 +117,18 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return null
     }
 
-    let value = null
-
     //@ts-ignore value_type is the type key on core traits
     switch (featureState.value_type || featureState.type) {
       case 'bool':
-        value = featureState.boolean_value
+        return featureState.boolean_value
         break
       case 'float':
-        value = featureState.float_value
-        break
+        return featureState.float_value
       case 'int':
-        value = featureState.integer_value
-        break
+        return featureState.integer_value
       default:
-        value = featureState.string_value
-        break
+        return featureState.string_value
     }
-
-    return value
   },
   findOperator(
     operator: SegmentCondition['operator'],
