@@ -21,7 +21,6 @@ from django.core.exceptions import (
 from django.db import models
 from django.db.models import Max, Q, QuerySet
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import (
     AFTER_CREATE,
     AFTER_SAVE,
@@ -99,7 +98,7 @@ class Feature(
     project = models.ForeignKey(
         Project,
         related_name="features",
-        help_text=_(
+        help_text=(
             "Changing the project selected will remove previous Feature States for the previously "
             "associated projects Environments that are related to this Feature. New default "
             "Feature States will be created for the new selected projects Environments for this "

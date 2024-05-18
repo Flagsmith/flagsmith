@@ -2,7 +2,6 @@ import logging
 from dataclasses import asdict
 
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 from django_lifecycle import (
     AFTER_SAVE,
     BEFORE_DELETE,
@@ -22,8 +21,8 @@ logger = logging.getLogger(__name__)
 class FeatureExternalResource(LifecycleModelMixin, models.Model):
     class ResourceType(models.TextChoices):
         # GitHub external resource types
-        GITHUB_ISSUE = "GITHUB_ISSUE", _("GitHub Issue")
-        GITHUB_PR = "GITHUB_PR", _("GitHub PR")
+        GITHUB_ISSUE = "GITHUB_ISSUE", "GitHub Issue"
+        GITHUB_PR = "GITHUB_PR", "GitHub PR"
 
     url = models.URLField()
     type = models.CharField(max_length=20, choices=ResourceType.choices)
