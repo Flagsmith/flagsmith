@@ -13,7 +13,9 @@ export const githubService = service
       >({
         providesTags: [{ id: 'LIST', type: 'Github' }],
         query: (query: Req['getGithubIssues']) => ({
-          url: `organisations/${query.organisation_id}/github/issues/?repo_name=${query.repo_name}&repo_owner=${query.repo_owner}`,
+          url:
+            `organisations/${query.organisation_id}/github/issues/` +
+            `?repo_name=${query.repo_name}&repo_owner=${query.repo_owner}&page_size=${query.page_size}&page=${query.page}&search_text=${query.q}`,
         }),
       }),
       getGithubPulls: builder.query<Res['githubPulls'], Req['getGithubPulls']>({

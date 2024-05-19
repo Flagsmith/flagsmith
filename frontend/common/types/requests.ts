@@ -412,11 +412,11 @@ export type Req = {
       repository_owner: string
     }
   }
-  getGithubIssues: {
+  getGithubIssues: PagedRequest<{
     organisation_id: string
     repo_name: string
     repo_owner: string
-  }
+  }>
   getGithubPulls: {
     organisation_id: string
     repo_name: string

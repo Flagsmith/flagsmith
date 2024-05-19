@@ -1,7 +1,9 @@
 import { FC, useEffect, useState } from 'react'
 import { useGetGithubIssuesQuery } from 'common/services/useGithub'
 import IssueSelect from './IssueSelect'
-import { ExternalResource, Issue } from 'common/types/responses'
+import { ExternalResource, Issue, Res } from 'common/types/responses'
+import useInfiniteScroll from 'common/useInfiniteScroll'
+import { Req } from 'common/types/requests'
 
 type MyIssuesSelectType = {
   orgId: string
@@ -18,18 +20,32 @@ const MyIssuesSelect: FC<MyIssuesSelectType> = ({
   repoName,
   repoOwner,
 }) => {
-  const [extenalResourcesSelect, setExtenalResourcesSelect] =
+  const [externalResourcesSelect, setExternalResourcesSelect] =
     useState<Issue[]>()
-  const { data } = useGetGithubIssuesQuery({
-    organisation_id: orgId,
-    repo_name: repoName,
-    repo_owner: repoOwner,
-  })
+
+  const { data, isFetching, isLoading, loadMore, searchItems } =
+    useInfiniteScroll<Req['getGithubIssues'], Res['githubIssues']>(
+      useGetGithubIssuesQuery,
+      {
+        organisation_id: orgId,
+        page_size: 100,
+        repo_name: repoName,
+        repo_owner: repoOwner,
+      },
+    )
+
+  const { next, results } = data || { results: [] }
 
   useEffect(() => {
-    if (data && linkedExternalResources) {
-      setExtenalResourcesSelect(
-        data.filter((i: Issue) => {
+    console.log(
+      `IsLoading: ${isLoading.toString()} isFetching: ${isFetching.toString()}`,
+    )
+  }, [isLoading, isFetching])
+
+  useEffect(() => {
+    if (results && linkedExternalResources) {
+      setExternalResourcesSelect(
+        results.filter((i: Issue) => {
           const same = linkedExternalResources?.some(
             (r) => i.html_url === r.url,
           )
@@ -40,7 +56,17 @@ const MyIssuesSelect: FC<MyIssuesSelectType> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, linkedExternalResources])
 
-  return <IssueSelect issues={extenalResourcesSelect} onChange={onChange} />
+  return (
+    <IssueSelect
+      issues={externalResourcesSelect}
+      onChange={onChange}
+      isFetching={isFetching}
+      isLoading={isLoading}
+      loadMore={loadMore}
+      nextPage={next}
+      searchItems={searchItems}
+    />
+  )
 }
 
 export default MyIssuesSelect

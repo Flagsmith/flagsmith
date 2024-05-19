@@ -61,6 +61,7 @@ const useInfiniteScroll = <
 
   return {
     data: combinedData,
+    isFetching: queryResponse.isFetching,
     isLoading: queryResponse.isLoading,
     loadMore,
     refresh,

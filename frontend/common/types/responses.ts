@@ -17,6 +17,9 @@ export type PagedResponse<T> = {
   previous?: string
   results: T[]
 }
+export interface GitHubPagedResponse<T> extends PagedResponse<T> {
+  incomplete_results: boolean
+}
 export type FlagsmithValue = string | number | boolean | null
 
 export type FeatureVersionState = {
@@ -112,7 +115,7 @@ export type ExternalResource = {
   url: string
   type: string
   project?: number
-  metadata: null | { status: string }
+  metadata: null | { status: string; name: string }
   feature: number
 }
 
@@ -770,7 +773,7 @@ export type Res = {
   externalResource: PagedResponse<ExternalResource>
   githubIntegrations: PagedResponse<githubIntegration>
   githubRepository: PagedResponse<GithubRepository>
-  githubIssues: Issue[]
+  githubIssues: GitHubPagedResponse<Issue>
   githubPulls: PullRequest[]
   githubRepos: GithubPaginatedRepos<Repository>
   segmentPriorities: {}

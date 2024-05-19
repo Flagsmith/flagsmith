@@ -5,6 +5,7 @@ export type PullRequestsSelectType = {
   disabled?: boolean
   pullRequest: PullRequest[] | undefined
   onChange: (value: string) => void
+  isLoading: boolean
 }
 
 type PullRequestValueType = {
@@ -13,6 +14,7 @@ type PullRequestValueType = {
 
 const PullRequestsSelect: FC<PullRequestsSelectType> = ({
   disabled,
+  isLoading,
   onChange,
   pullRequest,
 }) => {
@@ -29,6 +31,7 @@ const PullRequestsSelect: FC<PullRequestsSelectType> = ({
             value: p.html_url,
           }
         })}
+        noOptionsMessage={() => (isLoading ? 'Loading...' : 'No PRs found')}
       />
     </div>
   )

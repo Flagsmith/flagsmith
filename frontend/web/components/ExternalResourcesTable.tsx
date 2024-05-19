@@ -40,9 +40,13 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
   }, [isDeleted])
   return (
     <Row className='list-item' key={externalResource?.id}>
+      <div className='table-column text-left' style={{ width: '100px' }}>
+        <div className='font-weight-medium mb-1'>
+          {Constants.resourceTypes[externalResource?.type].label}
+        </div>
+      </div>
       <Flex className='table-column'>
         <Row className='font-weight-medium'>
-          {Constants.resourceTypes[externalResource?.type].label}
           <Button
             theme='text'
             href={`${externalResource?.url}`}
@@ -52,7 +56,9 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
             <Tooltip
               title={
                 <Row>
-                  {`#${externalResource?.url.replace(/\D/g, '')}`}{' '}
+                  {`${
+                    externalResource?.metadata?.name
+                  } (#${externalResource?.url.replace(/\D/g, '')})`}{' '}
                   <div className='ml-1 mb-1'>
                     <Icon name='open-external-link' width={14} fill='#6837fc' />
                   </div>
@@ -112,7 +118,10 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
         items={data?.results}
         header={
           <Row className='table-header'>
-            <Flex className='table-column px-3'>Type</Flex>
+            <div className='table-column' style={{ width: '240px' }}>
+              Type
+            </div>
+            <Flex className='table-column px-3'>Name</Flex>
             <div
               className='table-column text-center'
               style={{ width: '240px' }}

@@ -18,17 +18,17 @@ const MyGithubPullRequests: FC<MyGithubPullRequestSelectType> = ({
   repoName,
   repoOwner,
 }) => {
-  const { data } = useGetGithubPullsQuery({
+  const { data, isLoading } = useGetGithubPullsQuery({
     organisation_id: orgId,
     repo_name: repoName,
     repo_owner: repoOwner,
   })
-  const [extenalResourcesSelect, setExtenalResourcesSelect] =
+  const [externalResourcesSelect, setExternalResourcesSelect] =
     useState<PullRequest[]>()
 
   useEffect(() => {
     if (data && linkedExternalResources) {
-      setExtenalResourcesSelect(
+      setExternalResourcesSelect(
         data.filter((pr: PullRequest) => {
           const same = linkedExternalResources?.some(
             (r) => pr.html_url === r.url,
@@ -41,8 +41,9 @@ const MyGithubPullRequests: FC<MyGithubPullRequestSelectType> = ({
   }, [data, linkedExternalResources])
   return (
     <PullRequestSelect
-      pullRequest={extenalResourcesSelect}
+      pullRequest={externalResourcesSelect}
       onChange={onChange}
+      isLoading={isLoading}
     />
   )
 }
