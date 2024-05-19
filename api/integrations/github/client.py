@@ -5,6 +5,8 @@ from enum import Enum
 import requests
 from django.conf import settings
 from github import Auth, Github
+from rest_framework import status
+from rest_framework.response import Response
 
 from integrations.github.constants import (
     GITHUB_API_CALLS_TIMEOUT,
@@ -17,8 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 class ResourceType(Enum):
-    ISSUES = "issues"
-    PULL_REQUESTS = "pulls"
+    ISSUES = "issue"
+    PULL_REQUESTS = "pr"
 
 
 def build_request_headers(
@@ -93,18 +95,50 @@ def delete_github_installation(installation_id: str) -> requests.Response:
 
 
 def fetch_github_resource(
-    resource_type: ResourceType, organisation_id: int, repo_owner: str, repo_name: str
-) -> requests.Response:
+    resource_type: ResourceType,
+    organisation_id: int,
+    repo_owner: str,
+    repo_name: str,
+    page_size: int = 100,
+    page: int = 1,
+    search_text: str = "",
+) -> Response:
     github_configuration = GithubConfiguration.objects.get(
         organisation_id=organisation_id, deleted_at__isnull=True
     )
-    url = f"{GITHUB_API_URL}repos/{repo_owner}/{repo_name}/{resource_type.value}"
+    url = f"{GITHUB_API_URL}search/issues?q={search_text} repo:{repo_owner}/{repo_name} is:{resource_type.value} is:open in:title in:body &per_page={page_size}&page={page}"  # noqa E501
     headers: dict[str, str] = build_request_headers(
         github_configuration.installation_id
     )
     response = requests.get(url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT)
     response.raise_for_status()
-    return response
+    json_response = response.json()
+    results = [
+        {
+            "html_url": i["html_url"],
+            "id": i["id"],
+            "title": i["title"],
+            "number": i["number"],
+        }
+        for i in json_response["items"]
+    ]
+    data = {
+        "results": results,
+        "count": json_response["total_count"],
+        "incomplete_results": json_response["incomplete_results"],
+    }
+    # if previous := response.links.get("prev"):
+    #     data["previous"] = response.links.get("prev")
+
+    # if next := response.links.get("next"):
+    #     data["next"] = response.links.get("next")
+
+    # Return a Response object
+    return Response(
+        data=data,
+        content_type="application/json",
+        status=status.HTTP_200_OK,
+    )
 
 
 def fetch_github_repositories(installation_id: str) -> requests.Response:
@@ -115,3 +149,19 @@ def fetch_github_repositories(installation_id: str) -> requests.Response:
     response = requests.get(url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT)
     response.raise_for_status()
     return response
+
+
+def get_github_issue_pr_name(organisation_id: int, resource_url: str) -> str:
+    url_parts = resource_url.split("/")
+    owner = url_parts[-4]
+    repo = url_parts[-3]
+    number = url_parts[-1]
+    installation_id = GithubConfiguration.objects.get(
+        organisation_id=organisation_id, deleted_at__isnull=True
+    ).installation_id
+
+    url = f"{GITHUB_API_URL}repos/{owner}/{repo}/issues/{number}"
+    headers = build_request_headers(installation_id)
+    response = requests.get(url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT)
+    response.raise_for_status()
+    return response.json()["title"]

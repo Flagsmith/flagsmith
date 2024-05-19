@@ -14,6 +14,7 @@ class GithubConfigurationSerializer(ModelSerializer):
 class GithubRepositorySerializer(ModelSerializer):
     class Meta:
         model = GithubRepository
+        optional_fields = "search_text" "page"
         fields = (
             "id",
             "github_configuration",
@@ -30,3 +31,6 @@ class GithubRepositorySerializer(ModelSerializer):
 class RepoQuerySerializer(serializers.Serializer):
     repo_owner = serializers.CharField(required=True)
     repo_name = serializers.CharField(required=True)
+    search_text = serializers.CharField(required=False, allow_blank=True, default="")
+    page = serializers.IntegerField(required=False, default=1)
+    page_size = serializers.IntegerField(required=False, default=100)

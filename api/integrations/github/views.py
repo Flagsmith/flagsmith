@@ -153,10 +153,17 @@ def fetch_pull_requests(request, organisation_pk) -> Response:
 
     repo_owner = str(query_serializer.validated_data.get("repo_owner"))
     repo_name = str(query_serializer.validated_data.get("repo_name"))
+    search_text = str(query_serializer.validated_data.get("search_text"))
+    page = str(query_serializer.validated_data.get("page"))
 
     return Response(
         fetch_github_resource(
-            ResourceType.PULL_REQUESTS, organisation_pk, repo_owner, repo_name
+            ResourceType.PULL_REQUESTS,
+            organisation_pk,
+            repo_owner,
+            repo_name,
+            page,
+            search_text,
         ).json()
     )
 
@@ -172,14 +179,27 @@ def fetch_issues(request, organisation_pk) -> Response:
 
     repo_owner = str(query_serializer.validated_data.get("repo_owner"))
     repo_name = str(query_serializer.validated_data.get("repo_name"))
+    search_text = str(query_serializer.validated_data.get("search_text"))
+    page = int(str(query_serializer.validated_data.get("page")))
+    page_size = int(str(query_serializer.validated_data.get("page_size")))
 
-    response = fetch_github_resource(
-        ResourceType.ISSUES, organisation_pk, repo_owner, repo_name
-    ).json()
-    if response is not None:
-        if isinstance(response, list):
-            filtered_data = [issue for issue in response if "pull_request" not in issue]
-            return Response(filtered_data)
+    response: Response = fetch_github_resource(
+        resource_type=ResourceType.ISSUES,
+        organisation_id=organisation_pk,
+        repo_owner=repo_owner,
+        repo_name=repo_name,
+        page_size=page_size,
+        page=page,
+        search_text=search_text,
+    )
+    if (
+        response.data is not None
+        and isinstance(response.data, dict)
+        and "results" in response.data
+        and isinstance(response.data["results"], list)
+    ):
+        return response
+
     return Response(
         data={"detail": "Invalid response"},
         content_type="application/json",
