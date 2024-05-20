@@ -1,6 +1,7 @@
 import json
 
 import pytest
+import requests
 import responses
 from django.conf import settings
 from django.urls import reverse
@@ -318,19 +319,45 @@ def test_github_delete_repository(
         assert not FeatureExternalResource.objects.filter(feature=feature).exists()
 
 
+class MockResponse:
+    def __init__(self, json_data, status_code):
+        self.json_data = json_data
+        self.status_code = status_code
+        self.links = {}
+
+    def raise_for_status(self) -> None:
+        if 400 <= self.status_code < 600:
+            raise requests.exceptions.HTTPError(f"HTTP Error {self.status_code}")
+
+    def json(self):
+        return self.json_data
+
+
 def mocked_requests_get(*args, **kwargs):
-    class MockResponse:
-        def __init__(self, json_data, status_code):
-            self.json_data = json_data
-            self.status_code = status_code
+    json_data = {
+        "items": [
+            {
+                "html_url": "https://example.com/1",
+                "id": 1,
+                "title": "Title 1",
+                "number": 101,
+            },
+        ],
+        "total_count": 1,
+        "incomplete_results": 0,
+    }
+    status_code = 200
+    response = MockResponse(json_data, status_code)
 
-        def raise_for_status(self) -> None:
-            pass
+    return response
 
-        def json(self):
-            return self.json_data
 
-    return MockResponse(json_data=["data"], status_code=200)
+def mocked_requests_get_error(*args, **kwargs):
+    json_data = {"detail": "Not found"}
+    status_code = 404
+    response = MockResponse(json_data, status_code)
+
+    return response
 
 
 def test_fetch_pull_requests(
@@ -357,10 +384,10 @@ def test_fetch_pull_requests(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert "data" in response_json
+    assert "results" in response_json
 
     github_request_mock.assert_called_with(
-        "https://api.github.com/repos/owner/repo/pulls",
+        "https://api.github.com/search/issues?q= repo:owner/repo is:issue is:open in:title in:body &per_page=100&page=1",  # noqa: E501
         headers={
             "X-GitHub-Api-Version": "2022-11-28",
             "Accept": "application/vnd.github.v3+json",
@@ -391,10 +418,10 @@ def test_fetch_issues(
     # Then
     assert response.status_code == status.HTTP_200_OK
     response_json = response.json()
-    assert "data" in response_json
+    assert "results" in response_json
 
     github_request_mock.assert_called_with(
-        "https://api.github.com/repos/owner/repo/issues",
+        "https://api.github.com/search/issues?q= repo:owner/repo is:issue is:open in:title in:body &per_page=100&page=1",  # noqa: E501
         headers={
             "X-GitHub-Api-Version": "2022-11-28",
             "Accept": "application/vnd.github.v3+json",
@@ -416,7 +443,7 @@ def test_fetch_issues_returns_eror_on_bad_response_from_github(
         "integrations.github.client.generate_token",
     )
     mock_generate_token.return_value = "mocked_token"
-    mocker.patch("requests.get", response="{}")
+    mocker.patch("requests.get", side_effect=mocked_requests_get_error)
     url = reverse("api-v1:organisations:get-github-issues", args=[organisation.id])
     data = {"repo_owner": "owner", "repo_name": "repo"}
     # When
@@ -425,7 +452,10 @@ def test_fetch_issues_returns_eror_on_bad_response_from_github(
     # Then
     assert response.status_code == status.HTTP_502_BAD_GATEWAY
     response_json = response.json()
-    assert "Invalid response" in response_json["detail"]
+    assert (
+        "Failed to retrieve GitHub pull requests. Error: HTTP Error 404"
+        in response_json["detail"]
+    )
 
 
 def test_fetch_repositories(
@@ -452,7 +482,7 @@ def test_fetch_repositories(
     # Then
     assert response.status_code == status.HTTP_200_OK
     response_json = response.json()
-    assert "data" in response_json
+    assert "items" in response_json
 
     github_request_mock.assert_called_with(
         "https://api.github.com/installation/repositories",
