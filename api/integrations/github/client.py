@@ -141,14 +141,31 @@ def fetch_github_resource(
     )
 
 
-def fetch_github_repositories(installation_id: str) -> requests.Response:
+def fetch_github_repositories(installation_id: str) -> Response:
     url = f"{GITHUB_API_URL}installation/repositories"
 
     headers: dict[str, str] = build_request_headers(installation_id)
 
     response = requests.get(url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT)
+    json_response = response.json()
     response.raise_for_status()
-    return response
+    results = [
+        {
+            "full_name": i["full_name"],
+            "id": i["id"],
+            "name": i["name"],
+        }
+        for i in json_response["repositories"]
+    ]
+    data = {
+        "repositories": results,
+        "total_count": json_response["total_count"],
+    }
+    return Response(
+        data=data,
+        content_type="application/json",
+        status=status.HTTP_200_OK,
+    )
 
 
 def get_github_issue_pr_name_and_status(

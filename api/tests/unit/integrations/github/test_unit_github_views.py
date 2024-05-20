@@ -462,6 +462,7 @@ def test_fetch_issues_returns_eror_on_bad_response_from_github(
     )
 
 
+@responses.activate
 def test_fetch_repositories(
     admin_client_new: APIClient,
     organisation: Organisation,
@@ -474,9 +475,22 @@ def test_fetch_repositories(
         "integrations.github.client.generate_token",
     )
     mock_generate_token.return_value = "mocked_token"
-    github_request_mock = mocker.patch(
-        "requests.get", side_effect=mocked_requests_get_issues_and_pull_requests()
+    responses.add(
+        method="GET",
+        url=f"{GITHUB_API_URL}installation/repositories",
+        status=status.HTTP_200_OK,
+        json={
+            "repositories": [
+                {
+                    "full_name": "owner/repo-name",
+                    "id": 1,
+                    "name": "repo-name",
+                },
+            ],
+            "total_count": 1,
+        },
     )
+
     url = reverse(
         "api-v1:organisations:get-github-installation-repos", args=[organisation.id]
     )
@@ -488,17 +502,8 @@ def test_fetch_repositories(
     # Then
     assert response.status_code == status.HTTP_200_OK
     response_json = response.json()
-    assert "items" in response_json
-
-    github_request_mock.assert_called_with(
-        "https://api.github.com/installation/repositories",
-        headers={
-            "X-GitHub-Api-Version": "2022-11-28",
-            "Accept": "application/vnd.github.v3+json",
-            "Authorization": "Bearer mocked_token",
-        },
-        timeout=10,
-    )
+    assert "repositories" in response_json
+    assert len(response_json["repositories"]) == 1
 
 
 @pytest.mark.parametrize(

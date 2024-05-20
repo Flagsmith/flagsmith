@@ -226,7 +226,15 @@ def fetch_repositories(request, organisation_pk: int) -> Response:
             content_type="application/json",
             status=status.HTTP_400_BAD_REQUEST,
         )
-    return Response(fetch_github_repositories(installation_id).json())
+
+    response: Response = fetch_github_repositories(installation_id)
+    if (
+        response.data is not None
+        and isinstance(response.data, dict)
+        and "repositories" in response.data
+        and isinstance(response.data["repositories"], list)
+    ):
+        return response
 
 
 @api_view(["POST"])
