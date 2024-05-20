@@ -128,7 +128,7 @@ def test_create_feature_external_resource(
         "type": "GITHUB_ISSUE",
         "url": "https://github.com/repoowner/repo-name/issues/35",
         "feature": feature_with_value.id,
-        "metadata": {"status": "open"},
+        "metadata": {"state": "open"},
     }
 
     url = reverse(
@@ -171,7 +171,7 @@ def test_create_feature_external_resource(
         method="GET",
         url=f"{GITHUB_API_URL}repos/repoowner/repo-name/issues/35",
         status=200,
-        json={"title": "resource name"},
+        json={"title": "resource name", "state": "open"},
     )
     url = reverse(
         "api-v1:projects:feature-external-resources-list",
@@ -187,7 +187,7 @@ def test_create_feature_external_resource(
         response.json()["results"][0]["type"] == feature_external_resource_data["type"]
     )
     assert response.json()["results"][0]["url"] == feature_external_resource_data["url"]
-    feature_external_resource_data["metadata"]["name"] = "resource name"
+    feature_external_resource_data["metadata"]["title"] = "resource name"
 
     assert (
         response.json()["results"][0]["metadata"]
@@ -360,7 +360,7 @@ def test_get_feature_external_resources(
         method="GET",
         url=f"{GITHUB_API_URL}repos/userexample/example-project-repo/issues/11",
         status=200,
-        json={"title": "resource name"},
+        json={"title": "resource name", "state": "open"},
     )
 
     # When

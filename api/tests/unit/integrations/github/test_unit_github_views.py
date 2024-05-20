@@ -333,7 +333,7 @@ class MockResponse:
         return self.json_data
 
 
-def mocked_requests_get(*args, **kwargs):
+def mocked_requests_get_issues_and_pull_requests(*args, **kwargs):
     json_data = {
         "items": [
             {
@@ -373,7 +373,9 @@ def test_fetch_pull_requests(
         "integrations.github.client.generate_token",
     )
     mock_generate_token.return_value = "mocked_token"
-    github_request_mock = mocker.patch("requests.get", side_effect=mocked_requests_get)
+    github_request_mock = mocker.patch(
+        "requests.get", side_effect=mocked_requests_get_issues_and_pull_requests
+    )
 
     url = reverse("api-v1:organisations:get-github-pulls", args=[organisation.id])
     data = {"repo_owner": "owner", "repo_name": "repo"}
@@ -387,7 +389,7 @@ def test_fetch_pull_requests(
     assert "results" in response_json
 
     github_request_mock.assert_called_with(
-        "https://api.github.com/search/issues?q= repo:owner/repo is:issue is:open in:title in:body &per_page=100&page=1",  # noqa: E501
+        "https://api.github.com/search/issues?q= repo:owner/repo is:pr is:open in:title in:body &per_page=100&page=1",  # noqa: E501
         headers={
             "X-GitHub-Api-Version": "2022-11-28",
             "Accept": "application/vnd.github.v3+json",
@@ -409,7 +411,9 @@ def test_fetch_issues(
         "integrations.github.client.generate_token",
     )
     mock_generate_token.return_value = "mocked_token"
-    github_request_mock = mocker.patch("requests.get", side_effect=mocked_requests_get)
+    github_request_mock = mocker.patch(
+        "requests.get", side_effect=mocked_requests_get_issues_and_pull_requests
+    )
     url = reverse("api-v1:organisations:get-github-issues", args=[organisation.id])
     data = {"repo_owner": "owner", "repo_name": "repo"}
     # When
@@ -470,7 +474,9 @@ def test_fetch_repositories(
         "integrations.github.client.generate_token",
     )
     mock_generate_token.return_value = "mocked_token"
-    github_request_mock = mocker.patch("requests.get", side_effect=mocked_requests_get)
+    github_request_mock = mocker.patch(
+        "requests.get", side_effect=mocked_requests_get_issues_and_pull_requests()
+    )
     url = reverse(
         "api-v1:organisations:get-github-installation-repos", args=[organisation.id]
     )

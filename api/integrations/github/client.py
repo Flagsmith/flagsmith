@@ -151,7 +151,9 @@ def fetch_github_repositories(installation_id: str) -> requests.Response:
     return response
 
 
-def get_github_issue_pr_name(organisation_id: int, resource_url: str) -> str:
+def get_github_issue_pr_name_and_status(
+    organisation_id: int, resource_url: str
+) -> dict[str, str]:
     url_parts = resource_url.split("/")
     owner = url_parts[-4]
     repo = url_parts[-3]
@@ -164,4 +166,4 @@ def get_github_issue_pr_name(organisation_id: int, resource_url: str) -> str:
     headers = build_request_headers(installation_id)
     response = requests.get(url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT)
     response.raise_for_status()
-    return response.json()["title"]
+    return {"title": response.json()["title"], "state": response.json()["state"]}
