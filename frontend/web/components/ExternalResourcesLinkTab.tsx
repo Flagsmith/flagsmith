@@ -85,11 +85,15 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
           theme='primary'
           disabled={!externalResourceType || !featureExternalResource}
           onClick={() => {
+            const type = Object.keys(Constants.resourceTypes).find(
+              (key) =>
+                Constants.resourceTypes[key].label === externalResourceType,
+            )
             createExternalResource({
               body: {
                 feature: parseInt(featureId),
                 metadata: { status: 'open' },
-                type: externalResourceType.toUpperCase().replace(/\s+/g, '_'),
+                type: type!,
                 url: featureExternalResource,
               },
               feature_id: featureId,

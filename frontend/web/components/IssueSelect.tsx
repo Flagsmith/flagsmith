@@ -48,7 +48,6 @@ const IssueSelect: FC<IssueSelectType> = ({
   return (
     <div style={{ width: '300px' }}>
       <Select
-        value={inputValue}
         size='select-md'
         placeholder={'Select Your Issue'}
         onChange={(v: IssueValueType) => onChange(v?.value)}

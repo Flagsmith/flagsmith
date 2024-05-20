@@ -50,7 +50,6 @@ const PullRequestsSelect: FC<PullRequestsSelectType> = ({
   return (
     <div style={{ width: '300px' }}>
       <Select
-        value={inputValue}
         size='select-md'
         placeholder={'Select Your PR'}
         onChange={(v: PullRequestValueType) => onChange(v?.value)}
