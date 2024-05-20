@@ -39,12 +39,6 @@ const MyGithubPullRequests: FC<MyGithubPullRequestSelectType> = ({
   const { next, results } = data || { results: [] }
 
   useEffect(() => {
-    console.log(
-      `IsLoading: ${isLoading.toString()} isFetching: ${isFetching.toString()}`,
-    )
-  }, [isLoading, isFetching])
-
-  useEffect(() => {
     if (results && linkedExternalResources) {
       setExternalResourcesSelect(
         results.filter((pr: PullRequest) => {

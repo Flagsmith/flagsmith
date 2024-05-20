@@ -112,9 +112,6 @@ const IssueSelect: FC<IssueSelectType> = ({
               className='react-select__option'
             >
               {children}
-              {!!data.feature && (
-                <div className='unread ml-2 px-2'>Feature-Specific</div>
-              )}
             </div>
           ),
         }}

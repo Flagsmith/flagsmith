@@ -39,12 +39,6 @@ const MyIssuesSelect: FC<MyIssuesSelectType> = ({
   const { next, results } = data || { results: [] }
 
   useEffect(() => {
-    console.log(
-      `IsLoading: ${isLoading.toString()} isFetching: ${isFetching.toString()}`,
-    )
-  }, [isLoading, isFetching])
-
-  useEffect(() => {
     if (results && linkedExternalResources) {
       setExternalResourcesSelect(
         results.filter((i: Issue) => {
