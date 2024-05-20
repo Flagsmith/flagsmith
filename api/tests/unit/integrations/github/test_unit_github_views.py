@@ -323,7 +323,10 @@ class MockResponse:
     def __init__(self, json_data, status_code):
         self.json_data = json_data
         self.status_code = status_code
-        self.links = {}
+        self.links = {
+            "next": "https://example.com/next",
+            "prev": "https://example.com/prev",
+        }
 
     def raise_for_status(self) -> None:
         if 400 <= self.status_code < 600:
@@ -435,7 +438,7 @@ def test_fetch_issues(
     )
 
 
-def test_fetch_issues_returns_eror_on_bad_response_from_github(
+def test_fetch_issues_returns_error_on_bad_response_from_github(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -725,7 +728,7 @@ def test_cannot_fetch_pull_requests_when_github_request_call_failed(
 
 
 @responses.activate
-def test_cannot_fetch_pull_when_the_github_response_was_invalid(
+def test_cannot_fetch_pulls_when_the_github_response_was_invalid(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -741,6 +744,35 @@ def test_cannot_fetch_pull_when_the_github_response_was_invalid(
     responses.add(
         method="GET",
         url=f"{GITHUB_API_URL}repos/{data['repo_owner']}/{data['repo_name']}/pulls",
+        status=200,
+        json={"details": "invalid"},
+    )
+    url = reverse("api-v1:organisations:get-github-issues", args=[organisation.id])
+    data = {"repo_owner": "owner", "repo_name": "repo"}
+    # When
+    response = admin_client_new.get(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_502_BAD_GATEWAY
+
+
+@responses.activate
+def test_cannot_fetch_issues_when_the_github_response_was_invalid(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mocker,
+) -> None:
+    # Given
+    data = {"repo_owner": "owner", "repo_name": "repo"}
+    mock_generate_token = mocker.patch(
+        "integrations.github.client.generate_token",
+    )
+    mock_generate_token.return_value = "mocked_token"
+    responses.add(
+        method="GET",
+        url=f"{GITHUB_API_URL}repos/{data['repo_owner']}/{data['repo_name']}/issues",
         status=200,
         json={"details": "invalid"},
     )

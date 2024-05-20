@@ -32,15 +32,12 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         data = serializer.data
 
-        if not isinstance(data, list):
-            data = []
-
         # get organisation id from feature and get feature from validated data
         organisation_id = get_object_or_404(
             Feature.objects.filter(id=self.kwargs["feature_pk"]),
         ).project.organisation_id
 
-        for resource in data:
+        for resource in data if isinstance(data, list) else []:
             if resource["url"]:
                 resource["metadata"].update(
                     get_github_issue_pr_name_and_status(
