@@ -29,11 +29,9 @@ const IssueSelect: FC<IssueSelectType> = ({
   onChange,
   searchItems,
 }) => {
-  const [inputValue, setInputValue] = useState('')
   const [searchTimer, setSearchTimer] = useState<NodeJS.Timeout | null>(null)
   const handleInputChange = (e: any) => {
     const value = Utils.safeParseEventValue(e)
-    setInputValue(value)
 
     if (searchTimer) {
       clearTimeout(searchTimer)

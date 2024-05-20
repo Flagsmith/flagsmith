@@ -17,6 +17,7 @@ export type PullRequestsSelectType = {
 
 type PullRequestValueType = {
   value: string
+  label: string
 }
 
 const PullRequestsSelect: FC<PullRequestsSelectType> = ({
@@ -29,12 +30,10 @@ const PullRequestsSelect: FC<PullRequestsSelectType> = ({
   pullRequest,
   searchItems,
 }) => {
-  const [inputValue, setInputValue] = useState('')
   const [searchTimer, setSearchTimer] = useState<NodeJS.Timeout | null>(null)
 
   const handleInputChange = (e: any) => {
     const value = Utils.safeParseEventValue(e)
-    setInputValue(value)
 
     if (searchTimer) {
       clearTimeout(searchTimer)
@@ -52,7 +51,9 @@ const PullRequestsSelect: FC<PullRequestsSelectType> = ({
       <Select
         size='select-md'
         placeholder={'Select Your PR'}
-        onChange={(v: PullRequestValueType) => onChange(v?.value)}
+        onChange={(v: PullRequestValueType) => {
+          onChange(v?.value)
+        }}
         disabled={disabled}
         options={pullRequest?.map((p: PullRequest) => {
           return {

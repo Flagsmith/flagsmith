@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react'
 import MyRepositoriesSelect from './MyRepositoriesSelect'
 import ExternalResourcesTable, {
-  ExternalResourcesTableType,
+  ExternalResourcesTableBase,
 } from './ExternalResourcesTable'
 import { ExternalResource } from 'common/types/responses'
 import MyIssuesSelect from './MyIssuesSelect'
@@ -17,7 +17,7 @@ type ExternalResourcesLinkTabType = {
   projectId: string
 }
 
-type AddExternalResourceRowType = ExternalResourcesTableType & {
+type AddExternalResourceRowType = ExternalResourcesTableBase & {
   linkedExternalResources?: ExternalResource[]
 }
 
@@ -92,7 +92,7 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
             createExternalResource({
               body: {
                 feature: parseInt(featureId),
-                metadata: { status: 'open' },
+                metadata: {},
                 type: type!,
                 url: featureExternalResource,
               },

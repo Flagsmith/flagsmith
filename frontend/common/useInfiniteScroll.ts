@@ -45,6 +45,9 @@ const useInfiniteScroll = <
   )
 
   const searchItems = useThrottle((search: string) => {
+    if (q !== search) {
+      setCombinedData(null)
+    }
     setQ(search)
     setLocalPage(1)
   }, throttle)
