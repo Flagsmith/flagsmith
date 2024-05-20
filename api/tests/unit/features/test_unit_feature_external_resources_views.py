@@ -1,3 +1,4 @@
+import responses
 import simplejson as json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.urls import reverse
@@ -14,6 +15,7 @@ from features.serializers import (
     FeatureStateSerializerBasic,
     WritableNestedFeatureStateSerializer,
 )
+from integrations.github.constants import GITHUB_API_URL
 from integrations.github.models import GithubConfiguration, GithubRepository
 from projects.models import Project
 from tests.types import WithEnvironmentPermissionsCallable
@@ -71,6 +73,7 @@ def mocked_requests_post(*args, **kwargs):
     return MockResponse(json_data={"data": "data"}, status_code=200)
 
 
+@responses.activate
 def test_create_feature_external_resource(
     admin_client_new: APIClient,
     feature_with_value: Feature,
@@ -164,6 +167,12 @@ def test_create_feature_external_resource(
     assert feature_external_resources[0].url == feature_external_resource_data["url"]
 
     # And When
+    responses.add(
+        method="GET",
+        url=f"{GITHUB_API_URL}repos/repoowner/repo-name/issues/35",
+        status=200,
+        json={"title": "resource name"},
+    )
     url = reverse(
         "api-v1:projects:feature-external-resources-list",
         kwargs={"project_pk": project.id, "feature_pk": feature_with_value.id},
@@ -173,11 +182,13 @@ def test_create_feature_external_resource(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["count"] == 1
+    assert len(response.json()["results"]) == 1
     assert (
         response.json()["results"][0]["type"] == feature_external_resource_data["type"]
     )
     assert response.json()["results"][0]["url"] == feature_external_resource_data["url"]
+    feature_external_resource_data["metadata"]["name"] = "resource name"
+
     assert (
         response.json()["results"][0]["metadata"]
         == feature_external_resource_data["metadata"]
@@ -326,6 +337,7 @@ def test_delete_feature_external_resource(
     ).exists()
 
 
+@responses.activate
 def test_get_feature_external_resources(
     admin_client_new: APIClient,
     feature_external_resource: FeatureExternalResource,
@@ -333,11 +345,22 @@ def test_get_feature_external_resources(
     project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    mocker: MockerFixture,
 ) -> None:
     # Given
+    mocker.patch(
+        "integrations.github.client.generate_token",
+    )
     url = reverse(
         "api-v1:projects:feature-external-resources-list",
         kwargs={"project_pk": project.id, "feature_pk": feature.id},
+    )
+
+    responses.add(
+        method="GET",
+        url=f"{GITHUB_API_URL}repos/userexample/example-project-repo/issues/11",
+        status=200,
+        json={"title": "resource name"},
     )
 
     # When

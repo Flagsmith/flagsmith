@@ -127,11 +127,11 @@ def fetch_github_resource(
         "count": json_response["total_count"],
         "incomplete_results": json_response["incomplete_results"],
     }
-    # if previous := response.links.get("prev"):
-    #     data["previous"] = response.links.get("prev")
+    if response.links.get("prev"):
+        data["previous"] = response.links.get("prev")
 
-    # if next := response.links.get("next"):
-    #     data["next"] = response.links.get("next")
+    if response.links.get("next"):
+        data["next"] = response.links.get("next")
 
     # Return a Response object
     return Response(
