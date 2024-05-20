@@ -38,6 +38,8 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
   const [featureExternalResource, setFeatureExternalResource] =
     useState<string>('')
 
+  const [resetValue, setResetValue] = useState<boolean>(false)
+
   const [createExternalResource] = useCreateExternalResourceMutation()
   const githubTypes = Object.values(Constants.resourceTypes).filter(
     (v) => v.type === 'GITHUB',
@@ -60,19 +62,27 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
           Constants.resourceTypes.GITHUB_ISSUE.label ? (
             <MyIssuesSelect
               orgId={organisationId}
-              onChange={(v) => setFeatureExternalResource(v)}
+              onChange={(v) => {
+                setFeatureExternalResource(v)
+                setResetValue(false)
+              }}
               repoOwner={repoOwner}
               repoName={repoName}
               linkedExternalResources={linkedExternalResources!}
+              resetValue={resetValue}
             />
           ) : externalResourceType ==
             Constants.resourceTypes.GITHUB_PR.label ? (
             <MyPullRequestsSelect
               orgId={organisationId}
-              onChange={(v) => setFeatureExternalResource(v)}
+              onChange={(v) => {
+                setFeatureExternalResource(v)
+                setResetValue(false)
+              }}
               repoOwner={repoOwner}
               repoName={repoName}
               linkedExternalResources={linkedExternalResources!}
+              resetValue={resetValue}
             />
           ) : (
             <></>
@@ -100,6 +110,7 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
               project_id: projectId,
             }).then(() => {
               toast('External Resource Added')
+              setResetValue(true)
             })
           }}
         >

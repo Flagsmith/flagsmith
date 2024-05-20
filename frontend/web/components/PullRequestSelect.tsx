@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { components } from 'react-select'
 import { PullRequest } from 'common/types/responses'
 import Button from './base/forms/Button'
@@ -13,6 +13,7 @@ export type PullRequestsSelectType = {
   loadMore: () => void
   nextPage?: string
   searchItems: (search: string) => void
+  resetValue: boolean
 }
 
 type PullRequestValueType = {
@@ -28,12 +29,18 @@ const PullRequestsSelect: FC<PullRequestsSelectType> = ({
   nextPage,
   onChange,
   pullRequest,
+  resetValue,
   searchItems,
 }) => {
+  const [value, setValue] = useState<string | null>('')
   const [searchTimer, setSearchTimer] = useState<NodeJS.Timeout | null>(null)
+  useEffect(() => {
+    resetValue && setValue('')
+  }, [resetValue])
 
   const handleInputChange = (e: any) => {
     const value = Utils.safeParseEventValue(e)
+    setValue(value)
 
     if (searchTimer) {
       clearTimeout(searchTimer)
@@ -49,10 +56,14 @@ const PullRequestsSelect: FC<PullRequestsSelectType> = ({
   return (
     <div style={{ width: '300px' }}>
       <Select
+        value={value ? { label: value, value: value } : null}
         size='select-md'
         placeholder={'Select Your PR'}
         onChange={(v: PullRequestValueType) => {
           onChange(v?.value)
+          if (v?.label) {
+            setValue(v?.label)
+          }
         }}
         disabled={disabled}
         options={pullRequest?.map((p: PullRequest) => {
@@ -66,7 +77,7 @@ const PullRequestsSelect: FC<PullRequestsSelectType> = ({
             ? 'Loading...'
             : isFetching
             ? 'Refreshing data ...'
-            : 'No issues found'
+            : 'No Pull request found'
         }
         onInputChange={(e: any) => {
           handleInputChange(e)

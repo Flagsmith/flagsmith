@@ -11,6 +11,7 @@ type MyGithubPullRequestSelectType = {
   repoName: string
   onChange: (value: string) => void
   linkedExternalResources: ExternalResource[]
+  resetValue: boolean
 }
 
 const MyGithubPullRequests: FC<MyGithubPullRequestSelectType> = ({
@@ -19,6 +20,7 @@ const MyGithubPullRequests: FC<MyGithubPullRequestSelectType> = ({
   orgId,
   repoName,
   repoOwner,
+  resetValue,
 }) => {
   const [externalResourcesSelect, setExternalResourcesSelect] =
     useState<PullRequest[]>()
@@ -64,6 +66,7 @@ const MyGithubPullRequests: FC<MyGithubPullRequestSelectType> = ({
       loadMore={loadMore}
       nextPage={next}
       searchItems={searchItems}
+      resetValue={resetValue}
     />
   )
 }

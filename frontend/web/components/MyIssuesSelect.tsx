@@ -11,6 +11,7 @@ type MyIssuesSelectType = {
   repoName: string
   linkedExternalResources: ExternalResource[]
   onChange: (v: string) => void
+  resetValue: boolean
 }
 
 const MyIssuesSelect: FC<MyIssuesSelectType> = ({
@@ -19,6 +20,7 @@ const MyIssuesSelect: FC<MyIssuesSelectType> = ({
   orgId,
   repoName,
   repoOwner,
+  resetValue,
 }) => {
   const [externalResourcesSelect, setExternalResourcesSelect] =
     useState<Issue[]>()
@@ -65,6 +67,7 @@ const MyIssuesSelect: FC<MyIssuesSelectType> = ({
       loadMore={loadMore}
       nextPage={next}
       searchItems={searchItems}
+      resetValue={resetValue}
     />
   )
 }
