@@ -207,12 +207,6 @@ def fetch_issues(request, organisation_pk) -> Response:
     ):
         return response
 
-    return Response(
-        data={"detail": "Invalid response"},
-        content_type="application/json",
-        status=status.HTTP_502_BAD_GATEWAY,
-    )
-
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, GithubIsAdminOrganisation])

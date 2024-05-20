@@ -756,35 +756,6 @@ def test_cannot_fetch_pulls_when_the_github_response_was_invalid(
     assert response.status_code == status.HTTP_502_BAD_GATEWAY
 
 
-@responses.activate
-def test_cannot_fetch_issues_when_the_github_response_was_invalid(
-    admin_client_new: APIClient,
-    organisation: Organisation,
-    github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
-    mocker,
-) -> None:
-    # Given
-    data = {"repo_owner": "owner", "repo_name": "repo"}
-    mock_generate_token = mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-    mock_generate_token.return_value = "mocked_token"
-    responses.add(
-        method="GET",
-        url=f"{GITHUB_API_URL}repos/{data['repo_owner']}/{data['repo_name']}/issues",
-        status=200,
-        json={"details": "invalid"},
-    )
-    url = reverse("api-v1:organisations:get-github-issues", args=[organisation.id])
-    data = {"repo_owner": "owner", "repo_name": "repo"}
-    # When
-    response = admin_client_new.get(url, data=data)
-
-    # Then
-    assert response.status_code == status.HTTP_502_BAD_GATEWAY
-
-
 def test_cannot_fetch_repositories_when_there_is_no_installation_id(
     admin_client_new: APIClient,
     organisation: Organisation,
