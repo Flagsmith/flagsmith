@@ -8,7 +8,7 @@ from rest_framework.response import Response
 
 from features.models import Feature
 from features.permissions import FeatureExternalResourcePermissions
-from integrations.github.client import get_github_issue_pr_name_and_status
+from integrations.github.client import get_github_issue_pr_title_and_state
 from organisations.models import Organisation
 
 from .models import FeatureExternalResource
@@ -39,10 +39,8 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
 
         for resource in data if isinstance(data, list) else []:
             if resource["url"]:
-                resource["metadata"].update(
-                    get_github_issue_pr_name_and_status(
-                        organisation_id=organisation_id, resource_url=resource["url"]
-                    )
+                resource["metadata"] = get_github_issue_pr_title_and_state(
+                    organisation_id=organisation_id, resource_url=resource["url"]
                 )
 
         return Response(data={"results": data})

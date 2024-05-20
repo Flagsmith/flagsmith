@@ -170,7 +170,7 @@ def fetch_github_repositories(installation_id: str) -> Response:
     )
 
 
-def get_github_issue_pr_name_and_status(
+def get_github_issue_pr_title_and_state(
     organisation_id: int, resource_url: str
 ) -> dict[str, str]:
     url_parts = resource_url.split("/")
