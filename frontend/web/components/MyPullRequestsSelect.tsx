@@ -1,7 +1,9 @@
 import { FC, useEffect, useState } from 'react'
 import { useGetGithubPullsQuery } from 'common/services/useGithub'
 import PullRequestSelect from './PullRequestSelect'
-import { ExternalResource, PullRequest } from 'common/types/responses'
+import { ExternalResource, PullRequest, Res } from 'common/types/responses'
+import useInfiniteScroll from 'common/useInfiniteScroll'
+import { Req } from 'common/types/requests'
 
 type MyGithubPullRequestSelectType = {
   orgId: string
@@ -18,18 +20,32 @@ const MyGithubPullRequests: FC<MyGithubPullRequestSelectType> = ({
   repoName,
   repoOwner,
 }) => {
-  const { data, isLoading } = useGetGithubPullsQuery({
-    organisation_id: orgId,
-    repo_name: repoName,
-    repo_owner: repoOwner,
-  })
   const [externalResourcesSelect, setExternalResourcesSelect] =
     useState<PullRequest[]>()
 
+  const { data, isFetching, isLoading, loadMore, searchItems } =
+    useInfiniteScroll<Req['getGithubPulls'], Res['githubPulls']>(
+      useGetGithubPullsQuery,
+      {
+        organisation_id: orgId,
+        page_size: 100,
+        repo_name: repoName,
+        repo_owner: repoOwner,
+      },
+    )
+
+  const { next, results } = data || { results: [] }
+
   useEffect(() => {
-    if (data && linkedExternalResources) {
+    console.log(
+      `IsLoading: ${isLoading.toString()} isFetching: ${isFetching.toString()}`,
+    )
+  }, [isLoading, isFetching])
+
+  useEffect(() => {
+    if (results && linkedExternalResources) {
       setExternalResourcesSelect(
-        data.filter((pr: PullRequest) => {
+        results.filter((pr: PullRequest) => {
           const same = linkedExternalResources?.some(
             (r) => pr.html_url === r.url,
           )
@@ -41,9 +57,13 @@ const MyGithubPullRequests: FC<MyGithubPullRequestSelectType> = ({
   }, [data, linkedExternalResources])
   return (
     <PullRequestSelect
-      pullRequest={externalResourcesSelect}
+      pullRequest={externalResourcesSelect!}
       onChange={onChange}
+      isFetching={isFetching}
       isLoading={isLoading}
+      loadMore={loadMore}
+      nextPage={next}
+      searchItems={searchItems}
     />
   )
 }

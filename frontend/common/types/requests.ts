@@ -417,11 +417,11 @@ export type Req = {
     repo_name: string
     repo_owner: string
   }>
-  getGithubPulls: {
+  getGithubPulls: PagedRequest<{
     organisation_id: string
     repo_name: string
     repo_owner: string
-  }
+  }>
   getGithubRepos: { installation_id: string; organisation_id: string }
   getServersideEnvironmentKeys: { environmentId: string }
   deleteServersideEnvironmentKeys: { environmentId: string; id: string }

@@ -774,7 +774,7 @@ export type Res = {
   githubIntegrations: PagedResponse<githubIntegration>
   githubRepository: PagedResponse<GithubRepository>
   githubIssues: GitHubPagedResponse<Issue>
-  githubPulls: PullRequest[]
+  githubPulls: GitHubPagedResponse<PullRequest>
   githubRepos: GithubPaginatedRepos<Repository>
   segmentPriorities: {}
   featureSegment: FeatureState['feature_segment']

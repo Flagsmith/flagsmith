@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useState } from 'react'
 import { components } from 'react-select'
 import { Issue } from 'common/types/responses'
 import Button from './base/forms/Button'
@@ -29,9 +29,26 @@ const IssueSelect: FC<IssueSelectType> = ({
   onChange,
   searchItems,
 }) => {
+  const [inputValue, setInputValue] = useState('')
+  const [searchTimer, setSearchTimer] = useState<NodeJS.Timeout | null>(null)
+  const handleInputChange = (e: any) => {
+    const value = Utils.safeParseEventValue(e)
+    setInputValue(value)
+
+    if (searchTimer) {
+      clearTimeout(searchTimer)
+    }
+
+    setSearchTimer(
+      setTimeout(() => {
+        searchItems(value)
+      }, 500),
+    )
+  }
   return (
     <div style={{ width: '300px' }}>
       <Select
+        value={inputValue}
         size='select-md'
         placeholder={'Select Your Issue'}
         onChange={(v: IssueValueType) => onChange(v?.value)}
@@ -51,7 +68,7 @@ const IssueSelect: FC<IssueSelectType> = ({
             : 'No issues found'
         }
         onInputChange={(e: any) => {
-          searchItems(Utils.safeParseEventValue(e))
+          handleInputChange(e)
         }}
         components={{
           Menu: ({ ...props }: any) => {

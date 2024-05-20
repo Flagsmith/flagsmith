@@ -41,7 +41,7 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
   return (
     <Row className='list-item' key={externalResource?.id}>
       <div className='table-column text-left' style={{ width: '100px' }}>
-        <div className='font-weight-medium mb-1'>
+        <div className='font-weight-medium'>
           {Constants.resourceTypes[externalResource?.type].label}
         </div>
       </div>
@@ -118,7 +118,7 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
         items={data?.results}
         header={
           <Row className='table-header'>
-            <div className='table-column' style={{ width: '240px' }}>
+            <div className='table-column' style={{ width: '100px' }}>
               Type
             </div>
             <Flex className='table-column px-3'>Name</Flex>
