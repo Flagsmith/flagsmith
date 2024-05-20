@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.116.0](https://github.com/Flagsmith/flagsmith/compare/v2.115.0...v2.116.0) (2024-05-20)
+
+
+### Features
+
+* Add API usage billing ([#3729](https://github.com/Flagsmith/flagsmith/issues/3729)) ([03cdee3](https://github.com/Flagsmith/flagsmith/commit/03cdee3beea9cfecf6ca119fcaeac9530345368c))
+* Add global domain auth methods ([#3949](https://github.com/Flagsmith/flagsmith/issues/3949)) ([796564a](https://github.com/Flagsmith/flagsmith/commit/796564a7894939d83abc7657c8cb62f072b7ebec))
+* Add metadata fields to core entities (FE) ([#3212](https://github.com/Flagsmith/flagsmith/issues/3212)) ([c5bd7a2](https://github.com/Flagsmith/flagsmith/commit/c5bd7a230e5f44b633ef04948b5ee15073fe8a09))
+* Edge V2 migration opt-in, capacity budget for migration ([#3881](https://github.com/Flagsmith/flagsmith/issues/3881)) ([bca4165](https://github.com/Flagsmith/flagsmith/commit/bca4165002a45967b34ee93716dbac3442cf2570))
+* Identity overrides in environment document ([#3766](https://github.com/Flagsmith/flagsmith/issues/3766)) ([e8d1337](https://github.com/Flagsmith/flagsmith/commit/e8d133726c5b724057175bfc7d945e12a733f9d1))
+
+
+### Bug Fixes
+
+* change environment in settings page ([#3956](https://github.com/Flagsmith/flagsmith/issues/3956)) ([0d30180](https://github.com/Flagsmith/flagsmith/commit/0d30180d7e7d1a4128fbf60d0db469d6c9088e86))
+* change environment in settings page ([#3977](https://github.com/Flagsmith/flagsmith/issues/3977)) ([db12f17](https://github.com/Flagsmith/flagsmith/commit/db12f1728b6698bfaea96a8d93923ef189d9e6f4))
+* Improve the UI/UX for clone identities ([#3934](https://github.com/Flagsmith/flagsmith/issues/3934)) ([48ac76c](https://github.com/Flagsmith/flagsmith/commit/48ac76c22654155aee36c0805705333d28b82f3d))
+* Improve the UI/UX for GitHub integrations ([#3907](https://github.com/Flagsmith/flagsmith/issues/3907)) ([f624223](https://github.com/Flagsmith/flagsmith/commit/f624223afcf77fa709150c2195e94991d3488d50))
+* segment overrides stale feature state value while creating GitHub comment ([#3961](https://github.com/Flagsmith/flagsmith/issues/3961)) ([e9246bc](https://github.com/Flagsmith/flagsmith/commit/e9246bc02cb856ab9e4dcf42f727a6e1c40437d0))
+* **versioning:** ensure that future scheduled changes are migrated to versioning v2 ([#3958](https://github.com/Flagsmith/flagsmith/issues/3958)) ([c5aa610](https://github.com/Flagsmith/flagsmith/commit/c5aa6102f176884ef608795cfda2f2a0e481c255))
+* **versioning:** handle Master API Keys when publishing a version ([#3959](https://github.com/Flagsmith/flagsmith/issues/3959)) ([98a5114](https://github.com/Flagsmith/flagsmith/commit/98a51148b5536a61226afe9281900a3c4cbc8263))
+* **versioning:** multiple versioned segment overrides added to environment document ([#3974](https://github.com/Flagsmith/flagsmith/issues/3974)) ([aa5cc95](https://github.com/Flagsmith/flagsmith/commit/aa5cc95f19eccf3d404a8f0694c2e5c303422c46))
+
 ## [2.115.0](https://github.com/Flagsmith/flagsmith/compare/v2.114.1...v2.115.0) (2024-05-15)
 
 
