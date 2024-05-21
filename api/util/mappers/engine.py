@@ -206,7 +206,7 @@ def map_environment_to_engine(
             {
                 efv.uuid
                 for efv in EnvironmentFeatureVersion.objects.get_latest_versions(
-                    environment
+                    environment.id
                 )
             }
             if environment.use_v2_feature_versioning
