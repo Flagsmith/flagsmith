@@ -40,6 +40,127 @@ class EnvironmentFeatureVersionSerializer(serializers.ModelSerializer):
         )
 
 
+class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSerializer):
+    feature_states_to_create = EnvironmentFeatureVersionFeatureStateSerializer(
+        many=True, allow_null=True, required=False
+    )
+    feature_states_to_update = EnvironmentFeatureVersionFeatureStateSerializer(
+        many=True, allow_null=True, required=False
+    )
+    segment_ids_to_delete_overrides = serializers.ListSerializer(
+        child=serializers.IntegerField(),
+        required=False,
+        allow_null=True,
+    )
+    publish = serializers.BooleanField(required=False, default=False)
+
+    class Meta(EnvironmentFeatureVersionSerializer.Meta):
+        fields = EnvironmentFeatureVersionSerializer.Meta.fields + (
+            "feature_states_to_create",
+            "feature_states_to_update",
+            "segment_ids_to_delete_overrides",
+            "publish",
+        )
+        non_model_fields = (
+            "feature_states_to_create",
+            "feature_states_to_update",
+            "segment_ids_to_delete_overrides",
+            "publish",
+        )
+
+    def create(self, validated_data):
+        for field_name in self.Meta.non_model_fields:
+            validated_data.pop(field_name, None)
+
+        version = super().create(validated_data)
+
+        for feature_state_to_create in self.initial_data.get(
+            "feature_states_to_create", []
+        ):
+            self._create_feature_state(
+                {**feature_state_to_create, "environment": version.environment_id},
+                version,
+            )
+
+        for feature_state_to_update in self.initial_data.get(
+            "feature_states_to_update", []
+        ):
+            self._update_feature_state(feature_state_to_update, version)
+
+        self._delete_feature_states(
+            self.initial_data.get("segment_ids_to_delete_overrides", []), version
+        )
+
+        if self.initial_data.get("publish", False):
+            request = self.context["request"]
+            version.publish(
+                published_by=(
+                    request.user if isinstance(request.user, FFAdminUser) else None
+                )
+            )
+
+        return version
+
+    def _create_feature_state(
+        self, feature_state: dict, version: EnvironmentFeatureVersion
+    ) -> None:
+        if not self._is_segment_override(feature_state):
+            raise serializers.ValidationError(
+                "Cannot create FeatureState objects that are not segment overrides."
+            )
+
+        segment_id = feature_state["feature_segment"]["segment"]
+        if version.feature_states.filter(
+            feature_segment__segment_id=segment_id
+        ).exists():
+            raise serializers.ValidationError(
+                "Segment override already exists for Segment %d", segment_id
+            )
+
+        fs_serializer = EnvironmentFeatureVersionFeatureStateSerializer(
+            data=feature_state,
+            context={
+                "feature": version.feature,
+                "environment": version.environment,
+                "environment_feature_version": version,
+            },
+        )
+        fs_serializer.is_valid(raise_exception=True)
+        fs_serializer.save(
+            environment_feature_version=version,
+            environment=version.environment,
+            feature=version.feature,
+        )
+
+    def _update_feature_state(
+        self, feature_state: dict, version: EnvironmentFeatureVersion
+    ) -> None:
+        if self._is_segment_override(feature_state):
+            instance = version.feature_states.get(
+                feature_segment__segment_id=feature_state["feature_segment"]["segment"]
+            )
+        else:
+            instance = version.feature_states.get(feature_segment__isnull=True)
+
+        fs_serializer = EnvironmentFeatureVersionFeatureStateSerializer(
+            instance=instance, data=feature_state
+        )
+        fs_serializer.is_valid(raise_exception=True)
+        fs_serializer.save(
+            environment_feature_version=version, environment=version.environment
+        )
+
+    def _delete_feature_states(
+        self, segment_ids: list[int], version: EnvironmentFeatureVersion
+    ) -> None:
+        version.feature_states.filter(
+            feature_segment__segment_id__in=segment_ids
+        ).delete()
+
+    def _is_segment_override(self, feature_state: dict) -> bool:
+        return feature_state.get("feature_segment") is not None
+
+
 class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):
     live_from = serializers.DateTimeField(required=False)
 

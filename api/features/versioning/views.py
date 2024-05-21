@@ -27,6 +27,7 @@ from features.versioning.permissions import (
     EnvironmentFeatureVersionPermissions,
 )
 from features.versioning.serializers import (
+    EnvironmentFeatureVersionCreateSerializer,
     EnvironmentFeatureVersionFeatureStateSerializer,
     EnvironmentFeatureVersionPublishSerializer,
     EnvironmentFeatureVersionQuerySerializer,
@@ -48,7 +49,6 @@ class EnvironmentFeatureVersionViewSet(
     CreateModelMixin,
     DestroyModelMixin,
 ):
-    serializer_class = EnvironmentFeatureVersionSerializer
     permission_classes = [IsAuthenticated, EnvironmentFeatureVersionPermissions]
 
     def __init__(self, *args, **kwargs):
@@ -62,6 +62,8 @@ class EnvironmentFeatureVersionViewSet(
         match self.action:
             case "publish":
                 return EnvironmentFeatureVersionPublishSerializer
+            case "create":
+                return EnvironmentFeatureVersionCreateSerializer
             case _:
                 return EnvironmentFeatureVersionSerializer
 

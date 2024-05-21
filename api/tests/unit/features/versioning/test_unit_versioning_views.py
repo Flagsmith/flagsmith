@@ -641,12 +641,17 @@ def test_disable_v2_versioning_returns_bad_request_if_not_using_v2_versioning(
 
 
 def test_create_new_version_with_changes_in_single_request(
-    environment_v2_versioning: Environment,
     feature: Feature,
     segment: Segment,
+    segment_featurestate: FeatureState,
     admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
 ) -> None:
     # Given
+    another_segment = Segment.objects.create(
+        name="another-segment", project=feature.project
+    )
+
     url = reverse(
         "api-v1:versioning:environment-feature-versions-list",
         args=[environment_v2_versioning.id, feature.id],
@@ -661,17 +666,17 @@ def test_create_new_version_with_changes_in_single_request(
                 "feature_state_value": {"type": "unicode", "string_value": "updated!"},
             }
         ],
-        "feature_states_to_delete": [],  # TODO: test deleting a feature state
         "feature_states_to_create": [
             {
                 "feature_segment": {
                     # TODO: priorities?
-                    "segment": segment.id,
+                    "segment": another_segment.id,
                 },
                 "enabled": True,
                 "feature_state_value": {"type": "unicode", "string_value": "foo"},
             }
         ],
+        "segment_ids_to_delete_overrides": [segment.id],
     }
 
     # When
@@ -694,10 +699,14 @@ def test_create_new_version_with_changes_in_single_request(
     assert new_version_environment_fs.enabled is True
 
     new_version_segment_fs = new_version.feature_states.filter(
-        feature_segment__segment=segment
+        feature_segment__segment=another_segment
     ).get()
     assert new_version_segment_fs.get_feature_state_value() == "foo"
     assert new_version_segment_fs.enabled is True
+
+    assert not new_version.feature_states.filter(
+        feature_segment__segment=segment
+    ).exists()
 
     assert new_version.published is True
     assert new_version.is_live is True
