@@ -1,11 +1,108 @@
-import React, { FC, useState, useEffect } from 'react'
-import { components } from 'react-select'
+import React, { FC, useEffect, useRef, useState } from 'react'
 import { Issue } from 'common/types/responses'
-import Button from './base/forms/Button'
 import Utils from 'common/utils/utils'
+import { FixedSizeList } from 'react-window'
+import InfiniteLoader from 'react-window-infinite-loader'
+
+const MenuList = (props: any) => {
+  const infiniteLoaderRef = useRef(null)
+  const hasMountedRef = useRef(false)
+  const { children } = props
+  const childrenArray = React.Children.toArray(children)
+  const {
+    isFetching,
+    isLoading: parentIsLoading,
+    loadMore,
+    loadingCombinedData,
+    nextPage,
+    searchText,
+  } = props.selectProps.data
+  const [isLoading, setIsLoading] = useState(parentIsLoading)
+  const loadMoreItems =
+    isFetching || isLoading || !nextPage ? () => {} : loadMore
+  const isItemLoaded = (index: number) => childrenArray[index] !== undefined
+  const itemCount = childrenArray.length + (nextPage ? 1 : 0)
+  const itemSize = 60
+
+  const moreItems = async (
+    startIndex: number,
+    stopIndex: number,
+  ): Promise<void> => {
+    return loadMoreItems()
+  }
+
+  useEffect(() => {
+    setIsLoading(parentIsLoading || loadingCombinedData)
+  }, [parentIsLoading, loadingCombinedData])
+
+  useEffect(() => {
+    // Reset cached items when "searchText" changes.
+    if (hasMountedRef.current) {
+      if (infiniteLoaderRef.current) {
+        if (loadingCombinedData) {
+          ;(
+            infiniteLoaderRef.current as InfiniteLoader
+          ).resetloadMoreItemsCache()
+        }
+      }
+    }
+    hasMountedRef.current = true
+  }, [searchText, loadingCombinedData])
+
+  return isLoading ? (
+    <div>Loading...</div>
+  ) : !itemCount ? (
+    <div>No results found</div>
+  ) : (
+    <InfiniteLoader
+      isItemLoaded={isItemLoaded}
+      itemCount={itemCount}
+      loadMoreItems={moreItems}
+      threshold={40}
+    >
+      {({ onItemsRendered, ref }) => (
+        <FixedSizeList
+          {...props}
+          minHeight={props.selectProps.minMenuHeight}
+          maxHeight={props.selectProps.maxMenuHeight}
+          height={
+            Math.min(itemCount * itemSize, props.selectProps.maxMenuHeight) + 20
+          }
+          itemCount={itemCount}
+          itemSize={itemSize}
+          onItemsRendered={onItemsRendered}
+          ref={ref}
+          width={props.width}
+        >
+          {({ index, isScrolling, style, ...rest }) => {
+            const child = childrenArray[index]
+            return (
+              <div {...rest} style={style}>
+                {isItemLoaded(index) ? (
+                  child
+                ) : (
+                  <>
+                    <div className='text-center'>
+                      <Loader />
+                    </div>
+                    <div className='text-center'>
+                      {itemCount} : {index} : {childrenArray.length}
+                    </div>
+                  </>
+                )}
+              </div>
+            )
+          }}
+        </FixedSizeList>
+      )}
+    </InfiniteLoader>
+  )
+}
 
 export type IssueSelectType = {
+  count: number
   disabled?: boolean
+  loadingCombinedData: boolean
   isFetching: boolean
   isLoading: boolean
   issues?: Issue[]
@@ -13,56 +110,49 @@ export type IssueSelectType = {
   nextPage?: string
   onChange: (value: string) => void
   searchItems: (search: string) => void
-  resetValue: boolean
+  lastSavedResource: string | undefined
 }
 
 type IssueValueType = {
   value: string
-  label: string
 }
 
 const IssueSelect: FC<IssueSelectType> = ({
+  count,
   disabled,
   isFetching,
   isLoading,
   issues,
+  lastSavedResource,
   loadMore,
+  loadingCombinedData,
   nextPage,
   onChange,
-  resetValue,
   searchItems,
 }) => {
-  const [value, setValue] = useState<string | null>('')
-  const [searchTimer, setSearchTimer] = useState<NodeJS.Timeout | null>(null)
+  const [selectedOption, setSelectedOption] = useState<IssueValueType | null>(
+    null,
+  )
+  const [searchText, setSearchText] = React.useState('')
+
   useEffect(() => {
-    resetValue && setValue('')
-  }, [resetValue])
-
-  const handleInputChange = (e: any) => {
-    const value = Utils.safeParseEventValue(e)
-    setValue(value)
-
-    if (searchTimer) {
-      clearTimeout(searchTimer)
+    if (selectedOption && selectedOption.value === lastSavedResource) {
+      setSelectedOption(null)
     }
+  }, [lastSavedResource, selectedOption])
 
-    setSearchTimer(
-      setTimeout(() => {
-        searchItems(value)
-      }, 500),
-    )
-  }
   return (
     <div style={{ width: '300px' }}>
       <Select
-        value={value ? { label: value, value: value } : null}
+        filterOption={(options: any[]) => {
+          return options
+        }}
+        value={selectedOption}
         size='select-md'
         placeholder={'Select Your Issue'}
         onChange={(v: IssueValueType) => {
+          setSelectedOption(v)
           onChange(v?.value)
-          if (v?.label) {
-            setValue(v?.label)
-          }
         }}
         disabled={disabled}
         options={issues?.map((i: Issue) => {
@@ -80,40 +170,23 @@ const IssueSelect: FC<IssueSelectType> = ({
             : 'No issues found'
         }
         onInputChange={(e: any) => {
-          handleInputChange(e)
+          setSearchText(e)
+          searchItems(Utils.safeParseEventValue(e))
         }}
         components={{
-          Menu: ({ ...props }: any) => {
-            return (
-              <components.Menu {...props}>
-                <React.Fragment>
-                  {props.children}
-                  {!!nextPage && (
-                    <div className='text-center mb-4'>
-                      <Button
-                        theme='outline'
-                        onClick={() => {
-                          loadMore()
-                        }}
-                        disabled={isLoading || isFetching}
-                      >
-                        Load More
-                      </Button>
-                    </div>
-                  )}
-                </React.Fragment>
-              </components.Menu>
-            )
-          },
-          Option: ({ children, data, innerProps, innerRef }: any) => (
-            <div
-              ref={innerRef}
-              {...innerProps}
-              className='react-select__option'
-            >
-              {children}
-            </div>
-          ),
+          MenuList,
+        }}
+        data={{
+          count,
+          isFetching,
+          isLoading,
+          issues,
+          loadMore,
+          loadingCombinedData,
+          nextPage,
+          onChange,
+          searchText,
+          setSelectedOption,
         }}
       />
     </div>

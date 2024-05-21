@@ -15,6 +15,7 @@ const useInfiniteScroll = <
 ) => {
   const [localPage, setLocalPage] = useState(1)
   const [combinedData, setCombinedData] = useState<RES | null>(null)
+  const [loadingCombinedData, setLoadingCombinedData] = useState(false)
   const [q, setQ] = useState('')
 
   const queryResponse = useGetDataListQuery({
@@ -39,12 +40,16 @@ const useInfiniteScroll = <
             } as RES
           })
         }
+        setLoadingCombinedData(false)
       }
     }, //eslint-disable-next-line
         [queryResponse?.data]
   )
 
   const searchItems = useThrottle((search: string) => {
+    if (q !== search) {
+      setLoadingCombinedData(true)
+    }
     setQ(search)
     setLocalPage(1)
   }, throttle)
@@ -64,6 +69,7 @@ const useInfiniteScroll = <
     isFetching: queryResponse.isFetching,
     isLoading: queryResponse.isLoading,
     loadMore,
+    loadingCombinedData: loadingCombinedData && queryResponse.isFetching,
     refresh,
     response: queryResponse,
     searchItems,

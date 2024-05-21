@@ -44,8 +44,12 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
   return (
     <Row className='list-item' key={externalResource?.id}>
       <div className='table-column text-left' style={{ width: '100px' }}>
-        <div className='font-weight-medium'>
-          {Constants.resourceTypes[externalResource?.type].label}
+        <div className='font-weight-medium mb-1'>
+          {
+            Constants.resourceTypes[
+              externalResource?.type as keyof typeof Constants.resourceTypes
+            ].label
+          }
         </div>
       </div>
       <Flex className='table-column'>
@@ -87,7 +91,9 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
               <div>
                 <label>
                   {`Are you sure you want to unlink your ${
-                    Constants.resourceTypes[externalResource?.type].label
+                    Constants.resourceTypes[
+                      externalResource?.type as keyof typeof Constants.resourceTypes
+                    ].label
                   } ${externalResource?.metadata?.title}?`}
                 </label>
                 <div className='text-right'>
@@ -172,7 +178,7 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
         )}
         renderNoResults={
           <FormGroup className='text-center'>
-            You have no external resouces linked for this feature.
+            You have no external resources linked for this feature.
           </FormGroup>
         }
       />

@@ -37,9 +37,9 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
   const [externalResourceType, setExternalResourceType] = useState<string>('')
   const [featureExternalResource, setFeatureExternalResource] =
     useState<string>('')
-
-  const [resetValue, setResetValue] = useState<boolean>(false)
-
+  const [lastSavedResource, setLastSavedResource] = useState<
+    string | undefined
+  >(undefined)
   const [createExternalResource] = useCreateExternalResourceMutation()
   const githubTypes = Object.values(Constants.resourceTypes).filter(
     (v) => v.type === 'GITHUB',
@@ -61,15 +61,14 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
           {externalResourceType ==
           Constants.resourceTypes.GITHUB_ISSUE.label ? (
             <MyIssuesSelect
+              lastSavedResource={lastSavedResource}
+              linkedExternalResources={linkedExternalResources!}
               orgId={organisationId}
               onChange={(v) => {
                 setFeatureExternalResource(v)
-                setResetValue(false)
               }}
               repoOwner={repoOwner}
               repoName={repoName}
-              linkedExternalResources={linkedExternalResources!}
-              resetValue={resetValue}
             />
           ) : externalResourceType ==
             Constants.resourceTypes.GITHUB_PR.label ? (
@@ -77,12 +76,10 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
               orgId={organisationId}
               onChange={(v) => {
                 setFeatureExternalResource(v)
-                setResetValue(false)
               }}
               repoOwner={repoOwner}
               repoName={repoName}
               linkedExternalResources={linkedExternalResources!}
-              resetValue={resetValue}
             />
           ) : (
             <></>
@@ -96,8 +93,10 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
           disabled={!externalResourceType || !featureExternalResource}
           onClick={() => {
             const type = Object.keys(Constants.resourceTypes).find(
-              (key) =>
-                Constants.resourceTypes[key].label === externalResourceType,
+              (key: string) =>
+                Constants.resourceTypes[
+                  key as keyof typeof Constants.resourceTypes
+                ].label === externalResourceType,
             )
             createExternalResource({
               body: {
@@ -110,7 +109,7 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
               project_id: projectId,
             }).then(() => {
               toast('External Resource Added')
-              setResetValue(true)
+              setLastSavedResource(featureExternalResource)
             })
           }}
         >

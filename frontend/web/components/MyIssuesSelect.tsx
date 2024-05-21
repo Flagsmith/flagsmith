@@ -9,34 +9,43 @@ type MyIssuesSelectType = {
   orgId: string
   repoOwner: string
   repoName: string
+  lastSavedResource: string | undefined
   linkedExternalResources: ExternalResource[]
   onChange: (v: string) => void
-  resetValue: boolean
 }
 
 const MyIssuesSelect: FC<MyIssuesSelectType> = ({
+  lastSavedResource,
   linkedExternalResources,
   onChange,
   orgId,
   repoName,
   repoOwner,
-  resetValue,
 }) => {
   const [externalResourcesSelect, setExternalResourcesSelect] =
     useState<Issue[]>()
 
-  const { data, isFetching, isLoading, loadMore, searchItems } =
-    useInfiniteScroll<Req['getGithubIssues'], Res['githubIssues']>(
-      useGetGithubIssuesQuery,
-      {
-        organisation_id: orgId,
-        page_size: 100,
-        repo_name: repoName,
-        repo_owner: repoOwner,
-      },
-    )
+  const throttleDelay = 300
 
-  const { next, results } = data || { results: [] }
+  const {
+    data,
+    isFetching,
+    isLoading,
+    loadMore,
+    loadingCombinedData,
+    searchItems,
+  } = useInfiniteScroll<Req['getGithubIssues'], Res['githubIssues']>(
+    useGetGithubIssuesQuery,
+    {
+      organisation_id: orgId,
+      page_size: 10,
+      repo_name: repoName,
+      repo_owner: repoOwner,
+    },
+    throttleDelay,
+  )
+
+  const { count, next, results } = data || { results: [] }
 
   useEffect(() => {
     if (results && linkedExternalResources) {
@@ -54,14 +63,16 @@ const MyIssuesSelect: FC<MyIssuesSelectType> = ({
 
   return (
     <IssueSelect
+      count={count || 0}
       issues={externalResourcesSelect}
       onChange={onChange}
       isFetching={isFetching}
+      loadingCombinedData={loadingCombinedData}
       isLoading={isLoading}
+      lastSavedResource={lastSavedResource}
       loadMore={loadMore}
       nextPage={next}
       searchItems={searchItems}
-      resetValue={resetValue}
     />
   )
 }
