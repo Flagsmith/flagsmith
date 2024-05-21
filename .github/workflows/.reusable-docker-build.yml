@@ -1,0 +1,65 @@
+# reusable workflow
+name: Build Docker Image
+
+on:
+  workflow_call:
+    inputs:
+      registry_url:
+        type: string
+        description: Github container registry base URL
+        required: false
+        default: ghcr.io
+      file:
+        type: string
+        description: Path to the Dockerfile
+        required: true
+      slug:
+        type: string
+        description: Image slug
+        required: true
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v4
+
+      - name: Set up Depot CLI
+        uses: depot/setup-action@v1
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.registry_url }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            flagsmith/${{ inputs.slug }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+
+      - name: Build and push image
+        uses: depot/build-push-action@v1
+        with:
+          push: true
+          file: ${{ inputs.file }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ inputs.registry_url }}/flagsmith/${{ inputs.slug }}:${{ steps.meta.outputs.version }}

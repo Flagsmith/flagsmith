@@ -252,59 +252,23 @@ jobs:
   docker-build-unified:
     if: github.event.pull_request.draft == false
     name: Build Unified Image
-    runs-on: ubuntu-latest
-
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Checkout PR branch
-        uses: actions/checkout@v4
-
-      - uses: ./.github/actions/docker-build
-        with:
-          image_dockerfile: Dockerfile
-          image_name_tag: flagsmith:pr-${{ github.event.number }}
-          registry_username: ${{ github.actor }}
-          registry_password: ${{ secrets.GITHUB_TOKEN }}
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      file: Dockerfile
+      slug: flagsmith
 
   docker-build-api:
     if: github.event.pull_request.draft == false
     name: Build API Image
-    runs-on: ubuntu-latest
-
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Checkout PR branch
-        uses: actions/checkout@v4
-
-      - uses: ./.github/actions/docker-build
-        with:
-          image_dockerfile: api/Dockerfile
-          image_name_tag: flagsmith-api:pr-${{ github.event.number }}
-          registry_username: ${{ github.actor }}
-          registry_password: ${{ secrets.GITHUB_TOKEN }}
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      file: api/Dockerfile
+      slug: flagsmith-api
 
   docker-build-frontend:
     if: github.event.pull_request.draft == false
     name: Build Frontend Image
-    runs-on: ubuntu-latest
-
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Checkout PR branch
-        uses: actions/checkout@v4
-
-      - uses: ./.github/actions/docker-build
-        with:
-          image_dockerfile: frontend/Dockerfile
-          image_name_tag: flagsmith-frontend:pr-${{ github.event.number }}
-          registry_username: ${{ github.actor }}
-          registry_password: ${{ secrets.GITHUB_TOKEN }}
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      file: frontend/Dockerfile
+      slug: flagsmith-frontend
