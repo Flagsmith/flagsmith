@@ -152,7 +152,7 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
   return (
     <>
       <PanelSearch
-        className='no-pad overflow-visible'
+        className='no-pad overflow-visible mt-4'
         items={data?.results}
         header={
           <Row className='table-header'>

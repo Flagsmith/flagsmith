@@ -136,7 +136,17 @@ const ExternalResourcesLinkTab: FC<ExternalResourcesLinkTabType> = ({
   return (
     <>
       <h5>GitHub Issues and Pull Requests linked</h5>
-      <label className='cols-sm-2 control-label'>
+      <ExternalResourcesTable
+        featureId={featureId}
+        projectId={projectId}
+        organisationId={organisationId}
+        repoOwner={repoOwner}
+        repoName={repoName}
+        setSelectedResources={(r: ExternalResource[]) =>
+          setSelectedResources(r)
+        }
+      />
+      <label className='cols-sm-2 control-label mt-4'>
         {' '}
         Link new Issue / Pull Request{' '}
       </label>
@@ -161,16 +171,6 @@ const ExternalResourcesLinkTab: FC<ExternalResourcesLinkTabType> = ({
           />
         )}
       </FormGroup>
-      <ExternalResourcesTable
-        featureId={featureId}
-        projectId={projectId}
-        organisationId={organisationId}
-        repoOwner={repoOwner}
-        repoName={repoName}
-        setSelectedResources={(r: ExternalResource[]) =>
-          setSelectedResources(r)
-        }
-      />
     </>
   )
 }
