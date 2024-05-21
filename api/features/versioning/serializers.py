@@ -42,17 +42,31 @@ class EnvironmentFeatureVersionSerializer(serializers.ModelSerializer):
 
 class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSerializer):
     feature_states_to_create = EnvironmentFeatureVersionFeatureStateSerializer(
-        many=True, allow_null=True, required=False
+        many=True,
+        allow_null=True,
+        required=False,
+        help_text=(
+            "Array of feature states that will be created in the new version. "
+            "Note: these can only include segment overrides."
+        ),
     )
     feature_states_to_update = EnvironmentFeatureVersionFeatureStateSerializer(
-        many=True, allow_null=True, required=False
+        many=True,
+        allow_null=True,
+        required=False,
+        help_text="Array of feature states to update in the new version.",
     )
     segment_ids_to_delete_overrides = serializers.ListSerializer(
         child=serializers.IntegerField(),
         required=False,
         allow_null=True,
+        help_text="Array of segment ids for which the segment overrides will be removed in the new version.",
     )
-    publish = serializers.BooleanField(required=False, default=False)
+    publish = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text="Boolean to confirm whether the new version should be publish immediately or not.",
+    )
 
     class Meta(EnvironmentFeatureVersionSerializer.Meta):
         fields = EnvironmentFeatureVersionSerializer.Meta.fields + (
