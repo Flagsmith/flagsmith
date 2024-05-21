@@ -33,8 +33,5 @@ class EnvironmentFeatureVersionManager(SoftDeleteManager):
         operations on the ORM object.
         """
         return self.filter(
-            uuid__in=[
-                efv.uuid
-                for efv in EnvironmentFeatureVersion.objects.get_latest_versions(self)
-            ]
+            uuid__in=[efv.uuid for efv in self.get_latest_versions(environment)]
         )
