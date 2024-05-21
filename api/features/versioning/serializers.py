@@ -1,7 +1,14 @@
+from dataclasses import asdict
+
+import django.core.exceptions
 from rest_framework import serializers
 
 from features.serializers import CreateSegmentOverrideFeatureStateSerializer
 from features.versioning.models import EnvironmentFeatureVersion
+from integrations.github.github import GithubData, generate_data
+from integrations.github.models import GithubConfiguration
+from integrations.github.tasks import call_github_app_webhook_for_feature_state
+from webhooks.webhooks import WebhookEventType
 
 
 class EnvironmentFeatureVersionFeatureStateSerializer(
@@ -12,6 +19,37 @@ class EnvironmentFeatureVersionFeatureStateSerializer(
             CreateSegmentOverrideFeatureStateSerializer.Meta.read_only_fields
             + ("feature",)
         )
+
+    def save(self, **kwargs):
+        try:
+            response = super().save(**kwargs)
+
+            feature_state = self.instance
+            if (
+                not feature_state.identity_id
+                and feature_state.feature.external_resources.exists()
+                and feature_state.environment.project.github_project.exists()
+                and feature_state.environment.project.organisation.github_config.exists()
+            ):
+                github_configuration = GithubConfiguration.objects.get(
+                    organisation_id=feature_state.environment.project.organisation_id
+                )
+                feature_states = []
+                feature_states.append(feature_state)
+                feature_data: GithubData = generate_data(
+                    github_configuration=github_configuration,
+                    feature=feature_state.feature,
+                    type=WebhookEventType.FLAG_UPDATED.value,
+                    feature_states=feature_states,
+                )
+
+                call_github_app_webhook_for_feature_state.delay(
+                    args=(asdict(feature_data),),
+                )
+
+            return response
+        except django.core.exceptions.ValidationError as e:
+            raise serializers.ValidationError(str(e))
 
 
 class EnvironmentFeatureVersionSerializer(serializers.ModelSerializer):

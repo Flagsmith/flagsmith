@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import responses
 import simplejson as json
 from django.core.serializers.json import DjangoJSONEncoder
@@ -15,9 +17,11 @@ from features.serializers import (
     FeatureStateSerializerBasic,
     WritableNestedFeatureStateSerializer,
 )
+from features.versioning.models import EnvironmentFeatureVersion
 from integrations.github.constants import GITHUB_API_URL
 from integrations.github.models import GithubConfiguration, GithubRepository
 from projects.models import Project
+from segments.models import Segment
 from tests.types import WithEnvironmentPermissionsCallable
 
 _django_json_encoder_default = DjangoJSONEncoder().default
@@ -607,3 +611,84 @@ def test_create_github_comment_on_segment_override_deleted(
         },
         timeout=10,
     )
+
+
+def test_create_github_comment_on_using_v2(
+    admin_client_new: APIClient,
+    feature_external_resource: FeatureExternalResource,
+    environment_v2_versioning: Environment,
+    segment: Segment,
+    feature: Feature,
+    environment: Environment,
+    project: Project,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mocker: MockerFixture,
+) -> None:
+
+    # Given
+    mock_generate_token = mocker.patch(
+        "integrations.github.client.generate_token",
+    )
+    mock_generate_token.return_value = "mocked_token"
+
+    github_request_mock = mocker.patch(
+        "requests.post", side_effect=mocked_requests_post
+    )
+
+    environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-list",
+        args=[
+            environment_v2_versioning.id,
+            feature.id,
+            environment_feature_version.uuid,
+        ],
+    )
+
+    data = {
+        "feature_segment": {"segment": segment.id},
+        "enabled": True,
+        "feature_state_value": {
+            "string_value": "segment value!",
+        },
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    response_data = response.json()
+
+    # Then
+    format = "%Y-%m-%dT%H:%M:%S.%fZ"
+    formatted_updated_at = datetime.strptime(
+        response_data["updated_at"], format
+    ).strftime(get_format("DATETIME_INPUT_FORMATS")[0])
+    expected_comment_body = (
+        "Flagsmith Feature `Test Feature1` has been updated:\n"
+        + "\n"
+        + expected_segment_comment_body(
+            project.id,
+            environment.api_key,
+            feature.id,
+            formatted_updated_at,
+            "✅ Enabled",
+            "`segment value!`",
+        )
+    )
+
+    github_request_mock.assert_called_with(
+        "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
+        json={"body": expected_comment_body},
+        headers={
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": "Bearer mocked_token",
+        },
+        timeout=10,
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
