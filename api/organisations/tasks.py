@@ -1,4 +1,5 @@
 import logging
+import math
 from datetime import timedelta
 
 from app_analytics.influxdb_wrapper import get_current_api_usage
@@ -12,8 +13,8 @@ from django.utils import timezone
 from integrations.flagsmith.client import get_client
 from organisations import subscription_info_cache
 from organisations.chargebee import (
-    add_1000_api_calls_scale_up,
-    add_1000_api_calls_start_up,
+    add_100k_api_calls_scale_up,
+    add_100k_api_calls_start_up,
 )
 from organisations.models import (
     APILimitAccessBlock,
@@ -255,21 +256,35 @@ def charge_for_api_call_count_overages():
     ):
         subscription_cache = organisation.subscription_information_cache
         api_usage = get_current_api_usage(organisation.id, "30d")
-        api_usage_ratio = api_usage / subscription_cache.allowed_30d_api_calls
 
-        if api_usage_ratio < 1.0:
-            logger.warning("API Usage does not match API Notification")
+        api_billing = (
+            OrganisationAPIBilling.objects.filter(
+                billed_at__gte=subscription_cache.current_billing_term_starts_at
+            )
+            .order_by("-billed_at")
+            .first()
+        )
+
+        if api_billing:
+            previous_api_overage = api_billing.api_overage
+        else:
+            previous_api_overage = 0
+        api_limit = subscription_cache.allowed_30d_api_calls + previous_api_overage
+
+        api_overage = api_usage - api_limit
+        if api_overage <= 0:
+            logger.info("API Usage below current API limit.")
             continue
 
-        api_overage = api_usage - subscription_cache.allowed_30d_api_calls
-
         if organisation.subscription.plan in {SCALE_UP, SCALE_UP_V2}:
-            add_1000_api_calls_scale_up(
-                organisation.subscription.subscription_id, api_overage // 1000
+            add_100k_api_calls_scale_up(
+                organisation.subscription.subscription_id,
+                math.ceil(api_overage / 100_000),
             )
         elif organisation.subscription.plan in {STARTUP, STARTUP_V2}:
-            add_1000_api_calls_start_up(
-                organisation.subscription.subscription_id, api_overage // 1000
+            add_100k_api_calls_start_up(
+                organisation.subscription.subscription_id,
+                math.ceil(api_overage / 100_000),
             )
         else:
             logger.error(
@@ -281,7 +296,7 @@ def charge_for_api_call_count_overages():
         # double billing on a subsequent task run.
         OrganisationAPIBilling.objects.create(
             organisation=organisation,
-            api_overage=(1000 * (api_overage // 1000)),
+            api_overage=(100_000 * math.ceil(api_overage / 100_000)),
             immediate_invoice=False,
             billed_at=now,
         )
