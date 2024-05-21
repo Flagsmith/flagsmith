@@ -46,7 +46,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            flagsmith/${{ inputs.slug }}
+            ${{ inputs.registry_url }}/flagsmith/${{ inputs.slug }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
