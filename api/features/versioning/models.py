@@ -1,6 +1,7 @@
 import datetime
 import typing
 import uuid
+from copy import deepcopy
 
 from core.models import (
     SoftDeleteExportableModel,
@@ -128,3 +129,12 @@ class EnvironmentFeatureVersion(
         if persist:
             self.save()
             environment_feature_version_published.send(self.__class__, instance=self)
+
+    def clone(self, environment: "Environment") -> "EnvironmentFeatureVersion":
+        _clone = deepcopy(self)
+
+        _clone.uuid = None
+        _clone.environment = environment
+
+        _clone.save()
+        return _clone

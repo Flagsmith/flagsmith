@@ -41,6 +41,7 @@ from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata
 from projects.models import Project
 from segments.models import Segment
@@ -174,8 +175,36 @@ class Environment(
         # Since identities are closely tied to the environment
         # it does not make much sense to clone them, hence
         # only clone feature states without identities
-        for feature_state in self.feature_states.filter(identity=None):
-            feature_state.clone(clone, live_from=feature_state.live_from)
+        queryset = self.feature_states.filter(identity=None)
+
+        if self.use_v2_feature_versioning:
+            # Grab the latest feature versions from the source environment. Note that,
+            # to clone these later on in the logic, we need the ORM objects, not the
+            # RawSQL queryset, so we have to nest the queries here.
+            latest_environment_feature_versions = EnvironmentFeatureVersion.objects.filter(
+                uuid__in=[
+                    efv.uuid
+                    for efv in EnvironmentFeatureVersion.objects.get_latest_versions(
+                        self
+                    )
+                ]
+            )
+
+            # Create a dictionary holding the environment feature versions (unique per feature)
+            # to use in the cloned environment.
+            clone_environment_feature_versions = {
+                efv.feature_id: efv.clone(environment=clone)
+                for efv in latest_environment_feature_versions
+            }
+
+            for feature_state in queryset.filter(
+                environment_feature_version__in=latest_environment_feature_versions
+            ):
+                clone_efv = clone_environment_feature_versions[feature_state.feature_id]
+                feature_state.clone(clone, environment_feature_version=clone_efv)
+        else:
+            for feature_state in queryset:
+                feature_state.clone(clone, live_from=feature_state.live_from)
 
         return clone
 
