@@ -951,6 +951,9 @@ def test_clone_environment_v2_versioning(
     environment: Environment,
 ) -> None:
     # Given
+    expected_environment_fs_enabled_value = True
+    expected_segment_fs_enabled_value = True
+
     # First let's create some new versions via the old versioning methods
     feature_state.clone(environment, version=2)
     feature_state.clone(environment, version=3)
@@ -963,10 +966,16 @@ def test_clone_environment_v2_versioning(
     environment.refresh_from_db()
 
     # Finally, let's create another version using the new versioning methods
+    # and update some values on the feature states in it.
     v2 = EnvironmentFeatureVersion.objects.create(
         feature=feature, environment=environment
     )
-    v2.feature_states.filter(feature_segment__isnull=True).update(enabled=True)
+    v2.feature_states.filter(feature_segment__isnull=True).update(
+        enabled=expected_environment_fs_enabled_value
+    )
+    v2.feature_states.filter(feature_segment__isnull=False).update(
+        enabled=expected_segment_fs_enabled_value
+    )
     v2.publish()
 
     # When
@@ -975,14 +984,13 @@ def test_clone_environment_v2_versioning(
     # Then
     assert cloned_environment.use_v2_feature_versioning is True
 
-    source_environment_flags = get_environment_flags_queryset(environment)
     cloned_environment_flags = get_environment_flags_queryset(cloned_environment)
 
     assert (
         cloned_environment_flags.get(feature_segment__isnull=True).enabled
-        == source_environment_flags.get(feature_segment__isnull=True).enabled
+        is expected_environment_fs_enabled_value
     )
     assert (
         cloned_environment_flags.get(feature_segment__segment=segment).enabled
-        == source_environment_flags.get(feature_segment__segment=segment).enabled
+        is expected_segment_fs_enabled_value
     )
