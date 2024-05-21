@@ -1,0 +1,49 @@
+name: Build Docker Image
+description: |
+  Build Docker image under provided tag, push it to Github container registry, and scan it for vulnerabilities.
+  NOTE: Requires calling workflow to have following permissions:
+      id-token: write
+      contents: read
+
+inputs:
+  registry_url:
+    description: Github container registry base URL
+    required: false
+    default: ghcr.io
+  registry_username:
+    description: Github container registry username
+    required: true
+  registry_password:
+    description: Github container registry password
+    required: true
+  image_dockerfile:
+    description: Path to image Dockerfile
+    required: true
+  image_name_tag:
+    description: Image name and tag, in name:tag format
+    required: true
+
+runs:
+  using: composite
+
+  steps:
+    - name: Set up Depot CLI
+      uses: depot/setup-action@v1
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ inputs.registry_url }}
+        username: ${{ inputs.registry_username }}
+        password: ${{ inputs.registry_password }}
+
+    - name: Build and push image
+      uses: depot/build-push-action@v1
+      with:
+        file: ${{ inputs.image_dockerfile }}
+        tags: ${{ inputs.registry_url }}/flagsmith/${{ inputs.image_name_tag }}
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ inputs.registry_url }}/flagsmith/${{ inputs.image_name_tag }}

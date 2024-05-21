@@ -251,7 +251,7 @@ jobs:
 
   docker-build-unified:
     if: github.event.pull_request.draft == false
-    name: Test unified docker image build
+    name: Build Unified Image
     runs-on: ubuntu-latest
 
     permissions:
@@ -262,19 +262,16 @@ jobs:
       - name: Checkout PR branch
         uses: actions/checkout@v4
 
-      - name: Set up Depot CLI
-        uses: depot/setup-action@v1
-
-      - name: Build
-        id: docker_build
-        uses: depot/build-push-action@v1
+      - uses: ./.github/actions/docker-build
         with:
-          push: false
-          tags: flagsmith/flagsmith:testing
+          image_dockerfile: Dockerfile
+          image_name_tag: flagsmith:pr-${{ github.event.number }}
+          registry_username: ${{ github.actor }}
+          registry_password: ${{ secrets.GITHUB_TOKEN }}
 
   docker-build-api:
     if: github.event.pull_request.draft == false
-    name: Test api docker image build
+    name: Build API Image
     runs-on: ubuntu-latest
 
     permissions:
@@ -285,20 +282,16 @@ jobs:
       - name: Checkout PR branch
         uses: actions/checkout@v4
 
-      - name: Set up Depot CLI
-        uses: depot/setup-action@v1
-
-      - name: Build
-        id: docker_build
-        uses: depot/build-push-action@v1
+      - uses: ./.github/actions/docker-build
         with:
-          file: api/Dockerfile
-          push: false
-          tags: flagsmith/flagsmith-api:testing
+          image_dockerfile: api/Dockerfile
+          image_name_tag: flagsmith-api:pr-${{ github.event.number }}
+          registry_username: ${{ github.actor }}
+          registry_password: ${{ secrets.GITHUB_TOKEN }}
 
   docker-build-frontend:
     if: github.event.pull_request.draft == false
-    name: Test frontend docker image build
+    name: Build Frontend Image
     runs-on: ubuntu-latest
 
     permissions:
@@ -309,13 +302,9 @@ jobs:
       - name: Checkout PR branch
         uses: actions/checkout@v4
 
-      - name: Set up Depot CLI
-        uses: depot/setup-action@v1
-
-      - name: Build
-        id: docker_build
-        uses: depot/build-push-action@v1
+      - uses: ./.github/actions/docker-build
         with:
-          file: frontend/Dockerfile
-          push: false
-          tags: flagsmith/flagsmith-frontend:testing
+          image_dockerfile: frontend/Dockerfile
+          image_name_tag: flagsmith-frontend:pr-${{ github.event.number }}
+          registry_username: ${{ github.actor }}
+          registry_password: ${{ secrets.GITHUB_TOKEN }}
