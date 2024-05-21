@@ -231,11 +231,7 @@ def charge_for_api_call_count_overages():
         OrganisationAPIUsageNotification.objects.filter(
             notified_at__gte=api_usage_notified_at,
             percent_usage__gte=100,
-        )
-        .exclude(
-            organisation__api_billing__billed_at__gt=api_usage_notified_at,
-        )
-        .values_list("organisation_id", flat=True)
+        ).values_list("organisation_id", flat=True)
     )
 
     for organisation in Organisation.objects.filter(
