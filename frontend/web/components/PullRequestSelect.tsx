@@ -35,6 +35,7 @@ const PullRequestsSelect: FC<PullRequestsSelectType> = ({
   const [value, setValue] = useState<string | null>('')
   const [searchTimer, setSearchTimer] = useState<NodeJS.Timeout | null>(null)
   useEffect(() => {
+    console.log('DEBUG: resetValue', resetValue)
     resetValue && setValue('')
   }, [resetValue])
 

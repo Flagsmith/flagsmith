@@ -4,11 +4,12 @@ import ExternalResourcesTable, {
   ExternalResourcesTableBase,
 } from './ExternalResourcesTable'
 import { ExternalResource } from 'common/types/responses'
-import MyIssuesSelect from './MyIssuesSelect'
+import { IssueSelectProvider } from './IssueSelectProvider'
 import MyPullRequestsSelect from './MyPullRequestsSelect'
 import { useCreateExternalResourceMutation } from 'common/services/useExternalResource'
 import Constants from 'common/constants'
 import Button from './base/forms/Button'
+import IssueSelect from './IssueSelect'
 
 type ExternalResourcesLinkTabType = {
   githubId: string
@@ -45,7 +46,7 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
     (v) => v.type === 'GITHUB',
   )
   return (
-    <Row>
+    <div>
       <Flex style={{ maxWidth: '170px' }}>
         <Select
           size='select-md'
@@ -56,27 +57,28 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
           })}
         />
       </Flex>
-      <Flex className='table-column px-3'>
-        <Flex className='ml-4'>
+      <Row className='mt-4'>
+        <Flex>
           {externalResourceType ==
           Constants.resourceTypes.GITHUB_ISSUE.label ? (
-            <MyIssuesSelect
+            <IssueSelectProvider
               lastSavedResource={lastSavedResource}
               linkedExternalResources={linkedExternalResources!}
               orgId={organisationId}
-              onChange={(v) => {
-                setFeatureExternalResource(v)
-              }}
+              onChange={(v) => setFeatureExternalResource(v)}
               repoOwner={repoOwner}
               repoName={repoName}
-            />
+            >
+              <IssueSelect
+                onChange={(v) => setFeatureExternalResource(v)}
+                lastSavedResource={lastSavedResource}
+              />
+            </IssueSelectProvider>
           ) : externalResourceType ==
             Constants.resourceTypes.GITHUB_PR.label ? (
             <MyPullRequestsSelect
               orgId={organisationId}
-              onChange={(v) => {
-                setFeatureExternalResource(v)
-              }}
+              onChange={(v) => setFeatureExternalResource(v)}
               repoOwner={repoOwner}
               repoName={repoName}
               linkedExternalResources={linkedExternalResources!}
@@ -85,38 +87,38 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
             <></>
           )}
         </Flex>
-      </Flex>
-      <div className='table-column text-center' style={{ width: '80px' }}>
-        <Button
-          className='text-right'
-          theme='primary'
-          disabled={!externalResourceType || !featureExternalResource}
-          onClick={() => {
-            const type = Object.keys(Constants.resourceTypes).find(
-              (key: string) =>
-                Constants.resourceTypes[
-                  key as keyof typeof Constants.resourceTypes
-                ].label === externalResourceType,
-            )
-            createExternalResource({
-              body: {
-                feature: parseInt(featureId),
-                metadata: {},
-                type: type!,
-                url: featureExternalResource,
-              },
-              feature_id: featureId,
-              project_id: projectId,
-            }).then(() => {
-              toast('External Resource Added')
-              setLastSavedResource(featureExternalResource)
-            })
-          }}
-        >
-          Save
-        </Button>
-      </div>
-    </Row>
+        <div className='table-column text-center' style={{ width: '80px' }}>
+          <Button
+            className='text-right'
+            theme='primary'
+            disabled={!externalResourceType || !featureExternalResource}
+            onClick={() => {
+              const type = Object.keys(Constants.resourceTypes).find(
+                (key: string) =>
+                  Constants.resourceTypes[
+                    key as keyof typeof Constants.resourceTypes
+                  ].label === externalResourceType,
+              )
+              createExternalResource({
+                body: {
+                  feature: parseInt(featureId),
+                  metadata: {},
+                  type: type!,
+                  url: featureExternalResource,
+                },
+                feature_id: featureId,
+                project_id: projectId,
+              }).then(() => {
+                toast('External Resource Added')
+                setLastSavedResource(featureExternalResource)
+              })
+            }}
+          >
+            Save
+          </Button>
+        </div>
+      </Row>
+    </div>
   )
 }
 

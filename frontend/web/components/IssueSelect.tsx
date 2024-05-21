@@ -3,11 +3,25 @@ import { Issue } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import { FixedSizeList } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
+import { useIssueSelectProvider } from './IssueSelectProvider'
 
-const MenuList = (props: any) => {
+type MenuListType = {
+  children: React.ReactNode
+  searchText: (v: string) => void
+  selectProps: any
+  width: number
+  [key: string]: any
+}
+
+const MenuList: FC<MenuListType> = ({
+  children,
+  searchText,
+  selectProps,
+  width,
+  ...rest
+}) => {
   const infiniteLoaderRef = useRef(null)
   const hasMountedRef = useRef(false)
-  const { children } = props
   const childrenArray = React.Children.toArray(children)
   const {
     isFetching,
@@ -15,8 +29,7 @@ const MenuList = (props: any) => {
     loadMore,
     loadingCombinedData,
     nextPage,
-    searchText,
-  } = props.selectProps.data
+  } = useIssueSelectProvider()
   const [isLoading, setIsLoading] = useState(parentIsLoading)
   const loadMoreItems =
     isFetching || isLoading || !nextPage ? () => {} : loadMore
@@ -62,17 +75,16 @@ const MenuList = (props: any) => {
     >
       {({ onItemsRendered, ref }) => (
         <FixedSizeList
-          {...props}
-          minHeight={props.selectProps.minMenuHeight}
-          maxHeight={props.selectProps.maxMenuHeight}
-          height={
-            Math.min(itemCount * itemSize, props.selectProps.maxMenuHeight) + 20
-          }
+          {...rest}
+          height={Math.min(
+            itemCount * itemSize + 20,
+            selectProps.maxMenuHeight,
+          )}
           itemCount={itemCount}
           itemSize={itemSize}
           onItemsRendered={onItemsRendered}
           ref={ref}
-          width={props.width}
+          width={width}
         >
           {({ index, isScrolling, style, ...rest }) => {
             const child = childrenArray[index]
@@ -81,14 +93,9 @@ const MenuList = (props: any) => {
                 {isItemLoaded(index) ? (
                   child
                 ) : (
-                  <>
-                    <div className='text-center'>
-                      <Loader />
-                    </div>
-                    <div className='text-center'>
-                      {itemCount} : {index} : {childrenArray.length}
-                    </div>
-                  </>
+                  <div className='text-center'>
+                    <Loader />
+                  </div>
                 )}
               </div>
             )
@@ -100,16 +107,7 @@ const MenuList = (props: any) => {
 }
 
 export type IssueSelectType = {
-  count: number
-  disabled?: boolean
-  loadingCombinedData: boolean
-  isFetching: boolean
-  isLoading: boolean
-  issues?: Issue[]
-  loadMore: () => void
-  nextPage?: string
   onChange: (value: string) => void
-  searchItems: (search: string) => void
   lastSavedResource: string | undefined
 }
 
@@ -117,19 +115,16 @@ type IssueValueType = {
   value: string
 }
 
-const IssueSelect: FC<IssueSelectType> = ({
-  count,
-  disabled,
-  isFetching,
-  isLoading,
-  issues,
-  lastSavedResource,
-  loadMore,
-  loadingCombinedData,
-  nextPage,
-  onChange,
-  searchItems,
-}) => {
+const IssueSelect: FC<IssueSelectType> = ({ lastSavedResource, onChange }) => {
+  const {
+    isFetching,
+    isLoading,
+    issues,
+    loadMore,
+    loadingCombinedData,
+    nextPage,
+    searchItems,
+  } = useIssueSelectProvider()
   const [selectedOption, setSelectedOption] = useState<IssueValueType | null>(
     null,
   )
@@ -142,7 +137,7 @@ const IssueSelect: FC<IssueSelectType> = ({
   }, [lastSavedResource, selectedOption])
 
   return (
-    <div style={{ width: '300px' }}>
+    <div>
       <Select
         filterOption={(options: any[]) => {
           return options
@@ -154,7 +149,6 @@ const IssueSelect: FC<IssueSelectType> = ({
           setSelectedOption(v)
           onChange(v?.value)
         }}
-        disabled={disabled}
         options={issues?.map((i: Issue) => {
           return {
             label: `${i.title} #${i.number}`,
@@ -176,18 +170,7 @@ const IssueSelect: FC<IssueSelectType> = ({
         components={{
           MenuList,
         }}
-        data={{
-          count,
-          isFetching,
-          isLoading,
-          issues,
-          loadMore,
-          loadingCombinedData,
-          nextPage,
-          onChange,
-          searchText,
-          setSelectedOption,
-        }}
+        data={{ searchText }}
       />
     </div>
   )
