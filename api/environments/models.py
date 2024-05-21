@@ -178,16 +178,11 @@ class Environment(
         queryset = self.feature_states.filter(identity=None)
 
         if self.use_v2_feature_versioning:
-            # Grab the latest feature versions from the source environment. Note that,
-            # to clone these later on in the logic, we need the ORM objects, not the
-            # RawSQL queryset, so we have to nest the queries here.
-            latest_environment_feature_versions = EnvironmentFeatureVersion.objects.filter(
-                uuid__in=[
-                    efv.uuid
-                    for efv in EnvironmentFeatureVersion.objects.get_latest_versions(
-                        self
-                    )
-                ]
+            # Grab the latest feature versions from the source environment.
+            latest_environment_feature_versions = (
+                EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(
+                    environment=self
+                )
             )
 
             # Create a dictionary holding the environment feature versions (unique per feature)
