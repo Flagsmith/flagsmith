@@ -947,13 +947,19 @@ def test_get_subscription_metadata_returns_200_if_the_organisation_have_no_paid_
 
 
 def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
-    organisation, admin_client, chargebee_subscription
+    organisation: Organisation,
+    admin_client: APIClient,
+    chargebee_subscription: Subscription,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     url = reverse(
         "api-v1:organisations:organisation-get-subscription-metadata",
         args=[organisation.pk],
     )
+
+    mocker.patch("organisations.models.is_saas", return_value=True)
+    mocker.patch("organisations.models.is_enterprise", return_value=False)
 
     # When
     response = admin_client.get(url)
