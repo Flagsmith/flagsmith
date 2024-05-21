@@ -198,8 +198,15 @@ Percentage Split is the only operator that does not require a trait. You can use
 [staged feature rollouts](/guides-and-examples/staged-feature-rollouts#creating-staged-rollouts).
 
 Percentage Split deterministically assigns a "bucket" to each identity solely based on its ID and not any traits,
-meaning that segment overrides that use Percentage Split will always result in the same feature value for a given
+meaning that Segment overrides that use Percentage Split will always result in the same feature value for a given
 identity.
+
+If you create a Segment with a single Percentage Split rule, Identities who are members of that split when the split
+value is set to, say, 10% will be guaranteed to also be in that split if it is changed to a value higher than 10%.
+
+If the Percentage Split is reduced in value, some Identities will be removed from that Percentage Split to maintain the
+balance. The algorithm is fairly simple and good to understand - it is
+[described here](/guides-and-examples/staged-feature-rollouts#how-does-it-work).
 
 </TabItem>
 <TabItem value="modulo" label="Modulo">
@@ -248,3 +255,17 @@ These are the default limits for segments and rules:
 - 1000 bytes per segment rule value
 
 See the [documentation on System Limits](system-administration/system-limits.md) for more details.
+
+## Use Metadata
+
+When creating or updating a feature, you can add Metadata if you was created Metadata Fields in Project Settings ->
+Metadata.
+
+You can add the Metadata value in the Feature Setting Tab.
+
+When creating or updating a segment, you can add Metadata. You can add the Metadata value in the Settings Setting Tab.
+
+If you have metadata for features, it will create a list of fields that can be filled, saved, and will be stored with
+the feature's save flag.
+
+![Image](/img/metadata/metadata-segment-1.png)

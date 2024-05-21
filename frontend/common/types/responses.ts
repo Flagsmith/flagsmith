@@ -68,6 +68,7 @@ export type Segment = {
   description: string
   project: string | number
   feature?: number
+  metadata: Metadata[] | []
 }
 export type Environment = {
   id: number
@@ -82,6 +83,7 @@ export type Environment = {
   hide_sensitive_data: boolean
   total_segment_overrides?: number
   use_v2_feature_versioning: boolean
+  metadata: Metadata[] | []
 }
 export type Project = {
   id: number
@@ -109,8 +111,8 @@ export type ExternalResource = {
   id?: number
   url: string
   type: string
-  project: number
-  status: null | string
+  project?: number
+  metadata: null | { status: string }
   feature: number
 }
 
@@ -523,6 +525,7 @@ export type ProjectFlag = {
   num_segment_overrides: number | null
   owners: User[]
   owner_groups: UserGroupSummary[]
+  metadata: Metadata[] | []
   project: number
   tags: number[]
   type: string
@@ -639,6 +642,40 @@ export type FeatureVersion = {
   published_by: number | null
   created_by: number | null
 }
+
+export type Metadata = {
+  id?: number
+  model_field: number | string
+  field_value: string
+}
+
+export type MetadataField = {
+  id: number
+  name: string
+  type: string
+  description: string
+  organisation: number
+}
+
+export type ContentType = {
+  [key: string]: any
+  id: number
+  app_label: string
+  model: string
+}
+
+export type isRequiredFor = {
+  content_type: number
+  object_id: number
+}
+
+export type MetadataModelField = {
+  id: string
+  field: number
+  content_type: number | string
+  is_required_for: isRequiredFor[]
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -713,6 +750,10 @@ export type Res = {
   rolePermissionGroup: PagedResponse<RolePermissionGroup>
   getSubscriptionMetadata: { id: string }
   environment: Environment
+  metadataModelFieldList: PagedResponse<MetadataModelField>
+  metadataModelField: MetadataModelField
+  metadataList: PagedResponse<MetadataField>
+  metadataField: MetadataField
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   roleMasterApiKey: { id: number; master_api_key: string; role: number }
@@ -725,9 +766,10 @@ export type Res = {
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
   groupSummaries: UserGroupSummary[]
+  supportedContentType: ContentType[]
   externalResource: PagedResponse<ExternalResource>
   githubIntegrations: PagedResponse<githubIntegration>
-  githubRepository: PagedResponse<GithubRepository> | { data: { id: string } }
+  githubRepository: PagedResponse<GithubRepository>
   githubIssues: Issue[]
   githubPulls: PullRequest[]
   githubRepos: GithubPaginatedRepos<Repository>

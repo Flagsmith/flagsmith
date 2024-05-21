@@ -3,6 +3,7 @@ import typing
 
 from django.utils import timezone
 
+from features.models import FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.schemas import (
     EnvironmentFeatureVersionWebhookDataSerializer,
@@ -83,14 +84,36 @@ def _create_initial_feature_versions(environment: "Environment"):
         )
 
         latest_feature_states = get_environment_flags_queryset(
-            environment=environment
-        ).filter(identity__isnull=True, feature=feature)
+            environment=environment, feature_name=feature.name
+        ).filter(identity__isnull=True)
         related_feature_segments = FeatureSegment.objects.filter(
             feature_states__in=latest_feature_states
         )
 
         latest_feature_states.update(environment_feature_version=ef_version)
         related_feature_segments.update(environment_feature_version=ef_version)
+
+        scheduled_feature_states = FeatureState.objects.filter(
+            live_from__gt=now,
+            change_request__isnull=False,
+            change_request__committed_at__isnull=False,
+            change_request__deleted_at__isnull=True,
+        ).select_related("change_request")
+        for feature_state in scheduled_feature_states:
+            ef_version = EnvironmentFeatureVersion.objects.create(
+                feature=feature,
+                environment=environment,
+                published_at=feature_state.change_request.committed_at,
+                live_from=feature_state.live_from,
+                change_request=feature_state.change_request,
+            )
+            feature_state.environment_feature_version = ef_version
+            feature_state.change_request = None
+
+        FeatureState.objects.bulk_update(
+            scheduled_feature_states,
+            fields=["environment_feature_version", "change_request"],
+        )
 
 
 @register_task_handler()

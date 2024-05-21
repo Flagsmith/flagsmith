@@ -27,8 +27,12 @@ from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.tasks import enable_v2_versioning
+from features.versioning.versioning_service import (
+    get_environment_flags_queryset,
+)
 from organisations.models import Organisation, OrganisationRole
-from projects.models import IdentityOverridesV2MigrationStatus, Project
+from projects.models import EdgeV2MigrationStatus, Project
 from segments.models import Segment
 from util.mappers import map_environment_to_environment_document
 
@@ -500,9 +504,7 @@ def test_write_environments_to_dynamodb__project_environments_v2_migrated__call_
     mock_dynamo_env_v2_wrapper: Mock,
 ) -> None:
     # Given
-    dynamo_enabled_project.identity_overrides_v2_migration_status = (
-        IdentityOverridesV2MigrationStatus.COMPLETE
-    )
+    dynamo_enabled_project.edge_v2_migration_status = EdgeV2MigrationStatus.COMPLETE
     dynamo_enabled_project.save()
     mock_dynamo_env_v2_wrapper.is_enabled = True
 
@@ -527,9 +529,7 @@ def test_write_environments_to_dynamodb__project_environments_v2_migrated__wrapp
 ) -> None:
     # Given
     mock_dynamo_env_v2_wrapper.is_enabled = False
-    dynamo_enabled_project.identity_overrides_v2_migration_status = (
-        IdentityOverridesV2MigrationStatus.COMPLETE
-    )
+    dynamo_enabled_project.edge_v2_migration_status = EdgeV2MigrationStatus.COMPLETE
     dynamo_enabled_project.save()
 
     # When
@@ -540,10 +540,10 @@ def test_write_environments_to_dynamodb__project_environments_v2_migrated__wrapp
 
 
 @pytest.mark.parametrize(
-    "identity_overrides_v2_migration_status",
+    "edge_v2_migration_status",
     (
-        IdentityOverridesV2MigrationStatus.NOT_STARTED,
-        IdentityOverridesV2MigrationStatus.IN_PROGRESS,
+        EdgeV2MigrationStatus.NOT_STARTED,
+        EdgeV2MigrationStatus.IN_PROGRESS,
     ),
 )
 def test_write_environments_to_dynamodb__project_environments_v2_not_migrated__wrapper_not_called(
@@ -552,12 +552,10 @@ def test_write_environments_to_dynamodb__project_environments_v2_not_migrated__w
     dynamo_enabled_project_environment_two: Environment,
     mock_dynamo_env_wrapper: Mock,
     mock_dynamo_env_v2_wrapper: Mock,
-    identity_overrides_v2_migration_status: str,
+    edge_v2_migration_status: str,
 ) -> None:
     # Given
-    dynamo_enabled_project.identity_overrides_v2_migration_status = (
-        identity_overrides_v2_migration_status
-    )
+    dynamo_enabled_project.edge_v2_migration_status = edge_v2_migration_status
     dynamo_enabled_project.save()
     mock_dynamo_env_v2_wrapper.is_enabled = True
 
@@ -943,3 +941,56 @@ def test_create_environment_creates_feature_states_in_all_environments_and_envir
         EnvironmentFeatureVersion.objects.filter(environment=environment).count() == 2
     )
     assert environment.feature_states.count() == 2
+
+
+def test_clone_environment_v2_versioning(
+    feature: Feature,
+    feature_state: FeatureState,
+    segment: Segment,
+    segment_featurestate: FeatureState,
+    environment: Environment,
+) -> None:
+    # Given
+    expected_environment_fs_enabled_value = True
+    expected_segment_fs_enabled_value = True
+
+    # First let's create some new versions via the old versioning methods
+    feature_state.clone(environment, version=2)
+    feature_state.clone(environment, version=3)
+
+    # and a draft version
+    feature_state.clone(environment, as_draft=True)
+
+    # Now let's enable v2 versioning for the environment
+    enable_v2_versioning(environment.id)
+    environment.refresh_from_db()
+
+    # Finally, let's create another version using the new versioning methods
+    # and update some values on the feature states in it.
+    v2 = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment
+    )
+    v2.feature_states.filter(feature_segment__isnull=True).update(
+        enabled=expected_environment_fs_enabled_value
+    )
+    v2.feature_states.filter(feature_segment__isnull=False).update(
+        enabled=expected_segment_fs_enabled_value
+    )
+    v2.publish()
+
+    # When
+    cloned_environment = environment.clone(name="Cloned environment")
+
+    # Then
+    assert cloned_environment.use_v2_feature_versioning is True
+
+    cloned_environment_flags = get_environment_flags_queryset(cloned_environment)
+
+    assert (
+        cloned_environment_flags.get(feature_segment__isnull=True).enabled
+        is expected_environment_fs_enabled_value
+    )
+    assert (
+        cloned_environment_flags.get(feature_segment__segment=segment).enabled
+        is expected_segment_fs_enabled_value
+    )

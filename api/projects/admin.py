@@ -69,7 +69,8 @@ class ProjectAdmin(admin.ModelAdmin):
         "max_segments_allowed",
         "max_features_allowed",
         "max_segment_overrides_allowed",
-        "identity_overrides_v2_migration_status",
+        "edge_v2_migration_status",
+        "edge_v2_migration_read_capacity_budget",
     )
 
     @admin.action(

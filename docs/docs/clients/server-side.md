@@ -78,7 +78,7 @@ applications.
 
 ## Add the Flagsmith package
 
-<Tabs groupId="language">
+<Tabs groupId="language" queryString>
 <TabItem value="python" label="Python">
 
 ```bash
@@ -196,7 +196,7 @@ area and should be considered secret.
 
 :::
 
-<Tabs groupId="language">
+<Tabs groupId="language" queryString>
 <TabItem value="python" label="Python">
 
 ```python
@@ -314,7 +314,7 @@ config :flagsmith_engine, :configuration,
 
 ## Get Flags for an Environment
 
-<Tabs groupId="language">
+<Tabs groupId="language" queryString>
 <TabItem value="python" label="Python">
 
 ```python
@@ -415,7 +415,7 @@ secret_button_feature_value = Flagsmith.Client.get_feature_value(flags, "secret_
 
 ## Get Flags for an Identity
 
-<Tabs groupId="language">
+<Tabs groupId="language" queryString>
 <TabItem value="python" label="Python">
 
 ```python
@@ -575,7 +575,7 @@ secret_button_feature_value = Flagsmith.Client.get_feature_value(flags, "secret_
 Default Flags are configured by passing in a function that is called when a Flag cannot be found or if the network
 request to the API fails when retrieving flags.
 
-<Tabs groupId="language">
+<Tabs groupId="language" queryString>
 <TabItem value="python" label="Python">
 
 ```python
@@ -778,7 +778,7 @@ To use it as a default handler, we recommend using the [flagsmith CLI](https://g
 generate the [Environment Document](/clients/overview#the-environment-document) and use our LocalFileHandler class, but
 you can also create your own offline handlers, by extending the base class.
 
-<Tabs groupId="language">
+<Tabs groupId="language" queryString>
 <TabItem value="python" label="Python">
 
 ```python
@@ -911,7 +911,7 @@ To achieve Local Evaluation, in most languages, the SDK spawns a separate thread
 changes to the Environment. In certain languages, you may be required to terminate this thread before cleaning up the
 instance of the Flagsmith client. Languages in which this is necessary are provided below.
 
-<Tabs groupId="language">
+<Tabs groupId="language" queryString>
 <TabItem value="java" label = "Java">
 
 ```java
@@ -956,7 +956,7 @@ any calls to the Flagsmith API. To use offline mode, you must also provide an
 
 You can modify the behaviour of the SDK during initialisation. Full configuration options are shown below.
 
-<Tabs groupId="language">
+<Tabs groupId="language" queryString>
 <TabItem value="python" label="Python">
 
 ```python
@@ -1663,7 +1663,7 @@ client_configuration = Flagsmith.Client.new(
 
 The following SDKs have code and functionality related to caching flags.
 
-<Tabs groupId="language">
+<Tabs groupId="language" queryString>
 <TabItem value="java" label="Java">
 
 If you would like to use in-memory caching, you will need to enable it (it is disabled by default). The main advantage
@@ -1872,7 +1872,7 @@ Note:
 
 The following SDKs have code and functionality related to logging.
 
-<Tabs groupId="language">
+<Tabs groupId="language" queryString>
 <TabItem value="java" label="Java">
 
 Logging is disabled by default. If you would like to enable it then call `.enableLogging()` on the client builder:
@@ -1902,7 +1902,7 @@ then include an implementation, i.e.:
 
 All our SDKs are Open Source.
 
-<Tabs groupId="language">
+<Tabs groupId="language" queryString>
 <TabItem value="python" label="Python">
 
 https://github.com/Flagsmith/flagsmith-python-client
