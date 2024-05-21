@@ -638,3 +638,66 @@ def test_disable_v2_versioning_returns_bad_request_if_not_using_v2_versioning(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_create_new_version_with_changes_in_single_request(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    data = {
+        "publish": True,
+        "feature_states_to_update": [
+            {
+                "feature_segment": None,
+                "enabled": True,
+                "feature_state_value": {"type": "unicode", "string_value": "updated!"},
+            }
+        ],
+        "feature_states_to_delete": [],  # TODO: test deleting a feature state
+        "feature_states_to_create": [
+            {
+                "feature_segment": {
+                    # TODO: priorities?
+                    "segment": segment.id,
+                },
+                "enabled": True,
+                "feature_state_value": {"type": "unicode", "string_value": "foo"},
+            }
+        ],
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    new_version_uuid = response.json()["uuid"]
+    new_version = EnvironmentFeatureVersion.objects.get(uuid=new_version_uuid)
+
+    assert new_version.feature_states.count() == 2
+
+    new_version_environment_fs = new_version.feature_states.filter(
+        feature_segment__isnull=True
+    ).get()
+    assert new_version_environment_fs.get_feature_state_value() == "updated!"
+    assert new_version_environment_fs.enabled is True
+
+    new_version_segment_fs = new_version.feature_states.filter(
+        feature_segment__segment=segment
+    ).get()
+    assert new_version_segment_fs.get_feature_state_value() == "foo"
+    assert new_version_segment_fs.enabled is True
+
+    assert new_version.published is True
+    assert new_version.is_live is True
