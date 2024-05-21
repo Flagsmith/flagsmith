@@ -613,7 +613,7 @@ def test_create_github_comment_on_segment_override_deleted(
     )
 
 
-def test_create_github_comment_on_using_v2(
+def test_create_github_comment_using_v2(
     admin_client_new: APIClient,
     feature_external_resource: FeatureExternalResource,
     environment_v2_versioning: Environment,
@@ -692,3 +692,57 @@ def test_create_github_comment_on_using_v2(
     )
 
     assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_create_github_comment_using_v2_fails_on_wrong_params(
+    admin_client_new: APIClient,
+    feature_external_resource: FeatureExternalResource,
+    environment_v2_versioning: Environment,
+    segment: Segment,
+    feature: Feature,
+    environment: Environment,
+    project: Project,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mocker: MockerFixture,
+) -> None:
+
+    # Given
+    mock_generate_token = mocker.patch(
+        "integrations.github.client.generate_token",
+    )
+    mock_generate_token.return_value = "mocked_token"
+
+    github_request_mock = mocker.patch(
+        "requests.post", side_effect=mocked_requests_post
+    )
+
+    environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-list",
+        args=[
+            environment_v2_versioning.id,
+            feature.id,
+            environment_feature_version.uuid,
+        ],
+    )
+
+    data = {
+        "feature_segment": {"segment": segment.id},
+        "enabled": True,
+        "feature_state_value": {
+            "string_value": {"value": "wrong structure"},
+        },
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    github_request_mock.assert_not_called()
