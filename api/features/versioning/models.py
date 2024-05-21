@@ -130,7 +130,9 @@ class EnvironmentFeatureVersion(
             self.save()
             environment_feature_version_published.send(self.__class__, instance=self)
 
-    def clone(self, environment: "Environment") -> "EnvironmentFeatureVersion":
+    def clone_to_environment(
+        self, environment: "Environment"
+    ) -> "EnvironmentFeatureVersion":
         _clone = deepcopy(self)
 
         _clone.uuid = None

@@ -188,7 +188,7 @@ class Environment(
             # Create a dictionary holding the environment feature versions (unique per feature)
             # to use in the cloned environment.
             clone_environment_feature_versions = {
-                efv.feature_id: efv.clone(environment=clone)
+                efv.feature_id: efv.clone_to_environment(environment=clone)
                 for efv in latest_environment_feature_versions
             }
 
