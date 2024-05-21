@@ -762,7 +762,7 @@ TRENCH_AUTH = {
     "MFA_METHODS": {
         "app": {
             "VERBOSE_NAME": "TOTP App",
-            "VALIDITY_PERIOD": 60 * 10,
+            "VALIDITY_PERIOD": 30,
             "USES_THIRD_PARTY_CLIENT": True,
             "HANDLER": "custom_auth.mfa.backends.application.CustomApplicationBackend",
         },
