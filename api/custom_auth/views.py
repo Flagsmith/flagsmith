@@ -1,17 +1,23 @@
 from django.contrib.auth import user_logged_out
 from django.utils.decorators import method_decorator
-from djoser.views import UserViewSet
+from djoser.views import TokenCreateView, UserViewSet
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
-from trench.views.authtoken import (
-    AuthTokenLoginOrRequestMFACode,
-    AuthTokenLoginWithMFACode,
+from trench.backends.provider import get_mfa_handler
+from trench.command.authenticate_second_factor import (
+    authenticate_second_step_command,
 )
+from trench.exceptions import MFAMethodDoesNotExistError, MFAValidationError
+from trench.responses import ErrorResponse
+from trench.serializers import CodeLoginSerializer
+from trench.utils import get_mfa_model, user_token_generator
+from trench.views.authtoken import MFAFirstStepAuthTokenView
 
 from custom_auth.serializers import CustomUserDelete
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
@@ -19,7 +25,7 @@ from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from .models import UserPasswordResetRequest
 
 
-class CustomAuthTokenLoginOrRequestMFACode(AuthTokenLoginOrRequestMFACode):
+class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView, MFAFirstStepAuthTokenView):
     """
     Class to handle throttling for login requests
     """
@@ -27,14 +33,44 @@ class CustomAuthTokenLoginOrRequestMFACode(AuthTokenLoginOrRequestMFACode):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "login"
 
+    def post(self, request: Request) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.user
+        try:
+            mfa_model = get_mfa_model()
+            mfa_method = mfa_model.objects.get_primary_active(user_id=user.id)
+            get_mfa_handler(mfa_method=mfa_method).dispatch_message()
+            return Response(
+                data={
+                    "ephemeral_token": user_token_generator.make_token(user),
+                    "method": mfa_method.name,
+                }
+            )
+        except MFAMethodDoesNotExistError:
+            return self._action(serializer)
 
-class CustomAuthTokenLoginWithMFACode(AuthTokenLoginWithMFACode):
+
+class CustomAuthTokenLoginWithMFACode(TokenCreateView):
     """
     Override class to add throttling
     """
 
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "mfa_code"
+
+    def post(self, request: Request) -> Response:
+        serializer = CodeLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            user = authenticate_second_step_command(
+                code=serializer.validated_data["code"],
+                ephemeral_token=serializer.validated_data["ephemeral_token"],
+            )
+            serializer.user = user
+            return self._action(serializer)
+        except MFAValidationError as cause:
+            return ErrorResponse(error=cause, status=status.HTTP_401_UNAUTHORIZED)
 
 
 @api_view(["DELETE"])

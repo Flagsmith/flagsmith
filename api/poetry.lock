@@ -1211,19 +1211,23 @@ typing_extensions = ">=3.6,<5"
 
 [[package]]
 name = "django-trench"
-version = "0.2.3"
+version = "0.3.1"
 description = "REST Multi-factor authentication package for Django"
 optional = false
 python-versions = "*"
 files = [
-    {file = "django-trench-0.2.3.tar.gz", hash = "sha256:63e189a057c45198d178ea79337e690250b484fcd8ff2057c9fd4b3699639853"},
+    {file = "django-trench-0.3.1.tar.gz", hash = "sha256:ee667681b62c3ab057754419e15c68df93556e586781e4382277ec094e2bc2aa"},
+    {file = "django_trench-0.3.1-py3-none-any.whl", hash = "sha256:1bca8eec1900187f8e5b7b6c63adfa5714258a41d8bdb83d1bee12645cc0cadf"},
 ]
 
 [package.dependencies]
-pyotp = ">=2.2.6"
-smsapi-client = ">=2.2.5"
-twilio = ">=6.18.1"
-yubico-client = ">=1.10.0"
+pyotp = ">=2.6.0"
+smsapi-client = ">=2.4.5"
+twilio = ">=6.56.0"
+yubico-client = ">=1.13.0"
+
+[package.extras]
+docs = ["sphinx (>=1.4)", "sphinx-rtd-theme"]
 
 [[package]]
 name = "djangorestframework"
@@ -1310,13 +1314,13 @@ test = ["cryptography", "pytest", "pytest-cov", "pytest-django", "pytest-xdist",
 
 [[package]]
 name = "djoser"
-version = "2.2.0"
+version = "2.2.2"
 description = "REST implementation of Django authentication system."
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "djoser-2.2.0-py3-none-any.whl", hash = "sha256:7b24718cdc51b4294b0abcf6bf0ead11aa3ca83652e351dfb04b7b8b15afa3b0"},
-    {file = "djoser-2.2.0.tar.gz", hash = "sha256:4aa48502df870c8b5f07109ad4a749cc881c37bb5efa85cf5462ea695a0dca8c"},
+    {file = "djoser-2.2.2-py3-none-any.whl", hash = "sha256:efb91ad61e4d5b8d664db029b5947df9d34078289ef2680a1ab665e047144b74"},
+    {file = "djoser-2.2.2.tar.gz", hash = "sha256:9deb831a1c8781ceff325699e1407b4e1be8b4588e87071621d88ba31c09349f"},
 ]
 
 [package.dependencies]
