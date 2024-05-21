@@ -8,3 +8,7 @@ features/workflows/logic/
 
 # Unit test coverage
 .coverage
+
+# Files added in CI/CD to indicate the type of deployment
+ENTERPRISE_VERSION
+SAAS_DEPLOYMENT
