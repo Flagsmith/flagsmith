@@ -476,7 +476,7 @@ def test_charge_for_api_call_count_overages_scale_up(
         organisation=organisation,
         allowed_seats=10,
         allowed_projects=3,
-        allowed_30d_api_calls=10_000,
+        allowed_30d_api_calls=100_000,
         chargebee_email="test@example.com",
         current_billing_term_starts_at=now - timedelta(days=30),
         current_billing_term_ends_at=now + timedelta(minutes=30),
@@ -498,7 +498,7 @@ def test_charge_for_api_call_count_overages_scale_up(
     mock_api_usage = mocker.patch(
         "organisations.tasks.get_current_api_usage",
     )
-    mock_api_usage.return_value = 12_005
+    mock_api_usage.return_value = 212_005
     assert OrganisationAPIBilling.objects.count() == 0
 
     # When
@@ -511,7 +511,7 @@ def test_charge_for_api_call_count_overages_scale_up(
             "addons": [
                 {
                     "id": "additional-api-scale-up-monthly",
-                    "quantity": 2,  # Two thousand API requests.
+                    "quantity": 2,  # 200k API requests.
                 }
             ],
             "prorate": False,
@@ -522,7 +522,7 @@ def test_charge_for_api_call_count_overages_scale_up(
     assert OrganisationAPIBilling.objects.count() == 1
     api_billing = OrganisationAPIBilling.objects.first()
     assert api_billing.organisation == organisation
-    assert api_billing.api_overage == 2000
+    assert api_billing.api_overage == 200_000
     assert api_billing.immediate_invoice is False
     assert api_billing.billed_at == now
 
@@ -575,7 +575,7 @@ def test_charge_for_api_call_count_overages_with_not_covered_plan(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_sub_1_api_usage_ratio(
+def test_charge_for_api_call_count_overages_under_api_limit(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -629,7 +629,7 @@ def test_charge_for_api_call_count_overages_start_up(
         organisation=organisation,
         allowed_seats=10,
         allowed_projects=3,
-        allowed_30d_api_calls=10_000,
+        allowed_30d_api_calls=100_000,
         chargebee_email="test@example.com",
         current_billing_term_starts_at=now - timedelta(days=30),
         current_billing_term_ends_at=now + timedelta(minutes=30),
@@ -651,7 +651,7 @@ def test_charge_for_api_call_count_overages_start_up(
     mock_api_usage = mocker.patch(
         "organisations.tasks.get_current_api_usage",
     )
-    mock_api_usage.return_value = 12_005
+    mock_api_usage.return_value = 202_005
     assert OrganisationAPIBilling.objects.count() == 0
 
     # When
@@ -664,7 +664,7 @@ def test_charge_for_api_call_count_overages_start_up(
             "addons": [
                 {
                     "id": "additional-api-start-up-monthly",
-                    "quantity": 2,  # Two thousand API requests.
+                    "quantity": 2,  # 200k API requests.
                 }
             ],
             "prorate": False,
@@ -675,13 +675,13 @@ def test_charge_for_api_call_count_overages_start_up(
     assert OrganisationAPIBilling.objects.count() == 1
     api_billing = OrganisationAPIBilling.objects.first()
     assert api_billing.organisation == organisation
-    assert api_billing.api_overage == 2000
+    assert api_billing.api_overage == 200_000
     assert api_billing.immediate_invoice is False
     assert api_billing.billed_at == now
 
     # Now attempt to rebill the account should fail
     calls_mock = mocker.patch(
-        "organisations.tasks.add_1000_api_calls_start_up",
+        "organisations.tasks.add_100k_api_calls_start_up",
     )
     charge_for_api_call_count_overages()
     assert OrganisationAPIBilling.objects.count() == 1
