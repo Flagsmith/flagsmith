@@ -10,3 +10,6 @@ class CustomApplicationBackend(ApplicationMessageDispatcher):
             "secret": self._mfa_method.secret,
         }
         return Response(data)
+
+    def validate_code(self, code: str) -> bool:
+        return self._get_otp().verify(otp=code, valid_window=20)
