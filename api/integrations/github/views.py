@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 from functools import wraps
 from typing import Any, Callable
@@ -30,6 +31,8 @@ from integrations.github.serializers import (
 )
 from organisations.permissions.permissions import GithubIsAdminOrganisation
 
+logger = logging.getLogger(__name__)
+
 
 def github_auth_required(func):
     @wraps(func)
@@ -56,16 +59,13 @@ def github_api_call_error_handler(
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs) -> Response:
+            default_error = "Failed to retrieve requested information from GitHub API."
             try:
                 return func(*args, **kwargs)
             except requests.RequestException as e:
+                logger.error(f"{error or default_error} Error: {str(e)}")
                 return Response(
-                    data={
-                        "detail": (
-                            f"{error or 'Failed to retrieve requested information from GitHub API.'}"
-                            f" Error: {str(e)}"
-                        )
-                    },
+                    data={"detail": (f"{error or default_error}" f" Error: {str(e)}")},
                     content_type="application/json",
                     status=status.HTTP_502_BAD_GATEWAY,
                 )
