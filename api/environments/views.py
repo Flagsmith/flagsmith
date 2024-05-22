@@ -1,6 +1,6 @@
 import logging
 
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import no_body, swagger_auto_schema
@@ -17,6 +17,7 @@ from environments.permissions.permissions import (
     NestedEnvironmentPermissions,
 )
 from environments.sdk.schemas import SDKEnvironmentDocumentModel
+from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import (
     disable_v2_versioning,
     enable_v2_versioning,
@@ -108,9 +109,28 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         queryset = Environment.objects.all()
 
         if self.action == "retrieve":
-            queryset = queryset.annotate(
-                total_segment_overrides=Count("feature_segments")
+            # Since we don't have the environment at this stage, we would need to query the database
+            # regardless, so it seems worthwhile to just query the database for the latest versions
+            # and use their existence as a proxy to whether v2 feature versioning is enabled.
+            latest_versions = EnvironmentFeatureVersion.objects.get_latest_versions_by_environment_api_key(
+                environment_api_key=self.kwargs["api_key"]
             )
+            if latest_versions:
+                # if there are latest versions (and hence v2 feature versioning is enabled), then
+                # we need to ensure that we're only counting the feature segments for those
+                # latest versions against the limits.
+                queryset = queryset.annotate(
+                    total_segment_overrides=Count(
+                        "feature_segments",
+                        filter=Q(
+                            feature_segments__environment_feature_version__in=latest_versions
+                        ),
+                    )
+                )
+            else:
+                queryset = queryset.annotate(
+                    total_segment_overrides=Count("feature_segments")
+                )
 
         return queryset
 

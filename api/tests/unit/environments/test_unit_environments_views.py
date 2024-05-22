@@ -20,6 +20,7 @@ from environments.models import Environment, EnvironmentAPIKey, Webhook
 from environments.permissions.constants import VIEW_ENVIRONMENT
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata, MetadataModelField
 from organisations.models import Organisation
 from projects.models import Project
@@ -935,3 +936,27 @@ def test_cannot_enable_v2_versioning_for_environment_already_enabled(
     assert response.json() == {"detail": "Environment already using v2 versioning."}
 
     mock_enable_v2_versioning.delay.assert_not_called()
+
+
+def test_total_segment_overrides_correctly_ignores_old_versions(
+    feature: Feature,
+    segment_featurestate: FeatureState,
+    environment_v2_versioning: Environment,
+    admin_client_new: APIClient,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-detail",
+        args=[environment_v2_versioning.api_key],
+    )
+
+    EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    ).publish(staff_user)
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.json()["total_segment_overrides"] == 1

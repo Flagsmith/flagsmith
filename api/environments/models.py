@@ -181,7 +181,7 @@ class Environment(
             # Grab the latest feature versions from the source environment.
             latest_environment_feature_versions = (
                 EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(
-                    environment=self
+                    environment_id=self.id
                 )
             )
 
