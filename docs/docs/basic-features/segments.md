@@ -198,8 +198,15 @@ Percentage Split is the only operator that does not require a trait. You can use
 [staged feature rollouts](/guides-and-examples/staged-feature-rollouts#creating-staged-rollouts).
 
 Percentage Split deterministically assigns a "bucket" to each identity solely based on its ID and not any traits,
-meaning that segment overrides that use Percentage Split will always result in the same feature value for a given
+meaning that Segment overrides that use Percentage Split will always result in the same feature value for a given
 identity.
+
+If you create a Segment with a single Percentage Split rule, Identities who are members of that split when the split
+value is set to, say, 10% will be guaranteed to also be in that split if it is changed to a value higher than 10%.
+
+If the Percentage Split is reduced in value, some Identities will be removed from that Percentage Split to maintain the
+balance. The algorithm is fairly simple and good to understand - it is
+[described here](/guides-and-examples/staged-feature-rollouts#how-does-it-work).
 
 </TabItem>
 <TabItem value="modulo" label="Modulo">

@@ -12,7 +12,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
 import { informationCircleOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
-import Checkbox from 'components/base/forms/Checkbox'
+import classNames from 'classnames'
 
 const HomePage = class extends React.Component {
   static contextTypes = {
@@ -302,7 +302,15 @@ const HomePage = class extends React.Component {
                       <div id='sign-up'>
                         {!isSignup ? (
                           <React.Fragment>
-                            <Card className='mb-3'>
+                            <Card
+                              className='mb-3'
+                              contentClassName={classNames(
+                                'd-flex flex-column gap-3',
+                                {
+                                  'bg-light200': preventEmailPassword,
+                                },
+                              )}
+                            >
                               <AccountProvider>
                                 {(
                                   { error, isLoading, isSaving },
@@ -310,7 +318,7 @@ const HomePage = class extends React.Component {
                                 ) => (
                                   <>
                                     {!!oauths.length && (
-                                      <div className='d-flex flex-column flex-xl-row gap-2 mb-4'>
+                                      <div className='d-flex flex-column flex-xl-row justify-content-center gap-2'>
                                         {oauths}
                                       </div>
                                     )}
@@ -452,11 +460,19 @@ const HomePage = class extends React.Component {
                           </React.Fragment>
                         ) : (
                           <React.Fragment>
-                            <Card className='mb-3'>
-                              {!!oauths.length && (
-                                <div className='row mb-4'>{oauths}</div>
+                            <Card
+                              className='mb-3'
+                              contentClassName={classNames(
+                                'd-flex flex-column gap-3',
+                                {
+                                  'bg-light200': preventEmailPassword,
+                                },
                               )}
-
+                            >
+                              {' '}
+                              {!!oauths.length && (
+                                <div className='row'>{oauths}</div>
+                              )}
                               {!preventEmailPassword && (
                                 <form
                                   id='form'

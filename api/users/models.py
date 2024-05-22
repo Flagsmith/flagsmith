@@ -9,7 +9,6 @@ from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Count, QuerySet
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
 from integrations.lead_tracking.hubspot.tasks import (
@@ -101,8 +100,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     email = models.EmailField(unique=True, null=False)
     objects = UserManager()
     username = models.CharField(unique=True, max_length=150, null=True, blank=True)
-    first_name = models.CharField(_("first name"), max_length=30)
-    last_name = models.CharField(_("last name"), max_length=150)
+    first_name = models.CharField("first name", max_length=30)
+    last_name = models.CharField("last name", max_length=150)
     google_user_id = models.CharField(max_length=50, null=True, blank=True)
     github_user_id = models.CharField(max_length=50, null=True, blank=True)
     marketing_consent_given = models.BooleanField(

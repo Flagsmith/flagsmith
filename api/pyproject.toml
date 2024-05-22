@@ -63,7 +63,7 @@ django-cors-headers = "~3.5.0"
 djangorestframework = "~3.12.1"
 gunicorn = "~22.0.0"
 pyparsing = "~2.4.7"
-requests = "~2.31.0"
+requests = "~2.32.0"
 six = "~1.16.0"
 whitenoise = "~6.0.0"
 dj-database-url = "~0.5.0"
@@ -137,7 +137,7 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.3.1" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.3.2" }
 
 [tool.poetry.group.dev.dependencies]
 django-test-migrations = "~1.2.0"
