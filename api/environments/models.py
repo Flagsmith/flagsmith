@@ -41,7 +41,6 @@ from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
-from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata
 from projects.models import Project
 from segments.models import Segment
@@ -172,34 +171,11 @@ class Environment(
         clone.api_key = api_key if api_key else create_hash()
         clone.save()
 
-        # Since identities are closely tied to the environment
-        # it does not make much sense to clone them, hence
-        # only clone feature states without identities
-        queryset = self.feature_states.filter(identity=None)
+        from environments.tasks import clone_environment_feature_states
 
-        if self.use_v2_feature_versioning:
-            # Grab the latest feature versions from the source environment.
-            latest_environment_feature_versions = (
-                EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(
-                    environment=self
-                )
-            )
-
-            # Create a dictionary holding the environment feature versions (unique per feature)
-            # to use in the cloned environment.
-            clone_environment_feature_versions = {
-                efv.feature_id: efv.clone_to_environment(environment=clone)
-                for efv in latest_environment_feature_versions
-            }
-
-            for feature_state in queryset.filter(
-                environment_feature_version__in=latest_environment_feature_versions
-            ):
-                clone_efv = clone_environment_feature_versions[feature_state.feature_id]
-                feature_state.clone(clone, environment_feature_version=clone_efv)
-        else:
-            for feature_state in queryset:
-                feature_state.clone(clone, live_from=feature_state.live_from)
+        clone_environment_feature_states.delay(
+            kwargs={"source_environment_id": self.id, "clone_environment_id": clone.id}
+        )
 
         return clone
 
