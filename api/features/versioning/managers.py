@@ -5,7 +5,6 @@ from django.db.models.query import QuerySet, RawQuerySet
 from softdelete.models import SoftDeleteManager
 
 if typing.TYPE_CHECKING:
-    from environments.models import Environment
     from features.versioning.models import EnvironmentFeatureVersion
 
 
@@ -14,12 +13,6 @@ with open(Path(__file__).parent.resolve() / "sql/get_latest_versions.sql") as f:
 
 
 class EnvironmentFeatureVersionManager(SoftDeleteManager):
-    def get_latest_versions(self, environment: "Environment") -> RawQuerySet:
-        """
-        Get the latest EnvironmentFeatureVersion objects for a given environment.
-        """
-        return self.get_latest_versions_by_environment_id(environment_id=environment.id)
-
     def get_latest_versions_by_environment_id(self, environment_id: int) -> RawQuerySet:
         """
         Get the latest EnvironmentFeatureVersion objects for a given environment.
@@ -35,7 +28,7 @@ class EnvironmentFeatureVersionManager(SoftDeleteManager):
         return self._get_latest_versions(environment_api_key=environment_api_key)
 
     def get_latest_versions_as_queryset(
-        self, environment: "Environment"
+        self, environment_id: int
     ) -> QuerySet["EnvironmentFeatureVersion"]:
         """
         Get the latest EnvironmentFeatureVersion objects for a given environment
@@ -47,7 +40,7 @@ class EnvironmentFeatureVersionManager(SoftDeleteManager):
         return self.filter(
             uuid__in=[
                 efv.uuid
-                for efv in self._get_latest_versions(environment_id=environment.id)
+                for efv in self._get_latest_versions(environment_id=environment_id)
             ]
         )
 
