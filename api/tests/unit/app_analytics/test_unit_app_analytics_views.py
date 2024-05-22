@@ -3,8 +3,8 @@ from datetime import date, timedelta
 
 import pytest
 from app_analytics.constants import (
-    _90_DAY_PERIOD,
     CURRENT_BILLING_PERIOD,
+    NINETY_DAY_PERIOD,
     PREVIOUS_BILLING_PERIOD,
 )
 from app_analytics.dataclasses import UsageData
@@ -233,14 +233,14 @@ def test_get_usage_data__previous_billing_period(
 
 
 @pytest.mark.freeze_time("2024-04-30T09:09:47.325132+00:00")
-def test_get_usage_data__90_day_period(
+def test_get_usage_data__ninety_day_period(
     mocker: MockerFixture,
     admin_client_new: APIClient,
     organisation: Organisation,
 ) -> None:
     # Given
     url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
-    url += f"?period={_90_DAY_PERIOD}"
+    url += f"?period={NINETY_DAY_PERIOD}"
 
     mocked_get_usage_data = mocker.patch(
         "app_analytics.analytics_db_service.get_usage_data_from_influxdb",
