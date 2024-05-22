@@ -107,7 +107,7 @@ def test_get_usage_data(mocker, admin_client, organisation):
             "environment_document": 0,
         },
     ]
-    mocked_get_usage_data.assert_called_once_with(organisation)
+    mocked_get_usage_data.assert_called_once_with(organisation, period=None)
 
 
 @pytest.mark.freeze_time("2024-04-30T09:09:47.325132+00:00")
