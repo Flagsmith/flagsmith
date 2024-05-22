@@ -119,6 +119,36 @@ Flagsmith.shared.getTraits(forIdentity: "test_user@test.com") {(result) in
 }
 ```
 
+To retrieve a flag for a particular identity:
+
+```swift
+Flagsmith.shared.getFeatureFlags(forIdentity: "test_user@test.com") {(result) in
+    switch result {
+    case .success(let flags):
+        for flag in flags {
+            let name = flag.feature.name
+            let value = flag.value?.stringValue
+            let enabled = flag.enabled
+            print(name, "= enabled:", enabled, "value:", value ?? "nil")
+        }
+    case .failure(let error):
+        print(error)
+    }
+}
+```
+
+If you would prefer to do this using async/await you can do the following:
+
+```swift
+let flags = try await Flagsmith.shared.getFeatureFlags(forIdentity: "test_user@test.com")
+for flag in flags {
+    let name = flag.feature.name
+    let value = flag.value?.stringValue
+    let enabled = flag.enabled
+    print(name, "= enabled:", enabled, "value:", value ?? "nil")
+}
+```
+
 ## Override Default Configuration
 
 In `AppDelegate.swift`:
