@@ -146,12 +146,14 @@ def fetch_github_resource(
     if response.links.get("next"):
         data["next"] = response.links.get("next")
 
-    # Return a Response object
-    return Response(
-        data=data,
-        content_type="application/json",
-        status=status.HTTP_200_OK,
-    )
+    return data
+
+
+# Response(
+#         data=data,
+#         content_type="application/json",
+#         status=status.HTTP_200_OK,
+#     )
 
 
 def fetch_github_repositories(installation_id: str) -> Response:

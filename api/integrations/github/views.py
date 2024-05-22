@@ -153,12 +153,16 @@ def fetch_pull_requests(request, organisation_pk) -> Response | None:
 
     query_params = RepoQueryParams.from_dict(query_serializer.validated_data.__dict__)
 
-    response: Response = fetch_github_resource(
+    data = fetch_github_resource(
         resource_type=ResourceType.PULL_REQUESTS,
         organisation_id=organisation_pk,
         params=query_params,
     )
-    return response
+    return Response(
+        data=data,
+        content_type="application/json",
+        status=status.HTTP_200_OK,
+    )
 
 
 @api_view(["GET"])
@@ -172,12 +176,16 @@ def fetch_issues(request, organisation_pk) -> Response | None:
 
     query_params = RepoQueryParams.from_dict(query_serializer.validated_data.__dict__)
 
-    response: Response = fetch_github_resource(
+    data = fetch_github_resource(
         resource_type=ResourceType.ISSUES,
         organisation_id=organisation_pk,
         params=query_params,
     )
-    return response
+    return Response(
+        data=data,
+        content_type="application/json",
+        status=status.HTTP_200_OK,
+    )
 
 
 @api_view(["GET"])
