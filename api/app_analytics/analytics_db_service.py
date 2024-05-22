@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from typing import List, Literal
+from typing import List
 
 from app_analytics.dataclasses import FeatureEvaluationData, UsageData
 from app_analytics.influxdb_wrapper import get_events_for_organisation
@@ -24,20 +24,14 @@ from features.models import Feature
 from organisations.models import Organisation
 
 from . import constants
+from .typing import PERIOD_TYPE
 
 
 def get_usage_data(
     organisation: Organisation,
     environment_id: int | None = None,
     project_id: int | None = None,
-    period: (
-        Literal[
-            constants.CURRENT_BILLING_PERIOD,
-            constants.PREVIOUS_BILLING_PERIOD,
-            constants._90_DAY_PERIOD,
-        ]
-        | None
-    ) = None,
+    period: PERIOD_TYPE | None = None,
 ) -> list[UsageData]:
     now = timezone.now()
 
@@ -68,7 +62,7 @@ def get_usage_data(
             date_start = f"-{(now - period_starts_at).days}d"
             date_stop = f"-{(now - period_ends_at).days}d"
 
-        case constants._90_DAY_PERIOD:
+        case constants.NINETY_DAY_PERIOD:
             period_starts_at = now - relativedelta(days=90)
             period_ends_at = now
             date_start = "-90d"
