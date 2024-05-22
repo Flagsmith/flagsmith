@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react' // we need this to make JSX compile
+import React, { FC, useEffect, useState } from 'react' // we need this to make JSX compile
 import ConfigProvider from 'common/providers/ConfigProvider'
 import ToggleChip from 'components/ToggleChip'
 import Utils from 'common/utils/utils'
@@ -8,6 +8,8 @@ import AuditLog from 'components/AuditLog'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import PageTitle from 'components/PageTitle'
 import Tag from 'components/tags/Tag'
+import { Link } from 'react-router-dom'
+import Constants from 'common/constants'
 
 type AuditLogType = {
   router: RouterChildContext['router']
@@ -23,14 +25,27 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
   const projectId = props.match.params.projectId
 
   const [environment, setEnvironment] = useState(Utils.fromParam().env)
-
+  useEffect(() => {
+    const currentParams = Utils.fromParam()
+    if (currentParams.env !== environment) {
+      props.router.history.replace(
+        `${document.location.pathname}?${Utils.toParam({
+          env: environment,
+          search: currentParams.search,
+        })}`,
+      )
+    }
+  }, [environment])
   const hasRbacPermission = Utils.getPlansPermission('AUDIT')
   if (!hasRbacPermission) {
     return (
-      <div>
+      <div className='app-container container'>
         <div className='text-center'>
-          To access this feature please upgrade your account to scaleup or
-          higher.
+          To access this feature please{' '}
+          <Link className='text-primary' to={Constants.upgradeURL}>
+            upgrade your account to scaleup
+          </Link>{' '}
+          or higher.
         </div>
       </div>
     )

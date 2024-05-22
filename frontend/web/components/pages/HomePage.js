@@ -12,9 +12,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
 import { informationCircleOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
-import Checkbox from 'components/base/forms/Checkbox'
-
-let controller = new AbortController()
+import classNames from 'classnames'
 
 const HomePage = class extends React.Component {
   static contextTypes = {
@@ -25,15 +23,20 @@ const HomePage = class extends React.Component {
 
   constructor(props, context) {
     super(props, context)
+
+    // Note that we are explicitly setting marketing consent to true
+    // here to reduce the complexity of the change. This is due to
+    // the addition of wording in our ToS and the move from Pipedrive
+    // to Hubspot.
+    // TODO: this can probably all be removed from the FE and the BE
+    // can handle always setting the marketing consent.
+    API.setCookie('marketing_consent_given', 'true')
     this.state = {
-      marketing_consent_given:
-        API.getCookie('marketing_consent_given') === 'true',
+      marketing_consent_given: true,
     }
   }
 
   addAlbacross() {
-    EventTarget.prototype.oldAddEventListener =
-      EventTarget.prototype.addEventListener
     window._nQc = Project.albacross
     const script = document.createElement('script')
     script.type = 'text/javascript'
@@ -41,30 +44,7 @@ const HomePage = class extends React.Component {
     script.src = 'https://serve.albacross.com/track.js'
     script.id = 'albacross'
 
-    EventTarget.prototype.addEventListener = function (
-      type,
-      listener,
-      options = false,
-    ) {
-      const parsedOptions =
-        typeof options == 'boolean' ? { capture: options } : options
-
-      EventTarget.prototype.oldAddEventListener.call(this, type, listener, {
-        signal: controller.signal,
-        ...parsedOptions,
-      })
-    }
-
     document.body.appendChild(script)
-  }
-
-  removeAlbacross() {
-    controller.abort()
-    controller = new AbortController()
-    EventTarget.prototype.addEventListener =
-      EventTarget.prototype.oldAddEventListener
-    document.body.removeChild(document.getElementById('albacross'))
-    delete window._nQc
   }
 
   componentDidUpdate(prevProps) {
@@ -80,15 +60,7 @@ const HomePage = class extends React.Component {
         this.props.location.pathname.indexOf('signup') !== -1
       ) {
         this.addAlbacross()
-      } else if (document.getElementById('albacross')) {
-        this.removeAlbacross()
       }
-    }
-  }
-
-  componentWillUnmount() {
-    if (document.getElementById('albacross')) {
-      this.removeAlbacross()
     }
   }
 
@@ -190,7 +162,7 @@ const HomePage = class extends React.Component {
     const disableOauthRegister = Utils.getFlagsmithHasFeature(
       'disable_oauth_registration',
     )
-    const oauthClasses = 'col-12 col-md-4'
+    const oauthClasses = 'col-12 col-xl-4'
 
     if ((!isSignup || !disableOauthRegister) && !disableSignup) {
       if (Utils.getFlagsmithValue('oauth_github')) {
@@ -198,7 +170,7 @@ const HomePage = class extends React.Component {
           <div className={oauthClasses}>
             <Button
               theme='secondary'
-              className='full-width flex-row justify-content-center align-items-center'
+              className='w-100'
               key='github'
               iconLeft='github'
               href={JSON.parse(Utils.getFlagsmithValue('oauth_github')).url}
@@ -218,7 +190,7 @@ const HomePage = class extends React.Component {
               }
             >
               <GoogleButton
-                className='full-width flex-row justify-content-center align-items-center'
+                className='w-100'
                 onSuccess={(e) => {
                   document.location = `${document.location.origin}/oauth/google?code=${e.access_token}`
                 }}
@@ -255,6 +227,7 @@ const HomePage = class extends React.Component {
                 }
               }}
               key='single-sign-on'
+              className='w-100'
             >
               Single Sign-On
             </Button>
@@ -329,7 +302,15 @@ const HomePage = class extends React.Component {
                       <div id='sign-up'>
                         {!isSignup ? (
                           <React.Fragment>
-                            <Card className='mb-3'>
+                            <Card
+                              className='mb-3'
+                              contentClassName={classNames(
+                                'd-flex flex-column gap-3',
+                                {
+                                  'bg-light200': preventEmailPassword,
+                                },
+                              )}
+                            >
                               <AccountProvider>
                                 {(
                                   { error, isLoading, isSaving },
@@ -337,7 +318,9 @@ const HomePage = class extends React.Component {
                                 ) => (
                                   <>
                                     {!!oauths.length && (
-                                      <div className='row mb-4'>{oauths}</div>
+                                      <div className='d-flex flex-column flex-xl-row justify-content-center gap-2'>
+                                        {oauths}
+                                      </div>
                                     )}
                                     {!preventEmailPassword && (
                                       <form
@@ -472,39 +455,24 @@ const HomePage = class extends React.Component {
                                     </Link>
                                   </Row>
                                 )}
-
-                                <div className='mt-4 text-center text-small text-muted'>
-                                  By signing up you agree to our{' '}
-                                  <a
-                                    style={{ opacity: 0.8 }}
-                                    target='_blank'
-                                    className='text-small'
-                                    href='https://flagsmith.com/terms-of-service/'
-                                    rel='noreferrer'
-                                  >
-                                    Terms of Service
-                                  </a>{' '}
-                                  and{' '}
-                                  <a
-                                    style={{ opacity: 0.8 }}
-                                    target='_blank'
-                                    className='text-small'
-                                    href='https://flagsmith.com/privacy-policy/'
-                                    rel='noreferrer'
-                                  >
-                                    Privacy Policy
-                                  </a>
-                                </div>
                               </div>
                             )}
                           </React.Fragment>
                         ) : (
                           <React.Fragment>
-                            <Card className='mb-3'>
-                              {!!oauths.length && (
-                                <div className='row mb-4'>{oauths}</div>
+                            <Card
+                              className='mb-3'
+                              contentClassName={classNames(
+                                'd-flex flex-column gap-3',
+                                {
+                                  'bg-light200': preventEmailPassword,
+                                },
                               )}
-
+                            >
+                              {' '}
+                              {!!oauths.length && (
+                                <div className='row'>{oauths}</div>
+                              )}
                               {!preventEmailPassword && (
                                 <form
                                   id='form'
@@ -633,27 +601,6 @@ const HomePage = class extends React.Component {
                                       name='password'
                                       id='password'
                                     />
-                                    {Utils.getFlagsmithHasFeature(
-                                      'mailing_list',
-                                    ) && (
-                                      <div>
-                                        <Checkbox
-                                          label={
-                                            'Yes, I would like to signup for the twice monthly newsletter (optional)'
-                                          }
-                                          onChange={() => {
-                                            this.setState({
-                                              marketing_consent_given:
-                                                !this.state
-                                                  .marketing_consent_given,
-                                            })
-                                          }}
-                                          checked={
-                                            this.state.marketing_consent_given
-                                          }
-                                        />
-                                      </div>
-                                    )}
                                     <div className='form-cta'>
                                       <Button
                                         data-test='signup-btn'
@@ -685,6 +632,28 @@ const HomePage = class extends React.Component {
                         )}
                       </div>
                     )}
+                  </div>
+                  <div className='mt-4 text-center text-small text-muted'>
+                    By signing up you agree to our{' '}
+                    <a
+                      style={{ opacity: 0.8 }}
+                      target='_blank'
+                      className='text-small'
+                      href='https://flagsmith.com/terms-of-service/'
+                      rel='noreferrer'
+                    >
+                      Terms of Service
+                    </a>{' '}
+                    and{' '}
+                    <a
+                      style={{ opacity: 0.8 }}
+                      target='_blank'
+                      className='text-small'
+                      href='https://flagsmith.com/privacy-policy/'
+                      rel='noreferrer'
+                    >
+                      Privacy Policy
+                    </a>
                   </div>
                 </div>
               </div>

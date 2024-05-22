@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 from itertools import chain
 from typing import TYPE_CHECKING, Dict, List, Optional
+from uuid import UUID
 
 from flag_engine.environments.integrations.models import IntegrationModel
 from flag_engine.environments.models import (
@@ -23,6 +24,9 @@ from flag_engine.segments.models import (
     SegmentModel,
     SegmentRuleModel,
 )
+
+from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
+from features.versioning.models import EnvironmentFeatureVersion
 
 if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import Identity, Trait
@@ -174,6 +178,8 @@ def map_mv_option_to_engine(
 
 def map_environment_to_engine(
     environment: "Environment",
+    *,
+    with_integrations: bool = True,
 ) -> EnvironmentModel:
     """
     Maps Core API's `environments.models.Environment` model instance to the
@@ -196,6 +202,16 @@ def map_environment_to_engine(
     project_segment_feature_states_by_segment_id = _get_segment_feature_states(
         project_segments,
         environment.pk,
+        latest_environment_feature_version_uuids=(
+            {
+                efv.uuid
+                for efv in EnvironmentFeatureVersion.objects.get_latest_versions_by_environment_id(
+                    environment.id
+                )
+            }
+            if environment.use_v2_feature_versioning
+            else []
+        ),
     )
     environment_feature_states: List["FeatureState"] = _get_prioritised_feature_states(
         [
@@ -215,22 +231,14 @@ def map_environment_to_engine(
     }
 
     # Read integrations.
-    integration_configs: dict[str, Optional["EnvironmentIntegrationModel"]] = {}
-    for attr_name in (
-        "amplitude_config",
-        "dynatrace_config",
-        "heap_config",
-        "mixpanel_config",
-        "rudderstack_config",
-        "segment_config",
-    ):
-        integration_config = getattr(environment, attr_name, None)
-        if integration_config and not integration_config.deleted:
-            integration_configs[attr_name] = integration_config
-
-    webhook_config: Optional["WebhookConfiguration"] = getattr(
-        environment, "webhook_config", None
-    )
+    integration_configs: dict[
+        str, "EnvironmentIntegrationModel | WebhookConfiguration | None"
+    ] = {}
+    if with_integrations:
+        for attr_name in IDENTITY_INTEGRATIONS_RELATION_NAMES:
+            integration_config = getattr(environment, attr_name, None)
+            if integration_config and not integration_config.deleted:
+                integration_configs[attr_name] = integration_config
 
     # No reading from ORM past this point!
 
@@ -291,9 +299,6 @@ def map_environment_to_engine(
     amplitude_config_model = map_integration_to_engine(
         integration_configs.pop("amplitude_config", None),
     )
-    dynatrace_config_model = map_integration_to_engine(
-        integration_configs.pop("dynatrace_config", None),
-    )
     heap_config_model = map_integration_to_engine(
         integration_configs.pop("heap_config", None),
     )
@@ -306,13 +311,8 @@ def map_environment_to_engine(
     segment_config_model = map_integration_to_engine(
         integration_configs.pop("segment_config", None),
     )
-
-    webhook_config_model = (
-        map_webhook_config_to_engine(
-            webhook_config,
-        )
-        if webhook_config and not webhook_config.deleted
-        else None
+    webhook_config_model = map_webhook_config_to_engine(
+        integration_configs.pop("webhook_config", None),
     )
 
     return EnvironmentModel(
@@ -333,7 +333,6 @@ def map_environment_to_engine(
         #
         # Integrations:
         amplitude_config=amplitude_config_model,
-        dynatrace_config=dynatrace_config_model,
         heap_config=heap_config_model,
         mixpanel_config=mixpanel_config_model,
         rudderstack_config=rudderstack_config_model,
@@ -413,6 +412,9 @@ def _get_prioritised_feature_states(
 ) -> List["FeatureState"]:
     prioritised_feature_state_by_feature_id = {}
     for feature_state in feature_states:
+        # TODO: this call to is_live was causing an N+1 issue.
+        #  For now, we have solved it with an extra select_related, but
+        #  there is probably a neater solution here.
         if not feature_state.is_live:
             continue
         if existing_feature_state := prioritised_feature_state_by_feature_id.get(
@@ -420,23 +422,35 @@ def _get_prioritised_feature_states(
         ):
             if existing_feature_state > feature_state:
                 continue
-        prioritised_feature_state_by_feature_id[
-            feature_state.feature_id
-        ] = feature_state
+        prioritised_feature_state_by_feature_id[feature_state.feature_id] = (
+            feature_state
+        )
     return list(prioritised_feature_state_by_feature_id.values())
 
 
 def _get_segment_feature_states(
     segments: Iterable["Segment"],
     environment_id: int,
+    latest_environment_feature_version_uuids: Iterable[UUID],
 ) -> Dict[int, List["FeatureState"]]:
     feature_states_by_segment_id = {}
+
     for segment in segments:
         segment_feature_states = feature_states_by_segment_id.setdefault(segment.pk, [])
+
         for feature_segment in segment.feature_segments.all():
             if feature_segment.environment_id != environment_id:
                 continue
+
+            if (
+                latest_environment_feature_version_uuids
+                and feature_segment.environment_feature_version_id
+                not in latest_environment_feature_version_uuids
+            ):
+                continue
+
             segment_feature_states += _get_prioritised_feature_states(
                 feature_segment.feature_states.all()
             )
+
     return feature_states_by_segment_id

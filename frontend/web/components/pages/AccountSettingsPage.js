@@ -17,6 +17,7 @@ import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import { Link } from 'react-router-dom'
 import InfoMessage from 'components/InfoMessage'
+import Constants from 'common/constants'
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -56,34 +57,40 @@ class TheComponent extends Component {
     })
   }
 
-  confirmDeleteAccount = (lastUserOrganisations, id) => {
+  confirmDeleteAccount = (lastUserOrganisations, id, email, auth_type) => {
     openModal(
       'Are you sure?',
       <ConfirmDeleteAccount
         userId={id}
         lastUserOrganisations={lastUserOrganisations}
+        email={email}
+        auth_type={auth_type}
       />,
       'p-0',
     )
   }
 
   invalidateToken = () => {
-    openConfirm(
-      'Invalidate Token',
-      <div>
-        Invalidating your token will generate a new token to use with our API,{' '}
-        <span className='text-dark font-weight-medium'>
-          your current token will no longer work
-        </span>
-        . Performing this action will also log you out, are you sure you wish to
-        do this?
-      </div>,
-      () => {
+    openConfirm({
+      body: (
+        <div>
+          Invalidating your token will generate a new token to use with our API,{' '}
+          <span className='text-dark font-weight-medium'>
+            your current token will no longer work
+          </span>
+          . Performing this action will also log you out, are you sure you wish
+          to do this?
+        </div>
+      ),
+      destructive: true,
+      onYes: () => {
         _data.delete(`${Project.api}auth/token/`).then(() => {
           AppActions.logout()
         })
       },
-    )
+      title: 'Invalidate Token',
+      yesText: 'Confirm',
+    })
   }
 
   savePassword = (e) => {
@@ -122,6 +129,7 @@ class TheComponent extends Component {
   render() {
     const {
       state: {
+        auth_type,
         current_password,
         email,
         error,
@@ -301,7 +309,12 @@ class TheComponent extends Component {
                           id='delete-user-btn'
                           data-test='delete-user-btn'
                           onClick={() =>
-                            this.confirmDeleteAccount(lastUserOrganisations, id)
+                            this.confirmDeleteAccount(
+                              lastUserOrganisations,
+                              id,
+                              email,
+                              auth_type,
+                            )
                           }
                           className='btn-with-icon btn-remove'
                         >
@@ -311,10 +324,10 @@ class TheComponent extends Component {
                     </div>
                   </div>
                 </TabItem>
-                <TabItem tabLabel='Keys'>
+                <TabItem tabLabel='API Keys'>
                   <div className='mt-6'>
                     <div className='col-md-6'>
-                      <h5>API Token</h5>
+                      <h5>Manage API Keys</h5>
                       <InfoMessage>
                         <p>
                           You can use this token to securely integrate with the
@@ -447,7 +460,7 @@ class TheComponent extends Component {
                       ) : (
                         <div className='text-right'>
                           <Link
-                            to='/organisation-settings'
+                            to={Constants.upgradeURL}
                             className='btn btn-primary text-center ml-auto mt-2 mb-2'
                           >
                             Manage payment plan

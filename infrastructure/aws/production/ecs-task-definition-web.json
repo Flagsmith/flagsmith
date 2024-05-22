@@ -44,6 +44,10 @@
                     "value": "10"
                 },
                 {
+                    "name": "CACHE_ENVIRONMENT_SEGMENTS_SECONDS",
+                    "value": "30"
+                },
+                {
                     "name": "CHARGEBEE_SITE",
                     "value": "flagsmith"
                 },
@@ -178,6 +182,14 @@
                 {
                     "name": "PIPEDRIVE_IGNORE_DOMAINS",
                     "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io,flagsmithe2etestdomain.io"
+                },
+                {
+                    "name": "ENABLE_HUBSPOT_LEAD_TRACKING",
+                    "value": "True"
+                },
+                {
+                    "name": "GITHUB_APP_ID",
+                    "value": "811209"
                 }
             ],
             "secrets": [
@@ -232,6 +244,14 @@
                 {
                     "name": "SSE_AUTHENTICATION_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:SSE_AUTHENTICATION_TOKEN::"
+                },
+                {
+                    "name": "GITHUB_WEBHOOK_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:GITHUB_WEBHOOK_SECRET::"
+                },
+                {
+                    "name": "GITHUB_PEM",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:GITHUB_PEM-E1Ot8p"
                 }
             ],
             "logConfiguration": {

@@ -3,18 +3,23 @@ import typing
 from copy import deepcopy
 
 from core.models import (
-    AbstractBaseExportableModel,
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.db import models
 from flag_engine.segments import constants
 
-from audit.constants import SEGMENT_CREATED_MESSAGE, SEGMENT_UPDATED_MESSAGE
+from audit.constants import (
+    SEGMENT_CREATED_MESSAGE,
+    SEGMENT_DELETED_MESSAGE,
+    SEGMENT_UPDATED_MESSAGE,
+)
 from audit.related_object_type import RelatedObjectType
 from features.models import Feature
+from metadata.models import Metadata
 from projects.models import Project
 
 logger = logging.getLogger(__name__)
@@ -39,6 +44,8 @@ class Segment(
     feature = models.ForeignKey(
         Feature, on_delete=models.CASCADE, related_name="segments", null=True
     )
+
+    metadata = GenericRelation(Metadata)
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
@@ -83,11 +90,14 @@ class Segment(
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         return SEGMENT_UPDATED_MESSAGE % self.name
 
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+        return SEGMENT_DELETED_MESSAGE % self.name
+
     def _get_project(self):
         return self.project
 
 
-class SegmentRule(AbstractBaseExportableModel):
+class SegmentRule(SoftDeleteExportableModel):
     ALL_RULE = "ALL"
     ANY_RULE = "ANY"
     NONE_RULE = "NONE"
@@ -132,7 +142,7 @@ class SegmentRule(AbstractBaseExportableModel):
 
 
 class Condition(
-    AbstractBaseExportableModel, abstract_base_auditable_model_factory(["uuid"])
+    SoftDeleteExportableModel, abstract_base_auditable_model_factory(["uuid"])
 ):
     history_record_class_path = "segments.models.HistoricalCondition"
     related_object_type = RelatedObjectType.SEGMENT

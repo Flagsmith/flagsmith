@@ -7,9 +7,10 @@ from unittest.mock import MagicMock, Mock
 import pytest
 from core.constants import STRING
 from core.request_origin import RequestOrigin
-from django.test import TestCase, override_settings
+from django.test import override_settings
 from django.utils import timezone
 from mypy_boto3_dynamodb.service_resource import Table
+from pytest_django import DjangoAssertNumQueries
 from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
 from pytest_mock import MockerFixture
 
@@ -26,8 +27,12 @@ from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.tasks import enable_v2_versioning
+from features.versioning.versioning_service import (
+    get_environment_flags_queryset,
+)
 from organisations.models import Organisation, OrganisationRole
-from projects.models import IdentityOverridesV2MigrationStatus, Project
+from projects.models import EdgeV2MigrationStatus, Project
 from segments.models import Segment
 from util.mappers import map_environment_to_environment_document
 
@@ -37,215 +42,220 @@ if typing.TYPE_CHECKING:
     from features.workflows.core.models import ChangeRequest
 
 
-@pytest.mark.django_db
-class EnvironmentTestCase(TestCase):
-    def setUp(self):
-        self.organisation = Organisation.objects.create(name="Test Org")
-        self.project = Project.objects.create(
-            name="Test Project", organisation=self.organisation
-        )
-        self.feature = Feature.objects.create(name="Test Feature", project=self.project)
-        # The environment is initialised in a non-saved state as we want to test the save
-        # functionality.
-        self.environment = Environment(name="Test Environment", project=self.project)
+def test_on_environment_create_makes_feature_states(
+    organisation: Organisation,
+    feature: Feature,
+    project: Project,
+) -> None:
+    # Given
+    assert feature.feature_states.count() == 1
 
-    def test_environment_should_be_created_with_feature_states(self):
-        # Given - set up data
+    # When
+    Environment.objects.create(name="New Environment", project=project)
 
-        # When
-        self.environment.save()
+    # Then
+    # A new environment comes with a new feature state.
+    feature.feature_states.count() == 2
 
-        # Then
-        feature_states = FeatureState.objects.filter(environment=self.environment)
-        assert hasattr(self.environment, "api_key")
-        assert feature_states.count() == 1
 
-    def test_on_creation_save_feature_states_get_created(self):
-        # These should be no feature states before saving
-        self.assertEqual(FeatureState.objects.count(), 0)
+def test_on_environment_update_feature_states(
+    environment: Environment,
+    feature: Feature,
+) -> None:
+    # When
+    feature.default_enabled = True
+    feature.save()
+    environment.save()
 
-        self.environment.save()
+    # Then
+    assert FeatureState.objects.count() == 1
 
-        # On the first save a new feature state should be created
-        self.assertEqual(FeatureState.objects.count(), 1)
 
-    def test_on_update_save_feature_states_get_updated_not_created(self):
-        self.environment.save()
+def test_environment_clone_does_not_modify_the_original_instance(
+    environment: Environment,
+) -> None:
+    # When
+    clone = environment.clone(name="Cloned env")
 
-        self.feature.default_enabled = True
-        self.feature.save()
-        self.environment.save()
+    # Then
+    assert clone.name != environment.name
+    assert clone.api_key != environment.api_key
 
-        self.assertEqual(FeatureState.objects.count(), 1)
 
-    def test_on_creation_save_feature_is_created_with_the_correct_default(self):
-        self.environment.save()
-        self.assertFalse(FeatureState.objects.get().enabled)
+def test_environment_clone_save_creates_feature_states(
+    environment: Environment, feature: Feature
+):
+    # Given
+    assert feature.feature_states.count() == 1
 
-    def test_clone_does_not_modify_the_original_instance(self):
-        # Given
-        self.environment.save()
+    # When
+    clone = environment.clone(name="Cloned env")
 
-        # When
-        clone = self.environment.clone(name="Cloned env")
+    # Then
+    assert feature.feature_states.count() == 2
+    feature_states = FeatureState.objects.filter(environment=clone)
+    assert feature_states.count() == 1
 
-        # Then
-        self.assertNotEqual(clone.name, self.environment.name)
-        self.assertNotEqual(clone.api_key, self.environment.api_key)
 
-    def test_clone_save_creates_feature_states(self):
-        # Given
-        self.environment.save()
+def test_environment_clone_does_not_modify_source_feature_state(
+    environment: Environment,
+    feature: Feature,
+):
+    # Given
+    source_feature_state_before_clone = feature.feature_states.first()
 
-        # When
-        clone = self.environment.clone(name="Cloned env")
+    # When
+    environment.clone(name="Cloned env")
+    source_feature_state_after_clone = FeatureState.objects.filter(
+        environment=environment
+    ).first()
 
-        # Then
-        feature_states = FeatureState.objects.filter(environment=clone)
-        assert feature_states.count() == 1
+    # Then
+    assert source_feature_state_before_clone == source_feature_state_after_clone
 
-    def test_clone_does_not_modify_source_feature_state(self):
-        # Given
-        self.environment.save()
-        source_feature_state_before_clone = FeatureState.objects.filter(
-            environment=self.environment
-        ).first()
 
-        # When
-        self.environment.clone(name="Cloned env")
-        source_feature_state_after_clone = FeatureState.objects.filter(
-            environment=self.environment
-        ).first()
+def test_environment_clone_does_not_create_identities(
+    environment: Environment,
+):
+    # Given
+    Identity.objects.create(environment=environment, identifier="test_identity")
 
-        # Then
-        assert source_feature_state_before_clone == source_feature_state_after_clone
+    # When
+    clone = environment.clone(name="Cloned env")
 
-    def test_clone_does_not_create_identity(self):
-        # Given
-        self.environment.save()
-        Identity.objects.create(
-            environment=self.environment, identifier="test_identity"
-        )
-        # When
-        clone = self.environment.clone(name="Cloned env")
+    # Then
+    assert clone.identities.count() == 0
 
-        # Then
-        assert clone.identities.count() == 0
 
-    def test_clone_clones_the_feature_states(self):
-        # Given
-        self.environment.save()
+def test_environment_clone_clones_the_feature_states(
+    environment: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    feature_state = feature.feature_states.first()
+    assert feature_state.enabled is False
 
-        # Enable the feature in the source environment
-        self.environment.feature_states.update(enabled=True)
+    # Enable the feature in the source environment
+    feature_state.enabled = True
+    feature_state.save()
 
-        # When
-        clone = self.environment.clone(name="Cloned env")
+    # When
+    clone = environment.clone(name="Cloned env")
 
-        # Then
-        assert clone.feature_states.first().enabled is True
+    # Then
+    assert clone.feature_states.first().enabled is True
 
-    def test_clone_clones_multivariate_feature_state_values(self):
-        # Given
-        self.environment.save()
 
-        mv_feature = Feature.objects.create(
-            type=MULTIVARIATE,
-            name="mv_feature",
-            initial_value="foo",
-            project=self.project,
-        )
-        variant_1 = MultivariateFeatureOption.objects.create(
-            feature=mv_feature,
-            default_percentage_allocation=10,
-            type=STRING,
-            string_value="bar",
-        )
-
-        # When
-        clone = self.environment.clone(name="Cloned env")
-
-        # Then
-        cloned_mv_feature_state = clone.feature_states.get(feature=mv_feature)
-        assert cloned_mv_feature_state.multivariate_feature_state_values.count() == 1
-
-        original_mv_fs_value = FeatureState.objects.get(
-            environment=self.environment, feature=mv_feature
-        ).multivariate_feature_state_values.first()
-        cloned_mv_fs_value = (
-            cloned_mv_feature_state.multivariate_feature_state_values.first()
-        )
-
-        assert original_mv_fs_value != cloned_mv_fs_value
-        assert (
-            original_mv_fs_value.multivariate_feature_option
-            == cloned_mv_fs_value.multivariate_feature_option
-            == variant_1
-        )
-        assert (
-            original_mv_fs_value.percentage_allocation
-            == cloned_mv_fs_value.percentage_allocation
-            == 10
-        )
-
-    @mock.patch("environments.models.environment_cache")
-    def test_get_from_cache_stores_environment_in_cache_on_success(self, mock_cache):
-        # Given
-        self.environment.save()
-        mock_cache.get.return_value = None
-
-        # When
-        environment = Environment.get_from_cache(self.environment.api_key)
-
-        # Then
-        assert environment == self.environment
-        mock_cache.set.assert_called_with(
-            self.environment.api_key, self.environment, timeout=60
-        )
-
-    def test_get_from_cache_returns_None_if_no_matching_environment(self):
-        # Given
-        api_key = "no-matching-env"
-
-        # When
-        env = Environment.get_from_cache(api_key)
-
-        # Then
-        assert env is None
-
-    def test_get_from_cache_accepts_environment_api_key_model_key(self):
-        # Given
-        self.environment.save()
-        api_key = EnvironmentAPIKey.objects.create(
-            name="Some key", environment=self.environment
-        )
-
-        # When
-        environment_from_cache = Environment.get_from_cache(api_key=api_key.key)
-
-        # Then
-        assert environment_from_cache == self.environment
-
-    def test_get_from_cache_with_null_environment_key_returns_null(self):
-        # Given
-        self.environment.save()
-
-        # When
-        environment = Environment.get_from_cache(None)
-
-        # Then
-        assert environment is None
-
-    @override_settings(
-        CACHE_BAD_ENVIRONMENTS_SECONDS=60, CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES=1
+def test_environment_clone_clones_multivariate_feature_state_values(
+    environment: Environment,
+    project: Project,
+) -> None:
+    # Given
+    mv_feature = Feature.objects.create(
+        type=MULTIVARIATE,
+        name="mv_feature",
+        initial_value="foo",
+        project=project,
     )
-    def test_get_from_cache_does_not_hit_database_if_api_key_in_bad_env_cache(self):
-        # Given
-        api_key = "bad-key"
+    variant_1 = MultivariateFeatureOption.objects.create(
+        feature=mv_feature,
+        default_percentage_allocation=10,
+        type=STRING,
+        string_value="bar",
+    )
 
-        # When
-        with self.assertNumQueries(1):
-            [Environment.get_from_cache(api_key) for _ in range(10)]
+    # When
+    clone = environment.clone(name="Cloned env")
+
+    # Then
+    cloned_mv_feature_state = clone.feature_states.get(feature=mv_feature)
+    assert cloned_mv_feature_state.multivariate_feature_state_values.count() == 1
+
+    original_mv_fs_value = FeatureState.objects.get(
+        environment=environment, feature=mv_feature
+    ).multivariate_feature_state_values.first()
+    cloned_mv_fs_value = (
+        cloned_mv_feature_state.multivariate_feature_state_values.first()
+    )
+
+    assert original_mv_fs_value != cloned_mv_fs_value
+    assert (
+        original_mv_fs_value.multivariate_feature_option
+        == cloned_mv_fs_value.multivariate_feature_option
+        == variant_1
+    )
+    assert (
+        original_mv_fs_value.percentage_allocation
+        == cloned_mv_fs_value.percentage_allocation
+        == 10
+    )
+
+
+@mock.patch("environments.models.environment_cache")
+def test_environment_get_from_cache_stores_environment_in_cache_on_success(
+    mock_cache: MagicMock,
+    environment: Environment,
+) -> None:
+    # Given
+    mock_cache.get.return_value = None
+
+    # When
+    environment = Environment.get_from_cache(environment.api_key)
+
+    # Then
+    assert environment == environment
+    mock_cache.set.assert_called_with(environment.api_key, environment, timeout=60)
+
+
+def test_environment_get_from_cache_returns_None_if_no_matching_environment(
+    environment: Environment,
+) -> None:
+    # Given
+    api_key = "no-matching-env"
+
+    # When
+    env = Environment.get_from_cache(api_key)
+
+    # Then
+    assert env is None
+
+
+def test_environment_get_from_cache_accepts_environment_api_key_model_key(
+    environment: Environment,
+) -> None:
+    # Given
+    api_key = EnvironmentAPIKey.objects.create(name="Some key", environment=environment)
+
+    # When
+    environment_from_cache = Environment.get_from_cache(api_key=api_key.key)
+
+    # Then
+    assert environment_from_cache == environment
+
+
+def test_environment_get_from_cache_with_null_environment_key_returns_null(
+    environment: Environment,
+) -> None:
+    # When
+    environment2 = Environment.get_from_cache(None)
+
+    # Then
+    assert environment2 is None
+
+
+@override_settings(
+    CACHE_BAD_ENVIRONMENTS_SECONDS=60, CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES=1
+)
+def test_environment_get_from_cache_does_not_hit_database_if_api_key_in_bad_env_cache(
+    django_assert_num_queries: DjangoAssertNumQueries,
+    db: None,
+) -> None:
+    # Given
+    api_key = "bad-key"
+
+    # When
+    with django_assert_num_queries(1):
+        [Environment.get_from_cache(api_key) for _ in range(10)]
 
 
 def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key(
@@ -494,9 +504,7 @@ def test_write_environments_to_dynamodb__project_environments_v2_migrated__call_
     mock_dynamo_env_v2_wrapper: Mock,
 ) -> None:
     # Given
-    dynamo_enabled_project.identity_overrides_v2_migration_status = (
-        IdentityOverridesV2MigrationStatus.COMPLETE
-    )
+    dynamo_enabled_project.edge_v2_migration_status = EdgeV2MigrationStatus.COMPLETE
     dynamo_enabled_project.save()
     mock_dynamo_env_v2_wrapper.is_enabled = True
 
@@ -521,9 +529,7 @@ def test_write_environments_to_dynamodb__project_environments_v2_migrated__wrapp
 ) -> None:
     # Given
     mock_dynamo_env_v2_wrapper.is_enabled = False
-    dynamo_enabled_project.identity_overrides_v2_migration_status = (
-        IdentityOverridesV2MigrationStatus.COMPLETE
-    )
+    dynamo_enabled_project.edge_v2_migration_status = EdgeV2MigrationStatus.COMPLETE
     dynamo_enabled_project.save()
 
     # When
@@ -534,10 +540,10 @@ def test_write_environments_to_dynamodb__project_environments_v2_migrated__wrapp
 
 
 @pytest.mark.parametrize(
-    "identity_overrides_v2_migration_status",
+    "edge_v2_migration_status",
     (
-        IdentityOverridesV2MigrationStatus.NOT_STARTED,
-        IdentityOverridesV2MigrationStatus.IN_PROGRESS,
+        EdgeV2MigrationStatus.NOT_STARTED,
+        EdgeV2MigrationStatus.IN_PROGRESS,
     ),
 )
 def test_write_environments_to_dynamodb__project_environments_v2_not_migrated__wrapper_not_called(
@@ -546,12 +552,10 @@ def test_write_environments_to_dynamodb__project_environments_v2_not_migrated__w
     dynamo_enabled_project_environment_two: Environment,
     mock_dynamo_env_wrapper: Mock,
     mock_dynamo_env_v2_wrapper: Mock,
-    identity_overrides_v2_migration_status: str,
+    edge_v2_migration_status: str,
 ) -> None:
     # Given
-    dynamo_enabled_project.identity_overrides_v2_migration_status = (
-        identity_overrides_v2_migration_status
-    )
+    dynamo_enabled_project.edge_v2_migration_status = edge_v2_migration_status
     dynamo_enabled_project.save()
     mock_dynamo_env_v2_wrapper.is_enabled = True
 
@@ -937,3 +941,56 @@ def test_create_environment_creates_feature_states_in_all_environments_and_envir
         EnvironmentFeatureVersion.objects.filter(environment=environment).count() == 2
     )
     assert environment.feature_states.count() == 2
+
+
+def test_clone_environment_v2_versioning(
+    feature: Feature,
+    feature_state: FeatureState,
+    segment: Segment,
+    segment_featurestate: FeatureState,
+    environment: Environment,
+) -> None:
+    # Given
+    expected_environment_fs_enabled_value = True
+    expected_segment_fs_enabled_value = True
+
+    # First let's create some new versions via the old versioning methods
+    feature_state.clone(environment, version=2)
+    feature_state.clone(environment, version=3)
+
+    # and a draft version
+    feature_state.clone(environment, as_draft=True)
+
+    # Now let's enable v2 versioning for the environment
+    enable_v2_versioning(environment.id)
+    environment.refresh_from_db()
+
+    # Finally, let's create another version using the new versioning methods
+    # and update some values on the feature states in it.
+    v2 = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment
+    )
+    v2.feature_states.filter(feature_segment__isnull=True).update(
+        enabled=expected_environment_fs_enabled_value
+    )
+    v2.feature_states.filter(feature_segment__isnull=False).update(
+        enabled=expected_segment_fs_enabled_value
+    )
+    v2.publish()
+
+    # When
+    cloned_environment = environment.clone(name="Cloned environment")
+
+    # Then
+    assert cloned_environment.use_v2_feature_versioning is True
+
+    cloned_environment_flags = get_environment_flags_queryset(cloned_environment)
+
+    assert (
+        cloned_environment_flags.get(feature_segment__isnull=True).enabled
+        is expected_environment_fs_enabled_value
+    )
+    assert (
+        cloned_environment_flags.get(feature_segment__segment=segment).enabled
+        is expected_segment_fs_enabled_value
+    )

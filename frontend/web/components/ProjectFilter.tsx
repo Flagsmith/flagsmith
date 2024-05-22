@@ -1,10 +1,10 @@
-import { FC, useMemo } from 'react'
+import { FC, useEffect, useMemo } from 'react'
 import { useGetProjectsQuery } from 'common/services/useProject'
 
 export type ProjectFilterType = {
-  organisationId: string
+  organisationId: number
   value?: string
-  onChange: (value: string) => void
+  onChange: (id: string, name: string) => void
   showAll?: boolean
 }
 
@@ -14,7 +14,19 @@ const ProjectFilter: FC<ProjectFilterType> = ({
   showAll,
   value,
 }) => {
-  const { data } = useGetProjectsQuery({ organisationId })
+  const { data } = useGetProjectsQuery(
+    { organisationId: `${organisationId}` },
+    { skip: isNaN(organisationId) },
+  )
+
+  useEffect(() => {
+    if (data && data.length === 1) {
+      const project = data[0]
+      onChange(`${project.id}`, project.name)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data])
+
   const foundValue = useMemo(
     () => data?.find((project) => `${project.id}` === value),
     [value, data],
@@ -30,7 +42,7 @@ const ProjectFilter: FC<ProjectFilterType> = ({
         (data || [])?.map((v) => ({ label: v.name, value: `${v.id}` })),
       )}
       onChange={(value: { value: string; label: string }) =>
-        onChange(value?.value || '')
+        onChange(value.value || '', value.label || '')
       }
     />
   )

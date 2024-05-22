@@ -1,20 +1,15 @@
-import React, {
-  FC,
-  useEffect,
-  useState,
-  forwardRef,
-  useImperativeHandle,
-} from 'react'
+import React, { FC, forwardRef, useCallback, useEffect, useState } from 'react'
 import { find } from 'lodash'
 import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
-
 import _data from 'common/data/base/_data'
 import {
   AvailablePermission,
   GroupPermission,
+  Role,
   User,
   UserGroup,
+  UserGroupSummary,
   UserPermission,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
@@ -27,16 +22,16 @@ import Switch from './Switch'
 import TabItem from './base/forms/TabItem'
 import Tabs from './base/forms/Tabs'
 import UserGroupList from './UserGroupList'
-import { PermissionLevel } from 'common/types/requests'
+import { PermissionLevel, Req } from 'common/types/requests'
 import { RouterChildContext } from 'react-router'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from './Icon'
 import {
+  useCreateRolePermissionsMutation,
   useGetRoleEnvironmentPermissionsQuery,
   useGetRoleOrganisationPermissionsQuery,
   useGetRoleProjectPermissionsQuery,
-  useCreateRolePermissionsMutation,
   useUpdateRolePermissionsMutation,
 } from 'common/services/useRolePermission'
 
@@ -51,35 +46,42 @@ import {
 } from 'common/services/useRolePermissionGroup'
 
 import {
-  useGetUserWithRolesQuery,
   useDeleteUserWithRolesMutation,
+  useGetUserWithRolesQuery,
 } from 'common/services/useUserWithRole'
 
 import {
-  useGetGroupWithRoleQuery,
   useDeleteGroupWithRoleMutation,
+  useGetGroupWithRoleQuery,
 } from 'common/services/useGroupWithRole'
 
 import MyRoleSelect from './MyRoleSelect'
-const OrganisationProvider = require('common/providers/OrganisationProvider')
+import Panel from './base/grid/Panel'
+import InputGroup from './base/forms/InputGroup'
+import classNames from 'classnames'
+import OrganisationProvider from 'common/providers/OrganisationProvider'
+import { useHasPermission } from 'common/providers/Permission'
 const Project = require('common/project')
 
 type EditPermissionModalType = {
-  group?: UserGroup
-  id: string
+  group?: UserGroupSummary
+  id: number
+  className?: string
   isGroup?: boolean
   level: PermissionLevel
   name: string
-  onSave: () => void
+  onSave?: () => void
+  envId?: number | string | undefined
   parentId?: string
   parentLevel?: string
   parentSettingsLink?: string
+  roleTabTitle?: string
   permissions?: UserPermission[]
   push: (route: string) => void
   user?: User
   role?: Role
+  roles?: Role[]
   permissionChanged: () => void
-  editPermissionsFromSettings?: boolean
   isEditUserPermission?: boolean
   isEditGroupPermission?: boolean
 }
@@ -97,19 +99,56 @@ type EntityPermissions = Omit<
   id?: number
   user?: number
 }
+const withAdminPermissions = (InnerComponent: any) => {
+  const WrappedComponent: FC<EditPermissionModalType> = (props) => {
+    const { id, level } = props
+    const notReady = !id || !level
+    const { isLoading: permissionsLoading, permission } = useHasPermission({
+      id: id,
+      level,
+      permission: 'ADMIN',
+    })
 
-const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
-  (props, ref) => {
+    if (permissionsLoading || notReady) {
+      return (
+        <div className='my-4 text-center'>
+          <Loader />
+        </div>
+      )
+    }
+    if (!permission) {
+      return (
+        <div className='my-4 text-center text-muted'>
+          To manage permissions you need to be admin of this {level}.
+        </div>
+      )
+    }
+
+    return <InnerComponent {...props} />
+  }
+  return WrappedComponent
+}
+const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
+  forwardRef((props) => {
     const [entityPermissions, setEntityPermissions] =
       useState<EntityPermissions>({ admin: false, permissions: [] })
     const [parentError, setParentError] = useState(false)
     const [saving, setSaving] = useState(false)
     const [showRoles, setShowRoles] = useState<boolean>(false)
+    const [valueChanged, setValueChanged] = useState(false)
+
     const [permissionWasCreated, setPermissionWasCreated] =
       useState<boolean>(false)
-    const [rolesSelected, setRolesSelected] = useState<Array>([])
+    const [rolesSelected, setRolesSelected] = useState<
+      {
+        role: number
+        user_role_id?: number
+        group_role_id?: number
+      }[]
+    >([])
+
     const {
-      editPermissionsFromSettings,
+      className,
       envId,
       group,
       id,
@@ -128,36 +167,13 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       roles,
       user,
     } = props
-    useImperativeHandle(
-      ref,
-      () => {
-        return {
-          onClosing() {
-            if (valueChanged) {
-              return new Promise((resolve) => {
-                openConfirm(
-                  'Are you sure?',
-                  'Closing this will discard your unsaved changes.',
-                  () => resolve(true),
-                  () => resolve(false),
-                  'Ok',
-                  'Cancel',
-                )
-              })
-            } else {
-              return Promise.resolve(true)
-            }
-          },
-        }
-      },
-      [],
-    )
+
     const { data: permissions } = useGetAvailablePermissionsQuery({ level })
     const { data: userWithRolesData, isSuccess: userWithRolesDataSuccesfull } =
       useGetUserWithRolesQuery(
         {
           org_id: id,
-          user_id: user?.id,
+          user_id: parseInt(`${user?.id}`),
         },
         { skip: level !== 'organisation' || !user?.id },
       )
@@ -167,7 +183,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       isSuccess: groupWithRolesDataSuccesfull,
     } = useGetGroupWithRoleQuery(
       {
-        group_id: group?.id,
+        group_id: parseInt(`${group?.id}`),
         org_id: id,
       },
       { skip: level !== 'organisation' || !group?.id },
@@ -181,6 +197,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         }))
         setRolesSelected(resultArray)
       }
+      //eslint-disable-next-line
     }, [userWithRolesDataSuccesfull])
 
     useEffect(() => {
@@ -191,9 +208,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         }))
         setRolesSelected(resultArray)
       }
+      //eslint-disable-next-line
     }, [groupWithRolesDataSuccesfull])
 
-    const processResults = (results: (UserPermission & GroupPermission)[]) => {
+    const processResults = (results: (UserPermission | GroupPermission)[]) => {
       let entityPermissions:
         | (Omit<EntityPermissions, 'user' | 'group' | 'role'> & {
             user?: any
@@ -201,10 +219,16 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
             role?: any
           })
         | undefined = isGroup
-        ? find(results || [], (r) => r.group.id === group?.id)
+        ? find(
+            results || [],
+            (r) => (r as GroupPermission).group.id === group?.id,
+          )
         : role
-        ? find(results || [], (r) => r.role === role?.id)
-        : find(results || [], (r) => r.user?.id === user?.id)
+        ? find(results || [], (r) => (r as GroupPermission).role === role?.id)
+        : find(
+            results || [],
+            (r) => (r as UserPermission).user?.id === user?.id,
+          )
 
       if (!entityPermissions) {
         entityPermissions = { admin: false, permissions: [] }
@@ -263,13 +287,12 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         permissionChanged?.()
         onSave?.()
         setSaving(false)
-        if (editPermissionsFromSettings) {
-          close()
-        }
       }
       if (errorUpdating || errorCreating) {
         setSaving(false)
       }
+
+      //eslint-disable-next-line
     }, [
       errorUpdating,
       errorCreating,
@@ -282,8 +305,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     const { data: organisationPermissions, isLoading: organisationIsLoading } =
       useGetRoleOrganisationPermissionsQuery(
         {
-          organisation_id: role?.organisation,
-          role_id: role?.id,
+          organisation_id: parseInt(`${role?.organisation}`),
+          role_id: parseInt(`${role?.id}`),
         },
         { skip: !role || level !== 'organisation' },
       )
@@ -291,17 +314,16 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     const { data: projectPermissions, isLoading: projectIsLoading } =
       useGetRoleProjectPermissionsQuery(
         {
-          organisation_id: role?.organisation,
-          project_id: id,
-          role_id: role?.id,
+          organisation_id: parseInt(`${role?.organisation}`),
+          project_id: parseInt(`${id}`),
+          role_id: parseInt(`${role?.id}`),
         },
         {
           skip:
             !id ||
-            envId ||
+            !!envId ||
             // TODO: https://github.com/Flagsmith/flagsmith/issues/3020
             !role?.organisation ||
-            !Utils.getFlagsmithHasFeature('show_role_management') ||
             level !== 'project',
         },
       )
@@ -309,16 +331,12 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     const { data: envPermissions, isLoading: envIsLoading } =
       useGetRoleEnvironmentPermissionsQuery(
         {
-          env_id: envId || id,
-          organisation_id: role?.organisation,
-          role_id: role?.id,
+          env_id: parseInt(`${envId || id}`),
+          organisation_id: parseInt(`${role?.organisation}`),
+          role_id: parseInt(`${role?.id}`),
         },
         {
-          skip:
-            !role ||
-            !id ||
-            !Utils.getFlagsmithHasFeature('show_role_management') ||
-            level !== 'environment',
+          skip: !role || (!envId && !id) || level !== 'environment',
         },
       )
 
@@ -333,6 +351,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         )
         setEntityPermissions(entityPermissions)
       }
+      //eslint-disable-next-line
     }, [organisationPermissions, organisationIsLoading])
 
     useEffect(() => {
@@ -340,6 +359,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         const entityPermissions = processResults(projectPermissions?.results)
         setEntityPermissions(entityPermissions)
       }
+      //eslint-disable-next-line
     }, [projectPermissions, projectIsLoading])
 
     useEffect(() => {
@@ -347,6 +367,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         const entityPermissions = processResults(envPermissions?.results)
         setEntityPermissions(entityPermissions)
       }
+      //eslint-disable-next-line
     }, [envPermissions, envIsLoading])
 
     useEffect(() => {
@@ -400,13 +421,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       return entityPermissions.permissions.includes(key)
     }
 
-    const close = () => {
-      closeModal()
-    }
-
-    const save = () => {
+    const save = useCallback(() => {
       const entityId =
         typeof entityPermissions.id === 'undefined' ? '' : entityPermissions.id
+      setValueChanged(false)
       if (!role) {
         const url = isGroup
           ? `${level}s/${id}/user-group-permissions/${entityId}`
@@ -417,17 +435,25 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           `${Project.api}${url}${entityId && '/'}`,
           entityPermissions,
         )
-          .then(() => {
+          .then((res: EntityPermissions) => {
+            setEntityPermissions(res)
+            toast(
+              `${
+                level.charAt(0).toUpperCase() + level.slice(1)
+              } Permissions Saved`,
+            )
             onSave && onSave()
-            close()
           })
           .catch(() => {
+            toast(`Error Saving Permissions`, 'danger')
+          })
+          .finally(() => {
             setSaving(false)
           })
       } else {
         const body = {
           permissions: entityPermissions.permissions,
-        }
+        } as Partial<Req['createRolePermission']['body']>
         if (level === 'project') {
           body.admin = entityPermissions.admin
           body.project = id
@@ -438,24 +464,46 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         }
         if (entityId || permissionWasCreated) {
           updateRolePermissions({
-            body,
-            id: entityId,
-            level: level === 'organisation' ? level : `${level}s`,
+            body: body as Req['createRolePermission']['body'],
+            id: entityId as number,
+            level:
+              level === 'organisation'
+                ? level
+                : (`${level}s` as PermissionLevel),
             organisation_id: role.organisation,
             role_id: role.id,
-          })
+          }).then(onRoleSaved as any)
         } else {
           createRolePermissions({
-            body,
-            id: entityId,
-            level: level === 'organisation' ? level : `${level}s`,
+            body: body as Req['createRolePermission']['body'],
+            level:
+              level === 'organisation'
+                ? level
+                : (`${level}s` as PermissionLevel),
             organisation_id: role.organisation,
             role_id: role.id,
-          })
+          }).then(onRoleSaved as any)
         }
       }
-    }
+    }, [
+      createRolePermissions,
+      entityPermissions,
+      envId,
+      id,
+      isGroup,
+      level,
+      onSave,
+      permissionWasCreated,
+      role,
+      updateRolePermissions,
+    ])
 
+    useEffect(() => {
+      if (valueChanged) {
+        save()
+      }
+      //eslint-disable-next-line
+    }, [valueChanged])
     const togglePermission = (key: string) => {
       if (role) {
         permissionChanged?.()
@@ -492,7 +540,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         admin: !entityPermissions.admin,
       })
     }
-    const addRole = (roleId: string) => {
+    const addRole = (roleId: number) => {
       if (level === 'organisation') {
         if (user) {
           createRolePermissionUser({
@@ -515,7 +563,22 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       }
     }
 
-    const removeOwner = (roleId: string) => {
+    const onRoleRemoved = (res: { error?: any }) => {
+      if (!res?.error) {
+        toast('User role removed')
+      } else {
+        toast('Error removing role', 'danger')
+      }
+    }
+
+    const onRoleSaved = (res: { error?: any }) => {
+      // @ts-ignore rtk incorrect types
+      if (res.error) {
+        toast('Failed to Save', 'danger')
+      }
+    }
+
+    const removeOwner = (roleId: number) => {
       const roleSelected = rolesAdded.find((item) => item.id === roleId)
       if (level === 'organisation') {
         if (user) {
@@ -524,13 +587,13 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               org_id: id,
               role_id: roleId,
               user_id: user?.id,
-            })
+            }).then(onRoleRemoved as any)
           } else {
             deleteRolePermissionUser({
               organisation_id: id,
               role_id: roleId,
-              user_id: roleSelected.user_role_id,
-            })
+              user_id: roleSelected?.user_role_id,
+            }).then(onRoleRemoved as any)
           }
         }
         if (group) {
@@ -539,13 +602,13 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               group_id: group?.id,
               org_id: id,
               role_id: roleId,
-            })
-          } else {
+            }).then(onRoleRemoved as any)
+          } else if (roleSelected) {
             deleteRolePermissionGroup({
               group_id: roleSelected.group_role_id,
               organisation_id: id,
               role_id: roleId,
-            })
+            }).then(onRoleRemoved as any)
           }
         }
       }
@@ -572,9 +635,13 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         }
         toast('Role assigned')
       }
+      //eslint-disable-next-line
     }, [userAdded, usersData, groupsData, groupAdded])
 
-    const getRoles = (roles = [], selectedRoles) => {
+    const getRoles = (
+      roles: Role[] = [],
+      selectedRoles: typeof rolesSelected,
+    ) => {
       return roles
         .filter((v) => selectedRoles.find((a) => a.role === v.id))
         .map((role) => {
@@ -602,16 +669,18 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     const isAdmin = admin()
     const hasRbacPermission = Utils.getPlansPermission('RBAC')
 
+    const [search, setSearch] = useState()
+
     return !permissions || !entityPermissions ? (
       <div className='modal-body text-center'>
         <Loader />
       </div>
     ) : (
       <div>
-        <div className='modal-body px-4'>
-          <div className='mb-2 mt-4'>
-            {level !== 'organisation' && (
-              <Row className={role ? 'px-3 py-2' : ''}>
+        <div className={classNames('modal-body', className || 'px-4 mt-4')}>
+          {level !== 'organisation' && (
+            <div className='mb-2'>
+              <Row className={role ? 'py-2' : ''}>
                 <Flex>
                   <div className='font-weight-medium text-dark mb-1'>
                     Administrator
@@ -637,14 +706,30 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                   </div>
                 </Flex>
                 <Switch
-                  disabled={!hasRbacPermission}
-                  onChange={toggleAdmin}
+                  disabled={!hasRbacPermission || saving}
+                  onChange={() => {
+                    toggleAdmin()
+                    setValueChanged(true)
+                  }}
                   checked={isAdmin}
                 />
               </Row>
-            )}
-          </div>
+            </div>
+          )}
+          {!hasRbacPermission && (
+            <span>
+              Role-based access is not available on our Free Plan. Please visit{' '}
+              <a href='https://flagsmith.com/pricing/' className='text-primary'>
+                our Pricing Page
+              </a>{' '}
+              for more information on our licensing options.
+            </span>
+          )}
           <PanelSearch
+            filterRow={(item: AvailablePermission, search) => {
+              const name = Format.enumeration.get(item.key).toLowerCase()
+              return name.includes(search?.toLowerCase() || '')
+            }}
             title='Permissions'
             className='no-pad mb-2'
             items={permissions}
@@ -666,8 +751,13 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                       <div className='list-item-subtitle'>{p.description}</div>
                     </Flex>
                     <Switch
-                      onChange={() => togglePermission(p.key)}
-                      disabled={disabled || admin() || !hasRbacPermission}
+                      onChange={() => {
+                        setValueChanged(true)
+                        togglePermission(p.key)
+                      }}
+                      disabled={
+                        disabled || admin() || !hasRbacPermission || saving
+                      }
                       checked={!disabled && hasPermission(p.key)}
                     />
                   </Row>
@@ -679,11 +769,17 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           <p className='text-right mt-5 text-dark'>
             This will edit the permissions for{' '}
             <strong>
-              {isGroup
-                ? `the ${name} group`
-                : role
-                ? ` ${role.name}`
-                : ` ${name}`}
+              {isGroup ? (
+                `the ${group?.name || ''} group`
+              ) : user ? (
+                <>
+                  {user.first_name || ''} {user.last_name || ''}
+                </>
+              ) : role ? (
+                ` ${role.name}`
+              ) : (
+                ` ${name}`
+              )}
             </strong>
             .
           </p>
@@ -710,89 +806,72 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
             </div>
           )}
         </div>
-        {Utils.getFlagsmithHasFeature('show_role_management') &&
-          roles &&
-          level === 'organisation' && (
-            <FormGroup className='px-4'>
-              <InputGroup
-                component={
-                  <div>
-                    <Row>
-                      <strong style={{ width: 70 }}>Roles: </strong>
-                      {rolesAdded?.map((r) => (
-                        <Row
-                          key={r.id}
-                          onClick={() => removeOwner(r.id)}
-                          className='chip'
-                          style={{ marginBottom: 4, marginTop: 4 }}
-                        >
-                          <span className='font-weight-bold'>{r.name}</span>
-                          <span className='chip-icon ion'>
-                            <IonIcon
-                              icon={closeIcon}
-                              style={{ fontSize: '13px' }}
-                            />
-                          </span>
-                        </Row>
-                      ))}
-                      <Button
-                        theme='text'
-                        onClick={() => setShowRoles(true)}
-                        style={{ width: 70 }}
+        {roles && level === 'organisation' && (
+          <FormGroup className='px-4'>
+            <InputGroup
+              component={
+                <div>
+                  <Row>
+                    <strong style={{ width: 70 }}>Roles: </strong>
+                    {rolesAdded?.map((r) => (
+                      <Row
+                        key={r.id}
+                        onClick={() => removeOwner(r.id)}
+                        className='chip'
+                        style={{ marginBottom: 4, marginTop: 4 }}
                       >
-                        Add Role
-                      </Button>
-                    </Row>
-                  </div>
-                }
-                type='text'
-                title='Assign roles'
-                tooltip='Assigns what role the user/group will have'
-                inputProps={{
-                  className: 'full-width',
-                  style: { minHeight: 80 },
-                }}
-                className='full-width'
-                placeholder='Add an optional description...'
-              />
-            </FormGroup>
-          )}
-        {Utils.getFlagsmithHasFeature('show_role_management') &&
-          level !== 'environment' &&
-          level !== 'project' && (
-            <div className='px-4'>
-              <MyRoleSelect
-                orgId={id}
-                level={level}
-                value={rolesSelected?.map((v) => v.role)}
-                onAdd={addRole}
-                onRemove={removeOwner}
-                isOpen={showRoles}
-                onToggle={() => setShowRoles(!showRoles)}
-              />
-            </div>
-          )}
-        <div className='modal-footer'>
-          {!role && (
-            <Button className='mr-2' onClick={closeModal} theme='secondary'>
-              Cancel
-            </Button>
-          )}
-          <Button
-            onClick={save}
-            data-test='update-feature-btn'
-            id='update-feature-btn'
-            disabled={saving || !hasRbacPermission}
-          >
-            {saving ? 'Saving' : 'Save Permissions'}
-          </Button>
-        </div>
+                        <span className='font-weight-bold'>{r.name}</span>
+                        <span className='chip-icon ion'>
+                          <IonIcon
+                            icon={closeIcon}
+                            style={{ fontSize: '13px' }}
+                          />
+                        </span>
+                      </Row>
+                    ))}
+                    <Button
+                      theme='text'
+                      onClick={() => setShowRoles(true)}
+                      style={{ width: 70 }}
+                    >
+                      Add Role
+                    </Button>
+                  </Row>
+                </div>
+              }
+              type='text'
+              title='Assign roles'
+              tooltip='Assigns what role the user/group will have'
+              inputProps={{
+                className: 'full-width',
+                style: { minHeight: 80 },
+              }}
+              className='full-width'
+              placeholder='Add an optional description...'
+            />
+          </FormGroup>
+        )}
+        {level !== 'environment' && level !== 'project' && (
+          <div className='px-4'>
+            <MyRoleSelect
+              orgId={id}
+              level={level}
+              value={rolesSelected?.map((v) => v.role)}
+              onAdd={addRole}
+              onRemove={removeOwner}
+              isOpen={showRoles}
+              onToggle={() => setShowRoles(!showRoles)}
+            />
+          </div>
+        )}
       </div>
     )
-  },
+  }),
 )
 
-export const EditPermissionsModal = ConfigProvider(_EditPermissionsModal)
+export const EditPermissionsModal = ConfigProvider(
+  _EditPermissionsModal,
+) as FC<EditPermissionModalType>
 
 const rolesWidths = [250, 600, 100]
 const EditPermissions: FC<EditPermissionsType> = (props) => {
@@ -848,13 +927,12 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
       'p-0 side-modal',
     )
   }
-  const editRolePermissions = (role) => {
+  const editRolePermissions = (role: Role) => {
     openModal(
       `Edit ${Format.camelCase(level)} Role Permissions`,
       <EditPermissionsModal
         name={`${role.name}`}
         id={id}
-        editPermissionsFromSettings
         envId={envId}
         level={level}
         role={role}
@@ -863,10 +941,11 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
     )
   }
   const hasRbacPermission = Utils.getPlansPermission('RBAC')
-
   return (
     <div className='mt-4'>
-      <h5>Manage Permissions</h5>
+      <Row>
+        <h5>Manage Permissions</h5>
+      </Row>
       <p className='fs-small lh-sm col-md-8 mb-4'>
         Flagsmith lets you manage fine-grained permissions for your projects and
         environments.{' '}
@@ -879,10 +958,10 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
           Learn about User Roles.
         </Button>
       </p>
-      <Tabs value={tab} onChange={setTab} theme='pill'>
+      <Tabs urlParam='type' value={tab} onChange={setTab} theme='pill'>
         <TabItem tabLabel='Users'>
           <OrganisationProvider>
-            {({ isLoading, users }: { isLoading: boolean; users?: User[] }) => (
+            {({ isLoading, users }) => (
               <div className='mt-4'>
                 {isLoading && !users?.length && (
                   <div className='centered-container'>
@@ -954,7 +1033,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                 {role === 'ADMIN' ? (
                                   <Flex className='table-column fs-small lh-sm'>
                                     <Tooltip
-                                      html
                                       title={'Organisation Administrator'}
                                     >
                                       {
@@ -1018,89 +1096,88 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
               <UserGroupList
                 noTitle
                 orgId={AccountStore.getOrganisation().id}
+                projectId={level === 'project' && id}
                 onClick={(group: UserGroup) => editGroupPermissions(group)}
               />
             </div>
           </FormGroup>
         </TabItem>
-        {Utils.getFlagsmithHasFeature('show_role_management') && (
-          <TabItem tabLabel='Roles'>
-            {hasRbacPermission ? (
-              <>
-                <Row space className='mt-4'>
-                  <h5 className='m-b-0'>{roleTabTitle}</h5>
-                </Row>
-                <PanelSearch
-                  id='org-members-list'
-                  title={'Roles'}
-                  className='no-pad'
-                  items={roles}
-                  itemHeight={65}
-                  header={
-                    <Row className='table-header px-3'>
-                      <div
-                        style={{
-                          width: rolesWidths[0],
-                        }}
-                      >
-                        Roles
-                      </div>
-                      <div
-                        style={{
-                          width: rolesWidths[1],
-                        }}
-                      >
-                        Description
-                      </div>
-                    </Row>
-                  }
-                  renderRow={(role) => (
-                    <Row
-                      className='list-item clickable cursor-pointer'
-                      key={role.id}
+        <TabItem tabLabel='Roles'>
+          {hasRbacPermission ? (
+            <>
+              <Row space className='mt-4'>
+                <h5 className='m-b-0'>{roleTabTitle}</h5>
+              </Row>
+              <PanelSearch
+                id='org-members-list'
+                title={'Roles'}
+                className='no-pad'
+                items={roles}
+                itemHeight={65}
+                header={
+                  <Row className='table-header px-3'>
+                    <div
+                      style={{
+                        width: rolesWidths[0],
+                      }}
                     >
-                      <Row
-                        onClick={() => editRolePermissions(role)}
-                        className='table-column px-3'
-                        style={{
-                          width: rolesWidths[0],
-                        }}
-                      >
-                        {role.name}
-                      </Row>
-                      <Row
-                        className='table-column px-3'
-                        onClick={() => editRolePermissions(role)}
-                        style={{
-                          width: rolesWidths[1],
-                        }}
-                      >
-                        {role.description}
-                      </Row>
+                      Roles
+                    </div>
+                    <div
+                      style={{
+                        width: rolesWidths[1],
+                      }}
+                    >
+                      Description
+                    </div>
+                  </Row>
+                }
+                renderRow={(role: Role) => (
+                  <Row
+                    className='list-item clickable cursor-pointer'
+                    key={role.id}
+                  >
+                    <Row
+                      onClick={() => editRolePermissions(role)}
+                      className='table-column px-3'
+                      style={{
+                        width: rolesWidths[0],
+                      }}
+                    >
+                      {role.name}
                     </Row>
-                  )}
-                  renderNoResults={
-                    <Panel title={'Roles'} className='no-pad'>
-                      <div className='search-list'>
-                        <Row className='list-item p-3 text-muted'>
-                          {`You currently have no roles with ${level} permissions.`}
-                        </Row>
-                      </div>
-                    </Panel>
-                  }
-                  isLoading={false}
-                />
-              </>
-            ) : (
-              <div className='mt-4'>
-                <InfoMessage>
-                  To use <strong>role</strong> features you have to upgrade your
-                  plan.
-                </InfoMessage>
-              </div>
-            )}
-          </TabItem>
-        )}
+                    <Row
+                      className='table-column px-3'
+                      onClick={() => editRolePermissions(role)}
+                      style={{
+                        width: rolesWidths[1],
+                      }}
+                    >
+                      {role.description}
+                    </Row>
+                  </Row>
+                )}
+                renderNoResults={
+                  <Panel title={'Roles'} className='no-pad'>
+                    <div className='search-list'>
+                      <Row className='list-item p-3 text-muted'>
+                        {`You currently have no roles with ${level} permissions.`}
+                      </Row>
+                    </div>
+                  </Panel>
+                }
+                isLoading={false}
+              />
+            </>
+          ) : (
+            <div className='mt-4'>
+              <InfoMessage>
+                To use <strong>role</strong> features you have to upgrade your
+                plan.
+              </InfoMessage>
+            </div>
+          )}
+        </TabItem>
       </Tabs>
     </div>
   )

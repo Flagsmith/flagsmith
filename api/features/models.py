@@ -5,12 +5,14 @@ import logging
 import typing
 import uuid
 from copy import deepcopy
+from dataclasses import asdict
 
 from core.models import (
     AbstractBaseExportableModel,
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
     ObjectDoesNotExist,
@@ -19,9 +21,9 @@ from django.core.exceptions import (
 from django.db import models
 from django.db.models import Max, Q, QuerySet
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import (
     AFTER_CREATE,
+    AFTER_SAVE,
     BEFORE_CREATE,
     BEFORE_SAVE,
     LifecycleModelMixin,
@@ -72,6 +74,8 @@ from features.value_types import (
     STRING,
 )
 from features.versioning.models import EnvironmentFeatureVersion
+from integrations.github.models import GithubConfiguration
+from metadata.models import Metadata
 from projects.models import Project
 from projects.tags.models import Tag
 
@@ -94,7 +98,7 @@ class Feature(
     project = models.ForeignKey(
         Project,
         related_name="features",
-        help_text=_(
+        help_text=(
             "Changing the project selected will remove previous Feature States for the previously "
             "associated projects Environments that are related to this Feature. New default "
             "Feature States will be created for the new selected projects Environments for this "
@@ -126,10 +130,41 @@ class Feature(
 
     objects = FeatureManager()
 
+    metadata = GenericRelation(Metadata)
+
     class Meta:
         # Note: uniqueness index is added in explicit SQL in the migrations (See 0005, 0050)
         # TODO: after upgrade to Django 4.0 use UniqueConstraint()
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
+
+    @hook(AFTER_SAVE)
+    def create_github_comment(self) -> None:
+        from integrations.github.github import GithubData, generate_data
+        from integrations.github.tasks import (
+            call_github_app_webhook_for_feature_state,
+        )
+        from webhooks.webhooks import WebhookEventType
+
+        if (
+            self.external_resources.exists()
+            and self.project.github_project.exists()
+            and self.project.organisation.github_config.exists()
+            and self.deleted_at
+        ):
+            github_configuration = GithubConfiguration.objects.get(
+                organisation_id=self.project.organisation_id
+            )
+
+            feature_data: GithubData = generate_data(
+                github_configuration=github_configuration,
+                feature=self,
+                type=WebhookEventType.FLAG_DELETED.value,
+                feature_states=[],
+            )
+
+            call_github_app_webhook_for_feature_state.delay(
+                args=(asdict(feature_data),),
+            )
 
     @hook(AFTER_CREATE)
     def create_feature_states(self):
@@ -327,9 +362,11 @@ class FeatureSegment(
                         pair[0] for pair in new_feature_segment_id_priorities
                     ],
                     "user_id": getattr(request.user, "id", None),
-                    "master_api_key_id": request.master_api_key.id
-                    if hasattr(request, "master_api_key")
-                    else None,
+                    "master_api_key_id": (
+                        request.master_api_key.id
+                        if hasattr(request, "master_api_key")
+                        else None
+                    ),
                     "changed_at": timezone.now().isoformat(),
                 }
             )
@@ -542,7 +579,10 @@ class FeatureState(
     @property
     def is_live(self) -> bool:
         if self.environment.use_v2_feature_versioning:
-            return self.environment_feature_version.is_live
+            return (
+                self.environment_feature_version is not None
+                and self.environment_feature_version.is_live
+            )
         else:
             return (
                 self.version is not None
@@ -584,7 +624,9 @@ class FeatureState(
             )
 
         clone.environment = env
-        clone.version = None if as_draft else version or self.version
+        clone.version = (
+            None if as_draft or environment_feature_version else version or self.version
+        )
         clone.live_from = live_from
         clone.environment_feature_version = environment_feature_version
         clone.save()
@@ -691,6 +733,7 @@ class FeatureState(
     def check_for_duplicate_feature_state(self):
         if self.version is None:
             return
+
         filter_ = Q(
             environment=self.environment,
             feature=self.feature,
@@ -787,9 +830,11 @@ class FeatureState(
         kwargs = {
             "feature": feature,
             "environment": environment,
-            "enabled": False
-            if environment.project.prevent_flag_defaults
-            else feature.default_enabled,
+            "enabled": (
+                False
+                if environment.project.prevent_flag_defaults
+                else feature.default_enabled
+            ),
         }
         if environment.use_v2_feature_versioning:
             kwargs.update(
@@ -943,6 +988,53 @@ class FeatureState(
             and self.version > other.version
         ) or (self.version is not None and other.version is None)
 
+    @staticmethod
+    def copy_identity_feature_states(
+        target_identity: "Identity", source_identity: "Identity"
+    ) -> None:
+        target_feature_states: dict[int, FeatureState] = (
+            target_identity.get_overridden_feature_states()
+        )
+        source_feature_states: dict[int, FeatureState] = (
+            source_identity.get_overridden_feature_states()
+        )
+
+        # Delete own feature states not in source_identity
+        feature_states_to_delete = list(
+            target_feature_states.keys() - source_feature_states.keys()
+        )
+        for feature_state_id in feature_states_to_delete:
+            target_feature_states[feature_state_id].delete()
+
+        # Clone source_identity's feature states to target_identity
+        for source_feature_id, source_feature_state in source_feature_states.items():
+            # Get target feature_state if exists in target identity or create new one
+            target_feature_state: FeatureState = target_feature_states.get(
+                source_feature_id
+            ) or FeatureState.objects.create(
+                environment=target_identity.environment,
+                identity=target_identity,
+                feature=source_feature_state.feature,
+            )
+
+            # Copy enabled value from source feature_state
+            target_feature_state.enabled = source_feature_states[
+                source_feature_id
+            ].enabled
+
+            if source_feature_state.feature.type == MULTIVARIATE:
+                mv_values = [
+                    mv_value.clone(feature_state=target_feature_state, persist=False)
+                    for mv_value in source_feature_state.multivariate_feature_state_values.all()
+                ]
+                MultivariateFeatureStateValue.objects.bulk_create(mv_values)
+
+            target_feature_state.feature_state_value.copy_from(
+                source_feature_state.feature_state_value
+            )
+
+            target_feature_state.save()
+
 
 class FeatureStateValue(
     AbstractBaseFeatureValueModel,
@@ -967,6 +1059,14 @@ class FeatureStateValue(
         clone.feature_state = feature_state
         clone.save()
         return clone
+
+    def copy_from(self, source_feature_state_value: "FeatureStateValue"):
+        # Copy feature state type and values from given feature state value.
+        self.type = source_feature_state_value.type
+        self.boolean_value = source_feature_state_value.boolean_value
+        self.integer_value = source_feature_state_value.integer_value
+        self.string_value = source_feature_state_value.string_value
+        self.save()
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         fs = self.feature_state

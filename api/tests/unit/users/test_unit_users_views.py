@@ -608,22 +608,25 @@ def test_group_admin_can_retrieve_group(
     assert response.status_code == status.HTTP_200_OK
 
 
+def delete_user(
+    user: FFAdminUser,
+    password: str = None,
+    delete_orphan_organisations: bool = True,
+):
+    client = APIClient()
+    client.force_authenticate(user)
+    data = {
+        "delete_orphan_organisations": delete_orphan_organisations,
+    }
+    if password:
+        data["password"] = password
+
+    url = "/api/v1/auth/users/me/"
+    return client.delete(url, data=json.dumps(data), content_type="application/json")
+
+
 @pytest.mark.django_db
 def test_delete_user():
-    def delete_user(
-        user: FFAdminUser, password: str, delete_orphan_organisations: bool = True
-    ):
-        client = APIClient()
-        client.force_authenticate(user)
-        data = {
-            "current_password": password,
-            "delete_orphan_organisations": delete_orphan_organisations,
-        }
-        url = "/api/v1/auth/users/me/"
-        return client.delete(
-            url, data=json.dumps(data), content_type="application/json"
-        )
-
     # create a couple of users
     email1 = "test1@example.com"
     email2 = "test2@example.com"
@@ -633,7 +636,7 @@ def test_delete_user():
     user2 = FFAdminUser.objects.create_user(email=email2, password=password)
     user3 = FFAdminUser.objects.create_user(email=email3, password=password)
 
-    # crete some organizations
+    # create some organizations
     org1 = Organisation.objects.create(name="org1")
     org2 = Organisation.objects.create(name="org2")
     org3 = Organisation.objects.create(name="org3")
@@ -679,6 +682,42 @@ def test_delete_user():
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert not FFAdminUser.objects.filter(email=email3).exists()
     assert Organisation.objects.filter(name="org1").count() == 1
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("password", [None, "", "random"])
+def test_delete_user_social_auth_with_no_password(password):
+    google_auth_user_email = "google@example.com"
+    github_auth_user_email = "github@example.com"
+
+    # We have given each social auth test user their own org since all the other org
+    # logic has been checked in the email/password users tests and we're just doing a
+    # sanity check here to make sure that the related org is deleted.
+    google_auth_user_org = Organisation.objects.create(name="google_auth_user_org")
+    github_auth_user_org = Organisation.objects.create(name="github_auth_user_org")
+
+    google_auth_user = FFAdminUser.objects.create_user(
+        email=google_auth_user_email, google_user_id=123456
+    )
+    github_auth_user = FFAdminUser.objects.create_user(
+        email=github_auth_user_email, github_user_id=123456
+    )
+
+    # Add social auth users to their orgs
+    google_auth_user_org.users.add(google_auth_user)
+    github_auth_user_org.users.add(github_auth_user)
+
+    # Delete google_auth_user
+    response = delete_user(google_auth_user, password, delete_orphan_organisations=True)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not FFAdminUser.objects.filter(email=google_auth_user_email).exists()
+    assert Organisation.objects.filter(name="google_auth_user_org").count() == 0
+
+    # Delete github_auth_user
+    response = delete_user(github_auth_user, password, delete_orphan_organisations=True)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not FFAdminUser.objects.filter(email=github_auth_user_email).exists()
+    assert Organisation.objects.filter(name="github_auth_user_org").count() == 0
 
 
 @pytest.mark.django_db

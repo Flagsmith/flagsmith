@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import logging
 import typing
 from copy import deepcopy
@@ -11,15 +8,13 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
 from django.db import models
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import (
     AFTER_CREATE,
     AFTER_DELETE,
     AFTER_SAVE,
     AFTER_UPDATE,
-    BEFORE_UPDATE,
     LifecycleModel,
     hook,
 )
@@ -36,6 +31,7 @@ from environments.api_keys import (
     generate_client_api_key,
     generate_server_api_key,
 )
+from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
 from environments.dynamodb import (
     DynamoEnvironmentAPIKeyWrapper,
     DynamoEnvironmentV2Wrapper,
@@ -44,11 +40,12 @@ from environments.dynamodb import (
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
-from features.versioning.exceptions import FeatureVersioningError
+from features.multivariate.models import MultivariateFeatureStateValue
+from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata
-from projects.models import IdentityOverridesV2MigrationStatus, Project
+from projects.models import Project
 from segments.models import Segment
-from util.mappers import map_environment_to_environment_document
+from util.mappers import map_environment_to_sdk_document
 from webhooks.models import AbstractBaseExportableWebhookModel
 
 logger = logging.getLogger(__name__)
@@ -80,7 +77,7 @@ class Environment(
     project = models.ForeignKey(
         "projects.Project",
         related_name="environments",
-        help_text=_(
+        help_text=(
             "Changing the project selected will remove all previous Feature States for"
             " the previously associated projects Features that are related to this"
             " Environment. New default Feature States will be created for the new"
@@ -150,10 +147,6 @@ class Environment(
         # TODO: this could rebuild the cache itself (using an async task)
         environment_cache.delete(self.initial_value("api_key"))
 
-    @hook(BEFORE_UPDATE, when="use_v2_feature_versioning", was=True, is_now=False)
-    def validate_use_v2_feature_versioning(self):
-        raise FeatureVersioningError("Cannot revert from v2 feature versioning.")
-
     @hook(AFTER_DELETE)
     def delete_from_dynamo(self):
         if self.project.enable_dynamo_db and environment_wrapper.is_enabled:
@@ -182,8 +175,31 @@ class Environment(
         # Since identities are closely tied to the environment
         # it does not make much sense to clone them, hence
         # only clone feature states without identities
-        for feature_state in self.feature_states.filter(identity=None):
-            feature_state.clone(clone, live_from=feature_state.live_from)
+        queryset = self.feature_states.filter(identity=None)
+
+        if self.use_v2_feature_versioning:
+            # Grab the latest feature versions from the source environment.
+            latest_environment_feature_versions = (
+                EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(
+                    environment_id=self.id
+                )
+            )
+
+            # Create a dictionary holding the environment feature versions (unique per feature)
+            # to use in the cloned environment.
+            clone_environment_feature_versions = {
+                efv.feature_id: efv.clone_to_environment(environment=clone)
+                for efv in latest_environment_feature_versions
+            }
+
+            for feature_state in queryset.filter(
+                environment_feature_version__in=latest_environment_feature_versions
+            ):
+                clone_efv = clone_environment_feature_versions[feature_state.feature_id]
+                feature_state.clone(clone, environment_feature_version=clone_efv)
+        else:
+            for feature_state in queryset:
+                feature_state.clone(clone, live_from=feature_state.live_from)
 
         return clone
 
@@ -213,11 +229,7 @@ class Environment(
                 select_related_args = (
                     "project",
                     "project__organisation",
-                    "mixpanel_config",
-                    "segment_config",
-                    "amplitude_config",
-                    "heap_config",
-                    "dynatrace_config",
+                    *IDENTITY_INTEGRATIONS_RELATION_NAMES,
                 )
                 base_qs = cls.objects.select_related(*select_related_args).defer(
                     "description"
@@ -243,7 +255,24 @@ class Environment(
             Q(id=environment_id) if environment_id else Q(project_id=project_id)
         )
         environments = list(
-            cls.objects.filter_for_document_builder(environments_filter)
+            cls.objects.filter_for_document_builder(
+                environments_filter,
+                extra_select_related=IDENTITY_INTEGRATIONS_RELATION_NAMES,
+                extra_prefetch_related=[
+                    Prefetch(
+                        "feature_states",
+                        queryset=FeatureState.objects.select_related(
+                            "feature", "feature_state_value"
+                        ),
+                    ),
+                    Prefetch(
+                        "feature_states__multivariate_feature_state_values",
+                        queryset=MultivariateFeatureStateValue.objects.select_related(
+                            "multivariate_feature_option"
+                        ),
+                    ),
+                ],
+            )
         )
         if not environments:
             return
@@ -261,11 +290,7 @@ class Environment(
 
         environment_wrapper.write_environments(environments)
 
-        if (
-            project.identity_overrides_v2_migration_status
-            == IdentityOverridesV2MigrationStatus.COMPLETE
-            and environment_v2_wrapper.is_enabled
-        ):
+        if project.edge_v2_environments_migrated and environment_v2_wrapper.is_enabled:
             environment_v2_wrapper.write_environments(environments)
 
     def get_feature_state(
@@ -369,8 +394,40 @@ class Environment(
         cls,
         api_key: str,
     ) -> dict[str, typing.Any]:
-        environment = cls.objects.filter_for_document_builder(api_key=api_key).get()
-        return map_environment_to_environment_document(environment)
+        environment = cls.objects.filter_for_document_builder(
+            api_key=api_key,
+            extra_prefetch_related=[
+                Prefetch(
+                    "feature_states",
+                    queryset=FeatureState.objects.select_related(
+                        "feature",
+                        "feature_state_value",
+                        "identity",
+                        "identity__environment",
+                    ).prefetch_related(
+                        Prefetch(
+                            "identity__identity_features",
+                            queryset=FeatureState.objects.select_related(
+                                "feature", "feature_state_value", "environment"
+                            ),
+                        ),
+                        Prefetch(
+                            "identity__identity_features__multivariate_feature_state_values",
+                            queryset=MultivariateFeatureStateValue.objects.select_related(
+                                "multivariate_feature_option"
+                            ),
+                        ),
+                    ),
+                ),
+                Prefetch(
+                    "feature_states__multivariate_feature_state_values",
+                    queryset=MultivariateFeatureStateValue.objects.select_related(
+                        "multivariate_feature_option"
+                    ),
+                ),
+            ],
+        ).get()
+        return map_environment_to_sdk_document(environment)
 
     def _get_environment(self):
         return self

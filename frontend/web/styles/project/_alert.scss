@@ -6,20 +6,12 @@
   .app-container {
     margin-top: 130px;
   }
-  .aside {
-    margin-top: 60px;
-    height: calc(100% - 60px);
-  }
   &.hide {
     .navbar {
       margin-top: 0;
     }
     .app-container {
       margin-top: 70px;
-    }
-    .aside {
-      margin-top: 0;
-      height: 100%;
     }
   }
 }
@@ -51,7 +43,7 @@
   .title {
     font-weight: 500;
     margin-bottom: 2px;
-    color: $text-icon-dark;
+    color: $body-color;
   }
   a {
     color: $primary;
@@ -59,7 +51,7 @@
   }
   strong {
     font-weight: 500;
-    color: $text-icon-dark;
+    color: $body-color;
   }
 }
 .alert-success {
@@ -68,7 +60,7 @@
   .title {
     font-weight: 500;
     margin-bottom: 2px;
-    color: $text-icon-dark;
+    color: $body-color;
   }
   a {
     color: $primary;
@@ -76,7 +68,7 @@
   }
   strong {
     font-weight: 500;
-    color: $text-icon-dark;
+    color: $body-color;
   }
 }
 
@@ -129,5 +121,5 @@
   }
 }
 .text-info {
-  color: $bt-brand-primary !important;
+  color: $primary !important;
 }

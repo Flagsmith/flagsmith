@@ -8,10 +8,9 @@ import {
     createRemoteConfig,
     editRemoteConfig,
     log,
-    login,
-    waitAndRefresh,
-    waitForElementVisible,
-} from '../helpers.cafe';
+    login, refreshUntilElementVisible,
+    waitForElementVisible
+} from "../helpers.cafe";
 import { E2E_USER, PASSWORD } from '../config';
 import fetch from 'node-fetch';
 import flagsmith from 'flagsmith/isomorphic';
@@ -31,8 +30,8 @@ export default async () => {
     await waitForElementVisible(byId('features-page'))
     await click('#env-settings-link')
     await click(byId('enable-versioning'))
-    await click('#confirm-toggle-feature-btn')
-    await waitAndRefresh()
+    await click('#confirm-btn-yes')
+    await waitForElementVisible(byId('feature-versioning-enabled'))
 
     log('Create feature 1')
     await createRemoteConfig(0, 'a', 'small')

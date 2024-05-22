@@ -12,14 +12,13 @@
     <link rel="stylesheet" href="{% static 'sales_dashboard/css/bootstrap.min.css' %}"
           integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.18.3/dist/bootstrap-table.min.css">
-    <title>Flagsmith Sales Dashboard</title>
+    <title>{% block title %}{% endblock %} Flagsmith Sales Dashboard</title>
   </head>
   <body>
     <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
     <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="/sales-dashboard/">Flagsmith</a>
       <form method="get" action="{% url 'sales_dashboard:index' %}" class="form-inline w-100">
-        {% csrf_token %}
-        <input class="form-control mr-sm-2 w-100=" type="search" placeholder="Search" aria-label="Search" name="search" value="{{ search }}">
+        <input class="form-control mr-sm-2 w-75" type="search" placeholder="Search by org name, email addresses or subscription ID. Separate multiple search terms with commas" aria-label="Search" name="search" value="{{ search }}">
         <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
       </form>
       <ul class="navbar-nav px-3">

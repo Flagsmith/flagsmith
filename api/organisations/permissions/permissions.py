@@ -5,10 +5,12 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Model
 from django.views import View
-from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import BasePermission
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.permissions import BasePermission, IsAuthenticated
+from rest_framework.request import Request
 
 from organisations.models import Organisation
+from users.models import FFAdminUser
 
 CREATE_PROJECT = "CREATE_PROJECT"
 MANAGE_USER_GROUPS = "MANAGE_USER_GROUPS"
@@ -87,11 +89,22 @@ class OrganisationPermission(BasePermission):
     def has_permission(self, request, view):
         if view.action == "create" and settings.RESTRICT_ORG_CREATE_TO_SUPERUSERS:
             return request.user.is_superuser
+
+        organisation_id = view.kwargs.get("pk")
+        if organisation_id and not organisation_id.isnumeric():
+            raise ValidationError("Invalid organisation ID")
+
+        if view.action == "remove_users":
+            return request.user.is_organisation_admin(int(organisation_id))
+
+        if organisation_id:
+            return request.user.belongs_to(int(organisation_id))
+
         return True
 
     def has_object_permission(self, request, view, obj):
         return request.user.is_organisation_admin(obj) or (
-            view.action == "my_permissions" and obj in request.user.organisations.all()
+            view.action == "my_permissions" and request.user.belongs_to(obj)
         )
 
 
@@ -173,3 +186,34 @@ class NestedIsOrganisationAdminPermission(BasePermission):
         return request.user.is_organisation_admin(
             self.get_organisation_from_object_callable(obj)
         )
+
+
+class GithubIsAdminOrganisation(NestedIsOrganisationAdminPermission):
+    def has_permission(self, request, view):
+        organisation_pk = view.kwargs.get("organisation_pk")
+
+        with suppress(ObjectDoesNotExist):
+            if isinstance(request.user, FFAdminUser):
+                return request.user.is_organisation_admin(
+                    Organisation.objects.get(pk=organisation_pk)
+                )
+            else:
+                return request.user.is_master_api_key_user
+
+    def has_object_permission(self, request, view, obj):
+        organisation_pk = view.kwargs.get("organisation_pk")
+        if isinstance(request.user, FFAdminUser):
+            return request.user.is_organisation_admin(
+                Organisation.objects.get(pk=organisation_pk)
+            )
+        else:
+            return request.user.is_master_api_key_user
+
+
+class OrganisationAPIUsageNotificationPermission(IsAuthenticated):
+    def has_permission(self, request: Request, view: View) -> bool:
+        if not super().has_permission(request, view):
+            return False
+
+        # All organisation users can see api usage notifications.
+        return request.user.belongs_to(view.kwargs.get("organisation_pk"))

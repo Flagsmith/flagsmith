@@ -2,7 +2,10 @@ import React, { FC, useEffect, useMemo, useState } from 'react'
 import IdentitySelect, { IdentitySelectType } from './IdentitySelect'
 import Utils from 'common/utils/utils'
 import EnvironmentSelect from './EnvironmentSelect'
-import { useGetIdentityFeatureStatesQuery } from 'common/services/useIdentityFeatureState'
+import {
+  useGetIdentityFeatureStatesAllQuery,
+  useCreateCloneIdentityFeatureStatesMutation,
+} from 'common/services/useIdentityFeatureState'
 import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import Tag from './tags/Tag'
 import PanelSearch from './PanelSearch'
@@ -13,6 +16,12 @@ import FeatureValue from './FeatureValue'
 import { sortBy } from 'lodash'
 import { useHasPermission } from 'common/providers/Permission'
 import Constants from 'common/constants'
+import Button from './base/forms/Button'
+import ProjectStore from 'common/stores/project-store'
+import SegmentOverridesIcon from './SegmentOverridesIcon'
+import IdentityOverridesIcon from './IdentityOverridesIcon'
+import Tooltip from './Tooltip'
+import PageTitle from './PageTitle'
 
 type CompareIdentitiesType = {
   projectId: string
@@ -49,7 +58,10 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
 }) => {
   const [leftId, setLeftId] = useState<IdentitySelectType['value']>()
   const [rightId, setRightId] = useState<IdentitySelectType['value']>()
-  const { data: projectFlags } = useGetProjectFlagsQuery({ project: projectId })
+  const { data: projectFlags, refetch } = useGetProjectFlagsQuery({
+    environment: ProjectStore.getEnvironmentIdFromKey(_environmentId),
+    project: projectId,
+  })
   const [environmentId, setEnvironmentId] = useState(_environmentId)
   const [showArchived, setShowArchived] = useState(false)
 
@@ -59,14 +71,16 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     permission: Utils.getViewIdentitiesPermission(),
   })
 
-  const { data: leftUser } = useGetIdentityFeatureStatesQuery(
+  const { data: leftUser } = useGetIdentityFeatureStatesAllQuery(
     { environment: environmentId, user: `${leftId?.value}` },
     { skip: !leftId },
   )
-  const { data: rightUser } = useGetIdentityFeatureStatesQuery(
+  const { data: rightUser } = useGetIdentityFeatureStatesAllQuery(
     { environment: environmentId, user: `${rightId?.value}` },
     { skip: !rightId },
   )
+  const [createCloneIdentityFeatureStates] =
+    useCreateCloneIdentityFeatureStatesMutation()
 
   useEffect(() => {
     // Clear users whenever environment or project is changed
@@ -113,6 +127,45 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     )
   }
 
+  const cloneIdentityValues = (
+    leftIdentityName: string,
+    rightIdentityName: string,
+    leftIdentityId: string,
+    rightIdentityId: string,
+    environmentId: string,
+  ) => {
+    const body =
+      Utils.getFeatureStatesEndpoint() === 'featurestates'
+        ? { source_identity_id: leftIdentityId }
+        : { source_identity_uuid: leftIdentityId }
+
+    return openConfirm({
+      body: (
+        <div>
+          {'This will copy any Identity overrides from '}{' '}
+          <strong>{leftIdentityName}</strong> {'to '}
+          <strong>{`${rightIdentityName}.`}</strong>{' '}
+          {'Any existing Identity overrides on '}
+          <strong>{`${rightIdentityName}`}</strong> {'will be lost.'}
+          <br />
+        </div>
+      ),
+      destructive: true,
+      onYes: () => {
+        createCloneIdentityFeatureStates({
+          body: body,
+          environment_id: environmentId,
+          identity_id: rightIdentityId,
+        }).then(() => {
+          toast('Identity overrides successfully cloned!')
+          refetch()
+        })
+      },
+      title: 'Clone Identity overrides',
+      yesText: 'Confirm',
+    })
+  }
+
   return (
     <div>
       <div className='col-md-8'>
@@ -151,7 +204,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
           </div>
           <div className='mx-3'>
             <Icon
-              name='arrow-left'
+              name='arrow-right'
               width={20}
               fill={
                 Utils.getFlagsmithHasFeature('dark_mode') ? '#fff' : '#1A2634'
@@ -172,9 +225,41 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
 
       {isReady && (
         <>
+          <PageTitle
+            title={'Changed Flags'}
+            className='mt-3'
+            cta={
+              <>
+                {Utils.getFlagsmithHasFeature('clone_identities') && (
+                  <>
+                    <Tooltip
+                      title={
+                        <Button
+                          disabled={!leftId || !rightId || !environmentId}
+                          onClick={() => {
+                            cloneIdentityValues(
+                              leftId?.label,
+                              rightId?.label,
+                              leftId?.value,
+                              rightId?.value,
+                              environmentId,
+                            )
+                          }}
+                          className='ms-2 me-2'
+                        >
+                          {'Clone Features states'}
+                        </Button>
+                      }
+                    >
+                      {`Clone the Features states from ${leftId?.label} to ${rightId?.label}`}
+                    </Tooltip>
+                  </>
+                )}
+              </>
+            }
+          ></PageTitle>
           <PanelSearch
             className='no-pad mt-4'
-            title={'Changed Flags'}
             searchPanel={
               <Row className='mb-2'>
                 <Tag
@@ -211,23 +296,26 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                       !enabledDifferent && !valueDifferent && 'faded'
                     }`}
                   >
-                    <span className='font-weight-medium'>
-                      {description ? (
-                        <Tooltip
-                          title={
-                            <span>
-                              {name}
-                              <span className={'ms-1'}></span>
-                              <Icon name='info-outlined' />
-                            </span>
-                          }
-                        >
+                    <Row>
+                      <span className='font-weight-medium'>
+                        <Tooltip title={<span>{name}</span>}>
                           {description}
                         </Tooltip>
-                      ) : (
-                        name
-                      )}
-                    </span>
+                      </span>
+                      <Button
+                        onClick={() => Utils.copyFeatureName(name)}
+                        theme='icon'
+                        className='ms-2 me-2'
+                      >
+                        <Icon name='copy' />
+                      </Button>
+                      <SegmentOverridesIcon
+                        count={data.num_segment_overrides}
+                      />
+                      <IdentityOverridesIcon
+                        count={data.num_identity_overrides}
+                      />
+                    </Row>
                   </div>
                   <div
                     onClick={goUserLeft}

@@ -1,5 +1,6 @@
 import logging
 import typing
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
@@ -8,9 +9,11 @@ from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Count, QuerySet
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
+from integrations.lead_tracking.hubspot.tasks import (
+    track_hubspot_lead_without_organisation,
+)
 from organisations.models import (
     Organisation,
     OrganisationRole,
@@ -97,8 +100,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     email = models.EmailField(unique=True, null=False)
     objects = UserManager()
     username = models.CharField(unique=True, max_length=150, null=True, blank=True)
-    first_name = models.CharField(_("first name"), max_length=30)
-    last_name = models.CharField(_("last name"), max_length=150)
+    first_name = models.CharField("first name", max_length=30)
+    last_name = models.CharField("last name", max_length=150)
     google_user_id = models.CharField(max_length=50, null=True, blank=True)
     github_user_id = models.CharField(max_length=50, null=True, blank=True)
     marketing_consent_given = models.BooleanField(
@@ -122,6 +125,17 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     @hook(AFTER_CREATE)
     def subscribe_to_mailing_list(self):
         mailer_lite.subscribe(self)
+
+    @hook(AFTER_CREATE)
+    def schedule_hubspot_tracking(self) -> None:
+        if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
+            track_hubspot_lead_without_organisation.delay(
+                kwargs={"user_id": self.id},
+                delay_until=timezone.now()
+                + timedelta(
+                    minutes=settings.CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES
+                ),
+            )
 
     def delete_orphan_organisations(self):
         Organisation.objects.filter(
@@ -411,3 +425,14 @@ class UserPermissionGroup(models.Model):
 
     def remove_users_by_id(self, user_ids: list):
         self.users.remove(*user_ids)
+
+
+class HubspotLead(models.Model):
+    user = models.OneToOneField(
+        FFAdminUser,
+        related_name="hubspot_lead",
+        on_delete=models.CASCADE,
+    )
+    hubspot_id = models.CharField(unique=True, max_length=100, null=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

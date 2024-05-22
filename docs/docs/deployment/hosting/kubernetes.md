@@ -318,6 +318,7 @@ The following table lists the configurable parameters of the chart and their def
 | `api.livenessProbe.periodSeconds`                  |                                                                           | 10                             |
 | `api.livenessProbe.successThreshold`               |                                                                           | 1                              |
 | `api.livenessProbe.timeoutSeconds`                 |                                                                           | 2                              |
+| `api.logging.format`                               | Outputted log format, either `json` or `generic`                          | `generic`                      |
 | `api.readinessProbe.failureThreshold`              |                                                                           | 10                             |
 | `api.readinessProbe.initialDelaySeconds`           |                                                                           | 10                             |
 | `api.readinessProbe.periodSeconds`                 |                                                                           | 10                             |
@@ -380,7 +381,7 @@ The following table lists the configurable parameters of the chart and their def
 | `taskProcessor.affinity`                           |                                                                           | `{}`                           |
 | `taskProcessor.podSecurityContext`                 |                                                                           | `{}`                           |
 | `taskProcessor.defaultPodSecurityContext.enabled`  | whether to use the default security context                               | `true`                         |
-| `postgresql.enabled`                               | if `true`, creates in-cluster PostgreSQL database                         | `true`                         |
+| `devPostgresql.enabled`                            | if `true`, creates in-cluster PostgreSQL database                         | `true`                         |
 | `postgresql.serviceAccount.enabled`                | creates a serviceaccount for the postgres pod                             | `true`                         |
 | `nameOverride`                                     |                                                                           | `flagsmith-postgres`           |
 | `postgresqlDatabase`                               |                                                                           | `flagsmith`                    |
@@ -470,12 +471,14 @@ The following table lists the configurable parameters of the chart and their def
 | `api.statsd.hostFromNodeIp`                        | Set as true to use the node IP as the statsd host instead                 | `false`                        |
 | `api.statsd.port`                                  | Host port to receive statsd metrics                                       | `8125`                         |
 | `api.statsd.prefix`                                | Prefix to add to metric ids                                               | `flagsmith.api`                |
+| `common.labels`                                    | Labels to add to all resources                                            | `{}`                           |
+| `common.annotations`                               | Annotations to add to all resources                                       | `{}`                           |
 
 ---
 
 ## Key upgrade notes
 
-- [0.20.0](https://artifacthub.io/packages/helm/flagsmith/flagsmith/0.20.0): upgrades the bundled in-cluster Postgres.
+- [0.37.0](https://artifacthub.io/packages/helm/flagsmith/flagsmith/0.37.0): upgrades the bundled in-cluster Postgres.
   This makes no effort to preserve data in the bundled in-cluster Postgres if it is in use. This also renames the
   bundled in-cluster Postgres to have `dev-postgresql` in the name, to signify that it exists such that the chart can be
   deployed self-contained, but that this Postgres instance is treated as disposable. All Flagsmith installations for

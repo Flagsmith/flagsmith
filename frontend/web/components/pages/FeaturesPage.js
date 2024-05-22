@@ -16,11 +16,13 @@ import { IonIcon } from '@ionic/react'
 import TableSortFilter from 'components/tables/TableSortFilter'
 import TableSearchFilter from 'components/tables/TableSearchFilter'
 import TableTagFilter from 'components/tables/TableTagFilter'
-import { setViewMode } from 'common/useViewMode'
+import { getViewMode, setViewMode } from 'common/useViewMode'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
-import { getViewMode } from 'common/useViewMode'
-import { TagStrategy } from 'common/types/responses'
+import Format from 'common/utils/format'
 import EnvironmentDocumentCodeHelp from 'components/EnvironmentDocumentCodeHelp'
+import TableOwnerFilter from 'components/tables/TableOwnerFilter'
+import TableGroupsFilter from 'components/tables/TableGroupsFilter'
+import TableValueFilter from 'components/tables/TableValueFilter'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -31,13 +33,38 @@ const FeaturesPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
+    const params = Utils.fromParam()
     this.state = {
+      group_owners:
+        typeof params.group_owners === 'string'
+          ? params.group_owners.split(',').map((v) => parseInt(v))
+          : [],
+      is_enabled:
+        params.is_enabled === 'true'
+          ? true
+          : params.is_enabled === 'false'
+          ? false
+          : null,
       loadedOnce: false,
-      search: null,
-      showArchived: false,
-      sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
-      tag_strategy: 'INTERSECTION',
-      tags: [],
+      owners:
+        typeof params.owners === 'string'
+          ? params.owners.split(',').map((v) => parseInt(v))
+          : [],
+      page: params.page ? parseInt(params.page) - 1 : 1,
+      search: params.search || null,
+      showArchived: params.is_archived === 'true',
+      sort: {
+        label: Format.camelCase(params.sortBy || 'Name'),
+        sortBy: params.sortBy || 'name',
+        sortOrder: params.sortOrder || 'asc',
+      },
+      tag_strategy: params.tag_strategy || 'INTERSECTION',
+      tags:
+        typeof params.tags === 'string'
+          ? params.tags.split(',').map((v) => parseInt(v))
+          : [],
+      value_search:
+        typeof params.value_search === 'string' ? params.value_search : '',
     }
     ES6Component(this)
     getTags(getStore(), {
@@ -49,7 +76,7 @@ const FeaturesPage = class extends Component {
       true,
       this.state.search,
       this.state.sort,
-      0,
+      this.state.page,
       this.getFilter(),
     )
   }
@@ -66,15 +93,7 @@ const FeaturesPage = class extends Component {
       params.projectId !== oldParams.projectId
     ) {
       this.state.loadedOnce = false
-      AppActions.getFeatures(
-        params.projectId,
-        params.environmentId,
-        true,
-        this.state.search,
-        this.state.sort,
-        0,
-        this.getFilter(),
-      )
+      this.filter()
     }
   }
 
@@ -97,6 +116,7 @@ const FeaturesPage = class extends Component {
     openModal(
       'New Feature',
       <CreateFlagModal
+        history={this.props.router.history}
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
@@ -104,19 +124,32 @@ const FeaturesPage = class extends Component {
     )
   }
 
+  getURLParams = () => ({
+    ...this.getFilter(),
+    group_owners: (this.state.group_owners || [])?.join(',') || undefined,
+    owners: (this.state.owners || [])?.join(',') || undefined,
+    page: this.state.page || 1,
+    search: this.state.search || '',
+    sortBy: this.state.sort.sortBy,
+    sortOrder: this.state.sort.sortOrder,
+    tags: (this.state.tags || [])?.join(',') || undefined,
+  })
+
   getFilter = () => ({
+    group_owners: this.state.group_owners?.length
+      ? this.state.group_owners
+      : undefined,
     is_archived: this.state.showArchived,
+    is_enabled:
+      this.state.is_enabled === null ? undefined : this.state.is_enabled,
+    owners: this.state.owners?.length ? this.state.owners : undefined,
     tag_strategy: this.state.tag_strategy,
     tags:
       !this.state.tags || !this.state.tags.length
         ? undefined
         : this.state.tags.join(','),
+    value_search: this.state.value_search ? this.state.value_search : undefined,
   })
-
-  onSave = () => {
-    toast('Saved')
-  }
-
   onError = (error) => {
     // Kick user back out to projects
     this.setState({ error })
@@ -130,16 +163,37 @@ const FeaturesPage = class extends Component {
     }
   }
 
-  filter = () => {
-    AppActions.searchFeatures(
-      this.props.match.params.projectId,
-      this.props.match.params.environmentId,
-      true,
-      this.state.search,
-      this.state.sort,
-      0,
-      this.getFilter(),
-    )
+  filter = (page) => {
+    const currentParams = Utils.fromParam()
+    // this.props.router.push()
+    this.setState({ page }, () => {
+      if (!currentParams.feature) {
+        // don't replace page if we are currently viewing a feature
+        this.props.router.history.replace(
+          `${document.location.pathname}?${Utils.toParam(this.getURLParams())}`,
+        )
+      }
+      if (page) {
+        AppActions.getFeatures(
+          this.props.match.params.projectId,
+          this.props.match.params.environmentId,
+          true,
+          this.state.search,
+          this.state.sort,
+          page,
+          this.getFilter(),
+        )
+      } else {
+        AppActions.searchFeatures(
+          this.props.match.params.projectId,
+          this.props.match.params.environmentId,
+          true,
+          this.state.search,
+          this.state.sort,
+          this.getFilter(),
+        )
+      }
+    })
   }
 
   createFeaturePermission(el) {
@@ -187,16 +241,17 @@ const FeaturesPage = class extends Component {
               totalFeatures,
               maxFeaturesAllowed,
             )
-            if (projectFlags?.length && !this.state.loadedOnce) {
+            if (FeatureListStore.hasLoaded && !this.state.loadedOnce) {
               this.state.loadedOnce = true
             }
             return (
               <div className='features-page'>
-                {isLoading && (!projectFlags || !projectFlags.length) && (
-                  <div className='centered-container'>
-                    <Loader />
-                  </div>
-                )}
+                {(isLoading || !this.state.loadedOnce) &&
+                  (!projectFlags || !projectFlags.length) && (
+                    <div className='centered-container'>
+                      <Loader />
+                    </div>
+                  )}
                 {(!isLoading || this.state.loadedOnce) && (
                   <div>
                     {this.state.loadedOnce ||
@@ -290,19 +345,7 @@ const FeaturesPage = class extends Component {
                                               search:
                                                 Utils.safeParseEventValue(e),
                                             },
-                                            () => {
-                                              AppActions.searchFeatures(
-                                                this.props.match.params
-                                                  .projectId,
-                                                this.props.match.params
-                                                  .environmentId,
-                                                true,
-                                                this.state.search,
-                                                this.state.sort,
-                                                0,
-                                                this.getFilter(),
-                                              )
-                                            },
+                                            this.filter,
                                           )
                                         }}
                                         value={this.state.search}
@@ -315,7 +358,10 @@ const FeaturesPage = class extends Component {
                                           className='me-4'
                                           title='Tags'
                                           tagStrategy={this.state.tag_strategy}
-                                          onChangeStrategy={(tag_strategy) => {
+                                          onChangeStrategy={(
+                                            tag_strategy,
+                                            isAutomated,
+                                          ) => {
                                             this.setState(
                                               {
                                                 tag_strategy,
@@ -346,7 +392,7 @@ const FeaturesPage = class extends Component {
                                               this.filter,
                                             )
                                           }}
-                                          onChange={(tags) => {
+                                          onChange={(tags, isAutomated) => {
                                             FeatureListStore.isLoading = true
                                             if (
                                               tags.includes('') &&
@@ -375,9 +421,62 @@ const FeaturesPage = class extends Component {
                                                 this.filter,
                                               )
                                             }
-                                            AsyncStorage.setItem(
-                                              `${projectId}tags`,
-                                              JSON.stringify(tags),
+                                          }}
+                                        />
+                                        <TableValueFilter
+                                          title={'State'}
+                                          className={'me-4'}
+                                          projectId={projectId}
+                                          useLocalStorage
+                                          value={{
+                                            enabled: this.state.is_enabled,
+                                            valueSearch:
+                                              this.state.value_search,
+                                          }}
+                                          onChange={({
+                                            enabled,
+                                            valueSearch,
+                                          }) => {
+                                            this.setState(
+                                              {
+                                                is_enabled: enabled,
+                                                value_search: valueSearch,
+                                              },
+                                              this.filter,
+                                            )
+                                          }}
+                                        />
+                                        <TableOwnerFilter
+                                          title={'Owners'}
+                                          className={'me-4'}
+                                          useLocalStorage
+                                          value={this.state.owners}
+                                          onChange={(owners) => {
+                                            FeatureListStore.isLoading = true
+                                            this.setState(
+                                              {
+                                                owners: owners,
+                                              },
+                                              this.filter,
+                                            )
+                                          }}
+                                        />
+                                        <TableGroupsFilter
+                                          title={'Groups'}
+                                          className={'me-4'}
+                                          projectId={projectId}
+                                          orgId={
+                                            AccountStore.getOrganisation()?.id
+                                          }
+                                          useLocalStorage
+                                          value={this.state.group_owners}
+                                          onChange={(group_owners) => {
+                                            FeatureListStore.isLoading = true
+                                            this.setState(
+                                              {
+                                                group_owners: group_owners,
+                                              },
+                                              this.filter,
                                             )
                                           }}
                                         />
@@ -423,39 +522,13 @@ const FeaturesPage = class extends Component {
                                   </Row>
                                 }
                                 nextPage={() =>
-                                  AppActions.getFeatures(
-                                    this.props.match.params.projectId,
-                                    this.props.match.params.environmentId,
-                                    true,
-                                    this.state.search,
-                                    this.state.sort,
-                                    FeatureListStore.paging.next,
-                                    this.getFilter(),
-                                  )
+                                  this.filter(FeatureListStore.paging.next)
                                 }
                                 prevPage={() =>
-                                  AppActions.getFeatures(
-                                    this.props.match.params.projectId,
-                                    this.props.match.params.environmentId,
-                                    true,
-                                    this.state.search,
-                                    this.state.sort,
-                                    FeatureListStore.paging.previous,
-                                    this.getFilter(),
-                                  )
+                                  this.filter(FeatureListStore.paging.previous)
                                 }
-                                goToPage={(page) =>
-                                  AppActions.getFeatures(
-                                    this.props.match.params.projectId,
-                                    this.props.match.params.environmentId,
-                                    true,
-                                    this.state.search,
-                                    this.state.sort,
-                                    page,
-                                    this.getFilter(),
-                                  )
-                                }
-                                items={projectFlags}
+                                goToPage={(page) => this.filter(page)}
+                                items={projectFlags?.filter((v) => !v.ignore)}
                                 renderFooter={() => (
                                   <>
                                     <JSONReference
@@ -522,7 +595,8 @@ const FeaturesPage = class extends Component {
                         </FormGroup>
                       </div>
                     ) : (
-                      !isLoading && (
+                      !isLoading &&
+                      this.state.loadedOnce && (
                         <div>
                           <h3>Brilliant! Now create your features.</h3>
                           <FormGroup>

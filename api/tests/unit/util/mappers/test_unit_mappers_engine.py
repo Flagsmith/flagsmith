@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 import pytz
+from django.utils import timezone
 from flag_engine.environments.integrations.models import IntegrationModel
 from flag_engine.environments.models import (
     EnvironmentAPIKeyModel,
@@ -16,7 +17,11 @@ from flag_engine.features.models import (
     MultivariateFeatureOptionModel,
     MultivariateFeatureStateValueModel,
 )
-from flag_engine.identities.models import IdentityModel, TraitModel
+from flag_engine.identities.models import (
+    IdentityFeaturesList,
+    IdentityModel,
+    TraitModel,
+)
 from flag_engine.organisations.models import OrganisationModel
 from flag_engine.projects.models import ProjectModel
 from flag_engine.segments.models import (
@@ -28,15 +33,18 @@ from pytest_mock import MockerFixture
 
 from environments.models import Environment
 from features.models import FeatureSegment, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.tasks import enable_v2_versioning
 from integrations.common.models import IntegrationsModel
 from integrations.dynatrace.models import DynatraceConfiguration
 from integrations.mixpanel.models import MixpanelConfiguration
 from integrations.segment.models import SegmentConfiguration
 from integrations.webhook.models import WebhookConfiguration
 from segments.models import Segment, SegmentRule
+from users.models import FFAdminUser
 from util.mappers import engine
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from environments.identities import Identity, Trait
     from environments.models import EnvironmentAPIKey
     from features.models import Feature
@@ -451,21 +459,23 @@ def test_map_identity_to_engine__return_expected(
         identifier=identity.identifier,
         environment_api_key=environment_api_key,
         created_date=identity.created_date,
-        identity_features=[
-            FeatureStateModel(
-                feature=FeatureModel(
-                    id=feature.pk,
-                    name=feature.name,
-                    type=feature.type,
-                ),
-                enabled=identity_featurestate.enabled,
-                django_id=identity_featurestate.pk,
-                feature_segment=identity_featurestate.feature_segment,
-                featurestate_uuid=identity_featurestate.uuid,
-                feature_state_value=identity_featurestate.get_feature_state_value(),
-                multivariate_feature_state_values=[],
-            )
-        ],
+        identity_features=IdentityFeaturesList(
+            [
+                FeatureStateModel(
+                    feature=FeatureModel(
+                        id=feature.pk,
+                        name=feature.name,
+                        type=feature.type,
+                    ),
+                    enabled=identity_featurestate.enabled,
+                    django_id=identity_featurestate.pk,
+                    feature_segment=identity_featurestate.feature_segment,
+                    featurestate_uuid=identity_featurestate.uuid,
+                    feature_state_value=identity_featurestate.get_feature_state_value(),
+                    multivariate_feature_state_values=[],
+                )
+            ]
+        ),
         identity_traits=[
             TraitModel(
                 trait_key=trait.trait_key,
@@ -527,3 +537,122 @@ def test_map_environment_to_engine__returns_correct_feature_state_for_different_
     # Then
     assert len(result.feature_states) == 1
     assert result.feature_states[0].django_id == v15_feature_state.id
+
+
+def test_map_environment_to_engine_following_migration_to_v2_versioning(
+    environment: Environment,
+    feature: "Feature",
+    feature_state: FeatureState,
+    segment: Segment,
+    segment_featurestate: FeatureState,
+) -> None:
+    """
+    Specific test to reproduce an issue seen after migrating our staging environment to
+    v2 versioning.
+    """
+
+    # Given
+    # Multiple versions (old style versioning) of a given environment feature state and segment override
+    # to simulate the fact that we will be left with feature states that do NOT have a feature version
+    # (because only the latest versions get migrated to v2 versioning).
+    v2_environment_feature_state = feature_state.clone(
+        env=environment, live_from=timezone.now(), version=2
+    )
+    v2_environment_feature_state.enabled = True
+    v2_environment_feature_state_value = "v2"
+    v2_environment_feature_state.feature_state_value.string_value = (
+        v2_environment_feature_state_value
+    )
+    v2_environment_feature_state.save()
+    v2_environment_feature_state.feature_state_value.save()
+
+    v2_segment_override = segment_featurestate.clone(
+        env=environment, live_from=timezone.now(), version=2
+    )
+    v2_segment_override.enabled = True
+    v2_segment_override_value = "v2-override"
+    v2_segment_override.feature_state_value.string_value = v2_segment_override_value
+    v2_segment_override.save()
+    v2_segment_override.feature_state_value.save()
+
+    enable_v2_versioning(environment.id)
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    assert result
+
+    assert len(result.feature_states) == 1
+    mapped_environment_feature_state = result.feature_states[0]
+
+    assert mapped_environment_feature_state.django_id == v2_environment_feature_state.id
+    assert mapped_environment_feature_state.enabled is True
+    assert (
+        mapped_environment_feature_state.feature_state_value
+        == v2_environment_feature_state_value
+    )
+
+    assert len(result.project.segments) == 1
+    assert len(result.project.segments[0].feature_states) == 1
+
+    mapped_segment_override = result.project.segments[0].feature_states[0]
+    assert mapped_segment_override.django_id == v2_segment_override.id
+    assert mapped_segment_override.enabled is True
+    assert mapped_segment_override.feature_state_value == v2_segment_override_value
+
+
+def test_map_environment_to_engine_v2_versioning_segment_overrides(
+    environment_v2_versioning: Environment,
+    segment: Segment,
+    feature: "Feature",
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    # Another segment
+    another_segment = Segment.objects.create(
+        name="another_segment", project=feature.project
+    )
+
+    # First, let's create a version that includes 2 segment overrides
+    v2 = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+    for _segment in [segment, another_segment]:
+        FeatureState.objects.create(
+            feature=feature,
+            environment=environment_v2_versioning,
+            environment_feature_version=v2,
+            feature_segment=FeatureSegment.objects.create(
+                feature=feature,
+                segment=_segment,
+                environment=environment_v2_versioning,
+                environment_feature_version=v2,
+            ),
+        )
+    v2.publish(staff_user)
+
+    # Now, let's create another new version which will keep one of the segment overrides
+    # and remove the other.
+    v3 = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+
+    v3_segment_override = FeatureState.objects.get(
+        feature_segment__segment=segment, environment_feature_version=v3
+    )
+    FeatureState.objects.filter(
+        feature_segment__segment=another_segment, environment_feature_version=v3
+    ).delete()
+
+    v3.publish(staff_user)
+
+    # When
+    environment_model = engine.map_environment_to_engine(environment_v2_versioning)
+
+    # Then
+    assert len(environment_model.project.segments[0].feature_states) == 1
+    assert (
+        environment_model.project.segments[0].feature_states[0].django_id
+        == v3_segment_override.id
+    )

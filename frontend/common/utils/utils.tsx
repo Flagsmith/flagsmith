@@ -2,6 +2,7 @@ import AccountStore from 'common/stores/account-store'
 import ProjectStore from 'common/stores/project-store'
 import Project from 'common/project'
 import {
+  ContentType,
   FeatureState,
   FeatureStateValue,
   FlagsmithValue,
@@ -11,6 +12,7 @@ import {
   Project as ProjectType,
   ProjectFlag,
   SegmentCondition,
+  Tag,
 } from 'common/types/responses'
 import flagsmith from 'flagsmith'
 import { ReactNode } from 'react'
@@ -18,6 +20,7 @@ import _ from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
+import Format from './format'
 
 const semver = require('semver')
 
@@ -25,7 +28,6 @@ export const planNames = {
   enterprise: 'Enterprise',
   free: 'Free',
   scaleUp: 'Scale-Up',
-  sideProject: 'Side Project',
   startup: 'Startup',
 }
 const Utils = Object.assign({}, require('./base/_utils'), {
@@ -74,8 +76,21 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return 0
   },
 
+  canCreateOrganisation() {
+    return (
+      !Utils.getFlagsmithHasFeature('disable_create_org') &&
+      (!Project.superUserCreateOnly ||
+        (Project.superUserCreateOnly && AccountStore.isSuper()))
+    )
+  },
+
   changeRequestsEnabled(value: number | null | undefined) {
     return typeof value === 'number'
+  },
+
+  copyFeatureName: (featureName: string) => {
+    navigator.clipboard.writeText(featureName)
+    toast('Copied to clipboard')
   },
 
   displayLimitAlert(type: string, percentage: number | undefined) {
@@ -132,6 +147,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getApproveChangeRequestPermission() {
     return 'APPROVE_CHANGE_REQUEST'
   },
+  getContentType(contentTypes: ContentType[], model: string, type: string) {
+    return contentTypes.find((c: ContentType) => c[model] === type) || null
+  },
   getCreateProjectPermission(organisation: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {
       return 'ADMIN'
@@ -162,7 +180,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         description: projectFlag.description,
         enabled: false,
         feature_state_value: projectFlag.initial_value,
-        hide_from_client: false,
         is_archived: projectFlag.is_archived,
         is_server_key_only: projectFlag.is_server_key_only,
         multivariate_options: projectFlag.multivariate_options,
@@ -176,7 +193,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         description: projectFlag.description,
         enabled: identityFlag.enabled,
         feature_state_value: identityFlag.feature_state_value,
-        hide_from_client: environmentFlag.hide_from_client,
         is_archived: projectFlag.is_archived,
         is_server_key_only: projectFlag.is_server_key_only,
         multivariate_options: projectFlag.multivariate_options,
@@ -188,7 +204,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       description: projectFlag.description,
       enabled: environmentFlag.enabled,
       feature_state_value: environmentFlag.feature_state_value,
-      hide_from_client: environmentFlag.hide_from_client,
       is_archived: projectFlag.is_archived,
       is_server_key_only: projectFlag.is_server_key_only,
       multivariate_options: projectFlag.multivariate_options.map((v) => {
@@ -251,12 +266,47 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getManageUserPermissionDescription() {
     return 'Manage Identities'
   },
+  getOrganisationHomePage(id?: string) {
+    const orgId = id || AccountStore.getOrganisation()?.id
+    if (!orgId) {
+      return `/organisations`
+    }
+    return `/organisation/${orgId}/projects`
+  },
+  getPermissionList(
+    isAdmin: boolean,
+    permissions: string[] | undefined | null,
+    numberToTruncate = 3,
+  ): {
+    items: string[]
+    truncatedItems: string[]
+  } {
+    if (isAdmin) {
+      return {
+        items: ['Administrator'],
+        truncatedItems: [],
+      }
+    }
+    if (!permissions) return { items: [], truncatedItems: [] }
+
+    const items =
+      permissions && permissions.length
+        ? permissions
+            .slice(0, numberToTruncate)
+            .map((item) => `${Format.enumeration.get(item)}`)
+        : []
+
+    return {
+      items,
+      truncatedItems: (permissions || [])
+        .slice(numberToTruncate)
+        .map((item) => `${Format.enumeration.get(item)}`),
+    }
+  },
+
   getPlanName: (plan: string) => {
     if (plan && plan.includes('scale-up')) {
       return planNames.scaleUp
-    }
-    if (plan && plan.includes('side-project')) {
-      return planNames.sideProject
     }
     if (plan && plan.includes('startup')) {
       return planNames.startup
@@ -279,26 +329,24 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (!plan || planName === planNames.free) {
       return false
     }
-    const isSideProjectOrGreater = planName !== planNames.sideProject
-    const isScaleupOrGreater =
-      isSideProjectOrGreater && planName !== planNames.startup
+    const isScaleupOrGreater = planName !== planNames.startup
     const isEnterprise = planName === planNames.enterprise
-
+    const isSaas = Utils.isSaas()
     switch (permission) {
       case 'FLAG_OWNERS': {
         valid = isScaleupOrGreater
         break
       }
       case 'CREATE_ADDITIONAL_PROJECT': {
-        valid = isSideProjectOrGreater
+        valid = true // startup or greater
         break
       }
       case '2FA': {
-        valid = isSideProjectOrGreater
+        valid = true // startup or greater
         break
       }
       case 'RBAC': {
-        valid = isSideProjectOrGreater
+        valid = isScaleupOrGreater
         break
       }
       case 'AUDIT': {
@@ -314,11 +362,19 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         break
       }
       case 'SCHEDULE_FLAGS': {
-        valid = isSideProjectOrGreater
+        valid = true // startup or greater
         break
       }
       case '4_EYES': {
         valid = isScaleupOrGreater
+        break
+      }
+      case 'REALTIME': {
+        valid = isEnterprise && isSaas
+        break
+      }
+      case 'STALE_FLAGS': {
+        valid = isEnterprise
         break
       }
       default:
@@ -348,6 +404,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
+
   getSDKEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
 
@@ -356,7 +413,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return Project.api
   },
-
   getShouldHideIdentityOverridesTab(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (!Utils.getIsEdge()) {
@@ -364,10 +420,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
 
     return !!(
-      !Utils.getFlagsmithHasFeature('show_edge_identity_overrides') ||
-      (project &&
-        project.use_edge_identities &&
-        !project.show_edge_identity_overrides_for_feature)
+      project &&
+      project.use_edge_identities &&
+      !project.show_edge_identity_overrides_for_feature
     )
   },
 
@@ -465,6 +520,23 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
+
+  isSaas: () => global.flagsmithVersion?.backend?.is_saas,
+  isValidNumber(value: any) {
+    return /^-?\d*\.?\d+$/.test(`${value}`)
+  },
+  isValidURL(value: any) {
+    const pattern = new RegExp(
+      '^(https?:\\/\\/)?' + // protocol
+        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+        '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+        '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+        '(\\#[-a-z\\d_]*)?$',
+      'i',
+    )
+    return !!pattern.test(value)
+  },
   loadScriptPromise(url: string) {
     return new Promise((resolve) => {
       const cb = function () {
@@ -505,7 +577,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return permission ? (
       el
     ) : (
-      <Tooltip title={<div>{el}</div>} place='right' html>
+      <Tooltip title={<div>{el}</div>} place='right'>
         {name}
       </Tooltip>
     )
@@ -516,9 +588,29 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return `${value}`
   },
+
+  tagDisabled: (tag: Tag | undefined) => {
+    const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
+    return tag?.type === 'STALE' && !hasStaleFlagsPermission
+  },
+
+  validateMetadataType(type: string, value: any) {
+    switch (type) {
+      case 'int': {
+        return Utils.isValidNumber(value)
+      }
+      case 'url': {
+        return Utils.isValidURL(value)
+      }
+      case 'bool': {
+        return value === 'true' || value === 'false'
+      }
+      default:
+        return true
+    }
+  },
   validateRule(rule: SegmentCondition) {
     if (!rule) return false
-
     if (rule.delete) {
       return true
     }
@@ -528,11 +620,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       : []
     const operatorObj = Utils.findOperator(rule.operator, rule.value, operators)
 
-    if (
-      operatorObj &&
-      operatorObj.value &&
-      operatorObj.value.toLowerCase().includes('semver')
-    ) {
+    if (operatorObj?.type === 'number') {
+      return Utils.isValidNumber(rule.value)
+    }
+
+    if (operatorObj?.value?.toLowerCase?.().includes('semver')) {
       return !!semver.valid(`${rule.value.split(':')[0]}`)
     }
 

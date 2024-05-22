@@ -17,6 +17,10 @@ from django_lifecycle import (
 from simple_history.models import HistoricalRecords
 
 from app.utils import is_enterprise, is_saas
+from integrations.lead_tracking.hubspot.tasks import (
+    track_hubspot_lead,
+    update_hubspot_active_subscription,
+)
 from organisations.chargebee import (
     get_customer_id_from_subscription_id,
     get_max_api_calls_for_plan,
@@ -179,7 +183,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
         ).exclude(id=remaining_seat_holder.id).delete()
 
 
-class UserOrganisation(models.Model):
+class UserOrganisation(LifecycleModelMixin, models.Model):
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     date_joined = models.DateTimeField(auto_now_add=True)
@@ -190,6 +194,16 @@ class UserOrganisation(models.Model):
             "user",
             "organisation",
         )
+
+    @hook(AFTER_CREATE)
+    def register_hubspot_lead_tracking(self):
+        if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
+            track_hubspot_lead.delay(
+                args=(
+                    self.user.id,
+                    self.organisation.id,
+                )
+            )
 
 
 class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
@@ -239,6 +253,23 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
     @property
     def is_free_plan(self) -> bool:
         return self.plan == FREE_PLAN_ID
+
+    @hook(AFTER_SAVE, when="plan", has_changed=True)
+    def update_api_limit_access_block(self):
+        if not getattr(self.organisation, "api_limit_access_block", None):
+            return
+
+        self.organisation.api_limit_access_block.delete()
+        self.organisation.stop_serving_flags = False
+        self.organisation.block_access_to_admin = False
+        self.organisation.save()
+
+    @hook(AFTER_SAVE, when="plan", has_changed=True)
+    def update_hubspot_active_subscription(self):
+        if not settings.ENABLE_HUBSPOT_LEAD_TRACKING:
+            return
+
+        update_hubspot_active_subscription.delay(args=(self.id,))
 
     @hook(AFTER_SAVE, when="cancellation_date", has_changed=True)
     @hook(AFTER_SAVE, when="subscription_id", has_changed=True)
@@ -379,13 +410,6 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
         add_single_seat(self.subscription_id)
 
-    def get_api_call_overage(self):
-        subscription_info = self.organisation.subscription_information_cache
-        overage = (
-            subscription_info.api_calls_30d - subscription_info.allowed_30d_api_calls
-        )
-        return overage if overage > 0 else 0
-
     def is_in_trial(self) -> bool:
         return self.subscription_id == TRIAL_SUBSCRIPTION_ID
 
@@ -403,7 +427,7 @@ class OrganisationWebhook(AbstractBaseExportableWebhookModel):
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
 
-class OrganisationSubscriptionInformationCache(models.Model):
+class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model):
     """
     Model to hold a cache of an organisation's API usage and their Chargebee plan limits.
     """
@@ -429,8 +453,12 @@ class OrganisationSubscriptionInformationCache(models.Model):
 
     chargebee_email = models.EmailField(blank=True, max_length=254, null=True)
 
+    @hook(AFTER_SAVE, when="allowed_30d_api_calls", has_changed=True)
+    def erase_api_notifications(self):
+        self.organisation.api_usage_notifications.all().delete()
 
-class OranisationAPIUsageNotification(models.Model):
+
+class OrganisationAPIUsageNotification(models.Model):
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="api_usage_notifications"
     )
@@ -439,6 +467,53 @@ class OranisationAPIUsageNotification(models.Model):
         validators=[MinValueValidator(75), MaxValueValidator(120)],
     )
     notified_at = models.DateTimeField(null=True)
+
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)
+
+
+class APILimitAccessBlock(models.Model):
+    organisation = models.OneToOneField(
+        Organisation, on_delete=models.CASCADE, related_name="api_limit_access_block"
+    )
+
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)
+
+
+class HubspotOrganisation(models.Model):
+    organisation = models.OneToOneField(
+        Organisation,
+        related_name="hubspot_organisation",
+        on_delete=models.CASCADE,
+    )
+    hubspot_id = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class OrganisationAPIBilling(models.Model):
+    """
+    Tracks API billing for when accounts go over their API usage
+    limits. This model is what allows subsequent billing runs
+    to not double bill an organisation for the same use.
+
+    Even though api_overage is charge per thousand API calls, this
+    class tracks the actual rounded count of API calls that are
+    billed for (i.e., 52000 for an account with 52233 api calls).
+    We're intentionally rounding down to the closest thousands.
+
+    The option to set immediate_invoice means whether or not the
+    API billing was processed immediately versus pushed onto the
+    subsequent subscription billing period.
+    """
+
+    organisation = models.ForeignKey(
+        Organisation, on_delete=models.CASCADE, related_name="api_billing"
+    )
+    api_overage = models.IntegerField(null=False)
+    immediate_invoice = models.BooleanField(null=False, default=False)
+    billed_at = models.DateTimeField(null=False)
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)

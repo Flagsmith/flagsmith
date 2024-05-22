@@ -1,6 +1,4 @@
 import React, { Component } from 'react'
-import Tabs from './base/forms/Tabs'
-import TabItem from './base/forms/TabItem'
 import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
@@ -48,21 +46,23 @@ const getGithubLink = (key) => {
 const getDocsLink = (key) => {
   switch (key) {
     case '.NET':
-      return 'https://docs.flagsmith.com/clients/dotnet/'
+      return 'https://docs.flagsmith.com/clients/server-side?language=dotnet'
+    case 'curl':
+      return 'https://docs.flagsmith.com/clients/rest'
     case 'Flutter':
       return 'https://docs.flagsmith.com/clients/flutter/'
     case 'Go':
-      return 'https://docs.flagsmith.com/clients/go/'
+      return 'https://docs.flagsmith.com/clients/server-side?language=go'
     case 'Java':
-      return 'https://docs.flagsmith.com/clients/java/'
+      return 'https://docs.flagsmith.com/clients/server-side?language=java'
     case 'JavaScript':
       return 'https://docs.flagsmith.com/clients/javascript/'
     case 'Node JS':
-      return 'https://docs.flagsmith.com/clients/node/'
+      return 'https://docs.flagsmith.com/clients/server-side?language=nodejs'
     case 'PHP':
-      return 'https://docs.flagsmith.com/clients/php/'
+      return 'https://docs.flagsmith.com/clients/server-side?language=php'
     case 'Python':
-      return 'https://docs.flagsmith.com/clients/python/'
+      return 'https://docs.flagsmith.com/clients/server-side?language=python'
     case 'REST':
       return null
     case 'React':
@@ -70,9 +70,9 @@ const getDocsLink = (key) => {
     case 'React Native':
       return 'https://docs.flagsmith.com/clients/react'
     case 'Ruby':
-      return 'https://docs.flagsmith.com/clients/ruby/'
+      return 'https://docs.flagsmith.com/clients/server-side?language=ruby'
     case 'Rust':
-      return 'https://docs.flagsmith.com/clients/rust/'
+      return 'https://docs.flagsmith.com/clients/server-side?language=rust'
     case 'iOS':
       return 'https://docs.flagsmith.com/clients/ios/'
     case 'Next.js':
@@ -149,34 +149,6 @@ const CodeHelp = class extends Component {
             )}
 
             <div className='code-help'>
-              <Select
-                data-test='select-segment'
-                placeholder='Select a language'
-                value={{
-                  label: language,
-                }}
-                onChange={(v) => {
-                  const lang = v.label
-                  this.setState({ language: lang })
-                  flagsmith.setTrait('preferred_language', lang)
-                  this.setState({ tab })
-                }}
-                options={_.sortBy(Object.keys(this.props.snippets), (key) =>
-                  key[0].toLowerCase(),
-                ).map((v, i) => ({
-                  label: v,
-                  value: i,
-                }))}
-                styles={{
-                  control: (base) => ({
-                    ...base,
-                    '&:hover': { borderColor: '$bt-brand-secondary' },
-                    alignSelf: 'flex-end',
-                    border: '1px solid $bt-brand-secondary',
-                    width: 200,
-                  }),
-                }}
-              />
               {_.map(this.props.snippets, (s, key) => {
                 const docs = getDocsLink(key)
                 const github = getGithubLink(key)
@@ -186,6 +158,33 @@ const CodeHelp = class extends Component {
                       key !== language ? 'd-none' : 'hljs-container mt-2 mb-2'
                     }
                   >
+                    <Select
+                      data-test='select-segment'
+                      placeholder='Select a language'
+                      value={{
+                        label: language,
+                      }}
+                      onChange={(v) => {
+                        const lang = v.label
+                        this.setState({ language: lang })
+                        flagsmith.setTrait('preferred_language', lang)
+                        this.setState({ tab })
+                      }}
+                      options={_.sortBy(
+                        Object.keys(this.props.snippets),
+                        (key) => key[0].toLowerCase(),
+                      ).map((v, i) => ({
+                        label: v,
+                        value: i,
+                      }))}
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          alignSelf: 'flex-end',
+                          width: 200,
+                        }),
+                      }}
+                    />
                     <Highlight
                       forceExpanded
                       preventEscape

@@ -16,13 +16,14 @@ export type Rule = {
 export const setText = async (selector: string, text: string) => {
   logUsingLastSection(`Set text ${selector} : ${text}`)
   if (text) {
-     return t
+    return t
       .selectText(selector)
       .pressKey('delete')
       .selectText(selector) // Prevents issue where input tabs out of focus
       .typeText(selector, `${text}`)
   } else {
-    return t.selectText(selector) // Prevents issue where input tabs out of focus
+    return t
+      .selectText(selector) // Prevents issue where input tabs out of focus
       .pressKey('delete')
   }
 }
@@ -80,6 +81,7 @@ export const gotoFeatures = async () => {
 export const click = async (selector: string) => {
   await waitForElementVisible(selector)
   await t
+    .scrollIntoView(selector)
     .expect(Selector(selector).hasAttribute('disabled'))
     .notOk('ready for testing', { timeout: 5000 })
     .hover(selector)
@@ -101,6 +103,7 @@ export const getLogger = () =>
   })
 
 export const gotoTraits = async () => {
+  await click('#features-link')
   await click('#users-link')
   await click(byId('user-item-0'))
   await waitForElementVisible('#add-trait')
@@ -217,6 +220,7 @@ export const saveFeatureSegments = async () => {
 }
 
 export const goToUser = async (index: number) => {
+  await click('#features-link')
   await click('#users-link')
   await click(byId(`user-item-${index}`))
 }
@@ -324,10 +328,12 @@ export const createRemoteConfig = async (
   await click(byId('create-feature-btn'))
   await waitForElementVisible(byId(`feature-value-${index}`))
   await assertTextContent(byId(`feature-value-${index}`), expectedValue)
+  await closeModal()
 }
 
 export const createOrganisationAndProject = async (organisationName:string,projectName:string) =>{
   log('Create Organisation')
+  await click(byId('home-link'))
   await click(byId('create-organisation-btn'))
   await setText('[name="orgName"]', organisationName)
   await click('#create-org-btn')
@@ -387,6 +393,7 @@ export const createFeature = async (
   }
   await click(byId('create-feature-btn'))
   await waitForElementVisible(byId(`feature-item-${index}`))
+  await closeModal()
 }
 
 export const deleteFeature = async (index: number, name: string) => {
@@ -457,6 +464,18 @@ export const waitAndRefresh = async (waitFor = 3000) => {
   logUsingLastSection(`Waiting for ${waitFor}ms, then refreshing.`)
   await t.wait(waitFor)
   await t.eval(() => location.reload())
+}
+
+export const refreshUntilElementVisible = async (selector: string, maxRetries=20) => {
+  const element = Selector(selector);
+  const isElementVisible = async () => await element.exists && await element.visible;
+  let retries = 0;
+  while (retries < maxRetries && !(await isElementVisible())) {
+    await t.eval(() => location.reload()); // Reload the page
+    await t.wait(3000);
+    retries++;
+  }
+  return t.scrollIntoView(element)
 }
 
 export default {}

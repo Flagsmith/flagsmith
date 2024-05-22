@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest import mock
 
 import pytest
 from django.conf import settings
+from django.utils import timezone
 from pytest_mock import MockerFixture
 from rest_framework.test import override_settings
 
@@ -10,6 +11,7 @@ from environments.models import Environment
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
     Organisation,
+    OrganisationAPIUsageNotification,
     OrganisationSubscriptionInformationCache,
     Subscription,
 )
@@ -514,22 +516,38 @@ def test_organisation_update_clears_environment_caches(
     mock_environment_cache.delete_many.assert_called_once_with([environment.api_key])
 
 
-@pytest.mark.parametrize(
-    "allowed_calls_30d, actual_calls_30d, expected_overage",
-    ((1000000, 500000, 0), (1000000, 1100000, 100000), (0, 100000, 100000)),
-)
-def test_organisation_subscription_get_api_call_overage(
-    organisation, subscription, allowed_calls_30d, actual_calls_30d, expected_overage
-):
+def test_reset_of_api_notifications(organisation: Organisation) -> None:
     # Given
-    OrganisationSubscriptionInformationCache.objects.create(
+    now = timezone.now()
+    osic = OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
-        allowed_30d_api_calls=allowed_calls_30d,
-        api_calls_30d=actual_calls_30d,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+    )
+
+    # Create a notification which should be deleted shortly.
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=90,
+        notified_at=now,
+    )
+
+    # Keep a notification which should not be deleted.
+    organisation2 = Organisation.objects.create(name="Test org2")
+    oapiun = OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation2,
+        percent_usage=90,
+        notified_at=now,
     )
 
     # When
-    overage = subscription.get_api_call_overage()
+    osic.allowed_30d_api_calls *= 2
+    osic.save()
 
     # Then
-    assert overage == expected_overage
+    assert OrganisationAPIUsageNotification.objects.count() == 1
+    assert OrganisationAPIUsageNotification.objects.first() == oapiun

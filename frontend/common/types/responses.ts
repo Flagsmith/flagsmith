@@ -4,6 +4,13 @@ export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
 }
+export type Approval =
+  | {
+      user: number
+    }
+  | {
+      group: number
+    }
 export type PagedResponse<T> = {
   count?: number
   next?: string
@@ -18,6 +25,7 @@ export type FeatureVersionState = {
   feature_state_value: FeatureStateValue
   feature_segment: null | FeatureState['feature_segment']
   multivariate_feature_state_values: Omit<MultivariateFeatureStateValue, 'id'>[]
+  live_from: FeatureState['live_from']
 }
 export type Operator = {
   value: string | null
@@ -60,6 +68,7 @@ export type Segment = {
   description: string
   project: string | number
   feature?: number
+  metadata: Metadata[] | []
 }
 export type Environment = {
   id: number
@@ -74,6 +83,7 @@ export type Environment = {
   hide_sensitive_data: boolean
   total_segment_overrides?: number
   use_v2_feature_versioning: boolean
+  metadata: Metadata[] | []
 }
 export type Project = {
   id: number
@@ -91,10 +101,20 @@ export type Project = {
   max_features_allowed?: number | null
   max_segment_overrides_allowed?: number | null
   total_features?: number
+  stale_flags_limit_days?: number
   total_segments?: number
   environments: Environment[]
 }
 export type ImportStrategy = 'SKIP' | 'OVERWRITE_DESTRUCTIVE'
+
+export type ExternalResource = {
+  id?: number
+  url: string
+  type: string
+  project?: number
+  metadata: null | { status: string }
+  feature: number
+}
 
 export type ImportExportStatus = 'SUCCESS' | 'PROCESSING' | 'FAILED'
 
@@ -137,12 +157,179 @@ export type LaunchDarklyProjectImport = {
   project: number
 }
 
+export type Issue = {
+  url: string
+  repository_url: string
+  labels_url: string
+  comments_url: string
+  events_url: string
+  html_url: string
+  id: number
+  number: number
+  title: string
+  state: string
+  created_at: string
+  updated_at: string
+  closed_at: null | string
+  body: string
+  timeline_url: string
+}
+
+export type PullRequest = {
+  url: string
+  id: number
+  html_url: string
+  issue_url: string
+  number: number
+  state: string
+  locked: boolean
+  title: string
+  body: string | null
+  created_at: string
+  updated_at: string
+  closed_at: string | null
+  merged_at: string | null
+  draft: boolean
+  comments_url: string
+  statuses_url: string
+}
+
+export type GithubPaginatedRepos<T> = {
+  total_count: number
+  repository_selection: string
+  repositories: T[]
+}
+
+export type Repository = {
+  id: number
+  node_id: string
+  name: string
+  full_name: string
+  private: boolean
+  owner: {
+    login: string
+    id: number
+    node_id: string
+    avatar_url: string
+    gravatar_id: string
+    url: string
+    html_url: string
+    followers_url: string
+    following_url: string
+    gists_url: string
+    starred_url: string
+    subscriptions_url: string
+    organizations_url: string
+    repos_url: string
+    events_url: string
+    received_events_url: string
+    type: string
+    site_admin: boolean
+  }
+  html_url: string
+  description: string | null
+  fork: boolean
+  url: string
+  forks_url: string
+  keys_url: string
+  collaborators_url: string
+  teams_url: string
+  hooks_url: string
+  issue_events_url: string
+  events_url: string
+  assignees_url: string
+  branches_url: string
+  tags_url: string
+  blobs_url: string
+  git_tags_url: string
+  git_refs_url: string
+  trees_url: string
+  statuses_url: string
+  languages_url: string
+  stargazers_url: string
+  contributors_url: string
+  subscribers_url: string
+  subscription_url: string
+  commits_url: string
+  git_commits_url: string
+  comments_url: string
+  issue_comment_url: string
+  contents_url: string
+  compare_url: string
+  merges_url: string
+  archive_url: string
+  downloads_url: string
+  issues_url: string
+  pulls_url: string
+  milestones_url: string
+  notifications_url: string
+  labels_url: string
+  releases_url: string
+  deployments_url: string
+  created_at: string
+  updated_at: string
+  pushed_at: string
+  git_url: string
+  ssh_url: string
+  clone_url: string
+  svn_url: string
+  homepage: string | null
+  size: number
+  stargazers_count: number
+  watchers_count: number
+  language: string
+  has_issues: boolean
+  has_projects: boolean
+  has_downloads: boolean
+  has_wiki: boolean
+  has_pages: boolean
+  has_discussions: boolean
+  forks_count: number
+  mirror_url: string | null
+  archived: boolean
+  disabled: boolean
+  open_issues_count: number
+  license: string | null
+  allow_forking: boolean
+  is_template: boolean
+  web_commit_signoff_required: boolean
+  topics: string[]
+  visibility: string
+  forks: number
+  open_issues: number
+  watchers: number
+  default_branch: string
+  permissions: {
+    admin: boolean
+    maintain: boolean
+    push: boolean
+    triage: boolean
+    pull: boolean
+  }
+}
+
+export type GithubRepository = {
+  id: number
+  github_configuration: number
+  project: number
+  repository_owner: string
+  repository_name: string
+}
+
+export type githubIntegration = {
+  id: string
+  installation_id: string
+  organisation: string
+}
+
 export type User = {
   id: number
   email: string
+  last_login?: string
   first_name: string
   last_name: string
   role: 'ADMIN' | 'USER'
+  date_joined: string
 }
 export type GroupUser = Omit<User, 'role'> & {
   group_admin: boolean
@@ -166,6 +353,7 @@ export type UserPermission = {
   permissions: string[]
   admin: boolean
   id: number
+  role?: number
 }
 export type GroupPermission = Omit<UserPermission, 'user'> & {
   group: UserGroup
@@ -248,6 +436,9 @@ export type Tag = {
   description: string
   project: number
   label: string
+  is_system_tag: boolean
+  is_permanent: boolean
+  type: 'STALE' | 'NONE'
 }
 
 export type MultivariateFeatureStateValue = {
@@ -286,6 +477,7 @@ export type IdentityFeatureState = {
   enabled: boolean
   feature_state_value: FlagsmithValue
   segment: null
+  overridden_by: string | null
   multivariate_feature_state_values?: {
     multivariate_feature_option: {
       value: number
@@ -306,7 +498,6 @@ export type FeatureState = {
   environment_feature_version: string
   version?: number
   live_from?: string
-  hide_from_client?: string
   feature: number
   environment: number
   feature_segment?: {
@@ -316,6 +507,8 @@ export type FeatureState = {
     uuid: string
   }
   change_request?: number
+  //Added by FE
+  toRemove?: boolean
 }
 
 export type ProjectFlag = {
@@ -332,6 +525,7 @@ export type ProjectFlag = {
   num_segment_overrides: number | null
   owners: User[]
   owner_groups: UserGroupSummary[]
+  metadata: Metadata[] | []
   project: number
   tags: number[]
   type: string
@@ -360,6 +554,31 @@ export type AuthType = 'EMAIL' | 'GITHUB' | 'GOOGLE'
 
 export type SignupType = 'NO_INVITE' | 'INVITE_EMAIL' | 'INVITE_LINK'
 
+export type Invite = {
+  id: number
+  email: string
+  date_created: string
+  invited_by: User
+  link: string
+  permission_groups: number[]
+}
+
+export type InviteLink = {
+  id: number
+  hash: string
+  date_created: string
+  role: string
+  expires_at: string | null
+}
+
+export type SubscriptionMeta = {
+  max_seats: number | null
+  max_api_calls: number | null
+  max_projects: number | null
+  payment_source: string | null
+  chargebee_email: string | null
+}
+
 export type Account = {
   first_name: string
   last_name: string
@@ -382,6 +601,37 @@ export type RolePermissionUser = {
   id: number
   role_name: string
 }
+export type RolePermissionGroup = {
+  group: number
+  role: number
+  id: number
+  role_name: string
+}
+export type ChangeRequest = {
+  id: number
+  created_at: string
+  updated_at: string
+  environment: number
+  title: string
+  description: string | number
+  feature_states: FeatureState[]
+  user: number
+  committed_at: number | null
+  committed_by: number | null
+  deleted_at: null
+  approvals: {
+    id: number
+    user: number
+    approved_at: null | string
+  }[]
+  is_approved: boolean
+  is_committed: boolean
+  group_assignments: { group: number }[]
+  environment_feature_versions: {
+    uuid: string
+    feature_states: FeatureState[]
+  }[]
+}
 export type FeatureVersion = {
   created_at: string
   updated_at: string
@@ -392,6 +642,40 @@ export type FeatureVersion = {
   published_by: number | null
   created_by: number | null
 }
+
+export type Metadata = {
+  id?: number
+  model_field: number | string
+  field_value: string
+}
+
+export type MetadataField = {
+  id: number
+  name: string
+  type: string
+  description: string
+  organisation: number
+}
+
+export type ContentType = {
+  [key: string]: any
+  id: number
+  app_label: string
+  model: string
+}
+
+export type isRequiredFor = {
+  content_type: number
+  object_id: number
+}
+
+export type MetadataModelField = {
+  id: string
+  field: number
+  content_type: number | string
+  is_required_for: isRequiredFor[]
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -454,15 +738,22 @@ export type Res = {
   }
   featureVersion: FeatureVersion
   versionFeatureState: FeatureState[]
-  roles: Role[]
-  rolePermission: { id: string }
+  role: Role
+  roles: PagedResponse<Role>
+  rolePermission: PagedResponse<UserPermission>
   projectFlags: PagedResponse<ProjectFlag>
   projectFlag: ProjectFlag
-  identityFeatureStates: IdentityFeatureState[]
-  rolesPermissionUsers: RolePermissionUser
-  rolePermissionGroup: { id: string }
+  identityFeatureStatesAll: IdentityFeatureState[]
+  createRolesPermissionUsers: RolePermissionUser
+  rolesPermissionUsers: PagedResponse<RolePermissionUser>
+  createRolePermissionGroup: RolePermissionGroup
+  rolePermissionGroup: PagedResponse<RolePermissionGroup>
   getSubscriptionMetadata: { id: string }
   environment: Environment
+  metadataModelFieldList: PagedResponse<MetadataModelField>
+  metadataModelField: MetadataModelField
+  metadataList: PagedResponse<MetadataField>
+  metadataField: MetadataField
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   roleMasterApiKey: { id: number; master_api_key: string; role: number }
@@ -475,8 +766,15 @@ export type Res = {
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
   groupSummaries: UserGroupSummary[]
+  supportedContentType: ContentType[]
+  externalResource: PagedResponse<ExternalResource>
+  githubIntegrations: PagedResponse<githubIntegration>
+  githubRepository: PagedResponse<GithubRepository>
+  githubIssues: Issue[]
+  githubPulls: PullRequest[]
+  githubRepos: GithubPaginatedRepos<Repository>
   segmentPriorities: {}
-  featureSegment: { id: string }
+  featureSegment: FeatureState['feature_segment']
   featureVersions: PagedResponse<FeatureVersion>
   users: User[]
   enableFeatureVersioning: { id: string }
@@ -486,5 +784,9 @@ export type Res = {
   flagsmithProjectImport: { id: string }
   featureImports: PagedResponse<FeatureImport>
   serversideEnvironmentKeys: APIKey[]
+  userGroupPermissions: GroupPermission[]
+  identityFeatureStates: PagedResponse<FeatureState>
+  cloneidentityFeatureStates: IdentityFeatureState
+  featureStates: PagedResponse<FeatureState>
   // END OF TYPES
 }

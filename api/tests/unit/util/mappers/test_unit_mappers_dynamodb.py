@@ -8,7 +8,7 @@ from environments.dynamodb.constants import (
 from util.mappers import dynamodb
 from util.mappers.engine import map_feature_state_to_engine
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
     from environments.identities.models import Identity
@@ -50,6 +50,7 @@ def test_map_environment_to_environment_document__call_expected(
                 "multivariate_feature_state_values": [],
             }
         ],
+        "identity_overrides": [],
         "heap_config": None,
         "hide_disabled_flags": None,
         "hide_sensitive_data": False,
@@ -153,6 +154,7 @@ def test_map_environment_to_environment_v2_document__call_expected(
         "allow_client_traits": True,
         "amplitude_config": None,
         "dynatrace_config": None,
+        "identity_overrides": [],
         "feature_states": [
             {
                 "django_id": Decimal(feature_state.pk),

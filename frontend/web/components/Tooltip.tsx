@@ -1,81 +1,45 @@
-import React from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
-
-import * as DOMPurify from 'dompurify'
+import React, { FC, ReactElement, ReactNode, useRef } from 'react'
+import ReactTooltip, { TooltipProps as _TooltipProps } from 'react-tooltip'
 import Utils from 'common/utils/utils'
-import { informationCircle } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 
-const ReactTooltip = require('react-tooltip')
-
-type StyledTooltipProps = {
+export type TooltipProps = {
+  title: ReactNode
   children: string
-}
-
-type TooltipProps = {
-  children: string
+  place?: _TooltipProps['place']
   plainText?: boolean
-  place?: string | undefined
-  title: JSX.Element // This is actually the Tooltip parent component
-  noIcon?: boolean
+  titleClassName?: string
 }
 
-const StyledTooltip = ({ children }: StyledTooltipProps) => (
-  <div className='flex-row'>
-    <div className='icon--new-tooltip mr-1'>
-      <IonIcon icon={informationCircle} />
-    </div>
-    <span>{`${children}`}</span>
-  </div>
-)
-
-const tooltipStyler = (
-  plainText: boolean,
-  children: string,
-  noIcon?: boolean,
-): string => {
-  const tooltip = noIcon ? (
-    <span>{plainText ? children : '{{html}}'}</span>
-  ) : (
-    <StyledTooltip>{plainText ? children : '{{html}}'}</StyledTooltip>
-  )
-  const html = renderToStaticMarkup(tooltip)
-  if (plainText) {
-    return html
-  }
-  return html.replace('{{html}}', DOMPurify.sanitize(children.toString()))
-}
-
-const Tooltip = ({
+const Tooltip: FC<TooltipProps> = ({
   children,
-  noIcon,
   place,
   plainText,
   title,
-}: TooltipProps): JSX.Element => {
+  titleClassName,
+}) => {
   const id = Utils.GUID()
 
+  if (!children) {
+    // Skip tooltip by supplying falsy children
+    return <>{title}</>
+  }
   return (
-    <span className='question-tooltip'>
-      {title ? (
-        <span data-for={id} data-tip>
+    <>
+      {title && (
+        <span className={titleClassName} data-for={id} data-tip>
           {title}
         </span>
-      ) : (
-        <IonIcon icon={informationCircle} data-for={id} data-tip />
       )}
       {!!children && (
-        <ReactTooltip
-          html
-          id={id}
-          place={place || 'top'}
-          type='dark'
-          effect='solid'
-        >
-          {tooltipStyler(plainText, children, noIcon)}
+        <ReactTooltip className='rounded' id={id} place={place || 'top'}>
+          {plainText ? (
+            `${children}`
+          ) : (
+            <div dangerouslySetInnerHTML={{ __html: children }} />
+          )}
         </ReactTooltip>
       )}
-    </span>
+    </>
   )
 }
 

@@ -1,6 +1,7 @@
 import React, { FC } from 'react'
 import Icon from './Icon'
 import Button from './base/forms/Button'
+import Constants from 'common/constants'
 
 type WarningMessageType = {
   warningMessage: string
@@ -26,7 +27,7 @@ const WarningMessage: FC<WarningMessageType> = (props) => {
         <Button
           className='btn ml-3'
           onClick={() => {
-            document.location.replace('/organisation-settings')
+            document.location.replace(Constants.upgradeURL)
           }}
         >
           Upgrade plan

@@ -1,15 +1,20 @@
 from django.conf import settings
-from djoser.serializers import UserCreateSerializer, UserDeleteSerializer
+from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.validators import UniqueValidator
 
 from organisations.invites.models import Invite
+from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.models import FFAdminUser, SignUpType
 
-from .constants import USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
+from .constants import (
+    FIELD_BLANK_ERROR,
+    INVALID_PASSWORD_ERROR,
+    USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE,
+)
 
 
 class CustomTokenSerializer(serializers.ModelSerializer):
@@ -35,7 +40,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
                     UniqueValidator(
                         queryset=FFAdminUser.objects.all(),
                         lookup="iexact",
-                        message="Invalid email address.",
+                        message="Email already exists. Please log in.",
                     )
                 ]
             }
@@ -72,7 +77,36 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         return super(CustomUserCreateSerializer, self).save(**kwargs)
 
 
-class CustomUserDelete(UserDeleteSerializer):
+class CustomUserDelete(serializers.Serializer):
+    current_password = serializers.CharField(
+        style={"input_type": "password"},
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+    )
+
+    default_error_messages = {
+        "invalid_password": INVALID_PASSWORD_ERROR,
+        "field_blank": FIELD_BLANK_ERROR,
+    }
+
+    def validate_current_password(self, value):
+        user_auth_type = self.context["request"].user.auth_type
+        if (
+            user_auth_type == AuthType.GOOGLE.value
+            or user_auth_type == AuthType.GITHUB.value
+        ):
+            return value
+
+        if not value:
+            return self.fail("field_blank")
+
+        is_password_valid = self.context["request"].user.check_password(value)
+        if is_password_valid:
+            return value
+        else:
+            self.fail("invalid_password")
+
     delete_orphan_organisations = serializers.BooleanField(
         default=DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE, required=False
     )

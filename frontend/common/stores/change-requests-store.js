@@ -1,8 +1,33 @@
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
+const { flatten } = require('lodash')
+const {
+  addFeatureSegmentsToFeatureStates,
+} = require('../services/useFeatureState')
 
 const PAGE_SIZE = 20
+const transformChangeRequest = async (changeRequest) => {
+  const res = changeRequest?.environment_feature_versions?.length
+    ? {
+        ...changeRequest,
+        feature_states: flatten(
+          changeRequest.environment_feature_versions.map(
+            (featureVersion) => featureVersion.feature_states,
+          ),
+        ),
+      }
+    : changeRequest
+
+  const feature_states = await Promise.all(
+    res.feature_states.map(addFeatureSegmentsToFeatureStates),
+  )
+
+  return {
+    ...res,
+    feature_states,
+  }
+}
 const controller = {
   actionChangeRequest: (id, action, cb) => {
     store.loading()
@@ -11,8 +36,8 @@ const controller = {
       .then(() => {
         data
           .get(`${Project.api}features/workflows/change-requests/${id}/`)
-          .then((res) => {
-            store.model[id] = res
+          .then(async (res) => {
+            store.model[id] = await transformChangeRequest(res)
             cb && cb()
             store.loaded()
           })
@@ -33,8 +58,9 @@ const controller = {
     store.loading()
     data
       .get(`${Project.api}features/workflows/change-requests/${id}/`)
-      .then((res) =>
-        Promise.all([
+      .then(async (apiResponse) => {
+        const res = await transformChangeRequest(apiResponse)
+        return Promise.all([
           data.get(
             `${Project.api}environments/${environmentId}/featurestates/?feature=${res.feature_states[0].feature}`,
           ),
@@ -48,8 +74,8 @@ const controller = {
             projectFlag,
           }
           store.loaded()
-        }),
-      )
+        })
+      })
       .catch((e) => API.ajaxHandler(store, e))
   },
   getChangeRequests: (envId, { committed, live_from_after }, page) => {
@@ -99,15 +125,32 @@ const controller = {
   updateChangeRequest: (changeRequest) => {
     store.loading()
     data
-      .put(
+      .get(
         `${Project.api}features/workflows/change-requests/${changeRequest.id}/`,
-        changeRequest,
       )
       .then((res) => {
-        store.model[changeRequest.id] = res
-        store.loaded()
+        data
+          .put(
+            `${Project.api}features/workflows/change-requests/${changeRequest.id}/`,
+            {
+              ...res,
+              approvals: changeRequest.approvals,
+              description: changeRequest.description,
+              environment_feature_versions:
+                changeRequest?.environment_feature_versions?.map((v) => v.uuid),
+              group_assignments: changeRequest.group_assignments,
+              title: changeRequest.title,
+            },
+          )
+          .then(async () => {
+            const res = await data.get(
+              `${Project.api}features/workflows/change-requests/${changeRequest.id}/`,
+            )
+            store.model[changeRequest.id] = await transformChangeRequest(res)
+            store.loaded()
+          })
+          .catch((e) => API.ajaxHandler(store, e))
       })
-      .catch((e) => API.ajaxHandler(store, e))
   },
 }
 

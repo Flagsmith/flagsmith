@@ -2,9 +2,7 @@
 
 :::tip
 
-Real-time Flags are part of our SaaS Scale-Up and Enterprise plans.
-
-Real-time Flags are currently in beta. Please contact us to join the beta!
+Real-time Flags are currently part of our SaaS Enterprise plans.
 
 :::
 
@@ -65,13 +63,8 @@ but are happy to take pull requests!
 
 ## Things you should know
 
-### Per-Identity overrides do not trigger an update
-
-This is being worked on and we hope to release this capability across all our SDKs in Q4 2023.
-
-### Identity Trait updates do not trigger an update
-
-This is being worked on and we hope to release this capability across all our SDKs in Q4 2023.
+- Per-identity overrides do not trigger an update
+- Identity Trait updates do not trigger an update
 
 ## How it works under the hood
 

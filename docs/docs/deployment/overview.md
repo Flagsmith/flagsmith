@@ -151,7 +151,7 @@ We collect the following data on startup and then once every 8 hours per API ser
 ## Running Flagsmith on Flagsmith
 
 Flagsmith uses Flagsmith to control features on the front end dashboard. If you are self hosting the platform, you will
-sometimes see features greyed out, or you may want to disable specific features, e.g. logging in via Google and Github.
+sometimes see features greyed out, or you may want to disable specific features, e.g. logging in via Google and GitHub.
 If you are using your own Flagsmith environment then you will need to have a replica of our flags in order to control
 access to those features.
 
@@ -165,6 +165,8 @@ Once you have created the project, you need to set the following
 - `FLAGSMITH_ON_FLAGSMITH_API_KEY`
   - The Flagsmith Client-side Environment Key we use to manage features - Flagsmith runs on Flagsmith. This will be the
     API key for the project you created as instructed above.
+- `ENABLE_FLAGSMITH_REALTIME`
+  - Determines whether the Flagsmith on Flagsmith SDK uses Realtime.
 - `FLAGSMITH_ON_FLAGSMITH_API_URL`
   - The API URL which the Flagsmith front end dashboard should communicate with. This will most likely be the domain
     name of the Flagsmith API you are self hosting: Flagsmith runs on Flagsmith. E.g. For our SaaS hosted platform, the
@@ -181,39 +183,27 @@ the platform. For example, if you wanted to disable Google OAuth authentication,
 
 The list of the flags and remote config we're currently using in production is below:
 
-| Flag Name                             | Description                                                                                                                                    | Text Value                                           |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `4eyes`                               | Whether to enable the Change Requests feature                                                                                                  | None                                                 |
-| `announcement`                        | Shows an announcement at the top of the app                                                                                                    | None                                                 |
-| `butter_bar`                          | Show html in a butter bar for certain users                                                                                                    | None                                                 |
-| `case_sensitive_flags`                | Enables the project setting to allow case sensitive flags                                                                                      | None                                                 |
-| `compare_environments`                | Compare feature flag changes across environments                                                                                               | None                                                 |
-| `configure_hide_sensitive_data`       | If the value is true, the hide sensitive data switch will be displayed in the environment settings.                                            | None                                                 |
-| `dark_mode`                           | Enables Dark Mode in UI See Below                                                                                                              | None                                                 |
-| `disable_create_org`                  | Turning this on will prevent users from creating any additional organisations                                                                  | None                                                 |
-| `disable_users_as_reviewers`          | If enabled, this flag will hide the Assigned users section in the Change Requests and in the Create Change Request modal in the Features page. | None                                                 |
-| `enable_metadata`                     | If enabled, metadata can be handled                                                                                                            | None                                                 |
-| `feature_name_regex`                  | Enables the project setting to add a regex matcher to validate feature names                                                                   | None                                                 |
-| `feature_versioning`                  | Opt into feature versioning for your environment                                                                                               | None                                                 |
-| `flag_analytics`                      | Flag usage chart - requires additional infrastructure ([See here](/deployment/overview#flag-analytics))                                        | None                                                 |
-| `force_2fa`                           | Enables the organisation setting to force 2 factor authentication                                                                              | None                                                 |
-| `integration_data`                    | Integration config for different providers                                                                                                     | [See Below](#integration_data)                       |
-| `mailing_list`                        | Determines if mailing list consent is shown on signup                                                                                          | None                                                 |
-| `max_api_calls_alert`                 | If enabled, shows an alert message in the top banner when the organization is over a 70% of its API calls limit                                | None                                                 |
-| `oauth_github`                        | GitHub login key                                                                                                                               | [See Below](#oauth_github)                           |
-| `oauth_google`                        | Google login key                                                                                                                               | [See Below](#oauth_google)                           |
-| `payments_enabled`                    | Determines whether to show payment UI / seats                                                                                                  | None                                                 |
-| `plan_based_access`                   | Controls rbac and 2f based on plans                                                                                                            | None                                                 |
-| `rotate_api_token`                    | Enables the ability to rotate a user's access token                                                                                            | [See Below](#oauth_google)                           |
-| `saml`                                | Enables SAML authentication                                                                                                                    | [See](/deployment/configuration/authentication/SAML) |
-| `segment_associated_features`         | Enables the ability to see features associated with a segment                                                                                  | None                                                 |
-| `segment_operators`                   | Determines what rules are shown when creating a segment                                                                                        | [See Below](#segment_operators)                      |
-| `serverside_sdk_keys`                 | Enable Server-side Environment Keys                                                                                                            | None                                                 |
-| `show_role_management`                | Show role management tab in OrganisationalSettingsPage                                                                                         | None                                                 |
-| `sso_idp`                             | For self hosted, this will automatically redirect to the pre configured IdP                                                                    | None                                                 |
-| `tag_environments`                    | Enables an environment setting to add a UI hint to your environments (e.g. for prod)                                                           | None                                                 |
-| `usage_chart`                         | Organisation Analytics usage chart -                                                                                                           | None                                                 |
-| `verify_seats_limit_for_invite_links` | Determines whether to show los invite links                                                                                                    | None                                                 |
+| Flag Name                                   | Description                                                                                                                                    | Text Value                                        |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `announcement`                              | Shows an announcement at the top of the app                                                                                                    | None                                              |
+| `butter_bar`                                | Show html in a butter bar for certain users                                                                                                    | None                                              |
+| `dark_mode`                                 | Enables Dark Mode in UI See Below                                                                                                              | None                                              |
+| `default_environment_names_for_new_project` | Names of default environments to create when creating a new project (e.g. `["Development", "Production"]`)                                     | None                                              |
+| `disable_create_org`                        | Turning this on will prevent users from creating any additional organisations                                                                  | None                                              |
+| `disable_users_as_reviewers`                | If enabled, this flag will hide the Assigned users section in the Change Requests and in the Create Change Request modal in the Features page. | None                                              |
+| `enable_metadata`                           | If enabled, metadata can be handled                                                                                                            | None                                              |
+| `feature_versioning`                        | Opt into feature versioning for your environment                                                                                               | None                                              |
+| `integration_data`                          | Integration config for different providers                                                                                                     | [See Below](#integration_data)                    |
+| `mailing_list`                              | Determines if mailing list consent is shown on signup                                                                                          | None                                              |
+| `max_api_calls_alert`                       | If enabled, shows an alert message in the top banner when the organization is over a 70% of its API calls limit                                | None                                              |
+| `oauth_github`                              | GitHub login key                                                                                                                               | [See Below](#oauth_github)                        |
+| `oauth_google`                              | Google login key                                                                                                                               | [See Below](#oauth_google)                        |
+| `payments_enabled`                          | Determines whether to show payment UI / seats                                                                                                  | None                                              |
+| `plan_based_access`                         | Controls rbac and 2f based on plans                                                                                                            | None                                              |
+| `saml`                                      | Enables SAML authentication                                                                                                                    | [See](/system-administration/authentication/SAML) |
+| `segment_operators`                         | Determines what rules are shown when creating a segment                                                                                        | [See Below](#segment_operators)                   |
+| `sso_idp`                                   | For self hosted, this will automatically redirect to the pre configured IdP                                                                    | None                                              |
+| `verify_seats_limit_for_invite_links`       | Determines whether to show los invite links                                                                                                    | None                                              |
 
 ### `integration_data`
 
@@ -222,7 +212,7 @@ The list of the flags and remote config we're currently using in production is b
  "datadog": {
   "perEnvironment": false,
   "image": "/static/images/integrations/datadog.svg",
-  "docs": "https://docs.flagsmith.com/integrations/apm/datadog/",
+  "docs": "https://docs.flagsmith.com/integrations/apm/datadog",
   "fields": [
    {
     "key": "base_url",
@@ -232,6 +222,12 @@ The list of the flags and remote config we're currently using in production is b
     "key": "api_key",
     "label": "API Key",
     "hidden": true
+   },
+   {
+    "key": "use_custom_source",
+    "label": "Use Custom Source",
+    "inputType": "checkbox",
+    "default": true
    }
   ],
   "tags": ["logging"],
@@ -241,7 +237,7 @@ The list of the flags and remote config we're currently using in production is b
  "dynatrace": {
   "perEnvironment": true,
   "image": "/static/images/integrations/dynatrace.svg",
-  "docs": "https://docs.flagsmith.com/integrations/apm/dynatrace/",
+  "docs": "https://docs.flagsmith.com/integrations/apm/dynatrace",
   "fields": [
    {
     "key": "base_url",
@@ -261,11 +257,20 @@ The list of the flags and remote config we're currently using in production is b
   "title": "Dynatrace",
   "description": "Sends events to Dynatrace for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production."
  },
+ "jira": {
+  "perEnvironment": false,
+  "image": "https://docs.flagsmith.com/img/integrations/jira/jira-logo.svg",
+  "docs": "https://docs.flagsmith.com/integrations/project-management/jira",
+  "external": true,
+  "title": "Jira",
+  "description": "View your Flagsmith Flags inside Jira."
+ },
+
  "slack": {
   "perEnvironment": true,
   "isOauth": true,
   "image": "/static/images/integrations/slack.svg",
-  "docs": "https://docs.flagsmith.com/integrations/slack/",
+  "docs": "https://docs.flagsmith.com/integrations/slack",
   "tags": ["messaging"],
   "title": "Slack",
   "description": "Sends messages to Slack when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production."
@@ -273,7 +278,7 @@ The list of the flags and remote config we're currently using in production is b
  "amplitude": {
   "perEnvironment": true,
   "image": "/static/images/integrations/amplitude.svg",
-  "docs": "https://docs.flagsmith.com/integrations/analytics/amplitude/",
+  "docs": "https://docs.flagsmith.com/integrations/analytics/amplitude",
   "fields": [
    {
     "key": "api_key",
@@ -386,184 +391,6 @@ The list of the flags and remote config we're currently using in production is b
   "docs": "https://docs.flagsmith.com/integrations/analytics/mixpanel",
   "fields": [
    {
-    "datadog": {
-     "perEnvironment": false,
-     "image": "/static/images/integrations/datadog.svg",
-     "docs": "https://docs.flagsmith.com/integrations/apm/datadog/",
-     "fields": [
-      {
-       "key": "base_url",
-       "label": "Base URL"
-      },
-      {
-       "key": "api_key",
-       "label": "API Key",
-       "hidden": true
-      }
-     ],
-     "tags": ["logging"],
-     "title": "Datadog",
-     "description": "Sends events to Datadog for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production."
-    },
-    "dynatrace": {
-     "perEnvironment": true,
-     "image": "/static/images/integrations/dynatrace.svg",
-     "docs": "https://docs.flagsmith.com/integrations/apm/dynatrace/",
-     "fields": [
-      {
-       "key": "base_url",
-       "label": "Base URL"
-      },
-      {
-       "key": "api_key",
-       "label": "API Key",
-       "hidden": true
-      },
-      {
-       "key": "entity_selector",
-       "label": "Entity Selector"
-      }
-     ],
-     "tags": ["logging"],
-     "title": "Dynatrace",
-     "description": "Sends events to Dynatrace for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production."
-    },
-    "slack": {
-     "perEnvironment": true,
-     "isOauth": true,
-     "image": "/static/images/integrations/slack.svg",
-     "docs": "https://docs.flagsmith.com/integrations/slack/",
-     "tags": ["messaging"],
-     "title": "Slack",
-     "description": "Sends messages to Slack when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production."
-    },
-    "amplitude": {
-     "perEnvironment": true,
-     "image": "/static/images/integrations/amplitude.svg",
-     "docs": "https://docs.flagsmith.com/integrations/analytics/amplitude/",
-     "fields": [
-      {
-       "key": "api_key",
-       "label": "API Key",
-       "hidden": true
-      },
-      {
-       "key": "base_url",
-       "label": "Base URL"
-      }
-     ],
-     "tags": ["analytics"],
-     "title": "Amplitude",
-     "description": "Sends data on what flags served to each identity."
-    },
-    "new-relic": {
-     "perEnvironment": false,
-     "image": "/static/images/integrations/new_relic.svg",
-     "docs": "https://docs.flagsmith.com/integrations/apm/newrelic",
-     "fields": [
-      {
-       "key": "base_url",
-       "label": "New Relic Base URL"
-      },
-      {
-       "key": "api_key",
-       "label": "New Relic API Key",
-       "hidden": true
-      },
-      {
-       "key": "app_id",
-       "label": "New Relic Application ID"
-      }
-     ],
-     "tags": ["analytics"],
-     "title": "New Relic",
-     "description": "Sends events to New Relic for when flags are created, updated and removed."
-    },
-    "segment": {
-     "perEnvironment": true,
-     "image": "/static/images/integrations/segment.svg",
-     "docs": "https://docs.flagsmith.com/integrations/analytics/segment",
-     "fields": [
-      {
-       "key": "api_key",
-       "label": "API Key",
-       "hidden": true
-      }
-     ],
-     "tags": ["analytics"],
-     "title": "Segment",
-     "description": "Sends data on what flags served to each identity."
-    },
-    "rudderstack": {
-     "perEnvironment": true,
-     "image": "/static/images/integrations/rudderstack.svg",
-     "docs": "https://docs.flagsmith.com/integrations/analytics/rudderstack",
-     "fields": [
-      {
-       "key": "base_url",
-       "label": "Rudderstack Data Plane URL"
-      },
-      {
-       "key": "api_key",
-       "label": "API Key",
-       "hidden": true
-      }
-     ],
-     "tags": ["analytics"],
-     "title": "Rudderstack",
-     "description": "Sends data on what flags served to each identity."
-    },
-    "webhook": {
-     "perEnvironment": true,
-     "image": "/static/images/integrations/webhooks.svg",
-     "docs": "https://docs.flagsmith.com/integrations/webhook",
-     "fields": [
-      {
-       "key": "url",
-       "label": "Your Webhook URL Endpoint"
-      },
-      {
-       "key": "secret",
-       "label": "Your Webhook Secret",
-       "hidden": true
-      }
-     ],
-     "tags": ["analytics"],
-     "title": "Webhook",
-     "description": "Sends data on what flags served to each identity to a Webhook Endpoint you provide."
-    },
-    "heap": {
-     "perEnvironment": true,
-     "image": "/static/images/integrations/heap.svg",
-     "docs": "https://docs.flagsmith.com/integrations/analytics/heap",
-     "fields": [
-      {
-       "key": "api_key",
-       "label": "API Key",
-       "hidden": true
-      }
-     ],
-     "tags": ["analytics"],
-     "title": "Heap Analytics",
-     "description": "Sends data on what flags served to each identity."
-    },
-    "mixpanel": {
-     "perEnvironment": true,
-     "image": "/static/images/integrations/mp.svg",
-     "docs": "https://docs.flagsmith.com/integrations/analytics/mixpanel",
-     "fields": [
-      {
-       "key": "api_key",
-       "label": "Project Token",
-       "hidden": true
-      }
-     ],
-     "tags": ["analytics"],
-     "title": "Mixpanel",
-     "description": "Sends data on what flags served to each identity."
-    }
-   },
-   {
     "key": "api_key",
     "label": "Project Token",
     "hidden": true
@@ -594,19 +421,23 @@ The list of the flags and remote config we're currently using in production is b
  },
  {
   "value": "GREATER_THAN",
-  "label": ">"
+  "label": ">",
+  "type": "number"
  },
  {
   "value": "GREATER_THAN_INCLUSIVE",
-  "label": ">="
+  "label": ">=",
+  "type": "number"
  },
  {
   "value": "LESS_THAN",
-  "label": "<"
+  "label": "<",
+  "type": "number"
  },
  {
   "value": "LESS_THAN_INCLUSIVE",
-  "label": "<="
+  "label": "<=",
+  "type": "number"
  },
  {
   "value": "GREATER_THAN:semver",
@@ -628,7 +459,11 @@ The list of the flags and remote config we're currently using in production is b
   "label": "SemVer <=",
   "append": ":semver"
  },
-
+ {
+  "value": "MODULO",
+  "label": "Modulo",
+  "valuePlaceholder": "Divisor|Remainder"
+ },
  {
   "value": "CONTAINS",
   "label": "Contains"
@@ -638,12 +473,14 @@ The list of the flags and remote config we're currently using in production is b
   "label": "Does not contain"
  },
  {
-  "value": "REGEX",
-  "label": "Matches regex"
+  "value": "IN",
+  "label": "In",
+  "warning": "Check your SDK version supports the IN operator. <a href=\"https://docs.flagsmith.com/clients/overview#sdk-compatibility\">See SDK compatibility docs</a>.",
+  "valuePlaceholder": "Value1,Value2"
  },
  {
-  "value": "MODULO",
-  "label": "Modulo operation"
+  "value": "REGEX",
+  "label": "Matches regex"
  },
  {
   "value": "IS_SET",
@@ -660,7 +497,7 @@ The list of the flags and remote config we're currently using in production is b
 
 ### `oauth_github`
 
-Find instructions for GitHub Authentication [here](/deployment/configuration/authentication/OAuth#github).
+Find instructions for GitHub Authentication [here](/system-administration/authentication/OAuth#github).
 
 Create an OAuth application in the GitHub Developer Console and then provide the following as the Flag value:
 
@@ -686,8 +523,7 @@ Create an OAuth application in the Google Developer Console and then provide the
 
 ```json
 {
- "clientId": "<Your Google oAuth Client ID>",
- "apiKey": "<Your Google oAuth Client secret>"
+ "clientId": "<Your Google oAuth Client ID>"
 }
 ```
 

@@ -1,4 +1,4 @@
-@import '../new/variables-new';
+@import '../variables';
 
 .react-select .react-select {
   input[type='text'] {
@@ -28,7 +28,7 @@
     }
   }
   &__value-container {
-    padding: 12px 0px 12px 16px;
+    padding: 10px 0px 10px 16px;
     div {
       margin: 0;
       padding: 0;
@@ -52,16 +52,6 @@
     height: $input-height;
     border-radius: $border-radius;
     border: 1px solid $input-border-color;
-    &:hover {
-      border: 1px solid $basic-alpha-48;
-    }
-    &--is-focused {
-      border: 1px solid $primary;
-      box-shadow: none;
-      &:hover {
-        border: 1px solid $primary;
-      }
-    }
     &--is-disabled {
       border: 1px solid $basic-alpha-8;
       .react-select__indicators {
@@ -159,18 +149,21 @@
 .react-select {
   font-weight: 500;
   line-height: $input-line-height;
-  color: $text-icon-dark;
+  color: $body-color;
   &.select-xsm {
     font-size: $font-size-sm;
   }
   &__option {
-    color: $body-text !important;
+    color: $body-color !important;
     background: white !important;
     padding: 9px 16px;
     cursor: pointer;
     &:hover {
       background: $bg-light200 !important;
       cursor:pointer;
+    }
+    &--is-focused {
+      background: $bg-light300 !important;
     }
     &--is-selected {
       background-color: $primary-alfa-8 !important;
@@ -184,7 +177,7 @@
   }
 }
 .dark {
-  .react-select .react-select {
+  .react-select .react-select,.react-select {
     input[type='text'] {
       color: white !important;
       border: none !important;
@@ -194,10 +187,6 @@
       border: none;
       box-shadow: none;
       border: 1px solid $input-border-color-dark;
-      &--is-focused {
-        border: 1px solid $primary;
-        box-shadow: none !important;
-      }
       &--is-disabled {
         border: 1px solid $black-alpha-32;
         .react-select__indicator {
@@ -223,6 +212,10 @@
       &:hover {
         background: $bg-dark200 !important;
         color: white !important;
+        cursor:pointer;
+      }
+      &--is-focused {
+        background: $bg-dark200 !important;
         cursor:pointer;
       }
       &--is-selected {

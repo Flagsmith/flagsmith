@@ -29,7 +29,6 @@ const ImportPage: FC<ImportPageType> = ({
   projectId,
   projectName,
 }) => {
-  const [tab, setTab] = useState(0)
   const [LDKey, setLDKey] = useState<string>('')
   const [importId, setImportId] = useState<number>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -38,13 +37,10 @@ const ImportPage: FC<ImportPageType> = ({
   const [createLaunchDarklyProjectImport, { data, isSuccess }] =
     useCreateLaunchDarklyProjectImportMutation()
 
-  const hasFlagsmithImport = Utils.getFlagsmithHasFeature(
-    'flagsmith_import_export',
-  )
-
   const {
     data: status,
     isSuccess: statusLoaded,
+    isUninitialized,
     refetch,
   } = useGetLaunchDarklyProjectImportQuery(
     {
@@ -76,9 +72,11 @@ const ImportPage: FC<ImportPageType> = ({
   useEffect(() => {
     if (isSuccess && data?.id) {
       setImportId(data.id)
-      refetch()
+      if (!isUninitialized) {
+        refetch()
+      }
     }
-  }, [isSuccess, data, refetch])
+  }, [isSuccess, data, refetch, isUninitialized])
 
   const getProjectList = (LDKey: string) => {
     setIsLoading(true)
@@ -97,10 +95,6 @@ const ImportPage: FC<ImportPageType> = ({
     key: string,
     projectId: string,
   ) => {
-    createFeatureExport(getStore(), {
-      environment_id: environmentId,
-      tag_ids: [],
-    })
     createLaunchDarklyProjectImport({
       body: { project_key: key, token: LDKey },
       project_id: projectId,
@@ -162,7 +156,7 @@ const ImportPage: FC<ImportPageType> = ({
               <PanelSearch
                 id='projects-list'
                 className='no-pad panel-projects'
-                listClassName='row mt-n2 gy-4'
+                listClassName='row mt-n2 gy-3'
                 title='LaunchDarkly Projects'
                 items={projects}
                 renderRow={(
@@ -174,19 +168,22 @@ const ImportPage: FC<ImportPageType> = ({
                       <Button
                         className='btn-project'
                         onClick={() =>
-                          openConfirm(
-                            'Import LaunchDarkly project',
-                            <span>
-                              Flagsmith will import {<strong>{name}</strong>} to{' '}
-                              {<strong>{projectName}</strong>}. Are you sure?
-                            </span>,
-                            () => {
-                              createImportLDProjects(LDKey, key, projectId)
-                            },
-                            () => {
+                          openConfirm({
+                            body: (
+                              <span>
+                                Flagsmith will import {<strong>{name}</strong>}{' '}
+                                to {<strong>{projectName}</strong>}. Are you
+                                sure?
+                              </span>
+                            ),
+                            onNo: () => {
                               return
                             },
-                          )
+                            onYes: () => {
+                              createImportLDProjects(LDKey, key, projectId)
+                            },
+                            title: 'Import LaunchDarkly project',
+                          })
                         }
                       >
                         <Row className='flex-nowrap'>
@@ -230,20 +227,16 @@ const ImportPage: FC<ImportPageType> = ({
         </div>
       )}
       <div className='mt-4'>
-        {Utils.getFlagsmithHasFeature('flagsmith_import_export') ? (
-          <Tabs value={tab} onChange={setTab} theme='pill'>
-            <TabItem tabLabel={'Flagsmith'}>
-              <div className='mt-4'>
-                <FeatureImport projectId={projectId} />
-              </div>
-            </TabItem>
-            <TabItem tabLabel={'LaunchDarkly'}>
-              <div className='mt-4'>{launchDarklyImport}</div>
-            </TabItem>
-          </Tabs>
-        ) : (
-          launchDarklyImport
-        )}
+        <Tabs urlParam={'import'} theme='pill'>
+          <TabItem tabLabel={'Flagsmith'}>
+            <div className='mt-4'>
+              <FeatureImport projectId={projectId} />
+            </div>
+          </TabItem>
+          <TabItem tabLabel={'LaunchDarkly'}>
+            <div className='mt-4'>{launchDarklyImport}</div>
+          </TabItem>
+        </Tabs>
       </div>
     </>
   )

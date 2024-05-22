@@ -40,6 +40,13 @@ FREE_PLAN_SUBSCRIPTION_METADATA = BaseSubscriptionMetadata(
 )
 FREE_PLAN_ID = "free"
 TRIAL_SUBSCRIPTION_ID = "trial"
+SCALE_UP = "scale-up"
+SCALE_UP_12_MONTHS_V2 = "scale-up-12-months-v2"
+SCALE_UP_QUARTERLY_V2_SEMIANNUAL = "scale-up-quarterly-v2-semiannual"
+SCALE_UP_V2 = "scale-up-v2"
+STARTUP = "startup"
+STARTUP_ANNUAL_V2 = "startup-annual-v2"
+STARTUP_V2 = "startup-v2"
 
 
 class SubscriptionCacheEntity(Enum):

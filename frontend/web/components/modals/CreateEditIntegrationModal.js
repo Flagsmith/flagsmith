@@ -1,10 +1,16 @@
 import React, { Component } from 'react'
 import EnvironmentSelect from 'components/EnvironmentSelect'
+import MyGitHubRepositoriesComponent from 'components/MyGitHubRepositoriesComponent'
 import _data from 'common/data/base/_data'
 import ErrorMessage from 'components/ErrorMessage'
 import ModalHR from './ModalHR'
 import Button from 'components/base/forms/Button'
 import classNames from 'classnames'
+import { getStore } from 'common/store'
+import { getGithubRepos } from 'common/services/useGithub'
+
+const GITHUB_INSTALLATION_UPDATE = 'update'
+
 const CreateEditIntegration = class extends Component {
   static displayName = 'CreateEditIntegration'
 
@@ -62,6 +68,9 @@ const CreateEditIntegration = class extends Component {
     const isOauth = this.props.integration.isOauth && !this.state.authorised
     const isEdit = this.props.data && this.props.data.id
     Utils.preventDefault(e)
+    if (this.props.integration.isExternalInstallation) {
+      closeModal()
+    }
     if (this.state.isLoading) {
       return
     }
@@ -122,7 +131,7 @@ const CreateEditIntegration = class extends Component {
         )
         .then(this.onComplete)
         .catch(this.onError)
-    } else {
+    } else if (this.props.id !== 'github') {
       _data
         .post(
           `${Project.api}projects/${this.props.projectId}/integrations/${this.props.id}/`,
@@ -156,6 +165,36 @@ const CreateEditIntegration = class extends Component {
       })
   }
 
+  openGitHubWinInstallations = () => {
+    const childWindow = window.open(
+      `https://github.com/settings/installations/${this.props.githubMeta.installationId}`,
+      '_blank',
+      'height=600,width=600,status=yes,toolbar=no,menubar=no,addressbar=no',
+    )
+
+    childWindow.localStorage.setItem(
+      'githubIntegrationSetupFromFlagsmith',
+      GITHUB_INSTALLATION_UPDATE,
+    )
+    window.addEventListener('message', (event) => {
+      if (
+        event.source === childWindow &&
+        !event.data?.hasOwnProperty('installationId')
+      ) {
+        getGithubRepos(
+          getStore(),
+          {
+            installation_id: this.props.githubMeta.installationId,
+          },
+          { forceRefetch: true },
+        ).then(() => {
+          localStorage.removeItem('githubIntegrationSetupFromFlagsmith')
+          childWindow.close()
+        })
+      }
+    })
+  }
+
   render() {
     return (
       <form
@@ -180,6 +219,20 @@ const CreateEditIntegration = class extends Component {
               />
             </div>
           )}
+          {Utils.getFlagsmithHasFeature('github_integration') &&
+            this.props.integration.isExternalInstallation && (
+              <>
+                <div className='mb-3'>
+                  <MyGitHubRepositoriesComponent
+                    githubId={this.props.githubMeta.githubId}
+                    installationId={this.props.githubMeta.installationId}
+                    organisationId={AccountStore.getOrganisation().id}
+                    projectId={this.props.projectId}
+                    openGitHubWinInstallations={this.openGitHubWinInstallations}
+                  />
+                </div>
+              </>
+            )}
           {this.state.fields &&
             this.state.fields.map((field) => (
               <>
@@ -256,27 +309,28 @@ const CreateEditIntegration = class extends Component {
           <ErrorMessage error={this.state.error} />
         </div>
 
-        {!this.props.readOnly && (
-          <div className={'text-right mt-2 modal-footer'}>
-            {!!this.props.modal && (
-              <Button onClick={closeModal} className='mr-2' theme='secondary'>
-                Cancel
+        {!this.props.readOnly &&
+          !this.props.integration.isExternalInstallation && (
+            <div className={'text-right mt-2 modal-footer'}>
+              {!!this.props.modal && (
+                <Button onClick={closeModal} className='mr-2' theme='secondary'>
+                  Cancel
+                </Button>
+              )}
+              <Button
+                disabled={
+                  this.state.isLoading ||
+                  (!this.state.data.flagsmithEnvironment &&
+                    this.props.integration.perEnvironment)
+                }
+                type='submit'
+              >
+                {this.props.integration.isOauth && !this.state.authorised
+                  ? 'Authorise'
+                  : 'Save'}
               </Button>
-            )}
-            <Button
-              disabled={
-                this.state.isLoading ||
-                (!this.state.data.flagsmithEnvironment &&
-                  this.props.integration.perEnvironment)
-              }
-              type='submit'
-            >
-              {this.props.integration.isOauth && !this.state.authorised
-                ? 'Authorise'
-                : 'Save'}
-            </Button>
-          </div>
-        )}
+            </div>
+          )}
       </form>
     )
   }

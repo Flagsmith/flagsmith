@@ -7,7 +7,8 @@ from app_analytics.influxdb_wrapper import (
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Count, F, Q
+from django.db.models import Count, F, Q, Value
+from django.db.models.functions import Greatest
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -57,6 +58,11 @@ class OrganisationList(ListView):
             num_projects=Count("projects", distinct=True),
             num_users=Count("users", distinct=True),
             num_features=Count("projects__features", distinct=True),
+            overage=Greatest(
+                Value(0),
+                F("subscription_information_cache__api_calls_30d")
+                - F("subscription_information_cache__allowed_30d_api_calls"),
+            ),
         ).select_related("subscription", "subscription_information_cache")
 
         if self.request.GET.get("search"):
@@ -107,9 +113,9 @@ class OrganisationList(ListView):
         except AttributeError:
             subscription_information_caches_influx_updated_at = None
 
-        data[
-            "subscription_information_caches_influx_updated_at"
-        ] = subscription_information_caches_influx_updated_at
+        data["subscription_information_caches_influx_updated_at"] = (
+            subscription_information_caches_influx_updated_at
+        )
 
         return data
 
@@ -145,7 +151,7 @@ def organisation_info(request, organisation_id):
 
     # If self-hosted and running without an Influx DB data store, we don't want to/cant show usage
     if settings.INFLUXDB_TOKEN:
-        date_range = request.GET.get("date_range", "30d")
+        date_range = request.GET.get("date_range", "180d")
         context["date_range"] = date_range
 
         event_list, labels = get_event_list_for_organisation(

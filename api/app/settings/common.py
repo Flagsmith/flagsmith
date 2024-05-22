@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
+
 import importlib
 import json
 import os
@@ -124,6 +125,7 @@ INSTALLED_APPS = [
     "permissions",
     "projects.tags",
     "api_keys",
+    "features.feature_external_resources",
     # 2FA
     "trench",
     # health check plugins
@@ -146,6 +148,7 @@ INSTALLED_APPS = [
     "integrations.dynatrace",
     "integrations.flagsmith",
     "integrations.launch_darkly",
+    "integrations.github",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -482,6 +485,8 @@ if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 
 SWAGGER_SETTINGS = {
+    "DEEP_LINKING": True,
+    "DEFAULT_AUTO_SCHEMA_CLASS": "api.openapi.PydanticResponseCapableSwaggerAutoSchema",
     "SHOW_REQUEST_HEADERS": True,
     "SECURITY_DEFINITIONS": {
         "Private": {
@@ -870,20 +875,26 @@ DISABLE_ANALYTICS_FEATURES = env.bool(
 FLAGSMITH_ANALYTICS = env.bool("FLAGSMITH_ANALYTICS", default=False)
 FLAGSMITH_ON_FLAGSMITH_API_URL = env("FLAGSMITH_ON_FLAGSMITH_API_URL", default=None)
 FLAGSMITH_ON_FLAGSMITH_API_KEY = env("FLAGSMITH_ON_FLAGSMITH_API_KEY", default=None)
+LINKEDIN_PARTNER_TRACKING = env("LINKEDIN_PARTNER_TRACKING", default=False)
 GOOGLE_ANALYTICS_API_KEY = env("GOOGLE_ANALYTICS_API_KEY", default=None)
 HEADWAY_API_KEY = env("HEADWAY_API_KEY", default=None)
-LINKEDIN_API_KEY = env("LINKEDIN_API_KEY", default=None)
 CRISP_CHAT_API_KEY = env("CRISP_CHAT_API_KEY", default=None)
 MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
 SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
 AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
 ENABLE_FLAGSMITH_REALTIME = env.bool("ENABLE_FLAGSMITH_REALTIME", default=False)
+USE_SECURE_COOKIES = env.bool("USE_SECURE_COOKIES", default=True)
+COOKIE_SAME_SITE = env.str("COOKIE_SAME_SITE", default="none")
 
 # Set this to enable create organisation for only superusers
 RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS", False)
 # Slack Integration
 SLACK_CLIENT_ID = env.str("SLACK_CLIENT_ID", default="")
 SLACK_CLIENT_SECRET = env.str("SLACK_CLIENT_SECRET", default="")
+# GitHub integrations
+GITHUB_PEM = env.str("GITHUB_PEM", default="")
+GITHUB_APP_ID: int = env.int("GITHUB_APP_ID", default=0)
+GITHUB_WEBHOOK_SECRET = env.str("GITHUB_WEBHOOK_SECRET", default="")
 
 # MailerLite
 MAILERLITE_BASE_URL = env.str(
@@ -904,19 +915,18 @@ if SAML_INSTALLED:
     INSTALLED_APPS.append("saml")
     SAML_ACCEPTED_TIME_DIFF = env.int("SAML_ACCEPTED_TIME_DIFF", default=60)
     DJOSER["SERIALIZERS"]["current_user"] = "saml.serializers.SamlCurrentUserSerializer"
+    EXTRA_ALLOWED_CANONICALIZATIONS = env.list(
+        "EXTRA_ALLOWED_CANONICALIZATIONS", default=[]
+    )
 
 
-# Additional functionality needed for using workflows in Flagsmith SaaS
-# python module path to the workflows logic module, e.g. "path.to.workflows"
-WORKFLOWS_LOGIC_MODULE_PATH = env(
-    "WORKFLOWS_LOGIC_MODULE_PATH", "features.workflows.logic"
-)
-WORKFLOWS_LOGIC_INSTALLED = (
-    importlib.util.find_spec(WORKFLOWS_LOGIC_MODULE_PATH) is not None
-)
+WORKFLOWS_LOGIC_INSTALLED = importlib.util.find_spec("workflows_logic") is not None
 
 if WORKFLOWS_LOGIC_INSTALLED:
-    INSTALLED_APPS.append(WORKFLOWS_LOGIC_MODULE_PATH)
+    INSTALLED_APPS.append("workflows_logic")
+
+    if importlib.util.find_spec("workflows_logic.stale_flags") is not None:
+        INSTALLED_APPS.append("workflows_logic.stale_flags")
 
 # Additional functionality for restricting authentication to a set of authentication methods in Flagsmith SaaS
 AUTH_CONTROLLER_INSTALLED = importlib.util.find_spec("auth_controller") is not None
@@ -966,9 +976,11 @@ MAX_SELF_MIGRATABLE_IDENTITIES = env.int("MAX_SELF_MIGRATABLE_IDENTITIES", 10000
 TASK_RUN_METHOD = env.enum(
     "TASK_RUN_METHOD",
     type=TaskRunMethod,
-    default=TaskRunMethod.TASK_PROCESSOR.value
-    if env.bool("RUN_BY_PROCESSOR", False)
-    else TaskRunMethod.SEPARATE_THREAD.value,
+    default=(
+        TaskRunMethod.TASK_PROCESSOR.value
+        if env.bool("RUN_BY_PROCESSOR", False)
+        else TaskRunMethod.SEPARATE_THREAD.value
+    ),
 )
 ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
@@ -1027,6 +1039,20 @@ PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID = env(
     "PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID", None
 )
 
+# Hubspot settings
+HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
+ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
+HUBSPOT_IGNORE_DOMAINS = env.list("HUBSPOT_IGNORE_DOMAINS", [])
+HUBSPOT_IGNORE_DOMAINS_REGEX = env("HUBSPOT_IGNORE_DOMAINS_REGEX", "")
+HUBSPOT_IGNORE_ORGANISATION_DOMAINS = env.list(
+    "HUBSPOT_IGNORE_ORGANISATION_DOMAINS", []
+)
+
+# Number of minutes to wait for a user that has signed up to
+# join or create an organisation before creating a lead in
+# hubspot without a Flagsmith organisation.
+CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES = 30
+
 # List of plan ids that support seat upgrades
 AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
 
@@ -1067,6 +1093,12 @@ FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID = env.int(
 )
 FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID = env.int(
     "FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID",
+    default=None,
+)
+
+# The URL used to install the GitHub integration
+GITHUB_APP_URL = env.int(
+    "GITHUB_APP_URL",
     default=None,
 )
 
@@ -1164,3 +1196,21 @@ WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
 SPLIT_TESTING_INSTALLED = importlib.util.find_spec("split_testing")
 if SPLIT_TESTING_INSTALLED:
     INSTALLED_APPS += ("split_testing",)
+
+ENABLE_API_USAGE_ALERTING = env.bool("ENABLE_API_USAGE_ALERTING", default=False)
+
+# See DomainAuthMethods in flagsmith-auth-controller repository with auth_controller.models module
+GLOBAL_DOMAIN_AUTH_METHODS = env.dict(
+    "GLOBAL_DOMAIN_AUTH_METHODS",
+    {
+        "EP": True,  # Email / Password
+        "GO": True,  # Google
+        "GH": True,  # GitHub
+        "SAML": True,  # Security Assertion Markup Language
+    },
+)
+
+EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET = env.int(
+    "EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET",
+    default=0,
+)

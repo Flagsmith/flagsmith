@@ -22,9 +22,11 @@ type FeatureDiffType = {
   featureId: number
   projectId: string
   tabTheme?: string
+  disableSegments?: boolean
 }
 
 const DiffFeature: FC<FeatureDiffType> = ({
+  disableSegments,
   featureId,
   newState,
   noChangesMessage,
@@ -47,7 +49,9 @@ const DiffFeature: FC<FeatureDiffType> = ({
     projectId,
   })
 
-  const segmentDiffs = getSegmentDiff(oldState, newState, segments?.results)
+  const segmentDiffs = disableSegments
+    ? { diffs: [], totalChanges: 0 }
+    : getSegmentDiff(oldState, newState, segments?.results)
   const variationDiffs = getVariationDiff(oldEnv, newEnv, feature)
   const totalSegmentChanges = segmentDiffs?.totalChanges
   const totalVariationChanges = variationDiffs?.totalChanges
@@ -86,6 +90,11 @@ const DiffFeature: FC<FeatureDiffType> = ({
                 </div>
               }
             >
+              {!totalChanges && (
+                <div className='mt-4'>
+                  <InfoMessage>No Changes Found</InfoMessage>
+                </div>
+              )}
               <div className='panel-content'>
                 <div className='search-list mt-2'>
                   <div className='flex-row table-header'>

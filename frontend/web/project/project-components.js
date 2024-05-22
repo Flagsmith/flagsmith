@@ -1,7 +1,6 @@
 import { PureComponent } from 'react'
 import Select from 'react-select'
 import Button from 'components/base/forms/Button'
-import RemoveIcon from 'components/RemoveIcon'
 import Paging from 'components/Paging'
 import ToggleChip from 'components/ToggleChip'
 import Input from 'components/base/forms/Input'
@@ -11,6 +10,8 @@ import AccountStore from 'common/stores/account-store'
 import Tooltip from 'components/Tooltip'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import AccountProvider from 'common/providers/AccountProvider'
+import OrganisationProvider from 'common/providers/OrganisationProvider'
+import Panel from 'components/base/grid/Panel'
 
 window.AppActions = require('../../common/dispatcher/app-actions')
 window.Actions = require('../../common/dispatcher/action-constants')
@@ -21,13 +22,12 @@ window.IdentityProvider = require('../../common/providers/IdentityProvider')
 window.AccountProvider = AccountProvider
 window.AccountStore = AccountStore
 window.FeatureListProvider = require('../../common/providers/FeatureListProvider')
-window.OrganisationProvider = require('../../common/providers/OrganisationProvider')
+window.OrganisationProvider = OrganisationProvider
 window.ProjectProvider = ProjectProvider
 
 window.Paging = Paging
 
 // Useful components
-window.Gif = require('../components/base/Gif')
 window.Row = require('../components/base/grid/Row')
 window.Flex = require('../components/base/grid/Flex')
 window.Column = require('../components/base/grid/Column')
@@ -35,7 +35,7 @@ window.InputGroup = InputGroup
 window.Input = Input
 window.Button = Button
 window.FormGroup = require('../components/base/grid/FormGroup')
-window.Panel = require('../components/base/grid/Panel')
+window.Panel = Panel
 window.FormGroup = require('../components/base/grid/FormGroup')
 
 window.PanelSearch = PanelSearch
@@ -80,7 +80,6 @@ window.Loader = class extends PureComponent {
 window.Tooltip = Tooltip
 
 global.ToggleChip = ToggleChip
-global.RemoveIcon = RemoveIcon
 global.Select = class extends PureComponent {
   static displayName = 'Select'
 
@@ -103,7 +102,11 @@ global.Select = class extends PureComponent {
             <a
               key={index}
               onClick={() => props.onChange(option)}
-              data-test={`${props['data-test']}-option-${index}`}
+              data-test={
+                this.props.dataTest
+                  ? this.props.dataTest(option)
+                  : `${props['data-test']}-option-${index}`
+              }
             >
               .
             </a>

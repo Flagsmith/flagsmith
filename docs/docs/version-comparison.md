@@ -16,15 +16,15 @@ Open Source, SaaS hosted and Enterprise versions:
 - The SaaS and Enterprise versions have [Role-Based Access Control](/system-administration/rbac).
 - The SaaS and Enterprise versions have [Audit Logs](/system-administration/audit-logs).
 - The SaaS and Enterprise versions have additional Authentication Providers:
-  - [Okta](/deployment/configuration/authentication/Okta)
-  - [LDAP](/deployment/configuration/authentication/LDAP)
-  - [SAML](/deployment/configuration/authentication/SAML)
-  - [ADFS](/deployment/configuration/authentication/ADFS)
+  - [Okta](/system-administration/authentication/Okta)
+  - [LDAP](/system-administration/authentication/LDAP)
+  - [SAML](/system-administration/authentication/SAML)
+  - [ADFS](/system-administration/authentication/ADFS)
 
 :::tip
 
 You can switch between SaaS and Self Hosted Flagsmith using our
-[Import and Export tools](deployment/configuration/importing-and-exporting.md).
+[Import and Export tools](system-administration/importing-and-exporting/data-migration).
 
 :::
 
@@ -44,8 +44,8 @@ You can run our Enterprise version either on-premise, or we can provide private 
 organisation.
 
 - [Role Based Access Control](/system-administration/rbac).
-- [Okta](/deployment/configuration/authentication/Okta), [LDAP](/deployment/configuration/authentication/LDAP),
-  [SAML](/deployment/configuration/authentication/SAML) and [ADFS](/deployment/configuration/authentication/ADFS)
+- [Okta](/system-administration/authentication/Okta), [LDAP](/system-administration/authentication/LDAP),
+  [SAML](/system-administration/authentication/SAML) and [ADFS](/system-administration/authentication/ADFS)
   authentication, as well as the ability to lock authentication to a single provider.
 - Additional database engines: Oracle, SQL Server and MySQL.
 - Additional deployment and orchestration options as detailed below.

@@ -4,8 +4,10 @@ from unittest import mock
 import pytest
 from django.conf import settings
 from django.utils import timezone
+from pytest_django.fixtures import SettingsWrapper
 
-from projects.models import IdentityOverridesV2MigrationStatus, Project
+from organisations.models import Organisation
+from projects.models import EdgeV2MigrationStatus, Project
 
 now = timezone.now()
 tomorrow = now + timedelta(days=1)
@@ -54,14 +56,14 @@ def test_get_segments_from_cache_set_not_called(project, segments, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "edge_release_datetime, expected_enable_dynamo_db_value",
-    ((yesterday, True), (tomorrow, False), (None, False)),
+    "edge_enabled, expected_enable_dynamo_db_value",
+    ((True, True), (False, False)),
 )
 def test_create_project_sets_enable_dynamo_db(
-    db, edge_release_datetime, expected_enable_dynamo_db_value, settings, organisation
+    db, edge_enabled, expected_enable_dynamo_db_value, settings, organisation
 ):
     # Given
-    settings.EDGE_RELEASE_DATETIME = edge_release_datetime
+    settings.EDGE_ENABLED = edge_enabled
 
     # When
     project = Project.objects.create(name="Test project", organisation=organisation)
@@ -137,20 +139,34 @@ def test_environments_are_updated_in_dynamodb_when_project_id_updated(
 
 
 @pytest.mark.parametrize(
-    "identity_overrides_v2_migration_status, expected_value",
+    "edge_v2_migration_status, expected_value",
     (
-        (IdentityOverridesV2MigrationStatus.NOT_STARTED, False),
-        (IdentityOverridesV2MigrationStatus.IN_PROGRESS, False),
-        (IdentityOverridesV2MigrationStatus.COMPLETE, True),
+        (EdgeV2MigrationStatus.NOT_STARTED, False),
+        (EdgeV2MigrationStatus.IN_PROGRESS, False),
+        (EdgeV2MigrationStatus.COMPLETE, True),
+        (EdgeV2MigrationStatus.INCOMPLETE, False),
     ),
 )
 def test_show_edge_identity_overrides_for_feature(
-    identity_overrides_v2_migration_status: IdentityOverridesV2MigrationStatus,
+    edge_v2_migration_status: EdgeV2MigrationStatus,
     expected_value: bool,
 ):
     assert (
         Project(
-            identity_overrides_v2_migration_status=identity_overrides_v2_migration_status
+            edge_v2_migration_status=edge_v2_migration_status
         ).show_edge_identity_overrides_for_feature
         == expected_value
     )
+
+
+def test_create_project_sets_edge_v2_migration_status_if_edge_enabled(
+    settings: SettingsWrapper, organisation: Organisation
+) -> None:
+    # Given
+    settings.EDGE_ENABLED = True
+
+    # When
+    project = Project.objects.create(name="test", organisation=organisation)
+
+    # Then
+    assert project.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE

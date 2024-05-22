@@ -1,8 +1,10 @@
-from django.conf.urls import include, url
-from django.urls import path
+from django.urls import include, path, re_path
 from rest_framework_nested import routers
 
 from audit.views import ProjectAuditLogViewSet
+from features.feature_external_resources.views import (
+    FeatureExternalResourceViewSet,
+)
 from features.import_export.views import (
     FeatureExportListView,
     FeatureImportListView,
@@ -66,12 +68,18 @@ nested_features_router.register(
     r"mv-options", MultivariateFeatureOptionViewSet, basename="feature-mv-options"
 )
 
+nested_features_router.register(
+    r"feature-external-resources",
+    FeatureExternalResourceViewSet,
+    basename="feature-external-resources",
+)
+
 app_name = "projects"
 
 urlpatterns = [
-    url(r"^", include(router.urls)),
-    url(r"^", include(projects_router.urls)),
-    url(r"^", include(nested_features_router.urls)),
+    re_path(r"^", include(router.urls)),
+    re_path(r"^", include(projects_router.urls)),
+    re_path(r"^", include(nested_features_router.urls)),
     path(
         "<int:project_pk>/all-user-permissions/<int:user_pk>/",
         get_user_project_permissions,

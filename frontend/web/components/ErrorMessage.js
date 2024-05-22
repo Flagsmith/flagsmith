@@ -3,6 +3,7 @@ import React, { PureComponent } from 'react'
 import Icon from './Icon'
 import Button from './base/forms/Button'
 import Format from 'common/utils/format'
+import Constants from 'common/constants'
 
 export default class ErrorMessage extends PureComponent {
   static displayName = 'ErrorMessage'
@@ -40,7 +41,7 @@ export default class ErrorMessage extends PureComponent {
           <Button
             className='btn ml-3'
             onClick={() => {
-              document.location.replace('/organisation-settings')
+              document.location.replace(Constants.upgradeURL)
             }}
           >
             Upgrade plan

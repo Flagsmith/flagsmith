@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import ConfirmRemoveProject from 'components/modals/ConfirmRemoveProject'
 import ConfirmHideFlags from 'components/modals/ConfirmHideFlags'
+import MetadataPage from 'components/metadata/MetadataPage'
 import EditPermissions from 'components/EditPermissions'
 import Switch from 'components/Switch'
 import _data from 'common/data/base/_data'
@@ -19,6 +20,9 @@ import AccountStore from 'common/stores/account-store'
 import ImportPage from 'components/import-export/ImportPage'
 import FeatureExport from 'components/import-export/FeatureExport'
 import ProjectUsage from 'components/ProjectUsage'
+import ProjectStore from 'common/stores/project-store'
+import Tooltip from 'components/Tooltip'
+import { Link } from 'react-router-dom'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -29,7 +33,9 @@ const ProjectSettingsPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = { roles: [] }
+    this.state = {
+      roles: [],
+    }
     AppActions.getProject(this.props.match.params.projectId)
     this.getPermissions()
   }
@@ -46,28 +52,26 @@ const ProjectSettingsPage = class extends Component {
 
   componentDidMount = () => {
     API.trackPage(Constants.pages.PROJECT_SETTINGS)
-    if (Utils.getFlagsmithHasFeature('show_role_management')) {
-      getRoles(
+    getRoles(
+      getStore(),
+      { organisation_id: AccountStore.getOrganisation().id },
+      { forceRefetch: true },
+    ).then((roles) => {
+      getRolesProjectPermissions(
         getStore(),
-        { organisation_id: AccountStore.getOrganisation().id },
+        {
+          organisation_id: AccountStore.getOrganisation().id,
+          project_id: this.props.match.params.projectId,
+          role_id: roles.data.results[0].id,
+        },
         { forceRefetch: true },
-      ).then((roles) => {
-        getRolesProjectPermissions(
-          getStore(),
-          {
-            organisation_id: AccountStore.getOrganisation().id,
-            project_id: this.props.match.params.projectId,
-            role_id: roles.data.results[0].id,
-          },
-          { forceRefetch: true },
-        ).then((res) => {
-          const matchingItems = roles.data.results.filter((item1) =>
-            res.data.results.some((item2) => item2.role === item1.id),
-          )
-          this.setState({ roles: matchingItems })
-        })
+      ).then((res) => {
+        const matchingItems = roles.data.results.filter((item1) =>
+          res.data.results.some((item2) => item2.role === item1.id),
+        )
+        this.setState({ roles: matchingItems })
       })
-    }
+    })
   }
 
   onSave = () => {
@@ -108,6 +112,13 @@ const ProjectSettingsPage = class extends Component {
     editProject({
       ...project,
       prevent_flag_defaults: !project.prevent_flag_defaults,
+    })
+  }
+
+  toggleRealtimeUpdates = (project, editProject) => {
+    editProject({
+      ...project,
+      enable_realtime_updates: !project.enable_realtime_updates,
     })
   }
 
@@ -153,7 +164,10 @@ const ProjectSettingsPage = class extends Component {
   }
 
   render() {
-    const { name } = this.state
+    const { name, stale_flags_limit_days } = this.state
+    const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
+
+    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
 
     return (
       <div className='app-container container'>
@@ -162,6 +176,15 @@ const ProjectSettingsPage = class extends Component {
           onSave={this.onSave}
         >
           {({ deleteProject, editProject, isLoading, isSaving, project }) => {
+            if (
+              !this.state.stale_flags_limit_days &&
+              project?.stale_flags_limit_days
+            ) {
+              this.state.stale_flags_limit_days = project.stale_flags_limit_days
+            }
+            if (!this.state.name && project?.name) {
+              this.state.name = project.name
+            }
             if (
               !this.state.populatedProjectState &&
               project?.feature_name_regex
@@ -180,16 +203,21 @@ const ProjectSettingsPage = class extends Component {
               e.preventDefault()
               !isSaving &&
                 name &&
-                editProject(Object.assign({}, project, { name }))
+                editProject(
+                  Object.assign({}, project, { name, stale_flags_limit_days }),
+                )
             }
 
             const featureRegexEnabled =
               typeof this.state.feature_name_regex === 'string'
+
+            const hasVersioning =
+              Utils.getFlagsmithHasFeature('feature_versioning')
             return (
               <div>
                 <PageTitle title={'Project Settings'} />
                 {
-                  <Tabs className='mt-0' uncontrolled>
+                  <Tabs urlParam='tab' className='mt-0' uncontrolled>
                     <TabItem tabLabel='General'>
                       <div className='mt-4'>
                         <JSONReference
@@ -199,14 +227,13 @@ const ProjectSettingsPage = class extends Component {
                         />
                         <label>Project Name</label>
                         <FormGroup>
-                          <form onSubmit={saveProject}>
-                            <Row className='align-items-start col-md-8'>
+                          <form className='col-md-6' onSubmit={saveProject}>
+                            <Row className='align-items-start'>
                               <Flex className='ml-0'>
                                 <Input
                                   ref={(e) => (this.input = e)}
-                                  defaultValue={project.name}
                                   value={this.state.name}
-                                  inputClassName='input--wide'
+                                  inputClassName='full-width'
                                   name='proj-name'
                                   onChange={(e) =>
                                     this.setState({
@@ -219,15 +246,54 @@ const ProjectSettingsPage = class extends Component {
                                   placeholder='My Project Name'
                                 />
                               </Flex>
+                            </Row>
+                            {!!hasVersioning && (
+                              <Tooltip
+                                title={
+                                  <div>
+                                    <label className='mt-4'>
+                                      Days before a feature is marked as stale{' '}
+                                      <Icon name='info-outlined' />
+                                    </label>
+                                    <div style={{ width: 80 }} className='ml-0'>
+                                      <Input
+                                        disabled={!hasStaleFlagsPermission}
+                                        ref={(e) => (this.input = e)}
+                                        value={
+                                          this.state.stale_flags_limit_days
+                                        }
+                                        onChange={(e) =>
+                                          this.setState({
+                                            stale_flags_limit_days: parseInt(
+                                              Utils.safeParseEventValue(e),
+                                            ),
+                                          })
+                                        }
+                                        isValid={!!stale_flags_limit_days}
+                                        type='number'
+                                        placeholder='Number of Days'
+                                      />
+                                    </div>
+                                  </div>
+                                }
+                              >
+                                {`${
+                                  !hasStaleFlagsPermission
+                                    ? 'This feature is available with our enterprise plan. '
+                                    : ''
+                                }If no changes have been made to a feature in any environment within this threshold the feature will be tagged as stale. You will need to enable feature versioning in your environments for stale features to be detected.`}
+                              </Tooltip>
+                            )}
+                            <div className='text-right'>
                               <Button
                                 type='submit'
                                 id='save-proj-btn'
                                 disabled={isSaving || !name}
                                 className='ml-3'
                               >
-                                {isSaving ? 'Updating' : 'Update Name'}
+                                {isSaving ? 'Updating' : 'Update'}
                               </Button>
-                            </Row>
+                            </div>
                           </form>
                         </FormGroup>
                       </div>
@@ -378,13 +444,13 @@ const ProjectSettingsPage = class extends Component {
                             <Button
                               disabled={isSaving || Utils.isMigrating()}
                               onClick={() =>
-                                openConfirm(
-                                  'Are you sure?',
-                                  'This will migrate your project to the Global Edge API.',
-                                  () => {
+                                openConfirm({
+                                  body: 'This will migrate your project to the Global Edge API.',
+                                  onYes: () => {
                                     this.migrate(project)
                                   },
-                                )
+                                  title: 'Migrate to Global Edge API',
+                                })
                               }
                               size='xSmall'
                               theme='outline'
@@ -404,8 +470,10 @@ const ProjectSettingsPage = class extends Component {
                             Existing Core API endpoints will continue to work
                             whilst the migration takes place. Find out more{' '}
                             <a
+                              target='_blank'
                               href='https://docs.flagsmith.com/advanced-use/edge-api'
                               className='btn-link'
+                              rel='noreferrer'
                             >
                               here
                             </a>
@@ -425,7 +493,9 @@ const ProjectSettingsPage = class extends Component {
                           <Button
                             onClick={() =>
                               this.confirmRemove(project, () => {
-                                this.context.router.history.replace('/projects')
+                                this.context.router.history.replace(
+                                  Utils.getOrganisationHomePage(),
+                                )
                                 deleteProject(this.props.match.params.projectId)
                               })
                             }
@@ -445,6 +515,55 @@ const ProjectSettingsPage = class extends Component {
                       data-test='js-sdk-settings'
                       tabLabel='SDK Settings'
                     >
+                      {Utils.isSaas() &&
+                        Utils.getFlagsmithHasFeature('realtime_setting') && (
+                          <FormGroup className='mt-4 col-md-6'>
+                            <Row className='mb-2'>
+                              <Switch
+                                data-test='js-prevent-flag-defaults'
+                                disabled={
+                                  isSaving ||
+                                  !Utils.getPlansPermission('REALTIME')
+                                }
+                                onChange={() =>
+                                  this.toggleRealtimeUpdates(
+                                    project,
+                                    editProject,
+                                  )
+                                }
+                                checked={project.enable_realtime_updates}
+                              />
+                              <h5 className='mb-0 ml-3'>
+                                Enable Realtime Updates
+                              </h5>
+                            </Row>
+
+                            <p className='fs-small lh-sm mb-0'>
+                              Pushes realtime updates to client-side SDKs when
+                              features and segment overrides are adjusted in the
+                              dashboard.
+                              {!Utils.getPlansPermission('REALTIME') && (
+                                <>
+                                  This feature is available with our{' '}
+                                  <Link to={Constants.upgradeURL}>
+                                    enterprise plan
+                                  </Link>
+                                  .
+                                </>
+                              )}{' '}
+                              Find out more{' '}
+                              <a
+                                target='_blank'
+                                href='https://docs.flagsmith.com/advanced-use/real-time-flags#how-it-works'
+                                className='btn-link'
+                                rel='noreferrer'
+                              >
+                                here
+                              </a>
+                              .
+                            </p>
+                          </FormGroup>
+                        )}
                       <div className='mt-4'>
                         <form onSubmit={saveProject}>
                           <FormGroup className='mt-4 col-md-6'>
@@ -493,16 +612,24 @@ const ProjectSettingsPage = class extends Component {
                         roles={this.state.roles}
                       />
                     </TabItem>
-                    <TabItem data-test='js-import-page' tabLabel='Import'>
-                      <ImportPage
-                        environmentId={this.props.match.params.environmentId}
-                        projectId={this.props.match.params.projectId}
-                        projectName={project.name}
-                      />
-                    </TabItem>
-                    {Utils.getFlagsmithHasFeature(
-                      'flagsmith_import_export',
-                    ) && (
+                    {metadataEnable && (
+                      <TabItem tabLabel='Metadata'>
+                        <MetadataPage
+                          organisationId={AccountStore.getOrganisation().id}
+                          projectId={this.props.match.params.projectId}
+                        />
+                      </TabItem>
+                    )}
+                    {!!ProjectStore.getEnvs()?.length && (
+                      <TabItem data-test='js-import-page' tabLabel='Import'>
+                        <ImportPage
+                          environmentId={this.props.match.params.environmentId}
+                          projectId={this.props.match.params.projectId}
+                          projectName={project.name}
+                        />
+                      </TabItem>
+                    )}
+                    {!!ProjectStore.getEnvs()?.length && (
                       <TabItem tabLabel='Export'>
                         <FeatureExport
                           projectId={this.props.match.params.projectId}

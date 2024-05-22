@@ -182,6 +182,10 @@
                 {
                     "name": "USER_THROTTLE_CACHE_OPTIONS",
                     "value": "CLIENT_CLASS=core.redis_cluster.SafeRedisClusterClient"
+                },
+                {
+                    "name": "GITHUB_APP_ID",
+                    "value": "811209"
                 }
             ],
             "secrets": [
@@ -236,6 +240,14 @@
                 {
                     "name": "SSE_AUTHENTICATION_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:SSE_AUTHENTICATION_TOKEN::"
+                },
+                {
+                    "name": "GITHUB_WEBHOOK_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:GITHUB_WEBHOOK_SECRET::"
+                },
+                {
+                    "name": "GITHUB_PEM",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:GITHUB_PEM-Bfoaql"
                 }
             ],
             "logConfiguration": {

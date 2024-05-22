@@ -2,12 +2,73 @@ import React, { Component } from 'react'
 import _data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import { getStore } from 'common/store'
+import { getGithubIntegration } from 'common/services/useGithubIntegration'
 
 const CreateEditIntegration = require('./modals/CreateEditIntegrationModal')
+const GITHUB_INSTALLATION_SETUP = 'install'
 
 class Integration extends Component {
+  state = {
+    reFetchgithubId: '',
+    windowInstallationId: '',
+  }
   add = () => {
-    this.props.addIntegration(this.props.integration, this.props.id)
+    const isGithubIntegration =
+      this.props.githubMeta.githubId &&
+      this.props.integration.isExternalInstallation
+    if (isGithubIntegration) {
+      this.props.addIntegration(
+        this.props.integration,
+        this.props.id,
+        this.props.githubMeta.installationId,
+        this.props.githubMeta.githubId,
+      )
+    } else if (this.state.windowInstallationId) {
+      this.props.addIntegration(
+        this.props.integration,
+        this.props.id,
+        this.state.windowInstallationId,
+        this.state.reFetchgithubId,
+      )
+    } else {
+      this.props.addIntegration(this.props.integration, this.props.id)
+    }
+  }
+
+  openChildWin = () => {
+    const childWindow = window.open(
+      `${Project.githubAppURL}`,
+      '_blank',
+      'height=700%,width=800%,status=yes,toolbar=no,menubar=no,addressbar=no',
+    )
+
+    childWindow.localStorage.setItem(
+      'githubIntegrationSetupFromFlagsmith',
+      GITHUB_INSTALLATION_SETUP,
+    )
+    window.addEventListener('message', (event) => {
+      if (
+        event.source === childWindow &&
+        (event.data?.hasOwnProperty('installationId') || installationId)
+      ) {
+        this.setState({ windowInstallationId: event.data.installationId })
+        localStorage.removeItem('githubIntegrationSetupFromFlagsmith')
+        childWindow.close()
+        getGithubIntegration(
+          getStore(),
+          {
+            organisation_id: AccountStore.getOrganisation().id,
+          },
+          { forceRefetch: true },
+        ).then((res) => {
+          this.setState({
+            reFetchgithubId: res?.data?.results[0]?.id,
+          })
+          this.add()
+        })
+      }
+    })
   }
 
   remove = (integration) => {
@@ -23,8 +84,14 @@ class Integration extends Component {
   }
 
   render() {
-    const { description, docs, external, image, perEnvironment } =
-      this.props.integration
+    const {
+      description,
+      docs,
+      external,
+      image,
+      isExternalInstallation,
+      perEnvironment,
+    } = this.props.integration
     const activeIntegrations = this.props.activeIntegrations
     const showAdd = !(
       !perEnvironment &&
@@ -33,70 +100,93 @@ class Integration extends Component {
     )
     return (
       <div className='panel panel-integrations p-4 mb-3'>
-        <Flex>
-          <img className='mb-2' src={image} />
-          <Row space style={{ flexWrap: 'noWrap' }}>
-            <div className='subtitle mt-2'>
-              {description}{' '}
-              {docs && (
+        <img className='mb-2' src={image} />
+        <Row space style={{ flexWrap: 'noWrap' }}>
+          <div className='subtitle mt-2'>
+            {description}{' '}
+            {docs && (
+              <Button
+                theme='text'
+                href={docs}
+                target='_blank'
+                className='fw-normal'
+              >
+                View docs
+              </Button>
+            )}
+          </div>
+          <Row style={{ flexWrap: 'noWrap' }}>
+            {activeIntegrations &&
+              activeIntegrations.map((integration) => (
                 <Button
-                  theme='text'
-                  href={docs}
-                  target='_blank'
-                  className='fw-normal'
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    this.remove(integration)
+                    return false
+                  }}
+                  className='ml-3'
+                  theme='secondary'
+                  type='submit'
+                  size='xSmall'
+                  key={integration.id}
                 >
-                  View docs
+                  Delete Integration
                 </Button>
-              )}
-            </div>
-            <Row style={{ flexWrap: 'noWrap' }}>
-              {activeIntegrations &&
-                activeIntegrations.map((integration) => (
-                  <Button
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      this.remove(integration)
-                      return false
-                    }}
-                    className='ml-3'
-                    theme='secondary'
-                    type='submit'
-                    size='xSmall'
-                    key={integration.id}
+              ))}
+            {showAdd && (
+              <>
+                {external && !isExternalInstallation ? (
+                  <a
+                    href={docs}
+                    target={'_blank'}
+                    className='btn btn-primary btn-xsm ml-3'
+                    id='show-create-segment-btn'
+                    data-test='show-create-segment-btn'
+                    rel='noreferrer'
                   >
-                    Delete Integration
+                    Add Integration
+                  </a>
+                ) : external &&
+                  isExternalInstallation &&
+                  (this.state.windowInstallationId ||
+                    this.props.githubMeta.hasIntegrationWithGithub) ? (
+                  <Button
+                    className='ml-3'
+                    id='show-create-segment-btn'
+                    data-test='show-create-segment-btn'
+                    onClick={this.add}
+                    size='xSmall'
+                  >
+                    Manage Integration
                   </Button>
-                ))}
-              {showAdd && (
-                <>
-                  {external ? (
-                    <a
-                      href={docs}
-                      target={'_blank'}
-                      className='btn btn-primary btn-xsm ml-3'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      rel='noreferrer'
-                    >
-                      Add Integration
-                    </a>
-                  ) : (
-                    <Button
-                      className='ml-3'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      onClick={this.add}
-                      size='xSmall'
-                    >
-                      Add Integration
-                    </Button>
-                  )}
-                </>
-              )}
-            </Row>
+                ) : external &&
+                  !this.props.githubMeta.hasIntegrationWithGithub &&
+                  isExternalInstallation ? (
+                  <Button
+                    className='ml-3'
+                    id='show-create-segment-btn'
+                    data-test='show-create-segment-btn'
+                    onClick={this.openChildWin}
+                    size='xSmall'
+                  >
+                    Add Integration
+                  </Button>
+                ) : (
+                  <Button
+                    className='ml-3'
+                    id='show-create-segment-btn'
+                    data-test='show-create-segment-btn'
+                    onClick={this.add}
+                    size='xSmall'
+                  >
+                    Add Integration
+                  </Button>
+                )}
+              </>
+            )}
           </Row>
-        </Flex>
+        </Row>
 
         {activeIntegrations &&
           activeIntegrations.map((integration) => (
@@ -123,7 +213,11 @@ class Integration extends Component {
 }
 
 class IntegrationList extends Component {
-  state = {}
+  state = {
+    githubId: 0,
+    hasIntegrationWithGithub: false,
+    installationId: '',
+  }
 
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -131,6 +225,21 @@ class IntegrationList extends Component {
 
   componentDidMount() {
     this.fetch()
+    if (Utils.getFlagsmithHasFeature('github_integration')) {
+      this.fetchGithubIntegration()
+    }
+  }
+
+  fetchGithubIntegration = () => {
+    getGithubIntegration(getStore(), {
+      organisation_id: AccountStore.getOrganisation().id,
+    }).then((res) => {
+      this.setState({
+        githubId: res?.data?.results[0]?.id,
+        hasIntegrationWithGithub: !!res?.data?.results?.length,
+        installationId: res?.data?.results[0]?.installation_id,
+      })
+    })
   }
 
   fetch = () => {
@@ -167,11 +276,13 @@ class IntegrationList extends Component {
               return allItems
             })
           }
-          return _data
-            .get(
-              `${Project.api}projects/${this.props.projectId}/integrations/${key}/`,
-            )
-            .catch(() => {})
+          if (key !== 'github') {
+            return _data
+              .get(
+                `${Project.api}projects/${this.props.projectId}/integrations/${key}/`,
+              )
+              .catch(() => {})
+          }
         }
       }),
     ).then((res) => {
@@ -206,15 +317,17 @@ class IntegrationList extends Component {
       ? ProjectStore.getEnvironment(integration.flagsmithEnvironment)
       : ''
     const name = env && env.name
-    openConfirm(
-      'Confirm remove integration',
-      <span>
-        This will remove your integration from the{' '}
-        {integration.flagsmithEnvironment ? 'environment ' : 'project'}
-        {name ? <strong>{name}</strong> : ''}, it will no longer receive data.
-        Are you sure?
-      </span>,
-      () => {
+    openConfirm({
+      body: (
+        <span>
+          This will remove your integration from the{' '}
+          {integration.flagsmithEnvironment ? 'environment ' : 'project'}
+          {name ? <strong>{name}</strong> : ''}, it will no longer receive data.
+          Are you sure?
+        </span>
+      ),
+      destructive: true,
+      onYes: () => {
         if (integration.flagsmithEnvironment) {
           _data
             .delete(
@@ -231,10 +344,17 @@ class IntegrationList extends Component {
             .catch(this.onError)
         }
       },
-    )
+      title: 'Delete integration',
+      yesText: 'Confirm',
+    })
   }
 
-  addIntegration = (integration, id) => {
+  addIntegration = (
+    integration,
+    id,
+    installationId = undefined,
+    githubId = undefined,
+  ) => {
     const params = Utils.fromParam()
     openModal(
       `${integration.title} Integration`,
@@ -249,8 +369,9 @@ class IntegrationList extends Component {
               }
             : null
         }
+        githubMeta={{ githubId: githubId, installationId: installationId }}
         projectId={this.props.projectId}
-        onComplete={this.fetch}
+        onComplete={githubId ? this.fetch : this.fetchGithubIntegration}
       />,
       'side-modal',
     )
@@ -277,7 +398,11 @@ class IntegrationList extends Component {
       JSON.parse(Utils.getFlagsmithValue('integration_data'))
     return (
       <div>
-        <div>
+        <div
+          onFocus={() => {
+            this.fetchGithubIntegration()
+          }}
+        >
           {this.props.integrations &&
           !this.state.isLoading &&
           this.state.activeIntegrations &&
@@ -290,6 +415,11 @@ class IntegrationList extends Component {
                 projectId={this.props.projectId}
                 id={i}
                 key={i}
+                githubMeta={{
+                  githubId: this.state.githubId,
+                  hasIntegrationWithGithub: this.state.hasIntegrationWithGithub,
+                  installationId: this.state.installationId,
+                }}
                 activeIntegrations={this.state.activeIntegrations[index]}
                 integration={integrationList[i]}
               />

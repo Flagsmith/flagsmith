@@ -1,8 +1,10 @@
 import typing
+from dataclasses import asdict
 from datetime import datetime
 
 import django.core.exceptions
 from drf_writable_nested import WritableNestedModelSerializer
+from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
@@ -11,6 +13,10 @@ from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
+from integrations.github.github import GithubData, generate_data
+from integrations.github.models import GithubConfiguration
+from integrations.github.tasks import call_github_app_webhook_for_feature_state
+from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
 from users.serializers import (
     UserIdsSerializer,
@@ -20,6 +26,7 @@ from users.serializers import (
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
+from webhooks.webhooks import WebhookEventType
 
 from .constants import INTERSECTION, UNION
 from .feature_segments.serializers import (
@@ -32,47 +39,22 @@ from .multivariate.serializers import (
 )
 
 
-class FeatureOwnerInputSerializer(UserIdsSerializer):
-    def add_owners(self, feature: Feature):
-        user_ids = self.validated_data["user_ids"]
-        feature.owners.add(*user_ids)
-
-    def remove_users(self, feature: Feature):
-        user_ids = self.validated_data["user_ids"]
-        feature.owners.remove(*user_ids)
-
-
-class FeatureGroupOwnerInputSerializer(serializers.Serializer):
-    group_ids = serializers.ListField(child=serializers.IntegerField())
-
-    def add_group_owners(self, feature: Feature):
-        group_ids = self.validated_data["group_ids"]
-        feature.group_owners.add(*group_ids)
-
-    def remove_group_owners(self, feature: Feature):
-        group_ids = self.validated_data["group_ids"]
-        feature.group_owners.remove(*group_ids)
-
-
-class ProjectFeatureSerializer(serializers.ModelSerializer):
-    owners = UserListSerializer(many=True, read_only=True)
-    group_owners = UserPermissionGroupSummarySerializer(many=True, read_only=True)
+class FeatureStateSerializerSmall(serializers.ModelSerializer):
+    feature_state_value = serializers.SerializerMethodField()
 
     class Meta:
-        model = Feature
+        model = FeatureState
         fields = (
             "id",
-            "name",
-            "created_date",
-            "description",
-            "initial_value",
-            "default_enabled",
-            "type",
-            "owners",
-            "group_owners",
-            "is_server_key_only",
+            "feature_state_value",
+            "environment",
+            "identity",
+            "feature_segment",
+            "enabled",
         )
-        writeonly_fields = ("initial_value", "default_enabled")
+
+    def get_feature_state_value(self, obj):
+        return obj.get_feature_state_value(identity=self.context.get("identity"))
 
 
 class FeatureQuerySerializer(serializers.Serializer):
@@ -98,20 +80,58 @@ class FeatureQuerySerializer(serializers.Serializer):
         required=False,
         help_text="Integer ID of the environment to view features in the context of.",
     )
+    is_enabled = serializers.BooleanField(
+        allow_null=True,
+        required=False,
+        default=None,
+        help_text="Boolean value to filter features as enabled or disabled.",
+    )
+    value_search = serializers.CharField(
+        required=False,
+        default=None,
+        help_text="Value of type int, string, or boolean to filter features based on their values",
+    )
 
-    def validate_tags(self, tags):
+    owners = serializers.CharField(
+        required=False,
+        help_text="Comma separated list of owner ids to filter on",
+    )
+    group_owners = serializers.CharField(
+        required=False,
+        help_text="Comma separated list of group owner ids to filter on",
+    )
+
+    def validate_owners(self, owners: str) -> list[int]:
+        try:
+            return [int(owner_id.strip()) for owner_id in owners.split(",")]
+        except ValueError:
+            raise serializers.ValidationError("Owner IDs must be integers.")
+
+    def validate_group_owners(self, group_owners: str) -> list[int]:
+        try:
+            return [
+                int(group_owner_id.strip())
+                for group_owner_id in group_owners.split(",")
+            ]
+        except ValueError:
+            raise serializers.ValidationError("Group owner IDs must be integers.")
+
+    def validate_tags(self, tags: str) -> list[int]:
         try:
             return [int(tag_id.strip()) for tag_id in tags.split(",")]
         except ValueError:
             raise serializers.ValidationError("Tag IDs must be integers.")
 
 
-class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
+class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
     multivariate_options = NestedMultivariateFeatureOptionSerializer(
         many=True, required=False
     )
     owners = UserListSerializer(many=True, read_only=True)
     group_owners = UserPermissionGroupSummarySerializer(many=True, read_only=True)
+
+    environment_feature_state = serializers.SerializerMethodField()
+
     num_segment_overrides = serializers.SerializerMethodField(
         help_text="Number of segment overrides that exist for the given feature "
         "in the environment provided by the `environment` query parameter."
@@ -151,6 +171,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             "group_owners",
             "uuid",
             "project",
+            "environment_feature_state",
             "num_segment_overrides",
             "num_identity_overrides",
             "is_server_key_only",
@@ -162,7 +183,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
     def to_internal_value(self, data):
         if data.get("initial_value") and not isinstance(data["initial_value"], str):
             data["initial_value"] = str(data["initial_value"])
-        return super(ListCreateFeatureSerializer, self).to_internal_value(data)
+        return super(CreateFeatureSerializer, self).to_internal_value(data)
 
     def create(self, validated_data: dict) -> Feature:
         project = self.context["project"]
@@ -171,7 +192,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         # Add the default(User creating the feature) owner of the feature
         # NOTE: pop the user before passing the data to create
         user = validated_data.pop("user", None)
-        instance = super(ListCreateFeatureSerializer, self).create(validated_data)
+        instance = super(CreateFeatureSerializer, self).create(validated_data)
         if user and getattr(user, "is_master_api_key_user", False) is False:
             instance.owners.add(user)
         return instance
@@ -247,6 +268,17 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
 
         return attrs
 
+    @swagger_serializer_method(
+        serializer_or_field=FeatureStateSerializerSmall(allow_null=True)
+    )
+    def get_environment_feature_state(
+        self, instance: Feature
+    ) -> dict[str, typing.Any] | None:
+        if (feature_states := self.context.get("feature_states")) and (
+            feature_state := feature_states.get(instance.id)
+        ):
+            return FeatureStateSerializerSmall(instance=feature_state).data
+
     def get_num_segment_overrides(self, instance) -> int:
         try:
             return self.context["overrides_data"][instance.id].num_segment_overrides
@@ -270,11 +302,44 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         return getattr(instance, "last_modified_in_current_environment", None)
 
 
-class UpdateFeatureSerializer(ListCreateFeatureSerializer):
+class FeatureSerializerWithMetadata(SerializerWithMetadata, CreateFeatureSerializer):
+    metadata = MetadataSerializer(required=False, many=True)
+
+    class Meta(CreateFeatureSerializer.Meta):
+        fields = CreateFeatureSerializer.Meta.fields + ("metadata",)
+
+    def get_project(self, validated_data: dict = None) -> Project:
+        project = self.context.get("project")
+        if project:
+            return project
+        else:
+            raise serializers.ValidationError(
+                "Unable to retrieve project for metadata validation."
+            )
+
+
+class UpdateFeatureSerializerWithMetadata(FeatureSerializerWithMetadata):
     """prevent users from changing certain values after creation"""
 
-    class Meta(ListCreateFeatureSerializer.Meta):
-        read_only_fields = ListCreateFeatureSerializer.Meta.read_only_fields + (
+    class Meta(FeatureSerializerWithMetadata.Meta):
+        read_only_fields = FeatureSerializerWithMetadata.Meta.read_only_fields + (
+            "default_enabled",
+            "initial_value",
+            "name",
+        )
+
+
+class ListFeatureSerializer(FeatureSerializerWithMetadata):
+    # This exists purely to reduce the conflicts for the EE repository
+    # which has some extra behaviour here to support Oracle DB.
+    pass
+
+
+class UpdateFeatureSerializer(ListFeatureSerializer):
+    """prevent users from changing certain values after creation"""
+
+    class Meta(ListFeatureSerializer.Meta):
+        read_only_fields = ListFeatureSerializer.Meta.read_only_fields + (
             "default_enabled",
             "initial_value",
             "name",
@@ -325,6 +390,49 @@ class FeatureStateSerializerFull(serializers.ModelSerializer):
         return obj.get_feature_state_value(identity=self.context.get("identity"))
 
 
+class FeatureOwnerInputSerializer(UserIdsSerializer):
+    def add_owners(self, feature: Feature):
+        user_ids = self.validated_data["user_ids"]
+        feature.owners.add(*user_ids)
+
+    def remove_users(self, feature: Feature):
+        user_ids = self.validated_data["user_ids"]
+        feature.owners.remove(*user_ids)
+
+
+class FeatureGroupOwnerInputSerializer(serializers.Serializer):
+    group_ids = serializers.ListField(child=serializers.IntegerField())
+
+    def add_group_owners(self, feature: Feature):
+        group_ids = self.validated_data["group_ids"]
+        feature.group_owners.add(*group_ids)
+
+    def remove_group_owners(self, feature: Feature):
+        group_ids = self.validated_data["group_ids"]
+        feature.group_owners.remove(*group_ids)
+
+
+class ProjectFeatureSerializer(serializers.ModelSerializer):
+    owners = UserListSerializer(many=True, read_only=True)
+    group_owners = UserPermissionGroupSummarySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Feature
+        fields = (
+            "id",
+            "name",
+            "created_date",
+            "description",
+            "initial_value",
+            "default_enabled",
+            "type",
+            "owners",
+            "group_owners",
+            "is_server_key_only",
+        )
+        writeonly_fields = ("initial_value", "default_enabled")
+
+
 class SDKFeatureStateSerializer(
     HideSensitiveFieldsSerializerMixin, FeatureStateSerializerFull
 ):
@@ -357,9 +465,34 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
 
     def save(self, **kwargs):
         try:
-            return super().save(**kwargs)
+            response = super().save(**kwargs)
+
+            feature_state = self.instance
+            if (
+                not feature_state.identity_id
+                and feature_state.feature.external_resources.exists()
+                and feature_state.environment.project.github_project.exists()
+                and feature_state.environment.project.organisation.github_config.exists()
+            ):
+                github_configuration = GithubConfiguration.objects.get(
+                    organisation_id=feature_state.environment.project.organisation_id
+                )
+                feature_states = []
+                feature_states.append(feature_state)
+                feature_data: GithubData = generate_data(
+                    github_configuration=github_configuration,
+                    feature=feature_state.feature,
+                    type=WebhookEventType.FLAG_UPDATED.value,
+                    feature_states=feature_states,
+                )
+
+                call_github_app_webhook_for_feature_state.delay(
+                    args=(asdict(feature_data),),
+                )
+
+            return response
         except django.core.exceptions.ValidationError as e:
-            raise serializers.ValidationError(e.message)
+            raise serializers.ValidationError(str(e))
 
     def validate_feature(self, feature):
         if self.instance and self.instance.feature_id != feature.id:

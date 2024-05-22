@@ -1,59 +1,112 @@
-.question-tooltip {
-  .__react_component_tooltip {
-    font-family: $font-family-header;
-    font-size: $font-caption-sm;
-    line-height: $line-height-xxsm;
-    text-transform: none;
-    padding: 5px 8px;
-    border-radius: $border-radius-sm;
+$arrow: 6px;
+$shadow: 0 4px 4px 0 rgba(100, 116, 139, 0.12);
+$shadow-dark: 0 4px 4px 0 #00000029;
+.__react_component_tooltip.show {
+  box-shadow: $shadow;
+  max-width: 400px;
+  font-family: $btn-font-family;
+  font-size: $font-size-sm;
+  color: $body-color !important;
+  text-transform: none;
+  text-wrap: wrap;
+  &.show {
     opacity: 1;
-    i {
-      font-style: normal;
-      color: $bt-brand-primary;
+  }
+
+  i {
+    font-style: normal;
+    color: $primary;
+  }
+
+  background-color: white;
+
+  &:before {
+    z-index: -1 !important;
+  }
+  &.place-top {
+    &:after {
+      box-shadow: $shadow;
+      border-top-color: white;
+      background-color: white;
+      border-right-width: $arrow;
+      border-left-width: $arrow;
+      margin-top: -$arrow;
+      padding-top: 1px;
     }
-    &.type-dark {
-      background-color: $text-icon-dark;
-      &.place-top {
-        &:after {
-          border-top-color: $text-icon-dark;
-          border-right-width: 6px;
-          border-left-width: 6px;
-          margin-left: -6px;
-        }
-      }
-      &.place-bottom {
-        &:after {
-          border-bottom-color: $text-icon-dark;
-          border-right-width: 6px;
-          border-left-width: 6px;
-          margin-left: -6px;
-        }
-      }
-      &.place-right {
-        &:after {
-          border-right-color: $text-icon-dark;
-          border-top-width: 6px;
-          border-bottom-width: 6px;
-          margin-top: -5px;
-        }
-      }
-      &.place-left {
-        &:after {
-          border-left-color: $text-icon-dark;
-          border-top-width: 6px;
-          border-bottom-width: 6px;
-          margin-top: -5px;
-        }
-      }
+  }
+
+  &.place-bottom {
+    &:after {
+      box-shadow: $shadow;
+      border-bottom-color: white;
+      background-color: white;
+      border-right-width: $arrow;
+      border-left-width: $arrow;
+      margin-left: -$arrow;
+      padding-bottom: 1px;
+    }
+  }
+
+  &.place-right {
+    &:after {
+      box-shadow: $shadow;
+      border-right-color: white;
+      background-color: white;
+      border-top-width: $arrow;
+      border-bottom-width: $arrow;
+      margin-top: -5px;
+      padding-right: 1px;
+    }
+  }
+
+  &.place-left {
+    &:after {
+      box-shadow: $shadow;
+      border-left-color: white;
+      background-color: white;
+      border-top-width: $arrow;
+      border-bottom-width: $arrow;
+      margin-top: -5px;
+      padding-left: 1px;
     }
   }
 }
+
 .dark {
-  .question-tooltip {
-    .__react_component_tooltip {
-      &.type-dark {
-        background-color: $bg-light100;
-        color: $text-icon-dark;
+  .__react_component_tooltip {
+    background-color: $body-color;
+    color: white !important;
+    box-shadow: $shadow-dark;
+
+    &.place-top {
+      &:after {
+        box-shadow: $shadow-dark;
+        border-top-color: $body-color;
+        background-color: $body-color;
+      }
+    }
+
+    &.place-bottom {
+      &:after {
+        box-shadow: $shadow-dark;
+        border-bottom-color: $body-color;
+        background-color: $body-color;
+      }
+    }
+
+    &.place-right {
+      &:after {
+        box-shadow: $shadow-dark;
+        border-right-color: $body-color;
+        background-color: $body-color;
+      }
+    }
+
+    &.place-left {
+      &:after {
+        box-shadow: $shadow-dark;
+        border-left-color: $body-color;
+        background-color: $body-color;
       }
     }
   }
@@ -69,6 +122,7 @@
   line-height: $line-height-xxsm;
   font-weight: 500;
 }
+
 .xAxis {
   font-size: $font-caption-xs;
   line-height: $line-height-xxsm;
@@ -77,11 +131,13 @@
 
 .dark {
   .recharts-tooltip-header {
-    color: $text-icon-dark;
+    color: $body-color;
   }
+
   .xAxis {
     color: $text-icon-light-grey;
   }
+
   .recharts-wrapper {
     line {
       stroke: $bg-dark100;

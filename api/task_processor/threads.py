@@ -1,5 +1,6 @@
 import logging
 import time
+import traceback
 from threading import Thread
 
 from django.utils import timezone
@@ -27,12 +28,22 @@ class TaskRunner(Thread):
     def run(self) -> None:
         while not self._stopped:
             self.last_checked_for_tasks = timezone.now()
-            try:
-                run_tasks(self.queue_pop_size)
-            except Exception as e:
-                logger.exception(e)
-            run_recurring_tasks(self.queue_pop_size)
+            self.run_iteration()
             time.sleep(self.sleep_interval_millis / 1000)
+
+    def run_iteration(self) -> None:
+        try:
+            run_tasks(self.queue_pop_size)
+            run_recurring_tasks(self.queue_pop_size)
+        except Exception as e:
+            # To prevent task threads from dying if they get an error retrieving the tasks from the
+            # database this will allow the thread to continue trying to retrieve tasks if it can
+            # successfully re-establish a connection to the database.
+            # TODO: is this also what is causing tasks to get stuck as locked? Can we unlock
+            #  tasks here?
+
+            logger.error("Received error retrieving tasks: %s.", e)
+            logger.debug(traceback.format_exc())
 
     def stop(self):
         self._stopped = True

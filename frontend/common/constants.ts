@@ -10,7 +10,6 @@ const keywords = {
   LIB_NAME_JAVA: 'FlagsmithClient',
   NPM_CLIENT: 'flagsmith',
   NPM_NODE_CLIENT: 'flagsmith-nodejs',
-  NPM_RN_CLIENT: 'react-native-flagsmith',
   SEGMENT_NAME: 'superUsers',
   TRAIT_NAME: 'age',
   URL_CLIENT: 'https://cdn.jsdelivr.net/npm/flagsmith/index.js',
@@ -18,7 +17,10 @@ const keywords = {
   USER_FEATURE_NAME: 'my_even_cooler_feature',
   USER_ID: 'user_123456',
 }
-
+const keywordsReactNative = {
+  ...keywords,
+  NPM_CLIENT: 'react-native-flagsmith',
+}
 export default {
   archivedTag: { color: '#8f8f8f', label: 'Archived' },
   codeHelp: {
@@ -73,9 +75,9 @@ export default {
         keywords,
         userId,
       ),
-      'React Native': require('./code-help/create-user/create-user-rn')(
+      'React Native': require('./code-help/create-user/create-user-react')(
         envId,
-        keywords,
+        keywordsReactNative,
         userId,
       ),
       'Ruby': require('./code-help/create-user/create-user-ruby')(
@@ -111,7 +113,10 @@ export default {
       'PHP': require('./code-help/init/init-php')(envId, keywords),
       'Python': require('./code-help/init/init-python')(envId, keywords),
       'React': require('./code-help/init/init-react')(envId, keywords),
-      'React Native': require('./code-help/init/init-rn')(envId, keywords),
+      'React Native': require('./code-help/init/init-js')(
+        envId,
+        keywordsReactNative,
+      ),
       'Ruby': require('./code-help/init/init-ruby')(envId, keywords),
       'Rust': require('./code-help/init/init-rust')(envId, keywords),
       'curl': require('./code-help/init/init-curl')(envId, keywords),
@@ -129,7 +134,9 @@ export default {
       'PHP': require('./code-help/install/install-php')(keywords),
       'Python': require('./code-help/install/install-python')(keywords),
       'React': require('./code-help/install/install-js')(keywords),
-      'React Native': require('./code-help/install/install-rn')(keywords),
+      'React Native': require('./code-help/install/install-js')(
+        keywordsReactNative,
+      ),
       'Ruby': require('./code-help/install/install-ruby')(keywords),
       'Rust': require('./code-help/install/install-rust')(keywords),
       'curl': require('./code-help/install/install-curl')(keywords),
@@ -156,7 +163,7 @@ export default {
       ),
     }),
 
-    'USER_TRAITS': (envId: string, userId?: string) => ({
+    'USER_TRAITS': (envId: string, userId = keywords.USER_ID) => ({
       '.NET': require('./code-help/traits/traits-dotnet')(
         envId,
         keywords,
@@ -199,9 +206,9 @@ export default {
         keywords,
         userId,
       ),
-      'React Native': require('./code-help/traits/traits-rn')(
+      'React Native': require('./code-help/traits/traits-react')(
         envId,
-        keywords,
+        keywordsReactNative,
         userId,
       ),
       'Ruby': require('./code-help/traits/traits-ruby')(
@@ -335,6 +342,12 @@ export default {
       'category': 'Organisation',
       'event': 'Updated user role',
     },
+    UPGRADE: (plan: string) => {
+      return {
+        'category': 'Upgrade',
+        'event': `Upgrade ${plan}`,
+      }
+    },
     'VIEW_FEATURE': { 'category': 'Features', 'event': 'Feature viewed' },
     'VIEW_SEGMENT': { 'category': 'Segment', 'event': 'Segment viewed' },
     'VIEW_USER_FEATURE': {
@@ -422,6 +435,10 @@ export default {
       'TRAITS_ID': 150,
     },
   },
+  githubType: {
+    githubIssue: 'GitHub Issue',
+    githubPR: 'Github PR',
+  },
   modals: {
     'PAYMENT': 'Payment Modal',
   },
@@ -459,6 +476,10 @@ export default {
   ],
   projectPermissions: (perm: string) =>
     `To use this feature you need the <i>${perm}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`,
+  resourceTypes: {
+    GITHUB_ISSUE: { id: 1, label: 'GitHub Issue', type: 'GITHUB' },
+    GITHUB_PR: { id: 2, label: 'GitHub PR', type: 'GITHUB' },
+  },
   roles: {
     'ADMIN': 'Organisation Administrator',
     'USER': 'User',
@@ -484,9 +505,10 @@ export default {
     REMOTE_CONFIG_DESCRIPTION_VARIATION:
       'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.<br/>Variation values are set per project, the environment weight is per environment.',
     SEGMENT_OVERRIDES_DESCRIPTION:
-      'Set different values for your feature based on what segments users are in.',
+      'Set different values for your feature based on what segments users are in. Identity overrides will take priority over any segment override.',
     TAGS_DESCRIPTION:
       'Organise your flags with tags, tagging your features as "<strong>protected</strong>" will prevent them from accidentally being deleted.',
+    TOOLTIP_METADATA_DESCRIPTION: 'Add metadata in your',
     USER_PROPERTY_DESCRIPTION:
       'The name of the user trait or custom property belonging to the user, e.g. firstName',
     WEBHOOKS_DESCRIPTION:
@@ -495,7 +517,7 @@ export default {
   tagColors: [
     '#3d4db6',
     '#ea5a45',
-    '#f1d502',
+    '#c6b215',
     '#60bd4e',
     '#fe5505',
     '#1492f4',
@@ -515,4 +537,5 @@ export default {
     '#DE3163',
   ],
   untaggedTag: { color: '#dedede', label: 'Untagged' },
+  upgradeURL: '/organisation-settings?tab=billing',
 }

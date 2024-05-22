@@ -13,7 +13,6 @@ import IntegrationsPage from './components/pages/IntegrationsPage'
 import FlagsPage from './components/pages/FeaturesPage'
 import SegmentsPage from './components/pages/SegmentsPage'
 import OrganisationSettingsPage from './components/pages/OrganisationSettingsPage'
-import OrganisationGroupsPage from './components/pages/OrganisationGroupsPage'
 import AccountSettingsPage from './components/pages/AccountSettingsPage'
 import NotFoundErrorPage from './components/pages/NotFoundErrorPage'
 import ProjectSettingsPage from './components/pages/ProjectSettingsPage'
@@ -28,9 +27,18 @@ import AuditLogPage from './components/pages/AuditLogPage'
 import ComparePage from './components/pages/ComparePage'
 import WidgetPage from './components/pages/WidgetPage'
 import BrokenPage from './components/pages/BrokenPage'
-import ProjectsPage from './components/pages/ProjectsPage'
+import GitHubSetupPage from './components/pages/GitHubSetupPage'
 import AuditLogItemPage from './components/pages/AuditLogItemPage'
 import FeatureHistoryPage from './components/pages/FeatureHistoryPage'
+import Utils from 'common/utils/utils'
+import ProjectsPage from './components/ProjectsPage'
+import OrganisationSettingsRedirectPage from './components/pages/OrganisationSettingsRedirectPage'
+import OrganisationUsagePage from './components/pages/OrganisationUsagePage'
+import OrganisationsPage from './components/pages/OrganisationsPage'
+import UsersAndPermissionsPage from './components/pages/UsersAndPermissionsPage'
+import ProjectRedirectPage from './components/pages/ProjectRedirectPage'
+import SDKKeysPage from './components/SDKKeysPage'
+import { ParameterizedRoute } from './components/base/higher-order/ParameterizedRoute'
 
 export default (
   <App>
@@ -39,36 +47,37 @@ export default (
       <Route path='/login' exact component={HomePage} />
       <Route path='/404' exact component={NotFoundErrorPage} />
       <Route path='/signup' exact component={HomePage} />
-      <Route path='/signup' exact component={HomePage} />
       <Route path='/home' exact component={HomePage} />
-      <Route path='/projects' exact component={ProjectsPage} />
+      {Utils.getFlagsmithHasFeature('github_integration') && (
+        <Route path='/github-setup' exact component={GitHubSetupPage} />
+      )}
       <Route path='/maintenance' exact component={Maintenance} />
       <Route
         path='/password-reset/confirm/:uid/:token/'
         exact
         component={PasswordResetPage}
       />
-      <Route
+      <ParameterizedRoute
         path='/project/:projectId/environment/:environmentId/features'
         exact
         component={FlagsPage}
       />
-      <Route
+      <ParameterizedRoute
         path='/project/:projectId/environment/:environmentId/change-requests'
         exact
         component={ChangeRequestsPage}
       />
-      <Route
+      <ParameterizedRoute
         path='/project/:projectId/environment/:environmentId/scheduled-changes'
         exact
         component={ScheduledChangesPage}
       />
-      <Route
+      <ParameterizedRoute
         path='/project/:projectId/environment/:environmentId/change-requests/:id'
         exact
         component={ChangeRequestPage}
       />
-      <Route
+      <ParameterizedRoute
         path='/project/:projectId/environment/:environmentId/scheduled-changes/:id'
         exact
         component={ChangeRequestPage}
@@ -79,93 +88,119 @@ export default (
       <Route path='/broken' exact component={BrokenPage} />
       <Route path='/oauth/:type' exact component={HomePage} />
       <Route path='/saml' exact component={HomePage} />
-      <Route
+      <ParameterizedRoute
         path='/project/:projectId/environment/:environmentId/settings'
         exact
         component={EnvironmentSettingsPage}
       />
-      <Route
+      <ParameterizedRoute
+        path='/project/:projectId/environment/:environmentId/sdk-keys'
+        exact
+        component={SDKKeysPage}
+      />
+      <ParameterizedRoute
         path='/project/:projectId/integrations'
         exact
         component={IntegrationsPage}
       />
-      <Route
+      <ParameterizedRoute
         path='/project/:projectId/environment/:environmentId/users'
         exact
         component={UsersPage}
       />
-      <Route
+      <ParameterizedRoute
         path='/project/:projectId/environment/:environmentId/users/:identity'
         exact
         component={UserIdPage}
       />
-      <Route
+      <ParameterizedRoute
         path='/project/:projectId/environment/:environmentId/users/:identity/:id'
         exact
         component={UserPage}
       />
-      <Route
+      <ParameterizedRoute
         path='/project/:projectId/environment/create'
         exact
         component={CreateEnvironmentPage}
       />
-      <Route
+      <ParameterizedRoute
         path='/project/:projectId/environment/:environmentId/project-settings'
         exact
         component={ProjectSettingsPage}
       />
-      <Route
-        path='/project/:projectId/environment/:environmentId/compare'
+      <ParameterizedRoute
+        path='/project/:projectId/compare'
         exact
         component={ComparePage}
       />
-      <Route
+      <ParameterizedRoute
         path='/project/:projectId/environment/:environmentId/history'
         exact
         component={FeatureHistoryPage}
       />
-      <Route
+      <ParameterizedRoute
         path='/project/:projectId/settings'
         exact
         component={ProjectSettingsPage}
       />
-      <Route
-        path='/project/:projectId/environment/:environmentId/segments'
+      <ParameterizedRoute
+        path='/project/:projectId/permissions'
+        exact
+        component={ProjectSettingsPage}
+      />
+      <ParameterizedRoute
+        path='/project/:projectId/segments'
         exact
         component={SegmentsPage}
       />
-      <Route
-        path='/project/:projectId/environment/:environmentId/organisation-settings'
+      <ParameterizedRoute
+        path='/organisation/:organisationId/settings'
         exact
         component={OrganisationSettingsPage}
+      />
+      <ParameterizedRoute
+        path='/organisation/:organisationId/permissions'
+        exact
+        component={UsersAndPermissionsPage}
+      />
+      <ParameterizedRoute
+        path='/organisation/:organisationId/usage'
+        exact
+        component={OrganisationUsagePage}
       />
       <Route
         path='/organisation-settings'
         exact
-        component={OrganisationSettingsPage}
+        component={OrganisationSettingsRedirectPage}
       />
-      <Route
-        path='/organisation-groups'
+      <ParameterizedRoute
+        path='/organisation/:organisationId/projects'
         exact
-        component={OrganisationGroupsPage}
+        component={ProjectsPage}
       />
-      <Route
+      <ParameterizedRoute
         path='/project/:projectId/environment/:environmentId/account'
         exact
         component={AccountSettingsPage}
       />
+      <ParameterizedRoute
+        path='/project/:projectId'
+        exact
+        component={ProjectRedirectPage}
+      />
       <Route path='/account' exact component={AccountSettingsPage} />
-      <Route
+      <ParameterizedRoute
         path='/project/:projectId/environment/:environmentId/audit-log'
         exact
         component={AuditLogPage}
       />
-      <Route
+      <ParameterizedRoute
         path='/project/:projectId/audit-log'
         exact
         component={AuditLogPage}
       />
-      <Route
+      <Route path='/organisations' exact component={OrganisationsPage} />
+      <ParameterizedRoute
         path='/project/:projectId/environment/:environmentId/audit-log/:id'
         exact
         component={AuditLogItemPage}

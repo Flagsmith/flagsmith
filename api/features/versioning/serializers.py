@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from features.serializers import CreateSegmentOverrideFeatureStateSerializer
 from features.versioning.models import EnvironmentFeatureVersion
+from users.models import FFAdminUser
 
 
 class EnvironmentFeatureVersionFeatureStateSerializer(
@@ -44,7 +45,13 @@ class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):
 
     def save(self, **kwargs):
         live_from = self.validated_data.get("live_from")
-        self.instance.publish(
-            live_from=live_from, published_by=self.context["request"].user
-        )
+
+        request = self.context["request"]
+        published_by = request.user if isinstance(request.user, FFAdminUser) else None
+
+        self.instance.publish(live_from=live_from, published_by=published_by)
         return self.instance
+
+
+class EnvironmentFeatureVersionQuerySerializer(serializers.Serializer):
+    is_live = serializers.BooleanField(allow_null=True, required=False, default=None)

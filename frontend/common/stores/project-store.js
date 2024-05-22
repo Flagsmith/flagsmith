@@ -1,11 +1,14 @@
 import { getIsWidget } from 'components/pages/WidgetPage'
+import OrganisationStore from './organisation-store'
 
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
+import { getStore } from 'common/store'
+import { projectService } from 'common/services/useProject'
+import { environmentService } from 'common/services/useEnvironment'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
-const OrganisationStore = require('./organisation-store')
 
 const data = require('../data/base/_data')
 
@@ -49,6 +52,9 @@ const controller = {
                 ])
               }
               store.saved()
+              getStore().dispatch(
+                environmentService.util.invalidateTags(['Environment']),
+              )
               AppActions.refreshOrganisation()
             }),
         ),
@@ -74,6 +80,9 @@ const controller = {
       const index = _.findIndex(store.model.environments, { id: env.id })
       store.model.environments[index] = res
       store.saved()
+      getStore().dispatch(
+        environmentService.util.invalidateTags(['Environment']),
+      )
       AppActions.refreshOrganisation()
     })
   },
@@ -81,11 +90,18 @@ const controller = {
     store.saving()
     data.put(`${Project.api}projects/${project.id}/`, project).then((res) => {
       store.model = Object.assign(store.model, res)
+      getStore().dispatch(projectService.util.invalidateTags(['Project']))
+      AppActions.refreshOrganisation()
       store.saved()
     })
   },
   getProject: (id, cb, force) => {
-    if (force) {
+    if (!id) {
+      if (!getIsWidget()) {
+        !force && AsyncStorage.removeItem('lastEnv')
+        document.location.href = '/404'
+      }
+    } else if (force) {
       store.loading()
 
       return Promise.all([
@@ -190,6 +206,9 @@ const store = Object.assign({}, BaseStore, {
   },
   getMaxSegmentsAllowed: () => {
     return store.model && store.model.max_segments_allowed
+  },
+  getStaleFlagsLimit: () => {
+    return store.model && store.model.stale_flags_limit_days
   },
   getTotalFeatures: () => {
     return store.model && store.model.total_features

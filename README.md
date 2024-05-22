@@ -75,3 +75,7 @@ REST calls to the API.
 - [Website](https://flagsmith.com/)
 - [Documentation](https://docs.flagsmith.com/)
 - If you have any questions about our projects you can email [support@flagsmith.com](mailto:support@flagsmith.com)
+
+## Acknowledgements
+
+Thank you to [Uffizzi](https://www.uffizzi.com) for providing ephemeral environments to preview pull requests.

@@ -4,7 +4,7 @@ h3,
 h4,
 h5,
 h6 {
-  color: $text-icon-dark;
+  color: $body-color;
   font-family: $font-family;
   font-weight: 700;
 }
@@ -56,7 +56,7 @@ a {
 }
 
 .dark {
-  color: $body-text-dark;
+  color: $body-color-dark;
   h1,
   h2,
   h3,
@@ -72,12 +72,12 @@ a {
 }
 
 .text-primary {
-  color: $bt-brand-primary;
+  color: $primary;
 }
 
 .dark {
   .text-primary {
-    color: $bt-brand-primary-dark;
+    color: $primary900;
   }
   .text-dark {
     color: $text-icon-light !important;
@@ -89,14 +89,14 @@ a {
 }
 
 a.link-dark {
-  color: $bt-brand-primary;
+  color: $primary;
 }
 
 a.dark {
-  color: $bt-brand-primary-dark;
+  color: $primary900;
   text-decoration: underline;
   &:hover {
-    color: lighten($bt-brand-primary-dark, 10);
+    color: lighten($primary900, 10);
   }
 }
 
@@ -110,9 +110,9 @@ a.dark {
 
 .text {
   &__link {
-    color: $bt-brand-primary;
+    color: $primary;
     &:hover {
-      color: lighten($bt-brand-primary, 10);
+      color: lighten($primary, 10);
     }
   }
 }
@@ -134,9 +134,9 @@ a.dark {
 
 .feature {
   &--off {
-    color: $bt-brand-red;
+    color: $danger;
   }
   &--on {
-    color: $bt-brand-primary;
+    color: $primary;
   }
 }

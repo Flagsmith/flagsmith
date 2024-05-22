@@ -37,7 +37,7 @@ first Flag. This flag will control whether a button shows on our web page.
 ![Flagsmith Overview](/img/quickstart/demo_create_3.png)
 
 Flags within Flagsmith are a combination of both: A Boolean value - the `Flag State` and then optionally: A
-String/Integer/Float value - the `Flag Value`. For now, we're only going to use the `Boolean` value of the flag to
+String/Integer/Boolean value - the `Flag Value`. For now, we're only going to use the `Boolean` value of the flag to
 control whether the button shows. Create a flag called `show_demo_button`, and leave it as Disabled by default:
 
 ![Flagsmith Overview](/img/quickstart/demo_create_4.png)
@@ -166,6 +166,6 @@ This was a pretty quick demo, but it covers the core concepts involved in integr
 From here, some areas of the documentation you might want to check out are:
 
 - A deeper overview of the application - [Features](basic-features/managing-features.md),
-  [Identities](basic-features/managing-identities.md) and [Segments](basic-features/managing-segments.md).
+  [Identities](basic-features/managing-identities.md) and [Segments](basic-features/segments.md).
 - More details about our [API and SDKs](clients/rest.md).
 - How you can [run Flagsmith yourself](deployment/overview.md) or use our [Hosted API](https://flagsmith.com/).

@@ -1,9 +1,6 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import logging
 
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import no_body, swagger_auto_schema
@@ -19,7 +16,12 @@ from environments.permissions.permissions import (
     EnvironmentPermissions,
     NestedEnvironmentPermissions,
 )
-from features.versioning.tasks import enable_v2_versioning
+from environments.sdk.schemas import SDKEnvironmentDocumentModel
+from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.tasks import (
+    disable_v2_versioning,
+    enable_v2_versioning,
+)
 from permissions.permissions_calculator import get_environment_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
@@ -107,9 +109,28 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         queryset = Environment.objects.all()
 
         if self.action == "retrieve":
-            queryset = queryset.annotate(
-                total_segment_overrides=Count("feature_segments")
+            # Since we don't have the environment at this stage, we would need to query the database
+            # regardless, so it seems worthwhile to just query the database for the latest versions
+            # and use their existence as a proxy to whether v2 feature versioning is enabled.
+            latest_versions = EnvironmentFeatureVersion.objects.get_latest_versions_by_environment_api_key(
+                environment_api_key=self.kwargs["api_key"]
             )
+            if latest_versions:
+                # if there are latest versions (and hence v2 feature versioning is enabled), then
+                # we need to ensure that we're only counting the feature segments for those
+                # latest versions against the limits.
+                queryset = queryset.annotate(
+                    total_segment_overrides=Count(
+                        "feature_segments",
+                        filter=Q(
+                            feature_segments__environment_feature_version__in=latest_versions
+                        ),
+                    )
+                )
+            else:
+                queryset = queryset.annotate(
+                    total_segment_overrides=Count("feature_segments")
+                )
 
         return queryset
 
@@ -201,6 +222,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)
 
+    @swagger_auto_schema(responses={200: SDKEnvironmentDocumentModel})
     @action(detail=True, methods=["GET"], url_path="document")
     def get_document(self, request, api_key: str):
         return Response(Environment.get_environment_document(api_key))
@@ -215,6 +237,18 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
                 data={"detail": "Environment already using v2 versioning."},
             )
         enable_v2_versioning.delay(kwargs={"environment_id": environment.id})
+        return Response(status=status.HTTP_202_ACCEPTED)
+
+    @swagger_auto_schema(request_body=no_body, responses={202: ""})
+    @action(detail=True, methods=["POST"], url_path="disable-v2-versioning")
+    def disable_v2_versioning(self, request: Request, api_key: str) -> Response:
+        environment = self.get_object()
+        if environment.use_v2_feature_versioning is False:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"detail": "Environment is not using v2 versioning."},
+            )
+        disable_v2_versioning.delay(kwargs={"environment_id": environment.id})
         return Response(status=status.HTTP_202_ACCEPTED)
 
 

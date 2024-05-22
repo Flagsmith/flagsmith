@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from django.conf import settings
 from influxdb_client import InfluxDBClient, Point
+from influxdb_client.client.exceptions import InfluxDBError
 from influxdb_client.client.write_api import SYNCHRONOUS
 from sentry_sdk import capture_exception
 from urllib3 import Retry
@@ -61,8 +62,12 @@ class InfluxDBWrapper:
     def write(self):
         try:
             self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
-        except HTTPError:
-            logger.warning("Failed to write records to Influx.")
+        except (HTTPError, InfluxDBError) as e:
+            logger.warning(
+                "Failed to write records to Influx: %s",
+                str(e),
+                exc_info=e,
+            )
             logger.debug(
                 "Records: %s. Bucket: %s",
                 self.records,
@@ -336,8 +341,8 @@ def get_current_api_usage(organisation_id: int, date_range: str) -> int:
         ),
         drop_columns=("_start", "_stop", "_time"),
         extra='|> sum() \
-              |> group() \
-              |> sort(columns: ["_value"], desc: true) ',
+               |> group() \
+               |> sort(columns: ["_value"], desc: true) ',
     )
 
     for result in results:
@@ -345,10 +350,7 @@ def get_current_api_usage(organisation_id: int, date_range: str) -> int:
         if len(result.records) == 0:
             return 0
 
-        # There should only be one matching result due to the
-        # group part of the query.
-        assert len(result.records) == 1
-        return result.records[0].get_value()
+        return sum(r.get_value() for r in result.records)
 
     return 0
 

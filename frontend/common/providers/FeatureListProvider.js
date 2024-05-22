@@ -31,8 +31,8 @@ const FeatureListProvider = class extends React.Component {
       })
     })
 
-    this.listenTo(FeatureListStore, 'saved', () => {
-      this.props.onSave && this.props.onSave()
+    this.listenTo(FeatureListStore, 'saved', (data) => {
+      this.props.onSave && this.props.onSave(data)
     })
 
     this.listenTo(FeatureListStore, 'problem', () => {
@@ -48,17 +48,29 @@ const FeatureListProvider = class extends React.Component {
   }
 
   toggleFlag = (projectId, environmentId, projectFlag, environmentFlag) => {
-    AppActions.editEnvironmentFlag(
+    this.editFeatureValue(
       projectId,
       environmentId,
+      /* todo: Saving features involves sending an adjusted project flag rather than a feature state (old tech debt).
+       This will be removed when migrating to RTK. The following converts the feature state to the accepted format.
+      */
       {
         ...projectFlag,
         default_enabled: !environmentFlag.enabled,
+        initial_value: environmentFlag.feature_state_value,
+        multivariate_options: projectFlag.multivariate_options.map((mv) => {
+          const matching =
+            environmentFlag.multivariate_feature_state_values.find(
+              (v) => v.multivariate_feature_option == mv.id,
+            )
+          return {
+            ...mv,
+            default_percentage_allocation: matching.percentage_allocation,
+          }
+        }),
       },
       projectFlag,
       environmentFlag,
-      null,
-      'VALUE',
     )
   }
 
@@ -162,7 +174,7 @@ const FeatureListProvider = class extends React.Component {
       }),
       () => {
         FeatureListStore.isSaving = false
-        FeatureListStore.trigger('saved')
+        FeatureListStore.trigger('saved', {})
         FeatureListStore.trigger('change')
       },
     )
@@ -177,6 +189,7 @@ const FeatureListProvider = class extends React.Component {
     segmentOverrides,
     changeRequest,
     commit,
+    mode,
   ) => {
     AppActions.editFeatureMv(
       projectId,
@@ -208,6 +221,7 @@ const FeatureListProvider = class extends React.Component {
           segmentOverrides,
           changeRequest,
           commit,
+          mode,
         )
       },
     )

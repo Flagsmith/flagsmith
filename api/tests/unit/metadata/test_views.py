@@ -1,11 +1,19 @@
 import json
+from itertools import chain
 
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APIClient
 
-from metadata.models import MetadataModelField, MetadataModelFieldRequirement
-from metadata.views import METADATA_SUPPORTED_MODELS
+from metadata.models import (
+    MetadataField,
+    MetadataModelField,
+    MetadataModelFieldRequirement,
+)
+from metadata.views import SUPPORTED_REQUIREMENTS_MAPPING
+from organisations.models import Organisation
+from projects.models import Project
 
 
 def test_can_create_metadata_field(admin_client, organisation):
@@ -267,15 +275,14 @@ def test_can_not_update_model_metadata_field_from_other_organisation(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_create_model_metadata_field(
-    admin_client,
-    a_metadata_field,
-    organisation,
-    environment,
-    project_content_type,
-    environment_content_type,
-    project,
-):
+def test_create_model_metadata_field_for_environments(
+    admin_client: APIClient,
+    a_metadata_field: MetadataField,
+    organisation: Organisation,
+    project_content_type: ContentType,
+    environment_content_type: ContentType,
+    project: Project,
+) -> None:
     # Given
     url = reverse(
         "api-v1:organisations:metadata-model-fields-list", args=[organisation.id]
@@ -286,6 +293,72 @@ def test_create_model_metadata_field(
             {"content_type": project_content_type.id, "object_id": project.id}
         ],
         "content_type": environment_content_type.id,
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["field"] == a_metadata_field.id
+    assert response.json()["is_required_for"][0] == {
+        "content_type": project_content_type.id,
+        "object_id": project.id,
+    }
+
+
+def test_create_model_metadata_field_for_features(
+    admin_client: APIClient,
+    a_metadata_field: MetadataField,
+    organisation: Organisation,
+    project_content_type: ContentType,
+    feature_content_type: ContentType,
+    project: Project,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:metadata-model-fields-list", args=[organisation.id]
+    )
+    data = {
+        "field": a_metadata_field.id,
+        "is_required_for": [
+            {"content_type": project_content_type.id, "object_id": project.id}
+        ],
+        "content_type": feature_content_type.id,
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["field"] == a_metadata_field.id
+    assert response.json()["is_required_for"][0] == {
+        "content_type": project_content_type.id,
+        "object_id": project.id,
+    }
+
+
+def test_create_model_metadata_field_for_segments(
+    admin_client: APIClient,
+    a_metadata_field: MetadataField,
+    organisation: Organisation,
+    project_content_type: ContentType,
+    segment_content_type: ContentType,
+    project: Project,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:metadata-model-fields-list", args=[organisation.id]
+    )
+    data = {
+        "field": a_metadata_field.id,
+        "is_required_for": [
+            {"content_type": project_content_type.id, "object_id": project.id}
+        ],
+        "content_type": segment_content_type.id,
     }
 
     # When
@@ -322,22 +395,31 @@ def test_can_not_create_model_metadata_field_using_field_from_other_organisation
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_get_supported_content_type(admin_client, organisation):
+def test_get_supported_content_type(
+    admin_client: APIClient, organisation: Organisation
+):
     # Given
     url = reverse(
         "api-v1:organisations:metadata-model-fields-supported-content-types",
         args=[organisation.id],
     )
+
+    supported_models = list(
+        chain.from_iterable(
+            (key, *value) for key, value in SUPPORTED_REQUIREMENTS_MAPPING.items()
+        )
+    )
+
     # When
     response = admin_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.json()) == len(METADATA_SUPPORTED_MODELS)
 
-    assert set(content_type["model"] for content_type in response.json()) == set(
-        METADATA_SUPPORTED_MODELS
-    )
+    response_models = set(content_type["model"] for content_type in response.json())
+
+    for model in response_models:
+        assert model in supported_models
 
 
 def test_get_supported_required_for_models(admin_client, organisation):

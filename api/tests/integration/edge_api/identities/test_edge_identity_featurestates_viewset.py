@@ -1,15 +1,33 @@
 import json
 import typing
+import uuid
 
 import pytest
 from core.constants import BOOLEAN, INTEGER, STRING
 from django.urls import reverse
+from flag_engine.features.models import (
+    FeatureModel,
+    FeatureStateModel,
+    MultivariateFeatureOptionModel,
+    MultivariateFeatureStateValueList,
+    MultivariateFeatureStateValueModel,
+)
+from mypy_boto3_dynamodb.service_resource import Table
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.test import APIClient
 
+from edge_api.identities.models import (
+    EdgeIdentity,
+    IdentityFeaturesList,
+    IdentityModel,
+)
+from features.models import Feature
+from features.multivariate.models import MultivariateFeatureOption
+from projects.models import Project
 from tests.integration.helpers import create_mv_option_with_api
+from util.mappers.engine import map_feature_to_engine
 
 
 def test_edge_identities_feature_states_list_does_not_call_sync_identity_document_features_if_not_needed(
@@ -1014,15 +1032,15 @@ def _create_segment_override(
         "feature_segment": feature_segment_id,
         "feature_state_value": {
             "type": segment_override_type,
-            "string_value": segment_override_value
-            if segment_override_type == STRING
-            else None,
-            "integer_value": segment_override_value
-            if segment_override_type == INTEGER
-            else None,
-            "boolean_value": segment_override_value
-            if segment_override_type == BOOLEAN
-            else None,
+            "string_value": (
+                segment_override_value if segment_override_type == STRING else None
+            ),
+            "integer_value": (
+                segment_override_value if segment_override_type == INTEGER else None
+            ),
+            "boolean_value": (
+                segment_override_value if segment_override_type == BOOLEAN else None
+            ),
         },
         "enabled": True,
         "environment": environment_id,
@@ -1033,3 +1051,173 @@ def _create_segment_override(
         content_type="application/json",
     )
     assert create_segment_override_response.status_code == status.HTTP_201_CREATED
+
+
+def test_edge_identity_clone_flag_states_from(
+    admin_client: APIClient,
+    app_settings_for_dynamodb: None,
+    dynamo_enabled_environment: int,
+    dynamo_enabled_project: int,
+    environment_api_key: str,
+    flagsmith_identities_table: Table,
+) -> None:
+    def create_identity(identifier: str) -> EdgeIdentity:
+        identity_model = IdentityModel(
+            identifier=identifier,
+            environment_api_key=environment_api_key,
+            identity_features=IdentityFeaturesList(),
+            identity_uuid=uuid.uuid4(),
+        )
+        return EdgeIdentity(engine_identity_model=identity_model)
+
+    def features_for_identity_clone_flag_states_from(
+        project: Project,
+    ) -> tuple[Feature, ...]:
+        features: list[Feature] = []
+        for i in range(1, 4):
+            features.append(
+                Feature.objects.create(
+                    name=f"feature_{i}", project=project, default_enabled=True
+                )
+            )
+        return tuple(features)
+
+    # Given
+    project: Project = Project.objects.get(id=dynamo_enabled_project)
+
+    feature_1, feature_2, feature_3 = features_for_identity_clone_flag_states_from(
+        project
+    )
+
+    mv_feature = Feature.objects.create(
+        type="MULTIVARIATE",
+        name="mv_feature",
+        initial_value="foo",
+        project=project,
+    )
+
+    mv_variant_1 = MultivariateFeatureOption.objects.create(
+        feature=mv_feature,
+        default_percentage_allocation=0,
+        type=STRING,
+        string_value="bar",
+    )
+
+    feature_model_1: FeatureModel = map_feature_to_engine(feature=feature_1)
+    feature_model_2: FeatureModel = map_feature_to_engine(feature=feature_2)
+    feature_model_3: FeatureModel = map_feature_to_engine(feature=feature_3)
+    mv_feature_model: FeatureModel = map_feature_to_engine(feature=mv_feature)
+
+    source_identity: EdgeIdentity = create_identity(identifier="source_identity")
+    target_identity: EdgeIdentity = create_identity(identifier="target_identity")
+
+    source_feature_state_1_value = "Source Identity for feature value 1"
+    source_feature_state_1 = FeatureStateModel(
+        feature=feature_model_1,
+        environment_id=dynamo_enabled_environment,
+        enabled=True,
+        feature_state_value=source_feature_state_1_value,
+    )
+
+    source_feature_state_2_value = "Source Identity for feature value 2"
+    source_feature_state_2 = FeatureStateModel(
+        feature=feature_model_2,
+        environment_id=dynamo_enabled_environment,
+        enabled=True,
+        feature_state_value=source_feature_state_2_value,
+    )
+
+    source_mv_feature_state = FeatureStateModel(
+        feature=mv_feature_model,
+        environment_id=dynamo_enabled_environment,
+        enabled=True,
+        multivariate_feature_state_values=MultivariateFeatureStateValueList(),
+    )
+    source_mv_feature_state.multivariate_feature_state_values.append(
+        MultivariateFeatureStateValueModel(
+            multivariate_feature_option=MultivariateFeatureOptionModel(
+                value=mv_variant_1.value
+            ),
+            percentage_allocation=100,
+        )
+    )
+
+    target_feature_state_2_value = "Target Identity value for feature 2"
+    target_feature_state_2 = FeatureStateModel(
+        feature=feature_model_2,
+        environment_id=dynamo_enabled_environment,
+        enabled=False,
+        feature_state_value=target_feature_state_2_value,
+    )
+
+    target_feature_state_3 = FeatureStateModel(
+        feature=feature_model_3,
+        environment_id=dynamo_enabled_environment,
+        enabled=False,
+    )
+
+    # Add feature states for features 1 and 2 to source identity
+    source_identity.add_feature_override(feature_state=source_feature_state_1)
+    source_identity.add_feature_override(feature_state=source_feature_state_2)
+    source_identity.add_feature_override(feature_state=source_mv_feature_state)
+
+    # Add feature states for features 2 and 3 to target identity.
+    target_identity.add_feature_override(feature_state=target_feature_state_2)
+    target_identity.add_feature_override(feature_state=target_feature_state_3)
+
+    # Save identities to table
+    target_identity_document = target_identity.to_document()
+    source_identity_document = source_identity.to_document()
+
+    flagsmith_identities_table.put_item(Item=target_identity_document)
+    flagsmith_identities_table.put_item(Item=source_identity_document)
+
+    clone_from_given_identity_url: str = reverse(
+        viewname="api-v1:environments:edge-identity-featurestates-clone-from-given-identity",
+        args=(environment_api_key, target_identity.identity_uuid),
+    )
+
+    # When
+
+    clone_identity_feature_states_response = admin_client.post(
+        path=clone_from_given_identity_url,
+        data=json.dumps(
+            obj={"source_identity_uuid": str(object=source_identity.identity_uuid)}
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+
+    assert clone_identity_feature_states_response.status_code == status.HTTP_200_OK
+
+    response = clone_identity_feature_states_response.json()
+
+    # Target identity contains only the 2 cloned overridden features states and 1 environment feature state
+    assert len(response) == 4
+
+    assert response[0]["feature"]["id"] == feature_1.id
+    assert response[0]["enabled"] == source_feature_state_1.enabled
+    assert response[0]["feature_state_value"] == source_feature_state_1_value
+    assert response[0]["overridden_by"] == "IDENTITY"
+
+    assert response[1]["feature"]["id"] == feature_2.id
+    assert response[1]["enabled"] == source_feature_state_2.enabled
+    assert response[1]["feature_state_value"] == source_feature_state_2_value
+    assert response[1]["overridden_by"] == "IDENTITY"
+
+    assert response[2]["feature"]["id"] == feature_3.id
+    assert response[2]["enabled"] == feature_3.default_enabled
+    assert response[2]["feature_state_value"] == feature_3.initial_value
+    assert response[2]["overridden_by"] is None
+
+    assert response[3]["feature"]["id"] == mv_feature.id
+    assert response[3]["enabled"] == source_mv_feature_state.enabled
+    assert response[3]["feature_state_value"] == mv_variant_1.value
+    assert (
+        response[3]["multivariate_feature_state_values"][0][
+            "multivariate_feature_option"
+        ]["value"]
+        == mv_variant_1.value
+    )
+    assert response[3]["overridden_by"] == "IDENTITY"

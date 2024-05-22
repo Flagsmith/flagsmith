@@ -19,6 +19,17 @@
   .tab-line {
     display: none;
   }
+  .hljs-container {
+    code {
+
+      padding-top: 80px;
+    }
+    .react-select {
+      position: absolute;
+      top:16px;
+      left:16px;
+    }
+  }
 }
 .dark {
   .tabs {
@@ -34,7 +45,7 @@
       }
     }
     hr {
-      border-color: $white-alpha-16;
+      border-color: $white-alpha-8;
     }
     & .pill {
       background: $bg-dark300;
@@ -53,7 +64,7 @@
     box-shadow: none;
     flex: 1;
     background-color: transparent;
-    color: $text-icon-dark;
+    color: $body-color;
     &:hover {
       background-color: transparent;
       box-shadow: none;
@@ -61,7 +72,7 @@
     &.btn:active {
       box-shadow: none;
       background: transparent;
-      color: $text-icon-dark;
+      color: $body-color;
     }
     min-height: 34px;
     font-weight: $tab-btn-font-weight;
