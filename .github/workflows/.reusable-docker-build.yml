@@ -19,7 +19,8 @@ on:
         required: true
 
 jobs:
-  run:
+  build:
+    name: Build and verify ${{ inputs.slug }} image
     runs-on: ubuntu-latest
 
     permissions:
