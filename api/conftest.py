@@ -1022,3 +1022,17 @@ def admin_client_new(
         yield admin_master_api_key_client
     else:
         assert False, "Request param mismatch"
+
+
+@pytest.fixture()
+def superuser():
+    return FFAdminUser.objects.create_superuser(
+        email="superuser@example.com",
+        password=FFAdminUser.objects.make_random_password(),
+    )
+
+
+@pytest.fixture()
+def superuser_client(superuser: FFAdminUser, client: APIClient):
+    client.force_login(superuser, backend="django.contrib.auth.backends.ModelBackend")
+    return client
