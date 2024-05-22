@@ -412,15 +412,11 @@ export type Req = {
       repository_owner: string
     }
   }
-  getGithubIssues: PagedRequest<{
+  getGithubResources: PagedRequest<{
     organisation_id: string
     repo_name: string
     repo_owner: string
-  }>
-  getGithubPulls: PagedRequest<{
-    organisation_id: string
-    repo_name: string
-    repo_owner: string
+    github_resource: string
   }>
   getGithubRepos: { installation_id: string; organisation_id: string }
   getServersideEnvironmentKeys: { environmentId: string }

@@ -1,11 +1,12 @@
 import { createContext, useContext, FC, useEffect, useState } from 'react'
-import { useGetGithubIssuesQuery } from 'common/services/useGithub'
-import { ExternalResource, Issue, Res } from 'common/types/responses'
+import { useGetGithubResourcesQuery } from 'common/services/useGithub'
+import { ExternalResource, GithubResources, Res } from 'common/types/responses'
 import useInfiniteScroll from 'common/useInfiniteScroll'
 import { Req } from 'common/types/requests'
 
-type IssueSelectProviderType = {
+type GitHubResourceSelectProviderType = {
   children: React.ReactNode
+  githubResource: string
   lastSavedResource: string | undefined
   linkedExternalResources: ExternalResource[]
   onChange: (v: string) => void
@@ -14,9 +15,9 @@ type IssueSelectProviderType = {
   repoName: string
 }
 
-type IssueSelectContextType = {
+type GitHubResourceSelectContextType = {
   count: number
-  issues?: Issue[]
+  githubResources?: GithubResources[]
   isFetching: boolean
   isLoading: boolean
   loadMore: () => void
@@ -25,16 +26,15 @@ type IssueSelectContextType = {
   searchItems: (search: string) => void
 }
 
-const IssueSelectContext = createContext<IssueSelectContextType | undefined>(
-  undefined,
-)
+const GitHubResourceSelectContext = createContext<
+  GitHubResourceSelectContextType | undefined
+>(undefined)
 
-export const IssueSelectProvider: FC<IssueSelectProviderType> = ({
-  children,
-  ...props
-}) => {
+export const GitHubResourceSelectProvider: FC<
+  GitHubResourceSelectProviderType
+> = ({ children, ...props }) => {
   const [externalResourcesSelect, setExternalResourcesSelect] =
-    useState<Issue[]>()
+    useState<GithubResources[]>()
 
   const throttleDelay = 300
 
@@ -45,9 +45,10 @@ export const IssueSelectProvider: FC<IssueSelectProviderType> = ({
     loadMore,
     loadingCombinedData,
     searchItems,
-  } = useInfiniteScroll<Req['getGithubIssues'], Res['githubIssues']>(
-    useGetGithubIssuesQuery,
+  } = useInfiniteScroll<Req['getGithubResources'], Res['githubResources']>(
+    useGetGithubResourcesQuery,
     {
+      github_resource: props.githubResource,
       organisation_id: props.orgId,
       page_size: 100,
       repo_name: props.repoName,
@@ -59,15 +60,9 @@ export const IssueSelectProvider: FC<IssueSelectProviderType> = ({
   const { count, next, results } = data || { results: [] }
 
   useEffect(() => {
-    console.log(
-      `IsLoading: ${isLoading.toString()} isFetching: ${isFetching.toString()}`,
-    )
-  }, [isLoading, isFetching])
-
-  useEffect(() => {
     if (results && props.linkedExternalResources) {
       setExternalResourcesSelect(
-        results.filter((i: Issue) => {
+        results.filter((i: GithubResources) => {
           const same = props.linkedExternalResources?.some(
             (r) => i.html_url === r.url,
           )
@@ -79,13 +74,13 @@ export const IssueSelectProvider: FC<IssueSelectProviderType> = ({
   }, [data, props.linkedExternalResources])
 
   return (
-    <IssueSelectContext.Provider
+    <GitHubResourceSelectContext.Provider
       value={{
         ...props,
         count: count || 0,
+        githubResources: externalResourcesSelect,
         isFetching,
         isLoading,
-        issues: externalResourcesSelect,
         loadMore,
         loadingCombinedData,
         nextPage: next,
@@ -93,14 +88,16 @@ export const IssueSelectProvider: FC<IssueSelectProviderType> = ({
       }}
     >
       {children}
-    </IssueSelectContext.Provider>
+    </GitHubResourceSelectContext.Provider>
   )
 }
 
-export const useIssueSelectProvider = () => {
-  const context = useContext(IssueSelectContext)
+export const useGitHubResourceSelectProvider = () => {
+  const context = useContext(GitHubResourceSelectContext)
   if (!context) {
-    throw new Error('useIssueSelect must be used within a IssueSelectProvider')
+    throw new Error(
+      'useGitHubResourceSelect must be used within a GitHubResourceSelectProvider',
+    )
   }
   return context
 }

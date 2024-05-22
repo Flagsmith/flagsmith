@@ -4,12 +4,12 @@ import ExternalResourcesTable, {
   ExternalResourcesTableBase,
 } from './ExternalResourcesTable'
 import { ExternalResource } from 'common/types/responses'
-import { IssueSelectProvider } from './IssueSelectProvider'
-import MyPullRequestsSelect from './MyPullRequestsSelect'
+import { GitHubResourceSelectProvider } from './GitHubResourceSelectProvider'
 import { useCreateExternalResourceMutation } from 'common/services/useExternalResource'
 import Constants from 'common/constants'
 import Button from './base/forms/Button'
-import IssueSelect from './IssueSelect'
+import GitHubResourcesSelect from './GitHubResourcesSelect'
+import _ from 'lodash'
 
 type ExternalResourcesLinkTabType = {
   githubId: string
@@ -59,32 +59,27 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
       </Flex>
       <Row className='mt-4'>
         <Flex>
-          {externalResourceType ==
-          Constants.resourceTypes.GITHUB_ISSUE.label ? (
-            <IssueSelectProvider
+          {externalResourceType && (
+            <GitHubResourceSelectProvider
               lastSavedResource={lastSavedResource}
               linkedExternalResources={linkedExternalResources!}
               orgId={organisationId}
               onChange={(v) => setFeatureExternalResource(v)}
               repoOwner={repoOwner}
               repoName={repoName}
+              githubResource={
+                (
+                  _.find(_.values(Constants.resourceTypes), {
+                    label: externalResourceType!,
+                  }) as any
+                ).resourceType || ''
+              }
             >
-              <IssueSelect
+              <GitHubResourcesSelect
                 onChange={(v) => setFeatureExternalResource(v)}
                 lastSavedResource={lastSavedResource}
               />
-            </IssueSelectProvider>
-          ) : externalResourceType ==
-            Constants.resourceTypes.GITHUB_PR.label ? (
-            <MyPullRequestsSelect
-              orgId={organisationId}
-              onChange={(v) => setFeatureExternalResource(v)}
-              repoOwner={repoOwner}
-              repoName={repoName}
-              linkedExternalResources={linkedExternalResources!}
-            />
-          ) : (
-            <></>
+            </GitHubResourceSelectProvider>
           )}
         </Flex>
         <div className='table-column text-center' style={{ width: '80px' }}>

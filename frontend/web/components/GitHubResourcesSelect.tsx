@@ -1,9 +1,9 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
-import { Issue } from 'common/types/responses'
+import { GithubResources } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import { FixedSizeList } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
-import { useIssueSelectProvider } from './IssueSelectProvider'
+import { useGitHubResourceSelectProvider } from './GitHubResourceSelectProvider'
 
 type MenuListType = {
   children: React.ReactNode
@@ -29,7 +29,7 @@ const MenuList: FC<MenuListType> = ({
     loadMore,
     loadingCombinedData,
     nextPage,
-  } = useIssueSelectProvider()
+  } = useGitHubResourceSelectProvider()
   const [isLoading, setIsLoading] = useState(parentIsLoading)
   const loadMoreItems =
     isFetching || isLoading || !nextPage ? () => {} : loadMore
@@ -106,28 +106,30 @@ const MenuList: FC<MenuListType> = ({
   )
 }
 
-export type IssueSelectType = {
+export type GitHubResourcesSelectType = {
   onChange: (value: string) => void
   lastSavedResource: string | undefined
 }
 
-type IssueValueType = {
+type GitHubResourcesValueType = {
   value: string
 }
 
-const IssueSelect: FC<IssueSelectType> = ({ lastSavedResource, onChange }) => {
+const GitHubResourcesSelect: FC<GitHubResourcesSelectType> = ({
+  lastSavedResource,
+  onChange,
+}) => {
   const {
+    githubResources,
     isFetching,
     isLoading,
-    issues,
     loadMore,
     loadingCombinedData,
     nextPage,
     searchItems,
-  } = useIssueSelectProvider()
-  const [selectedOption, setSelectedOption] = useState<IssueValueType | null>(
-    null,
-  )
+  } = useGitHubResourceSelectProvider()
+  const [selectedOption, setSelectedOption] =
+    useState<GitHubResourcesValueType | null>(null)
   const [searchText, setSearchText] = React.useState('')
 
   useEffect(() => {
@@ -144,12 +146,12 @@ const IssueSelect: FC<IssueSelectType> = ({ lastSavedResource, onChange }) => {
         }}
         value={selectedOption}
         size='select-md'
-        placeholder={'Select Your Issue'}
-        onChange={(v: IssueValueType) => {
+        placeholder={'Select Your Resource'}
+        onChange={(v: GitHubResourcesValueType) => {
           setSelectedOption(v)
           onChange(v?.value)
         }}
-        options={issues?.map((i: Issue) => {
+        options={githubResources?.map((i: GithubResources) => {
           return {
             label: `${i.title} #${i.number}`,
             status: i.state,
@@ -161,7 +163,7 @@ const IssueSelect: FC<IssueSelectType> = ({ lastSavedResource, onChange }) => {
             ? 'Loading...'
             : isFetching
             ? 'Refreshing data ...'
-            : 'No issues found'
+            : 'No Results found'
         }
         onInputChange={(e: any) => {
           setSearchText(e)
@@ -176,4 +178,4 @@ const IssueSelect: FC<IssueSelectType> = ({ lastSavedResource, onChange }) => {
   )
 }
 
-export default IssueSelect
+export default GitHubResourcesSelect

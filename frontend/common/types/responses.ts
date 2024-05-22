@@ -160,7 +160,7 @@ export type LaunchDarklyProjectImport = {
   project: number
 }
 
-export type Issue = {
+export type GithubResources = {
   url: string
   repository_url: string
   html_url: string
@@ -169,17 +169,6 @@ export type Issue = {
   title: string
   state: string
   body: string
-}
-
-export type PullRequest = {
-  url: string
-  id: number
-  html_url: string
-  issue_url: string
-  number: number
-  state: string
-  title: string
-  body: string | null
 }
 
 export type GithubPaginatedRepos<T> = {
@@ -656,8 +645,7 @@ export type Res = {
   externalResource: PagedResponse<ExternalResource>
   githubIntegrations: PagedResponse<githubIntegration>
   githubRepository: PagedResponse<GithubRepository>
-  githubIssues: GitHubPagedResponse<Issue>
-  githubPulls: GitHubPagedResponse<PullRequest>
+  githubResources: GitHubPagedResponse<GithubResources>
   githubRepos: GithubPaginatedRepos<Repository>
   segmentPriorities: {}
   featureSegment: FeatureState['feature_segment']
