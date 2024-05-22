@@ -1,6 +1,8 @@
+import typing
+
 from rest_framework import serializers
 
-from . import constants
+from .typing import PERIOD_TYPE
 
 
 class UsageDataSerializer(serializers.Serializer):
@@ -14,15 +16,10 @@ class UsageDataSerializer(serializers.Serializer):
 class UsageDataQuerySerializer(serializers.Serializer):
     project_id = serializers.IntegerField(required=False)
     environment_id = serializers.IntegerField(required=False)
-    period = serializers.RegexField(
-        regex=r"^(%s)$"
-        % "|".join(
-            [
-                constants.CURRENT_BILLING_PERIOD,
-                constants.PREVIOUS_BILLING_PERIOD,
-                constants._90_DAY_PERIOD,
-            ]
-        ),
+    period: PERIOD_TYPE | None = serializers.ChoiceField(
+        choices=typing.get_args(PERIOD_TYPE),
+        allow_null=True,
+        default=None,
         required=False,
     )
 
