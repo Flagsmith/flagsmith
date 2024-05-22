@@ -93,7 +93,7 @@ def fetch_github_resource(
     resource_type: ResourceType,
     organisation_id: int,
     params: RepoQueryParams,
-) -> Response:
+) -> dict[str, typing.Any]:
     github_configuration = GithubConfiguration.objects.get(
         organisation_id=organisation_id, deleted_at__isnull=True
     )
@@ -147,13 +147,6 @@ def fetch_github_resource(
         data["next"] = response.links.get("next")
 
     return data
-
-
-# Response(
-#         data=data,
-#         content_type="application/json",
-#         status=status.HTTP_200_OK,
-#     )
 
 
 def fetch_github_repositories(installation_id: str) -> Response:
