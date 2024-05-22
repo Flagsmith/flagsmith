@@ -63,7 +63,7 @@ def github_api_call_error_handler(
             try:
                 return func(*args, **kwargs)
             except requests.RequestException as e:
-                logger.error(f"{error or default_error} Error: {str(e)}")
+                logger.error(f"{error or default_error} Error: {str(e)}", exc_info=e)
                 return Response(
                     data={"detail": (f"{error or default_error}" f" Error: {str(e)}")},
                     content_type="application/json",
