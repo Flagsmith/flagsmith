@@ -39,10 +39,6 @@ class RepoQueryParams(PaginatedQueryParams):
     repo_owner: str
     repo_name: str
 
-    @classmethod
-    def from_dict(cls, data_dict: dict[str, Any]) -> "RepoQueryParams":
-        return cls(**data_dict)
-
 
 @dataclass
 class IssueQueryParams(RepoQueryParams):

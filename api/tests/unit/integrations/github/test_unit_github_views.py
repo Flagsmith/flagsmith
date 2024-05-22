@@ -822,3 +822,29 @@ def test_fetch_github_repo_contributors(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == contributors_data
+
+
+# Add a unit test to cover the case when request params are no valid
+def test_fetch_github_repo_contributors_with_invalid_query_params(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+) -> None:
+    # Given
+    url = reverse(
+        viewname="api-v1:organisations:get-github-repo-contributors",
+        args=[organisation.id],
+    )
+
+    # When
+    response = admin_client_new.get(
+        path=url,
+        data={
+            "repo_owner": github_repository.repository_owner,
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"error": {"repo_name": ["This field is required."]}}
