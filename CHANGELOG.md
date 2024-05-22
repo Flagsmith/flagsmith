@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.116.3](https://github.com/Flagsmith/flagsmith/compare/v2.116.2...v2.116.3) (2024-05-22)
+
+
+### Bug Fixes
+
+* **versioning:** webhooks not triggered when new version published ([#3953](https://github.com/Flagsmith/flagsmith/issues/3953)) ([fb2191b](https://github.com/Flagsmith/flagsmith/commit/fb2191b34fef9b6d45d7eda17e22b77d826d4a19))
+
 ## [2.116.2](https://github.com/Flagsmith/flagsmith/compare/v2.116.1...v2.116.2) (2024-05-22)
 
 
