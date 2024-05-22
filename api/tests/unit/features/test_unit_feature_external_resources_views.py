@@ -23,6 +23,7 @@ from integrations.github.models import GithubConfiguration, GithubRepository
 from projects.models import Project
 from segments.models import Segment
 from tests.types import WithEnvironmentPermissionsCallable
+from users.models import FFAdminUser
 
 _django_json_encoder_default = DjangoJSONEncoder().default
 
@@ -98,36 +99,6 @@ def test_create_feature_external_resource(
         "requests.post", side_effect=mocked_requests_post
     )
 
-    feature_state = FeatureState.objects.filter(feature=feature_with_value).first()
-    feature_state_updated_at = feature_state.updated_at.strftime(
-        get_format("DATETIME_INPUT_FORMATS")[0]
-    )
-    segment_override_updated_at = (
-        segment_featurestate_and_feature_with_value.updated_at.strftime(
-            get_format("DATETIME_INPUT_FORMATS")[0]
-        )
-    )
-
-    expected_comment_body = (
-        "**Flagsmith feature linked:** `feature_with_value`\n"
-        + "Default Values:\n"
-        + expected_default_body(
-            project.id,
-            environment.api_key,
-            feature_with_value.id,
-            feature_state_updated_at,
-        )
-        + "\n"
-        + expected_segment_comment_body(
-            project.id,
-            environment.api_key,
-            feature_with_value.id,
-            segment_override_updated_at,
-            "❌ Disabled",
-            "`value`",
-        )
-    )
-
     feature_external_resource_data = {
         "type": "GITHUB_ISSUE",
         "url": "https://github.com/repoowner/repo-name/issues/35",
@@ -146,6 +117,34 @@ def test_create_feature_external_resource(
     )
 
     # Then
+    feature_state_update_at = (
+        FeatureState.objects.filter(feature=feature_with_value)
+        .first()
+        .updated_at.strftime(get_format("DATETIME_INPUT_FORMATS")[0])
+    )
+    segment_override_updated_at = FeatureState.objects.get(
+        id=segment_featurestate_and_feature_with_value.id
+    ).updated_at.strftime(get_format("DATETIME_INPUT_FORMATS")[0])
+
+    expected_comment_body = (
+        "**Flagsmith feature linked:** `feature_with_value`\n"
+        + "Default Values:\n"
+        + expected_default_body(
+            project.id,
+            environment.api_key,
+            feature_with_value.id,
+            feature_state_update_at,
+        )
+        + "\n"
+        + expected_segment_comment_body(
+            project.id,
+            environment.api_key,
+            feature_with_value.id,
+            segment_override_updated_at,
+            "❌ Disabled",
+            "`value`",
+        )
+    )
     github_request_mock.assert_called_with(
         "https://api.github.com/repos/repoowner/repo-name/issues/35/comments",
         json={"body": f"{expected_comment_body}"},
@@ -399,6 +398,7 @@ def test_get_feature_external_resource(
 
 
 def test_create_github_comment_on_feature_state_updated(
+    staff_user: FFAdminUser,
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     feature_external_resource: FeatureExternalResource,
@@ -410,7 +410,7 @@ def test_create_github_comment_on_feature_state_updated(
     environment: Environment,
 ) -> None:
     # Given
-    with_environment_permissions([UPDATE_FEATURE_STATE])
+    with_environment_permissions([UPDATE_FEATURE_STATE], environment.id, False)
     feature_state = FeatureState.objects.get(
         feature=feature, environment=environment.id
     )
@@ -420,22 +420,6 @@ def test_create_github_comment_on_feature_state_updated(
     mock_generate_token.return_value = "mocked_token"
     github_request_mock = mocker.patch(
         "requests.post", side_effect=mocked_requests_post
-    )
-
-    feature_state_updated_at = feature_state.updated_at.strftime(
-        get_format("DATETIME_INPUT_FORMATS")[0]
-    )
-
-    expected_body_comment = (
-        "Flagsmith Feature `Test Feature1` has been updated:\n"
-        + expected_default_body(
-            project.id,
-            environment.api_key,
-            feature.id,
-            feature_state_updated_at,
-            "✅ Enabled",
-            "",
-        )
     )
 
     payload = dict(FeatureStateSerializerBasic(instance=feature_state).data)
@@ -450,6 +434,22 @@ def test_create_github_comment_on_feature_state_updated(
     response = staff_client.put(path=url, data=payload, format="json")
 
     # Then
+    feature_state_updated_at = FeatureState.objects.get(
+        id=feature_state.id
+    ).updated_at.strftime(get_format("DATETIME_INPUT_FORMATS")[0])
+
+    expected_body_comment = (
+        "Flagsmith Feature `Test Feature1` has been updated:\n"
+        + expected_default_body(
+            project.id,
+            environment.api_key,
+            feature.id,
+            feature_state_updated_at,
+            "✅ Enabled",
+            "",
+        )
+    )
+
     assert response.status_code == status.HTTP_200_OK
 
     github_request_mock.assert_called_with(
