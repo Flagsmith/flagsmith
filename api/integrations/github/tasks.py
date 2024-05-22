@@ -1,28 +1,19 @@
 import logging
-from dataclasses import dataclass
-from typing import Any
+from typing import Any, List
 from urllib.parse import urlparse
 
 from features.models import Feature
-from integrations.github.github import (
-    GithubData,
-    generate_body_comment,
-    post_comment_to_github,
-)
+from integrations.github.client import post_comment_to_github
+from integrations.github.dataclasses import CallGithubData
 from task_processor.decorators import register_task_handler
 from webhooks.webhooks import WebhookEventType
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class CallGithubData:
-    event_type: str
-    github_data: GithubData
-    feature_external_resources: list[dict[str, Any]]
-
-
 def send_post_request(data: CallGithubData) -> None:
+    from integrations.github.github import generate_body_comment
+
     feature_name = data.github_data.feature_name
     feature_id = data.github_data.feature_id
     project_id = data.github_data.project_id
@@ -31,8 +22,9 @@ def send_post_request(data: CallGithubData) -> None:
         data.github_data.feature_states if data.github_data.feature_states else None
     )
     installation_id = data.github_data.installation_id
+    segment_name: str | None = data.github_data.segment_name
     body = generate_body_comment(
-        feature_name, event_type, project_id, feature_id, feature_states
+        feature_name, event_type, project_id, feature_id, feature_states, segment_name
     )
 
     if (
@@ -71,11 +63,12 @@ def call_github_app_webhook_for_feature_state(event_data: dict[str, Any]) -> Non
     from features.feature_external_resources.models import (
         FeatureExternalResource,
     )
+    from integrations.github.github import GithubData
 
     github_event_data = GithubData.from_dict(event_data)
 
     def generate_feature_external_resources(
-        feature_external_resources: FeatureExternalResource,
+        feature_external_resources: List[FeatureExternalResource],
     ) -> list[dict[str, Any]]:
         return [
             {
@@ -85,10 +78,15 @@ def call_github_app_webhook_for_feature_state(event_data: dict[str, Any]) -> Non
             for resource in feature_external_resources
         ]
 
-    if github_event_data.type == WebhookEventType.FLAG_DELETED.value:
+    if (
+        github_event_data.type == WebhookEventType.FLAG_DELETED.value
+        or github_event_data.type == WebhookEventType.SEGMENT_OVERRIDE_DELETED.value
+    ):
         feature_external_resources = generate_feature_external_resources(
-            FeatureExternalResource.objects.filter(
-                feature_id=github_event_data.feature_id
+            list(
+                FeatureExternalResource.objects.filter(
+                    feature_id=github_event_data.feature_id
+                )
             )
         )
         data = CallGithubData(

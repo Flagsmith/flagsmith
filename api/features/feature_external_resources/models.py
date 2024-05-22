@@ -1,5 +1,4 @@
 import logging
-from dataclasses import asdict
 
 from django.db import models
 from django_lifecycle import (
@@ -10,8 +9,7 @@ from django_lifecycle import (
 )
 
 from features.models import Feature, FeatureState
-from integrations.github.github import GithubData, generate_data
-from integrations.github.tasks import call_github_app_webhook_for_feature_state
+from integrations.github.github import call_github_task
 from organisations.models import Organisation
 from webhooks.webhooks import WebhookEventType
 
@@ -50,43 +48,36 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
     def execute_after_save_actions(self):
         # Add a comment to GitHub Issue/PR when feature is linked to the GH external resource
         if (
-            github_configuration := Organisation.objects.prefetch_related(
-                "github_config"
-            )
+            Organisation.objects.prefetch_related("github_config")
             .get(id=self.feature.project.organisation_id)
             .github_config.first()
         ):
             feature_states = FeatureState.objects.filter(
                 feature_id=self.feature_id, identity_id__isnull=True
             )
-            feature_data: GithubData = generate_data(
-                github_configuration=github_configuration,
-                feature=self.feature,
+            call_github_task(
+                organisation_id=self.feature.project.organisation_id,
                 type=WebhookEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
+                feature=self.feature,
+                segment_name=None,
+                url=None,
                 feature_states=feature_states,
-            )
-
-            call_github_app_webhook_for_feature_state.delay(
-                args=(asdict(feature_data),),
             )
 
     @hook(BEFORE_DELETE)
     def execute_before_save_actions(self) -> None:
         # Add a comment to GitHub Issue/PR when feature is unlinked to the GH external resource
         if (
-            github_configuration := Organisation.objects.prefetch_related(
-                "github_config"
-            )
+            Organisation.objects.prefetch_related("github_config")
             .get(id=self.feature.project.organisation_id)
             .github_config.first()
         ):
-            feature_data: GithubData = generate_data(
-                github_configuration=github_configuration,
-                feature=self.feature,
-                type=WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
-                url=self.url,
-            )
 
-            call_github_app_webhook_for_feature_state.delay(
-                args=(asdict(feature_data),),
+            call_github_task(
+                organisation_id=self.feature.project.organisation_id,
+                type=WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
+                feature=self.feature,
+                segment_name=None,
+                url=self.url,
+                feature_states=None,
             )

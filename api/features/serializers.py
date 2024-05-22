@@ -1,5 +1,4 @@
 import typing
-from dataclasses import asdict
 from datetime import datetime
 
 import django.core.exceptions
@@ -13,9 +12,7 @@ from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
-from integrations.github.github import GithubData, generate_data
-from integrations.github.models import GithubConfiguration
-from integrations.github.tasks import call_github_app_webhook_for_feature_state
+from integrations.github.github import call_github_task
 from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
 from users.serializers import (
@@ -474,23 +471,18 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
                 and feature_state.environment.project.github_project.exists()
                 and feature_state.environment.project.organisation.github_config.exists()
             ):
-                github_configuration = GithubConfiguration.objects.get(
-                    organisation_id=feature_state.environment.project.organisation_id
-                )
-                feature_states = []
-                feature_states.append(feature_state)
-                feature_data: GithubData = generate_data(
-                    github_configuration=github_configuration,
-                    feature=feature_state.feature,
-                    type=WebhookEventType.FLAG_UPDATED.value,
-                    feature_states=feature_states,
-                )
 
-                call_github_app_webhook_for_feature_state.delay(
-                    args=(asdict(feature_data),),
+                call_github_task(
+                    organisation_id=feature_state.feature.project.organisation_id,
+                    type=WebhookEventType.FLAG_UPDATED.value,
+                    feature=feature_state.feature,
+                    segment_name=None,
+                    url=None,
+                    feature_states=[feature_state],
                 )
 
             return response
+
         except django.core.exceptions.ValidationError as e:
             raise serializers.ValidationError(str(e))
 

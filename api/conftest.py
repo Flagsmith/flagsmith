@@ -971,6 +971,7 @@ def feature_external_resource(feature: Feature) -> FeatureExternalResource:
         url="https://github.com/userexample/example-project-repo/issues/11",
         type="GITHUB_ISSUE",
         feature=feature,
+        metadata='{"status": "open"}',
     )
 
 

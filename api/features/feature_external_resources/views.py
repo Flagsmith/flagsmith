@@ -8,6 +8,7 @@ from rest_framework.response import Response
 
 from features.models import Feature
 from features.permissions import FeatureExternalResourcePermissions
+from integrations.github.client import get_github_issue_pr_title_and_state
 from organisations.models import Organisation
 
 from .models import FeatureExternalResource
@@ -24,6 +25,25 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
         else:
             features_pk = self.kwargs["feature_pk"]
             return FeatureExternalResource.objects.filter(feature=features_pk)
+
+    # Override get list view to add github issue/pr name to each linked external resource
+    def list(self, request, *args, **kwargs) -> Response:
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        data = serializer.data
+
+        # get organisation id from feature and get feature from validated data
+        organisation_id = get_object_or_404(
+            Feature.objects.filter(id=self.kwargs["feature_pk"]),
+        ).project.organisation_id
+
+        for resource in data if isinstance(data, list) else []:
+            if resource_url := resource.get("url"):
+                resource["metadata"] = get_github_issue_pr_title_and_state(
+                    organisation_id=organisation_id, resource_url=resource_url
+                )
+
+        return Response(data={"results": data})
 
     def create(self, request, *args, **kwargs):
         feature = get_object_or_404(
