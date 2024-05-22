@@ -130,9 +130,14 @@ class Environment(
         help_text="If true, will hide sensitive data(e.g: traits, description etc) from the SDK endpoints",
     )
 
-    objects = EnvironmentManager()
-
     use_v2_feature_versioning = models.BooleanField(default=False)
+
+    is_creating = models.BooleanField(
+        default=False,
+        help_text="Attribute used to indicate when an environment is still being created (via clone for example)",
+    )
+
+    objects = EnvironmentManager()
 
     class Meta:
         ordering = ["id"]
@@ -169,6 +174,7 @@ class Environment(
         clone.id = None
         clone.name = name
         clone.api_key = api_key if api_key else create_hash()
+        clone.is_creating = True
         clone.save()
 
         from environments.tasks import clone_environment_feature_states

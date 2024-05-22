@@ -94,3 +94,6 @@ def clone_environment_feature_states(
     else:
         for feature_state in queryset:
             feature_state.clone(clone, live_from=feature_state.live_from)
+
+    clone.is_creating = False
+    clone.save()
