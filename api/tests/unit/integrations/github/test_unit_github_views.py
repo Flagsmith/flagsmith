@@ -418,7 +418,14 @@ def test_fetch_issues(
         "requests.get", side_effect=mocked_requests_get_issues_and_pull_requests
     )
     url = reverse("api-v1:organisations:get-github-issues", args=[organisation.id])
-    data = {"repo_owner": "owner", "repo_name": "repo"}
+    data = {
+        "repo_owner": "owner",
+        "repo_name": "repo",
+        "search_text": "search text",
+        "search_in_comments": True,
+        "author": "author",
+        "assignee": "assignee",
+    }
     # When
     response = admin_client_new.get(url, data=data)
 
@@ -428,7 +435,7 @@ def test_fetch_issues(
     assert "results" in response_json
 
     github_request_mock.assert_called_with(
-        "https://api.github.com/search/issues?q= repo:owner/repo is:issue is:open in:title in:body&per_page=100&page=1",  # noqa: E501
+        "https://api.github.com/search/issues?q= search text repo:owner/repo is:issue is:open in:title in:body in:comments author:author assignee:assignee&per_page=100&page=1",  # noqa: E501
         headers={
             "X-GitHub-Api-Version": "2022-11-28",
             "Accept": "application/vnd.github.v3+json",
