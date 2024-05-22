@@ -127,7 +127,7 @@ INSTALLED_APPS = [
     "api_keys",
     "features.feature_external_resources",
     # 2FA
-    "trench",
+    "custom_auth.mfa.trench",
     # health check plugins
     "health_check",
     "health_check.db",
@@ -762,7 +762,7 @@ TRENCH_AUTH = {
     "MFA_METHODS": {
         "app": {
             "VERBOSE_NAME": "TOTP App",
-            "VALIDITY_PERIOD": 30,
+            "VALIDITY_PERIOD": 60 * 10,
             "USES_THIRD_PARTY_CLIENT": True,
             "HANDLER": "custom_auth.mfa.backends.application.CustomApplicationBackend",
         },

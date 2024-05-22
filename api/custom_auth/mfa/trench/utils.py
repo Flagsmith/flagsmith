@@ -1,12 +1,17 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Type
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.crypto import constant_time_compare, salted_hmac
 from django.utils.http import base36_to_int, int_to_base36
+
+from custom_auth.mfa.backends.application import CustomApplicationBackend
+from custom_auth.mfa.trench.models import MFAMethod
+
+User: AbstractUser = get_user_model()
 
 
 class UserTokenGenerator(PasswordResetTokenGenerator):
@@ -55,3 +60,13 @@ class UserTokenGenerator(PasswordResetTokenGenerator):
 
 
 user_token_generator = UserTokenGenerator()
+
+
+def get_mfa_model() -> Type[MFAMethod]:
+    return MFAMethod
+
+
+def get_mfa_handler(mfa_method: MFAMethod) -> CustomApplicationBackend:
+    conf = settings.TRENCH_AUTH["MFA_METHODS"]["app"]
+    mfa_handler = CustomApplicationBackend(mfa_method=mfa_method, config=conf)
+    return mfa_handler

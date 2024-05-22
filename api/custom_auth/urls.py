@@ -32,6 +32,7 @@ urlpatterns = [
     # NOTE: endpoints provided by `djoser.urls`
     # are deprecated and will be removed in the next Major release
     path("", include("djoser.urls")),
-    path("", include("trench.urls")),  # MFA
+    path("", include("custom_auth.mfa.trench.urls")),  # MFA
+    # path("", include("trench.urls")),  # MFA
     path("oauth/", include("custom_auth.oauth.urls")),
 ]

@@ -10,16 +10,19 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
-from trench.command.authenticate_second_factor import (
-    authenticate_second_step_command,
-)
-from trench.exceptions import MFAMethodDoesNotExistError, MFAValidationError
-from trench.models import MFAMethod
-from trench.responses import ErrorResponse
-from trench.serializers import CodeLoginSerializer
 
 from custom_auth.mfa.backends.application import CustomApplicationBackend
-from custom_auth.mfa.user_token_generator import user_token_generator
+from custom_auth.mfa.trench.command.authenticate_second_factor import (
+    authenticate_second_step_command,
+)
+from custom_auth.mfa.trench.exceptions import (
+    MFAMethodDoesNotExistError,
+    MFAValidationError,
+)
+from custom_auth.mfa.trench.models import MFAMethod
+from custom_auth.mfa.trench.responses import ErrorResponse
+from custom_auth.mfa.trench.serializers import CodeLoginSerializer
+from custom_auth.mfa.trench.utils import user_token_generator
 from custom_auth.serializers import CustomUserDelete
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 

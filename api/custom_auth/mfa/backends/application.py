@@ -3,7 +3,8 @@ from typing import Any, Dict
 from django.conf import settings
 from pyotp import TOTP
 from rest_framework.response import Response
-from trench.models import MFAMethod
+
+from custom_auth.mfa.trench.models import MFAMethod
 
 
 class CustomApplicationBackend:
@@ -22,11 +23,9 @@ class CustomApplicationBackend:
         }
         return Response(data)
 
-    def confirm_activation(self, code: str) -> None:
-        pass
-
     def validate_confirmation_code(self, code: str) -> bool:
         return self.validate_code(code)
 
     def validate_code(self, code: str) -> bool:
-        return self._totp.verify(otp=code, valid_window=20)
+        validity_period = settings.TRENCH_AUTH["MFA_METHODS"]["app"]["VALIDITY_PERIOD"]
+        return self._totp.verify(otp=code, valid_window=int(validity_period / 20))
