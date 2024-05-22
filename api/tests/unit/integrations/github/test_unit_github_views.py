@@ -776,3 +776,49 @@ def test_cannot_fetch_repositories_when_there_is_no_installation_id(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {"detail": "Missing installation_id parameter"}
+
+
+@responses.activate
+def test_fetch_github_repo_contributors(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    url = reverse(
+        viewname="api-v1:organisations:get-github-repo-contributors",
+        args=[organisation.id],
+    )
+    contributors_data = [
+        {"login": "contributor1", "avatar_url": "https://example.com/avatar1"},
+        {"login": "contributor2", "avatar_url": "https://example.com/avatar2"},
+        {"login": "contributor3", "avatar_url": "https://example.com/avatar3"},
+    ]
+
+    mock_generate_token = mocker.patch(
+        "integrations.github.client.generate_token",
+    )
+    mock_generate_token.return_value = "mocked_token"
+
+    # Add response for endpoint being tested
+    responses.add(
+        responses.GET,
+        f"{GITHUB_API_URL}repos/{github_repository.repository_owner}/{github_repository.repository_name}/contributors",
+        json=contributors_data,
+        status=200,
+    )
+
+    # When
+    response = admin_client_new.get(
+        path=url,
+        data={
+            "repo_owner": github_repository.repository_owner,
+            "repo_name": github_repository.repository_name,
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == contributors_data

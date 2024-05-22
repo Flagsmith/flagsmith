@@ -1,6 +1,6 @@
 import logging
-import typing
 from enum import Enum
+from typing import Any
 
 import requests
 from django.conf import settings
@@ -13,7 +13,7 @@ from integrations.github.constants import (
     GITHUB_API_URL,
     GITHUB_API_VERSION,
 )
-from integrations.github.dataclasses import RepoQueryParams
+from integrations.github.dataclasses import IssueQueryParams
 from integrations.github.models import GithubConfiguration
 
 logger = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ def generate_jwt_token(app_id: int) -> str:  # pragma: no cover
 
 def post_comment_to_github(
     installation_id: str, owner: str, repo: str, issue: str, body: str
-) -> dict[str, typing.Any]:
+) -> dict[str, Any]:
 
     url = f"{GITHUB_API_URL}repos/{owner}/{repo}/issues/{issue}/comments"
     headers = build_request_headers(installation_id)
@@ -89,11 +89,11 @@ def delete_github_installation(installation_id: str) -> requests.Response:
     return response
 
 
-def fetch_github_resource(
+def fetch_search_github_resource(
     resource_type: ResourceType,
     organisation_id: int,
-    params: RepoQueryParams,
-) -> dict[str, typing.Any]:
+    params: IssueQueryParams,
+) -> dict[str, Any]:
     github_configuration = GithubConfiguration.objects.get(
         organisation_id=organisation_id, deleted_at__isnull=True
     )
@@ -191,5 +191,29 @@ def get_github_issue_pr_title_and_state(
     headers = build_request_headers(installation_id)
     response = requests.get(url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT)
     response.raise_for_status()
-    response_json = response.json()
-    return {"title": response_json["title"], "state": response_json["state"]}
+    json_response = response.json()
+    return {"title": json_response["title"], "state": json_response["state"]}
+
+
+def fetch_github_repo_contributors(
+    organisation_id: int, owner: str, repo: str
+) -> list[dict[str, Any]]:
+    installation_id = GithubConfiguration.objects.get(
+        organisation_id=organisation_id, deleted_at__isnull=True
+    ).installation_id
+
+    url = f"{GITHUB_API_URL}repos/{owner}/{repo}/contributors"
+    headers = build_request_headers(installation_id)
+    response = requests.get(url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT)
+    response.raise_for_status()
+    json_response = response.json()
+
+    results = [
+        {
+            "login": i["login"],
+            "avatar_url": i["avatar_url"],
+        }
+        for i in json_response
+    ]
+
+    return results
