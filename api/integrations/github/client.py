@@ -28,12 +28,12 @@ def build_request_headers(
     installation_id: str, use_jwt: bool = False
 ) -> dict[str, str]:
     token = (
-        generate_token(
+        generate_jwt_token(settings.GITHUB_APP_ID)
+        if use_jwt
+        else generate_token(
             installation_id,
             settings.GITHUB_APP_ID,
         )
-        if not use_jwt
-        else generate_jwt_token(settings.GITHUB_APP_ID)
     )
 
     return {
@@ -43,7 +43,7 @@ def build_request_headers(
     }
 
 
-# TODO: Add coverage tests for this function
+# TODO: Add test coverage for this function
 def generate_token(installation_id: str, app_id: int) -> str:  # pragma: no cover
     auth: Auth.AppInstallationAuth = Auth.AppAuth(
         app_id=int(app_id), private_key=settings.GITHUB_PEM
@@ -56,7 +56,7 @@ def generate_token(installation_id: str, app_id: int) -> str:  # pragma: no cove
     return token
 
 
-# TODO: Add coverage tests for this function
+# TODO: Add test coverage for this function
 def generate_jwt_token(app_id: int) -> str:  # pragma: no cover
     github_auth: Auth.AppAuth = Auth.AppAuth(
         app_id=app_id,
@@ -68,18 +68,10 @@ def generate_jwt_token(app_id: int) -> str:  # pragma: no cover
 
 def post_comment_to_github(
     installation_id: str, owner: str, repo: str, issue: str, body: str
-) -> typing.Dict[str, typing.Any]:
-    token = generate_token(
-        installation_id,
-        settings.GITHUB_APP_ID,
-    )
+) -> dict[str, typing.Any]:
 
     url = f"{GITHUB_API_URL}repos/{owner}/{repo}/issues/{issue}/comments"
-    headers = {
-        "Accept": "application/vnd.github.v3+json",
-        "Authorization": f"Bearer {token}",
-    }
-
+    headers = build_request_headers(installation_id)
     payload = {"body": body}
     response = response = requests.post(
         url, json=payload, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT
@@ -204,4 +196,5 @@ def get_github_issue_pr_title_and_state(
     headers = build_request_headers(installation_id)
     response = requests.get(url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT)
     response.raise_for_status()
-    return {"title": response.json()["title"], "state": response.json()["state"]}
+    response_json = response.json()
+    return {"title": response_json["title"], "state": response_json["state"]}

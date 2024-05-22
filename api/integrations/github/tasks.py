@@ -5,7 +5,6 @@ from urllib.parse import urlparse
 from features.models import Feature
 from integrations.github.client import post_comment_to_github
 from integrations.github.dataclasses import CallGithubData
-from integrations.github.github import GithubData, generate_body_comment
 from task_processor.decorators import register_task_handler
 from webhooks.webhooks import WebhookEventType
 
@@ -13,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 def send_post_request(data: CallGithubData) -> None:
+    from integrations.github.github import generate_body_comment
+
     feature_name = data.github_data.feature_name
     feature_id = data.github_data.feature_id
     project_id = data.github_data.project_id
@@ -62,6 +63,7 @@ def call_github_app_webhook_for_feature_state(event_data: dict[str, Any]) -> Non
     from features.feature_external_resources.models import (
         FeatureExternalResource,
     )
+    from integrations.github.github import GithubData
 
     github_event_data = GithubData.from_dict(event_data)
 
@@ -84,7 +86,7 @@ def call_github_app_webhook_for_feature_state(event_data: dict[str, Any]) -> Non
             list(
                 FeatureExternalResource.objects.filter(
                     feature_id=github_event_data.feature_id
-                ).all()
+                )
             )
         )
         data = CallGithubData(

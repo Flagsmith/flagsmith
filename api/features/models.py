@@ -5,7 +5,6 @@ import logging
 import typing
 import uuid
 from copy import deepcopy
-from dataclasses import asdict
 
 from core.models import (
     AbstractBaseExportableModel,
@@ -75,7 +74,6 @@ from features.value_types import (
     STRING,
 )
 from features.versioning.models import EnvironmentFeatureVersion
-from integrations.github.models import GithubConfiguration
 from metadata.models import Metadata
 from projects.models import Project
 from projects.tags.models import Tag
@@ -140,11 +138,7 @@ class Feature(
 
     @hook(AFTER_SAVE)
     def create_github_comment(self) -> None:
-        from integrations.github.dataclasses import GithubData
-        from integrations.github.github import generate_data
-        from integrations.github.tasks import (
-            call_github_app_webhook_for_feature_state,
-        )
+        from integrations.github.github import call_github_task
         from webhooks.webhooks import WebhookEventType
 
         if (
@@ -153,19 +147,14 @@ class Feature(
             and self.project.organisation.github_config.exists()
             and self.deleted_at
         ):
-            github_configuration = GithubConfiguration.objects.get(
-                organisation_id=self.project.organisation_id
-            )
 
-            feature_data: GithubData = generate_data(
-                github_configuration=github_configuration,
-                feature=self,
+            call_github_task(
+                organisation_id=self.project.organisation_id,
                 type=WebhookEventType.FLAG_DELETED.value,
-                feature_states=[],
-            )
-
-            call_github_app_webhook_for_feature_state.delay(
-                args=(asdict(feature_data),),
+                feature=self,
+                segment_name=None,
+                url=None,
+                feature_states=None,
             )
 
     @hook(AFTER_CREATE)
@@ -411,11 +400,7 @@ class FeatureSegment(
 
     @hook(AFTER_DELETE)
     def create_github_comment(self) -> None:
-        from integrations.github.dataclasses import GithubData
-        from integrations.github.github import generate_data
-        from integrations.github.tasks import (
-            call_github_app_webhook_for_feature_state,
-        )
+        from integrations.github.github import call_github_task
         from webhooks.webhooks import WebhookEventType
 
         if (
@@ -423,19 +408,14 @@ class FeatureSegment(
             and self.feature.project.github_project.exists()
             and self.feature.project.organisation.github_config.exists()
         ):
-            github_configuration = GithubConfiguration.objects.get(
-                organisation_id=self.feature.project.organisation_id
-            )
 
-            feature_data: GithubData = generate_data(
-                github_configuration=github_configuration,
-                feature=self.feature,
-                type=WebhookEventType.SEGMENT_OVERRIDE_DELETED.value,
-                segment_name=self.segment.name,
-            )
-
-            call_github_app_webhook_for_feature_state.delay(
-                args=(asdict(feature_data),),
+            call_github_task(
+                self.feature.project.organisation_id,
+                WebhookEventType.SEGMENT_OVERRIDE_DELETED.value,
+                self.feature,
+                self.segment.name,
+                None,
+                None,
             )
 
 

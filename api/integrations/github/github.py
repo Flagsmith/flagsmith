@@ -1,5 +1,6 @@
 import logging
 import typing
+from dataclasses import asdict
 
 from core.helpers import get_current_site_url
 from django.utils.formats import get_format
@@ -16,10 +17,10 @@ from integrations.github.constants import (
     UNLINKED_FEATURE_TEXT,
     UPDATED_FEATURE_TEXT,
 )
+from integrations.github.dataclasses import GithubData
+from integrations.github.models import GithubConfiguration
+from integrations.github.tasks import call_github_app_webhook_for_feature_state
 from webhooks.webhooks import WebhookEventType
-
-from .dataclasses import GithubData
-from .models import GithubConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ def generate_body_comment(
     event_type: str,
     project_id: int,
     feature_id: int,
-    feature_states: typing.List[typing.Dict[str, typing.Any]],
+    feature_states: list[dict[str, typing.Any]],
     segment_name: str | None = None,
 ) -> str:
 
@@ -136,4 +137,31 @@ def generate_data(
         feature_states=feature_states_list if feature_states else None,
         project_id=feature.project_id,
         segment_name=segment_name,
+    )
+
+
+def call_github_task(
+    organisation_id: str,
+    type: str,
+    feature: Feature,
+    segment_name: str | None,
+    url: str | None,
+    feature_states: typing.Union[list[typing.Any], list[typing.Any]] | None,
+) -> None:
+
+    github_configuration = GithubConfiguration.objects.get(
+        organisation_id=organisation_id
+    )
+
+    feature_data: GithubData = generate_data(
+        github_configuration=github_configuration,
+        feature=feature,
+        type=type,
+        url=url,
+        segment_name=segment_name,
+        feature_states=feature_states,
+    )
+
+    call_github_app_webhook_for_feature_state.delay(
+        args=(asdict(feature_data),),
     )

@@ -9,13 +9,13 @@ class GithubData:
     feature_id: int
     feature_name: str
     type: str
-    feature_states: typing.List[dict[str, typing.Any]] | None = None
+    feature_states: list[dict[str, typing.Any]] | None = None
     url: str | None = None
     project_id: int | None = None
     segment_name: str | None = None
 
     @classmethod
-    def from_dict(cls, data_dict: dict) -> "GithubData":
+    def from_dict(cls, data_dict: dict[str, typing.Any]) -> "GithubData":
         return cls(**data_dict)
 
 
@@ -40,5 +40,5 @@ class RepoQueryParams:
     search_in_comments: Optional[bool] = False
 
     @classmethod
-    def from_dict(cls, data_dict: dict) -> "RepoQueryParams":
+    def from_dict(cls, data_dict: dict[str, typing.Any]) -> "RepoQueryParams":
         return cls(**data_dict)

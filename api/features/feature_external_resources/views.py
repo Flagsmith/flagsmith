@@ -38,9 +38,9 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
         ).project.organisation_id
 
         for resource in data if isinstance(data, list) else []:
-            if resource["url"]:
+            if resource_url := resource.get("url"):
                 resource["metadata"] = get_github_issue_pr_title_and_state(
-                    organisation_id=organisation_id, resource_url=resource["url"]
+                    organisation_id=organisation_id, resource_url=resource_url
                 )
 
         return Response(data={"results": data})

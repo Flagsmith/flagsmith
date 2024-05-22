@@ -3,8 +3,7 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework_dataclasses.serializers import DataclassSerializer
 
 from integrations.github.dataclasses import RepoQueryParams
-
-from .models import GithubConfiguration, GithubRepository
+from integrations.github.models import GithubConfiguration, GithubRepository
 
 
 class GithubConfigurationSerializer(ModelSerializer):
@@ -17,7 +16,7 @@ class GithubConfigurationSerializer(ModelSerializer):
 class GithubRepositorySerializer(ModelSerializer):
     class Meta:
         model = GithubRepository
-        optional_fields = "search_text" "page"
+        optional_fields = ("search_text", "page")
         fields = (
             "id",
             "github_configuration",

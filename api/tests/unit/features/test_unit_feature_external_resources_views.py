@@ -18,7 +18,7 @@ from features.serializers import (
     WritableNestedFeatureStateSerializer,
 )
 from features.versioning.models import EnvironmentFeatureVersion
-from integrations.github.constants import GITHUB_API_URL
+from integrations.github.constants import GITHUB_API_URL, GITHUB_API_VERSION
 from integrations.github.models import GithubConfiguration, GithubRepository
 from projects.models import Project
 from segments.models import Segment
@@ -150,6 +150,7 @@ def test_create_feature_external_resource(
         json={"body": f"{expected_comment_body}"},
         headers={
             "Accept": "application/vnd.github.v3+json",
+            "X-GitHub-Api-Version": GITHUB_API_VERSION,
             "Authorization": "Bearer mocked_token",
         },
         timeout=10,
@@ -330,6 +331,7 @@ def test_delete_feature_external_resource(
         },
         headers={
             "Accept": "application/vnd.github.v3+json",
+            "X-GitHub-Api-Version": GITHUB_API_VERSION,
             "Authorization": "Bearer mocked_token",
         },
         timeout=10,
@@ -457,6 +459,7 @@ def test_create_github_comment_on_feature_state_updated(
         json={"body": expected_body_comment},
         headers={
             "Accept": "application/vnd.github.v3+json",
+            "X-GitHub-Api-Version": GITHUB_API_VERSION,
             "Authorization": "Bearer mocked_token",
         },
         timeout=10,
@@ -499,6 +502,7 @@ def test_create_github_comment_on_feature_was_deleted(
         json={"body": "### The Feature Flag `Test Feature1` was deleted"},
         headers={
             "Accept": "application/vnd.github.v3+json",
+            "X-GitHub-Api-Version": GITHUB_API_VERSION,
             "Authorization": "Bearer mocked_token",
         },
         timeout=10,
@@ -564,6 +568,7 @@ def test_create_github_comment_on_segment_override_updated(
         json={"body": expected_comment_body},
         headers={
             "Accept": "application/vnd.github.v3+json",
+            "X-GitHub-Api-Version": GITHUB_API_VERSION,
             "Authorization": "Bearer mocked_token",
         },
         timeout=10,
@@ -607,6 +612,7 @@ def test_create_github_comment_on_segment_override_deleted(
         },
         headers={
             "Accept": "application/vnd.github.v3+json",
+            "X-GitHub-Api-Version": GITHUB_API_VERSION,
             "Authorization": "Bearer mocked_token",
         },
         timeout=10,
@@ -686,6 +692,7 @@ def test_create_github_comment_using_v2(
         json={"body": expected_comment_body},
         headers={
             "Accept": "application/vnd.github.v3+json",
+            "X-GitHub-Api-Version": GITHUB_API_VERSION,
             "Authorization": "Bearer mocked_token",
         },
         timeout=10,

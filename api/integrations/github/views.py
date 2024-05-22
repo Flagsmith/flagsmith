@@ -120,13 +120,12 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
         serializer.save(github_configuration_id=github_configuration_id)
 
     def get_queryset(self):
-        github_pk = self.kwargs.get("github_pk")
-        if github_pk is not None:
-            try:
+        try:
+            if github_pk := self.kwargs.get("github_pk"):
                 int(github_pk)
-            except ValueError:
-                raise ValidationError({"github_pk": ["Must be an integer"]})
-            return GithubRepository.objects.filter(github_configuration=github_pk)
+                return GithubRepository.objects.filter(github_configuration=github_pk)
+        except ValueError:
+            raise ValidationError({"github_pk": ["Must be an integer"]})
 
     def create(self, request, *args, **kwargs):
 
@@ -159,13 +158,7 @@ def fetch_pull_requests(request, organisation_pk) -> Response | None:
         organisation_id=organisation_pk,
         params=query_params,
     )
-    if (
-        response.data is not None
-        and isinstance(response.data, dict)
-        and "results" in response.data
-        and isinstance(response.data["results"], list)
-    ):
-        return response
+    return response
 
 
 @api_view(["GET"])
@@ -184,13 +177,7 @@ def fetch_issues(request, organisation_pk) -> Response | None:
         organisation_id=organisation_pk,
         params=query_params,
     )
-    if (
-        response.data is not None
-        and isinstance(response.data, dict)
-        and "results" in response.data
-        and isinstance(response.data["results"], list)
-    ):
-        return response
+    return response
 
 
 @api_view(["GET"])
@@ -207,13 +194,7 @@ def fetch_repositories(request, organisation_pk: int) -> Response | None:
         )
 
     response: Response = fetch_github_repositories(installation_id)
-    if (
-        response.data is not None
-        and isinstance(response.data, dict)
-        and "repositories" in response.data
-        and isinstance(response.data["repositories"], list)
-    ):
-        return response
+    return response
 
 
 @api_view(["POST"])
