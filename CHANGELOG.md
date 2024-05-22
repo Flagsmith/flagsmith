@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.116.1](https://github.com/Flagsmith/flagsmith/compare/v2.116.0...v2.116.1) (2024-05-21)
+
+
+### Bug Fixes
+
+* **versioning:** fix cloning environments using v2 versioning ([#3999](https://github.com/Flagsmith/flagsmith/issues/3999)) ([eef02fb](https://github.com/Flagsmith/flagsmith/commit/eef02fb75de85a75b169561b9055b533f3c71bfb))
+
 ## [2.116.0](https://github.com/Flagsmith/flagsmith/compare/v2.115.0...v2.116.0) (2024-05-20)
 
 
