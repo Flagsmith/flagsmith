@@ -13,7 +13,8 @@ from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
-from integrations.github.github import GithubData, generate_data
+from integrations.github.dataclasses import GithubData
+from integrations.github.github import generate_data
 from integrations.github.models import GithubConfiguration
 from integrations.github.tasks import call_github_app_webhook_for_feature_state
 from metadata.serializers import MetadataSerializer, SerializerWithMetadata

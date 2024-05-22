@@ -392,7 +392,7 @@ def test_fetch_pull_requests(
     assert "results" in response_json
 
     github_request_mock.assert_called_with(
-        "https://api.github.com/search/issues?q= repo:owner/repo is:pr is:open in:title in:body &per_page=100&page=1",  # noqa: E501
+        "https://api.github.com/search/issues?q= repo:owner/repo is:pr is:open in:title in:body&per_page=100&page=1",  # noqa: E501
         headers={
             "X-GitHub-Api-Version": "2022-11-28",
             "Accept": "application/vnd.github.v3+json",
@@ -428,7 +428,7 @@ def test_fetch_issues(
     assert "results" in response_json
 
     github_request_mock.assert_called_with(
-        "https://api.github.com/search/issues?q= repo:owner/repo is:issue is:open in:title in:body &per_page=100&page=1",  # noqa: E501
+        "https://api.github.com/search/issues?q= repo:owner/repo is:issue is:open in:title in:body&per_page=100&page=1",  # noqa: E501
         headers={
             "X-GitHub-Api-Version": "2022-11-28",
             "Accept": "application/vnd.github.v3+json",

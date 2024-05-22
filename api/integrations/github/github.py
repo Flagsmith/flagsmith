@@ -1,6 +1,5 @@
 import logging
 import typing
-from dataclasses import dataclass
 
 from core.helpers import get_current_site_url
 from django.utils.formats import get_format
@@ -17,26 +16,12 @@ from integrations.github.constants import (
     UNLINKED_FEATURE_TEXT,
     UPDATED_FEATURE_TEXT,
 )
-from integrations.github.models import GithubConfiguration
 from webhooks.webhooks import WebhookEventType
 
+from .dataclasses import GithubData
+from .models import GithubConfiguration
+
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class GithubData:
-    installation_id: str
-    feature_id: int
-    feature_name: str
-    type: str
-    feature_states: typing.List[dict[str, typing.Any]] | None = None
-    url: str | None = None
-    project_id: int | None = None
-    segment_name: str | None = None
-
-    @classmethod
-    def from_dict(cls, data_dict: dict) -> "GithubData":
-        return cls(**data_dict)
 
 
 def generate_body_comment(

@@ -13,6 +13,7 @@ from integrations.github.constants import (
     GITHUB_API_URL,
     GITHUB_API_VERSION,
 )
+from integrations.github.dataclasses import RepoQueryParams
 from integrations.github.models import GithubConfiguration
 
 logger = logging.getLogger(__name__)
@@ -99,16 +100,34 @@ def delete_github_installation(installation_id: str) -> requests.Response:
 def fetch_github_resource(
     resource_type: ResourceType,
     organisation_id: int,
-    repo_owner: str,
-    repo_name: str,
-    page_size: int = 100,
-    page: int = 1,
-    search_text: str = "",
+    params: RepoQueryParams,
 ) -> Response:
     github_configuration = GithubConfiguration.objects.get(
         organisation_id=organisation_id, deleted_at__isnull=True
     )
-    url = f"{GITHUB_API_URL}search/issues?q={search_text} repo:{repo_owner}/{repo_name} is:{resource_type.value} is:open in:title in:body &per_page={page_size}&page={page}"  # noqa E501
+    # Build Github search query
+    q = ["q="]
+    if params.search_text:
+        q.append(params.search_text)
+    q.append(f"repo:{params.repo_owner}/{params.repo_name}")
+    q.append(f"is:{resource_type.value}")
+    if params.state:
+        q.append(f"is:{params.state}")
+    q.append("in:title")
+    if params.search_in_body:
+        q.append("in:body")
+    if params.search_in_comments:
+        q.append("in:comments")
+    if params.author:
+        q.append(f"author:{params.author}")
+    if params.assignee:
+        q.append(f"assignee:{params.assignee}")
+
+    url = (
+        f"{GITHUB_API_URL}search/issues?"
+        + " ".join(q)
+        + f"&per_page={params.page_size}&page={params.page}"
+    )
     headers: dict[str, str] = build_request_headers(
         github_configuration.installation_id
     )

@@ -10,7 +10,8 @@ from django_lifecycle import (
 )
 
 from features.models import Feature, FeatureState
-from integrations.github.github import GithubData, generate_data
+from integrations.github.dataclasses import GithubData
+from integrations.github.github import generate_data
 from integrations.github.tasks import call_github_app_webhook_for_feature_state
 from organisations.models import Organisation
 from webhooks.webhooks import WebhookEventType

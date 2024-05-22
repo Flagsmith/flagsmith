@@ -140,7 +140,8 @@ class Feature(
 
     @hook(AFTER_SAVE)
     def create_github_comment(self) -> None:
-        from integrations.github.github import GithubData, generate_data
+        from integrations.github.dataclasses import GithubData
+        from integrations.github.github import generate_data
         from integrations.github.tasks import (
             call_github_app_webhook_for_feature_state,
         )
@@ -410,7 +411,8 @@ class FeatureSegment(
 
     @hook(AFTER_DELETE)
     def create_github_comment(self) -> None:
-        from integrations.github.github import GithubData, generate_data
+        from integrations.github.dataclasses import GithubData
+        from integrations.github.github import generate_data
         from integrations.github.tasks import (
             call_github_app_webhook_for_feature_state,
         )
