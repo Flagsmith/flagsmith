@@ -121,7 +121,7 @@ class OrganisationList(ListView):
 
 
 @staff_member_required
-def organisation_info(request, organisation_id):
+def organisation_info(request: HttpRequest, organisation_id: int) -> HttpResponse:
     organisation = get_object_or_404(
         Organisation.objects.select_related("subscription"), pk=organisation_id
     )
