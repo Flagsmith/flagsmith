@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.116.2](https://github.com/Flagsmith/flagsmith/compare/v2.116.1...v2.116.2) (2024-05-22)
+
+
+### Bug Fixes
+
+* **versioning:** segment overrides limit ([#4007](https://github.com/Flagsmith/flagsmith/issues/4007)) ([918b731](https://github.com/Flagsmith/flagsmith/commit/918b73148e180d91e794ea8b840310b61ffe6300))
+
 ## [2.116.1](https://github.com/Flagsmith/flagsmith/compare/v2.116.0...v2.116.1) (2024-05-21)
 
 
