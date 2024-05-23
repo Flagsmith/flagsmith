@@ -1,70 +1,28 @@
 import logging
 import typing
-from dataclasses import dataclass
+from dataclasses import asdict
 
-import requests
 from core.helpers import get_current_site_url
-from django.conf import settings
 from django.utils.formats import get_format
 
 from features.models import Feature, FeatureState, FeatureStateValue
-from integrations.github.client import generate_token
 from integrations.github.constants import (
     DELETED_FEATURE_TEXT,
+    DELETED_SEGMENT_OVERRIDE_TEXT,
     FEATURE_ENVIRONMENT_URL,
     FEATURE_TABLE_HEADER,
     FEATURE_TABLE_ROW,
-    GITHUB_API_URL,
     LINK_FEATURE_TITLE,
     LINK_SEGMENT_TITLE,
     UNLINKED_FEATURE_TEXT,
     UPDATED_FEATURE_TEXT,
 )
+from integrations.github.dataclasses import GithubData
 from integrations.github.models import GithubConfiguration
+from integrations.github.tasks import call_github_app_webhook_for_feature_state
 from webhooks.webhooks import WebhookEventType
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class GithubData:
-    installation_id: str
-    feature_id: int
-    feature_name: str
-    type: str
-    feature_states: typing.List[dict[str, typing.Any]] | None = None
-    url: str | None = None
-    project_id: int | None = None
-
-    @classmethod
-    def from_dict(cls, data_dict: dict) -> "GithubData":
-        return cls(**data_dict)
-
-
-def post_comment_to_github(
-    installation_id: str, owner: str, repo: str, issue: str, body: str
-) -> typing.Optional[typing.Dict[str, typing.Any]]:
-    try:
-        token = generate_token(
-            installation_id,
-            settings.GITHUB_APP_ID,
-        )
-
-        url = f"{GITHUB_API_URL}repos/{owner}/{repo}/issues/{issue}/comments"
-        headers = {
-            "Accept": "application/vnd.github.v3+json",
-            "Authorization": f"Bearer {token}",
-        }
-
-        payload = {"body": body}
-        response = response = requests.post(
-            url, json=payload, headers=headers, timeout=10
-        )
-
-        return response.json() if response.status_code == 201 else None
-    except requests.RequestException as e:
-        logger.error(f" {e}")
-        return None
 
 
 def generate_body_comment(
@@ -72,18 +30,24 @@ def generate_body_comment(
     event_type: str,
     project_id: int,
     feature_id: int,
-    feature_states: typing.List[typing.Dict[str, typing.Any]],
+    feature_states: list[dict[str, typing.Any]],
+    segment_name: str | None = None,
 ) -> str:
 
     is_update = event_type == WebhookEventType.FLAG_UPDATED.value
     is_removed = event_type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
-    delete_text = UNLINKED_FEATURE_TEXT % (name,)
+    is_segment_override_deleted = (
+        event_type == WebhookEventType.SEGMENT_OVERRIDE_DELETED.value
+    )
 
     if event_type == WebhookEventType.FLAG_DELETED.value:
-        return DELETED_FEATURE_TEXT % (name,)
+        return DELETED_FEATURE_TEXT % (name)
 
     if is_removed:
-        return delete_text
+        return UNLINKED_FEATURE_TEXT % (name)
+
+    if is_segment_override_deleted and segment_name is not None:
+        return DELETED_SEGMENT_OVERRIDE_TEXT % (segment_name, name)
 
     result = UPDATED_FEATURE_TEXT % (name) if is_update else LINK_FEATURE_TITLE % (name)
     last_segment_name = ""
@@ -131,6 +95,7 @@ def generate_data(
         typing.Union[list[FeatureState], list[FeatureStateValue]] | None
     ) = None,
     url: str | None = None,
+    segment_name: str | None = None,
 ) -> GithubData:
     if feature_states:
         feature_states_list = []
@@ -171,4 +136,32 @@ def generate_data(
         ),
         feature_states=feature_states_list if feature_states else None,
         project_id=feature.project_id,
+        segment_name=segment_name,
+    )
+
+
+def call_github_task(
+    organisation_id: str,
+    type: str,
+    feature: Feature,
+    segment_name: str | None,
+    url: str | None,
+    feature_states: typing.Union[list[typing.Any], list[typing.Any]] | None,
+) -> None:
+
+    github_configuration = GithubConfiguration.objects.get(
+        organisation_id=organisation_id
+    )
+
+    feature_data: GithubData = generate_data(
+        github_configuration=github_configuration,
+        feature=feature,
+        type=type,
+        url=url,
+        segment_name=segment_name,
+        feature_states=feature_states,
+    )
+
+    call_github_app_webhook_for_feature_state.delay(
+        args=(asdict(feature_data),),
     )

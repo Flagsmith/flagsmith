@@ -1,7 +1,9 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
+from rest_framework_dataclasses.serializers import DataclassSerializer
 
-from .models import GithubConfiguration, GithubRepository
+from integrations.github.dataclasses import RepoQueryParams
+from integrations.github.models import GithubConfiguration, GithubRepository
 
 
 class GithubConfigurationSerializer(ModelSerializer):
@@ -14,6 +16,7 @@ class GithubConfigurationSerializer(ModelSerializer):
 class GithubRepositorySerializer(ModelSerializer):
     class Meta:
         model = GithubRepository
+        optional_fields = ("search_text", "page")
         fields = (
             "id",
             "github_configuration",
@@ -27,6 +30,8 @@ class GithubRepositorySerializer(ModelSerializer):
         )
 
 
-class RepoQuerySerializer(serializers.Serializer):
-    repo_owner = serializers.CharField(required=True)
-    repo_name = serializers.CharField(required=True)
+class RepoQueryParamsSerializer(DataclassSerializer):
+    class Meta:
+        dataclass = RepoQueryParams
+
+    search_in_body = serializers.BooleanField(required=False, default=True)
