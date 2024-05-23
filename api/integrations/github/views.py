@@ -174,7 +174,7 @@ def fetch_pull_requests(request, organisation_pk) -> Response:
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
 @github_auth_required
-@github_api_call_error_handler(error="Failed to retrieve GitHub pull requests.")
+@github_api_call_error_handler(error="Failed to retrieve GitHub issues.")
 def fetch_issues(request, organisation_pk) -> Response | None:
     query_serializer = IssueQueryParamsSerializer(data=request.query_params)
     if not query_serializer.is_valid():
@@ -194,7 +194,7 @@ def fetch_issues(request, organisation_pk) -> Response | None:
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, GithubIsAdminOrganisation])
-@github_api_call_error_handler(error="Failed to retrieve GitHub pull requests.")
+@github_api_call_error_handler(error="Failed to retrieve GitHub repositories.")
 def fetch_repositories(request, organisation_pk: int) -> Response | None:
     query_serializer = PaginatedQueryParamsSerializer(data=request.query_params)
     if not query_serializer.is_valid():
