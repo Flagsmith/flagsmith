@@ -60,7 +60,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
         child=serializers.IntegerField(),
         required=False,
         allow_null=True,
-        help_text="Array of segment ids for which the segment overrides will be removed in the new version.",
+        help_text="List of segment ids for which the segment overrides will be removed in the new version.",
     )
     publish_immediately = serializers.BooleanField(
         required=False,
