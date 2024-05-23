@@ -75,7 +75,7 @@ def clone_environment_feature_states(
         # Grab the latest feature versions from the source environment.
         latest_environment_feature_versions = (
             EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(
-                environment=source
+                environment_id=source.id
             )
         )
 

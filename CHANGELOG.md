@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.116.3](https://github.com/Flagsmith/flagsmith/compare/v2.116.2...v2.116.3) (2024-05-22)
+
+
+### Bug Fixes
+
+* **versioning:** webhooks not triggered when new version published ([#3953](https://github.com/Flagsmith/flagsmith/issues/3953)) ([fb2191b](https://github.com/Flagsmith/flagsmith/commit/fb2191b34fef9b6d45d7eda17e22b77d826d4a19))
+
+## [2.116.2](https://github.com/Flagsmith/flagsmith/compare/v2.116.1...v2.116.2) (2024-05-22)
+
+
+### Bug Fixes
+
+* **versioning:** segment overrides limit ([#4007](https://github.com/Flagsmith/flagsmith/issues/4007)) ([918b731](https://github.com/Flagsmith/flagsmith/commit/918b73148e180d91e794ea8b840310b61ffe6300))
+
+## [2.116.1](https://github.com/Flagsmith/flagsmith/compare/v2.116.0...v2.116.1) (2024-05-21)
+
+
+### Bug Fixes
+
+* **versioning:** fix cloning environments using v2 versioning ([#3999](https://github.com/Flagsmith/flagsmith/issues/3999)) ([eef02fb](https://github.com/Flagsmith/flagsmith/commit/eef02fb75de85a75b169561b9055b533f3c71bfb))
+
 ## [2.116.0](https://github.com/Flagsmith/flagsmith/compare/v2.115.0...v2.116.0) (2024-05-20)
 
 
