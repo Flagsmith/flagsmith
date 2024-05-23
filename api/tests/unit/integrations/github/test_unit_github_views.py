@@ -490,7 +490,7 @@ def test_fetch_repositories(
         url=f"{GITHUB_API_URL}installation/repositories",
         status=status.HTTP_200_OK,
         json={
-            "repositories": [
+            "results": [
                 {
                     "full_name": "owner/repo-name",
                     "id": 1,
@@ -512,8 +512,8 @@ def test_fetch_repositories(
     # Then
     assert response.status_code == status.HTTP_200_OK
     response_json = response.json()
-    assert "repositories" in response_json
-    assert len(response_json["repositories"]) == 1
+    assert "results" in response_json
+    assert len(response_json["results"]) == 1
 
 
 @pytest.mark.parametrize(
@@ -791,11 +791,26 @@ def test_fetch_github_repo_contributors(
         viewname="api-v1:organisations:get-github-repo-contributors",
         args=[organisation.id],
     )
-    contributors_data = [
-        {"login": "contributor1", "avatar_url": "https://example.com/avatar1"},
-        {"login": "contributor2", "avatar_url": "https://example.com/avatar2"},
-        {"login": "contributor3", "avatar_url": "https://example.com/avatar3"},
+
+    mocked_github_response = [
+        {
+            "login": "contributor1",
+            "avatar_url": "https://example.com/avatar1",
+            "contributions": 150,
+        },
+        {
+            "login": "contributor2",
+            "avatar_url": "https://example.com/avatar2",
+            "contributions": 110,
+        },
+        {
+            "login": "contributor3",
+            "avatar_url": "https://example.com/avatar3",
+            "contributions": 12,
+        },
     ]
+
+    expected_response = {"results": mocked_github_response}
 
     mock_generate_token = mocker.patch(
         "integrations.github.client.generate_token",
@@ -804,9 +819,12 @@ def test_fetch_github_repo_contributors(
 
     # Add response for endpoint being tested
     responses.add(
-        responses.GET,
-        f"{GITHUB_API_URL}repos/{github_repository.repository_owner}/{github_repository.repository_name}/contributors",
-        json=contributors_data,
+        method=responses.GET,
+        url=(
+            f"{GITHUB_API_URL}repos/{github_repository.repository_owner}/{github_repository.repository_name}/"
+            "contributors?&per_page=100&page=1"
+        ),
+        json=mocked_github_response,
         status=200,
     )
 
@@ -821,10 +839,9 @@ def test_fetch_github_repo_contributors(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == contributors_data
+    assert response.json() == expected_response
 
 
-# Add a unit test to cover the case when request params are no valid
 def test_fetch_github_repo_contributors_with_invalid_query_params(
     admin_client_new: APIClient,
     organisation: Organisation,

@@ -1,4 +1,3 @@
-from abc import ABC
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
@@ -29,9 +28,15 @@ class CallGithubData:
 
 # Dataclasses for external calls to GitHub API
 @dataclass
-class PaginatedQueryParams(ABC):
-    page: int = field(default=1, init=False)
-    page_size: int = field(default=100, init=False)
+class PaginatedQueryParams:
+    page: int = field(default=1, kw_only=True)
+    page_size: int = field(default=100, kw_only=True)
+
+    def __post_init__(self):
+        if self.page < 1:
+            raise ValueError("Page must be greater or equal than 1")
+        if self.page_size < 1 or self.page_size > 100:
+            raise ValueError("Page size must be an integer between 1 and 100")
 
 
 @dataclass
@@ -48,7 +53,3 @@ class IssueQueryParams(RepoQueryParams):
     assignee: Optional[str] = None
     search_in_body: Optional[bool] = True
     search_in_comments: Optional[bool] = False
-
-    @classmethod
-    def from_dict(cls, data_dict: dict[str, Any]) -> "IssueQueryParams":
-        return cls(**data_dict)

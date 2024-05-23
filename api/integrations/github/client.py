@@ -5,15 +5,17 @@ from typing import Any
 import requests
 from django.conf import settings
 from github import Auth, Github
-from rest_framework import status
-from rest_framework.response import Response
 
 from integrations.github.constants import (
     GITHUB_API_CALLS_TIMEOUT,
     GITHUB_API_URL,
     GITHUB_API_VERSION,
 )
-from integrations.github.dataclasses import IssueQueryParams
+from integrations.github.dataclasses import (
+    IssueQueryParams,
+    PaginatedQueryParams,
+    RepoQueryParams,
+)
 from integrations.github.models import GithubConfiguration
 
 logger = logging.getLogger(__name__)
@@ -64,6 +66,31 @@ def generate_jwt_token(app_id: int) -> str:  # pragma: no cover
     )
     token = github_auth.create_jwt()
     return token
+
+
+def build_paginated_response(
+    results: list[dict[str, Any]],
+    response: requests.Response,
+    total_count: int | None = None,
+    incomplete_results: bool | None = None,
+) -> dict[str, Any]:
+    data: dict[str, Any] = {
+        "results": results,
+    }
+
+    if response.links.get("prev"):
+        data["previous"] = response.links.get("prev")
+
+    if response.links.get("next"):
+        data["next"] = response.links.get("next")
+
+    if total_count:
+        data["total_count"] = total_count
+
+    if incomplete_results:
+        data["incomplete_results"] = incomplete_results
+
+    return data
 
 
 def post_comment_to_github(
@@ -135,22 +162,23 @@ def fetch_search_github_resource(
         }
         for i in json_response["items"]
     ]
-    data = {
-        "results": results,
-        "count": json_response["total_count"],
-        "incomplete_results": json_response["incomplete_results"],
-    }
-    if response.links.get("prev"):
-        data["previous"] = response.links.get("prev")
 
-    if response.links.get("next"):
-        data["next"] = response.links.get("next")
-
-    return data
+    return build_paginated_response(
+        results=results,
+        response=response,
+        total_count=json_response["total_count"],
+        incomplete_results=json_response["incomplete_results"],
+    )
 
 
-def fetch_github_repositories(installation_id: str) -> Response:
-    url = f"{GITHUB_API_URL}installation/repositories"
+def fetch_github_repositories(
+    installation_id: str,
+    params: PaginatedQueryParams,
+) -> dict[str, Any]:
+    url = (
+        f"{GITHUB_API_URL}installation/repositories?"
+        + f"&per_page={params.page_size}&page={params.page}"
+    )
 
     headers: dict[str, str] = build_request_headers(installation_id)
 
@@ -163,17 +191,10 @@ def fetch_github_repositories(installation_id: str) -> Response:
             "id": i["id"],
             "name": i["name"],
         }
-        for i in json_response["repositories"]
+        for i in json_response["results"]
     ]
-    data = {
-        "repositories": results,
-        "total_count": json_response["total_count"],
-    }
-    return Response(
-        data=data,
-        content_type="application/json",
-        status=status.HTTP_200_OK,
-    )
+
+    return build_paginated_response(results, response, json_response["total_count"])
 
 
 def get_github_issue_pr_title_and_state(
@@ -196,13 +217,18 @@ def get_github_issue_pr_title_and_state(
 
 
 def fetch_github_repo_contributors(
-    organisation_id: int, owner: str, repo: str
-) -> list[dict[str, Any]]:
+    organisation_id: int,
+    params: RepoQueryParams,
+) -> dict[str, Any]:
     installation_id = GithubConfiguration.objects.get(
         organisation_id=organisation_id, deleted_at__isnull=True
     ).installation_id
 
-    url = f"{GITHUB_API_URL}repos/{owner}/{repo}/contributors"
+    url = (
+        f"{GITHUB_API_URL}repos/{params.repo_owner}/{params.repo_name}/contributors?"
+        + f"&per_page={params.page_size}&page={params.page}"
+    )
+
     headers = build_request_headers(installation_id)
     response = requests.get(url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT)
     response.raise_for_status()
@@ -212,8 +238,9 @@ def fetch_github_repo_contributors(
         {
             "login": i["login"],
             "avatar_url": i["avatar_url"],
+            "contributions": i["contributions"],
         }
         for i in json_response
     ]
 
-    return results
+    return build_paginated_response(results, response)

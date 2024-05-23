@@ -28,6 +28,7 @@ from integrations.github.serializers import (
     GithubConfigurationSerializer,
     GithubRepositorySerializer,
     IssueQueryParamsSerializer,
+    PaginatedQueryParamsSerializer,
     RepoQueryParamsSerializer,
 )
 from organisations.permissions.permissions import GithubIsAdminOrganisation
@@ -63,6 +64,12 @@ def github_api_call_error_handler(
             default_error = "Failed to retrieve requested information from GitHub API."
             try:
                 return func(*args, **kwargs)
+            except ValueError as e:
+                return Response(
+                    data={"detail": (f"{error or default_error}" f" Error: {str(e)}")},
+                    content_type="application/json",
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             except requests.RequestException as e:
                 logger.error(f"{error or default_error} Error: {str(e)}", exc_info=e)
                 return Response(
@@ -189,6 +196,9 @@ def fetch_issues(request, organisation_pk) -> Response | None:
 @permission_classes([IsAuthenticated, GithubIsAdminOrganisation])
 @github_api_call_error_handler(error="Failed to retrieve GitHub pull requests.")
 def fetch_repositories(request, organisation_pk: int) -> Response | None:
+    query_serializer = PaginatedQueryParamsSerializer(data=request.query_params)
+    if not query_serializer.is_valid():
+        return Response({"error": query_serializer.errors}, status=400)
     installation_id = request.GET.get("installation_id")
 
     if not installation_id:
@@ -198,8 +208,34 @@ def fetch_repositories(request, organisation_pk: int) -> Response | None:
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    response: Response = fetch_github_repositories(installation_id)
-    return response
+    data = fetch_github_repositories(
+        installation_id=installation_id, params=query_serializer.validated_data
+    )
+    return Response(
+        data=data,
+        content_type="application/json",
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
+@github_auth_required
+@github_api_call_error_handler(error="Failed to retrieve GitHub repo contributors.")
+def fetch_repo_contributors(request, organisation_pk) -> Response:
+    query_serializer = RepoQueryParamsSerializer(data=request.query_params)
+    if not query_serializer.is_valid():
+        return Response({"error": query_serializer.errors}, status=400)
+
+    response = fetch_github_repo_contributors(
+        organisation_id=organisation_pk, params=query_serializer.validated_data
+    )
+
+    return Response(
+        data=response,
+        content_type="application/json",
+        status=status.HTTP_200_OK,
+    )
 
 
 @api_view(["POST"])
@@ -223,25 +259,3 @@ def github_webhook(request) -> Response:
             return Response({"detail": "Event bypassed"}, status=200)
     else:
         return Response({"error": "Invalid signature"}, status=400)
-
-
-@api_view(["GET"])
-@permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
-@github_auth_required
-@github_api_call_error_handler(error="Failed to retrieve GitHub pull requests.")
-def fetch_repo_contributors(request, organisation_pk) -> Response:
-    query_serializer = RepoQueryParamsSerializer(data=request.query_params)
-    if not query_serializer.is_valid():
-        return Response({"error": query_serializer.errors}, status=400)
-
-    response = fetch_github_repo_contributors(
-        organisation_id=organisation_pk,
-        owner=query_serializer.validated_data.repo_owner,
-        repo=query_serializer.validated_data.repo_name,
-    )
-
-    return Response(
-        data=response,
-        content_type="application/json",
-        status=status.HTTP_200_OK,
-    )

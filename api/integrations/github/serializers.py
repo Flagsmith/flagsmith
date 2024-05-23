@@ -2,7 +2,11 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from rest_framework_dataclasses.serializers import DataclassSerializer
 
-from integrations.github.dataclasses import IssueQueryParams, RepoQueryParams
+from integrations.github.dataclasses import (
+    IssueQueryParams,
+    PaginatedQueryParams,
+    RepoQueryParams,
+)
 from integrations.github.models import GithubConfiguration, GithubRepository
 
 
@@ -28,6 +32,11 @@ class GithubRepositorySerializer(ModelSerializer):
             "id",
             "github_configuration",
         )
+
+
+class PaginatedQueryParamsSerializer(DataclassSerializer):
+    class Meta:
+        dataclass = PaginatedQueryParams
 
 
 class RepoQueryParamsSerializer(DataclassSerializer):
