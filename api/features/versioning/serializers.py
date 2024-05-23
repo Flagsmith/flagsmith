@@ -148,7 +148,9 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
     ) -> None:
         if not self._is_segment_override(feature_state):
             raise serializers.ValidationError(
-                "Cannot create FeatureState objects that are not segment overrides."
+                {
+                    "feature_states_to_create": "Cannot create FeatureState objects that are not segment overrides."
+                }
             )
 
         segment_id = feature_state["feature_segment"]["segment"]
@@ -156,7 +158,10 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             feature_segment__segment_id=segment_id
         ).exists():
             raise serializers.ValidationError(
-                "Segment override already exists for Segment %d", segment_id
+                {
+                    "feature_states_to_create": "Segment override already exists for Segment %d"
+                    % segment_id
+                }
             )
 
         fs_serializer = EnvironmentFeatureVersionFeatureStateSerializer(

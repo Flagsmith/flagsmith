@@ -814,3 +814,79 @@ def test_update_and_create_segment_override_in_single_request(
 
     assert new_version.published is True
     assert new_version.is_live is True
+
+
+def test_create_environment_default_when_creating_new_version_fails(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    data = {
+        "feature_states_to_create": [
+            {
+                "feature_segment": None,
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "some new value",
+                },
+            }
+        ]
+    }
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    assert response.json() == {
+        "feature_states_to_create": "Cannot create FeatureState objects that are not segment overrides."
+    }
+
+
+def test_create_segment_override_for_existing_override_when_creating_new_version_fails(
+    feature: Feature,
+    admin_client_new: APIClient,
+    segment: Segment,
+    segment_featurestate: FeatureState,
+    environment_v2_versioning: Environment,
+) -> None:
+    # Given
+    data = {
+        "feature_states_to_create": [
+            {
+                "feature_segment": {"segment": segment.id},
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "some new value",
+                },
+            }
+        ]
+    }
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "feature_states_to_create": "Segment override already exists for Segment %d"
+        % segment.id
+    }
