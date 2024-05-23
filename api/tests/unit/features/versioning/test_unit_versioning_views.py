@@ -644,12 +644,9 @@ def test_create_new_version_with_changes_in_single_request(
     feature: Feature,
     segment: Segment,
     segment_featurestate: FeatureState,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_v2_versioning: Environment,
 ) -> None:
-    # TODO: replace fixture with admin_client_new
-    admin_client_new = admin_client
-
     # Given
     additional_segment_1 = Segment.objects.create(
         name="additional-segment-1", project=feature.project
