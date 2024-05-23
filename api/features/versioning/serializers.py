@@ -62,7 +62,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
         allow_null=True,
         help_text="Array of segment ids for which the segment overrides will be removed in the new version.",
     )
-    publish = serializers.BooleanField(
+    publish_immediately = serializers.BooleanField(
         required=False,
         default=False,
         help_text="Boolean to confirm whether the new version should be publish immediately or not.",
@@ -73,13 +73,13 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             "feature_states_to_create",
             "feature_states_to_update",
             "segment_ids_to_delete_overrides",
-            "publish",
+            "publish_immediately",
         )
         non_model_fields = (
             "feature_states_to_create",
             "feature_states_to_update",
             "segment_ids_to_delete_overrides",
-            "publish",
+            "publish_immediately",
         )
 
     def create(self, validated_data):
@@ -88,6 +88,9 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
 
         version = super().create(validated_data)
 
+        # Note that we use self.initial_data for handling the feature states here
+        # since we want the raw data to pass into the serializers in the separate
+        # private methods used for modifying the FeatureState objects.
         for feature_state_to_create in self.initial_data.get(
             "feature_states_to_create", []
         ):
@@ -105,7 +108,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             self.initial_data.get("segment_ids_to_delete_overrides", []), version
         )
 
-        if self.initial_data.get("publish", False):
+        if self.validated_data.get("publish_immediately", False):
             request = self.context["request"]
             version.publish(
                 published_by=(

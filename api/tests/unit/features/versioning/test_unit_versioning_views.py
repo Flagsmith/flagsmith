@@ -658,7 +658,7 @@ def test_create_new_version_with_changes_in_single_request(
     )
 
     data = {
-        "publish": True,
+        "publish_immediately": True,
         "feature_states_to_update": [
             {
                 "feature_segment": None,
