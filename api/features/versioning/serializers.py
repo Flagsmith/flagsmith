@@ -156,11 +156,20 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             instance = version.feature_states.get(
                 feature_segment__segment_id=feature_state["feature_segment"]["segment"]
             )
+            # Patch the id of the feature segment onto the feature state data so that
+            # the serializer knows to update rather than try and create a new one.
+            feature_state["feature_segment"]["id"] = instance.feature_segment_id
         else:
             instance = version.feature_states.get(feature_segment__isnull=True)
 
         fs_serializer = EnvironmentFeatureVersionFeatureStateSerializer(
-            instance=instance, data=feature_state
+            instance=instance,
+            data=feature_state,
+            context={
+                "feature": version.feature,
+                "environment": version.environment,
+                "environment_feature_version": version,
+            },
         )
         fs_serializer.is_valid(raise_exception=True)
         fs_serializer.save(

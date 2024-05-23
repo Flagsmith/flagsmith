@@ -735,3 +735,82 @@ def test_create_new_version_with_changes_in_single_request(
 
     assert new_version.published is True
     assert new_version.is_live is True
+
+
+def test_update_and_create_segment_override_in_single_request(
+    feature: Feature,
+    segment: Segment,
+    segment_featurestate: FeatureState,
+    admin_client: APIClient,
+    environment_v2_versioning: Environment,
+) -> None:
+    # Given
+    additional_segment = Segment.objects.create(
+        name="additional-segment", project=feature.project
+    )
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    data = {
+        "publish_immediately": True,
+        "feature_states_to_update": [
+            {
+                "feature_segment": {"segment": segment.id, "priority": 2},
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "updated-segment-override",
+                },
+            }
+        ],
+        "feature_states_to_create": [
+            {
+                "feature_segment": {
+                    "segment": additional_segment.id,
+                    "priority": 1,
+                },
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "additional-segment-override",
+                },
+            },
+        ],
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    new_version_uuid = response.json()["uuid"]
+    new_version = EnvironmentFeatureVersion.objects.get(uuid=new_version_uuid)
+
+    assert new_version.feature_states.count() == 3
+
+    updated_segment_override = new_version.feature_states.filter(
+        feature_segment__segment=segment
+    ).get()
+    assert (
+        updated_segment_override.get_feature_state_value() == "updated-segment-override"
+    )
+    assert updated_segment_override.enabled is True
+    assert updated_segment_override.feature_segment.priority == 2
+
+    new_segment_override = new_version.feature_states.filter(
+        feature_segment__segment=additional_segment
+    ).get()
+    assert (
+        new_segment_override.get_feature_state_value() == "additional-segment-override"
+    )
+    assert new_segment_override.enabled is True
+    assert new_segment_override.feature_segment.priority == 1
+
+    assert new_version.published is True
+    assert new_version.is_live is True
