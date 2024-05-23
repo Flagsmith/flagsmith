@@ -10,7 +10,10 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from environments.models import Environment
-from environments.permissions.constants import VIEW_ENVIRONMENT
+from environments.permissions.constants import (
+    UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
+)
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from projects.permissions import VIEW_PROJECT
@@ -70,25 +73,30 @@ def test_get_versions_for_a_feature_and_environment(
 
 
 def test_create_new_feature_version(
-    admin_user: FFAdminUser,
-    admin_client: APIClient,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
+    with_project_permissions([VIEW_PROJECT])
+
     url = reverse(
         "api-v1:versioning:environment-feature-versions-list",
         args=[environment_v2_versioning.id, feature.id],
     )
 
     # When
-    response = admin_client.post(url)
+    response = staff_client.post(url)
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
 
     response_json = response.json()
-    assert response_json["created_by"] == admin_user.id
+    assert response_json["created_by"] == staff_user.id
     assert response_json["uuid"]
 
 
@@ -383,7 +391,6 @@ def test_update_environment_feature_version_feature_state(
 
 def test_cannot_update_feature_state_in_published_environment_feature_version(
     admin_client: APIClient,
-    admin_user: FFAdminUser,
     environment_v2_versioning: Environment,
     feature: Feature,
 ) -> None:
@@ -428,7 +435,6 @@ def test_cannot_update_feature_state_in_published_environment_feature_version(
 
 def test_delete_environment_feature_version_feature_state(
     admin_client: APIClient,
-    admin_user: FFAdminUser,
     environment_v2_versioning: Environment,
     segment: Segment,
     feature: Feature,
@@ -519,7 +525,6 @@ def test_cannot_delete_feature_state_in_published_environment_feature_version(
 
 def test_cannot_delete_environment_default_feature_state_for_unpublished_environment_feature_version(
     admin_client: APIClient,
-    admin_user: FFAdminUser,
     environment_v2_versioning: Environment,
     feature: Feature,
 ) -> None:
@@ -741,7 +746,7 @@ def test_update_and_create_segment_override_in_single_request(
     feature: Feature,
     segment: Segment,
     segment_featurestate: FeatureState,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_v2_versioning: Environment,
 ) -> None:
     # Given
@@ -782,7 +787,7 @@ def test_update_and_create_segment_override_in_single_request(
     }
 
     # When
-    response = admin_client.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 

@@ -1,3 +1,5 @@
+import typing
+
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
@@ -46,7 +48,7 @@ class CreateSegmentOverrideFeatureSegmentSerializer(serializers.ModelSerializer)
         model = FeatureSegment
         fields = ("id", "segment", "priority", "uuid")
 
-    def save(self, **kwargs):
+    def save(self, **kwargs: typing.Any) -> FeatureSegment:
         priority: int | None = self.initial_data.pop("priority", None)
 
         feature_segment: FeatureSegment = super().save(**kwargs)

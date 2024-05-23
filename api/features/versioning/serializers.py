@@ -1,3 +1,5 @@
+import typing
+
 from rest_framework import serializers
 
 from features.serializers import CreateSegmentOverrideFeatureStateSerializer
@@ -110,7 +112,9 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             "publish_immediately",
         )
 
-    def create(self, validated_data):
+    def create(
+        self, validated_data: dict[str, typing.Any]
+    ) -> EnvironmentFeatureVersion:
         for field_name in self.Meta.non_model_fields:
             validated_data.pop(field_name, None)
 
@@ -168,23 +172,20 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
                 }
             )
 
+        save_kwargs = {
+            "feature": version.feature,
+            "environment": version.environment,
+            "environment_feature_version": version,
+        }
         fs_serializer = EnvironmentFeatureVersionFeatureStateSerializer(
             data=feature_state,
-            context={
-                "feature": version.feature,
-                "environment": version.environment,
-                "environment_feature_version": version,
-            },
+            context=save_kwargs,
         )
         fs_serializer.is_valid(raise_exception=True)
-        fs_serializer.save(
-            environment_feature_version=version,
-            environment=version.environment,
-            feature=version.feature,
-        )
+        fs_serializer.save(**save_kwargs)
 
     def _update_feature_state(
-        self, feature_state: dict, version: EnvironmentFeatureVersion
+        self, feature_state: dict[str, typing.Any], version: EnvironmentFeatureVersion
     ) -> None:
         if self._is_segment_override(feature_state):
             instance = version.feature_states.get(
