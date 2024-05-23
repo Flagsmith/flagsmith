@@ -494,7 +494,7 @@ def test_fetch_repositories(
         url=f"{GITHUB_API_URL}installation/repositories",
         status=status.HTTP_200_OK,
         json={
-            "results": [
+            "repositories": [
                 {
                     "full_name": "owner/repo-name",
                     "id": 1,
