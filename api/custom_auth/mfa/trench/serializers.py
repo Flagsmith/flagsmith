@@ -1,9 +1,7 @@
 from abc import abstractmethod
-from typing import Any, OrderedDict
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
-from django.db.models import Model
 from rest_framework.fields import CharField
 from rest_framework.serializers import ModelSerializer, Serializer
 
@@ -26,15 +24,7 @@ from custom_auth.mfa.trench.utils import get_mfa_handler, get_mfa_model
 User: AbstractUser = get_user_model()
 
 
-class RequestBodyValidator(Serializer):
-    def update(self, instance: Model, validated_data: OrderedDict[str, Any]):
-        raise NotImplementedError
-
-    def create(self, validated_data: OrderedDict[str, Any]):
-        raise NotImplementedError
-
-
-class ProtectedActionValidator(RequestBodyValidator):
+class ProtectedActionValidator(Serializer):
     code = CharField()
 
     @staticmethod
@@ -98,15 +88,7 @@ class MFAMethodActivationConfirmationValidator(ProtectedActionValidator):
             raise MFAMethodAlreadyActiveError()
 
 
-class LoginSerializer(RequestBodyValidator):
-    password = CharField(write_only=True)
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-        self.fields[User.USERNAME_FIELD] = CharField()
-
-
-class CodeLoginSerializer(RequestBodyValidator):
+class CodeLoginSerializer(Serializer):
     ephemeral_token = CharField()
     code = CharField()
 
@@ -115,9 +97,3 @@ class UserMFAMethodSerializer(ModelSerializer):
     class Meta:
         model = get_mfa_model()
         fields = ("name", "is_primary")
-
-
-class ChangePrimaryMethodCodeValidator(ProtectedActionValidator):
-    @staticmethod
-    def _validate_mfa_method(mfa: MFAMethod) -> None:
-        pass

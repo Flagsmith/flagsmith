@@ -41,7 +41,6 @@ class TrenchAPISettings(APISettings):
         return self.__getattr__(attr)
 
 
-SOURCE_FIELD = "SOURCE_FIELD"
 HANDLER = "HANDLER"
 VALIDITY_PERIOD = "VALIDITY_PERIOD"
 VERBOSE_NAME = "VERBOSE_NAME"

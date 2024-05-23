@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -15,22 +16,14 @@ from custom_auth.mfa.trench.command.create_mfa_method import (
 from custom_auth.mfa.trench.command.deactivate_mfa_method import (
     deactivate_mfa_method_command,
 )
-from custom_auth.mfa.trench.exceptions import (
-    MFAMethodDoesNotExistError,
-    MFASourceFieldDoesNotExistError,
-    MFAValidationError,
-)
+from custom_auth.mfa.trench.exceptions import MFAValidationError
 from custom_auth.mfa.trench.models import MFAMethod
-from custom_auth.mfa.trench.query.get_mfa_config_by_name import (
-    get_mfa_config_by_name_query,
-)
 from custom_auth.mfa.trench.responses import ErrorResponse
 from custom_auth.mfa.trench.serializers import (
     MFAMethodActivationConfirmationValidator,
     MFAMethodDeactivationValidator,
     UserMFAMethodSerializer,
 )
-from custom_auth.mfa.trench.settings import SOURCE_FIELD
 from custom_auth.mfa.trench.utils import get_mfa_handler
 
 User: AbstractUser = get_user_model()
@@ -41,17 +34,11 @@ class MFAMethodActivationView(APIView):
 
     @staticmethod
     def post(request: Request, method: str) -> Response:
-        try:
-            source_field = get_mfa_config_by_name_query(name=method).get(SOURCE_FIELD)
-        except MFAMethodDoesNotExistError as cause:
-            return ErrorResponse(error=cause)
         user = request.user
+        if method != "app":
+            # return 404
+            return Response(status=status.HTTP_404_NOT_FOUND)
         try:
-            if source_field is not None and not hasattr(user, source_field):
-                raise MFASourceFieldDoesNotExistError(
-                    source_field, user.__class__.__name__
-                )
-
             mfa = create_mfa_method_command(
                 user_id=user.id,
                 name=method,

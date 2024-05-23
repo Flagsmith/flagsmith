@@ -3,11 +3,6 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.serializers import ValidationError
 
 
-class MissingConfigurationError(ImproperlyConfigured):
-    def __init__(self, attribute_name: str) -> None:
-        super().__init__(f"Could not retrieve attribute '{attribute_name}'.")
-
-
 class MethodHandlerMissingError(ImproperlyConfigured):
     def __init__(self, method_name: str) -> None:
         super().__init__(f"Missing handler in {method_name} configuration.")
@@ -23,16 +18,6 @@ class CodeInvalidOrExpiredError(MFAValidationError):
         super().__init__(
             detail=_("Code invalid or expired."),
             code="code_invalid_or_expired",
-        )
-
-
-class MFASourceFieldDoesNotExistError(MFAValidationError):
-    def __init__(self, source_field: str, model_name: str) -> None:
-        super().__init__(
-            detail=_(
-                f"Field name `{source_field}` is not valid for model `{model_name}`."
-            ),
-            code="source_field_not_exist",
         )
 
 

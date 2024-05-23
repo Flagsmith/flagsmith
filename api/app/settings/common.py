@@ -750,7 +750,6 @@ CACHES = {
 }
 
 TRENCH_AUTH = {
-    "FROM_EMAIL": DEFAULT_FROM_EMAIL,
     "BACKUP_CODES_QUANTITY": 5,
     "BACKUP_CODES_LENGTH": 10,  # keep (quantity * length) under 200
     "BACKUP_CODES_CHARACTERS": (

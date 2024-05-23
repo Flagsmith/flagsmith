@@ -28,26 +28,6 @@ class MFAUserMethodManager(Manager):
         except self.model.DoesNotExist:
             raise MFAMethodDoesNotExistError()
 
-    def get_primary_active_name(self, user_id: Any) -> str:
-        method_name = (
-            self.filter(user_id=user_id, is_primary=True, is_active=True)
-            .values_list("name", flat=True)
-            .first()
-        )
-        if method_name is None:
-            raise MFAMethodDoesNotExistError()
-        return method_name
-
-    def is_active_by_name(self, user_id: Any, name: str) -> bool:
-        is_active = (
-            self.filter(user_id=user_id, name=name)
-            .values_list("is_active", flat=True)
-            .first()
-        )
-        if is_active is None:
-            raise MFAMethodDoesNotExistError()
-        return is_active
-
     def list_active(self, user_id: Any) -> QuerySet:
         return self.filter(user_id=user_id, is_active=True)
 
