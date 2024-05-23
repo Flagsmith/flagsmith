@@ -89,8 +89,9 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
         version = super().create(validated_data)
 
         # Note that we use self.initial_data for handling the feature states here
-        # since we want the raw data to pass into the serializers in the separate
-        # private methods used for modifying the FeatureState objects.
+        # since we want the raw data (rather than the serialized ORM objects) to
+        # pass into the serializers in the separate private methods used for modifying
+        # the FeatureState objects.
         for feature_state_to_create in self.initial_data.get(
             "feature_states_to_create", []
         ):
