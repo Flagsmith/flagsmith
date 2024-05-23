@@ -351,7 +351,7 @@ def mocked_requests_get_issues_and_pull_requests(*args, **kwargs):
             },
         ],
         "total_count": 1,
-        "incomplete_results": False,
+        "incomplete_results": True,
     }
     status_code = 200
     response = MockResponse(json_data, status_code)
@@ -905,12 +905,11 @@ def test_github_api_call_error_handler_with_value_error(
         ),
     ],
 )
-def test_send_the_invalid_page_or_page_size_param_returns_400(
+def test_send_the_invalid_number_page_or_page_size_param_returns_400(
     admin_client: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
-    mocker: MockerFixture,
     page: int,
     page_size: int,
     is_invalid_page: bool,
@@ -938,4 +937,52 @@ def test_send_the_invalid_page_or_page_size_param_returns_400(
     else:
         assert response_json == {
             "detail": "Failed to retrieve GitHub repositories. Error: Page size must be an integer between 1 and 100"
+        }
+
+
+@pytest.mark.parametrize(
+    "page, page_size, is_invalid_page",
+    [
+        (
+            1,
+            "string",
+            False,
+        ),
+        (
+            "string",
+            100,
+            True,
+        ),
+    ],
+)
+def test_send_the_invalid_type_page_or_page_size_param_returns_400(
+    admin_client: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    page: int,
+    page_size: int,
+    is_invalid_page: bool,
+) -> None:
+    # Given
+    data: dict[str, str | int] = {
+        "installation_id": github_configuration.installation_id,
+        "page": page,
+        "page_size": page_size,
+    }
+
+    url = reverse(
+        "api-v1:organisations:get-github-installation-repos", args=[organisation.id]
+    )
+    # When
+    response = admin_client.get(url, data)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    if is_invalid_page:
+        assert response_json == {"error": {"page": ["A valid integer is required."]}}
+    else:
+        assert response_json == {
+            "error": {"page_size": ["A valid integer is required."]}
         }
