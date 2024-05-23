@@ -24,7 +24,7 @@ from features.models import Feature
 from organisations.models import Organisation
 
 from . import constants
-from .typing import PERIOD_TYPE
+from .types import PERIOD_TYPE
 
 
 def get_usage_data(
