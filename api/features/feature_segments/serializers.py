@@ -37,10 +37,21 @@ class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
 
 
 class CreateSegmentOverrideFeatureSegmentSerializer(serializers.ModelSerializer):
+    priority = serializers.IntegerField(min_value=1, required=False)
+
     class Meta:
         model = FeatureSegment
         fields = ("id", "segment", "priority", "uuid")
-        read_only_fields = ("priority",)
+
+    def save(self, **kwargs):
+        priority: int | None = self.initial_data.pop("priority", None)
+
+        feature_segment: FeatureSegment = super().save(**kwargs)
+
+        if priority:
+            feature_segment.to(priority)
+
+        return feature_segment
 
 
 class FeatureSegmentQuerySerializer(serializers.Serializer):

@@ -644,12 +644,18 @@ def test_create_new_version_with_changes_in_single_request(
     feature: Feature,
     segment: Segment,
     segment_featurestate: FeatureState,
-    admin_client_new: APIClient,
+    admin_client: APIClient,
     environment_v2_versioning: Environment,
 ) -> None:
+    # TODO: replace fixture with admin_client_new
+    admin_client_new = admin_client
+
     # Given
-    another_segment = Segment.objects.create(
-        name="another-segment", project=feature.project
+    additional_segment_1 = Segment.objects.create(
+        name="additional-segment-1", project=feature.project
+    )
+    additional_segment_2 = Segment.objects.create(
+        name="additional-segment-2", project=feature.project
     )
 
     url = reverse(
@@ -669,12 +675,26 @@ def test_create_new_version_with_changes_in_single_request(
         "feature_states_to_create": [
             {
                 "feature_segment": {
-                    # TODO: priorities?
-                    "segment": another_segment.id,
+                    "segment": additional_segment_1.id,
+                    "priority": 2,
                 },
                 "enabled": True,
-                "feature_state_value": {"type": "unicode", "string_value": "foo"},
-            }
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "segment-override-1",
+                },
+            },
+            {
+                "feature_segment": {
+                    "segment": additional_segment_2.id,
+                    "priority": 1,
+                },
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "segment-override-2",
+                },
+            },
         ],
         "segment_ids_to_delete_overrides": [segment.id],
     }
@@ -690,7 +710,7 @@ def test_create_new_version_with_changes_in_single_request(
     new_version_uuid = response.json()["uuid"]
     new_version = EnvironmentFeatureVersion.objects.get(uuid=new_version_uuid)
 
-    assert new_version.feature_states.count() == 2
+    assert new_version.feature_states.count() == 3
 
     new_version_environment_fs = new_version.feature_states.filter(
         feature_segment__isnull=True
@@ -698,11 +718,19 @@ def test_create_new_version_with_changes_in_single_request(
     assert new_version_environment_fs.get_feature_state_value() == "updated!"
     assert new_version_environment_fs.enabled is True
 
-    new_version_segment_fs = new_version.feature_states.filter(
-        feature_segment__segment=another_segment
+    new_version_segment_fs_1 = new_version.feature_states.filter(
+        feature_segment__segment=additional_segment_1
     ).get()
-    assert new_version_segment_fs.get_feature_state_value() == "foo"
-    assert new_version_segment_fs.enabled is True
+    assert new_version_segment_fs_1.get_feature_state_value() == "segment-override-1"
+    assert new_version_segment_fs_1.enabled is True
+    assert new_version_segment_fs_1.feature_segment.priority == 2
+
+    new_version_segment_fs_2 = new_version.feature_states.filter(
+        feature_segment__segment=additional_segment_2
+    ).get()
+    assert new_version_segment_fs_2.get_feature_state_value() == "segment-override-2"
+    assert new_version_segment_fs_2.enabled is True
+    assert new_version_segment_fs_2.feature_segment.priority == 1
 
     assert not new_version.feature_states.filter(
         feature_segment__segment=segment
