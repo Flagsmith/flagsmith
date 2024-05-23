@@ -191,7 +191,7 @@ def fetch_github_repositories(
             "id": i["id"],
             "name": i["name"],
         }
-        for i in json_response["results"]
+        for i in json_response["repositories"]
     ]
 
     return build_paginated_response(results, response, json_response["total_count"])
