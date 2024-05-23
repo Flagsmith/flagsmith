@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from custom_auth.mfa.trench.models import MFAMethod
+from users.models import FFAdminUser
 
 
 def test_list_user_active_methods(admin_client: APIClient, mfa_app_method: MFAMethod):
@@ -79,3 +80,23 @@ def test_activate_confirm_without_code_returns_400(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {"code": ["This field is required."]}
+
+
+def test_login_with_mfa_wrong_code_returns_401(
+    api_client: APIClient, admin_user: FFAdminUser, mfa_app_method: MFAMethod
+):
+    # Given
+    login_url = reverse("api-v1:custom_auth:custom-mfa-authtoken-login")
+    data = {"email": admin_user.email, "password": "password"}
+
+    login_response = api_client.post(login_url, data=data)
+
+    ephemeral_token = login_response.json()["ephemeral_token"]
+    confirm_login_data = {"ephemeral_token": ephemeral_token, "code": "wrong_code"}
+    login_confirm_url = reverse("api-v1:custom_auth:mfa-authtoken-login-code")
+
+    # When
+    login_confirm_response = api_client.post(login_confirm_url, data=confirm_login_data)
+
+    # Then
+    assert login_confirm_response.status_code == status.HTTP_401_UNAUTHORIZED

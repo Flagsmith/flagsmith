@@ -34,11 +34,10 @@ class MFAMethodActivationView(APIView):
 
     @staticmethod
     def post(request: Request, method: str) -> Response:
-        user = request.user
         if method != "app":
-            # return 404
             return Response(status=status.HTTP_404_NOT_FOUND)
         try:
+            user = request.user
             mfa = create_mfa_method_command(
                 user_id=user.id,
                 name=method,
