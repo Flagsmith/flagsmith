@@ -1,6 +1,7 @@
 import logging
 
 from django.db import models
+from django.db.models import Q
 from django_lifecycle import (
     AFTER_SAVE,
     BEFORE_DELETE,
@@ -8,6 +9,7 @@ from django_lifecycle import (
     hook,
 )
 
+from environments.models import Environment
 from features.models import Feature, FeatureState
 from integrations.github.github import call_github_task
 from organisations.models import Organisation
@@ -52,9 +54,23 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
             .get(id=self.feature.project.organisation_id)
             .github_config.first()
         ):
-            feature_states = FeatureState.objects.filter(
-                feature_id=self.feature_id, identity_id__isnull=True
+            feature_states: list[FeatureState] = []
+
+            environments = Environment.objects.filter(
+                project_id=self.feature.project_id
             )
+
+            for environment in environments:
+                q = Q(
+                    feature_id=self.feature_id,
+                    identity__isnull=True,
+                )
+                feature_states.extend(
+                    FeatureState.objects.get_live_feature_states(
+                        environment=environment, additional_filters=q
+                    )
+                )
+
             call_github_task(
                 organisation_id=self.feature.project.organisation_id,
                 type=WebhookEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,

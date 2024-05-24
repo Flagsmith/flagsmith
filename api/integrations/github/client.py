@@ -73,7 +73,7 @@ def post_comment_to_github(
     url = f"{GITHUB_API_URL}repos/{owner}/{repo}/issues/{issue}/comments"
     headers = build_request_headers(installation_id)
     payload = {"body": body}
-    response = response = requests.post(
+    response = requests.post(
         url, json=payload, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT
     )
     response.raise_for_status()

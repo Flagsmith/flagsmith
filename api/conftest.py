@@ -563,7 +563,7 @@ def feature_with_value_segment(
 
 
 @pytest.fixture()
-def segment_featurestate_and_feature_with_value(
+def segment_override_for_feature_with_value(
     feature_with_value_segment: FeatureSegment,
     feature_with_value: Feature,
     environment: Environment,
