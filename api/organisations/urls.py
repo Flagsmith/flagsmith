@@ -13,6 +13,7 @@ from integrations.github.views import (
     GithubRepositoryViewSet,
     fetch_issues,
     fetch_pull_requests,
+    fetch_repo_contributors,
     fetch_repositories,
 )
 from metadata.views import MetaDataModelFieldViewSet
@@ -123,6 +124,11 @@ urlpatterns = [
         "<int:organisation_pk>/github/issues/",
         fetch_issues,
         name="get-github-issues",
+    ),
+    path(
+        "<int:organisation_pk>/github/repo-contributors/",
+        fetch_repo_contributors,
+        name="get-github-repo-contributors",
     ),
     path(
         "<int:organisation_pk>/github/pulls/",
