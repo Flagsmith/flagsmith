@@ -1012,10 +1012,28 @@ def github_repository(
         "admin_master_api_key_client",
     ]
 )
-def admin_client_new(request, admin_client_original, admin_master_api_key_client):
+def admin_client_new(
+    request: pytest.FixtureRequest,
+    admin_client_original: APIClient,
+    admin_master_api_key_client: APIClient,
+) -> APIClient:
     if request.param == "admin_client_original":
         yield admin_client_original
     elif request.param == "admin_master_api_key_client":
         yield admin_master_api_key_client
     else:
         assert False, "Request param mismatch"
+
+
+@pytest.fixture()
+def superuser():
+    return FFAdminUser.objects.create_superuser(
+        email="superuser@example.com",
+        password=FFAdminUser.objects.make_random_password(),
+    )
+
+
+@pytest.fixture()
+def superuser_client(superuser: FFAdminUser, client: APIClient):
+    client.force_login(superuser, backend="django.contrib.auth.backends.ModelBackend")
+    return client

@@ -76,7 +76,7 @@ class InfluxDBWrapper:
 
     @staticmethod
     def influx_query_manager(
-        date_range: str = "30d",
+        date_start: str = "-30d",
         date_stop: str = "now()",
         drop_columns: typing.Tuple[str, ...] = DEFAULT_DROP_COLUMNS,
         filters: str = "|> filter(fn:(r) => r._measurement == 'api_call')",
@@ -88,7 +88,7 @@ class InfluxDBWrapper:
 
         query = (
             f'from(bucket:"{bucket}")'
-            f" |> range(start: -{date_range}, stop: {date_stop})"
+            f" |> range(start: {date_start}, stop: {date_stop})"
             f" {filters}"
             f" |> drop(columns: {drop_columns_input})"
             f"{extra}"
@@ -103,7 +103,9 @@ class InfluxDBWrapper:
             return []
 
 
-def get_events_for_organisation(organisation_id: id, date_range: str = "30d") -> int:
+def get_events_for_organisation(
+    organisation_id: id, date_start: str = "-30d", date_stop: str = "now()"
+) -> int:
     """
     Query influx db for usage for given organisation id
 
@@ -126,7 +128,8 @@ def get_events_for_organisation(organisation_id: id, date_range: str = "30d") ->
             "environment_id",
         ),
         extra="|> sum()",
-        date_range=date_range,
+        date_start=date_start,
+        date_stop=date_stop,
     )
 
     total = 0
@@ -137,7 +140,9 @@ def get_events_for_organisation(organisation_id: id, date_range: str = "30d") ->
     return total
 
 
-def get_event_list_for_organisation(organisation_id: int, date_range: str = "30d"):
+def get_event_list_for_organisation(
+    organisation_id: int, date_start: str = "-30d", date_stop: str = "now()"
+) -> tuple[dict[str, list[int]], list[str]]:
     """
     Query influx db for usage for given organisation id
 
@@ -149,14 +154,20 @@ def get_event_list_for_organisation(organisation_id: int, date_range: str = "30d
         filters=f'|> filter(fn:(r) => r._measurement == "api_call") \
                   |> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")',
         extra="|> aggregateWindow(every: 24h, fn: sum)",
-        date_range=date_range,
+        date_start=date_start,
+        date_stop=date_stop,
     )
     dataset = defaultdict(list)
     labels = []
     for result in results:
         for record in result.records:
             dataset[record["resource"]].append(record["_value"])
-            required_records = int(date_range[:-1]) + 1
+            if date_stop == "now()":
+                required_records = abs(int(date_start[:-1])) + 1
+            else:
+                required_records = (
+                    abs(int(date_start[:-1])) - abs(int(date_stop[:-1])) + 1
+                )
             if len(labels) != required_records:
                 labels.append(record.values["_time"].strftime("%Y-%m-%d"))
     return dataset, labels
@@ -166,7 +177,9 @@ def get_multiple_event_list_for_organisation(
     organisation_id: int,
     project_id: int = None,
     environment_id: int = None,
-):
+    date_start: str = "-30d",
+    date_stop: str = "now()",
+) -> list[UsageData]:
     """
     Query influx db for usage for given organisation id
 
@@ -176,7 +189,6 @@ def get_multiple_event_list_for_organisation(
 
     :return: a number of requests for flags, traits, identities, environment-document
     """
-
     filters = [
         'r._measurement == "api_call"',
         f'r["organisation_id"] == "{organisation_id}"',
@@ -189,6 +201,8 @@ def get_multiple_event_list_for_organisation(
         filters.append(f'r["environment_id"] == "{environment_id}"')
 
     results = InfluxDBWrapper.influx_query_manager(
+        date_start=date_start,
+        date_stop=date_stop,
         filters=build_filter_string(filters),
         extra="|> aggregateWindow(every: 24h, fn: sum)",
     )
@@ -201,14 +215,23 @@ def get_multiple_event_list_for_organisation(
         for i, record in enumerate(result.records):
             dataset[i][record.values["resource"].capitalize()] = record.values["_value"]
             dataset[i]["name"] = record.values["_time"].strftime("%Y-%m-%d")
+
     return dataset
 
 
 def get_usage_data(
-    organisation_id: int, project_id: int = None, environment_id=None
-) -> typing.List[UsageData]:
+    organisation_id: int,
+    project_id: int | None = None,
+    environment_id: int | None = None,
+    date_start: str = "-30d",
+    date_stop: str = "now()",
+) -> list[UsageData]:
     events_list = get_multiple_event_list_for_organisation(
-        organisation_id, project_id, environment_id
+        organisation_id=organisation_id,
+        project_id=project_id,
+        environment_id=environment_id,
+        date_start=date_start,
+        date_stop=date_stop,
     )
     return UsageDataSchema(many=True).load(events_list)
 
@@ -216,9 +239,9 @@ def get_usage_data(
 def get_multiple_event_list_for_feature(
     environment_id: int,
     feature_name: str,
-    period: str = "30d",
+    date_start: str = "-30d",
     aggregate_every: str = "24h",
-) -> typing.List[dict]:
+) -> list[dict]:
     """
     Get aggregated request data for the given feature in a given environment across
     all time, aggregated into time windows of length defined by the period argument.
@@ -237,14 +260,14 @@ def get_multiple_event_list_for_feature(
 
     :param environment_id: an id of the environment to get usage for
     :param feature_name: the name of the feature to get usage for
-    :param period: the influx time period to filter on, e.g. 30d, 7d, etc.
+    :param date_start: the influx time period to filter on, e.g. -30d, -7d, etc.
     :param aggregate_every: the influx time period to aggregate the data by, e.g. 24h
 
     :return: a list of dicts with feature and request count in a specific environment
     """
 
     results = InfluxDBWrapper.influx_query_manager(
-        date_range=period,
+        date_start=date_start,
         filters=f'|> filter(fn:(r) => r._measurement == "feature_evaluation") \
                   |> filter(fn: (r) => r["_field"] == "request_count") \
                   |> filter(fn: (r) => r["environment_id"] == "{environment_id}") \
@@ -271,16 +294,18 @@ def get_feature_evaluation_data(
     feature_name: str, environment_id: int, period: str = "30d"
 ) -> typing.List[FeatureEvaluationData]:
     data = get_multiple_event_list_for_feature(
-        feature_name=feature_name, environment_id=environment_id, period=period
+        feature_name=feature_name,
+        environment_id=environment_id,
+        date_start=f"-{period}",
     )
     return FeatureEvaluationDataSchema(many=True).load(data)
 
 
-def get_top_organisations(date_range: str, limit: str = ""):
+def get_top_organisations(date_start: str, limit: str = ""):
     """
     Query influx db top used organisations
 
-    :param date_range: data range for top organisations
+    :param date_start: Start of the date range for top organisations
     :param limit: limit for query
 
 
@@ -289,9 +314,9 @@ def get_top_organisations(date_range: str, limit: str = ""):
     if limit:
         limit = f"|> limit(n:{limit})"
 
-    bucket = range_bucket_mappings[date_range]
+    bucket = range_bucket_mappings[date_start]
     results = InfluxDBWrapper.influx_query_manager(
-        date_range=date_range,
+        date_start=date_start,
         bucket=bucket,
         filters='|> filter(fn:(r) => r._measurement == "api_call") \
                     |> filter(fn: (r) => r["_field"] == "request_count")',
@@ -318,7 +343,7 @@ def get_top_organisations(date_range: str, limit: str = ""):
     return dataset
 
 
-def get_current_api_usage(organisation_id: int, date_range: str) -> int:
+def get_current_api_usage(organisation_id: int, date_start: str) -> int:
     """
     Query influx db for api usage
 
@@ -330,7 +355,7 @@ def get_current_api_usage(organisation_id: int, date_range: str) -> int:
 
     bucket = read_bucket
     results = InfluxDBWrapper.influx_query_manager(
-        date_range=date_range,
+        date_start=date_start,
         bucket=bucket,
         filters=build_filter_string(
             [

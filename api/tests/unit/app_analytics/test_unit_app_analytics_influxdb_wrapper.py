@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from typing import Generator, Type
 from unittest import mock
 from unittest.mock import MagicMock
@@ -14,12 +14,17 @@ from app_analytics.influxdb_wrapper import (
     get_feature_evaluation_data,
     get_multiple_event_list_for_feature,
     get_multiple_event_list_for_organisation,
+    get_top_organisations,
     get_usage_data,
 )
 from django.conf import settings
+from django.utils import timezone
 from influxdb_client.client.exceptions import InfluxDBError
 from influxdb_client.rest import ApiException
+from pytest_mock import MockerFixture
 from urllib3.exceptions import HTTPError
+
+from organisations.models import Organisation
 
 # Given
 org_id = 123
@@ -178,6 +183,7 @@ def test_influx_db_query_when_get_events_list_then_query_api_called(monkeypatch)
 def test_influx_db_query_when_get_multiple_events_for_organisation_then_query_api_called(
     monkeypatch, project_id, environment_id, expected_filters
 ):
+
     expected_query = (
         (
             f'from(bucket:"{read_bucket}") '
@@ -271,7 +277,11 @@ def test_get_usage_data(mocker):
 
     # Then
     mocked_get_multiple_event_list_for_organisation.assert_called_once_with(
-        org_id, None, None
+        organisation_id=org_id,
+        environment_id=None,
+        project_id=None,
+        date_start="-30d",
+        date_stop="now()",
     )
 
     assert len(usage_data) == 2
@@ -309,7 +319,7 @@ def test_get_feature_evaluation_data(mocker):
 
     # Then
     mocked_get_multiple_event_list_for_feature.assert_called_once_with(
-        feature_name=feature_name, environment_id=env_id, period="30d"
+        feature_name=feature_name, environment_id=env_id, date_start="-30d"
     )
 
     assert len(feature_evaluation_data) == 2
@@ -319,3 +329,113 @@ def test_get_feature_evaluation_data(mocker):
 
     assert feature_evaluation_data[1].day == date(year=2023, month=1, day=9)
     assert feature_evaluation_data[1].count == 200
+
+
+@pytest.mark.parametrize("date_stop", ["now()", "-5d"])
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_event_list_for_organisation_with_date_stop_set_to_now_and_previously(
+    date_stop: str,
+    mocker: MockerFixture,
+    organisation: Organisation,
+) -> None:
+    # Given
+    now = timezone.now()
+    one_day_ago = now - timedelta(days=1)
+    two_days_ago = now - timedelta(days=2)
+
+    record_mock1 = mock.MagicMock()
+    record_mock1.__getitem__.side_effect = lambda key: {
+        "resource": "resource23",
+        "_value": 23,
+    }.get(key)
+    record_mock1.values = {"_time": one_day_ago}
+
+    record_mock2 = mock.MagicMock()
+    record_mock2.__getitem__.side_effect = lambda key: {
+        "resource": "resource24",
+        "_value": 24,
+    }.get(key)
+    record_mock2.values = {"_time": two_days_ago}
+
+    result = mock.MagicMock()
+    result.records = [record_mock1, record_mock2]
+
+    influx_mock = mocker.patch(
+        "app_analytics.influxdb_wrapper.InfluxDBWrapper.influx_query_manager"
+    )
+
+    influx_mock.return_value = [result]
+
+    # When
+    dataset, labels = get_event_list_for_organisation(
+        organisation_id=organisation.id,
+        date_stop=date_stop,
+    )
+
+    # Then
+    assert dataset == {"resource23": [23], "resource24": [24]}
+    assert labels == ["2023-01-18", "2023-01-17"]
+
+
+@pytest.mark.parametrize("limit", ["10", ""])
+def test_get_top_organisations(
+    limit: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch("app_analytics.influxdb_wrapper.range_bucket_mappings")
+
+    record_mock1 = mock.MagicMock()
+    record_mock1.values = {"organisation": "123-TestOrg"}
+    record_mock1.get_value.return_value = 23
+
+    record_mock2 = mock.MagicMock()
+    record_mock2.values = {"organisation": "456-TestCorp"}
+    record_mock2.get_value.return_value = 43
+
+    result = mock.MagicMock()
+    result.records = [record_mock1, record_mock2]
+
+    influx_mock = mocker.patch(
+        "app_analytics.influxdb_wrapper.InfluxDBWrapper.influx_query_manager"
+    )
+
+    influx_mock.return_value = [result]
+
+    # When
+    dataset = get_top_organisations(date_start="-30d", limit=limit)
+
+    # Then
+    assert dataset == {123: 23, 456: 43}
+
+
+def test_get_top_organisations_value_error(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch("app_analytics.influxdb_wrapper.range_bucket_mappings")
+
+    record_mock1 = mock.MagicMock()
+    record_mock1.values = {"organisation": "BadData-TestOrg"}
+    record_mock1.get_value.return_value = 23
+
+    record_mock2 = mock.MagicMock()
+    record_mock2.values = {"organisation": "456-TestCorp"}
+    record_mock2.get_value.return_value = 43
+
+    result = mock.MagicMock()
+    result.records = [record_mock1, record_mock2]
+
+    influx_mock = mocker.patch(
+        "app_analytics.influxdb_wrapper.InfluxDBWrapper.influx_query_manager"
+    )
+
+    influx_mock.return_value = [result]
+
+    # When
+    dataset = get_top_organisations(date_start="-30d")
+
+    # Then
+    # The wrongly typed data does not stop the remaining data
+    # from being returned.
+    assert dataset == {456: 43}

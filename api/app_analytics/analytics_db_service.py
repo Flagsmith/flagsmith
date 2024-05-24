@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import List
 
 from app_analytics.dataclasses import FeatureEvaluationData, UsageData
@@ -14,34 +14,103 @@ from app_analytics.models import (
     FeatureEvaluationBucket,
     Resource,
 )
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.db.models import Sum
 from django.utils import timezone
 
 from environments.models import Environment
 from features.models import Feature
+from organisations.models import Organisation
 
-ANALYTICS_READ_BUCKET_SIZE = 15
+from . import constants
+from .types import PERIOD_TYPE
 
 
 def get_usage_data(
-    organisation, environment_id=None, project_id=None
-) -> List[UsageData]:
+    organisation: Organisation,
+    environment_id: int | None = None,
+    project_id: int | None = None,
+    period: PERIOD_TYPE | None = None,
+) -> list[UsageData]:
+    now = timezone.now()
+
+    date_stop = date_start = None
+    period_starts_at = period_ends_at = None
+
+    match period:
+        case constants.CURRENT_BILLING_PERIOD:
+            if not getattr(organisation, "subscription_information_cache", None):
+                return []
+            sub_cache = organisation.subscription_information_cache
+            starts_at = sub_cache.current_billing_term_starts_at
+            month_delta = relativedelta(now, starts_at).months
+            period_starts_at = relativedelta(months=month_delta) + starts_at
+            period_ends_at = now
+            date_start = f"-{(now - period_starts_at).days}d"
+            date_stop = "now()"
+
+        case constants.PREVIOUS_BILLING_PERIOD:
+            if not getattr(organisation, "subscription_information_cache", None):
+                return []
+            sub_cache = organisation.subscription_information_cache
+            starts_at = sub_cache.current_billing_term_starts_at
+            month_delta = relativedelta(now, starts_at).months - 1
+            month_delta += relativedelta(now, starts_at).years * 12
+            period_starts_at = relativedelta(months=month_delta) + starts_at
+            period_ends_at = relativedelta(months=month_delta + 1) + starts_at
+            date_start = f"-{(now - period_starts_at).days}d"
+            date_stop = f"-{(now - period_ends_at).days}d"
+
+        case constants.NINETY_DAY_PERIOD:
+            period_starts_at = now - relativedelta(days=90)
+            period_ends_at = now
+            date_start = "-90d"
+            date_stop = "now()"
+
     if settings.USE_POSTGRES_FOR_ANALYTICS:
-        return get_usage_data_from_local_db(
-            organisation, environment_id=environment_id, project_id=project_id
-        )
-    return get_usage_data_from_influxdb(
-        organisation.id, environment_id=environment_id, project_id=project_id
-    )
+        kwargs = {
+            "organisation": organisation,
+            "environment_id": environment_id,
+            "project_id": project_id,
+        }
+
+        if period_starts_at:
+            assert period_ends_at
+            kwargs["date_start"] = period_starts_at
+            kwargs["date_stop"] = period_ends_at
+
+        return get_usage_data_from_local_db(**kwargs)
+
+    kwargs = {
+        "organisation_id": organisation.id,
+        "environment_id": environment_id,
+        "project_id": project_id,
+    }
+
+    if date_start:
+        assert date_stop
+        kwargs["date_start"] = date_start
+        kwargs["date_stop"] = date_stop
+
+    return get_usage_data_from_influxdb(**kwargs)
 
 
 def get_usage_data_from_local_db(
-    organisation, environment_id=None, project_id=None, period: int = 30
+    organisation: Organisation,
+    environment_id: int | None = None,
+    project_id: int | None = None,
+    date_start: datetime | None = None,
+    date_stop: datetime | None = None,
 ) -> List[UsageData]:
+    if date_start is None:
+        date_start = timezone.now() - timedelta(days=30)
+    if date_stop is None:
+        date_stop = timezone.now()
+
     qs = APIUsageBucket.objects.filter(
         environment_id__in=_get_environment_ids_for_org(organisation),
-        bucket_size=ANALYTICS_READ_BUCKET_SIZE,
+        bucket_size=constants.ANALYTICS_READ_BUCKET_SIZE,
     )
     if project_id:
         qs = qs.filter(project_id=project_id)
@@ -50,8 +119,8 @@ def get_usage_data_from_local_db(
 
     qs = (
         qs.filter(
-            created_at__date__lte=timezone.now(),
-            created_at__date__gt=timezone.now() - timedelta(days=30),
+            created_at__date__lte=date_stop,
+            created_at__date__gt=date_start,
         )
         .order_by("created_at__date")
         .values("created_at__date", "resource")
@@ -80,7 +149,7 @@ def get_total_events_count(organisation) -> int:
             environment_id__in=_get_environment_ids_for_org(organisation),
             created_at__date__lte=date.today(),
             created_at__date__gt=date.today() - timedelta(days=30),
-            bucket_size=ANALYTICS_READ_BUCKET_SIZE,
+            bucket_size=constants.ANALYTICS_READ_BUCKET_SIZE,
         ).aggregate(total_count=Sum("total_count"))["total_count"]
     else:
         count = get_events_for_organisation(organisation.id)
@@ -105,7 +174,7 @@ def get_feature_evaluation_data_from_local_db(
     feature_evaluation_data = (
         FeatureEvaluationBucket.objects.filter(
             environment_id=environment_id,
-            bucket_size=ANALYTICS_READ_BUCKET_SIZE,
+            bucket_size=constants.ANALYTICS_READ_BUCKET_SIZE,
             feature_name=feature.name,
             created_at__date__lte=timezone.now(),
             created_at__date__gt=timezone.now() - timedelta(days=period),
