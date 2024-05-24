@@ -2,11 +2,17 @@ import json
 from datetime import date, timedelta
 
 import pytest
+from app_analytics.constants import (
+    CURRENT_BILLING_PERIOD,
+    NINETY_DAY_PERIOD,
+    PREVIOUS_BILLING_PERIOD,
+)
 from app_analytics.dataclasses import UsageData
 from app_analytics.models import FeatureEvaluationRaw
 from app_analytics.views import SDKAnalyticsFlags
 from django.conf import settings
 from django.urls import reverse
+from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
@@ -15,6 +21,10 @@ from rest_framework.test import APIClient
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature
+from organisations.models import (
+    Organisation,
+    OrganisationSubscriptionInformationCache,
+)
 
 
 def test_sdk_analytics_does_not_allow_bad_data(mocker, settings, environment):
@@ -66,6 +76,7 @@ def test_sdk_analytics_allows_valid_data(mocker, settings, environment, feature)
 def test_get_usage_data(mocker, admin_client, organisation):
     # Given
     url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
+
     mocked_get_usage_data = mocker.patch(
         "app_analytics.views.get_usage_data",
         autospec=True,
@@ -96,7 +107,190 @@ def test_get_usage_data(mocker, admin_client, organisation):
             "environment_document": 0,
         },
     ]
-    mocked_get_usage_data.assert_called_once_with(organisation)
+    mocked_get_usage_data.assert_called_once_with(organisation, period=None)
+
+
+@pytest.mark.freeze_time("2024-04-30T09:09:47.325132+00:00")
+def test_get_usage_data__current_billing_period(
+    mocker: MockerFixture,
+    admin_client_new: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
+    url += f"?period={CURRENT_BILLING_PERIOD}"
+
+    mocked_get_usage_data = mocker.patch(
+        "app_analytics.analytics_db_service.get_usage_data_from_influxdb",
+        autospec=True,
+        return_value=[
+            UsageData(flags=10, day=date.today()),
+            UsageData(flags=10, day=date.today() - timedelta(days=1)),
+        ],
+    )
+
+    now = timezone.now()
+    week_from_now = now + timedelta(days=7)
+    four_weeks_ago = now - timedelta(days=28)
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=four_weeks_ago,
+        current_billing_term_ends_at=week_from_now,
+        allowed_30d_api_calls=1_000_000,
+    )
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "flags": 10,
+            "day": str(date.today()),
+            "identities": 0,
+            "traits": 0,
+            "environment_document": 0,
+        },
+        {
+            "flags": 10,
+            "day": str(date.today() - timedelta(days=1)),
+            "identities": 0,
+            "traits": 0,
+            "environment_document": 0,
+        },
+    ]
+
+    mocked_get_usage_data.assert_called_once_with(
+        organisation_id=organisation.id,
+        environment_id=None,
+        project_id=None,
+        date_start="-28d",
+        date_stop="now()",
+    )
+
+
+@pytest.mark.freeze_time("2024-04-30T09:09:47.325132+00:00")
+def test_get_usage_data__previous_billing_period(
+    mocker: MockerFixture,
+    admin_client_new: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
+    url += f"?period={PREVIOUS_BILLING_PERIOD}"
+
+    mocked_get_usage_data = mocker.patch(
+        "app_analytics.analytics_db_service.get_usage_data_from_influxdb",
+        autospec=True,
+        return_value=[
+            UsageData(flags=10, day=date.today() - timedelta(days=29)),
+            UsageData(flags=10, day=date.today() - timedelta(days=30)),
+        ],
+    )
+
+    now = timezone.now()
+    week_from_now = now + timedelta(days=7)
+    four_weeks_ago = now - timedelta(days=28)
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=four_weeks_ago,
+        current_billing_term_ends_at=week_from_now,
+        allowed_30d_api_calls=1_000_000,
+    )
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "flags": 10,
+            "day": str(date.today() - timedelta(days=29)),
+            "identities": 0,
+            "traits": 0,
+            "environment_document": 0,
+        },
+        {
+            "flags": 10,
+            "day": str(date.today() - timedelta(days=30)),
+            "identities": 0,
+            "traits": 0,
+            "environment_document": 0,
+        },
+    ]
+
+    mocked_get_usage_data.assert_called_once_with(
+        organisation_id=organisation.id,
+        environment_id=None,
+        project_id=None,
+        date_start="-59d",
+        date_stop="-28d",
+    )
+
+
+@pytest.mark.freeze_time("2024-04-30T09:09:47.325132+00:00")
+def test_get_usage_data__ninety_day_period(
+    mocker: MockerFixture,
+    admin_client_new: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
+    url += f"?period={NINETY_DAY_PERIOD}"
+
+    mocked_get_usage_data = mocker.patch(
+        "app_analytics.analytics_db_service.get_usage_data_from_influxdb",
+        autospec=True,
+        return_value=[
+            UsageData(flags=10, day=date.today()),
+            UsageData(flags=10, day=date.today() - timedelta(days=1)),
+        ],
+    )
+
+    now = timezone.now()
+    week_from_now = now + timedelta(days=7)
+    four_weeks_ago = now - timedelta(days=28)
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=four_weeks_ago,
+        current_billing_term_ends_at=week_from_now,
+        allowed_30d_api_calls=1_000_000,
+    )
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "flags": 10,
+            "day": str(date.today()),
+            "identities": 0,
+            "traits": 0,
+            "environment_document": 0,
+        },
+        {
+            "flags": 10,
+            "day": str(date.today() - timedelta(days=1)),
+            "identities": 0,
+            "traits": 0,
+            "environment_document": 0,
+        },
+    ]
+
+    mocked_get_usage_data.assert_called_once_with(
+        organisation_id=organisation.id,
+        environment_id=None,
+        project_id=None,
+        date_start="-90d",
+        date_stop="now()",
+    )
 
 
 def test_get_usage_data_for_non_admin_user_returns_403(

@@ -36,7 +36,7 @@ def generate_segment_data(
 
 def fix_issue_3869():
     """
-    Hack to get around Pydantic issue with Freeze Gun.
+    Hack to get around Pydantic issue with FreezeGun.
 
     https://github.com/Flagsmith/flagsmith/issues/3869
     """

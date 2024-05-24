@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import List, Tuple
 
-from app_analytics.analytics_db_service import ANALYTICS_READ_BUCKET_SIZE
+from app_analytics.constants import ANALYTICS_READ_BUCKET_SIZE
 from django.conf import settings
 from django.db.models import Count, Q, Sum
 from django.utils import timezone

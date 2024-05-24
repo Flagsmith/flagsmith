@@ -15,7 +15,7 @@ def test_update_caches(mocker, organisation, chargebee_subscription, settings):
         "organisations.subscription_info_cache.get_top_organisations"
     )
     mocked_get_top_organisations.side_effect = lambda t, _: {
-        organisation.id: organisation_usage.get(t)
+        organisation.id: organisation_usage.get(f"{t[1:]}")
     }
 
     chargebee_metadata = ChargebeeObjMetadata(seats=15, api_calls=1000000)
@@ -59,7 +59,7 @@ def test_update_caches(mocker, organisation, chargebee_subscription, settings):
 
     assert mocked_get_top_organisations.call_count == 3
     assert [call[0] for call in mocked_get_top_organisations.call_args_list] == [
-        ("30d", ""),
-        ("7d", ""),
-        ("24h", "100"),
+        ("-30d", ""),
+        ("-7d", ""),
+        ("-24h", "100"),
     ]
