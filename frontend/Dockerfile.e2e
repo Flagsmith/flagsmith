@@ -4,9 +4,9 @@ FROM ${FRONTEND_IMAGE} as frontend
 
 FROM ghcr.io/flagsmith/e2e-frontend-base:latest
 
-ENV ENV=e2e
+WORKDIR /srv/bt
+COPY --from=frontend /srv/bt ./
 
-WORKDIR /srv/flagsmith
-COPY --from=frontend /srv/flagsmith ./
+ENV ENV=e2e
 
 CMD ["bash", "-l"]

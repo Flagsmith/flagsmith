@@ -59,7 +59,7 @@ jobs:
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
       file: frontend/Dockerfile.e2e
-      slug: flagsmith-frontend
+      slug: flagsmith-e2e
       build-args: |
         FRONTEND_IMAGE=${{ needs.docker-build-frontend.outputs.image }}
 
