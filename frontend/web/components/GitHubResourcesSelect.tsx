@@ -151,6 +151,7 @@ const GitHubResourcesSelect: FC<GitHubResourcesSelectType> = ({
           setSelectedOption(v)
           onChange(v?.value)
         }}
+        isClearable={true}
         options={githubResources?.map((i: GithubResources) => {
           return {
             label: `${i.title} #${i.number}`,

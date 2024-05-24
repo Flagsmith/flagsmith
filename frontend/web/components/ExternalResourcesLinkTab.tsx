@@ -46,7 +46,7 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
     (v) => v.type === 'GITHUB',
   )
   return (
-    <div>
+    <div className='mt-4'>
       <Flex style={{ maxWidth: '170px' }}>
         <Select
           size='select-md'

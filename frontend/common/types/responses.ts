@@ -161,14 +161,11 @@ export type LaunchDarklyProjectImport = {
 }
 
 export type GithubResources = {
-  url: string
-  repository_url: string
   html_url: string
   id: number
   number: number
   title: string
   state: string
-  body: string
 }
 
 export type GithubPaginatedRepos<T> = {
