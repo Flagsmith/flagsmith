@@ -549,6 +549,12 @@ export type MetadataModelField = {
   is_required_for: isRequiredFor[]
 }
 
+export type ApiOrganisationUsage = {
+  organisation_id: number
+  percent_usage: number
+  notified_at: string
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -660,5 +666,6 @@ export type Res = {
   identityFeatureStates: PagedResponse<FeatureState>
   cloneidentityFeatureStates: IdentityFeatureState
   featureStates: PagedResponse<FeatureState>
+  apiOrganisationUsage: PagedResponse<ApiOrganisationUsage>
   // END OF TYPES
 }

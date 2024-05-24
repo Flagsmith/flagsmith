@@ -476,5 +476,6 @@ export type Req = {
     feature?: number
   }
   getFeatureSegment: { id: string }
+  getApiOrganisationUsage: { organisation_id: string }
   // END OF TYPES
 }

@@ -7,15 +7,23 @@ import Icon from './Icon'
 import Utils from 'common/utils/utils'
 import { Environment, FeatureImport, Res } from 'common/types/responses'
 import { useGetFeatureImportsQuery } from 'common/services/useFeatureImport'
+import { useGetApiOrganisationUsageQuery } from 'common/services/useApiOrganisationUsage'
 import AppActions from 'common/dispatcher/app-actions'
 import Constants from 'common/constants'
 
 interface ButterBarProps {
   billingStatus?: string
   projectId: string
+  organisationId: string
+  organisationPlan: string
 }
 
-const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
+const ButterBar: React.FC<ButterBarProps> = ({
+  billingStatus,
+  organisationId,
+  organisationPlan,
+  projectId,
+}) => {
   const matches = document.location.href.match(/\/environment\/([^/]*)/)
   const environment = matches && matches[1]
   const timerRef = useRef<NodeJS.Timer>()
@@ -26,6 +34,11 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
     { skip: !projectId },
   )
   const processingRef = useRef(false)
+
+  const { data: apiOrganisationUsage } = useGetApiOrganisationUsageQuery(
+    { organisation_id: organisationId },
+    { skip: !organisationId },
+  )
   const checkProcessing = useCallback(
     (processing: FeatureImport | undefined) => {
       if (processing) {
@@ -109,6 +122,21 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
             payment method to keep your subscription active.
           </div>
         )}
+      {!!apiOrganisationUsage?.results.length && (
+        <div className='butter-bar'>
+          {'Your organisation has exceeded'}{' '}
+          <b>{apiOrganisationUsage?.results[0].percent_usage}</b>
+          {'% '}
+          {'of its API usage quota. '}
+          {Utils.getPlanName(organisationPlan) === 'Free' ? (
+            <b>
+              API access may be turned off unless your organisation upgrades
+            </b>
+          ) : (
+            <b>Automated billing for the overages may apply.</b>
+          )}
+        </div>
+      )}
     </>
   )
 }
