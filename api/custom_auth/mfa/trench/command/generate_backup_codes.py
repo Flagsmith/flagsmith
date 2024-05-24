@@ -1,8 +1,7 @@
 from typing import Callable, Set
 
+from django.conf import settings
 from django.utils.crypto import get_random_string
-
-from custom_auth.mfa.trench.settings import trench_settings
 
 
 class GenerateBackupCodesCommand:
@@ -11,9 +10,9 @@ class GenerateBackupCodesCommand:
 
     def execute(
         self,
-        quantity: int = trench_settings.BACKUP_CODES_QUANTITY,
-        length: int = trench_settings.BACKUP_CODES_LENGTH,
-        allowed_chars: str = trench_settings.BACKUP_CODES_CHARACTERS,
+        quantity: int = settings.TRENCH_AUTH["BACKUP_CODES_QUANTITY"],
+        length: int = settings.TRENCH_AUTH["BACKUP_CODES_LENGTH"],
+        allowed_chars: str = settings.TRENCH_AUTH["BACKUP_CODES_CHARACTERS"],
     ) -> Set[str]:
         """
         Generates random encrypted backup codes.

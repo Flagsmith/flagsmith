@@ -758,6 +758,7 @@ TRENCH_AUTH = {
     "DEFAULT_VALIDITY_PERIOD": 30,
     "CONFIRM_BACKUP_CODES_REGENERATION_WITH_CODE": True,
     "APPLICATION_ISSUER_NAME": "app.bullet-train.io",
+    "ENCRYPT_BACKUP_CODES": True,
     "MFA_METHODS": {
         "app": {
             "VERBOSE_NAME": "TOTP App",

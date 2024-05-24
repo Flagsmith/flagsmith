@@ -36,7 +36,7 @@ class MFAUserMethodManager(Manager):
 
 
 class MFAMethod(Model):
-    _BACKUP_CODES_DELIMITER = "|"
+    _BACKUP_CODES_DELIMITER = ","
 
     user = ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -56,13 +56,6 @@ class MFAMethod(Model):
 
     objects = MFAUserMethodManager()
 
-    def __str__(self) -> str:
-        return f"{self.name} (User id: {self.user_id})"
-
     @property
     def backup_codes(self) -> Iterable[str]:
         return self._backup_codes.split(self._BACKUP_CODES_DELIMITER)
-
-    @backup_codes.setter
-    def backup_codes(self, codes: Iterable) -> None:
-        self._backup_codes = self._BACKUP_CODES_DELIMITER.join(codes)

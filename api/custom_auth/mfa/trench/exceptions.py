@@ -1,11 +1,5 @@
-from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 from rest_framework.serializers import ValidationError
-
-
-class MethodHandlerMissingError(ImproperlyConfigured):
-    def __init__(self, method_name: str) -> None:
-        super().__init__(f"Missing handler in {method_name} configuration.")
 
 
 class MFAValidationError(ValidationError):
@@ -21,11 +15,6 @@ class CodeInvalidOrExpiredError(MFAValidationError):
         )
 
 
-class OTPCodeMissingError(MFAValidationError):
-    def __init__(self) -> None:
-        super().__init__(detail=_("OTP code not provided."), code="otp_code_missing")
-
-
 class MFAMethodDoesNotExistError(MFAValidationError):
     def __init__(self) -> None:
         super().__init__(
@@ -39,16 +28,6 @@ class MFAMethodAlreadyActiveError(MFAValidationError):
         super().__init__(
             detail=_("MFA method already active."),
             code="method_already_active",
-        )
-
-
-class DeactivationOfPrimaryMFAMethodError(MFAValidationError):
-    def __init__(self) -> None:
-        super().__init__(
-            detail=_(
-                "Deactivation of MFA method that is set as primary is not allowed."
-            ),
-            code="deactivation_of_primary",
         )
 
 

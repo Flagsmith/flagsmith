@@ -31,8 +31,6 @@ class UserTokenGenerator(PasswordResetTokenGenerator):
 
     def check_token(self, user: User, token: str) -> Optional[User]:
         user_model = get_user_model()
-        if not token:
-            return None
         try:
             token = str(token)
             user_pk, ts_b36, token_hash = token.rsplit("-", 2)

@@ -23,9 +23,6 @@ class CustomApplicationBackend:
         }
         return Response(data)
 
-    def validate_confirmation_code(self, code: str) -> bool:
-        return self.validate_code(code)
-
     def validate_code(self, code: str) -> bool:
         validity_period = settings.TRENCH_AUTH["MFA_METHODS"]["app"]["VALIDITY_PERIOD"]
         return self._totp.verify(otp=code, valid_window=int(validity_period / 20))

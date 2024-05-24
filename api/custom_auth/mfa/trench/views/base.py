@@ -21,7 +21,6 @@ from custom_auth.mfa.trench.models import MFAMethod
 from custom_auth.mfa.trench.responses import ErrorResponse
 from custom_auth.mfa.trench.serializers import (
     MFAMethodActivationConfirmationValidator,
-    MFAMethodDeactivationValidator,
     UserMFAMethodSerializer,
 )
 from custom_auth.mfa.trench.utils import get_mfa_handler
@@ -57,15 +56,12 @@ class MFAMethodConfirmActivationView(APIView):
         )
         if not serializer.is_valid():
             return Response(status=HTTP_400_BAD_REQUEST, data=serializer.errors)
-        try:
-            backup_codes = activate_mfa_method_command(
-                user_id=request.user.id,
-                name=method,
-                code=serializer.validated_data["code"],
-            )
-            return Response({"backup_codes": backup_codes})
-        except MFAValidationError as cause:
-            return ErrorResponse(error=cause)
+        backup_codes = activate_mfa_method_command(
+            user_id=request.user.id,
+            name=method,
+            code=serializer.validated_data["code"],
+        )
+        return Response({"backup_codes": backup_codes})
 
 
 class MFAMethodDeactivationView(APIView):
@@ -73,11 +69,6 @@ class MFAMethodDeactivationView(APIView):
 
     @staticmethod
     def post(request: Request, method: str) -> Response:
-        serializer = MFAMethodDeactivationValidator(
-            mfa_method_name=method, user=request.user, data=request.data
-        )
-        if not serializer.is_valid():
-            return Response(status=HTTP_400_BAD_REQUEST, data=serializer.errors)
         try:
             deactivate_mfa_method_command(
                 mfa_method_name=method, user_id=request.user.id
