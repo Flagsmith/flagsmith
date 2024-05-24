@@ -7,21 +7,6 @@ export const githubService = service
   .enhanceEndpoints({ addTagTypes: ['Github'] })
   .injectEndpoints({
     endpoints: (builder) => ({
-      getGithubIssues: builder.query<
-        Res['githubIssues'],
-        Req['getGithubIssues']
-      >({
-        providesTags: [{ id: 'LIST', type: 'Github' }],
-        query: (query: Req['getGithubIssues']) => ({
-          url: `organisations/${query.organisation_id}/github/issues/?repo_name=${query.repo_name}&repo_owner=${query.repo_owner}`,
-        }),
-      }),
-      getGithubPulls: builder.query<Res['githubPulls'], Req['getGithubPulls']>({
-        providesTags: [{ id: 'LIST', type: 'Github' }],
-        query: (query: Req['getGithubPulls']) => ({
-          url: `organisations/${query.organisation_id}/github/pulls/?repo_name=${query.repo_name}&repo_owner=${query.repo_owner}`,
-        }),
-      }),
       getGithubRepos: builder.query<Res['githubRepos'], Req['getGithubRepos']>({
         providesTags: [{ id: 'LIST', type: 'Github' }],
         query: (query: Req['getGithubRepos']) => ({
@@ -32,30 +17,30 @@ export const githubService = service
           })}`,
         }),
       }),
+      getGithubResources: builder.query<
+        Res['githubResources'],
+        Req['getGithubResources']
+      >({
+        providesTags: [{ id: 'LIST', type: 'Github' }],
+        query: (query: Req['getGithubResources']) => ({
+          url:
+            `organisations/${query.organisation_id}/github/${query.github_resource}/` +
+            `?repo_name=${query.repo_name}&repo_owner=${query.repo_owner}&page_size=${query.page_size}&page=${query.page}&search_text=${query.q}`,
+        }),
+      }),
       // END OF ENDPOINTS
     }),
   })
 
-export async function getGithubIssues(
+export async function getGithubResources(
   store: any,
-  data: Req['getGithubIssues'],
+  data: Req['getGithubResources'],
   options?: Parameters<
-    typeof githubService.endpoints.getGithubIssues.initiate
+    typeof githubService.endpoints.getGithubResources.initiate
   >[1],
 ) {
   return store.dispatch(
-    githubService.endpoints.getGithubIssues.initiate(data, options),
-  )
-}
-export async function getGithubPulls(
-  store: any,
-  data: Req['getGithubPulls'],
-  options?: Parameters<
-    typeof githubService.endpoints.getGithubPulls.initiate
-  >[1],
-) {
-  return store.dispatch(
-    githubService.endpoints.getGithubPulls.initiate(data, options),
+    githubService.endpoints.getGithubResources.initiate(data, options),
   )
 }
 export async function getGithubRepos(
@@ -72,14 +57,13 @@ export async function getGithubRepos(
 // END OF FUNCTION_EXPORTS
 
 export const {
-  useGetGithubIssuesQuery,
-  useGetGithubPullsQuery,
   useGetGithubReposQuery,
+  useGetGithubResourcesQuery,
   // END OF EXPORTS
 } = githubService
 
 /* Usage examples:
-const { data, isLoading } = useGetGithubIssuesQuery({ id: 2 }, {}) //get hook
+const { data, isLoading } = useGetGithubResourcesQuery({ id: 2 }, {}) //get hook
 const [createGithub, { isLoading, data, isSuccess }] = useCreateGithubMutation() //create hook
 githubService.endpoints.getGithub.select({id: 2})(store.getState()) //access data from any function
 */

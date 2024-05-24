@@ -61,8 +61,8 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
   ] = useCreateGithubRepositoryMutation()
 
   useEffect(() => {
-    if (reposLoaded && repos.repositories) {
-      setRepositoryOwner(repos?.repositories[0].owner.login)
+    if (reposLoaded && repos.results) {
+      setRepositoryOwner(repos?.results[0].full_name.split('/')[0])
       setRepositories(repos)
     }
   }, [repos, reposLoaded])
@@ -168,7 +168,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
                 size='select-md'
                 placeholder={'Select your repository'}
                 onChange={(v: repoType) => setRepositoryName(v.label)}
-                options={repositories?.repositories?.map((r: repoType) => {
+                options={repositories?.results?.map((r: repoType) => {
                   return { label: r.name, value: r.name }
                 })}
               />
@@ -254,7 +254,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
                         await createGithubRepository({
                           body: {
                             project: project.id,
-                            repository_name: repositoryName,
+                            repository_name: project.repo,
                             repository_owner: repositoryOwner,
                           },
                           github_id: res?.data?.id,

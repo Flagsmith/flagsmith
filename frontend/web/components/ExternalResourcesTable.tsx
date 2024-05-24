@@ -10,12 +10,15 @@ import { ExternalResource } from 'common/types/responses'
 import Constants from 'common/constants'
 import Tooltip from './Tooltip'
 
-export type ExternalResourcesTableType = {
+export type ExternalResourcesTableBase = {
   featureId: string
   projectId: string
   organisationId: string
   repoName: string
   repoOwner: string
+}
+
+export type ExternalResourcesTableType = ExternalResourcesTableBase & {
   setSelectedResources: (r: ExternalResource[]) => void
 }
 
@@ -40,9 +43,17 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
   }, [isDeleted])
   return (
     <Row className='list-item' key={externalResource?.id}>
+      <div className='table-column text-left' style={{ width: '100px' }}>
+        <div className='font-weight-medium mb-1'>
+          {
+            Constants.resourceTypes[
+              externalResource?.type as keyof typeof Constants.resourceTypes
+            ].label
+          }
+        </div>
+      </div>
       <Flex className='table-column'>
         <Row className='font-weight-medium'>
-          {Constants.resourceTypes[externalResource?.type].label}
           <Button
             theme='text'
             href={`${externalResource?.url}`}
@@ -52,7 +63,9 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
             <Tooltip
               title={
                 <Row>
-                  {`#${externalResource?.url.replace(/\D/g, '')}`}{' '}
+                  {`${
+                    externalResource?.metadata?.title
+                  } (#${externalResource?.url.replace(/\D/g, '')})`}{' '}
                   <div className='ml-1 mb-1'>
                     <Icon name='open-external-link' width={14} fill='#6837fc' />
                   </div>
@@ -67,18 +80,49 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
       </Flex>
       <div className='table-column text-center' style={{ width: '80px' }}>
         <div className='font-weight-medium mb-1'>
-          {externalResource?.metadata?.status}
+          {externalResource?.metadata?.state}
         </div>
       </div>
       <div className='table-column text-center' style={{ width: '80px' }}>
         <Button
-          onClick={() => {
-            deleteExternalResource({
-              external_resource_id: `${externalResource?.id}`,
-              feature_id: featureId,
-              project_id: projectId,
-            })
-          }}
+          onClick={() =>
+            openModal2(
+              'Unlink External Resources',
+              <div>
+                <label>
+                  {`Are you sure you want to unlink your ${
+                    Constants.resourceTypes[
+                      externalResource?.type as keyof typeof Constants.resourceTypes
+                    ].label
+                  } ${externalResource?.metadata?.title}?`}
+                </label>
+                <div className='text-right'>
+                  <Button
+                    className='mr-2'
+                    onClick={() => {
+                      closeModal2()
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    theme='danger'
+                    onClick={() => {
+                      deleteExternalResource({
+                        external_resource_id: `${externalResource?.id}`,
+                        feature_id: featureId,
+                        project_id: projectId,
+                      }).then(() => {
+                        closeModal2()
+                      })
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>,
+            )
+          }
           className='btn btn-with-icon'
         >
           <Icon name='trash-2' width={20} fill='#656D7B' />
@@ -108,11 +152,14 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
   return (
     <>
       <PanelSearch
-        className='no-pad overflow-visible'
+        className='no-pad overflow-visible mt-4'
         items={data?.results}
         header={
           <Row className='table-header'>
-            <Flex className='table-column px-3'>Type</Flex>
+            <div className='table-column' style={{ width: '100px' }}>
+              Type
+            </div>
+            <Flex className='table-column px-3'>Name</Flex>
             <div
               className='table-column text-center'
               style={{ width: '240px' }}
@@ -131,7 +178,7 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
         )}
         renderNoResults={
           <FormGroup className='text-center'>
-            You have no external resouces linked for this feature.
+            You have no external resources linked for this feature.
           </FormGroup>
         }
       />

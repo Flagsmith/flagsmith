@@ -231,9 +231,13 @@ class IntegrationList extends Component {
   }
 
   fetchGithubIntegration = () => {
-    getGithubIntegration(getStore(), {
-      organisation_id: AccountStore.getOrganisation().id,
-    }).then((res) => {
+    getGithubIntegration(
+      getStore(),
+      {
+        organisation_id: AccountStore.getOrganisation().id,
+      },
+      { forceRefetch: true },
+    ).then((res) => {
       this.setState({
         githubId: res?.data?.results[0]?.id,
         hasIntegrationWithGithub: !!res?.data?.results?.length,
