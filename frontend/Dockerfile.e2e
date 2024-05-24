@@ -1,17 +1,12 @@
+ARG FRONTEND_IMAGE
+
+FROM ${FRONTEND_IMAGE} as frontend
+
 FROM ghcr.io/flagsmith/e2e-frontend-base:latest
 
-# Build Flagsmith
-WORKDIR /srv/flagsmith
-COPY frontend/package.json frontend/package-lock.json frontend/.npmrc frontend/.nvmrc ./
-COPY frontend/bin/ ./bin/
-COPY frontend/env/ ./env/
-
-# Run npm ci before copying source code to improve caching of layers.
 ENV ENV=e2e
-RUN npm ci
 
-COPY frontend .
-COPY .release-please-manifest.json ./.versions.json
-RUN npm run env
+WORKDIR /srv/flagsmith
+COPY --from=frontend /srv/flagsmith ./
 
 CMD ["bash", "-l"]
