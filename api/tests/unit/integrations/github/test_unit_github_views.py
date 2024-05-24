@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 import pytest
 import requests
@@ -891,17 +892,17 @@ def test_github_api_call_error_handler_with_value_error(
 
 
 @pytest.mark.parametrize(
-    "page, page_size, is_invalid_page",
+    "page, page_size, error_detail",
     [
         (
             1,
             103,
-            False,
+            "Failed to retrieve GitHub repositories. Error: Page size must be an integer between 1 and 100",
         ),
         (
             0,
             100,
-            True,
+            "Failed to retrieve GitHub repositories. Error: Page must be greater or equal than 1",
         ),
     ],
 )
@@ -912,7 +913,7 @@ def test_send_the_invalid_number_page_or_page_size_param_returns_400(
     github_repository: GithubRepository,
     page: int,
     page_size: int,
-    is_invalid_page: bool,
+    error_detail: str,
 ) -> None:
     # Given
     data: dict[str, str | int] = {
@@ -930,28 +931,21 @@ def test_send_the_invalid_number_page_or_page_size_param_returns_400(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     response_json = response.json()
-    if is_invalid_page:
-        assert response_json == {
-            "detail": "Failed to retrieve GitHub repositories. Error: Page must be greater or equal than 1"
-        }
-    else:
-        assert response_json == {
-            "detail": "Failed to retrieve GitHub repositories. Error: Page size must be an integer between 1 and 100"
-        }
+    assert response_json == {"detail": error_detail}
 
 
 @pytest.mark.parametrize(
-    "page, page_size, is_invalid_page",
+    "page, page_size, error_response",
     [
         (
             1,
             "string",
-            False,
+            {"error": {"page_size": ["A valid integer is required."]}},
         ),
         (
             "string",
             100,
-            True,
+            {"error": {"page": ["A valid integer is required."]}},
         ),
     ],
 )
@@ -962,7 +956,7 @@ def test_send_the_invalid_type_page_or_page_size_param_returns_400(
     github_repository: GithubRepository,
     page: int,
     page_size: int,
-    is_invalid_page: bool,
+    error_response: dict[str, Any],
 ) -> None:
     # Given
     data: dict[str, str | int] = {
@@ -980,9 +974,4 @@ def test_send_the_invalid_type_page_or_page_size_param_returns_400(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     response_json = response.json()
-    if is_invalid_page:
-        assert response_json == {"error": {"page": ["A valid integer is required."]}}
-    else:
-        assert response_json == {
-            "error": {"page_size": ["A valid integer is required."]}
-        }
+    assert response_json == error_response
