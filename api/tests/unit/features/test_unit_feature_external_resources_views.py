@@ -82,7 +82,7 @@ def mocked_requests_post(*args, **kwargs):
 def test_create_feature_external_resource(
     admin_client_new: APIClient,
     feature_with_value: Feature,
-    segment_featurestate_and_feature_with_value: FeatureState,
+    segment_override_for_feature_with_value: FeatureState,
     environment: Environment,
     project: Project,
     github_configuration: GithubConfiguration,
@@ -123,7 +123,7 @@ def test_create_feature_external_resource(
         .updated_at.strftime(get_format("DATETIME_INPUT_FORMATS")[0])
     )
     segment_override_updated_at = FeatureState.objects.get(
-        id=segment_featurestate_and_feature_with_value.id
+        id=segment_override_for_feature_with_value.id
     ).updated_at.strftime(get_format("DATETIME_INPUT_FORMATS")[0])
 
     expected_comment_body = (
@@ -511,7 +511,7 @@ def test_create_github_comment_on_feature_was_deleted(
 
 def test_create_github_comment_on_segment_override_updated(
     feature_with_value: Feature,
-    segment_featurestate_and_feature_with_value: FeatureState,
+    segment_override_for_feature_with_value: FeatureState,
     feature_with_value_external_resource: FeatureExternalResource,
     project: Project,
     github_configuration: GithubConfiguration,
@@ -521,7 +521,7 @@ def test_create_github_comment_on_segment_override_updated(
     admin_client: APIClient,
 ) -> None:
     # Given
-    feature_state = segment_featurestate_and_feature_with_value
+    feature_state = segment_override_for_feature_with_value
     mock_generate_token = mocker.patch(
         "integrations.github.client.generate_token",
     )
@@ -545,7 +545,7 @@ def test_create_github_comment_on_segment_override_updated(
 
     # Then
     segment_override_updated_at = FeatureState.objects.get(
-        id=segment_featurestate_and_feature_with_value.id
+        id=segment_override_for_feature_with_value.id
     ).updated_at.strftime(get_format("DATETIME_INPUT_FORMATS")[0])
 
     expected_comment_body = (
@@ -576,7 +576,7 @@ def test_create_github_comment_on_segment_override_updated(
 
 
 def test_create_github_comment_on_segment_override_deleted(
-    segment_featurestate_and_feature_with_value: FeatureState,
+    segment_override_for_feature_with_value: FeatureState,
     feature_with_value_segment: FeatureSegment,
     feature_with_value_external_resource: FeatureExternalResource,
     github_configuration: GithubConfiguration,
@@ -753,3 +753,86 @@ def test_create_github_comment_using_v2_fails_on_wrong_params(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     github_request_mock.assert_not_called()
+
+
+@responses.activate
+def test_create_feature_external_resource_on_environment_with_v2(
+    admin_client_new: APIClient,
+    project: Project,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    segment_override_for_feature_with_value: FeatureState,
+    environment_v2_versioning: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_id = segment_override_for_feature_with_value.feature_id
+
+    mock_generate_token = mocker.patch(
+        "integrations.github.client.generate_token",
+        return_value="mocked_token",
+    )
+
+    mock_generate_token.return_value = "mocked_token"
+    github_request_mock = mocker.patch(
+        "requests.post", side_effect=mocked_requests_post
+    )
+
+    feature_external_resource_data = {
+        "type": "GITHUB_ISSUE",
+        "url": "https://github.com/repoowner/repo-name/issues/35",
+        "feature": feature_id,
+        "metadata": {"state": "open"},
+    }
+
+    url = reverse(
+        "api-v1:projects:feature-external-resources-list",
+        kwargs={"project_pk": project.id, "feature_pk": feature_id},
+    )
+
+    # When
+    response = admin_client_new.post(
+        url, data=feature_external_resource_data, format="json"
+    )
+
+    # Then
+    feature_state_update_at = FeatureState.objects.get(
+        id=segment_override_for_feature_with_value.id
+    ).updated_at.strftime(get_format("DATETIME_INPUT_FORMATS")[0])
+
+    segment_override_updated_at = FeatureState.objects.get(
+        id=segment_override_for_feature_with_value.id
+    ).updated_at.strftime(get_format("DATETIME_INPUT_FORMATS")[0])
+
+    expected_comment_body = (
+        "**Flagsmith feature linked:** `feature_with_value`\n"
+        + "Default Values:\n"
+        + expected_default_body(
+            project.id,
+            environment_v2_versioning.api_key,
+            feature_id,
+            feature_state_update_at,
+        )
+        + "\n"
+        + expected_segment_comment_body(
+            project.id,
+            environment_v2_versioning.api_key,
+            feature_id,
+            segment_override_updated_at,
+            "❌ Disabled",
+            "`value`",
+        )
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+
+    github_request_mock.assert_called_with(
+        "https://api.github.com/repos/repoowner/repo-name/issues/35/comments",
+        json={"body": f"{expected_comment_body}"},
+        headers={
+            "Accept": "application/vnd.github.v3+json",
+            "X-GitHub-Api-Version": GITHUB_API_VERSION,
+            "Authorization": "Bearer mocked_token",
+        },
+        timeout=10,
+    )
