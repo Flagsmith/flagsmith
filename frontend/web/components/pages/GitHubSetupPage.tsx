@@ -61,8 +61,8 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
   ] = useCreateGithubRepositoryMutation()
 
   useEffect(() => {
-    if (reposLoaded && repos.repositories) {
-      setRepositoryOwner(repos?.repositories[0].owner.login)
+    if (reposLoaded && repos.results) {
+      setRepositoryOwner(repos?.results[0].owner.login)
       setRepositories(repos)
     }
   }, [repos, reposLoaded])

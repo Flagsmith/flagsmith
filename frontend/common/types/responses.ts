@@ -171,13 +171,14 @@ export type GithubResources = {
 export type GithubPaginatedRepos<T> = {
   total_count: number
   repository_selection: string
-  repositories: T[]
+  results: T[]
 }
 
 export type Repository = {
   id: number
   name: string
   full_name: string
+  owner: { login: string }
 }
 
 export type GithubRepository = {
