@@ -43,8 +43,6 @@ services:
     build:
       context: ../
       dockerfile: frontend/Dockerfile.e2e
-      args:
-        - FRONTEND_IMAGE=${FRONTEND_IMAGE:-ghcr.io/flagsmith/flagsmith-frontend:dev}
     platform: linux/amd64
     environment:
       E2E_TEST_TOKEN_DEV: some-token

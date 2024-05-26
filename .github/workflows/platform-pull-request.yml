@@ -54,14 +54,13 @@ jobs:
       slug: flagsmith-frontend
 
   docker-build-e2e:
-    needs: docker-build-frontend
+    if: github.event.pull_request.draft == false
     name: Build E2E Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
       file: frontend/Dockerfile.e2e
       slug: flagsmith-e2e
-      build-args: |
-        FRONTEND_IMAGE=${{ needs.docker-build-frontend.outputs.image }}
+      scan: false
 
   run-e2e-tests-local:
     needs: docker-build-api
