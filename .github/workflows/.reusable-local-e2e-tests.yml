@@ -60,7 +60,7 @@ jobs:
       - name: Output API container status and logs
         if: failure()
         env:
-          API_CONTAINER_ID: ${{ steps.run-local-api.outputs.containerId }}
+          API_CONTAINER_ID: ${{ steps.run-local-api.outputs.container-id }}
         run: |
           docker inspect $API_CONTAINER_ID | jq '.[0].State'
           docker logs $API_CONTAINER_ID
