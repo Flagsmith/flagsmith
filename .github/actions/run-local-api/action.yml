@@ -1,5 +1,5 @@
 name: Run Core API image in Docker
-description: Runs the Core API image in Docker, making it available for e.g. E2E tests
+description: Runs the Core API image in Docker, making it available for E2E testing
 
 inputs:
   api-image:
