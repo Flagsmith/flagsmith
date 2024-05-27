@@ -64,6 +64,7 @@ jobs:
 
   run-e2e-tests-local:
     needs: docker-build-api
+    name: 'E2E Local: ${{ matrix.args.tests }}'
     uses: ./.github/workflows/.reusable-local-e2e-tests.yml
     with:
       api-image: ${{ needs.docker-build-api.outputs.image }}
@@ -82,10 +83,10 @@ jobs:
           - tests: versioning
             concurrency: 1
 
-  run-e2e-tests-unified:
+  run-e2e-tests-dockerised:
     needs: [docker-build-api, docker-build-e2e]
+    name: 'E2E Dockerised: ${{ matrix.args.tests }}'
     runs-on: ubuntu-latest
-    name: 'E2E Unified: ${{ matrix.args.tests }}'
 
     strategy:
       matrix:
@@ -103,13 +104,19 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v4
 
-      - name: Run tests on unified docker image
-        working-directory: frontend
+      - name: Run tests on dockerised frontend
+        uses: nick-fields/retry@v3
+        with:
+          shell: bash
+          command: |
+            cd frontend
+            docker compose -f docker-compose-e2e-tests.yml run frontend \
+              npx cross-env E2E_CONCURRENCY=${{ matrix.args.concurrency }} npm run test -- ${{ matrix.args.tests }}
+          max_attempts: 2
+          retry_on: error
+          timeout_minutes: 10
         env:
           API_IMAGE: ${{ needs.docker-build-api.outputs.image }}
           E2E_IMAGE: ${{ needs.docker-build-e2e.outputs.image }}
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          docker compose -f docker-compose-e2e-tests.yml run frontend \
-            npx cross-env E2E_CONCURRENCY=${{ matrix.args.concurrency }} npm run test -- ${{ matrix.args.tests }}

@@ -22,7 +22,6 @@ on:
 jobs:
   run-e2e:
     runs-on: ubuntu-latest
-    name: "E2E Local${{ inputs.tests && format(': {0}', inputs.tests) || ''}}"
 
     services:
       postgres:
