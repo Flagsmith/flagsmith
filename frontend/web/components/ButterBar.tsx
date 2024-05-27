@@ -122,21 +122,21 @@ const ButterBar: React.FC<ButterBarProps> = ({
             payment method to keep your subscription active.
           </div>
         )}
-      {!!apiOrganisationUsage?.results.length && (
-        <div className='butter-bar'>
-          {'Your organisation has exceeded'}{' '}
-          <b>{apiOrganisationUsage?.results[0].percent_usage}</b>
-          {'% '}
-          {'of its API usage quota. '}
-          {Utils.getPlanName(organisationPlan) === 'Free' ? (
-            <b>
-              API access may be turned off unless your organisation upgrades
-            </b>
-          ) : (
-            <b>Automated billing for the overages may apply.</b>
-          )}
-        </div>
-      )}
+      {Utils.getFlagsmithHasFeature('usage_notification_butter_bar') &&
+        !!apiOrganisationUsage?.results.length && (
+          <div className='butter-bar'>
+            {'Your organisation has exceeded'}{' '}
+            <b>{`${apiOrganisationUsage?.results[0].percent_usage}%`}</b>{' '}
+            {'of its API usage quota. '}
+            {Utils.getPlanName(organisationPlan) === 'Free' ? (
+              <b>
+                API access may be turned off unless your organisation upgrades
+              </b>
+            ) : (
+              <b>Automated billing for the overages may apply.</b>
+            )}
+          </div>
+        )}
     </>
   )
 }
