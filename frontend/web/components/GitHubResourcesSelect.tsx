@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
-import { GithubResources } from 'common/types/responses'
+import { GithubResource } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import { FixedSizeList } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
@@ -119,15 +119,8 @@ const GitHubResourcesSelect: FC<GitHubResourcesSelectType> = ({
   lastSavedResource,
   onChange,
 }) => {
-  const {
-    githubResources,
-    isFetching,
-    isLoading,
-    loadMore,
-    loadingCombinedData,
-    nextPage,
-    searchItems,
-  } = useGitHubResourceSelectProvider()
+  const { githubResources, isFetching, isLoading, searchItems } =
+    useGitHubResourceSelectProvider()
   const [selectedOption, setSelectedOption] =
     useState<GitHubResourcesValueType | null>(null)
   const [searchText, setSearchText] = React.useState('')
@@ -152,11 +145,10 @@ const GitHubResourcesSelect: FC<GitHubResourcesSelectType> = ({
           onChange(v?.value)
         }}
         isClearable={true}
-        options={githubResources?.map((i: GithubResources) => {
+        options={githubResources?.map((i: GithubResource) => {
           return {
             label: `${i.title} #${i.number}`,
-            status: i.state,
-            value: i.html_url,
+            value: i,
           }
         })}
         noOptionsMessage={() =>
