@@ -8,7 +8,7 @@ from pytest_mock import MockerFixture
 
 @pytest.mark.skipif(
     "analytics" not in settings.DATABASES,
-    reason="Skip test if analytics database is configured",
+    reason="Skip test if analytics database is not configured",
 )
 @pytest.mark.django_db(databases=["analytics", "default"])
 def test_migrate_feature_evaluations(mocker: MockerFixture):

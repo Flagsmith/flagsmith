@@ -1,4 +1,4 @@
-from app_analytics.analytics_db_service import ANALYTICS_READ_BUCKET_SIZE
+from app_analytics.constants import ANALYTICS_READ_BUCKET_SIZE
 from app_analytics.influxdb_wrapper import influxdb_client, read_bucket
 from app_analytics.models import FeatureEvaluationBucket
 
