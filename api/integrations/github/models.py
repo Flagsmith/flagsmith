@@ -1,4 +1,5 @@
 import logging
+import re
 
 from core.models import SoftDeleteExportableModel
 from django.db import models
@@ -72,6 +73,8 @@ class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
             ResourceType,
         )
 
+        pattern = re.escape(f"/{self.repository_owner}/{self.repository_name}/")
+
         FeatureExternalResource.objects.filter(
             feature_id__in=self.project.features.values_list("id", flat=True),
             type__in=[
@@ -79,5 +82,5 @@ class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
                 ResourceType.GITHUB_PR,
             ],
             # Filter by url containing the repository owner and name
-            url__contains=f"{self.repository_owner}/{self.repository_name}",
+            url__regex=pattern,
         ).delete()

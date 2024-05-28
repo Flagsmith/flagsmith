@@ -1,6 +1,7 @@
 from datetime import datetime
 from unittest.mock import MagicMock
 
+import pytest
 import responses
 import simplejson as json
 from django.core.serializers.json import DjangoJSONEncoder
@@ -702,6 +703,7 @@ def test_create_github_comment_using_v2_fails_on_wrong_params(
 
 
 @responses.activate
+@pytest.mark.freeze_time("2024-05-28T09:09:47.325132+00:00")
 def test_create_feature_external_resource_on_environment_with_v2(
     admin_client_new: APIClient,
     project: Project,
