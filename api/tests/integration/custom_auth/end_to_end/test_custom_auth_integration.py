@@ -1,13 +1,11 @@
 import json
 import re
 from collections import ChainMap
-from time import sleep
 
 import pyotp
 from django.conf import settings
 from django.core import mail
 from django.urls import reverse
-from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 from rest_framework.test import APIClient, override_settings
 
@@ -272,8 +270,8 @@ def test_login_workflow_with_mfa_enabled(
     assert current_user_response.json()["email"] == email
 
 
+@override_settings()
 def test_throttle_login_workflows(
-    settings: SettingsWrapper,
     api_client: APIClient,
     db: None,
 ) -> None:
@@ -281,7 +279,6 @@ def test_throttle_login_workflows(
     # to something easier to reliably test
     assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"]
     settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"] = "1/sec"
-    sleep(1)
 
     email = "test@example.com"
     password = FFAdminUser.objects.make_random_password()
