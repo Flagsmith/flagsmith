@@ -209,19 +209,19 @@ def add_single_seat(subscription_id: str):
         raise UpgradeSeatsError(msg) from e
 
 
-def add_1000_api_calls_start_up(
+def add_100k_api_calls_start_up(
     subscription_id: str, count: int = 1, invoice_immediately: bool = False
 ) -> None:
-    add_1000_api_calls(ADDITIONAL_API_START_UP_ADDON_ID, subscription_id, count)
+    add_100k_api_calls(ADDITIONAL_API_START_UP_ADDON_ID, subscription_id, count)
 
 
-def add_1000_api_calls_scale_up(
+def add_100k_api_calls_scale_up(
     subscription_id: str, count: int = 1, invoice_immediately: bool = False
 ) -> None:
-    add_1000_api_calls(ADDITIONAL_API_SCALE_UP_ADDON_ID, subscription_id, count)
+    add_100k_api_calls(ADDITIONAL_API_SCALE_UP_ADDON_ID, subscription_id, count)
 
 
-def add_1000_api_calls(
+def add_100k_api_calls(
     addon_id: str,
     subscription_id: str,
     count: int = 1,
