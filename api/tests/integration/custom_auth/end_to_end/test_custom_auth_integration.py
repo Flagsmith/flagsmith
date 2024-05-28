@@ -1,6 +1,7 @@
 import json
 import re
 from collections import ChainMap
+from time import sleep
 
 import pyotp
 from django.conf import settings
@@ -280,6 +281,7 @@ def test_throttle_login_workflows(
     # to something easier to reliably test
     assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"]
     settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"] = "1/sec"
+    sleep(1)
 
     email = "test@example.com"
     password = FFAdminUser.objects.make_random_password()
