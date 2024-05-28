@@ -10,16 +10,19 @@ import Constants from 'common/constants'
 import Button from './base/forms/Button'
 import GitHubResourcesSelect from './GitHubResourcesSelect'
 import _ from 'lodash'
+import AppActions from 'common/dispatcher/app-actions'
 
 type ExternalResourcesLinkTabType = {
   githubId: string
   organisationId: string
   featureId: string
   projectId: string
+  environmentId: string
 }
 
 type AddExternalResourceRowType = ExternalResourcesTableBase & {
   linkedExternalResources?: ExternalResource[]
+  environmentId: string
 }
 
 type GitHubStatusType = {
@@ -28,6 +31,7 @@ type GitHubStatusType = {
 }
 
 const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
+  environmentId,
   featureId,
   linkedExternalResources,
   organisationId,
@@ -115,6 +119,7 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
                 }).then(() => {
                   toast('External Resource Added')
                   setLastSavedResource(featureExternalResource.html_url)
+                  AppActions.refreshFeatures(parseInt(projectId), environmentId)
                 })
               } else {
                 throw new Error('Invalid External Resource Data')
@@ -130,6 +135,7 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
 }
 
 const ExternalResourcesLinkTab: FC<ExternalResourcesLinkTabType> = ({
+  environmentId,
   featureId,
   githubId,
   organisationId,
@@ -169,6 +175,7 @@ const ExternalResourcesLinkTab: FC<ExternalResourcesLinkTabType> = ({
         />
         {repoName && repoOwner && (
           <AddExternalResourceRow
+            environmentId={environmentId}
             featureId={featureId}
             projectId={projectId}
             organisationId={organisationId}
