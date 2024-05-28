@@ -185,6 +185,29 @@ def test_audit_log_created_when_segment_updated(project, segment, client):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
+def test_can_patch_segment(project, segment, client):
+    # Given
+    segment = Segment.objects.create(name="Test segment", project=project)
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project.id, segment.id],
+    )
+    data = {
+        "name": "New segment name",
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+    }
+
+    # When
+    res = client.patch(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert res.status_code == status.HTTP_200_OK
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_audit_log_created_when_segment_deleted(project, segment, client):
     # Given
     segment = Segment.objects.create(name="Test segment", project=project)

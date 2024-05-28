@@ -61,7 +61,9 @@ class SegmentSerializer(serializers.ModelSerializer, SerializerWithMetadata):
         return attrs
 
     def get_project(self, validated_data: dict = None) -> Project:
-        return validated_data.get("project")
+        return validated_data.get("project") or Project.objects.get(
+            id=self.context["view"].kwargs["project_pk"]
+        )
 
     def create(self, validated_data):
         project = validated_data["project"]
