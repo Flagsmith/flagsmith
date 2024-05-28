@@ -23,7 +23,19 @@ from organisations.models import Organisation
 from projects.models import Project
 
 WEBHOOK_PAYLOAD = json.dumps({"installation": {"id": 1234567}, "action": "deleted"})
+WEBHOOK_PAYLOAD_WITH_AN_INVALID_INSTALLATION_ID = json.dumps(
+    {"installation": {"id": 765432}, "action": "deleted"}
+)
+WEBHOOK_PAYLOAD_WITHOUT_INSTALLATION_ID = json.dumps(
+    {"installation": {"test": 765432}, "action": "deleted"}
+)
 WEBHOOK_SIGNATURE = "sha1=57a1426e19cdab55dd6d0c191743e2958e50ccaa"
+WEBHOOK_SIGNATURE_WITH_AN_INVALID_INSTALLATION_ID = (
+    "sha1=081eef49d04df27552587d5df1c6b76e0fe20d21"
+)
+WEBHOOK_SIGNATURE_WITHOUT_INSTALLATION_ID = (
+    "sha1=f99796bd3cebb902864e87ed960c5cca8772ff67"
+)
 WEBHOOK_SECRET = "secret-key"
 
 
@@ -300,9 +312,9 @@ def test_cannot_create_github_repository_due_to_unique_constraint(
 def test_github_delete_repository(
     admin_client_new: APIClient,
     organisation: Organisation,
-    feature_external_resource: FeatureExternalResource,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    feature_external_resource: FeatureExternalResource,
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -316,8 +328,10 @@ def test_github_delete_repository(
     )
     for feature in github_repository.project.features.all():
         assert FeatureExternalResource.objects.filter(feature=feature).exists()
+
     # When
     response = admin_client_new.delete(url)
+
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
     for feature in github_repository.project.features.all():
@@ -349,6 +363,9 @@ def mocked_requests_get_issues_and_pull_requests(*args, **kwargs):
                 "id": 1,
                 "title": "Title 1",
                 "number": 101,
+                "state": "Open",
+                "merged": False,
+                "draft": True,
             },
         ],
         "total_count": 1,
@@ -618,6 +635,7 @@ def test_verify_github_webhook_payload_returns_false_on_no_signature_header() ->
 
 
 def test_github_webhook_delete_installation(
+    api_client: APIClient,
     github_configuration: GithubConfiguration,
 ) -> None:
     # Given
@@ -625,8 +643,7 @@ def test_github_webhook_delete_installation(
     url = reverse("api-v1:github-webhook")
 
     # When
-    client = APIClient()
-    response = client.post(
+    response = api_client.post(
         path=url,
         data=WEBHOOK_PAYLOAD,
         content_type="application/json",
@@ -637,6 +654,58 @@ def test_github_webhook_delete_installation(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert not GithubConfiguration.objects.filter(installation_id=1234567).exists()
+
+
+def test_github_webhook_with_non_existing_installation(
+    api_client: APIClient,
+    github_configuration: GithubConfiguration,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
+    url = reverse("api-v1:github-webhook")
+    mocker_logger = mocker.patch("integrations.github.github.logger")
+
+    # When
+    response = api_client.post(
+        path=url,
+        data=WEBHOOK_PAYLOAD_WITH_AN_INVALID_INSTALLATION_ID,
+        content_type="application/json",
+        HTTP_X_HUB_SIGNATURE=WEBHOOK_SIGNATURE_WITH_AN_INVALID_INSTALLATION_ID,
+        HTTP_X_GITHUB_EVENT="installation",
+    )
+
+    # Then
+    mocker_logger.error.assert_called_once_with(
+        "GitHub Configuration with installation_id 765432 does not exist"
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+
+def test_github_webhook_without_installation_id(
+    api_client: APIClient,
+    github_configuration: GithubConfiguration,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
+    url = reverse("api-v1:github-webhook")
+    mocker_logger = mocker.patch("integrations.github.github.logger")
+
+    # When
+    response = api_client.post(
+        path=url,
+        data=WEBHOOK_PAYLOAD_WITHOUT_INSTALLATION_ID,
+        content_type="application/json",
+        HTTP_X_HUB_SIGNATURE=WEBHOOK_SIGNATURE_WITHOUT_INSTALLATION_ID,
+        HTTP_X_GITHUB_EVENT="installation",
+    )
+
+    # Then
+    mocker_logger.error.assert_called_once_with(
+        "The installation_id is not present in the payload: {'installation': {'test': 765432}, 'action': 'deleted'}"
+    )
+    assert response.status_code == status.HTTP_200_OK
 
 
 def test_github_webhook_fails_on_signature_header_missing(

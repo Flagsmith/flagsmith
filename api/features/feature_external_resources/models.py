@@ -18,12 +18,13 @@ from webhooks.webhooks import WebhookEventType
 logger = logging.getLogger(__name__)
 
 
-class FeatureExternalResource(LifecycleModelMixin, models.Model):
-    class ResourceType(models.TextChoices):
-        # GitHub external resource types
-        GITHUB_ISSUE = "GITHUB_ISSUE", "GitHub Issue"
-        GITHUB_PR = "GITHUB_PR", "GitHub PR"
+class ResourceType(models.TextChoices):
+    # GitHub external resource types
+    GITHUB_ISSUE = "GITHUB_ISSUE", "GitHub Issue"
+    GITHUB_PR = "GITHUB_PR", "GitHub PR"
 
+
+class FeatureExternalResource(LifecycleModelMixin, models.Model):
     url = models.URLField()
     type = models.CharField(max_length=20, choices=ResourceType.choices)
 

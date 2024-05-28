@@ -21,6 +21,7 @@ from integrations.github.client import (
     fetch_search_github_resource,
 )
 from integrations.github.exceptions import DuplicateGitHubIntegration
+from integrations.github.github import handle_github_webhook_event
 from integrations.github.helpers import github_webhook_payload_is_valid
 from integrations.github.models import GithubConfiguration, GithubRepository
 from integrations.github.permissions import HasPermissionToGithubConfiguration
@@ -249,11 +250,8 @@ def github_webhook(request) -> Response:
         payload_body=payload, secret_token=secret, signature_header=signature
     ):
         data = json.loads(payload.decode("utf-8"))
-        # handle GitHub Webhook "installation" event with action type "deleted"
-        if github_event == "installation" and data["action"] == "deleted":
-            GithubConfiguration.objects.filter(
-                installation_id=data["installation"]["id"]
-            ).delete()
+        if github_event == "installation":
+            handle_github_webhook_event(event_type=github_event, payload=data)
             return Response({"detail": "Event processed"}, status=200)
         else:
             return Response({"detail": "Event bypassed"}, status=200)
