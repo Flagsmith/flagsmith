@@ -253,20 +253,12 @@ def charge_for_api_call_count_overages():
         subscription_cache = organisation.subscription_information_cache
         api_usage = get_current_api_usage(organisation.id, "30d")
 
-        api_billing = (
-            OrganisationAPIBilling.objects.filter(
-                billed_at__gte=subscription_cache.current_billing_term_starts_at
-            )
-            .order_by("-billed_at")
-            .first()
+        api_billings = OrganisationAPIBilling.objects.filter(
+            billed_at__gte=subscription_cache.current_billing_term_starts_at
         )
+        previous_api_overage = sum([ap.api_overage for ap in api_billings])
 
-        if api_billing:
-            previous_api_overage = api_billing.api_overage
-        else:
-            previous_api_overage = 0
         api_limit = subscription_cache.allowed_30d_api_calls + previous_api_overage
-
         api_overage = api_usage - api_limit
         if api_overage <= 0:
             logger.info("API Usage below current API limit.")
