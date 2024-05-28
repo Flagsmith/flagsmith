@@ -31,6 +31,7 @@ class GithubConfiguration(SoftDeleteExportableModel):
                 condition=models.Q(deleted_at__isnull=True),
             )
         ]
+        ordering = ("id",)
 
 
 class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
@@ -57,8 +58,10 @@ class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
                     "repository_name",
                 ],
                 name="unique_repository_data",
+                condition=models.Q(deleted_at__isnull=True),
             )
         ]
+        ordering = ("id",)
 
     @hook(BEFORE_DELETE)
     def delete_feature_external_resources(
@@ -66,12 +69,15 @@ class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
     ) -> None:
         from features.feature_external_resources.models import (
             FeatureExternalResource,
+            ResourceType,
         )
 
         FeatureExternalResource.objects.filter(
             feature_id__in=self.project.features.values_list("id", flat=True),
             type__in=[
-                FeatureExternalResource.ResourceType.GITHUB_ISSUE,
-                FeatureExternalResource.ResourceType.GITHUB_PR,
+                ResourceType.GITHUB_ISSUE,
+                ResourceType.GITHUB_PR,
             ],
+            # Filter by url containing the repository owner and name
+            url__contains=f"{self.repository_owner}/{self.repository_name}",
         ).delete()

@@ -1,5 +1,6 @@
 import os
 import typing
+from unittest.mock import MagicMock
 
 import boto3
 import pytest
@@ -11,6 +12,7 @@ from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pytest_django.plugin import blocking_manager_key
+from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 from urllib3.connectionpool import HTTPConnectionPool
@@ -83,6 +85,25 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 def pytest_sessionstart(session: pytest.Session) -> None:
     fix_issue_3869()
+
+
+@pytest.fixture()
+def post_request_mock(mocker: MockerFixture) -> MagicMock:
+    def mocked_request(*args, **kwargs):
+        class MockResponse:
+            def __init__(self, json_data, status_code):
+                self.json_data = json_data
+                self.status_code = status_code
+
+            def raise_for_status(self) -> None:
+                pass
+
+            def json(self):
+                return self.json_data
+
+        return MockResponse(json_data={"data": "data"}, status_code=200)
+
+    return mocker.patch("requests.post", side_effect=mocked_request)
 
 
 @pytest.hookimpl(trylast=True)
@@ -966,9 +987,16 @@ def flagsmith_environments_v2_table(dynamodb: DynamoDBServiceResource) -> Table:
 
 
 @pytest.fixture()
-def feature_external_resource(feature: Feature) -> FeatureExternalResource:
+def feature_external_resource(
+    feature: Feature, post_request_mock: MagicMock, mocker: MockerFixture
+) -> FeatureExternalResource:
+    mocker.patch(
+        "integrations.github.client.generate_token",
+        return_value="mocked_token",
+    )
+
     return FeatureExternalResource.objects.create(
-        url="https://github.com/userexample/example-project-repo/issues/11",
+        url="https://github.com/repositoryownertest/repositorynametest/issues/11",
         type="GITHUB_ISSUE",
         feature=feature,
         metadata='{"status": "open"}',
@@ -978,9 +1006,16 @@ def feature_external_resource(feature: Feature) -> FeatureExternalResource:
 @pytest.fixture()
 def feature_with_value_external_resource(
     feature_with_value: Feature,
+    post_request_mock: MagicMock,
+    mocker: MockerFixture,
 ) -> FeatureExternalResource:
+    mocker.patch(
+        "integrations.github.client.generate_token",
+        return_value="mocked_token",
+    )
+
     return FeatureExternalResource.objects.create(
-        url="https://github.com/userexample/example-project-repo/issues/11",
+        url="https://github.com/repositoryownertest/repositorynametest/issues/11",
         type="GITHUB_ISSUE",
         feature=feature_with_value,
     )
