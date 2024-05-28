@@ -23,12 +23,18 @@ from organisations.models import Organisation
 from projects.models import Project
 
 WEBHOOK_PAYLOAD = json.dumps({"installation": {"id": 1234567}, "action": "deleted"})
-WEBHOOK_PAYLOAD_WITHOUT_INSTALLATION_ID = json.dumps(
+WEBHOOK_PAYLOAD_WITH_AN_INVALID_INSTALLATION_ID = json.dumps(
     {"installation": {"id": 765432}, "action": "deleted"}
 )
+WEBHOOK_PAYLOAD_WITHOUT_INSTALLATION_ID = json.dumps(
+    {"installation": {"test": 765432}, "action": "deleted"}
+)
 WEBHOOK_SIGNATURE = "sha1=57a1426e19cdab55dd6d0c191743e2958e50ccaa"
-WEBHOOK_SIGNATURE_WITHOUT_INSTALLATION_ID = (
+WEBHOOK_SIGNATURE_WITH_AN_INVALID_INSTALLATION_ID = (
     "sha1=081eef49d04df27552587d5df1c6b76e0fe20d21"
+)
+WEBHOOK_SIGNATURE_WITHOUT_INSTALLATION_ID = (
+    "sha1=f99796bd3cebb902864e87ed960c5cca8772ff67"
 )
 WEBHOOK_SECRET = "secret-key"
 
@@ -629,6 +635,7 @@ def test_verify_github_webhook_payload_returns_false_on_no_signature_header() ->
 
 
 def test_github_webhook_delete_installation(
+    api_client: APIClient,
     github_configuration: GithubConfiguration,
 ) -> None:
     # Given
@@ -636,8 +643,7 @@ def test_github_webhook_delete_installation(
     url = reverse("api-v1:github-webhook")
 
     # When
-    client = APIClient()
-    response = client.post(
+    response = api_client.post(
         path=url,
         data=WEBHOOK_PAYLOAD,
         content_type="application/json",
@@ -651,6 +657,7 @@ def test_github_webhook_delete_installation(
 
 
 def test_github_webhook_with_non_existing_installation(
+    api_client: APIClient,
     github_configuration: GithubConfiguration,
     mocker: MockerFixture,
 ) -> None:
@@ -660,8 +667,33 @@ def test_github_webhook_with_non_existing_installation(
     mocker_logger = mocker.patch("integrations.github.github.logger")
 
     # When
-    client = APIClient()
-    response = client.post(
+    response = api_client.post(
+        path=url,
+        data=WEBHOOK_PAYLOAD_WITH_AN_INVALID_INSTALLATION_ID,
+        content_type="application/json",
+        HTTP_X_HUB_SIGNATURE=WEBHOOK_SIGNATURE_WITH_AN_INVALID_INSTALLATION_ID,
+        HTTP_X_GITHUB_EVENT="installation",
+    )
+
+    # Then
+    mocker_logger.error.assert_called_once_with(
+        "GitHub Configuration with installation_id 765432 does not exist"
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+
+def test_github_webhook_without_installation_id(
+    api_client: APIClient,
+    github_configuration: GithubConfiguration,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
+    url = reverse("api-v1:github-webhook")
+    mocker_logger = mocker.patch("integrations.github.github.logger")
+
+    # When
+    response = api_client.post(
         path=url,
         data=WEBHOOK_PAYLOAD_WITHOUT_INSTALLATION_ID,
         content_type="application/json",
@@ -671,7 +703,7 @@ def test_github_webhook_with_non_existing_installation(
 
     # Then
     mocker_logger.error.assert_called_once_with(
-        "Github Configuration with installation_id 765432 does not exist"
+        "The installation_id is not present in the payload: {'installation': {'test': 765432}, 'action': 'deleted'}"
     )
     assert response.status_code == status.HTTP_200_OK
 

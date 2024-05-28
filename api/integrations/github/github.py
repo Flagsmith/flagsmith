@@ -26,14 +26,17 @@ from webhooks.webhooks import WebhookEventType
 logger = logging.getLogger(__name__)
 
 
-def handle_installation_deleted(payload: dict[str, typing.Any]) -> None:
+def handle_installation_deleted(payload: dict[str, Any]) -> None:
     installation_id = payload.get("installation", {}).get("id")
-    try:
-        GithubConfiguration.objects.get(installation_id=installation_id).delete()
-    except GithubConfiguration.DoesNotExist:
-        logger.error(
-            f"Github Configuration with installation_id {installation_id} does not exist"
-        )
+    if installation_id is not None:
+        try:
+            GithubConfiguration.objects.get(installation_id=installation_id).delete()
+        except GithubConfiguration.DoesNotExist:
+            logger.error(
+                f"GitHub Configuration with installation_id {installation_id} does not exist"
+            )
+    else:
+        logger.error(f"The installation_id is not present in the payload: {payload}")
 
 
 def handle_github_webhook_event(event_type: str, payload: dict[str, Any]) -> None:

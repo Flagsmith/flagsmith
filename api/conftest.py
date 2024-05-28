@@ -89,16 +89,16 @@ def pytest_sessionstart(session: pytest.Session) -> None:
 
 @pytest.fixture()
 def post_request_mock(mocker: MockerFixture) -> MagicMock:
-    def mocked_request(*args, **kwargs):
+    def mocked_request(*args, **kwargs) -> None:
         class MockResponse:
-            def __init__(self, json_data, status_code):
+            def __init__(self, json_data: str, status_code: int) -> None:
                 self.json_data = json_data
                 self.status_code = status_code
 
             def raise_for_status(self) -> None:
                 pass
 
-            def json(self):
+            def json(self) -> str:
                 return self.json_data
 
         return MockResponse(json_data={"data": "data"}, status_code=200)
