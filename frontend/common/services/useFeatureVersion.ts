@@ -29,11 +29,13 @@ export const featureVersionService = service
         invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
         queryFn: async (query: Req['createAndSetFeatureVersion']) => {
           const featureStatesToCreate: Req['createFeatureVersion']['feature_states_to_create'] =
-            query.featureStates.filter((v) => !v.id)
+            query.featureStates.filter((v) => !v.id && !v.toRemove)
           const featureStatesToUpdate: Req['createFeatureVersion']['feature_states_to_update'] =
-            query.featureStates.filter((v) => !!v.id)
-          const segmentIdsToDeleteOverrides: Req['createFeatureVersion']['segment_ids_to_delete_overrides'] =
-            []
+            query.featureStates.filter((v) => !!v.id && !v.toRemove)
+          const segmentIdsToDeleteOverrides: Req['createFeatureVersion']['feature_states_to_update'] =
+            query.featureStates
+              .filter((v) => !!v.id && !!v.toRemove && !!v.feature_segment)
+              .map((v) => v.feature_segment!.segment)
 
           // Step 1: Create a new feature version
           const versionRes: { data: FeatureVersion } =
@@ -58,21 +60,6 @@ export const featureVersionService = service
             })
 
           const res = currentFeatureStates.data
-
-          //Step 2: Update feature segment priorities before saving feature states
-          const prioritiesToUpdate = query.featureStates
-            .filter((v) => !v.toRemove && !!v.feature_segment)
-            .map((v) => {
-              const matchingFeatureSegment = res?.find(
-                (currentFeatureState) =>
-                  v.feature_segment?.segment ===
-                  currentFeatureState.data.feature_segment?.segment,
-              )
-              return {
-                id: matchingFeatureSegment!.data.feature_segment!.id!,
-                priority: v.feature_segment!.priority,
-              }
-            })
 
           const ret = {
             data: res.map((item) => ({
