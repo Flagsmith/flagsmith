@@ -26,4 +26,4 @@ serve:
 .PHONY: test
 test:
 	docker compose -f docker-compose-e2e-tests.yml run frontend \
-		npx cross-env E2E_CONCURRENCY=${E2E_CONCURRENCY} npm run test -- ${NPM_TEST_ARGS}
+		npx cross-env E2E_CONCURRENCY=${E2E_CONCURRENCY} npm run test -- $(opts)

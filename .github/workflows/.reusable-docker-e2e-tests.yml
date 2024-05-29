@@ -43,9 +43,9 @@ jobs:
           retry_on: error
           timeout_minutes: 10
         env:
+          opts: ${{ inputs.tests }}
           API_IMAGE: ${{ inputs.api-image }}
           E2E_IMAGE: ${{ inputs.e2e-image }}
-          NPM_TEST_ARGS: ${{ inputs.tests }}
           E2E_CONCURRENCY: ${{ inputs.concurrency }}
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
