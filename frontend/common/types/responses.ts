@@ -549,6 +549,14 @@ export type MetadataModelField = {
   is_required_for: isRequiredFor[]
 }
 
+export type SAMLConfiguration = {
+  organisation: number
+  name: string
+  frontend_url: string
+  idp_metadata_xml?: string
+  allow_idp_initiated?: boolean
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -660,5 +668,6 @@ export type Res = {
   identityFeatureStates: PagedResponse<FeatureState>
   cloneidentityFeatureStates: IdentityFeatureState
   featureStates: PagedResponse<FeatureState>
+  samlConfiguration: SAMLConfiguration
   // END OF TYPES
 }
