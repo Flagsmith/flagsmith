@@ -3,7 +3,7 @@ description: Runs the Core API image in Docker, making it available for E2E test
 
 inputs:
   api-image:
-    description: API image to use
+    description: Core API Docker image to use, e.g., `ghcr.io/flagsmith/flagsmith-api:main`
     required: true
   database_url:
     description: The database URL to connect the API to

@@ -6,7 +6,7 @@ on:
     inputs:
       api-image:
         type: string
-        description: API image to use
+        description: Core API Docker image to use, e.g., `ghcr.io/flagsmith/flagsmith-api:main`
         required: true
       tests:
         type: string
