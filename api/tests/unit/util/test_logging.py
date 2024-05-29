@@ -45,14 +45,14 @@ def test_json_formatter__outputs_expected(inspecting_handler: logging.Handler) -
             logger.error("this is an error", exc_info=exc)
 
     # When
-    logger.info("hello")
+    logger.info("hello %s, %d", "arg1", 22.22)
     _log_traceback()
 
     # Then
     assert [json.loads(message) for message in inspecting_handler.messages] == [
         {
             "levelname": "INFO",
-            "message": "hello",
+            "message": "hello arg1, 22",
             "timestamp": "2023-12-08 06:05:47,319",
             "logger_name": "test_json_formatter__outputs_expected",
             "process_id": expected_pid,
