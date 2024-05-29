@@ -21,7 +21,10 @@ def inspecting_handler() -> logging.Handler:
 
 
 @pytest.mark.freeze_time("2023-12-08T06:05:47.320000+00:00")
-def test_json_formatter__outputs_expected(inspecting_handler: logging.Handler) -> None:
+def test_json_formatter__outputs_expected(
+    inspecting_handler: logging.Handler,
+    request: pytest.FixtureRequest,
+) -> None:
     # Given
     json_formatter = JsonFormatter()
 
@@ -31,10 +34,11 @@ def test_json_formatter__outputs_expected(inspecting_handler: logging.Handler) -
     logger.setLevel(logging.INFO)
 
     expected_pid = os.getpid()
+    expected_module_path = os.path.abspath(request.path)
     expected_tb_string = (
         "Traceback (most recent call last):\n"
-        '  File "/Users/kgustyr/dev/flagsmith/flagsmith/api/tests/unit/util/test_logging.py",'
-        " line 43, in _log_traceback\n"
+        f'  File "{expected_module_path}",'
+        " line 47, in _log_traceback\n"
         "    raise Exception()\nException"
     )
 
