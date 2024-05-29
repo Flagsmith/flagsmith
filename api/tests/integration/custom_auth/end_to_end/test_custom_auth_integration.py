@@ -270,7 +270,6 @@ def test_login_workflow_with_mfa_enabled(
     assert current_user_response.json()["email"] == email
 
 
-@override_settings()
 def test_throttle_login_workflows(
     api_client: APIClient,
     db: None,
