@@ -2,16 +2,22 @@ import { FeatureState, FeatureVersion, Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import { getStore } from 'common/store'
-import {
-  createVersionFeatureState,
-  getVersionFeatureState,
-  updateVersionFeatureState,
-} from './useVersionFeatureState'
-import { deleteFeatureSegment } from './useFeatureSegment'
+import { getVersionFeatureState } from './useVersionFeatureState'
 import transformCorePaging from 'common/transformCorePaging'
 import Utils from 'common/utils/utils'
-import { updateSegmentPriorities } from './useSegmentPriority'
 
+const transformFeatureStates = (featureStates: FeatureState[]) =>
+  featureStates?.map((v) => ({
+    ...v,
+    feature_state_value: Utils.valueToFeatureState(v.feature_state_value),
+    id: undefined,
+    multivariate_feature_state_values: v.multivariate_feature_state_values?.map(
+      (v) => ({
+        ...v,
+        id: undefined,
+      }),
+    ),
+  }))
 export const featureVersionService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureVersion'] })
   .injectEndpoints({
@@ -25,7 +31,7 @@ export const featureVersionService = service
           const featureStatesToCreate: Req['createFeatureVersion']['feature_states_to_create'] =
             query.featureStates.filter((v) => !v.id)
           const featureStatesToUpdate: Req['createFeatureVersion']['feature_states_to_update'] =
-            query.featureStates.filter((v) => !v.id)
+            query.featureStates.filter((v) => !!v.id)
           const segmentIdsToDeleteOverrides: Req['createFeatureVersion']['segment_ids_to_delete_overrides'] =
             []
 
@@ -34,8 +40,12 @@ export const featureVersionService = service
             await createFeatureVersion(getStore(), {
               environmentId: query.environmentId,
               featureId: query.featureId,
-              feature_states_to_create: featureStatesToCreate,
-              feature_states_to_update: featureStatesToUpdate,
+              feature_states_to_create: transformFeatureStates(
+                featureStatesToCreate,
+              ),
+              feature_states_to_update: transformFeatureStates(
+                featureStatesToUpdate,
+              ),
               publish_immediately: !query.skipPublish,
               segment_ids_to_delete_overrides: segmentIdsToDeleteOverrides,
             })
@@ -63,13 +73,12 @@ export const featureVersionService = service
                 priority: v.feature_segment!.priority,
               }
             })
-          if (prioritiesToUpdate.length) {
-            await updateSegmentPriorities(getStore(), prioritiesToUpdate)
-          }
 
           const ret = {
             data: res.map((item) => ({
-              ...item,
+              data: {
+                ...item,
+              },
               version_sha: versionRes.data.uuid,
             })),
             error: res.find((v) => !!v.error)?.error,
