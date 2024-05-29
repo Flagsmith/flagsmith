@@ -15,13 +15,14 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({
   id,
   organisationPlan,
 }) => {
-  const { data: totalApiCalls } = useGetOrganisationUsageQuery(
-    {
-      organisationId: id,
-      period: 'current_billing_period',
-    },
-    { skip: !id },
-  )
+  let body = { organisationId: id }
+  if (Utils.getPlanName(organisationPlan) !== 'free') {
+    body = { ...body, ...{ period: 'current_billing_period' } }
+  }
+
+  const { data: totalApiCalls } = useGetOrganisationUsageQuery(body, {
+    skip: !id,
+  })
   const { data: maxApiCalls } = useGetSubscriptionMetadataQuery({ id })
   const maxApiCallsPercentage = Utils.calculateRemainingLimitsPercentage(
     totalApiCalls?.totals.total,
