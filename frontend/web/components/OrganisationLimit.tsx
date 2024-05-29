@@ -30,11 +30,11 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({
     70,
   ).percentage
 
-  const errorMessageText = `${Format.shortenNumber(
+  const apiUsageMessageText = `${Format.shortenNumber(
     totalApiCalls?.totals.total,
   )}/${Format.shortenNumber(maxApiCalls?.max_api_calls)}`
 
-  const alertMaxApiCallsText = `You have used ${errorMessageText} of your allowed requests.`
+  const alertMaxApiCallsText = `You have used ${apiUsageMessageText} of your allowed requests.`
 
   return (
     <Row>
@@ -49,7 +49,7 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({
         ) : (
           maxApiCallsPercentage >= 100 && (
             <ErrorMessage
-              error={errorMessageText}
+              error={apiUsageMessageText}
               organisationPlan={organisationPlan}
               errorMessageClass={'announcement'}
               enabledButton
