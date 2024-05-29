@@ -59,6 +59,7 @@ export type Req = {
     organisationId: string
     projectId?: string
     environmentId?: string
+    period?: string
   }
   deleteIdentity: {
     id: string
@@ -476,6 +477,5 @@ export type Req = {
     feature?: number
   }
   getFeatureSegment: { id: string }
-  getApiOrganisationUsage: { organisation_id: string }
   // END OF TYPES
 }

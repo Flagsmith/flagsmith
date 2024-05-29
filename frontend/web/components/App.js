@@ -364,10 +364,6 @@ const App = class extends Component {
             const inner = (
               <div>
                 <ButterBar
-                  organisationId={AccountStore.getOrganisation()?.id}
-                  organisationPlan={
-                    AccountStore.getOrganisation()?.subscription.plan
-                  }
                   projectId={projectId}
                   billingStatus={
                     AccountStore.getOrganisation()?.subscription.billing_status
@@ -382,6 +378,9 @@ const App = class extends Component {
                     {user && (
                       <OrganisationLimit
                         id={AccountStore.getOrganisation()?.id}
+                        organisationPlan={
+                          AccountStore.getOrganisation()?.subscription.plan
+                        }
                       />
                     )}
                     {user && showBanner && (

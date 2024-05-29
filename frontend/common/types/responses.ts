@@ -549,12 +549,6 @@ export type MetadataModelField = {
   is_required_for: isRequiredFor[]
 }
 
-export type ApiOrganisationUsage = {
-  organisation_id: number
-  percent_usage: number
-  notified_at: string
-}
-
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -627,7 +621,7 @@ export type Res = {
   rolesPermissionUsers: PagedResponse<RolePermissionUser>
   createRolePermissionGroup: RolePermissionGroup
   rolePermissionGroup: PagedResponse<RolePermissionGroup>
-  getSubscriptionMetadata: { id: string }
+  getSubscriptionMetadata: { id: string; max_api_calls: number }
   environment: Environment
   metadataModelFieldList: PagedResponse<MetadataModelField>
   metadataModelField: MetadataModelField
@@ -666,6 +660,5 @@ export type Res = {
   identityFeatureStates: PagedResponse<FeatureState>
   cloneidentityFeatureStates: IdentityFeatureState
   featureStates: PagedResponse<FeatureState>
-  apiOrganisationUsage: PagedResponse<ApiOrganisationUsage>
   // END OF TYPES
 }

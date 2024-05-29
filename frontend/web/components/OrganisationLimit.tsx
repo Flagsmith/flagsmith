@@ -8,12 +8,17 @@ import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsa
 
 type OrganisationLimitType = {
   id: string
+  organisationPlan: string
 }
 
-const OrganisationLimit: FC<OrganisationLimitType> = ({ id }) => {
+const OrganisationLimit: FC<OrganisationLimitType> = ({
+  id,
+  organisationPlan,
+}) => {
   const { data: totalApiCalls } = useGetOrganisationUsageQuery(
     {
       organisationId: id,
+      period: 'current_billing_period',
     },
     { skip: !id },
   )
@@ -24,11 +29,11 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({ id }) => {
     70,
   ).percentage
 
-  const alertMaxApiCallsText = `You have used ${Format.shortenNumber(
+  const errorMessageText = `${Format.shortenNumber(
     totalApiCalls?.totals.total,
-  )}/${Format.shortenNumber(
-    maxApiCalls?.max_api_calls,
-  )} of your allowed requests.`
+  )}/${Format.shortenNumber(maxApiCalls?.max_api_calls)}`
+
+  const alertMaxApiCallsText = `You have used ${errorMessageText} of your allowed requests.`
 
   return (
     <Row>
@@ -43,9 +48,11 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({ id }) => {
         ) : (
           maxApiCallsPercentage >= 100 && (
             <ErrorMessage
-              error={alertMaxApiCallsText}
+              error={errorMessageText}
+              organisationPlan={organisationPlan}
               errorMessageClass={'announcement'}
               enabledButton
+              exceeded
             />
           )
         ))}
