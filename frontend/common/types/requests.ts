@@ -315,6 +315,11 @@ export type Req = {
   createFeatureVersion: {
     environmentId: number
     featureId: number
+    live_from?: string
+    feature_states_to_create: Omit<FeatureState, 'id'>[]
+    feature_states_to_update: Omit<FeatureState, 'id'>[]
+    publish_immediately: boolean
+    segment_ids_to_delete_overrides: number[]
   }
   publishFeatureVersion: {
     sha: string
