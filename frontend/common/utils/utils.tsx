@@ -462,7 +462,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return id ? 'put' : 'post'
   },
 
-  getTypedValue(str: FlagsmithValue, boolToString?: boolean) {
+  getTypedValue(
+    str: FlagsmithValue,
+    boolToString?: boolean,
+    testWithTrim?: boolean,
+  ) {
     if (typeof str === 'undefined') {
       return ''
     }
@@ -470,26 +474,27 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return str
     }
 
-    const isNum = /^\d+$/.test(str.trim())
+    const typedValue = testWithTrim ? str.trim() : str
+    const isNum = /^\d+$/.test(typedValue)
 
-    if (isNum && parseInt(str.trim()) > Number.MAX_SAFE_INTEGER) {
+    if (isNum && parseInt(typedValue) > Number.MAX_SAFE_INTEGER) {
       return `${str}`
     }
 
-    if (str.trim() === 'true') {
+    if (typedValue === 'true') {
       if (boolToString) return 'true'
       return true
     }
-    if (str.trim() === 'false') {
+    if (typedValue === 'false') {
       if (boolToString) return 'false'
       return false
     }
 
     if (isNum) {
       if (str.indexOf('.') !== -1) {
-        return parseFloat(str)
+        return parseFloat(typedValue)
       }
-      return parseInt(str)
+      return parseInt(typedValue)
     }
 
     return str
@@ -668,7 +673,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
   },
   valueToFeatureState(value: FlagsmithValue) {
-    const val = Utils.getTypedValue(value)
+    const val = Utils.getTypedValue(value, undefined, true)
 
     if (typeof val === 'boolean') {
       return {
