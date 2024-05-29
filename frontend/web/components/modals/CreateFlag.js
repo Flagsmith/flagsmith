@@ -1026,9 +1026,9 @@ const CreateFlag = class extends Component {
                 }
               })
 
-              const onCreateFeature = () => {
+              const onCreateFeature = saveWithValidation(() => {
                 this.save(createFlag, isSaving)
-              }
+              })
 
               const featureLimitAlert =
                 Utils.calculateRemainingLimitsPercentage(
