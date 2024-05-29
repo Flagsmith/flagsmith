@@ -13,7 +13,7 @@ on:
         type: string
         description: Path to the Dockerfile
         required: true
-      slug:
+      image-name:
         type: string
         description: Image slug
         required: true
@@ -29,11 +29,11 @@ on:
     outputs:
       image:
         description: Resulting image specifier
-        value: ${{ inputs.registry-url }}/flagsmith/${{ inputs.slug }}:${{ jobs.build.outputs.version }}
+        value: ${{ inputs.registry-url }}/flagsmith/${{ inputs.image-name }}:${{ jobs.build.outputs.version }}
 
 jobs:
   build:
-    name: Build ${{ inputs.scan && 'and verify ' || '' }}${{ inputs.slug }} image
+    name: Build ${{ inputs.scan && 'and verify ' || '' }}${{ inputs.image-name }} image
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.meta.outputs.version }}
@@ -62,7 +62,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ inputs.registry-url }}/flagsmith/${{ inputs.slug }}
+            ${{ inputs.registry-url }}/flagsmith/${{ inputs.image-name }}
           tags: |
             type=ref,event=branch
             type=ref,event=tag
@@ -81,4 +81,4 @@ jobs:
         if: ${{ inputs.scan }}
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ inputs.registry-url }}/flagsmith/${{ inputs.slug }}:${{ steps.meta.outputs.version }}
+          image-ref: ${{ inputs.registry-url }}/flagsmith/${{ inputs.image-name }}:${{ steps.meta.outputs.version }}

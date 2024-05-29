@@ -35,7 +35,7 @@ jobs:
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
       file: Dockerfile
-      slug: flagsmith
+      image-name: flagsmith
 
   docker-build-api:
     if: github.event.pull_request.draft == false
@@ -43,7 +43,7 @@ jobs:
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
       file: api/Dockerfile
-      slug: flagsmith-api
+      image-name: flagsmith-api
 
   docker-build-frontend:
     if: github.event.pull_request.draft == false
@@ -51,7 +51,7 @@ jobs:
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
       file: frontend/Dockerfile
-      slug: flagsmith-frontend
+      image-name: flagsmith-frontend
 
   docker-build-e2e:
     if: github.event.pull_request.draft == false
@@ -59,7 +59,7 @@ jobs:
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
       file: frontend/Dockerfile.e2e
-      slug: flagsmith-e2e
+      image-name: flagsmith-e2e
       scan: false
 
   run-e2e-tests-local:

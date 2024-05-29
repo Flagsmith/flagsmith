@@ -11,7 +11,7 @@ jobs:
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
       file: api/Dockerfile
-      slug: flagsmith-api
+      image-name: flagsmith-api
 
   run-e2e-tests-local:
     needs: docker-build-api
