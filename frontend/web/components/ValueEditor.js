@@ -93,29 +93,25 @@ class Validation extends Component {
   render() {
     const displayLanguage =
       this.props.language === 'ini' ? 'toml' : this.props.language
-    return (
+    return this.state.error ? (
       <Tooltip
         position='top'
         title={
-          !this.state.error ? (
-            <IonIcon
-              id='language-validation-success'
-              className='language-icon'
-              icon={checkmarkCircle}
-            />
-          ) : (
-            <IonIcon
-              id='language-validation-error'
-              className='language-icon'
-              icon={warning}
-            />
-          )
+          <IonIcon
+            id='language-validation-error'
+            className='language-icon text-danger'
+            icon={warning}
+          />
         }
       >
-        {!this.state.error
-          ? `${displayLanguage} validation passed`
-          : `${displayLanguage} validation error, please check your value.<br/>Error: ${this.state.error}`}
+        {`${displayLanguage} validation error, please check your value.<br/>Error: ${this.state.error}`}
       </Tooltip>
+    ) : (
+      <IonIcon
+        id='language-validation-success'
+        className='language-icon text-success'
+        icon={checkmarkCircle}
+      />
     )
   }
 }
@@ -134,7 +130,11 @@ class ValueEditor extends Component {
   }
 
   renderValidation = () => (
-    <Validation language={this.state.language} value={this.props.value} />
+    <Validation
+      key={this.state.language}
+      language={this.state.language}
+      value={this.props.value}
+    />
   )
 
   render() {
