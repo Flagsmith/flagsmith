@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.test import APIClient
 
 from features.feature_external_resources.models import FeatureExternalResource
+from features.models import Feature
 from integrations.github.constants import GITHUB_API_URL
 from integrations.github.models import GithubConfiguration, GithubRepository
 from integrations.github.views import (
@@ -29,6 +30,17 @@ WEBHOOK_PAYLOAD_WITH_AN_INVALID_INSTALLATION_ID = json.dumps(
 WEBHOOK_PAYLOAD_WITHOUT_INSTALLATION_ID = json.dumps(
     {"installation": {"test": 765432}, "action": "deleted"}
 )
+WEBHOOK_PAYLOAD_MERGED = json.dumps(
+    {
+        "pull_request": {
+            "id": 1234567,
+            "html_url": "https://github.com/repositoryownertest/repositorynametest/issues/11",
+            "merged": True,
+        },
+        "action": "closed",
+    }
+)
+
 WEBHOOK_SIGNATURE = "sha1=57a1426e19cdab55dd6d0c191743e2958e50ccaa"
 WEBHOOK_SIGNATURE_WITH_AN_INVALID_INSTALLATION_ID = (
     "sha1=081eef49d04df27552587d5df1c6b76e0fe20d21"
@@ -36,6 +48,7 @@ WEBHOOK_SIGNATURE_WITH_AN_INVALID_INSTALLATION_ID = (
 WEBHOOK_SIGNATURE_WITHOUT_INSTALLATION_ID = (
     "sha1=f99796bd3cebb902864e87ed960c5cca8772ff67"
 )
+WEBHOOK_MERGED_ACTION_SIGNATURE = "sha1=712ec7a5db14aad99d900da40738ebb9508ecad2"
 WEBHOOK_SECRET = "secret-key"
 
 
@@ -656,37 +669,35 @@ def test_github_webhook_delete_installation(
     assert not GithubConfiguration.objects.filter(installation_id=1234567).exists()
 
 
-def test_github_webhook_with_non_existing_installation(
+def test_github_webhook_merged_a_pull_request(
     api_client: APIClient,
+    feature: Feature,
     github_configuration: GithubConfiguration,
-    mocker: MockerFixture,
+    github_repository: GithubRepository,
+    feature_external_resource: FeatureExternalResource,
 ) -> None:
     # Given
     settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
     url = reverse("api-v1:github-webhook")
-    mocker_logger = mocker.patch("integrations.github.github.logger")
 
     # When
     response = api_client.post(
         path=url,
-        data=WEBHOOK_PAYLOAD_WITH_AN_INVALID_INSTALLATION_ID,
+        data=WEBHOOK_PAYLOAD_MERGED,
         content_type="application/json",
-        HTTP_X_HUB_SIGNATURE=WEBHOOK_SIGNATURE_WITH_AN_INVALID_INSTALLATION_ID,
-        HTTP_X_GITHUB_EVENT="installation",
+        HTTP_X_HUB_SIGNATURE=WEBHOOK_MERGED_ACTION_SIGNATURE,
+        HTTP_X_GITHUB_EVENT="pull_request",
     )
 
     # Then
-    mocker_logger.error.assert_called_once_with(
-        "GitHub Configuration with installation_id 765432 does not exist"
-    )
+    feature.refresh_from_db()
     assert response.status_code == status.HTTP_200_OK
-
+    assert feature.tags.first().label == "PR Merged"    
 
 def test_github_webhook_without_installation_id(
     api_client: APIClient,
-    github_configuration: GithubConfiguration,
     mocker: MockerFixture,
-) -> None:
+)-> None:
     # Given
     settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
     url = reverse("api-v1:github-webhook")
@@ -704,6 +715,32 @@ def test_github_webhook_without_installation_id(
     # Then
     mocker_logger.error.assert_called_once_with(
         "The installation_id is not present in the payload: {'installation': {'test': 765432}, 'action': 'deleted'}"
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+
+def test_github_webhook_with_non_existing_installation(
+    api_client: APIClient,
+    github_configuration: GithubConfiguration,
+    mocker: MockerFixture,
+)-> None:
+    # Given
+    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
+    url = reverse("api-v1:github-webhook")
+    mocker_logger = mocker.patch("integrations.github.github.logger")
+
+    # When
+    response = api_client.post(
+        path=url,
+        data=WEBHOOK_PAYLOAD_WITH_AN_INVALID_INSTALLATION_ID,
+        content_type="application/json",
+        HTTP_X_HUB_SIGNATURE=WEBHOOK_SIGNATURE_WITH_AN_INVALID_INSTALLATION_ID,
+        HTTP_X_GITHUB_EVENT="installation",
+    )
+
+    # Then
+    mocker_logger.error.assert_called_once_with(
+        "GitHub Configuration with installation_id 765432 does not exist"
     )
     assert response.status_code == status.HTTP_200_OK
 

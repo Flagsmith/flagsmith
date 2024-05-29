@@ -21,7 +21,10 @@ from integrations.github.client import (
     fetch_search_github_resource,
 )
 from integrations.github.exceptions import DuplicateGitHubIntegration
-from integrations.github.github import handle_github_webhook_event
+from integrations.github.github import (
+    handle_github_webhook_event,
+    tag_by_event_type,
+)
 from integrations.github.helpers import github_webhook_payload_is_valid
 from integrations.github.models import GithubConfiguration, GithubRepository
 from integrations.github.permissions import HasPermissionToGithubConfiguration
@@ -250,7 +253,7 @@ def github_webhook(request) -> Response:
         payload_body=payload, secret_token=secret, signature_header=signature
     ):
         data = json.loads(payload.decode("utf-8"))
-        if github_event == "installation":
+        if github_event == "installation" or github_event in tag_by_event_type:
             handle_github_webhook_event(event_type=github_event, payload=data)
             return Response({"detail": "Event processed"}, status=200)
         else:

@@ -159,6 +159,9 @@ def fetch_search_github_resource(
             "id": i["id"],
             "title": i["title"],
             "number": i["number"],
+            "state": i["state"],
+            "merged": i.get("merged", False),
+            "draft": i.get("draft", False),
         }
         for i in json_response["items"]
     ]

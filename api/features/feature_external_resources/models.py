@@ -1,3 +1,4 @@
+import json
 import logging
 
 from django.db import models
@@ -11,8 +12,10 @@ from django_lifecycle import (
 
 from environments.models import Environment
 from features.models import Feature, FeatureState
+from integrations.github.constants import GitHubTag
 from integrations.github.github import call_github_task
 from organisations.models import Organisation
+from projects.tags.models import Tag, TagType
 from webhooks.webhooks import WebhookEventType
 
 logger = logging.getLogger(__name__)
@@ -22,6 +25,20 @@ class ResourceType(models.TextChoices):
     # GitHub external resource types
     GITHUB_ISSUE = "GITHUB_ISSUE", "GitHub Issue"
     GITHUB_PR = "GITHUB_PR", "GitHub PR"
+
+
+tag_by_type_and_state = {
+    ResourceType.GITHUB_ISSUE.value: {
+        "open": GitHubTag.ISSUE_OPEN.value,
+        "closed": GitHubTag.ISSUE_CLOSED.value,
+    },
+    ResourceType.GITHUB_PR.value: {
+        "open": GitHubTag.PR_OPEN.value,
+        "closed": GitHubTag.PR_CLOSED.value,
+        "merged": GitHubTag.PR_MERGED.value,
+        "draft": GitHubTag.PR_DRAFT.value,
+    },
+}
 
 
 class FeatureExternalResource(LifecycleModelMixin, models.Model):
@@ -49,6 +66,18 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
 
     @hook(AFTER_SAVE)
     def execute_after_save_actions(self):
+        # Tag the feature with the external resource type
+        metadata = json.loads(self.metadata) if self.metadata else {}
+        state = metadata.get("state", "open")
+        github_tag = Tag.objects.get(
+            label=tag_by_type_and_state[self.type][state],
+            project=self.feature.project,
+            is_system_tag=True,
+            type=TagType.GITHUB.value,
+        )
+
+        self.feature.tags.add(github_tag)
+
         # Add a comment to GitHub Issue/PR when feature is linked to the GH external resource
         if (
             Organisation.objects.prefetch_related("github_config")
