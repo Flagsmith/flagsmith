@@ -4,6 +4,8 @@ import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { Clipboard } from 'polyfill-react-native'
 import Icon from './Icon'
+import { IonIcon } from '@ionic/react';
+import { warning } from 'ionicons/icons';
 
 const toml = require('toml')
 const yaml = require('yaml')
@@ -98,9 +100,10 @@ class Validation extends Component {
           !this.state.error ? (
             <span className='language-icon ion-ios-checkmark-circle' />
           ) : (
-            <span
+            <IonIcon
               id='language-validation-error'
-              className='language-icon ion-ios-warning'
+              className='language-icon'
+              icon={warning}
             />
           )
         }

@@ -41,6 +41,21 @@ import { getGithubIntegration } from 'common/services/useGithubIntegration'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
 
+const saveWithValidation = (cb) => {
+  return () => {
+    if (document.getElementById('language-validation-error')) {
+      openConfirm({
+        body: 'Your remote config value does not pass validation for the language you have selected. Are you sure you wish to save?',
+        noText: 'Cancel',
+        onYes: () => cb(),
+        title: 'Validation error',
+        yesText: 'Save',
+      })
+    } else {
+      cb()
+    }
+  }
+}
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
 
@@ -855,7 +870,7 @@ const CreateFlag = class extends Component {
                 editFeatureValue,
               },
             ) => {
-              const saveFeatureValue = (schedule) => {
+              const saveFeatureValue = saveWithValidation((schedule) => {
                 this.setState({ valueChanged: false })
                 if ((is4Eyes || schedule) && !identity) {
                   openModal2(
@@ -926,29 +941,17 @@ const CreateFlag = class extends Component {
                       }}
                     />,
                   )
-                } else if (
-                  document.getElementById('language-validation-error')
-                ) {
-                  openConfirm({
-                    body: 'Your remote config value does not pass validation for the language you have selected. Are you sure you wish to save?',
-                    noText: 'Cancel',
-                    onYes: () => {
-                      this.save(editFeatureValue, isSaving)
-                    },
-                    title: 'Validation error',
-                    yesText: 'Save',
-                  })
                 } else {
                   this.save(editFeatureValue, isSaving)
                 }
-              }
+              })
 
               const saveSettings = () => {
                 this.setState({ settingsChanged: false })
                 this.save(editFeatureSettings, isSaving)
               }
 
-              const saveFeatureSegments = () => {
+              const saveFeatureSegments = saveWithValidation(() => {
                 this.setState({ segmentsChanged: false })
 
                 if (is4Eyes && isVersioned && !identity) {
@@ -1021,7 +1024,7 @@ const CreateFlag = class extends Component {
                 } else {
                   this.save(editFeatureSegments, isSaving)
                 }
-              }
+              })
 
               const onCreateFeature = () => {
                 this.save(createFlag, isSaving)
