@@ -274,6 +274,7 @@ def test_login_workflow_with_mfa_enabled(
 def test_throttle_login_workflows(
     api_client: APIClient,
     db: None,
+    reset_cache: None,
 ) -> None:
     # verify that a throttle rate exists already then set it
     # to something easier to reliably test
