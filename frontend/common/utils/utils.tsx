@@ -470,17 +470,17 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return str
     }
 
-    const isNum = /^\d+$/.test(str)
+    const isNum = /^\d+$/.test(str.trim())
 
-    if (isNum && parseInt(str) > Number.MAX_SAFE_INTEGER) {
+    if (isNum && parseInt(str.trim()) > Number.MAX_SAFE_INTEGER) {
       return `${str}`
     }
 
-    if (str === 'true') {
+    if (str.trim() === 'true') {
       if (boolToString) return 'true'
       return true
     }
-    if (str === 'false') {
+    if (str.trim() === 'false') {
       if (boolToString) return 'false'
       return false
     }
