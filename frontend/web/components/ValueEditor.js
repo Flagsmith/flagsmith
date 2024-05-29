@@ -99,7 +99,7 @@ class Validation extends Component {
         title={
           !this.state.error ? (
             <IonIcon
-              id='language-validation-error'
+              id='language-validation-success'
               className='language-icon'
               icon={checkmarkCircle}
             />
