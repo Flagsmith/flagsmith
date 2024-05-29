@@ -42,7 +42,7 @@ class CreateSegmentOverrideFeatureSegmentSerializer(serializers.ModelSerializer)
     # Since the `priority` field on the FeatureSegment model is set to editable=False
     # (to adhere to the django-ordered-model functionality), we redefine the priority
     # field here, and use it manually in the save method.
-    priority = serializers.IntegerField(min_value=1, required=False)
+    priority = serializers.IntegerField(min_value=0, required=False)
 
     class Meta:
         model = FeatureSegment
