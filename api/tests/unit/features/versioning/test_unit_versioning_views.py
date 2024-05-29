@@ -3,6 +3,7 @@ import typing
 from datetime import datetime, timedelta
 
 import pytest
+from core.constants import STRING
 from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
@@ -15,6 +16,7 @@ from environments.permissions.constants import (
     VIEW_ENVIRONMENT,
 )
 from features.models import Feature, FeatureSegment, FeatureState
+from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.models import EnvironmentFeatureVersion
 from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
@@ -895,3 +897,63 @@ def test_create_segment_override_for_existing_override_when_creating_new_version
         "feature_states_to_create": "Segment override already exists for Segment %d"
         % segment.id
     }
+
+
+def test_create_new_version_for_multivariate_feature(
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    environment_v2_versioning: Environment,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions(
+        [VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE], environment_v2_versioning.id
+    )
+    with_project_permissions([VIEW_PROJECT])
+
+    create_version_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, multivariate_feature.id],
+    )
+
+    data = {
+        "feature_states_to_update": [
+            {
+                "feature_segment": None,
+                "enabled": True,
+                "feature_state_value": {
+                    "type": STRING,
+                    "string_value": multivariate_feature.initial_value,
+                },
+                "multivariate_feature_state_values": [
+                    {
+                        "multivariate_feature_option": mvfo.id,
+                        "percentage_allocation": 10,
+                    }
+                    for mvfo in multivariate_options
+                ],
+            }
+        ]
+    }
+
+    # When
+    response = staff_client.post(
+        create_version_url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    version_uuid = response.json()["uuid"]
+    new_version = EnvironmentFeatureVersion.objects.get(uuid=version_uuid)
+
+    assert all(
+        [
+            mvfsv.percentage_allocation == 10
+            for mvfsv in new_version.feature_states.get(
+                feature=multivariate_feature
+            ).multivariate_feature_state_values.all()
+        ]
+    )

@@ -197,6 +197,22 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
         else:
             instance = version.feature_states.get(feature_segment__isnull=True)
 
+        # TODO: can this be simplified at all?
+        for existing_mvfsv in instance.multivariate_feature_state_values.all():
+            updated_mvfsv_dicts = feature_state.get(
+                "multivariate_feature_state_values", []
+            )
+            updated_mvfsv_dict = next(
+                filter(
+                    lambda d: d["multivariate_feature_option"]
+                    == existing_mvfsv.multivariate_feature_option_id,
+                    updated_mvfsv_dicts,
+                ),
+                None,
+            )
+            if updated_mvfsv_dict:
+                updated_mvfsv_dict["id"] = existing_mvfsv.id
+
         fs_serializer = EnvironmentFeatureVersionFeatureStateSerializer(
             instance=instance,
             data=feature_state,

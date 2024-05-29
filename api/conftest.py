@@ -447,6 +447,13 @@ def multivariate_feature(project):
 
 
 @pytest.fixture()
+def multivariate_options(
+    multivariate_feature: Feature,
+) -> list[MultivariateFeatureOption]:
+    return list(multivariate_feature.multivariate_options.all())
+
+
+@pytest.fixture()
 def identity_matching_segment(project, trait):
     segment = Segment.objects.create(name="Matching segment", project=project)
     matching_rule = SegmentRule.objects.create(
