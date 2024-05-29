@@ -33,8 +33,10 @@ class FeatureStateManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
 
         qs_filter = Q(environment=environment, deleted_at__isnull=True)
         if environment.use_v2_feature_versioning:
-            latest_versions = EnvironmentFeatureVersion.objects.get_latest_versions(
-                environment
+            latest_versions = (
+                EnvironmentFeatureVersion.objects.get_latest_versions_by_environment_id(
+                    environment.id
+                )
             )
             latest_version_uuids = [efv.uuid for efv in latest_versions]
 

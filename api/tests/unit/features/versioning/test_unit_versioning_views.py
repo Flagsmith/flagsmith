@@ -7,33 +7,29 @@ from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from environments.models import Environment
 from environments.permissions.constants import VIEW_ENVIRONMENT
-from features.models import FeatureSegment, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from projects.permissions import VIEW_PROJECT
+from segments.models import Segment
 from tests.types import (
     WithEnvironmentPermissionsCallable,
     WithProjectPermissionsCallable,
 )
-
-if typing.TYPE_CHECKING:
-    from rest_framework.test import APIClient
-
-    from features.models import Feature
-    from segments.models import Segment
-    from users.models import FFAdminUser
+from users.models import FFAdminUser
 
 now = timezone.now()
 tomorrow = now + timedelta(days=1)
 
 
 def test_get_versions_for_a_feature_and_environment(
-    admin_client: "APIClient",
-    admin_user: "FFAdminUser",
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
     environment_v2_versioning: Environment,
-    feature: "Feature",
+    feature: Feature,
 ) -> None:
     # Given
     url = reverse(
@@ -74,10 +70,10 @@ def test_get_versions_for_a_feature_and_environment(
 
 
 def test_create_new_feature_version(
-    admin_user: "FFAdminUser",
-    admin_client: "APIClient",
+    admin_user: FFAdminUser,
+    admin_client: APIClient,
     environment_v2_versioning: Environment,
-    feature: "Feature",
+    feature: Feature,
 ) -> None:
     # Given
     url = reverse(
@@ -97,9 +93,9 @@ def test_create_new_feature_version(
 
 
 def test_delete_feature_version(
-    admin_client: "APIClient",
+    admin_client: APIClient,
     environment_v2_versioning: Environment,
-    feature: "Feature",
+    feature: Feature,
 ) -> None:
     # Given
     # an unpublished version
@@ -127,9 +123,9 @@ def test_delete_feature_version(
 
 
 def test_cannot_delete_live_feature_version(
-    admin_client: "APIClient",
+    admin_client: APIClient,
     environment_v2_versioning: Environment,
-    feature: "Feature",
+    feature: Feature,
 ) -> None:
     # Given
     # the initial published version
@@ -157,10 +153,10 @@ def test_cannot_delete_live_feature_version(
 
 @pytest.mark.parametrize("live_from", (None, tomorrow))
 def test_publish_feature_version(
-    admin_client: "APIClient",
-    admin_user: "FFAdminUser",
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
     environment_v2_versioning: Environment,
-    feature: "Feature",
+    feature: Feature,
     live_from: typing.Optional[datetime],
 ) -> None:
     # Given
@@ -194,10 +190,48 @@ def test_publish_feature_version(
     )
 
 
-def test_list_environment_feature_version_feature_states(
-    admin_client: "APIClient",
+@pytest.mark.parametrize("live_from", (None, tomorrow))
+def test_publish_feature_version_using_master_api_key(
+    admin_master_api_key_client: APIClient,
     environment_v2_versioning: Environment,
-    feature: "Feature",
+    feature: Feature,
+    live_from: datetime | None,
+) -> None:
+    # Given
+    # an unpublished version
+    environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-publish",
+        args=[
+            environment_v2_versioning.id,
+            feature.id,
+            environment_feature_version.uuid,
+        ],
+    )
+
+    # When
+    with freeze_time(now):
+        response = admin_master_api_key_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    environment_feature_version.refresh_from_db()
+    assert environment_feature_version.is_live is True
+    assert environment_feature_version.published is True
+    assert environment_feature_version.published_by is None
+    assert (
+        environment_feature_version.live_from == now if live_from is None else live_from
+    )
+
+
+def test_list_environment_feature_version_feature_states(
+    admin_client: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
 ) -> None:
     # Given
     environment_feature_version = EnvironmentFeatureVersion.objects.get(
@@ -224,10 +258,10 @@ def test_list_environment_feature_version_feature_states(
 
 
 def test_add_environment_feature_version_feature_state(
-    admin_client: "APIClient",
+    admin_client: APIClient,
     environment_v2_versioning: Environment,
-    segment: "Segment",
-    feature: "Feature",
+    segment: Segment,
+    feature: Feature,
 ) -> None:
     # Given
     # an unpublished environment feature version
@@ -265,10 +299,10 @@ def test_add_environment_feature_version_feature_state(
 
 
 def test_cannot_add_feature_state_to_published_environment_feature_version(
-    admin_client: "APIClient",
+    admin_client: APIClient,
     environment_v2_versioning: Environment,
-    segment: "Segment",
-    feature: "Feature",
+    segment: Segment,
+    feature: Feature,
 ) -> None:
     # Given
     # the initial (published) environment feature version
@@ -306,9 +340,9 @@ def test_cannot_add_feature_state_to_published_environment_feature_version(
 
 
 def test_update_environment_feature_version_feature_state(
-    admin_client: "APIClient",
+    admin_client: APIClient,
     environment_v2_versioning: Environment,
-    feature: "Feature",
+    feature: Feature,
 ) -> None:
     # Given
     # an unpublished environment feature version
@@ -348,10 +382,10 @@ def test_update_environment_feature_version_feature_state(
 
 
 def test_cannot_update_feature_state_in_published_environment_feature_version(
-    admin_client: "APIClient",
-    admin_user: "FFAdminUser",
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
     environment_v2_versioning: Environment,
-    feature: "Feature",
+    feature: Feature,
 ) -> None:
     # Given
     # the initial (published) environment feature version
@@ -393,11 +427,11 @@ def test_cannot_update_feature_state_in_published_environment_feature_version(
 
 
 def test_delete_environment_feature_version_feature_state(
-    admin_client: "APIClient",
-    admin_user: "FFAdminUser",
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
     environment_v2_versioning: Environment,
-    segment: "Segment",
-    feature: "Feature",
+    segment: Segment,
+    feature: Feature,
 ) -> None:
     # Given
     # an unpublished environment feature version
@@ -436,11 +470,11 @@ def test_delete_environment_feature_version_feature_state(
 
 
 def test_cannot_delete_feature_state_in_published_environment_feature_version(
-    admin_client: "APIClient",
-    admin_user: "FFAdminUser",
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
     environment_v2_versioning: Environment,
-    segment: "Segment",
-    feature: "Feature",
+    segment: Segment,
+    feature: Feature,
 ) -> None:
     # Given
     # an unpublished environment feature version
@@ -484,10 +518,10 @@ def test_cannot_delete_feature_state_in_published_environment_feature_version(
 
 
 def test_cannot_delete_environment_default_feature_state_for_unpublished_environment_feature_version(
-    admin_client: "APIClient",
-    admin_user: "FFAdminUser",
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
     environment_v2_versioning: Environment,
-    feature: "Feature",
+    feature: Feature,
 ) -> None:
     # Given
     # an unpublished environment feature version
@@ -530,9 +564,9 @@ def test_cannot_delete_environment_default_feature_state_for_unpublished_environ
 
 def test_filter_versions_by_is_live(
     environment_v2_versioning: Environment,
-    feature: "Feature",
-    staff_user: "FFAdminUser",
-    staff_client: "APIClient",
+    feature: Feature,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
@@ -586,7 +620,7 @@ def test_filter_versions_by_is_live(
 
 def test_disable_v2_versioning_returns_bad_request_if_not_using_v2_versioning(
     environment: Environment,
-    staff_client: "APIClient",
+    staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
     # Given

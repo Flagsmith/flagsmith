@@ -1,6 +1,7 @@
 import datetime
 import typing
 import uuid
+from copy import deepcopy
 
 from core.models import (
     SoftDeleteExportableModel,
@@ -116,8 +117,8 @@ class EnvironmentFeatureVersion(
 
     def publish(
         self,
-        published_by: "FFAdminUser",
-        live_from: datetime.datetime = None,
+        published_by: typing.Union["FFAdminUser", None] = None,
+        live_from: datetime.datetime | None = None,
         persist: bool = True,
     ) -> None:
         now = timezone.now()
@@ -128,3 +129,14 @@ class EnvironmentFeatureVersion(
         if persist:
             self.save()
             environment_feature_version_published.send(self.__class__, instance=self)
+
+    def clone_to_environment(
+        self, environment: "Environment"
+    ) -> "EnvironmentFeatureVersion":
+        _clone = deepcopy(self)
+
+        _clone.uuid = None
+        _clone.environment = environment
+
+        _clone.save()
+        return _clone

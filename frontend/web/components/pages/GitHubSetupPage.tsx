@@ -6,6 +6,7 @@ import InputGroup from 'components/base/forms/InputGroup'
 import ProjectFilter from 'components/ProjectFilter'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
+import AppActions from 'common/dispatcher/app-actions'
 import { useCreateGithubIntegrationMutation } from 'common/services/useGithubIntegration'
 import { useCreateGithubRepositoryMutation } from 'common/services/useGithubRepository'
 import { useGetGithubReposQuery } from 'common/services/useGithub'
@@ -19,9 +20,10 @@ type GitHubSetupPageType = {
   location: Location
 }
 
-type projectType = {
+type ProjectType = {
   id: string
   name: string
+  repo: string
 }
 
 type repoType = {
@@ -37,7 +39,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
     localStorage?.githubIntegrationSetupFromFlagsmith
   const [organisation, setOrganisation] = useState<string>('')
   const [project, setProject] = useState<any>({})
-  const [projects, setProjects] = useState<projectType[]>([])
+  const [projects, setProjects] = useState<ProjectType[]>([])
   const [repositoryName, setRepositoryName] = useState<string>('')
   const [repositoryOwner, setRepositoryOwner] = useState<string>('')
   const [repositories, setRepositories] = useState<any>([])
@@ -47,7 +49,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
       installation_id: installationId,
       organisation_id: organisation,
     },
-    { skip: !installationId },
+    { skip: !installationId || !organisation },
   )
 
   const [createGithubIntegration] = useCreateGithubIntegrationMutation()
@@ -59,8 +61,8 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
   ] = useCreateGithubRepositoryMutation()
 
   useEffect(() => {
-    if (reposLoaded && repos.repositories) {
-      setRepositoryOwner(repos?.repositories[0].owner.login)
+    if (reposLoaded && repos.results) {
+      setRepositoryOwner(repos?.results[0].full_name.split('/')[0])
       setRepositories(repos)
     }
   }, [repos, reposLoaded])
@@ -72,6 +74,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
     ) {
       window.location.href = `${baseUrl}/`
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSuccessCreatedGithubRepository])
 
   useEffect(() => {
@@ -124,7 +127,9 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
             <label>Select your Flagsmith Organisation</label>
             <OrganisationSelect
               onChange={(organisationId: string) => {
-                setOrganisation(organisationId)
+                setOrganisation(`${organisationId}`)
+                AppActions.selectOrganisation(organisationId)
+                AppActions.getOrganisation(organisationId)
               }}
               showSettings={false}
               firstOrganisation
@@ -163,20 +168,28 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
                 size='select-md'
                 placeholder={'Select your repository'}
                 onChange={(v: repoType) => setRepositoryName(v.label)}
-                options={repositories?.repositories?.map((r: repoType) => {
+                options={repositories?.results?.map((r: repoType) => {
                   return { label: r.name, value: r.name }
                 })}
               />
             </div>
             <Button
               theme='primary'
-              disabled={!project || !installationId || !repositoryName}
+              disabled={
+                !(
+                  Object.entries(project).length &&
+                  installationId &&
+                  repositoryName
+                )
+              }
               onClick={() => {
-                {
-                  const newProjects = [...projects]
-                  newProjects.push(project)
-                  setProjects(newProjects)
+                const newProjects = [...projects]
+                const projectWithRepo = {
+                  ...project,
+                  repo: repositoryName,
                 }
+                newProjects.push(projectWithRepo)
+                setProjects(newProjects)
               }}
             >
               Add Project
@@ -189,6 +202,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
             header={
               <Row className='table-header'>
                 <Flex className='table-column px-3'>Project</Flex>
+                <Flex className='table-column px-3'>Repository</Flex>
                 <div
                   className='table-column text-center'
                   style={{ width: '80px' }}
@@ -197,10 +211,13 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
                 </div>
               </Row>
             }
-            renderRow={(v: projectType) => (
-              <Row className='list-item' key={v.value}>
+            renderRow={(v: ProjectType) => (
+              <Row className='list-item' key={v.id}>
                 <Flex className='table-column px-3'>
                   <div className='font-weight-medium mb-1'>{v.name}</div>
+                </Flex>
+                <Flex className='table-column px-3'>
+                  <div className='font-weight-medium mb-1'>{v.repo}</div>
                 </Flex>
                 <div
                   className='table-column  text-center'
@@ -209,7 +226,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
                   <Button
                     onClick={() => {
                       setProjects(
-                        projects.filter((p: projectType) => p.id !== v.id),
+                        projects.filter((p: ProjectType) => p.repo !== v.repo),
                       )
                     }}
                     className='btn btn-with-icon'
@@ -237,7 +254,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
                         await createGithubRepository({
                           body: {
                             project: project.id,
-                            repository_name: repositoryName,
+                            repository_name: project.repo,
                             repository_owner: repositoryOwner,
                           },
                           github_id: res?.data?.id,

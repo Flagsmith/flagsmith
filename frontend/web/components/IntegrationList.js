@@ -40,7 +40,7 @@ class Integration extends Component {
     const childWindow = window.open(
       `${Project.githubAppURL}`,
       '_blank',
-      'height=600,width=800,status=yes,toolbar=no,menubar=no,addressbar=no',
+      'height=700%,width=800%,status=yes,toolbar=no,menubar=no,addressbar=no',
     )
 
     childWindow.localStorage.setItem(
@@ -65,6 +65,7 @@ class Integration extends Component {
           this.setState({
             reFetchgithubId: res?.data?.results[0]?.id,
           })
+          this.add()
         })
       }
     })
@@ -225,16 +226,24 @@ class IntegrationList extends Component {
   componentDidMount() {
     this.fetch()
     if (Utils.getFlagsmithHasFeature('github_integration')) {
-      getGithubIntegration(getStore(), {
-        organisation_id: AccountStore.getOrganisation().id,
-      }).then((res) => {
-        this.setState({
-          githubId: res?.data?.results[0]?.id,
-          hasIntegrationWithGithub: !!res?.data?.results?.length,
-          installationId: res?.data?.results[0]?.installation_id,
-        })
-      })
+      this.fetchGithubIntegration()
     }
+  }
+
+  fetchGithubIntegration = () => {
+    getGithubIntegration(
+      getStore(),
+      {
+        organisation_id: AccountStore.getOrganisation().id,
+      },
+      { forceRefetch: true },
+    ).then((res) => {
+      this.setState({
+        githubId: res?.data?.results[0]?.id,
+        hasIntegrationWithGithub: !!res?.data?.results?.length,
+        installationId: res?.data?.results[0]?.installation_id,
+      })
+    })
   }
 
   fetch = () => {
@@ -271,11 +280,13 @@ class IntegrationList extends Component {
               return allItems
             })
           }
-          return _data
-            .get(
-              `${Project.api}projects/${this.props.projectId}/integrations/${key}/`,
-            )
-            .catch(() => {})
+          if (key !== 'github') {
+            return _data
+              .get(
+                `${Project.api}projects/${this.props.projectId}/integrations/${key}/`,
+              )
+              .catch(() => {})
+          }
         }
       }),
     ).then((res) => {
@@ -364,7 +375,7 @@ class IntegrationList extends Component {
         }
         githubMeta={{ githubId: githubId, installationId: installationId }}
         projectId={this.props.projectId}
-        onComplete={this.fetch}
+        onComplete={githubId ? this.fetch : this.fetchGithubIntegration}
       />,
       'side-modal',
     )
@@ -391,7 +402,11 @@ class IntegrationList extends Component {
       JSON.parse(Utils.getFlagsmithValue('integration_data'))
     return (
       <div>
-        <div>
+        <div
+          onFocus={() => {
+            this.fetchGithubIntegration()
+          }}
+        >
           {this.props.integrations &&
           !this.state.isLoading &&
           this.state.activeIntegrations &&

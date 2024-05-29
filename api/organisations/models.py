@@ -458,7 +458,7 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
         self.organisation.api_usage_notifications.all().delete()
 
 
-class OranisationAPIUsageNotification(models.Model):
+class OrganisationAPIUsageNotification(models.Model):
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="api_usage_notifications"
     )
@@ -490,3 +490,32 @@ class HubspotOrganisation(models.Model):
     hubspot_id = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class OrganisationAPIBilling(models.Model):
+    """
+    Tracks API billing for when accounts go over their API usage
+    limits. This model is what allows subsequent billing runs
+    to not double bill an organisation for the same use.
+
+    Even though api_overage is charge per 100k API calls, this
+    class tracks the actual rounded count of API calls that are
+    billed for (i.e., 200000 for an account with 234323 api calls
+    and a allowed_30d_api_calls set to 100000, the overage is
+    beyond the allowed api calls).
+    We're intentionally rounding up to the closest hundred thousand.
+
+    The option to set immediate_invoice means whether or not the
+    API billing was processed immediately versus pushed onto the
+    subsequent subscription billing period.
+    """
+
+    organisation = models.ForeignKey(
+        Organisation, on_delete=models.CASCADE, related_name="api_billing"
+    )
+    api_overage = models.IntegerField(null=False)
+    immediate_invoice = models.BooleanField(null=False, default=False)
+    billed_at = models.DateTimeField(null=False)
+
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)

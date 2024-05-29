@@ -1,20 +1,26 @@
 import logging
+import math
 from datetime import timedelta
 
 from app_analytics.influxdb_wrapper import get_current_api_usage
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.mail import send_mail
-from django.db.models import Max
+from django.db.models import F, Max
 from django.template.loader import render_to_string
 from django.utils import timezone
 
 from integrations.flagsmith.client import get_client
 from organisations import subscription_info_cache
+from organisations.chargebee import (
+    add_100k_api_calls_scale_up,
+    add_100k_api_calls_start_up,
+)
 from organisations.models import (
     APILimitAccessBlock,
-    OranisationAPIUsageNotification,
     Organisation,
+    OrganisationAPIBilling,
+    OrganisationAPIUsageNotification,
     OrganisationRole,
     Subscription,
 )
@@ -34,7 +40,13 @@ from .constants import (
     API_USAGE_ALERT_THRESHOLDS,
     API_USAGE_GRACE_PERIOD,
 )
-from .subscriptions.constants import SubscriptionCacheEntity
+from .subscriptions.constants import (
+    SCALE_UP,
+    SCALE_UP_V2,
+    STARTUP,
+    STARTUP_V2,
+    SubscriptionCacheEntity,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +142,7 @@ def send_admin_api_usage_notification(
         fail_silently=True,
     )
 
-    OranisationAPIUsageNotification.objects.create(
+    OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,
         percent_usage=matched_threshold,
         notified_at=timezone.now(),
@@ -147,7 +159,7 @@ def _handle_api_usage_notifications(organisation: Organisation) -> None:
     period_starts_at = relativedelta(months=month_delta) + billing_starts_at
 
     days = relativedelta(now, period_starts_at).days
-    api_usage = get_current_api_usage(organisation.id, f"{days}d")
+    api_usage = get_current_api_usage(organisation.id, f"-{days}d")
 
     api_usage_percent = int(100 * api_usage / subscription_cache.allowed_30d_api_calls)
 
@@ -162,7 +174,7 @@ def _handle_api_usage_notifications(organisation: Organisation) -> None:
     if matched_threshold is None:
         return
 
-    if OranisationAPIUsageNotification.objects.filter(
+    if OrganisationAPIUsageNotification.objects.filter(
         notified_at__gt=period_starts_at,
         percent_usage=matched_threshold,
     ).exists():
@@ -197,6 +209,92 @@ def handle_api_usage_notifications() -> None:
             )
 
 
+def charge_for_api_call_count_overages():
+    now = timezone.now()
+
+    # Get the period where we're interested in any new API usage
+    # notifications for the relevant billing period (ie, this month).
+    api_usage_notified_at = now - timedelta(days=30)
+
+    # Since we're only interested in monthly billed accounts, set a wide
+    # threshold to catch as many billing periods that could be roughly
+    # considered to be a "monthly" subscription, while still ruling out
+    # non-monthly subscriptions.
+    month_window_start = timedelta(days=25)
+    month_window_end = timedelta(days=35)
+
+    # Only apply charges to ongoing subscriptions that are close to
+    # being charged due to being at the end of the billing term.
+    closing_billing_term = now + timedelta(hours=1)
+
+    organisation_ids = set(
+        OrganisationAPIUsageNotification.objects.filter(
+            notified_at__gte=api_usage_notified_at,
+            percent_usage__gte=100,
+        ).values_list("organisation_id", flat=True)
+    )
+
+    for organisation in Organisation.objects.filter(
+        id__in=organisation_ids,
+        subscription_information_cache__current_billing_term_ends_at__lte=closing_billing_term,
+        subscription_information_cache__current_billing_term_ends_at__gte=now,
+        subscription_information_cache__current_billing_term_starts_at__lte=F(
+            "subscription_information_cache__current_billing_term_ends_at"
+        )
+        - month_window_start,
+        subscription_information_cache__current_billing_term_starts_at__gte=F(
+            "subscription_information_cache__current_billing_term_ends_at"
+        )
+        - month_window_end,
+    ).select_related(
+        "subscription_information_cache",
+        "subscription",
+    ):
+        subscription_cache = organisation.subscription_information_cache
+        api_usage = get_current_api_usage(organisation.id, "30d")
+
+        # Grace period for organisations < 200% of usage.
+        if api_usage / subscription_cache.allowed_30d_api_calls < 2.0:
+            logger.info("API Usage below normal usage or grace period.")
+            continue
+
+        api_billings = OrganisationAPIBilling.objects.filter(
+            billed_at__gte=subscription_cache.current_billing_term_starts_at
+        )
+        previous_api_overage = sum([ap.api_overage for ap in api_billings])
+
+        api_limit = subscription_cache.allowed_30d_api_calls + previous_api_overage
+        api_overage = api_usage - api_limit
+        if api_overage <= 0:
+            logger.info("API Usage below current API limit.")
+            continue
+
+        if organisation.subscription.plan in {SCALE_UP, SCALE_UP_V2}:
+            add_100k_api_calls_scale_up(
+                organisation.subscription.subscription_id,
+                math.ceil(api_overage / 100_000),
+            )
+        elif organisation.subscription.plan in {STARTUP, STARTUP_V2}:
+            add_100k_api_calls_start_up(
+                organisation.subscription.subscription_id,
+                math.ceil(api_overage / 100_000),
+            )
+        else:
+            logger.error(
+                f"Unable to bill for API overages for plan `{organisation.subscription.plan}`"
+            )
+            continue
+
+        # Save a copy of what was just billed in order to avoid
+        # double billing on a subsequent task run.
+        OrganisationAPIBilling.objects.create(
+            organisation=organisation,
+            api_overage=(100_000 * math.ceil(api_overage / 100_000)),
+            immediate_invoice=False,
+            billed_at=now,
+        )
+
+
 def restrict_use_due_to_api_limit_grace_period_over() -> None:
     """
     Restrict API use once a grace period has ended.
@@ -208,7 +306,7 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
     grace_period = timezone.now() - timedelta(days=API_USAGE_GRACE_PERIOD)
     month_start = timezone.now() - timedelta(30)
     queryset = (
-        OranisationAPIUsageNotification.objects.filter(
+        OrganisationAPIUsageNotification.objects.filter(
             notified_at__gt=month_start,
             notified_at__lt=grace_period,
             percent_usage__gte=100,
@@ -270,7 +368,7 @@ def unrestrict_after_api_limit_grace_period_is_stale() -> None:
 
     month_start = timezone.now() - timedelta(30)
     still_restricted_organisation_notifications = (
-        OranisationAPIUsageNotification.objects.filter(
+        OrganisationAPIUsageNotification.objects.filter(
             notified_at__gt=month_start,
             percent_usage__gte=100,
         )
@@ -296,13 +394,28 @@ def unrestrict_after_api_limit_grace_period_is_stale() -> None:
         organisation.api_limit_access_block.delete()
 
 
-if settings.ENABLE_API_USAGE_ALERTING:
+def register_recurring_tasks() -> None:
+    """
+    Helper function to get codecov coverage.
+    """
+    assert settings.ENABLE_API_USAGE_ALERTING
+
     register_recurring_task(
         run_every=timedelta(hours=12),
     )(handle_api_usage_notifications)
+
+    register_recurring_task(
+        run_every=timedelta(minutes=30),
+    )(charge_for_api_call_count_overages)
+
     register_recurring_task(
         run_every=timedelta(hours=12),
     )(restrict_use_due_to_api_limit_grace_period_over)
+
     register_recurring_task(
         run_every=timedelta(hours=12),
     )(unrestrict_after_api_limit_grace_period_is_stale)
+
+
+if settings.ENABLE_API_USAGE_ALERTING:
+    register_recurring_tasks()  # pragma: no cover

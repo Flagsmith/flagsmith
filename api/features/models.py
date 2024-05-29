@@ -5,7 +5,6 @@ import logging
 import typing
 import uuid
 from copy import deepcopy
-from dataclasses import asdict
 
 from core.models import (
     AbstractBaseExportableModel,
@@ -21,9 +20,9 @@ from django.core.exceptions import (
 from django.db import models
 from django.db.models import Max, Q, QuerySet
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import (
     AFTER_CREATE,
+    AFTER_DELETE,
     AFTER_SAVE,
     BEFORE_CREATE,
     BEFORE_SAVE,
@@ -75,7 +74,6 @@ from features.value_types import (
     STRING,
 )
 from features.versioning.models import EnvironmentFeatureVersion
-from integrations.github.models import GithubConfiguration
 from metadata.models import Metadata
 from projects.models import Project
 from projects.tags.models import Tag
@@ -99,7 +97,7 @@ class Feature(
     project = models.ForeignKey(
         Project,
         related_name="features",
-        help_text=_(
+        help_text=(
             "Changing the project selected will remove previous Feature States for the previously "
             "associated projects Environments that are related to this Feature. New default "
             "Feature States will be created for the new selected projects Environments for this "
@@ -140,10 +138,7 @@ class Feature(
 
     @hook(AFTER_SAVE)
     def create_github_comment(self) -> None:
-        from integrations.github.github import GithubData, generate_data
-        from integrations.github.tasks import (
-            call_github_app_webhook_for_feature_state,
-        )
+        from integrations.github.github import call_github_task
         from webhooks.webhooks import WebhookEventType
 
         if (
@@ -152,19 +147,14 @@ class Feature(
             and self.project.organisation.github_config.exists()
             and self.deleted_at
         ):
-            github_configuration = GithubConfiguration.objects.get(
-                organisation_id=self.project.organisation_id
-            )
 
-            feature_data: GithubData = generate_data(
-                github_configuration=github_configuration,
-                feature=self,
+            call_github_task(
+                organisation_id=self.project.organisation_id,
                 type=WebhookEventType.FLAG_DELETED.value,
-                feature_states=[],
-            )
-
-            call_github_app_webhook_for_feature_state.delay(
-                args=(asdict(feature_data),),
+                feature=self,
+                segment_name=None,
+                url=None,
+                feature_states=None,
             )
 
     @hook(AFTER_CREATE)
@@ -220,6 +210,7 @@ def get_next_segment_priority(feature):
 
 
 class FeatureSegment(
+    LifecycleModelMixin,
     AbstractBaseExportableModel,
     OrderedModelBase,
     abstract_base_auditable_model_factory(["uuid"]),
@@ -406,6 +397,26 @@ class FeatureSegment(
 
     def _get_environment(self) -> "Environment":
         return self.environment
+
+    @hook(AFTER_DELETE)
+    def create_github_comment(self) -> None:
+        from integrations.github.github import call_github_task
+        from webhooks.webhooks import WebhookEventType
+
+        if (
+            self.feature.external_resources.exists()
+            and self.feature.project.github_project.exists()
+            and self.feature.project.organisation.github_config.exists()
+        ):
+
+            call_github_task(
+                self.feature.project.organisation_id,
+                WebhookEventType.SEGMENT_OVERRIDE_DELETED.value,
+                self.feature,
+                self.segment.name,
+                None,
+                None,
+            )
 
 
 class FeatureState(

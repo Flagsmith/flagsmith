@@ -11,11 +11,17 @@ from pytz import UTC
 from ..subscriptions.constants import CHARGEBEE
 from ..subscriptions.exceptions import (
     CannotCancelChargebeeSubscription,
+    UpgradeAPIUsageError,
+    UpgradeAPIUsagePaymentFailure,
     UpgradeSeatsError,
     UpgradeSeatsPaymentFailure,
 )
 from .cache import ChargebeeCache
-from .constants import ADDITIONAL_SEAT_ADDON_ID
+from .constants import (
+    ADDITIONAL_API_SCALE_UP_ADDON_ID,
+    ADDITIONAL_API_START_UP_ADDON_ID,
+    ADDITIONAL_SEAT_ADDON_ID,
+)
 from .metadata import ChargebeeObjMetadata
 
 chargebee.configure(settings.CHARGEBEE_API_KEY, settings.CHARGEBEE_SITE)
@@ -201,6 +207,54 @@ def add_single_seat(subscription_id: str):
         )
         logger.error(msg)
         raise UpgradeSeatsError(msg) from e
+
+
+def add_100k_api_calls_start_up(
+    subscription_id: str, count: int = 1, invoice_immediately: bool = False
+) -> None:
+    add_100k_api_calls(ADDITIONAL_API_START_UP_ADDON_ID, subscription_id, count)
+
+
+def add_100k_api_calls_scale_up(
+    subscription_id: str, count: int = 1, invoice_immediately: bool = False
+) -> None:
+    add_100k_api_calls(ADDITIONAL_API_SCALE_UP_ADDON_ID, subscription_id, count)
+
+
+def add_100k_api_calls(
+    addon_id: str,
+    subscription_id: str,
+    count: int = 1,
+    invoice_immediately: bool = False,
+) -> None:
+    if not count:
+        return
+    try:
+        chargebee.Subscription.update(
+            subscription_id,
+            {
+                "addons": [{"id": addon_id, "quantity": count}],
+                "prorate": False,
+                "invoice_immediately": invoice_immediately,
+            },
+        )
+
+    except ChargebeeAPIError as e:
+        api_error_code = e.json_obj["api_error_code"]
+        if api_error_code in CHARGEBEE_PAYMENT_ERROR_CODES:
+            logger.warning(
+                f"Payment declined ({api_error_code}) during additional "
+                f"api calls upgrade to a CB subscription for subscription_id "
+                f"{subscription_id}"
+            )
+            raise UpgradeAPIUsagePaymentFailure() from e
+
+        msg = (
+            "Failed to add additional API calls to CB subscription for subscription id: %s"
+            % subscription_id
+        )
+        logger.error(msg)
+        raise UpgradeAPIUsageError(msg) from e
 
 
 def _convert_chargebee_subscription_to_dictionary(

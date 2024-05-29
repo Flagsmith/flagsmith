@@ -10,8 +10,8 @@ from rest_framework.test import override_settings
 from environments.models import Environment
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
-    OranisationAPIUsageNotification,
     Organisation,
+    OrganisationAPIUsageNotification,
     OrganisationSubscriptionInformationCache,
     Subscription,
 )
@@ -530,7 +530,7 @@ def test_reset_of_api_notifications(organisation: Organisation) -> None:
     )
 
     # Create a notification which should be deleted shortly.
-    OranisationAPIUsageNotification.objects.create(
+    OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,
         percent_usage=90,
         notified_at=now,
@@ -538,7 +538,7 @@ def test_reset_of_api_notifications(organisation: Organisation) -> None:
 
     # Keep a notification which should not be deleted.
     organisation2 = Organisation.objects.create(name="Test org2")
-    oapiun = OranisationAPIUsageNotification.objects.create(
+    oapiun = OrganisationAPIUsageNotification.objects.create(
         organisation=organisation2,
         percent_usage=90,
         notified_at=now,
@@ -549,5 +549,5 @@ def test_reset_of_api_notifications(organisation: Organisation) -> None:
     osic.save()
 
     # Then
-    assert OranisationAPIUsageNotification.objects.count() == 1
-    assert OranisationAPIUsageNotification.objects.first() == oapiun
+    assert OrganisationAPIUsageNotification.objects.count() == 1
+    assert OrganisationAPIUsageNotification.objects.first() == oapiun

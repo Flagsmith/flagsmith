@@ -3,8 +3,7 @@ from app_analytics.views import (
     get_usage_data_view,
 )
 from django.conf import settings
-from django.conf.urls import include, url
-from django.urls import path
+from django.urls import include, path, re_path
 from rest_framework_nested import routers
 
 from api_keys.views import MasterAPIKeyViewSet
@@ -14,6 +13,7 @@ from integrations.github.views import (
     GithubRepositoryViewSet,
     fetch_issues,
     fetch_pull_requests,
+    fetch_repo_contributors,
     fetch_repositories,
 )
 from metadata.views import MetaDataModelFieldViewSet
@@ -97,9 +97,9 @@ app_name = "organisations"
 
 
 urlpatterns = [
-    url(r"^", include(router.urls)),
-    url(r"^", include(organisations_router.urls)),
-    url(r"^", include(nested_github_router.urls)),
+    re_path(r"^", include(router.urls)),
+    re_path(r"^", include(organisations_router.urls)),
+    re_path(r"^", include(nested_github_router.urls)),
     path(
         "<int:organisation_pk>/usage-data/",
         get_usage_data_view,
@@ -124,6 +124,11 @@ urlpatterns = [
         "<int:organisation_pk>/github/issues/",
         fetch_issues,
         name="get-github-issues",
+    ),
+    path(
+        "<int:organisation_pk>/github/repo-contributors/",
+        fetch_repo_contributors,
+        name="get-github-repo-contributors",
     ),
     path(
         "<int:organisation_pk>/github/pulls/",
@@ -211,10 +216,10 @@ if settings.IS_RBAC_INSTALLED:
     )
     urlpatterns.extend(
         [
-            url(r"^", include(organisations_router.urls)),
-            url(r"^", include(nested_roles_router.urls)),
-            url(r"^", include(nested_user_roles_routes.urls)),
-            url(r"^", include(nested_api_key_roles_routes.urls)),
-            url(r"^", include(nested_group_roles_routes.urls)),
+            re_path(r"^", include(organisations_router.urls)),
+            re_path(r"^", include(nested_roles_router.urls)),
+            re_path(r"^", include(nested_user_roles_routes.urls)),
+            re_path(r"^", include(nested_api_key_roles_routes.urls)),
+            re_path(r"^", include(nested_group_roles_routes.urls)),
         ]
     )
