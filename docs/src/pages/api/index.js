@@ -2,6 +2,7 @@ import { RedocStandalone } from 'redoc';
 import React from 'react';
 import Layout from '@theme/Layout';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
 
 export default function Redoc() {
     const { siteConfig } = useDocusaurusContext();
