@@ -22,7 +22,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
   const [metadataXml, setMetadataXml] = useState<string>('')
   const [allowIdpInitiated, setAllowIdpInitiated] = useState<boolean>(false)
   const [createSamlConfiguration] = useCreateSamlConfigurationMutation()
-  const [editSamlCOnfiguration] = useUpdateSamlConfigurationMutation()
+  const [editSamlConfiguration] = useUpdateSamlConfigurationMutation()
   const [deleteSamlConfiguration] = useDeleteSamlConfigurationMutation()
   const { data } = useGetSamlConfigurationQuery({ name: name }, { skip: !name })
 
@@ -103,7 +103,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
                 body.allow_idp_initiated = allowIdpInitiated
               }
               if (data) {
-                editSamlCOnfiguration(body).then((res) => {
+                editSamlConfiguration(body).then((res) => {
                   if (res.data) {
                     setName(res.data.organisation)
                     setFrontendUrl(res.data.name)
@@ -134,7 +134,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
             <div className='col-md-7'>
               <h5 className='mn-2'>Delete SAML configuration</h5>
               <p className='fs-small lh-sm'>
-                This SAML configuration will be permanently deleted.s
+                This SAML configuration will be permanently deleted.
               </p>
             </div>
             <Button
