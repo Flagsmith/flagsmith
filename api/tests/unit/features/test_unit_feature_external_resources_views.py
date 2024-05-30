@@ -289,6 +289,7 @@ def test_update_feature_external_resource(
     project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    post_request_mock: MagicMock,
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -297,7 +298,6 @@ def test_update_feature_external_resource(
     )
     mock_generate_token.return_value = "mocked_token"
     mock_generate_token.return_value = "mocked_token"
-    mocker.patch("requests.post", side_effect=mocked_requests_post)
     feature_external_resource_data = {
         "type": "GITHUB_ISSUE",
         "url": "https://github.com/userexample/example-project-repo/issues/12",
