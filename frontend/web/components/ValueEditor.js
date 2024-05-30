@@ -217,6 +217,7 @@ class ValueEditor extends Component {
             data-test={rest['data-test']}
             disabled={rest.disabled}
             onChange={rest.disabled ? null : rest.onChange}
+            onBlur={rest.disabled ? null : rest.onBlur}
             className={this.state.language}
           >
             {typeof rest.value !== 'undefined' && rest.value != null

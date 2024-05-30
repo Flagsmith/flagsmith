@@ -672,8 +672,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         )
     }
   },
-  valueToFeatureState(value: FlagsmithValue) {
-    const val = Utils.getTypedValue(value, undefined, true)
+  valueToFeatureState(value: FlagsmithValue, trimSpaces = true) {
+    const val = Utils.getTypedValue(value, undefined, trimSpaces)
 
     if (typeof val === 'boolean') {
       return {

@@ -22,10 +22,20 @@ const VariationValue = ({
             className='full-width code-medium'
             value={Utils.getTypedValue(Utils.featureStateToValue(value))}
             disabled={disabled || readOnlyValue}
+            onBlur={() => {
+              onChange({
+                ...value,
+                // Trim spaces and do conversion on blur
+                ...Utils.valueToFeatureState(Utils.featureStateToValue(value)),
+              })
+            }}
             onChange={(e) => {
               onChange({
                 ...value,
-                ...Utils.valueToFeatureState(Utils.safeParseEventValue(e)),
+                ...Utils.valueToFeatureState(
+                  Utils.safeParseEventValue(e),
+                  false,
+                ),
               })
             }}
             placeholder="e.g. 'big' "
