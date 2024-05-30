@@ -232,16 +232,18 @@ const OrganisationSettingsPage = class extends Component {
                     AccountStore.getUser() &&
                     AccountStore.getOrganisationRole() === 'ADMIN'
                   ) {
-                    const isEnterprise =
-                      Utils.getPlanName(organisation.subscription?.plan) ===
-                      'enterprise'
+                    const showSaml =
+                      Utils.getPlanPermission(
+                        organisation.subscription?.plan,
+                        'SAML',
+                      ) && Utils.getFlagsmithHasFeature('saml_configuration')
                     displayedTabs.push(
                       ...[
                         SettingsTab.General,
                         paymentsEnabled && !isAWS ? SettingsTab.Billing : null,
                         SettingsTab.Keys,
                         SettingsTab.Webhooks,
-                        isEnterprise ? SettingsTab.SAML : null,
+                        showSaml ? SettingsTab.SAML : null,
                       ].filter((v) => !!v),
                     )
                   } else {
@@ -613,12 +615,11 @@ const OrganisationSettingsPage = class extends Component {
                             </FormGroup>
                           </TabItem>
                         )}
-                        {Utils.getFlagsmithHasFeature('saml_configuration') &&
-                          displayedTabs.includes(SettingsTab.SAML) && (
-                            <TabItem tabLabel='SAML'>
-                              <SamlTab organisationId={organisation.id} />
-                            </TabItem>
-                          )}
+                        {displayedTabs.includes(SettingsTab.SAML) && (
+                          <TabItem tabLabel='SAML'>
+                            <SamlTab organisationId={organisation.id} />
+                          </TabItem>
+                        )}
                       </Tabs>
                     </div>
                   )

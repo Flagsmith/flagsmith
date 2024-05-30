@@ -377,6 +377,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         valid = isEnterprise
         break
       }
+      case 'SAML': {
+        valid = isEnterprise
+        break
+      }
       default:
         valid = true
         break
