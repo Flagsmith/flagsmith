@@ -12,6 +12,7 @@ import EnvironmentSelect from 'components/EnvironmentSelect'
 import SegmentOverrideLimit from 'components/SegmentOverrideLimit'
 import { getStore } from 'common/store'
 import { getEnvironment } from 'common/services/useEnvironment'
+import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 
 class TheComponent extends Component {
   state = {
@@ -306,7 +307,7 @@ export default class SegmentOverridesInner extends Component {
     return (
       <FeatureListProvider>
         {({}, { editFeatureSegments, isSaving }) => {
-          const save = () => {
+          const save = saveFeatureWithValidation(() => {
             FeatureListStore.isSaving = true
             FeatureListStore.trigger('change')
             !isSaving &&
@@ -324,7 +325,7 @@ export default class SegmentOverridesInner extends Component {
                 },
               )
             this.setState({ isSaving: true })
-          }
+          })
           const segmentOverride =
             segmentOverrides && segmentOverrides.filter((v) => v.segment === id)
           if (!segmentOverrides) return null
