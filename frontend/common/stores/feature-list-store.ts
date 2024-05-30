@@ -99,8 +99,11 @@ const controller = {
       }),
       project_id: projectId,
     })
-      .then((res) =>
-        Promise.all(
+      .then((res) => {
+        if (res.error) {
+          return Promise.reject(res.error)
+        }
+        return Promise.all(
           (flag.multivariate_options || []).map((v) =>
             data
               .post(
@@ -116,8 +119,8 @@ const controller = {
           data.get(
             `${Project.api}projects/${projectId}/features/${res.data.id}/`,
           ),
-        ),
-      )
+        )
+      })
       .then(() =>
         Promise.all([
           data.get(`${Project.api}projects/${projectId}/features/`),
@@ -413,32 +416,36 @@ const controller = {
             )
           : Promise.resolve()
 
-      Promise.all([prom, segmentOverridesRequest]).then(([res, segmentRes]) => {
-        if (store.model) {
-          store.model.keyedEnvironmentFeatures[projectFlag.id] = res
-          if (segmentRes) {
-            const feature = _.find(
-              store.model.features,
-              (f) => f.id === projectFlag.id,
-            )
-            if (feature) {
-              feature.feature_segments = _.map(
-                segmentRes.feature_segments,
-                (segment) => ({
-                  ...segment,
-                  segment: segment.segment.id,
-                }),
+      Promise.all([prom, segmentOverridesRequest])
+        .then(([res, segmentRes]) => {
+          if (store.model) {
+            store.model.keyedEnvironmentFeatures[projectFlag.id] = res
+            if (segmentRes) {
+              const feature = _.find(
+                store.model.features,
+                (f) => f.id === projectFlag.id,
               )
+              if (feature) {
+                feature.feature_segments = _.map(
+                  segmentRes.feature_segments,
+                  (segment) => ({
+                    ...segment,
+                    segment: segment.segment.id,
+                  }),
+                )
+              }
             }
           }
-        }
 
-        if (store.model) {
-          store.model.lastSaved = new Date().valueOf()
-        }
-        onComplete && onComplete()
-        store.saved({})
-      })
+          if (store.model) {
+            store.model.lastSaved = new Date().valueOf()
+          }
+          onComplete && onComplete()
+          store.saved({})
+        })
+        .catch((e) => {
+          API.ajaxHandler(store, e)
+        })
     })
   },
   editFeatureStateChangeRequest: async (
