@@ -170,7 +170,9 @@ def organisation_info(request: HttpRequest, organisation_id: int) -> HttpRespons
         context["api_calls"] = {
             # TODO: this could probably be reduced to a single influx request
             #  rather than 3
-            range_: get_events_for_organisation(organisation_id, date_range=range_)
+            range_: get_events_for_organisation(
+                organisation_id, date_start=f"-{range_}"
+            )
             for range_ in ("24h", "7d", "30d")
         }
 
