@@ -357,7 +357,11 @@ const controller = {
               `${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`,
               Object.assign({}, environmentFlag, {
                 enabled: flag.default_enabled,
-                feature_state_value: flag.initial_value,
+                feature_state_value: Utils.getTypedValue(
+                  flag.initial_value,
+                  undefined,
+                  true,
+                ),
               }),
             )
           })
