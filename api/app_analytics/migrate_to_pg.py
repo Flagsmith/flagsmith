@@ -3,7 +3,7 @@ from app_analytics.influxdb_wrapper import influxdb_client, read_bucket
 from app_analytics.models import FeatureEvaluationBucket
 
 
-def migrate_feature_evaluations(migrate_till: int = 30):
+def migrate_feature_evaluations(migrate_till: int = 30) -> None:
     query_api = influxdb_client.query_api()
 
     for i in range(migrate_till):

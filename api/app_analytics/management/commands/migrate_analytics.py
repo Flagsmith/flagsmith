@@ -15,5 +15,5 @@ class Command(BaseCommand):
             default=30,
         )
 
-    def handle(self, *args: Any, migrate_till: int, **options):
+    def handle(self, *args: Any, migrate_till: int, **options: Any) -> None:
         migrate_feature_evaluations(migrate_till)
