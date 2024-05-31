@@ -2,6 +2,7 @@ import typing
 
 from rest_framework import serializers
 
+from api_keys.user import APIKeyUser
 from features.serializers import CreateSegmentOverrideFeatureStateSerializer
 from features.versioning.models import EnvironmentFeatureVersion
 from integrations.github.github import call_github_task
@@ -64,6 +65,23 @@ class EnvironmentFeatureVersionSerializer(serializers.ModelSerializer):
             "published_by",
             "created_by",
         )
+
+
+class EnvironmentFeatureVersionRetrieveSerializer(EnvironmentFeatureVersionSerializer):
+    previous_version_uuid = serializers.SerializerMethodField()
+
+    class Meta(EnvironmentFeatureVersionSerializer.Meta):
+        _fields = ("previous_version_uuid",)
+
+        fields = EnvironmentFeatureVersionSerializer.Meta.fields + _fields
+
+    def get_previous_version_uuid(
+        self, environment_feature_version: EnvironmentFeatureVersion
+    ) -> str | None:
+        previous_version = environment_feature_version.get_previous_version()
+        if not previous_version:
+            return None
+        return str(previous_version.uuid)
 
 
 class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSerializer):
@@ -245,9 +263,20 @@ class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):
         live_from = self.validated_data.get("live_from")
 
         request = self.context["request"]
-        published_by = request.user if isinstance(request.user, FFAdminUser) else None
 
-        self.instance.publish(live_from=live_from, published_by=published_by)
+        published_by = None
+        published_by_api_key = None
+
+        if isinstance(request.user, FFAdminUser):
+            published_by = request.user
+        elif isinstance(request.user, APIKeyUser):
+            published_by_api_key = request.user.key
+
+        self.instance.publish(
+            live_from=live_from,
+            published_by=published_by,
+            published_by_api_key=published_by_api_key,
+        )
         return self.instance
 
 

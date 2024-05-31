@@ -8,6 +8,7 @@ from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
     ListModelMixin,
+    RetrieveModelMixin,
     UpdateModelMixin,
 )
 from rest_framework.permissions import IsAuthenticated
@@ -31,6 +32,7 @@ from features.versioning.serializers import (
     EnvironmentFeatureVersionFeatureStateSerializer,
     EnvironmentFeatureVersionPublishSerializer,
     EnvironmentFeatureVersionQuerySerializer,
+    EnvironmentFeatureVersionRetrieveSerializer,
     EnvironmentFeatureVersionSerializer,
 )
 from projects.permissions import VIEW_PROJECT
@@ -45,6 +47,7 @@ from users.models import FFAdminUser
 )
 class EnvironmentFeatureVersionViewSet(
     GenericViewSet,
+    RetrieveModelMixin,
     ListModelMixin,
     CreateModelMixin,
     DestroyModelMixin,
@@ -62,6 +65,8 @@ class EnvironmentFeatureVersionViewSet(
         match self.action:
             case "publish":
                 return EnvironmentFeatureVersionPublishSerializer
+            case "retrieve":
+                return EnvironmentFeatureVersionRetrieveSerializer
             case "create":
                 return EnvironmentFeatureVersionCreateSerializer
             case _:

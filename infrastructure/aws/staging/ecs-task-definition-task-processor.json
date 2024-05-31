@@ -109,7 +109,7 @@
                 },
                 {
                     "name": "USE_POSTGRES_FOR_ANALYTICS",
-                    "value": "True"
+                    "value": "False"
                 },
                 {
                     "name": "TASK_DELETE_RETENTION_DAYS",
@@ -152,10 +152,6 @@
                 {
                     "name": "CHARGEBEE_API_KEY",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:CHARGEBEE_API_KEY::"
-                },
-                {
-                    "name": "ANALYTICS_DATABASE_URL",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:ANALYTICS_DATABASE_URL::"
                 },
                 {
                     "name": "DATABASE_URL",

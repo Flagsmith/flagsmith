@@ -1,5 +1,7 @@
 from datetime import datetime
+from unittest.mock import MagicMock
 
+import pytest
 import responses
 import simplejson as json
 from django.core.serializers.json import DjangoJSONEncoder
@@ -63,40 +65,22 @@ def expected_segment_comment_body(
     )
 
 
-def mocked_requests_post(*args, **kwargs):
-    class MockResponse:
-        def __init__(self, json_data, status_code):
-            self.json_data = json_data
-            self.status_code = status_code
-
-        def raise_for_status(self) -> None:
-            pass
-
-        def json(self):
-            return self.json_data
-
-    return MockResponse(json_data={"data": "data"}, status_code=200)
-
-
 @responses.activate
 def test_create_feature_external_resource(
     admin_client_new: APIClient,
     feature_with_value: Feature,
-    segment_featurestate_and_feature_with_value: FeatureState,
+    segment_override_for_feature_with_value: FeatureState,
     environment: Environment,
     project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    post_request_mock: MagicMock,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_generate_token = mocker.patch(
+    mocker.patch(
         "integrations.github.client.generate_token",
-    )
-
-    mock_generate_token.return_value = "mocked_token"
-    github_request_mock = mocker.patch(
-        "requests.post", side_effect=mocked_requests_post
+        return_value="mocked_token",
     )
 
     feature_external_resource_data = {
@@ -123,7 +107,7 @@ def test_create_feature_external_resource(
         .updated_at.strftime(get_format("DATETIME_INPUT_FORMATS")[0])
     )
     segment_override_updated_at = FeatureState.objects.get(
-        id=segment_featurestate_and_feature_with_value.id
+        id=segment_override_for_feature_with_value.id
     ).updated_at.strftime(get_format("DATETIME_INPUT_FORMATS")[0])
 
     expected_comment_body = (
@@ -145,7 +129,7 @@ def test_create_feature_external_resource(
             "`value`",
         )
     )
-    github_request_mock.assert_called_with(
+    post_request_mock.assert_called_with(
         "https://api.github.com/repos/repoowner/repo-name/issues/35/comments",
         json={"body": f"{expected_comment_body}"},
         headers={
@@ -272,15 +256,15 @@ def test_cannot_create_feature_external_resource_when_the_type_is_incorrect(
 def test_cannot_create_feature_external_resource_due_to_unique_constraint(
     admin_client_new: APIClient,
     feature: Feature,
-    feature_external_resource: FeatureExternalResource,
     project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    feature_external_resource: FeatureExternalResource,
 ) -> None:
     # Given
     feature_external_resource_data = {
         "type": "GITHUB_ISSUE",
-        "url": "https://github.com/userexample/example-project-repo/issues/11",
+        "url": "https://github.com/repositoryownertest/repositorynametest/issues/11",
         "feature": feature.id,
     }
     url = reverse(
@@ -300,21 +284,15 @@ def test_cannot_create_feature_external_resource_due_to_unique_constraint(
 
 def test_delete_feature_external_resource(
     admin_client_new: APIClient,
-    feature_external_resource: FeatureExternalResource,
     feature: Feature,
     project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
-    mocker,
+    feature_external_resource: FeatureExternalResource,
+    post_request_mock: MagicMock,
+    mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_generate_token = mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-    mock_generate_token.return_value = "mocked_token"
-    github_request_mock = mocker.patch(
-        "requests.post", side_effect=mocked_requests_post
-    )
     url = reverse(
         "api-v1:projects:feature-external-resources-detail",
         args=[project.id, feature.id, feature_external_resource.id],
@@ -324,8 +302,8 @@ def test_delete_feature_external_resource(
     response = admin_client_new.delete(url)
 
     # Then
-    github_request_mock.assert_called_with(
-        "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
+    post_request_mock.assert_called_with(
+        "https://api.github.com/repos/repositoryownertest/repositorynametest/issues/11/comments",
         json={
             "body": "### The feature flag `Test Feature1` was unlinked from the issue/PR"
         },
@@ -345,11 +323,11 @@ def test_delete_feature_external_resource(
 @responses.activate
 def test_get_feature_external_resources(
     admin_client_new: APIClient,
-    feature_external_resource: FeatureExternalResource,
     feature: Feature,
     project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    feature_external_resource: FeatureExternalResource,
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -363,7 +341,7 @@ def test_get_feature_external_resources(
 
     responses.add(
         method="GET",
-        url=f"{GITHUB_API_URL}repos/userexample/example-project-repo/issues/11",
+        url=f"{GITHUB_API_URL}repos/repositoryownertest/repositorynametest/issues/11",
         status=200,
         json={"title": "resource name", "state": "open"},
     )
@@ -377,11 +355,11 @@ def test_get_feature_external_resources(
 
 def test_get_feature_external_resource(
     admin_client_new: APIClient,
-    feature_external_resource: FeatureExternalResource,
     feature: Feature,
     project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    feature_external_resource: FeatureExternalResource,
 ) -> None:
     # Given
     url = reverse(
@@ -403,25 +381,19 @@ def test_create_github_comment_on_feature_state_updated(
     staff_user: FFAdminUser,
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
-    feature_external_resource: FeatureExternalResource,
     feature: Feature,
     project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    post_request_mock: MagicMock,
     mocker: MockerFixture,
     environment: Environment,
+    feature_external_resource: FeatureExternalResource,
 ) -> None:
     # Given
     with_environment_permissions([UPDATE_FEATURE_STATE], environment.id, False)
     feature_state = FeatureState.objects.get(
         feature=feature, environment=environment.id
-    )
-    mock_generate_token = mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-    mock_generate_token.return_value = "mocked_token"
-    github_request_mock = mocker.patch(
-        "requests.post", side_effect=mocked_requests_post
     )
 
     payload = dict(FeatureStateSerializerBasic(instance=feature_state).data)
@@ -454,8 +426,8 @@ def test_create_github_comment_on_feature_state_updated(
 
     assert response.status_code == status.HTTP_200_OK
 
-    github_request_mock.assert_called_with(
-        "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
+    post_request_mock.assert_called_with(
+        "https://api.github.com/repos/repositoryownertest/repositorynametest/issues/11/comments",
         json={"body": expected_body_comment},
         headers={
             "Accept": "application/vnd.github.v3+json",
@@ -469,21 +441,18 @@ def test_create_github_comment_on_feature_state_updated(
 def test_create_github_comment_on_feature_was_deleted(
     admin_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
-    feature_external_resource: FeatureExternalResource,
     feature: Feature,
     project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    feature_external_resource: FeatureExternalResource,
+    post_request_mock: MagicMock,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_generate_token = mocker.patch(
+    mocker.patch(
         "integrations.github.client.generate_token",
-    )
-    mock_generate_token.return_value = "mocked_token"
-
-    github_request_mock = mocker.patch(
-        "requests.post", side_effect=mocked_requests_post
+        return_value="mocked_token",
     )
 
     url = reverse(
@@ -497,8 +466,8 @@ def test_create_github_comment_on_feature_was_deleted(
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    github_request_mock.assert_called_with(
-        "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
+    post_request_mock.assert_called_with(
+        "https://api.github.com/repos/repositoryownertest/repositorynametest/issues/11/comments",
         json={"body": "### The Feature Flag `Test Feature1` was deleted"},
         headers={
             "Accept": "application/vnd.github.v3+json",
@@ -511,23 +480,21 @@ def test_create_github_comment_on_feature_was_deleted(
 
 def test_create_github_comment_on_segment_override_updated(
     feature_with_value: Feature,
-    segment_featurestate_and_feature_with_value: FeatureState,
-    feature_with_value_external_resource: FeatureExternalResource,
+    segment_override_for_feature_with_value: FeatureState,
     project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    post_request_mock: MagicMock,
     mocker: MockerFixture,
     environment: Environment,
     admin_client: APIClient,
+    feature_with_value_external_resource: FeatureExternalResource,
 ) -> None:
     # Given
-    feature_state = segment_featurestate_and_feature_with_value
-    mock_generate_token = mocker.patch(
+    feature_state = segment_override_for_feature_with_value
+    mocker.patch(
         "integrations.github.client.generate_token",
-    )
-    mock_generate_token.return_value = "mocked_token"
-    github_request_mock = mocker.patch(
-        "requests.post", side_effect=mocked_requests_post
+        return_value="mocked_token",
     )
 
     payload = dict(WritableNestedFeatureStateSerializer(instance=feature_state).data)
@@ -545,7 +512,7 @@ def test_create_github_comment_on_segment_override_updated(
 
     # Then
     segment_override_updated_at = FeatureState.objects.get(
-        id=segment_featurestate_and_feature_with_value.id
+        id=segment_override_for_feature_with_value.id
     ).updated_at.strftime(get_format("DATETIME_INPUT_FORMATS")[0])
 
     expected_comment_body = (
@@ -563,8 +530,8 @@ def test_create_github_comment_on_segment_override_updated(
 
     assert response.status_code == status.HTTP_200_OK
 
-    github_request_mock.assert_called_with(
-        "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
+    post_request_mock.assert_called_with(
+        "https://api.github.com/repos/repositoryownertest/repositorynametest/issues/11/comments",
         json={"body": expected_comment_body},
         headers={
             "Accept": "application/vnd.github.v3+json",
@@ -576,21 +543,19 @@ def test_create_github_comment_on_segment_override_updated(
 
 
 def test_create_github_comment_on_segment_override_deleted(
-    segment_featurestate_and_feature_with_value: FeatureState,
+    segment_override_for_feature_with_value: FeatureState,
     feature_with_value_segment: FeatureSegment,
-    feature_with_value_external_resource: FeatureExternalResource,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    post_request_mock: MagicMock,
     mocker: MockerFixture,
     admin_client_new: APIClient,
+    feature_with_value_external_resource: FeatureExternalResource,
 ) -> None:
     # Given
-    mock_generate_token = mocker.patch(
+    mocker.patch(
         "integrations.github.client.generate_token",
-    )
-    mock_generate_token.return_value = "mocked_token"
-    github_request_mock = mocker.patch(
-        "requests.post", side_effect=mocked_requests_post
+        return_value="mocked_token",
     )
 
     url = reverse(
@@ -605,8 +570,8 @@ def test_create_github_comment_on_segment_override_deleted(
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    github_request_mock.assert_called_with(
-        "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
+    post_request_mock.assert_called_with(
+        "https://api.github.com/repos/repositoryownertest/repositorynametest/issues/11/comments",
         json={
             "body": "### The Segment Override `segment` for Feature Flag `feature_with_value` was deleted"
         },
@@ -621,7 +586,6 @@ def test_create_github_comment_on_segment_override_deleted(
 
 def test_create_github_comment_using_v2(
     admin_client_new: APIClient,
-    feature_external_resource: FeatureExternalResource,
     environment_v2_versioning: Environment,
     segment: Segment,
     feature: Feature,
@@ -629,19 +593,11 @@ def test_create_github_comment_using_v2(
     project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    feature_external_resource: FeatureExternalResource,
+    post_request_mock: MagicMock,
     mocker: MockerFixture,
 ) -> None:
-
     # Given
-    mock_generate_token = mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-    mock_generate_token.return_value = "mocked_token"
-
-    github_request_mock = mocker.patch(
-        "requests.post", side_effect=mocked_requests_post
-    )
-
     environment_feature_version = EnvironmentFeatureVersion.objects.create(
         environment=environment_v2_versioning, feature=feature
     )
@@ -687,8 +643,8 @@ def test_create_github_comment_using_v2(
         )
     )
 
-    github_request_mock.assert_called_with(
-        "https://api.github.com/repos/userexample/example-project-repo/issues/11/comments",
+    post_request_mock.assert_called_with(
+        "https://api.github.com/repos/repositoryownertest/repositorynametest/issues/11/comments",
         json={"body": expected_comment_body},
         headers={
             "Accept": "application/vnd.github.v3+json",
@@ -703,7 +659,6 @@ def test_create_github_comment_using_v2(
 
 def test_create_github_comment_using_v2_fails_on_wrong_params(
     admin_client_new: APIClient,
-    feature_external_resource: FeatureExternalResource,
     environment_v2_versioning: Environment,
     segment: Segment,
     feature: Feature,
@@ -711,19 +666,12 @@ def test_create_github_comment_using_v2_fails_on_wrong_params(
     project: Project,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    feature_external_resource: FeatureExternalResource,
+    post_request_mock: MagicMock,
     mocker: MockerFixture,
 ) -> None:
 
     # Given
-    mock_generate_token = mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-    mock_generate_token.return_value = "mocked_token"
-
-    github_request_mock = mocker.patch(
-        "requests.post", side_effect=mocked_requests_post
-    )
-
     environment_feature_version = EnvironmentFeatureVersion.objects.create(
         environment=environment_v2_versioning, feature=feature
     )
@@ -752,4 +700,83 @@ def test_create_github_comment_using_v2_fails_on_wrong_params(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    github_request_mock.assert_not_called()
+
+
+@responses.activate
+@pytest.mark.freeze_time("2024-05-28T09:09:47.325132+00:00")
+def test_create_feature_external_resource_on_environment_with_v2(
+    admin_client_new: APIClient,
+    project: Project,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    segment_override_for_feature_with_value: FeatureState,
+    environment_v2_versioning: Environment,
+    post_request_mock: MagicMock,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_id = segment_override_for_feature_with_value.feature_id
+
+    mocker.patch(
+        "integrations.github.client.generate_token",
+        return_value="mocked_token",
+    )
+
+    feature_external_resource_data = {
+        "type": "GITHUB_ISSUE",
+        "url": "https://github.com/repoowner/repo-name/issues/35",
+        "feature": feature_id,
+        "metadata": {"state": "open"},
+    }
+
+    url = reverse(
+        "api-v1:projects:feature-external-resources-list",
+        kwargs={"project_pk": project.id, "feature_pk": feature_id},
+    )
+
+    # When
+    response = admin_client_new.post(
+        url, data=feature_external_resource_data, format="json"
+    )
+
+    # Then
+    feature_state_update_at = FeatureState.objects.get(
+        id=segment_override_for_feature_with_value.id
+    ).updated_at.strftime(get_format("DATETIME_INPUT_FORMATS")[0])
+
+    segment_override_updated_at = FeatureState.objects.get(
+        id=segment_override_for_feature_with_value.id
+    ).updated_at.strftime(get_format("DATETIME_INPUT_FORMATS")[0])
+
+    expected_comment_body = (
+        "**Flagsmith feature linked:** `feature_with_value`\n"
+        + "Default Values:\n"
+        + expected_default_body(
+            project.id,
+            environment_v2_versioning.api_key,
+            feature_id,
+            feature_state_update_at,
+        )
+        + "\n"
+        + expected_segment_comment_body(
+            project.id,
+            environment_v2_versioning.api_key,
+            feature_id,
+            segment_override_updated_at,
+            "❌ Disabled",
+            "`value`",
+        )
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+
+    post_request_mock.assert_called_with(
+        "https://api.github.com/repos/repoowner/repo-name/issues/35/comments",
+        json={"body": f"{expected_comment_body}"},
+        headers={
+            "Accept": "application/vnd.github.v3+json",
+            "X-GitHub-Api-Version": GITHUB_API_VERSION,
+            "Authorization": "Bearer mocked_token",
+        },
+        timeout=10,
+    )
