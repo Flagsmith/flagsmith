@@ -159,9 +159,16 @@ def create_segment_priorities_changed_audit_log(
     if not feature_segments:
         return
 
-    # all feature segments should have the same value for feature and environment
+    # all feature segments should have the same value for feature, environment and
+    # environment feature version
     environment = feature_segments[0].environment
     feature = feature_segments[0].feature
+    environment_feature_version_id = feature_segments[0].environment_feature_version_id
+
+    if environment_feature_version_id is not None:
+        # Don't create audit logs for FeatureSegments wrapped in a version
+        # as this is handled by the feature history instead.
+        return
 
     AuditLog.objects.create(
         log=f"Segment overrides re-ordered for feature '{feature.name}'.",
