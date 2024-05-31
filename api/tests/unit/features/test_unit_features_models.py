@@ -660,7 +660,7 @@ def test_feature_state_get_skip_create_audit_log_if_uncommitted_change_request(
 
 
 def test_feature_state_get_skip_create_audit_log_if_environment_feature_version(
-    environment_v2_versioning, feature
+    environment_v2_versioning: Environment, feature: Feature
 ):
     # Given
     environment_feature_version = EnvironmentFeatureVersion.objects.get(
@@ -674,6 +674,23 @@ def test_feature_state_get_skip_create_audit_log_if_environment_feature_version(
 
     # Then
     assert feature_state.get_skip_create_audit_log() is True
+
+
+def test_feature_state_value_get_skip_create_audit_log_if_environment_feature_version(
+    environment_v2_versioning: Environment, feature: Feature
+):
+    # Given
+    environment_feature_version = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+    feature_state = FeatureState.objects.get(
+        environment=environment_v2_versioning,
+        feature=feature,
+        environment_feature_version=environment_feature_version,
+    )
+
+    # Then
+    assert feature_state.feature_state_value.get_skip_create_audit_log() is True
 
 
 @pytest.mark.parametrize(
