@@ -219,6 +219,10 @@ const config = {
             }),
         ],
     ],
+
+    scripts: ['/js/crisp-chat.js'],
+
+    clientModules: [require.resolve('./plugins/crisp-chat-links.js')],
 };
 
 export default config;
