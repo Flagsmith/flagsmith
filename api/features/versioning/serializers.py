@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from api_keys.user import APIKeyUser
 from features.serializers import CreateSegmentOverrideFeatureStateSerializer
 from features.versioning.models import EnvironmentFeatureVersion
 from integrations.github.github import call_github_task
@@ -71,9 +72,20 @@ class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):
         live_from = self.validated_data.get("live_from")
 
         request = self.context["request"]
-        published_by = request.user if isinstance(request.user, FFAdminUser) else None
 
-        self.instance.publish(live_from=live_from, published_by=published_by)
+        published_by = None
+        published_by_api_key = None
+
+        if isinstance(request.user, FFAdminUser):
+            published_by = request.user
+        elif isinstance(request.user, APIKeyUser):
+            published_by_api_key = request.user.key
+
+        self.instance.publish(
+            live_from=live_from,
+            published_by=published_by,
+            published_by_api_key=published_by_api_key,
+        )
         return self.instance
 
 

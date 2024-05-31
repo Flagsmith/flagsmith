@@ -9,6 +9,10 @@ from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from api_keys.models import MasterAPIKey
+from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from environments.permissions.constants import VIEW_ENVIRONMENT
 from features.models import Feature, FeatureSegment, FeatureState
@@ -189,9 +193,18 @@ def test_publish_feature_version(
         environment_feature_version.live_from == now if live_from is None else live_from
     )
 
+    # and an audit log record is created correctly
+    record = AuditLog.objects.filter(
+        related_object_type=RelatedObjectType.EF_VERSION.name,
+        related_object_uuid=environment_feature_version.uuid,
+    ).first()
+    assert record
+    assert record.log == ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE % feature.name
+
 
 @pytest.mark.parametrize("live_from", (None, tomorrow))
 def test_publish_feature_version_using_master_api_key(
+    admin_master_api_key: MasterAPIKey,
     admin_master_api_key_client: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -223,6 +236,7 @@ def test_publish_feature_version_using_master_api_key(
     assert environment_feature_version.is_live is True
     assert environment_feature_version.published is True
     assert environment_feature_version.published_by is None
+    assert environment_feature_version.published_by_api_key == admin_master_api_key[0]
     assert (
         environment_feature_version.live_from == now if live_from is None else live_from
     )
