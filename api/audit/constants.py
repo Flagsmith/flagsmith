@@ -58,4 +58,6 @@ CHANGE_REQUEST_APPROVED_MESSAGE = "Change Request: %s approved"
 CHANGE_REQUEST_COMMITTED_MESSAGE = "Change Request: %s committed"
 CHANGE_REQUEST_DELETED_MESSAGE = "Change Request: %s deleted"
 
+ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE = "New version published for feature: %s"
+
 DATETIME_FORMAT = "%d/%m/%Y %H:%M:%S"
