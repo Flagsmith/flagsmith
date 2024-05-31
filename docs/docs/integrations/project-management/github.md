@@ -17,6 +17,8 @@ The GitHub integration is currently only supported with our hosted Flagsmith Saa
 
 ## Integration Setup
 
+You can either set up the integration from the Flagsmith side or from the Github side.
+
 ### From Flagsmith
 
 1. In the Integrations Option in the side bar, find the GitHub integration and click on 'Add Integration'.
