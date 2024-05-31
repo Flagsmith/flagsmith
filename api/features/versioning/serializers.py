@@ -65,6 +65,23 @@ class EnvironmentFeatureVersionSerializer(serializers.ModelSerializer):
         )
 
 
+class EnvironmentFeatureVersionRetrieveSerializer(EnvironmentFeatureVersionSerializer):
+    previous_version_uuid = serializers.SerializerMethodField()
+
+    class Meta(EnvironmentFeatureVersionSerializer.Meta):
+        _fields = ("previous_version_uuid",)
+
+        fields = EnvironmentFeatureVersionSerializer.Meta.fields + _fields
+
+    def get_previous_version_uuid(
+        self, environment_feature_version: EnvironmentFeatureVersion
+    ) -> str | None:
+        previous_version = environment_feature_version.get_previous_version()
+        if not previous_version:
+            return None
+        return str(previous_version.uuid)
+
+
 class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):
     live_from = serializers.DateTimeField(required=False)
 
