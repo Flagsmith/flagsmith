@@ -692,12 +692,13 @@ def test_github_webhook_merged_a_pull_request(
     # Then
     feature.refresh_from_db()
     assert response.status_code == status.HTTP_200_OK
-    assert feature.tags.first().label == "PR Merged"    
+    assert feature.tags.first().label == "PR Merged"
+
 
 def test_github_webhook_without_installation_id(
     api_client: APIClient,
     mocker: MockerFixture,
-)-> None:
+) -> None:
     # Given
     settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
     url = reverse("api-v1:github-webhook")
@@ -723,7 +724,7 @@ def test_github_webhook_with_non_existing_installation(
     api_client: APIClient,
     github_configuration: GithubConfiguration,
     mocker: MockerFixture,
-)-> None:
+) -> None:
     # Given
     settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
     url = reverse("api-v1:github-webhook")
