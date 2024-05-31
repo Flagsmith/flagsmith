@@ -166,8 +166,8 @@ def create_segment_priorities_changed_audit_log(
     environment_feature_version_id = feature_segments[0].environment_feature_version_id
 
     if environment_feature_version_id is not None:
-        # Don't create audit logs for segment priority changes as this is handled
-        # by the feature history instead.
+        # Don't create audit logs for FeatureSegments wrapped in a version
+        # as this is handled by the feature history instead.
         return
 
     AuditLog.objects.create(
