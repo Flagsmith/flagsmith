@@ -346,7 +346,10 @@ are all computed locally.
 - Identities and their Traits are **not** read from or written to the Flagsmith API, and so are not persisted in the
   datastore. This means that you have to provide the full complement of Traits when requesting the Flags for a
   particular Identity. Our SDKs all provide relevant methods to achieve this.
-- [Identity overrides](../basic-features/managing-identities#identity-overrides) do not operate at all.
+- [Identity overrides](../basic-features/managing-identities#identity-overrides) work with self-hosted Flagsmith
+  instances. We're rolling them out gradually for the SaaS version. If you are a SaaS customer,
+  <a class="open-chat" data-crisp-chat-message="Hi! I'm interested to try out identity overrides in Local Evaluation mode with Flagsmith SaaS!" href="#local-evaluation-1">contact
+  us</a> to try them out!
 - [Analytics-based Integrations](/integrations/overview#analytics-platforms) do not run.
   [Flag Analytics](/advanced-use/flag-analytics) do still work, if enabled within the
   [SDK setup](/clients/server-side#configuring-the-sdk).
