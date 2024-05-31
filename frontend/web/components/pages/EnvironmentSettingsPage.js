@@ -897,7 +897,9 @@ const EnvironmentSettingsPage = class extends Component {
                           <FormGroup className='mt-5 setting'>
                             <InputGroup
                               title={'Metadata'}
-                              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} environments`}
+                              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
+                                'environments',
+                              )}`}
                               tooltipPlace='right'
                               component={
                                 <AddMetadataToEntity

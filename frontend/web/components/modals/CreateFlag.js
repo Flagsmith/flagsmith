@@ -583,7 +583,9 @@ const CreateFlag = class extends Component {
           <FormGroup className='mb-5 setting'>
             <InputGroup
               title={'Metadata'}
-              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} feature`}
+              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
+                'feature',
+              )}`}
               tooltipPlace='right'
               component={
                 <AddMetadataToEntity

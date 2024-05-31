@@ -427,7 +427,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
           <FormGroup className='mb-5 setting'>
             <InputGroup
               title={'Metadata'}
-              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} segments`}
+              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
+                'segments',
+              )}`}
               tooltipPlace='right'
               component={
                 <AddMetadataToEntity

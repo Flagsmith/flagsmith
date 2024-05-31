@@ -105,18 +105,9 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
   return (
     <div>
       <Row space className='mb-2'>
-        <Tooltip
-          title={
-            <Row>
-              <h5 className='mt-2'>Metadata Fields</h5>
-              <div>
-                <Icon name='info-outlined' />
-              </div>
-            </Row>
-          }
-        >
-          {'Create or Update the Metadata Fields Project'}
-        </Tooltip>
+        <Row>
+          <h5 className='mt-2'>Metadata Fields</h5>
+        </Row>
         <Button className='mt-2' onClick={() => createMetadataField()}>
           {'Create Metadata Field'}
         </Button>
@@ -126,7 +117,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         <Button
           theme='text'
           target='_blank'
-          href='http://localhost:3000/system-administration/metadata/#metadata-fields'
+          href='https://docs.flagsmith.com/system-administration/metadata/'
           className='fw-normal'
         >
           Learn more.
