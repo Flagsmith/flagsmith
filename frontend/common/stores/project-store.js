@@ -15,6 +15,7 @@ const data = require('../data/base/_data')
 const controller = {
   createEnv: (name, projectId, cloneId, description) => {
     API.trackEvent(Constants.events.CREATE_ENVIRONMENT)
+    store.saving()
     const req = cloneId
       ? data.post(`${Project.api}environments/${cloneId}/clone/`, {
           description,
