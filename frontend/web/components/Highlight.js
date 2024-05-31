@@ -102,6 +102,7 @@ class Highlight extends React.Component {
 
   onBlur = () => {
     this.setState({ focus: false })
+    this.props.onBlur?.()
   }
 
   render() {

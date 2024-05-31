@@ -43,7 +43,9 @@ def get_usage_data(
             if not getattr(organisation, "subscription_information_cache", None):
                 return []
             sub_cache = organisation.subscription_information_cache
-            starts_at = sub_cache.current_billing_term_starts_at
+            starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
+                days=30
+            )
             month_delta = relativedelta(now, starts_at).months
             period_starts_at = relativedelta(months=month_delta) + starts_at
             period_ends_at = now
@@ -54,7 +56,9 @@ def get_usage_data(
             if not getattr(organisation, "subscription_information_cache", None):
                 return []
             sub_cache = organisation.subscription_information_cache
-            starts_at = sub_cache.current_billing_term_starts_at
+            starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
+                days=30
+            )
             month_delta = relativedelta(now, starts_at).months - 1
             month_delta += relativedelta(now, starts_at).years * 12
             period_starts_at = relativedelta(months=month_delta) + starts_at
