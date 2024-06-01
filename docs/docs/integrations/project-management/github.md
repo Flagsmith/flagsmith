@@ -24,7 +24,7 @@ You can either set up the integration from the Flagsmith side or from the Github
 1. In the Integrations Option in the side bar, find the GitHub integration and click on 'Add Integration'.
 2. A window will open asking you to select the organization you belong to.
 3. Select the repositories and save.
-4. Back in Flagsmith application, click on the 'Manage Integration' button.
+4. Back in the Flagsmith application, click on the 'Manage Integration' button.
 5. Finally, select the repository you wish to link.
 
 ### From GitHub
