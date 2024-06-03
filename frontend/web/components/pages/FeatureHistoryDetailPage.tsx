@@ -93,19 +93,6 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                 </strong>
               </div>
               <Tabs urlParam='compare' theme='pill' uncontrolled>
-                {versions?.results?.[0].uuid !== data.uuid && (
-                  <TabItem tabLabel='Compare to Live'>
-                    <div className='mt-4'>
-                      <FeatureVersion
-                        projectId={`${match.params.projectId}`}
-                        featureId={parseInt(featureId)}
-                        environmentId={environmentId}
-                        newUUID={live!.uuid}
-                        oldUUID={data.uuid}
-                      />
-                    </div>
-                  </TabItem>
-                )}
                 {!!data.previous_version_uuid && (
                   <TabItem tabLabel='Compare to Previous'>
                     <div className='mt-4'>
@@ -115,6 +102,19 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                         environmentId={environmentId}
                         newUUID={data.uuid}
                         oldUUID={data.previous_version_uuid}
+                      />
+                    </div>
+                  </TabItem>
+                )}
+                {versions?.results?.[0].uuid !== data.uuid && (
+                  <TabItem tabLabel='Compare to Live'>
+                    <div className='mt-4'>
+                      <FeatureVersion
+                        projectId={`${match.params.projectId}`}
+                        featureId={parseInt(featureId)}
+                        environmentId={environmentId}
+                        newUUID={live!.uuid}
+                        oldUUID={data.uuid}
                       />
                     </div>
                   </TabItem>
