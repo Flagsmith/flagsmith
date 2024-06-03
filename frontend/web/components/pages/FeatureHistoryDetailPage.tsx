@@ -106,19 +106,17 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                     </div>
                   </TabItem>
                 )}
-                {versions?.results?.[0].uuid !== data.uuid && (
-                  <TabItem tabLabel='Compare to Live'>
-                    <div className='mt-4'>
-                      <FeatureVersion
-                        projectId={`${match.params.projectId}`}
-                        featureId={parseInt(featureId)}
-                        environmentId={environmentId}
-                        newUUID={live!.uuid}
-                        oldUUID={data.uuid}
-                      />
-                    </div>
-                  </TabItem>
-                )}
+                <TabItem tabLabel='Compare to Live'>
+                  <div className='mt-4'>
+                    <FeatureVersion
+                      projectId={`${match.params.projectId}`}
+                      featureId={parseInt(featureId)}
+                      environmentId={environmentId}
+                      newUUID={live!.uuid}
+                      oldUUID={data.uuid}
+                    />
+                  </div>
+                </TabItem>
               </Tabs>
             </div>
           </Row>
