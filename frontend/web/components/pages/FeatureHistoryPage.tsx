@@ -18,8 +18,9 @@ import FeatureVersion from 'components/FeatureVersion'
 import InlineModal from 'components/InlineModal'
 import TableFilterItem from 'components/tables/TableFilterItem'
 import moment from 'moment'
+import { Link } from 'react-router-dom'
 
-const widths = [250, 100]
+const widths = [250, 150]
 type FeatureHistoryPageType = {
   router: RouterChildContext['router']
 
@@ -40,6 +41,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
   ) as any
   // @ts-ignore
   const environmentId = `${env?.id}`
+  const environmentApiKey = `${env?.api_key}`
   const { data: users } = useGetUsersQuery({
     organisationId: AccountStore.getOrganisation().id,
   })
@@ -99,6 +101,9 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
               <div className='table-column' style={{ width: widths[1] }}>
                 View
               </div>
+              <div className='table-column' style={{ width: widths[1] }}>
+                Compare
+              </div>
             </Row>
           }
           renderRow={(v: TFeatureVersion, i: number) => {
@@ -117,7 +122,19 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                         ? `${user.first_name || ''} ${user.last_name || ''} `
                         : 'System '}
                     </div>
-
+                    <div className='table-column' style={{ width: widths[1] }}>
+                      <Link
+                        to={`/project/${match.params.projectId}/environment/${environmentApiKey}/history/${v.uuid}/`}
+                      >
+                        <Button
+                          theme='text'
+                          className='px-0 text-primary'
+                          size='xSmall'
+                        >
+                          View Details
+                        </Button>
+                      </Link>
+                    </div>
                     <div className='table-column' style={{ width: widths[1] }}>
                       {i + 1 !== data!.results.length && (
                         <>
@@ -152,7 +169,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                                 theme='text'
                                 size='xSmall'
                               >
-                                Compare
+                                Quick compare
                               </Button>
                             </div>
                           )}

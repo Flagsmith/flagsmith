@@ -51,31 +51,28 @@ const FeatureVersion: FC<VersionDiffType> = ({
       ) : (
         <>
           {oldUUID === newUUID ? (
-            <InfoMessage>
-              Published at{' '}
-              <strong>
-                {moment(newVersion.created_at).format('Do MMM YYYY HH:mma')}
-              </strong>{' '}
-            </InfoMessage>
+            <InfoMessage>Versions are the same.</InfoMessage>
           ) : (
-            <InfoMessage>
-              Comparing{' '}
-              <strong>
-                {moment(newVersion.created_at).format('Do MMM YYYY HH:mma')}
-              </strong>{' '}
-              to{' '}
-              <strong>
-                {moment(oldVersion.created_at).format('Do MMM YYYY HH:mma')}
-              </strong>
-            </InfoMessage>
-          )}
+            <>
+              <InfoMessage>
+                Comparing{' '}
+                <strong>
+                  {moment(newVersion.created_at).format('Do MMM YYYY HH:mma')}
+                </strong>{' '}
+                to{' '}
+                <strong>
+                  {moment(oldVersion.created_at).format('Do MMM YYYY HH:mma')}
+                </strong>
+              </InfoMessage>
 
-          <DiffFeature
-            projectId={projectId}
-            featureId={featureId}
-            oldState={oldData}
-            newState={newData}
-          />
+              <DiffFeature
+                projectId={projectId}
+                featureId={featureId}
+                oldState={oldData}
+                newState={newData}
+              />
+            </>
+          )}
         </>
       )}
     </div>
