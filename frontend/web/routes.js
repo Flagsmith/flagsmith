@@ -39,6 +39,7 @@ import UsersAndPermissionsPage from './components/pages/UsersAndPermissionsPage'
 import ProjectRedirectPage from './components/pages/ProjectRedirectPage'
 import SDKKeysPage from './components/SDKKeysPage'
 import { ParameterizedRoute } from './components/base/higher-order/ParameterizedRoute'
+import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPage'
 
 export default (
   <App>
@@ -139,6 +140,11 @@ export default (
         component={FeatureHistoryPage}
       />
       <ParameterizedRoute
+        path='/project/:projectId/environment/:environmentId/history/:id/'
+        exact
+        component={FeatureHistoryDetailPage}
+      />
+      <ParameterizedRoute
         path='/project/:projectId/settings'
         exact
         component={ProjectSettingsPage}
@@ -190,18 +196,13 @@ export default (
       />
       <Route path='/account' exact component={AccountSettingsPage} />
       <ParameterizedRoute
-        path='/project/:projectId/environment/:environmentId/audit-log'
-        exact
-        component={AuditLogPage}
-      />
-      <ParameterizedRoute
         path='/project/:projectId/audit-log'
         exact
         component={AuditLogPage}
       />
       <Route path='/organisations' exact component={OrganisationsPage} />
       <ParameterizedRoute
-        path='/project/:projectId/environment/:environmentId/audit-log/:id'
+        path='/project/:projectId/audit-log/:id'
         exact
         component={AuditLogItemPage}
       />

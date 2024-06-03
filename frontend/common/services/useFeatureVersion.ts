@@ -171,7 +171,7 @@ export const featureVersionService = service
       >({
         providesTags: (res) => [{ id: res?.uuid, type: 'FeatureVersion' }],
         query: (query: Req['getFeatureVersion']) => ({
-          url: `environments/${query.environmentId}/features/${query.featureId}/versions/${query.uuid}`,
+          url: `environment-feature-versions/${query.uuid}/`,
         }),
       }),
       getFeatureVersions: builder.query<

@@ -341,8 +341,6 @@ export type Req = {
   }>
   getUsers: { organisationId: number }
   getFeatureVersion: {
-    environmentId: string
-    featureId: string
     uuid: string
   }
   enableFeatureVersioning: {

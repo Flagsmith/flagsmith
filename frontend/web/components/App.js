@@ -381,10 +381,9 @@ const App = class extends Component {
                       />
                     )}
                     {user && showBanner && (
-                      <Row className={'px-3'}>
+                      <Row className={'px-3 mt-4'}>
                         <InfoMessage
                           title={announcementValue.title}
-                          infoMessageClass={'announcement'}
                           isClosable={announcementValue.isClosable}
                           close={() =>
                             this.closeAnnouncement(announcementValue.id)
