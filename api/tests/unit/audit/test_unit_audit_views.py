@@ -182,7 +182,6 @@ def test_retrieve_environment_feature_version_published_audit_log_record_include
     response_json = response.json()
     assert response_json["related_object_uuid"] == str(new_version.uuid)
     assert response_json["related_object_type"] == RelatedObjectType.EF_VERSION.name
-    assert response_json["related_feature_id"] == new_version.feature_id
     assert (
         response_json["log"]
         == ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE % feature.name

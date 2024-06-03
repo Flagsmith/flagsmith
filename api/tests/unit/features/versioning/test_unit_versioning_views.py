@@ -126,112 +126,6 @@ def test_delete_feature_version(
     assert environment_feature_version.deleted is True
 
 
-def test_retrieve_feature_version_with_no_previous_version(
-    feature: Feature,
-    environment_v2_versioning: Environment,
-    staff_client: APIClient,
-    with_environment_permissions: WithEnvironmentPermissionsCallable,
-    with_project_permissions: WithProjectPermissionsCallable,
-) -> None:
-    # Given
-    environment_feature_version = EnvironmentFeatureVersion.objects.get(
-        feature=feature, environment=environment_v2_versioning
-    )
-
-    url = reverse(
-        "api-v1:versioning:environment-feature-versions-detail",
-        args=[
-            environment_v2_versioning.id,
-            feature.id,
-            environment_feature_version.uuid,
-        ],
-    )
-
-    with_environment_permissions([VIEW_ENVIRONMENT])
-    with_project_permissions([VIEW_PROJECT])
-
-    # When
-    response = staff_client.get(url)
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-
-    response_json = response.json()
-    assert response_json["uuid"] == str(environment_feature_version.uuid)
-    assert response_json["previous_version_uuid"] is None
-
-
-def test_retrieve_feature_version_with_previous_version(
-    feature: Feature,
-    environment_v2_versioning: Environment,
-    staff_user: FFAdminUser,
-    staff_client: APIClient,
-    with_environment_permissions: WithEnvironmentPermissionsCallable,
-    with_project_permissions: WithProjectPermissionsCallable,
-) -> None:
-    # Given
-    with_environment_permissions([VIEW_ENVIRONMENT])
-    with_project_permissions([VIEW_PROJECT])
-
-    version_1 = EnvironmentFeatureVersion.objects.filter(
-        feature=feature, environment=environment_v2_versioning
-    ).get()
-    version_2 = EnvironmentFeatureVersion.objects.create(
-        feature=feature, environment=environment_v2_versioning
-    )
-    version_2.publish(published_by=staff_user)
-
-    url = reverse(
-        "api-v1:versioning:environment-feature-versions-detail",
-        args=[environment_v2_versioning.id, feature.id, version_2.uuid],
-    )
-
-    # When
-    response = staff_client.get(url)
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-
-    response_json = response.json()
-    assert response_json["uuid"] == str(version_2.uuid)
-    assert response_json["previous_version_uuid"] == str(version_1.uuid)
-
-
-def test_retrieve_feature_version_for_unpublished_version(
-    feature: Feature,
-    environment_v2_versioning: Environment,
-    staff_user: FFAdminUser,
-    staff_client: APIClient,
-    with_environment_permissions: WithEnvironmentPermissionsCallable,
-    with_project_permissions: WithProjectPermissionsCallable,
-) -> None:
-    # Given
-    with_environment_permissions([VIEW_ENVIRONMENT])
-    with_project_permissions([VIEW_PROJECT])
-
-    version_1 = EnvironmentFeatureVersion.objects.filter(
-        feature=feature, environment=environment_v2_versioning
-    ).get()
-    version_2 = EnvironmentFeatureVersion.objects.create(
-        feature=feature, environment=environment_v2_versioning
-    )
-
-    url = reverse(
-        "api-v1:versioning:environment-feature-versions-detail",
-        args=[environment_v2_versioning.id, feature.id, version_2.uuid],
-    )
-
-    # When
-    response = staff_client.get(url)
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-
-    response_json = response.json()
-    assert response_json["uuid"] == str(version_2.uuid)
-    assert response_json["previous_version_uuid"] == str(version_1.uuid)
-
-
 def test_cannot_delete_live_feature_version(
     admin_client: APIClient,
     environment_v2_versioning: Environment,
@@ -758,3 +652,137 @@ def test_disable_v2_versioning_returns_bad_request_if_not_using_v2_versioning(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_retrieve_environment_feature_version_without_path_args(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    efv = EnvironmentFeatureVersion.objects.first()
+
+    url = reverse("api-v1:versioning:get-efv-by-uuid", args=[efv.uuid])
+    with_environment_permissions([VIEW_ENVIRONMENT], efv.environment_id)
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["uuid"] == str(efv.uuid)
+
+
+def test_retrieve_environment_feature_version_without_path_args_permission_denied(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    efv = EnvironmentFeatureVersion.objects.first()
+
+    url = reverse("api-v1:versioning:get-efv-by-uuid", args=[str(efv.uuid)])
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_retrieve_feature_version_with_no_previous_version(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    environment_feature_version = EnvironmentFeatureVersion.objects.get(
+        feature=feature, environment=environment_v2_versioning
+    )
+
+    url = reverse(
+        "api-v1:versioning:get-efv-by-uuid", args=[environment_feature_version.uuid]
+    )
+
+    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_project_permissions([VIEW_PROJECT])
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["uuid"] == str(environment_feature_version.uuid)
+    assert response_json["previous_version_uuid"] is None
+
+
+def test_retrieve_feature_version_with_previous_version(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_project_permissions([VIEW_PROJECT])
+
+    version_1 = EnvironmentFeatureVersion.objects.filter(
+        feature=feature, environment=environment_v2_versioning
+    ).get()
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+    version_2.publish(published_by=staff_user)
+
+    url = reverse("api-v1:versioning:get-efv-by-uuid", args=[version_2.uuid])
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["uuid"] == str(version_2.uuid)
+    assert response_json["previous_version_uuid"] == str(version_1.uuid)
+
+
+def test_retrieve_feature_version_for_unpublished_version(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_project_permissions([VIEW_PROJECT])
+
+    version_1 = EnvironmentFeatureVersion.objects.filter(
+        feature=feature, environment=environment_v2_versioning
+    ).get()
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+
+    url = reverse("api-v1:versioning:get-efv-by-uuid", args=[version_2.uuid])
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["uuid"] == str(version_2.uuid)
+    assert response_json["previous_version_uuid"] == str(version_1.uuid)
