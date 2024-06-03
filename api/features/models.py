@@ -389,6 +389,11 @@ class FeatureSegment(
     def get_audit_log_related_object_id(self, history_instance) -> int:
         return self.feature_id
 
+    def get_skip_create_audit_log(self) -> bool:
+        # Don't create audit logs when deleting feature segments using versioning
+        # v2 as we rely on the version history instead.
+        return self.environment_feature_version_id is not None
+
     def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
         return SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
             self.feature.name,
