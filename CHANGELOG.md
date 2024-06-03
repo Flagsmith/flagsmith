@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.118.0](https://github.com/Flagsmith/flagsmith/compare/v2.117.1...v2.118.0) (2024-05-31)
+
+
+### Features
+
+* add audit log when environment feature version is published ([#4064](https://github.com/Flagsmith/flagsmith/issues/4064)) ([88cfc76](https://github.com/Flagsmith/flagsmith/commit/88cfc762f201967f5a4a2b362eecae444b1a2b19))
+
+
+### Bug Fixes
+
+* don't create audit log for FeatureStateValue when not published ([#4065](https://github.com/Flagsmith/flagsmith/issues/4065)) ([8b73b5c](https://github.com/Flagsmith/flagsmith/commit/8b73b5c5bb4336d5fe5947e3fe3004736c942ae2))
+* versioned remove segment override ([#4063](https://github.com/Flagsmith/flagsmith/issues/4063)) ([e4cd25a](https://github.com/Flagsmith/flagsmith/commit/e4cd25ae9d79c66447377bb087061193a6264eff))
+
 ## [2.117.1](https://github.com/Flagsmith/flagsmith/compare/v2.117.0...v2.117.1) (2024-05-30)
 
 
