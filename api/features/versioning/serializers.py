@@ -2,9 +2,9 @@ from rest_framework import serializers
 
 from features.serializers import CreateSegmentOverrideFeatureStateSerializer
 from features.versioning.models import EnvironmentFeatureVersion
+from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
 from users.models import FFAdminUser
-from webhooks.webhooks import WebhookEventType
 
 
 class EnvironmentFeatureVersionFeatureStateSerializer(
@@ -29,7 +29,7 @@ class EnvironmentFeatureVersionFeatureStateSerializer(
 
             call_github_task(
                 organisation_id=feature_state.environment.project.organisation_id,
-                type=WebhookEventType.FLAG_UPDATED.value,
+                type=GitHubEventType.FLAG_UPDATED.value,
                 feature=feature_state.feature,
                 segment_name=None,
                 url=None,

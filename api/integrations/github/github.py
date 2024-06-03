@@ -14,17 +14,18 @@ from integrations.github.constants import (
     FEATURE_ENVIRONMENT_URL,
     FEATURE_TABLE_HEADER,
     FEATURE_TABLE_ROW,
+    FEATURE_UPDATED_FROM_GHA_TEXT,
     LINK_FEATURE_TITLE,
     LINK_SEGMENT_TITLE,
     UNLINKED_FEATURE_TEXT,
     UPDATED_FEATURE_TEXT,
+    GitHubEventType,
     GitHubTag,
 )
 from integrations.github.dataclasses import GithubData
 from integrations.github.models import GithubConfiguration
 from integrations.github.tasks import call_github_app_webhook_for_feature_state
 from projects.tags.models import Tag, TagType
-from webhooks.webhooks import WebhookEventType
 
 logger = logging.getLogger(__name__)
 
@@ -112,14 +113,19 @@ def generate_body_comment(
     segment_name: str | None = None,
 ) -> str:
 
-    is_update = event_type == WebhookEventType.FLAG_UPDATED.value
-    is_removed = event_type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
+    is_update = (
+        event_type == GitHubEventType.FLAG_UPDATED.value
+        or event_type == GitHubEventType.FLAG_UPDATED_FROM_GHA
+    )
+    is_removed = event_type == GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
     is_segment_override_deleted = (
-        event_type == WebhookEventType.SEGMENT_OVERRIDE_DELETED.value
+        event_type == GitHubEventType.SEGMENT_OVERRIDE_DELETED.value
     )
 
-    if event_type == WebhookEventType.FLAG_DELETED.value:
+    if event_type == GitHubEventType.FLAG_DELETED.value:
         return DELETED_FEATURE_TEXT % (name)
+    elif event_type == GitHubEventType.FLAG_UPDATED_FROM_GHA:
+        return FEATURE_UPDATED_FROM_GHA_TEXT % (name)
 
     if is_removed:
         return UNLINKED_FEATURE_TEXT % (name)
@@ -184,7 +190,7 @@ def generate_data(
             if check_not_none(feature_state_value):
                 feature_env_data["feature_state_value"] = feature_state_value
 
-            if type is not WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
+            if type is not GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
                 feature_env_data["environment_name"] = feature_state.environment.name
                 feature_env_data["enabled"] = feature_state.enabled
                 feature_env_data["last_updated"] = feature_state.updated_at.strftime(
@@ -209,7 +215,7 @@ def generate_data(
         type=type,
         url=(
             url
-            if type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
+            if type == GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
             else None
         ),
         feature_states=feature_states_list if feature_states else None,

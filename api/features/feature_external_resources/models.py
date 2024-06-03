@@ -12,11 +12,10 @@ from django_lifecycle import (
 
 from environments.models import Environment
 from features.models import Feature, FeatureState
-from integrations.github.constants import GitHubTag
+from integrations.github.constants import GitHubEventType, GitHubTag
 from integrations.github.github import call_github_task
 from organisations.models import Organisation
 from projects.tags.models import Tag, TagType
-from webhooks.webhooks import WebhookEventType
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +102,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
 
             call_github_task(
                 organisation_id=self.feature.project.organisation_id,
-                type=WebhookEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
+                type=GitHubEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
                 feature=self.feature,
                 segment_name=None,
                 url=None,
@@ -121,7 +120,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
 
             call_github_task(
                 organisation_id=self.feature.project.organisation_id,
-                type=WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
+                type=GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
                 feature=self.feature,
                 segment_name=None,
                 url=self.url,

@@ -131,7 +131,7 @@ def enable_linked_feature(request, project_pk) -> Response:
             feature_state_names.append(feature_state.feature.name)
             call_github_task(
                 organisation_id=environment.project.organisation_id,
-                type=GitHubEventType.FLAG_UPDATED.value,
+                type=GitHubEventType.FLAG_UPDATED_FROM_GHA.value,
                 feature=feature_state.feature,
                 segment_name=None,
                 url=None,
