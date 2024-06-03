@@ -91,34 +91,43 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
         <div>
           <Row className='list-item py-2'>
             <div className='flex-fill'>
-              <div>
-                Published {moment(data.live_from).format('Do MMM HH:mma')} by{' '}
-                {user
-                  ? `${user.first_name || ''} ${user.last_name || ''} `
-                  : 'System '}
+              <div className='mb-4'>
+                Published{' '}
+                <strong>
+                  {moment(data.live_from).format('Do MMM HH:mma')}
+                </strong>{' '}
+                by{' '}
+                <strong>
+                  {user
+                    ? `${user.first_name || ''} ${user.last_name || ''} `
+                    : 'System '}
+                </strong>
               </div>
-              <h6 className='mt-4'>Compare versions</h6>
               <Tabs urlParam='compare' theme='pill' uncontrolled>
                 {versions?.results?.[0].uuid !== data.uuid && (
                   <TabItem tabLabel='Compare to Live'>
-                    <FeatureVersion
-                      projectId={`${match.params.projectId}`}
-                      featureId={parseInt(featureId)}
-                      environmentId={environmentId}
-                      newUUID={live!.uuid}
-                      oldUUID={data.uuid}
-                    />
+                    <div className='mt-4'>
+                      <FeatureVersion
+                        projectId={`${match.params.projectId}`}
+                        featureId={parseInt(featureId)}
+                        environmentId={environmentId}
+                        newUUID={live!.uuid}
+                        oldUUID={data.uuid}
+                      />
+                    </div>
                   </TabItem>
                 )}
                 {!!data.previous_version_uuid && (
                   <TabItem tabLabel='Compare to Previous'>
-                    <FeatureVersion
-                      projectId={`${match.params.projectId}`}
-                      featureId={parseInt(featureId)}
-                      environmentId={environmentId}
-                      newUUID={data.uuid}
-                      oldUUID={data.previous_version_uuid}
-                    />
+                    <div className='mt-4'>
+                      <FeatureVersion
+                        projectId={`${match.params.projectId}`}
+                        featureId={parseInt(featureId)}
+                        environmentId={environmentId}
+                        newUUID={data.uuid}
+                        oldUUID={data.previous_version_uuid}
+                      />
+                    </div>
                   </TabItem>
                 )}
               </Tabs>
