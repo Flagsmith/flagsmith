@@ -201,6 +201,11 @@ export default (
       />
       <Route path='/organisations' exact component={OrganisationsPage} />
       <ParameterizedRoute
+        path='/project/:projectId/audit-log/:id'
+        exact
+        component={AuditLogItemPage}
+      />
+      <ParameterizedRoute
         path='/project/:projectId/environment/:environmentId/audit-log/:id'
         exact
         component={AuditLogItemPage}
