@@ -126,6 +126,23 @@ def test_delete_feature_version(
     assert environment_feature_version.deleted is True
 
 
+def test_retrieve_environment_feature_version_permission_denied(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    efv = EnvironmentFeatureVersion.objects.first()
+
+    url = reverse("api-v1:versioning:get-efv-by-uuid", args=[str(efv.uuid)])
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
 def test_retrieve_feature_version_with_no_previous_version(
     feature: Feature,
     environment_v2_versioning: Environment,
@@ -139,12 +156,7 @@ def test_retrieve_feature_version_with_no_previous_version(
     )
 
     url = reverse(
-        "api-v1:versioning:environment-feature-versions-detail",
-        args=[
-            environment_v2_versioning.id,
-            feature.id,
-            environment_feature_version.uuid,
-        ],
+        "api-v1:versioning:get-efv-by-uuid", args=[environment_feature_version.uuid]
     )
 
     with_environment_permissions([VIEW_ENVIRONMENT])
@@ -181,10 +193,7 @@ def test_retrieve_feature_version_with_previous_version(
     )
     version_2.publish(published_by=staff_user)
 
-    url = reverse(
-        "api-v1:versioning:environment-feature-versions-detail",
-        args=[environment_v2_versioning.id, feature.id, version_2.uuid],
-    )
+    url = reverse("api-v1:versioning:get-efv-by-uuid", args=[version_2.uuid])
 
     # When
     response = staff_client.get(url)
@@ -216,10 +225,7 @@ def test_retrieve_feature_version_for_unpublished_version(
         feature=feature, environment=environment_v2_versioning
     )
 
-    url = reverse(
-        "api-v1:versioning:environment-feature-versions-detail",
-        args=[environment_v2_versioning.id, feature.id, version_2.uuid],
-    )
+    url = reverse("api-v1:versioning:get-efv-by-uuid", args=[version_2.uuid])
 
     # When
     response = staff_client.get(url)
