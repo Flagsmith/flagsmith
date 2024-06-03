@@ -41,7 +41,7 @@ const AuditLogItemPage: FC<AuditLogItemPageType> = ({ match }) => {
         items={[
           {
             title: 'Audit Log',
-            url: `/project/${match.params.projectId}/environment/${match.params.environmentId}/audit-log`,
+            url: `/project/${match.params.projectId}/audit-log`,
           },
         ]}
         currentPage={match.params.id}

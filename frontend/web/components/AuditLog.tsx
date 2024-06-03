@@ -81,7 +81,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
     log,
     project,
     related_feature_id,
-    related_object_id,
+    related_object_uuid,
     related_object_type,
   }: AuditLogItem) => {
     const environments = ProjectStore.getEnvs() as Environment[] | null
@@ -91,13 +91,13 @@ const AuditLog: FC<AuditLogType> = (props) => {
     const colour = index === -1 ? 0 : index
     let link: ReactNode = null
     if (
-      related_object_id &&
+      related_object_uuid &&
       related_object_type === 'EF_VERSION' &&
       environment
     ) {
       link = (
         <Link
-          to={`project/${project.id}/environment/${environment.id}/history/${related_feature_id}/${related_object_id}/`}
+          to={`/project/${project.id}/environment/${environment.api_key}/history/${related_object_uuid}/`}
         >
           <Button theme='text'>View version</Button>
         </Link>
@@ -137,15 +137,18 @@ const AuditLog: FC<AuditLogType> = (props) => {
           <div className='table-column' style={{ width: widths[2] }} />
         )}
         <Flex className='table-column fs-small ln-sm'>
-          {log}
-          {link}
+          <div className="d-flex gap-2 ">
+
+            {log}
+            {link}
+          </div>
         </Flex>
       </Row>
     )
     return (
       <Link
         className='fw-normal d-flex align-items-center flex-row list-item list-item-sm link-unstyled clickable'
-        to={`/project/${props.projectId}/environment/${props.match.params.environmentId}/audit-log/${id}`}
+        to={`/project/${props.projectId}/audit-log/${id}`}
       >
         {inner}
       </Link>
