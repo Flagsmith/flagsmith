@@ -11,9 +11,4 @@ jobs:
     steps:
       - uses: bcoe/conventional-release-labels@v1
         with:
-          type_labels: |
-              {
-              "feat": "feature",
-              "fix": "fix",
-              "breaking": "breaking"
-              }
+          type_labels: '{"feat": "feature","fix": "fix","breaking": "breaking"}'
