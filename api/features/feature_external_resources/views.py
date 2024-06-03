@@ -1,14 +1,24 @@
+import json
 import re
 
+from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from features.models import Feature
-from features.permissions import FeatureExternalResourcePermissions
+from environments.models import Environment
+from features.models import Feature, FeatureState
+from features.permissions import (
+    FeatureExternalResourceGitHubActionPermissions,
+    FeatureExternalResourcePermissions,
+)
 from integrations.github.client import get_github_issue_pr_title_and_state
+from integrations.github.constants import GitHubEventType
+from integrations.github.github import call_github_task
 from organisations.models import Organisation
 
 from .models import FeatureExternalResource
@@ -83,3 +93,53 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         external_resource_id = int(self.kwargs["id"])
         serializer.save(id=external_resource_id)
+
+
+@swagger_auto_schema(
+    method="POST",
+    responses={200: "Feature enabled"},
+    operation_description="This endpoint is to enable a feature linked to the provided external resource URL.",
+)
+@api_view(["POST"])
+@permission_classes([FeatureExternalResourceGitHubActionPermissions])
+def enable_linked_feature(request, project_pk) -> Response:
+    external_resource = get_object_or_404(
+        FeatureExternalResource.objects.filter(url=request.data.get("html_url")),
+    )
+    selected_environments_json = request.data.get("environments", "[]")
+    selected_environments = json.loads(selected_environments_json)
+    environments = Environment.objects.filter(
+        project_id=project_pk,
+        name__in=selected_environments,
+    )
+
+    feature_state_names = []
+
+    for environment in environments:
+        q = Q(
+            feature_id=external_resource.feature_id,
+            identity__isnull=True,
+            feature_segment__isnull=True,
+        )
+        feature_state_query = FeatureState.objects.get_live_feature_states(
+            environment=environment, additional_filters=q
+        )
+        feature_state = feature_state_query.first()
+        if feature_state:
+            feature_state.enabled = True
+            feature_state.save()
+            feature_state_names.append(feature_state.feature.name)
+            call_github_task(
+                organisation_id=environment.project.organisation_id,
+                type=GitHubEventType.FLAG_UPDATED.value,
+                feature=feature_state.feature,
+                segment_name=None,
+                url=None,
+                feature_states=[feature_state],
+            )
+
+    return Response(
+        data=feature_state_names,
+        content_type="application/json",
+        status=status.HTTP_200_OK,
+    )
