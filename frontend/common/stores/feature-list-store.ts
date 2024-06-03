@@ -27,6 +27,7 @@ import flagsmith from 'flagsmith'
 import API from 'project/api'
 import segmentOverrides from 'components/SegmentOverrides'
 import { Req } from 'common/types/requests'
+import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 let createdFirstFeature = false
 const PAGE_SIZE = 200
 function recursivePageGet(url, parentRes) {
@@ -615,6 +616,20 @@ const controller = {
           if (res.error) {
             throw res.error
           }
+          // Fetch and update the latest environment feature state
+          return getVersionFeatureState(getStore(), {
+            environmentId: ProjectStore.getEnvironmentIdFromKey(environmentId),
+            featureId: projectFlag.id,
+            sha: res.data[0].version_sha,
+          }).then((res) => {
+            const environmentFeatureState = res.data.find(
+              (v) => !v.feature_segment,
+            )
+            store.model.keyedEnvironmentFeatures[projectFlag.id] = {
+              ...store.model.keyedEnvironmentFeatures[projectFlag.id],
+              ...environmentFeatureState,
+            }
+          })
         })
       })
     } else if (environmentFlag) {
