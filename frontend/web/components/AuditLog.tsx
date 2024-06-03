@@ -56,13 +56,18 @@ const AuditLog: FC<AuditLogType> = (props) => {
     data: projectAuditLog,
     isError,
     isFetching,
-  } = useGetAuditLogsQuery({
-    environments,
-    page,
-    page_size: props.pageSize,
-    project: props.projectId,
-    search,
-  })
+  } = useGetAuditLogsQuery(
+    {
+      environments,
+      page,
+      page_size: props.pageSize,
+      project: props.projectId,
+      search,
+    },
+    {
+      refetchOnMountOrArgChange: true
+    },
+  )
 
   useEffect(() => {
     props.onErrorChange?.(isError)
@@ -81,8 +86,8 @@ const AuditLog: FC<AuditLogType> = (props) => {
     log,
     project,
     related_feature_id,
-    related_object_uuid,
     related_object_type,
+    related_object_uuid,
   }: AuditLogItem) => {
     const environments = ProjectStore.getEnvs() as Environment[] | null
     const index = environments?.findIndex((v) => {
@@ -137,8 +142,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
           <div className='table-column' style={{ width: widths[2] }} />
         )}
         <Flex className='table-column fs-small ln-sm'>
-          <div className="d-flex gap-2 ">
-
+          <div className='d-flex gap-2 '>
             {log}
             {link}
           </div>
