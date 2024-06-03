@@ -1,0 +1,19 @@
+name: Platform Pull Requests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  label-pr:
+    name: Label PRs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: bcoe/conventional-release-labels@v1
+        with:
+          type_labels: |
+              {
+              "feat": "feature",
+              "fix": "fix",
+              "breaking": "breaking"
+              }
