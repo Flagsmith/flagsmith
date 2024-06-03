@@ -3,6 +3,7 @@ import typing
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 
+from audit.audit_helpers import get_related_feature_id
 from audit.models import AuditLog
 from environments.serializers import EnvironmentSerializerLight
 from projects.serializers import ProjectListSerializer
@@ -42,6 +43,7 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):
     project = ProjectListSerializer()
     change_details = serializers.SerializerMethodField()
     change_type = serializers.SerializerMethodField()
+    related_feature_id = serializers.SerializerMethodField()
 
     class Meta:
         model = AuditLog
@@ -58,6 +60,7 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):
             "is_system_event",
             "change_details",
             "change_type",
+            "related_feature_id",
         )
 
     @swagger_serializer_method(
@@ -82,6 +85,9 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):
             "-": "DELETE",
             "~": "UPDATE",
         }.get(history_record.history_type)
+
+    def get_related_feature_id(self, instance: AuditLog) -> int | None:
+        return get_related_feature_id(instance)
 
 
 class AuditLogsQueryParamSerializer(serializers.Serializer):
