@@ -9,6 +9,8 @@ sidebar_label: Overview
 [Flagsmith](https://flagsmith.com/) is a feature flag tool that lets you manage features across web, mobile and server
 side applications.
 
+1.
+
 [Flagsmith is Open Source](https://github.com/Flagsmith). Host yourself or let us take care of the hosting.
 
 ## Getting Started
