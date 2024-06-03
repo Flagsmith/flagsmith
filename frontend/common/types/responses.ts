@@ -239,7 +239,7 @@ export type AuditLogItem = {
   author?: User
   environment?: Environment
   project: ProjectSummary
-  related_object_uuid: number
+  related_object_uuid?: number
   related_feature_id?: number
   related_object_type:
     | 'FEATURE'
@@ -510,7 +510,7 @@ export type ChangeRequest = {
 export type FeatureVersion = {
   created_at: string
   updated_at: string
-  feature: number
+  feature?: number
   previous_version_uuid?: string
   published: boolean
   live_from: string
