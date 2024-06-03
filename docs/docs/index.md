@@ -11,6 +11,8 @@ side applications.
 
 [Flagsmith is Open Source](https://github.com/Flagsmith). Host yourself or let us take care of the hosting.
 
+2.
+
 ## Getting Started
 
 If you're new to Flagsmith or Feature Flags in general we would recommend:
