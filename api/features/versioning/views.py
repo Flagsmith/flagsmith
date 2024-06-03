@@ -4,11 +4,11 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import action
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
     ListModelMixin,
-    RetrieveModelMixin,
     UpdateModelMixin,
 )
 from rest_framework.permissions import IsAuthenticated
@@ -26,6 +26,7 @@ from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.permissions import (
     EnvironmentFeatureVersionFeatureStatePermissions,
     EnvironmentFeatureVersionPermissions,
+    EnvironmentFeatureVersionRetrievePermissions,
 )
 from features.versioning.serializers import (
     EnvironmentFeatureVersionFeatureStateSerializer,
@@ -46,7 +47,6 @@ from users.models import FFAdminUser
 )
 class EnvironmentFeatureVersionViewSet(
     GenericViewSet,
-    RetrieveModelMixin,
     ListModelMixin,
     CreateModelMixin,
     DestroyModelMixin,
@@ -133,6 +133,22 @@ class EnvironmentFeatureVersionViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save(published_by=request.user)
         return Response(serializer.data)
+
+
+class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):
+    """
+    This is an additional endpoint to retrieve a specific version without needing
+    to provide the environment or feature as part of the URL.
+    """
+
+    permission_classes = [
+        IsAuthenticated,
+        EnvironmentFeatureVersionRetrievePermissions,
+    ]
+    serializer_class = EnvironmentFeatureVersionRetrieveSerializer
+
+    def get_queryset(self):
+        return EnvironmentFeatureVersion.objects.all()
 
 
 class EnvironmentFeatureVersionFeatureStatesViewSet(

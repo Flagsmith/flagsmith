@@ -35,6 +35,13 @@ class EnvironmentFeatureVersionPermissions(BasePermission):
         )
 
 
+class EnvironmentFeatureVersionRetrievePermissions(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return request.user.has_environment_permission(
+            VIEW_ENVIRONMENT, obj.environment
+        )
+
+
 class EnvironmentFeatureVersionFeatureStatePermissions(BasePermission):
     def has_permission(self, request: Request, view: GenericViewSet) -> bool:
         environment_pk = view.kwargs["environment_pk"]
