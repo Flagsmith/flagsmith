@@ -564,7 +564,7 @@ const CreateFlag = class extends Component {
         {!identity && this.state.tags && (
           <FormGroup className='mb-5 setting'>
             <InputGroup
-              title={identity ? 'Tags' : 'Tags (optional)'}
+              title={identity ? 'Tags' : 'Tags'}
               tooltip={Constants.strings.TAGS_DESCRIPTION}
               component={
                 <AddEditTags
@@ -649,7 +649,7 @@ const CreateFlag = class extends Component {
             }
             ds
             type='text'
-            title={identity ? 'Description' : 'Description (optional)'}
+            title={identity ? 'Description' : 'Description'}
             placeholder="e.g. 'This determines what size the header is' "
           />
         </FormGroup>
@@ -784,7 +784,7 @@ const CreateFlag = class extends Component {
                 this.setState({ description: Utils.safeParseEventValue(e) })
               }
               type='text'
-              title={identity ? 'Description' : 'Description (optional)'}
+              title={identity ? 'Description' : 'Description'}
               placeholder='No description'
             />
           </FormGroup>

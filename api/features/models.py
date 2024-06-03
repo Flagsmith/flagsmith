@@ -1080,6 +1080,9 @@ class FeatureStateValue(
         self.string_value = source_feature_state_value.string_value
         self.save()
 
+    def get_skip_create_audit_log(self) -> bool:
+        return self.feature_state.get_skip_create_audit_log()
+
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         fs = self.feature_state
 
