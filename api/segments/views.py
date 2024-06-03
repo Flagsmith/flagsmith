@@ -50,6 +50,7 @@ class SegmentViewSet(viewsets.ModelViewSet):
                 "rules__rules",
                 "rules__rules__conditions",
                 "rules__rules__rules",
+                "metadata",
             )
 
         query_serializer = SegmentListQuerySerializer(data=self.request.query_params)
