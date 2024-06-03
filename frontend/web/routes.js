@@ -196,11 +196,6 @@ export default (
       />
       <Route path='/account' exact component={AccountSettingsPage} />
       <ParameterizedRoute
-        path='/project/:projectId/environment/:environmentId/audit-log'
-        exact
-        component={AuditLogPage}
-      />
-      <ParameterizedRoute
         path='/project/:projectId/audit-log'
         exact
         component={AuditLogPage}
