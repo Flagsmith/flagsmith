@@ -64,6 +64,8 @@ class EnvironmentFeatureVersionSerializer(serializers.ModelSerializer):
             "is_live",
             "published_by",
             "created_by",
+            "feature",
+            "environment",
         )
 
 
@@ -71,7 +73,11 @@ class EnvironmentFeatureVersionRetrieveSerializer(EnvironmentFeatureVersionSeria
     previous_version_uuid = serializers.SerializerMethodField()
 
     class Meta(EnvironmentFeatureVersionSerializer.Meta):
-        _fields = ("previous_version_uuid",)
+        _fields = (
+            "previous_version_uuid",
+            "feature",
+            "environment",
+        )
 
         fields = EnvironmentFeatureVersionSerializer.Meta.fields + _fields
 
