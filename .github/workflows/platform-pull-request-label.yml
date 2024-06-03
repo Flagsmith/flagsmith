@@ -1,4 +1,4 @@
-name: Platform Pull Requests
+name: Platform Pull Request Label
 
 on:
   pull_request:
