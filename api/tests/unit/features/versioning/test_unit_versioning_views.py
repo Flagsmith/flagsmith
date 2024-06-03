@@ -171,6 +171,8 @@ def test_retrieve_feature_version_with_no_previous_version(
     response_json = response.json()
     assert response_json["uuid"] == str(environment_feature_version.uuid)
     assert response_json["previous_version_uuid"] is None
+    assert response_json["feature"] == feature.id
+    assert response_json["environment"] == environment_v2_versioning.id
 
 
 def test_retrieve_feature_version_with_previous_version(
