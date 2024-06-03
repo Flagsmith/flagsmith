@@ -113,10 +113,6 @@ def generate_body_comment(
     segment_name: str | None = None,
 ) -> str:
 
-    is_update = (
-        event_type == GitHubEventType.FLAG_UPDATED.value
-        or event_type == GitHubEventType.FLAG_UPDATED_FROM_GHA
-    )
     is_removed = event_type == GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
     is_segment_override_deleted = (
         event_type == GitHubEventType.SEGMENT_OVERRIDE_DELETED.value
@@ -124,8 +120,6 @@ def generate_body_comment(
 
     if event_type == GitHubEventType.FLAG_DELETED.value:
         return DELETED_FEATURE_TEXT % (name)
-    elif event_type == GitHubEventType.FLAG_UPDATED_FROM_GHA:
-        return FEATURE_UPDATED_FROM_GHA_TEXT % (name)
 
     if is_removed:
         return UNLINKED_FEATURE_TEXT % (name)
@@ -133,7 +127,14 @@ def generate_body_comment(
     if is_segment_override_deleted and segment_name is not None:
         return DELETED_SEGMENT_OVERRIDE_TEXT % (segment_name, name)
 
-    result = UPDATED_FEATURE_TEXT % (name) if is_update else LINK_FEATURE_TITLE % (name)
+    result = ""
+    if event_type == GitHubEventType.FLAG_UPDATED.value:
+        result = UPDATED_FEATURE_TEXT % (name)
+    elif event_type == GitHubEventType.FLAG_UPDATED_FROM_GHA.value:
+        result = FEATURE_UPDATED_FROM_GHA_TEXT % (name)
+    else:
+        result = LINK_FEATURE_TITLE % (name)
+
     last_segment_name = ""
     if len(feature_states) > 0 and not feature_states[0].get("segment_name"):
         result += FEATURE_TABLE_HEADER
