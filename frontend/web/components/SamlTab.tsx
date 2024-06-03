@@ -1,160 +1,124 @@
-import React, { FC, useState } from 'react'
-import Switch from './Switch'
-import InputGroup from './base/forms/InputGroup'
+import React, { FC } from 'react'
 import Button from './base/forms/Button'
-import ValueEditor from './ValueEditor'
-import Utils from 'common/utils/utils'
-import {
-  useCreateSamlConfigurationMutation,
-  useUpdateSamlConfigurationMutation,
-  useDeleteSamlConfigurationMutation,
-  useGetSamlConfigurationQuery,
-} from 'common/services/useSamlConfiguration'
-import { SAMLConfiguration } from 'common/types/responses'
+
 import Icon from './Icon'
+import PanelSearch from './PanelSearch'
+import PageTitle from './PageTitle'
+
+import { useDeleteSamlConfigurationMutation } from 'common/services/useSamlConfiguration'
+import CreateSAML from './modals/CreateSAML'
+import Switch from './Switch'
+import { SAMLConfiguration } from 'common/types/responses'
 
 export type SamlTabType = {
   organisationId: number
 }
 const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
-  const [name, setName] = useState<string>('')
-  const [frontendUrl, setFrontendUrl] = useState<string>(window.location.origin)
-  const [metadataXml, setMetadataXml] = useState<string>('')
-  const [allowIdpInitiated, setAllowIdpInitiated] = useState<boolean>(false)
-  const [createSamlConfiguration] = useCreateSamlConfigurationMutation()
-  const [editSamlConfiguration] = useUpdateSamlConfigurationMutation()
   const [deleteSamlConfiguration] = useDeleteSamlConfigurationMutation()
-  const { data } = useGetSamlConfigurationQuery({ name: name }, { skip: !name })
+  const samlExamples = [
+    {
+      'allow_idp_initiated': true,
+      'frontend_url': 'http://localhost:8080/',
+      'idp_metadata_xml': 'string',
+      'name': 'name 1',
+      'organisation': 1,
+    },
+    {
+      'allow_idp_initiated': false,
+      'frontend_url': 'http://localhost:8080/',
+      'idp_metadata_xml': 'string',
+      'name': 'name 2',
+      'organisation': 1,
+    },
+    {
+      'allow_idp_initiated': false,
+      'frontend_url': 'http://localhost:8080/',
+      'idp_metadata_xml': 'string',
+      'name': 'name 3',
+      'organisation': 1,
+    },
+  ]
+  const openCreateSAML = (organisationId: number, name?: string) => {
+    openModal(
+      'New SAML configuration',
+      <CreateSAML organisationId={organisationId} samlName={name || ''} />,
+      'p-0 side-modal',
+    )
+  }
 
   return (
-    <div className='col-md-8 mt-3'>
-      <h5 className='mb-5'>SAML Configuration</h5>
-      <InputGroup
-        className='mt-2'
-        title='Name*'
-        data-test='saml-name'
-        value={name}
-        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-          setName(Utils.safeParseEventValue(event))
-        }}
-        inputProps={{
-          className: 'full-width',
-        }}
-        type='text'
-        name='Name*'
-      />
-      <InputGroup
-        className='mt-2 mb-4'
-        title='Frontend URL*'
-        data-test='frontend-url'
-        value={frontendUrl}
-        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-          setFrontendUrl(Utils.safeParseEventValue(event))
-        }}
-        inputProps={{
-          className: 'full-width',
-          name: 'groupName',
-        }}
-        type='text'
-        name='Frontend URL*'
-      />
-      <InputGroup
-        className='mt-2 mb-4'
-        title='Allow idp initiated'
-        component={
-          <Switch
-            checked={allowIdpInitiated}
-            onChange={() => {
-              setAllowIdpInitiated(!allowIdpInitiated)
-            }}
-          />
-        }
-      />
-      <FormGroup className='mb-4'>
-        <InputGroup
-          component={
-            <ValueEditor
-              data-test='featureValue'
-              name='featureValue'
-              className='full-width'
-              value={metadataXml}
-              onChange={setMetadataXml}
-              placeholder="e.g. '<xml>time<xml>' "
-            />
-          }
-          title={'IPD Metadata XML'}
-        />
-      </FormGroup>
-      <form className='text-right'>
-        <div className='text-right mt-2'>
+    <div className='mt-3'>
+      <PageTitle
+        title={'SAML Configuration'}
+        cta={
           <Button
-            type='submit'
-            disabled={!name || !frontendUrl}
+            className='text-right'
             onClick={() => {
-              const body = {
-                frontend_url: frontendUrl,
-                name: name,
-                organisation: organisationId,
-              } as SAMLConfiguration
-              if (metadataXml) {
-                body.idp_metadata_xml = metadataXml
-              }
-              if (allowIdpInitiated) {
-                body.allow_idp_initiated = allowIdpInitiated
-              }
-              if (data) {
-                editSamlConfiguration(body).then((res) => {
-                  if (res.data) {
-                    setName(res.data.organisation)
-                    setFrontendUrl(res.data.name)
-                    setMetadataXml(res.data.idp_metadata_xml)
-                    setAllowIdpInitiated(res.data.allow_idp_initiated)
-                  }
-                })
-              } else {
-                createSamlConfiguration(body).then((res) => {
-                  if (res.data) {
-                    setName(res.data.organisation)
-                    setFrontendUrl(res.data.name)
-                    setMetadataXml(res.data.idp_metadata_xml)
-                    setAllowIdpInitiated(res.data.allow_idp_initiated)
-                  }
-                })
-              }
+              openCreateSAML(organisationId)
             }}
           >
-            {data ? 'Edit Configuration' : 'Create Configuration'}
+            {'Create a SAML Configuration'}
           </Button>
-        </div>
-      </form>
-      <hr className='py-0 my-4' />
-      {data && (
-        <FormGroup className='mt-4 col-md-6'>
-          <Row space>
-            <div className='col-md-7'>
-              <h5 className='mn-2'>Delete SAML configuration</h5>
-              <p className='fs-small lh-sm'>
-                This SAML configuration will be permanently deleted.
-              </p>
-            </div>
-            <Button
-              id='delete-saml-configuration'
+        }
+      ></PageTitle>
+
+      <FormGroup className='mb-4'>
+        <PanelSearch
+          className='no-pad overflow-visible'
+          id='features-list'
+          renderSearchWithNoResults
+          itemHeight={65}
+          isLoading={false}
+          filterRow={(samlConf: SAMLConfiguration, search: string) =>
+            samlConf.name.toLowerCase().indexOf(search) > -1
+          }
+          header={
+            <Row className='table-header'>
+              <Flex className='table-column'>
+                <div className='font-weight-medium mb-1'>SAML Name</div>
+              </Flex>
+              <div className='table-column'>Allow IDP Initiated</div>
+            </Row>
+          }
+          items={samlExamples}
+          renderRow={(samlConf: SAMLConfiguration) => (
+            <Row
               onClick={() => {
-                deleteSamlConfiguration({ name: name }).then((res) => {
-                  if (res.data) {
-                    setName('')
-                    setMetadataXml('')
-                    setAllowIdpInitiated(false)
-                  }
-                })
+                openCreateSAML(organisationId, samlConf.name)
               }}
-              className='btn-with-icon btn-remove'
+              space
+              className='list-item clickable cursor-pointer'
+              key={samlConf.name}
             >
-              <Icon name='trash-2' width={20} fill='#EF4D56' />
-            </Button>
-          </Row>
-        </FormGroup>
-      )}
+              <Flex className='table-column px-3'>
+                <div className='font-weight-medium mb-1'>{samlConf.name}</div>
+              </Flex>
+              <div className='table-column'>
+                <Switch checked={samlConf.allow_idp_initiated} />
+              </div>
+              <div className='table-column'>
+                <Button
+                  id='delete-invite'
+                  type='button'
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    deleteSamlConfiguration({ name: samlConf.name }).then(
+                      () => {
+                        toast('SAML configuration deleted')
+                        closeModal()
+                      },
+                    )
+                  }}
+                  className='btn btn-with-icon'
+                >
+                  <Icon name='trash-2' width={20} fill='#656D7B' />
+                </Button>
+              </div>
+            </Row>
+          )}
+        />
+      </FormGroup>
     </div>
   )
 }
