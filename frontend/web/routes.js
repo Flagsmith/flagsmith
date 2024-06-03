@@ -39,6 +39,7 @@ import UsersAndPermissionsPage from './components/pages/UsersAndPermissionsPage'
 import ProjectRedirectPage from './components/pages/ProjectRedirectPage'
 import SDKKeysPage from './components/SDKKeysPage'
 import { ParameterizedRoute } from './components/base/higher-order/ParameterizedRoute'
+import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPage';
 
 export default (
   <App>
@@ -137,6 +138,11 @@ export default (
         path='/project/:projectId/environment/:environmentId/history'
         exact
         component={FeatureHistoryPage}
+      />
+      <ParameterizedRoute
+        path='/project/:projectId/environment/:environmentId/history/:featureId/:id/'
+        exact
+        component={FeatureHistoryDetailPage}
       />
       <ParameterizedRoute
         path='/project/:projectId/settings'

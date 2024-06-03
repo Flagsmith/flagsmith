@@ -1,14 +1,15 @@
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react' // we need this to make JSX compile
-import moment from 'moment'
 import Utils from 'common/utils/utils'
 import { AuditLogItem, Environment } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
 import useSearchThrottle from 'common/useSearchThrottle'
-import JSONReference from './JSONReference'
 import { Link, withRouter } from 'react-router-dom'
-import PanelSearch from './PanelSearch'
 import ProjectStore from 'common/stores/project-store'
+import Button from './base/forms/Button'
 import Tag from './tags/Tag'
+import PanelSearch from './PanelSearch'
+import JSONReference from './JSONReference'
+import moment from 'moment'
 
 type AuditLogType = {
   environmentId: string
@@ -78,12 +79,30 @@ const AuditLog: FC<AuditLogType> = (props) => {
     environment,
     id,
     log,
+    project,
+    related_feature_id,
+    related_object_id,
+    related_object_type,
   }: AuditLogItem) => {
     const environments = ProjectStore.getEnvs() as Environment[] | null
     const index = environments?.findIndex((v) => {
       return v.id === environment?.id
     })
     const colour = index === -1 ? 0 : index
+    let link: ReactNode = null
+    if (
+      related_object_id &&
+      related_object_type === 'EF_VERSION' &&
+      environment
+    ) {
+      link = (
+        <Link
+          to={`project/${project.id}/environment/${environment.id}/history/${related_feature_id}/${related_object_id}/`}
+        >
+          <Button theme='text'>View version</Button>
+        </Link>
+      )
+    }
     const inner = (
       <Row>
         <div
@@ -117,7 +136,10 @@ const AuditLog: FC<AuditLogType> = (props) => {
         ) : (
           <div className='table-column' style={{ width: widths[2] }} />
         )}
-        <Flex className='table-column fs-small ln-sm'>{log}</Flex>
+        <Flex className='table-column fs-small ln-sm'>
+          {log}
+          {link}
+        </Flex>
       </Row>
     )
     return (
@@ -203,4 +225,4 @@ const AuditLog: FC<AuditLogType> = (props) => {
   )
 }
 
-export default withRouter(AuditLog)
+export default withRouter(AuditLog as any)
