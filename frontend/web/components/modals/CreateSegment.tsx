@@ -400,7 +400,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           }
           isValid={name && name.length}
           type='text'
-          title='Description (optional)'
+          title='Description'
           placeholder="e.g. 'People who have spent over $100' "
         />
       )}
