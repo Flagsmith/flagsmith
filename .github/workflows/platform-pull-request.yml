@@ -12,22 +12,39 @@ jobs:
     name: Validate Conventional Commit title
     runs-on: ubuntu-latest
     steps:
-      - uses: amannn/action-semantic-pull-request@v5
+      - name: Check PR Conventional Commit title
+        uses: amannn/action-semantic-pull-request@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           types: | # mirrors changelog-sections in the /release-please-config.json
-            fix
             feat
+            fix
             infra
+            ci
             docs
             chore
-            build
             deps
-            ci
+            perf
             refactor
-            style
             test
+
+      - name: Auto-label PR with Conventional Commit title
+        uses: bcoe/conventional-release-labels@v1
+        with:
+          type_labels: |
+            {
+              "feat": "feature",
+              "fix": "fix",
+              "infra": "infrastructure",
+              "ci": "ci-cd",
+              "docs": "docs",
+              "chore": "chore",
+              "deps": "dependencies",
+              "perf": "performance",
+              "refactor": "refactor",
+              "test": "testing",
+            }
 
   run-e2e-tests-1:
     runs-on: ubuntu-latest
