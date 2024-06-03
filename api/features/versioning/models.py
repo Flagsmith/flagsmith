@@ -123,7 +123,7 @@ class EnvironmentFeatureVersion(
             self.__class__.objects.filter(
                 environment=self.environment,
                 feature=self.feature,
-                live_from__lt=timezone.now(),
+                live_from__lt=self.live_from or timezone.now(),
                 published_at__isnull=False,
             )
             .order_by("-live_from")
