@@ -5,7 +5,10 @@ import Icon from './Icon'
 import PanelSearch from './PanelSearch'
 import PageTitle from './PageTitle'
 
-import { useDeleteSamlConfigurationMutation } from 'common/services/useSamlConfiguration'
+import {
+  useDeleteSamlConfigurationMutation,
+  useGetSamlConfigurationsQuery,
+} from 'common/services/useSamlConfiguration'
 import CreateSAML from './modals/CreateSAML'
 import Switch from './Switch'
 import { SAMLConfiguration } from 'common/types/responses'
@@ -14,30 +17,10 @@ export type SamlTabType = {
   organisationId: number
 }
 const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
+  const { data } = useGetSamlConfigurationsQuery({
+    organisation_id: organisationId,
+  })
   const [deleteSamlConfiguration] = useDeleteSamlConfigurationMutation()
-  const samlExamples = [
-    {
-      'allow_idp_initiated': true,
-      'frontend_url': 'http://localhost:8080/',
-      'idp_metadata_xml': 'string',
-      'name': 'name 1',
-      'organisation': 1,
-    },
-    {
-      'allow_idp_initiated': false,
-      'frontend_url': 'http://localhost:8080/',
-      'idp_metadata_xml': 'string',
-      'name': 'name 2',
-      'organisation': 1,
-    },
-    {
-      'allow_idp_initiated': false,
-      'frontend_url': 'http://localhost:8080/',
-      'idp_metadata_xml': 'string',
-      'name': 'name 3',
-      'organisation': 1,
-    },
-  ]
   const openCreateSAML = (organisationId: number, name?: string) => {
     openModal(
       'New SAML configuration',
@@ -80,7 +63,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
               <div className='table-column'>Allow IDP Initiated</div>
             </Row>
           }
-          items={samlExamples}
+          items={data}
           renderRow={(samlConf: SAMLConfiguration) => (
             <Row
               onClick={() => {

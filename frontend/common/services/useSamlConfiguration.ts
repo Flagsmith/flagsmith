@@ -1,6 +1,7 @@
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
+import Utils from 'common/utils/utils'
 
 export const samlConfigurationService = service
   .enhanceEndpoints({ addTagTypes: ['SamlConfiguration'] })
@@ -44,6 +45,17 @@ export const samlConfigurationService = service
         providesTags: (res) => [{ id: res?.name, type: 'SamlConfiguration' }],
         query: (query: Req['getSamlConfigurationMetadata']) => ({
           url: `auth/saml/${query.name}/metadata/`,
+        }),
+      }),
+      getSamlConfigurations: builder.query<
+        Res['samlConfiguration'],
+        Req['getSamlConfigurations']
+      >({
+        providesTags: (res) => [{ id: res?.name, type: 'SamlConfiguration' }],
+        query: (query: Req['getSamlConfigurations']) => ({
+          url: `auth/saml/configuration/?${Utils.toParam(
+            query.organisation_id,
+          )}`,
         }),
       }),
       updateSamlConfiguration: builder.mutation<
@@ -106,6 +118,20 @@ export async function getSamlConfiguration(
     ),
   )
 }
+export async function getSamlConfigurations(
+  store: any,
+  data: Req['getSamlConfigurations'],
+  options?: Parameters<
+    typeof samlConfigurationService.endpoints.getSamlConfigurations.initiate
+  >[1],
+) {
+  return store.dispatch(
+    samlConfigurationService.endpoints.getSamlConfigurations.initiate(
+      data,
+      options,
+    ),
+  )
+}
 export async function getSamlConfigurationMetadata(
   store: any,
   data: Req['getSamlConfigurationMetadata'],
@@ -141,6 +167,7 @@ export const {
   useDeleteSamlConfigurationMutation,
   useGetSamlConfigurationMetadataQuery,
   useGetSamlConfigurationQuery,
+  useGetSamlConfigurationsQuery,
   useUpdateSamlConfigurationMutation,
   // END OF EXPORTS
 } = samlConfigurationService
