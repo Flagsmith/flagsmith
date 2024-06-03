@@ -245,7 +245,7 @@ const SegmentOverrideInner = class Override extends React.Component {
         <div className='text-left mt-2'>
           {showValue ? (
             <>
-              <label>Value (optional)</label>
+              <label>Value</label>
               <ValueEditor
                 readOnly={readOnly}
                 disabled={readOnly}
