@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from flag_engine.segments.constants import EQUAL
+from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
@@ -343,11 +344,11 @@ def test_get_segment_by_uuid(client, project, segment):
     ],
 )
 def test_list_segments(
-    django_assert_num_queries,
-    project,
-    client,
-    num_queries,
-    required_a_segment_metadata_field,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    project: Project,
+    client: APIClient,
+    num_queries: int,
+    required_a_segment_metadata_field: MetadataModelField,
 ):
     # Given
     num_segments = 5
