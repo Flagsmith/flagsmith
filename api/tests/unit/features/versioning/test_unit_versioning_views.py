@@ -1085,3 +1085,42 @@ def test_create_new_version_for_multivariate_feature(
             ).multivariate_feature_state_values.all()
         ]
     )
+
+
+def test_create_new_version_delete_segment_override_updates_overrides_immediately(
+    feature: Feature,
+    segment: Segment,
+    feature_segment: FeatureSegment,
+    segment_featurestate: FeatureState,
+    environment_v2_versioning: Environment,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    create_version_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    data = {
+        "segment_ids_to_delete_overrides": [segment.id],
+        "publish_immediately": True,
+    }
+
+    # When
+    response = admin_client.post(
+        create_version_url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    get_feature_segments_url = "%s?environment=%d&feature=%d" % (
+        reverse("api-v1:features:feature-segment-list"),
+        environment_v2_versioning.id,
+        feature.id,
+    )
+    get_feature_segments_response = admin_client.get(get_feature_segments_url)
+    assert get_feature_segments_response.status_code == status.HTTP_200_OK
+    assert get_feature_segments_response.json()["count"] == 0

@@ -254,9 +254,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
     def _delete_feature_states(
         self, segment_ids: list[int], version: EnvironmentFeatureVersion
     ) -> None:
-        version.feature_states.filter(
-            feature_segment__segment_id__in=segment_ids
-        ).delete()
+        version.feature_segments.filter(segment_id__in=segment_ids).delete()
 
     def _is_segment_override(self, feature_state: dict) -> bool:
         return feature_state.get("feature_segment") is not None
