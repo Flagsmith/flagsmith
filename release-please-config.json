@@ -39,11 +39,6 @@
             "section": "Docs"
         },
         {
-            "type": "chore",
-            "hidden": true,
-            "section": "Other"
-        },
-        {
             "type": "deps",
             "hidden": true,
             "section": "Dependency Updates"
@@ -62,6 +57,11 @@
             "type": "test",
             "hidden": true,
             "section": "Tests"
+        },
+        {
+            "type": "chore",
+            "hidden": true,
+            "section": "Other"
         }
     ]
 }

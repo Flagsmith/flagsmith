@@ -23,11 +23,11 @@ jobs:
             infra
             ci
             docs
-            chore
             deps
             perf
             refactor
             test
+            chore
 
       - name: Auto-label PR with Conventional Commit title
         uses: bcoe/conventional-release-labels@v1
@@ -39,11 +39,11 @@ jobs:
               "infra": "infrastructure",
               "ci": "ci-cd",
               "docs": "docs",
-              "chore": "chore",
               "deps": "dependencies",
               "perf": "performance",
               "refactor": "refactor",
               "test": "testing",
+              "chore": "chore"
             }
 
   run-e2e-tests-1:
