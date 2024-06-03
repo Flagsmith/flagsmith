@@ -45,6 +45,7 @@ jobs:
               "test": "testing",
               "chore": "chore"
             }
+          ignored_types: '[]'
 
   run-e2e-tests-1:
     runs-on: ubuntu-latest
