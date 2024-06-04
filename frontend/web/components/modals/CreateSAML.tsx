@@ -7,10 +7,12 @@ import {
   useCreateSamlConfigurationMutation,
   useUpdateSamlConfigurationMutation,
   useGetSamlConfigurationQuery,
+  getSamlConfigurationMetadata,
 } from 'common/services/useSamlConfiguration'
 import Button from 'components/base/forms/Button'
 import { Req } from 'common/types/requests'
 import ErrorMessage from 'components/ErrorMessage'
+import { getStore } from 'common/store'
 
 type CreateSAML = {
   organisationId: number
@@ -22,6 +24,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
   const [frontendUrl, setFrontendUrl] = useState<string>(window.location.origin)
   const [metadataXml, setMetadataXml] = useState<string>('')
   const [allowIdpInitiated, setAllowIdpInitiated] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const [createSamlConfiguration, createError] =
     useCreateSamlConfigurationMutation()
   const [editSamlConfiguration, updateError] =
@@ -31,8 +34,25 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
     { skip: !samlName },
   )
   const validateName = (name: string) => {
-    const regularExpresion = /^[a-zA-Z0-9_+-]+$/
+    const regularExpresion = /^$|^[a-zA-Z0-9_+-]+$/
     return regularExpresion.test(name)
+  }
+
+  const download = () => {
+    setIsLoading(true)
+    getSamlConfigurationMetadata(getStore(), { name: name })
+      .then((res) => {
+        if (res.data) {
+          const blob = new Blob([JSON.stringify(res.data, null, 2)])
+          const link = document.createElement('a')
+          link.download = `${data?.name}.json`
+          link.href = window.URL.createObjectURL(blob)
+          link.click()
+        }
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
   }
 
   return (
@@ -80,37 +100,40 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
       />
       <InputGroup
         className='mt-2 mb-4'
-        title='Allow idp initiated'
+        title='Allow IDP initiated'
         component={
           <Switch
-            checked={allowIdpInitiated}
+            checked={allowIdpInitiated || data?.allow_idp_initiated}
             onChange={() => {
               setAllowIdpInitiated(!allowIdpInitiated)
             }}
           />
         }
       />
-      {allowIdpInitiated && (
-        <FormGroup className='mb-4'>
-          <InputGroup
-            component={
-              <ValueEditor
-                data-test='featureValue'
-                name='featureValue'
-                className='full-width'
-                value={metadataXml}
-                onChange={setMetadataXml}
-                placeholder="e.g. '<xml>time<xml>' "
-                onlyOneLang
-                language='xml'
-              />
-            }
-            title={'IPD Metadata XML'}
-          />
-        </FormGroup>
-      )}
+      <FormGroup className='mb-4'>
+        <InputGroup
+          component={
+            <ValueEditor
+              data-test='featureValue'
+              name='featureValue'
+              className='full-width'
+              value={metadataXml || data?.idp_metadata_xml}
+              onChange={setMetadataXml}
+              placeholder="e.g. '<xml>time<xml>' "
+              onlyOneLang
+              language='xml'
+            />
+          }
+          title={'IDP Metadata XML'}
+        />
+      </FormGroup>
 
       <div className='text-right mt-2'>
+        {data?.idp_metadata_xml && (
+          <Button disabled={isLoading} onClick={download} className='mr-2'>
+            {isLoading ? 'Downloading' : 'Download Service Provider Metadata'}
+          </Button>
+        )}
         <Button
           type='submit'
           disabled={!name || !frontendUrl}
@@ -127,21 +150,27 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
               body.allow_idp_initiated = allowIdpInitiated
             }
             if (data) {
-              editSamlConfiguration(body).then((res) => {
+              editSamlConfiguration({
+                body: { ...body },
+                name: samlName!,
+              }).then((res) => {
                 if (res.data) {
-                  setName(res.data.organisation)
-                  setFrontendUrl(res.data.name)
+                  setName(res.data.name)
+                  setFrontendUrl(res.data.frontend_url)
                   setMetadataXml(res.data.idp_metadata_xml)
                   setAllowIdpInitiated(res.data.allow_idp_initiated)
+                  toast('SAML configuration updated!')
                 }
               })
             } else {
               createSamlConfiguration(body).then((res) => {
                 if (res.data) {
-                  setName(res.data.organisation)
-                  setFrontendUrl(res.data.name)
+                  setName(res.data.name)
+                  setFrontendUrl(res.data.frontend_url)
                   setMetadataXml(res.data.idp_metadata_xml)
                   setAllowIdpInitiated(res.data.allow_idp_initiated)
+                  toast('SAML configuration Created!')
+                  closeModal()
                 }
               })
             }

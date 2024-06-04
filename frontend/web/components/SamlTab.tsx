@@ -21,9 +21,13 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
     organisation_id: organisationId,
   })
   const [deleteSamlConfiguration] = useDeleteSamlConfigurationMutation()
-  const openCreateSAML = (organisationId: number, name?: string) => {
+  const openCreateSAML = (
+    title: string,
+    organisationId: number,
+    name?: string,
+  ) => {
     openModal(
-      'New SAML configuration',
+      title,
       <CreateSAML organisationId={organisationId} samlName={name || ''} />,
       'p-0 side-modal',
     )
@@ -37,7 +41,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
           <Button
             className='text-right'
             onClick={() => {
-              openCreateSAML(organisationId)
+              openCreateSAML('Create SAML configuration', organisationId)
             }}
           >
             {'Create a SAML Configuration'}
@@ -63,11 +67,15 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
               <div className='table-column'>Allow IDP Initiated</div>
             </Row>
           }
-          items={data}
+          items={data?.results || []}
           renderRow={(samlConf: SAMLConfiguration) => (
             <Row
               onClick={() => {
-                openCreateSAML(organisationId, samlConf.name)
+                openCreateSAML(
+                  'Update SAML configuration',
+                  organisationId,
+                  samlConf.name,
+                )
               }}
               space
               className='list-item clickable cursor-pointer'
@@ -84,14 +92,40 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
                   id='delete-invite'
                   type='button'
                   onClick={(e) => {
+                    openModal(
+                      'Delete Github Integration',
+                      <div>
+                        <div>
+                          Are you sure you want to delete the SAML
+                          configuration?
+                        </div>
+                        <div className='text-right'>
+                          <Button
+                            className='mr-2'
+                            onClick={() => {
+                              closeModal2()
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            theme='danger'
+                            onClick={() => {
+                              deleteSamlConfiguration({
+                                name: samlConf.name,
+                              }).then(() => {
+                                toast('SAML configuration deleted')
+                                closeModal()
+                              })
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>,
+                    )
                     e.stopPropagation()
                     e.preventDefault()
-                    deleteSamlConfiguration({ name: samlConf.name }).then(
-                      () => {
-                        toast('SAML configuration deleted')
-                        closeModal()
-                      },
-                    )
                   }}
                   className='btn btn-with-icon'
                 >

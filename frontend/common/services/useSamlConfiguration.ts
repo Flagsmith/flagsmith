@@ -4,14 +4,19 @@ import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 
 export const samlConfigurationService = service
-  .enhanceEndpoints({ addTagTypes: ['SamlConfiguration'] })
+  .enhanceEndpoints({
+    addTagTypes: ['SamlConfiguration', 'samlConfigurations'],
+  })
   .injectEndpoints({
     endpoints: (builder) => ({
       createSamlConfiguration: builder.mutation<
         Res['samlConfiguration'],
         Req['createSamlConfiguration']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'SamlConfiguration' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'SamlConfiguration' },
+          { id: 'LIST', type: 'samlConfigurations' },
+        ],
         query: (query: Req['createSamlConfiguration']) => ({
           body: query,
           method: 'POST',
@@ -22,7 +27,10 @@ export const samlConfigurationService = service
         Res['samlConfiguration'],
         Req['deleteSamlConfiguration']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'SamlConfiguration' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'SamlConfiguration' },
+          { id: 'LIST', type: 'samlConfigurations' },
+        ],
         query: (query: Req['deleteSamlConfiguration']) => ({
           body: query,
           method: 'DELETE',
@@ -39,23 +47,25 @@ export const samlConfigurationService = service
         }),
       }),
       getSamlConfigurationMetadata: builder.query<
-        Res['samlConfiguration'],
+        Res['samlMetadata'],
         Req['getSamlConfigurationMetadata']
       >({
-        providesTags: (res) => [{ id: res?.name, type: 'SamlConfiguration' }],
+        providesTags: (res) => [
+          { id: res?.entity_id, type: 'SamlConfiguration' },
+        ],
         query: (query: Req['getSamlConfigurationMetadata']) => ({
           url: `auth/saml/${query.name}/metadata/`,
         }),
       }),
       getSamlConfigurations: builder.query<
-        Res['samlConfiguration'],
+        Res['samlConfigurations'],
         Req['getSamlConfigurations']
       >({
-        providesTags: (res) => [{ id: res?.name, type: 'SamlConfiguration' }],
+        providesTags: [{ id: 'LIST', type: 'samlConfigurations' }],
         query: (query: Req['getSamlConfigurations']) => ({
-          url: `auth/saml/configuration/?${Utils.toParam(
-            query.organisation_id,
-          )}`,
+          url: `auth/saml/configuration/?${Utils.toParam({
+            organisation: query.organisation_id,
+          })}`,
         }),
       }),
       updateSamlConfiguration: builder.mutation<
@@ -64,10 +74,11 @@ export const samlConfigurationService = service
       >({
         invalidatesTags: (res) => [
           { id: 'LIST', type: 'SamlConfiguration' },
+          { id: 'LIST', type: 'samlConfigurations' },
           { id: res?.name, type: 'SamlConfiguration' },
         ],
         query: (query: Req['updateSamlConfiguration']) => ({
-          body: query,
+          body: query.body,
           method: 'PUT',
           url: `auth/saml/configuration/${query.name}/`,
         }),

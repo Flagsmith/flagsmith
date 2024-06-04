@@ -669,5 +669,11 @@ export type Res = {
   cloneidentityFeatureStates: IdentityFeatureState
   featureStates: PagedResponse<FeatureState>
   samlConfiguration: SAMLConfiguration
+  samlConfigurations: PagedResponse<SAMLConfiguration>
+  samlMetadata: {
+    entity_id: string
+    response_url: string
+    metadata_xml: string
+  }
   // END OF TYPES
 }
