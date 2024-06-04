@@ -29,19 +29,14 @@
             "section": "Infrastructure (Flagsmith SaaS Only)"
         },
         {
+            "type": "ci",
+            "hidden": true,
+            "section": "CI"
+        },
+        {
             "type": "docs",
             "hidden": true,
             "section": "Docs"
-        },
-        {
-            "type": "chore",
-            "hidden": true,
-            "section": "Other"
-        },
-        {
-            "type": "build",
-            "hidden": true,
-            "section": "Build"
         },
         {
             "type": "deps",
@@ -49,9 +44,9 @@
             "section": "Dependency Updates"
         },
         {
-            "type": "ci",
+            "type": "perf",
             "hidden": true,
-            "section": "CI"
+            "section": "Performance Improvements"
         },
         {
             "type": "refactor",
@@ -59,14 +54,14 @@
             "section": "Refactoring"
         },
         {
-            "type": "style",
-            "hidden": true,
-            "section": "Code Style"
-        },
-        {
             "type": "test",
             "hidden": true,
             "section": "Tests"
+        },
+        {
+            "type": "chore",
+            "hidden": true,
+            "section": "Other"
         }
     ]
 }
