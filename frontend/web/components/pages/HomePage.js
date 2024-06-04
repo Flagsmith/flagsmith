@@ -366,6 +366,7 @@ const HomePage = class extends React.Component {
                                           <InputGroup
                                             title='Password'
                                             inputProps={{
+                                              enableAutoComplete: true,
                                               className: 'full-width',
                                               error: error && error.password,
                                               name: 'password',
@@ -569,6 +570,7 @@ const HomePage = class extends React.Component {
                                       data-test='email'
                                       inputProps={{
                                         className: 'full-width',
+                                        enableAutoComplete: true,
                                         error: error && error.email,
                                         name: 'email',
                                       }}
@@ -586,6 +588,7 @@ const HomePage = class extends React.Component {
                                       title='Password'
                                       data-test='password'
                                       inputProps={{
+
                                         className: 'full-width',
                                         error: error && error.password,
                                         name: 'password',
