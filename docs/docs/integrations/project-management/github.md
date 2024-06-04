@@ -7,22 +7,24 @@ hide_title: true
 
 <img src="/img/integrations/github/github-logo.svg" alt="GitHub Logo" width="30%" height="30%"/>
 
-View your Flagsmith Flags inside your GitHub Issues and Pull Request
+View your Flagsmith Flags inside GitHub Issues and Pull Requests.
 
 :::tip
 
-- The GitHub integration is currently only supported with our hosted Flagsmith SaaS service.
+The GitHub integration is currently only supported with our hosted Flagsmith SaaS service.
 
 :::
 
 ## Integration Setup
 
+You can either set up the integration from the Flagsmith side or from the Github side.
+
 ### From Flagsmith
 
 1. In the Integrations Option in the side bar, find the GitHub integration and click on 'Add Integration'.
-2. A window will open asking you to select an organization you belong to.
+2. A window will open asking you to select the organization you belong to.
 3. Select the repositories and save.
-4. In the Flagsmith application, the button will now say "Manage Integration", click on it.
+4. Back in the Flagsmith application, click on the 'Manage Integration' button.
 5. Finally, select the repository you wish to link.
 
 ### From GitHub
@@ -43,8 +45,8 @@ View your Flagsmith Flags inside your GitHub Issues and Pull Request
 4. Select GitHub Issue or GitHub PR.
 5. Select your external resource and save.
 
-## Delete GitHub Integration
+## Removing the GitHub Integration
 
-1. In the Integrations Option in the side bar, find the GitHub integration and click on 'Manage Integration'.
-2. Click on 'Delete Integracion' button, and confirm.
+1. From Flagsmith, click 'Integrations', find the GitHub integration and click on 'Manage Integration'.
+2. Click on 'Delete Integration' button, and confirm.
 3. In your GitHub organisation, uninstall the Flagsmith GitHub App.
