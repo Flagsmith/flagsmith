@@ -114,7 +114,13 @@ const CreateSegment: FC<CreateSegmentType> = ({
     rules: [
       {
         conditions: [],
-        rules: [],
+        rules: [
+          {
+            conditions: [{ ...Constants.defaultRule }],
+            rules: [],
+            type: 'ANY',
+          },
+        ],
         type: 'ALL',
       },
     ],
