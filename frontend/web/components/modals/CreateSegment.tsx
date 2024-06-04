@@ -463,9 +463,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             style={{ fontWeight: 'normal', marginLeft: '12px' }}
             className='mb-0 fs-small text-dark'
           >
-            {showDescriptions
-              ? 'Hide condition descriptions'
-              : 'Show condition descriptions'}
+            Show condition descriptions
           </span>
         </Row>
         {metadataEnable && segmentContentType?.id && (
