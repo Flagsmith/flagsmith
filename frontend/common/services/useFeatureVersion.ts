@@ -38,81 +38,83 @@ export const featureVersionService = service
             })
 
           // Step 3: update, create or delete feature states from the new version
-          const res: { data: FeatureState }[] = await Promise.all(
-            query.featureStates.map((featureState) => {
-              const matchingVersionState = currentFeatureStates.data.find(
-                (feature) => {
-                  return (
-                    feature.feature_segment?.segment ===
-                    featureState.feature_segment?.segment
-                  )
-                },
-              )
-              // Matching feature state exists, meaning we need to either modify or delete it
-              if (matchingVersionState) {
-                //Feature state is marked as to remove, delete it from the current version
-                if (
-                  featureState.toRemove &&
-                  matchingVersionState.feature_segment
-                ) {
-                  return deleteFeatureSegment(getStore(), {
-                    id: matchingVersionState.feature_segment.id,
+          const res: { data: FeatureState }[] = (
+            await Promise.all(
+              query.featureStates.map((featureState) => {
+                const matchingVersionState = currentFeatureStates.data.find(
+                  (feature) => {
+                    return (
+                      feature.feature_segment?.segment ===
+                      featureState.feature_segment?.segment
+                    )
+                  },
+                )
+                // Matching feature state exists, meaning we need to either modify or delete it
+                if (matchingVersionState) {
+                  //Feature state is marked as to remove, delete it from the current version
+                  if (
+                    featureState.toRemove &&
+                    matchingVersionState.feature_segment
+                  ) {
+                    return deleteFeatureSegment(getStore(), {
+                      id: matchingVersionState.feature_segment.id,
+                    })
+                  }
+                  //Feature state is not marked as remove, so we update it
+                  const multivariate_feature_state_values =
+                    featureState.multivariate_feature_state_values
+                      ? featureState.multivariate_feature_state_values?.map(
+                          (featureStateValue) => {
+                            const newId =
+                              matchingVersionState?.multivariate_feature_state_values?.find(
+                                (v) => {
+                                  return (
+                                    v.multivariate_feature_option ===
+                                    featureStateValue.multivariate_feature_option
+                                  )
+                                },
+                              )
+
+                            return {
+                              ...featureStateValue,
+                              id: newId!.id,
+                            }
+                          },
+                        )
+                      : []
+
+                  return updateVersionFeatureState(getStore(), {
+                    environmentId: query.environmentId,
+                    featureId: matchingVersionState.feature,
+                    featureState: {
+                      ...featureState,
+                      feature_segment: matchingVersionState?.feature_segment
+                        ? {
+                            ...(matchingVersionState.feature_segment as any),
+                            priority: featureState.feature_segment!.priority,
+                          }
+                        : undefined,
+                      id: matchingVersionState.id,
+                      multivariate_feature_state_values,
+                      uuid: matchingVersionState.uuid,
+                    },
+                    id: matchingVersionState.id,
+                    sha: versionRes.data.uuid,
+                    uuid: matchingVersionState.uuid,
                   })
                 }
-                //Feature state is not marked as remove, so we update it
-                const multivariate_feature_state_values =
-                  featureState.multivariate_feature_state_values
-                    ? featureState.multivariate_feature_state_values?.map(
-                        (featureStateValue) => {
-                          const newId =
-                            matchingVersionState?.multivariate_feature_state_values?.find(
-                              (v) => {
-                                return (
-                                  v.multivariate_feature_option ===
-                                  featureStateValue.multivariate_feature_option
-                                )
-                              },
-                            )
-
-                          return {
-                            ...featureStateValue,
-                            id: newId!.id,
-                          }
-                        },
-                      )
-                    : []
-
-                return updateVersionFeatureState(getStore(), {
-                  environmentId: query.environmentId,
-                  featureId: matchingVersionState.feature,
-                  featureState: {
-                    ...featureState,
-                    feature_segment: matchingVersionState?.feature_segment
-                      ? {
-                          ...(matchingVersionState.feature_segment as any),
-                          priority: featureState.feature_segment!.priority,
-                        }
-                      : undefined,
-                    id: matchingVersionState.id,
-                    multivariate_feature_state_values,
-                    uuid: matchingVersionState.uuid,
-                  },
-                  id: matchingVersionState.id,
-                  sha: versionRes.data.uuid,
-                  uuid: matchingVersionState.uuid,
-                })
-              }
-              // Matching feature state does not exist, meaning we need to create it
-              else {
-                return createVersionFeatureState(getStore(), {
-                  environmentId: query.environmentId,
-                  featureId: query.featureId,
-                  featureState,
-                  sha: versionRes.data.uuid,
-                })
-              }
-            }),
-          )
+                // Matching feature state does not exist, meaning we need to create it
+                else {
+                  return createVersionFeatureState(getStore(), {
+                    environmentId: query.environmentId,
+                    featureId: query.featureId,
+                    featureState,
+                    sha: versionRes.data.uuid,
+                  })
+                }
+              }),
+            )
+          ).filter((v) => !!v?.data)
 
           //Step 4: Update feature segment priorities before saving feature states
           const prioritiesToUpdate = query.featureStates
@@ -169,7 +171,7 @@ export const featureVersionService = service
       >({
         providesTags: (res) => [{ id: res?.uuid, type: 'FeatureVersion' }],
         query: (query: Req['getFeatureVersion']) => ({
-          url: `environments/${query.environmentId}/features/${query.featureId}/versions/${query.uuid}`,
+          url: `environment-feature-versions/${query.uuid}/`,
         }),
       }),
       getFeatureVersions: builder.query<

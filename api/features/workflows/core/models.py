@@ -38,6 +38,7 @@ from audit.tasks import (
 from environments.tasks import rebuild_environment_document
 from features.models import FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.signals import environment_feature_version_published
 from features.versioning.tasks import trigger_update_version_webhooks
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
@@ -168,6 +169,9 @@ class ChangeRequest(
                 rebuild_environment_document.delay(
                     kwargs={"environment_id": self.environment_id},
                     delay_until=environment_feature_version.live_from,
+                )
+                environment_feature_version_published.send(
+                    EnvironmentFeatureVersion, instance=environment_feature_version
                 )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:

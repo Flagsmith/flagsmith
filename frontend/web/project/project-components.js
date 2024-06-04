@@ -113,11 +113,17 @@ global.Select = class extends PureComponent {
           ))}
       </div>
     ) : (
-      <Select
-        className={`react-select ${props.size ? props.size : ''}`}
-        classNamePrefix='react-select'
-        {...props}
-      />
+      <div
+        onClick={(e) => {
+          e.stopPropagation()
+        }}
+      >
+        <Select
+          className={`react-select ${props.size ? props.size : ''}`}
+          classNamePrefix='react-select'
+          {...props}
+        />
+      </div>
     )
   }
 }

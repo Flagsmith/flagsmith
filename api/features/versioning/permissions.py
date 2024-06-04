@@ -13,8 +13,8 @@ from features.versioning.models import EnvironmentFeatureVersion
 
 class EnvironmentFeatureVersionPermissions(BasePermission):
     def has_permission(self, request: Request, view: GenericViewSet) -> bool:
-        if view.action == "list":
-            # permissions for listing handled in view.get_queryset
+        if view.action in ("list", "retrieve"):
+            # permissions for listing and retrieving handled in view.get_queryset
             return True
 
         environment_pk = view.kwargs["environment_pk"]
@@ -32,6 +32,13 @@ class EnvironmentFeatureVersionPermissions(BasePermission):
 
         return request.user.has_environment_permission(
             permission=UPDATE_FEATURE_STATE, environment=obj.environment
+        )
+
+
+class EnvironmentFeatureVersionRetrievePermissions(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return request.user.has_environment_permission(
+            VIEW_ENVIRONMENT, obj.environment
         )
 
 
