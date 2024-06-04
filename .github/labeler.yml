@@ -12,7 +12,7 @@ api:
   - changed-files:
       - any-glob-to-any-file: api/**
 
-github:
+ci-cd:
   - changed-files:
       - any-glob-to-any-file: .github/**
 
