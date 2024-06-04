@@ -588,7 +588,6 @@ const HomePage = class extends React.Component {
                                       title='Password'
                                       data-test='password'
                                       inputProps={{
-
                                         className: 'full-width',
                                         error: error && error.password,
                                         name: 'password',
