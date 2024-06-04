@@ -159,6 +159,36 @@ def test_get_previous_version_ignores_unpublished_version(
     assert version_3.get_previous_version() == version_1
 
 
+def test_get_previous_version_returns_previous_version_if_there_is_a_more_recent_previous_version(
+    feature: "Feature",
+    environment_v2_versioning: Environment,
+    admin_user: "FFAdminUser",
+) -> None:
+    # Given
+    # The initial version created when enabling versioning_v2
+    version_0 = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    # Now, let's create (and publish) 2 new versions
+    version_1 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    version_1.publish(admin_user)
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    version_2.publish(admin_user)
+
+    # When
+    previous_version = version_1.get_previous_version()
+
+    # Then
+    # The previous version for the first version we created should be the
+    # original version created when enabling versioning_v2
+    assert previous_version == version_0
+
+
 def test_publish(
     feature: "Feature",
     project: "Project",
