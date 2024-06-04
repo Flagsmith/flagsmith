@@ -18,7 +18,7 @@ suggesting the next steps.
 
 ### Conventional Commits
 
-Please title your PR's with starting with one of the following
+Please prefix the title of your PRs with one of the following
 [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/#summary) labels. E.g. `feat: My great feature`:
 
 - **feat**: A new feature or improvement to an existing feature
