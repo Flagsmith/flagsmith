@@ -6,6 +6,7 @@ import GitHubRepositoriesSelect from './GitHubRepositoriesSelect'
 import GithubRepositoriesTable from './GithubRepositoriesTable'
 import DeleteGithubIntegration from './DeleteGithubIntegration'
 import { Repository } from 'common/types/responses'
+import GitHubActionCodeHelp from './GitHubActionCodeHelp'
 
 type MyGitHubRepositoriesComponentType = {
   installationId: string
@@ -88,6 +89,7 @@ const MyGitHubRepositoriesComponent: FC<MyGitHubRepositoriesComponentType> = ({
               organisationId={organisationId}
             />
           </div>
+          <GitHubActionCodeHelp projectId={projectId} title='GitHub actions' />
         </>
       )}
     </>
