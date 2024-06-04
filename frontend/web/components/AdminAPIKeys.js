@@ -44,7 +44,7 @@ export class CreateAPIKey extends PureComponent {
               noText: 'Cancel',
               onNo: () => resolve(false),
               onYes: () => resolve(true),
-              title: 'Discard changes',
+              title: 'Confirm saved API key',
               yesText: 'Confirm',
             })
           })
