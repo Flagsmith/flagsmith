@@ -12,10 +12,6 @@ api:
   - changed-files:
       - any-glob-to-any-file: api/**
 
-ci-cd:
-  - changed-files:
-      - any-glob-to-any-file: .github/**
-
 infrastructure:
   - changed-files:
       - any-glob-to-any-file: infrastructure/**
