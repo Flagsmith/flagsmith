@@ -247,3 +247,21 @@ def fetch_github_repo_contributors(
     ]
 
     return build_paginated_response(results, response)
+
+
+# Create "Flagsmith Flag" label in linked repo
+def create_flagsmith_flag_label(
+    installation_id: str, owner: str, repo: str
+) -> dict[str, Any]:
+    url = f"{GITHUB_API_URL}repos/{owner}/{repo}/labels"
+    headers = build_request_headers(installation_id)
+    payload = {
+        "name": "Flagsmith Flag",
+        "color": "6633FF",
+        "description": "This GitHub Issue/PR is linked to a Flagsmith Feature Flag",
+    }
+    response = requests.post(
+        url, json=payload, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT
+    )
+    response.raise_for_status()
+    return response.json()

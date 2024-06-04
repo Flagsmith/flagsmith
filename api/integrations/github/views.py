@@ -15,6 +15,7 @@ from rest_framework.response import Response
 
 from integrations.github.client import (
     ResourceType,
+    create_flagsmith_flag_label,
     delete_github_installation,
     fetch_github_repo_contributors,
     fetch_github_repositories,
@@ -142,7 +143,16 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
 
         try:
-            return super().create(request, *args, **kwargs)
+            response = super().create(request, *args, **kwargs)
+            github_configuration = GithubConfiguration.objects.get(
+                id=self.kwargs["github_pk"]
+            )
+            create_flagsmith_flag_label(
+                installation_id=github_configuration.installation_id,
+                owner=request.data.get("repository_owner"),
+                repo=request.data.get("repository_name"),
+            )
+            return response
 
         except IntegrityError as e:
             if re.search(

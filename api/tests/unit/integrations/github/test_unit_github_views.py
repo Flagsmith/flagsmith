@@ -1,10 +1,12 @@
 import json
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 import requests
 import responses
 from django.conf import settings
+from django.db.models import Q
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from pytest_mock import MockerFixture
@@ -12,8 +14,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.test import APIClient
 
+from environments.models import Environment
 from features.feature_external_resources.models import FeatureExternalResource
-from features.models import Feature
+from features.models import Feature, FeatureState
 from integrations.github.constants import GITHUB_API_URL
 from integrations.github.models import GithubConfiguration, GithubRepository
 from integrations.github.views import (
@@ -240,11 +243,14 @@ def test_cannot_get_github_repository_when_github_pk_in_not_a_number(
     assert response.json() == {"github_pk": ["Must be an integer"]}
 
 
+@responses.activate
 def test_create_github_repository(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     project: Project,
+    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
 ) -> None:
     # Given
     data = {
@@ -253,6 +259,13 @@ def test_create_github_repository(
         "repository_name": "repositoryname",
         "project": project.id,
     }
+
+    responses.add(
+        method="POST",
+        url=f"{GITHUB_API_URL}repos/repositoryowner/repositoryname/labels",
+        status=status.HTTP_200_OK,
+        json={},
+    )
 
     url = reverse(
         "api-v1:organisations:repositories-list",
@@ -328,13 +341,9 @@ def test_github_delete_repository(
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
     feature_external_resource: FeatureExternalResource,
-    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
 ) -> None:
     # Given
-    mock_generate_token = mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-    mock_generate_token.return_value = "mocked_token"
     url = reverse(
         "api-v1:organisations:repositories-detail",
         args=[organisation.id, github_configuration.id, github_repository.id],
@@ -403,14 +412,10 @@ def test_fetch_pull_requests(
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    mock_github_client_generate_token: MagicMock,
     mocker: MockerFixture,
 ) -> None:
-
     # Given
-    mock_generate_token = mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-    mock_generate_token.return_value = "mocked_token"
     github_request_mock = mocker.patch(
         "requests.get", side_effect=mocked_requests_get_issues_and_pull_requests
     )
@@ -442,13 +447,10 @@ def test_fetch_issues(
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    mock_github_client_generate_token: MagicMock,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_generate_token = mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-    mock_generate_token.return_value = "mocked_token"
     github_request_mock = mocker.patch(
         "requests.get", side_effect=mocked_requests_get_issues_and_pull_requests
     )
@@ -485,13 +487,10 @@ def test_fetch_issues_returns_error_on_bad_response_from_github(
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
+    mock_github_client_generate_token: MagicMock,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_generate_token = mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-    mock_generate_token.return_value = "mocked_token"
     mocker.patch("requests.get", side_effect=mocked_requests_get_error)
     url = reverse("api-v1:organisations:get-github-issues", args=[organisation.id])
     data = {"repo_owner": "owner", "repo_name": "repo"}
@@ -513,13 +512,9 @@ def test_fetch_repositories(
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
-    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
 ) -> None:
     # Given
-    mock_generate_token = mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-    mock_generate_token.return_value = "mocked_token"
     responses.add(
         method="GET",
         url=f"{GITHUB_API_URL}installation/repositories",
@@ -567,13 +562,11 @@ def test_fetch_repositories(
     ],
 )
 def test_fetch_issues_and_pull_requests_fails_with_status_400_when_integration_not_configured(
-    client: APIClient, organisation: Organisation, reverse_url: str, mocker
+    client: APIClient,
+    organisation: Organisation,
+    reverse_url: str,
+    mock_github_client_generate_token: MagicMock,
 ) -> None:
-    # Given
-    mock_generate_token = mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-    mock_generate_token.generate_token.return_value = "mocked_token"
     # When
     url = reverse(reverse_url, args=[organisation.id])
     response = client.get(url)
@@ -594,15 +587,9 @@ def test_cannot_fetch_issues_or_prs_when_does_not_have_permissions(
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
-    mocker,
+    mock_github_client_generate_token: MagicMock,
     reverse_url: str,
 ) -> None:
-    # Given
-    mock_generate_token = mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-    mock_generate_token.generate_token.return_value = "mocked_token"
-
     # When
     url = reverse(reverse_url, args=[organisation.id])
     response = test_user_client.get(url)
@@ -819,15 +806,10 @@ def test_cannot_fetch_pull_requests_when_github_request_call_failed(
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
-    mocker,
+    mock_github_client_generate_token: MagicMock,
 ) -> None:
-
     # Given
     data = {"repo_owner": "owner", "repo_name": "repo"}
-    mock_generate_token = mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-    mock_generate_token.return_value = "mocked_token"
     responses.add(
         method="GET",
         url=f"{GITHUB_API_URL}repos/{data['repo_owner']}/{data['repo_name']}/pulls",
@@ -852,14 +834,10 @@ def test_cannot_fetch_pulls_when_the_github_response_was_invalid(
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
-    mocker,
+    mock_github_client_generate_token: MagicMock,
 ) -> None:
     # Given
     data = {"repo_owner": "owner", "repo_name": "repo"}
-    mock_generate_token = mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-    mock_generate_token.return_value = "mocked_token"
     responses.add(
         method="GET",
         url=f"{GITHUB_API_URL}repos/{data['repo_owner']}/{data['repo_name']}/pulls",
@@ -896,7 +874,7 @@ def test_fetch_github_repo_contributors(
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
-    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
 ) -> None:
     # Given
     url = reverse(
@@ -923,11 +901,6 @@ def test_fetch_github_repo_contributors(
     ]
 
     expected_response = {"results": mocked_github_response}
-
-    mock_generate_token = mocker.patch(
-        "integrations.github.client.generate_token",
-    )
-    mock_generate_token.return_value = "mocked_token"
 
     # Add response for endpoint being tested
     responses.add(
@@ -1082,3 +1055,42 @@ def test_send_the_invalid_type_page_or_page_size_param_returns_400(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     response_json = response.json()
     assert response_json == error_response
+
+
+# Unit test for enable_linked_feature view in feature_external_resources views
+def test_enable_linked_feature(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    project: Project,
+    environment: Environment,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    feature_external_resource: FeatureExternalResource,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:enable-linked-feature",
+        args=[project.id],
+    )
+    q = Q(
+        feature_id=feature_external_resource.feature_id,
+        identity__isnull=True,
+        feature_segment__isnull=True,
+    )
+
+    # When
+    response = admin_client_new.post(
+        url,
+        data={
+            "html_url": feature_external_resource.url,
+            "environments": f'["{environment.name}"]',
+        },
+    )
+    feature_state = FeatureState.objects.get_live_feature_states(
+        environment=environment,
+        additional_filters=q,
+    ).first()
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert feature_state.enabled is True

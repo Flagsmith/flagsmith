@@ -75,14 +75,9 @@ def test_create_feature_external_resource(
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
     post_request_mock: MagicMock,
-    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
 ) -> None:
     # Given
-    mocker.patch(
-        "integrations.github.client.generate_token",
-        return_value="mocked_token",
-    )
-
     feature_external_resource_data = {
         "type": "GITHUB_ISSUE",
         "url": "https://github.com/repoowner/repo-name/issues/35",
@@ -305,7 +300,7 @@ def test_delete_feature_external_resource(
     post_request_mock.assert_called_with(
         "https://api.github.com/repos/repositoryownertest/repositorynametest/issues/11/comments",
         json={
-            "body": "### The feature flag `Test Feature1` was unlinked from the issue/PR"
+            "body": "**The feature flag `Test Feature1` was unlinked from the issue/PR**"
         },
         headers={
             "Accept": "application/vnd.github.v3+json",
@@ -328,12 +323,9 @@ def test_get_feature_external_resources(
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
     feature_external_resource: FeatureExternalResource,
-    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
 ) -> None:
     # Given
-    mocker.patch(
-        "integrations.github.client.generate_token",
-    )
     url = reverse(
         "api-v1:projects:feature-external-resources-list",
         kwargs={"project_pk": project.id, "feature_pk": feature.id},
@@ -413,7 +405,7 @@ def test_create_github_comment_on_feature_state_updated(
     ).updated_at.strftime(get_format("DATETIME_INPUT_FORMATS")[0])
 
     expected_body_comment = (
-        "Flagsmith Feature `Test Feature1` has been updated:\n"
+        "**Flagsmith Feature `Test Feature1` has been updated:**\n"
         + expected_default_body(
             project.id,
             environment.api_key,
@@ -447,14 +439,9 @@ def test_create_github_comment_on_feature_was_deleted(
     github_repository: GithubRepository,
     feature_external_resource: FeatureExternalResource,
     post_request_mock: MagicMock,
-    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
 ) -> None:
     # Given
-    mocker.patch(
-        "integrations.github.client.generate_token",
-        return_value="mocked_token",
-    )
-
     url = reverse(
         viewname="api-v1:projects:project-features-detail",
         kwargs={"project_pk": project.id, "pk": feature.id},
@@ -468,7 +455,7 @@ def test_create_github_comment_on_feature_was_deleted(
 
     post_request_mock.assert_called_with(
         "https://api.github.com/repos/repositoryownertest/repositorynametest/issues/11/comments",
-        json={"body": "### The Feature Flag `Test Feature1` was deleted"},
+        json={"body": "**The Feature Flag `Test Feature1` was deleted**"},
         headers={
             "Accept": "application/vnd.github.v3+json",
             "X-GitHub-Api-Version": GITHUB_API_VERSION,
@@ -485,18 +472,13 @@ def test_create_github_comment_on_segment_override_updated(
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
     post_request_mock: MagicMock,
-    mocker: MockerFixture,
     environment: Environment,
     admin_client: APIClient,
     feature_with_value_external_resource: FeatureExternalResource,
+    mock_github_client_generate_token: MagicMock,
 ) -> None:
     # Given
     feature_state = segment_override_for_feature_with_value
-    mocker.patch(
-        "integrations.github.client.generate_token",
-        return_value="mocked_token",
-    )
-
     payload = dict(WritableNestedFeatureStateSerializer(instance=feature_state).data)
 
     payload["enabled"] = not feature_state.enabled
@@ -516,7 +498,7 @@ def test_create_github_comment_on_segment_override_updated(
     ).updated_at.strftime(get_format("DATETIME_INPUT_FORMATS")[0])
 
     expected_comment_body = (
-        "Flagsmith Feature `feature_with_value` has been updated:\n"
+        "**Flagsmith Feature `feature_with_value` has been updated:**\n"
         + "\n"
         + expected_segment_comment_body(
             project.id,
@@ -548,16 +530,11 @@ def test_create_github_comment_on_segment_override_deleted(
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
     post_request_mock: MagicMock,
-    mocker: MockerFixture,
     admin_client_new: APIClient,
     feature_with_value_external_resource: FeatureExternalResource,
+    mock_github_client_generate_token: MagicMock,
 ) -> None:
     # Given
-    mocker.patch(
-        "integrations.github.client.generate_token",
-        return_value="mocked_token",
-    )
-
     url = reverse(
         viewname="api-v1:features:feature-segment-detail",
         kwargs={"pk": feature_with_value_segment.id},
@@ -573,7 +550,7 @@ def test_create_github_comment_on_segment_override_deleted(
     post_request_mock.assert_called_with(
         "https://api.github.com/repos/repositoryownertest/repositorynametest/issues/11/comments",
         json={
-            "body": "### The Segment Override `segment` for Feature Flag `feature_with_value` was deleted"
+            "body": "**The Segment Override `segment` for Feature Flag `feature_with_value` was deleted**"
         },
         headers={
             "Accept": "application/vnd.github.v3+json",
@@ -631,7 +608,7 @@ def test_create_github_comment_using_v2(
         response_data["updated_at"], format
     ).strftime(get_format("DATETIME_INPUT_FORMATS")[0])
     expected_comment_body = (
-        "Flagsmith Feature `Test Feature1` has been updated:\n"
+        "**Flagsmith Feature `Test Feature1` has been updated:**\n"
         + "\n"
         + expected_segment_comment_body(
             project.id,
@@ -712,15 +689,10 @@ def test_create_feature_external_resource_on_environment_with_v2(
     segment_override_for_feature_with_value: FeatureState,
     environment_v2_versioning: Environment,
     post_request_mock: MagicMock,
-    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
 ) -> None:
     # Given
     feature_id = segment_override_for_feature_with_value.feature_id
-
-    mocker.patch(
-        "integrations.github.client.generate_token",
-        return_value="mocked_token",
-    )
 
     feature_external_resource_data = {
         "type": "GITHUB_ISSUE",
