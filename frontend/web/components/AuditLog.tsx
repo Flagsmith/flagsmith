@@ -26,7 +26,7 @@ type AuditLogType = {
   }
 }
 
-const widths = [210, 210, 210]
+const widths = [210, 210, 130]
 const AuditLog: FC<AuditLogType> = (props) => {
   const [page, setPage] = useState(1)
   const { search, searchInput, setSearchInput } = useSearchThrottle(
@@ -128,7 +128,6 @@ const AuditLog: FC<AuditLogType> = (props) => {
             style={{ width: widths[2] }}
             to={`/project/${props.projectId}/environment/${environment?.api_key}/features/`}
           >
-            <Row>
               <Tag
                 tag={{
                   color: Utils.getTagColour(colour),
@@ -136,7 +135,6 @@ const AuditLog: FC<AuditLogType> = (props) => {
                 }}
                 className='chip--sm'
               />
-            </Row>
           </Link>
         ) : (
           <div className='table-column' style={{ width: widths[2] }} />
