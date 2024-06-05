@@ -1308,6 +1308,7 @@ const CreateFlag = class extends Component {
                                                 return (
                                                   <SegmentOverrides
                                                     readOnly={isReadOnly}
+                                                    is4Eyes={is4Eyes}
                                                     showEditSegment
                                                     showCreateSegment={
                                                       this.state
