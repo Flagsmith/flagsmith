@@ -9,7 +9,11 @@ export const saveFeatureWithValidation = (cb: (schedule?: boolean) => void) => {
         yesText: 'Save',
       })
     } else {
-      cb(schedule)
+      if (schedule) {
+        cb(schedule)
+      } else {
+        cb()
+      }
     }
   }
 }
