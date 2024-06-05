@@ -45,6 +45,7 @@ import AddMetadataToEntity, {
   CustomMetadataField,
 } from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
+import MetadataTitle from 'components/metadata/MetadataTitle'
 
 type PageType = {
   number: number
@@ -140,6 +141,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [metadata, setMetadata] = useState<CustomMetadataField[]>(
     segment.metadata,
   )
+  const [visible, setVisible] = useState<boolean>(false)
+  const [hasMetadataRequired, setHasMetadataRequired] = useState<boolean>(true)
   const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
 
   const error = createError || updateError
@@ -424,27 +427,30 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </span>
         </Row>
         {metadataEnable && segmentContentType?.id && (
-          <FormGroup className='mb-5 setting'>
-            <InputGroup
-              title={'Metadata'}
-              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
-                'segments',
-              )}`}
-              tooltipPlace='right'
-              component={
-                <AddMetadataToEntity
-                  organisationId={AccountStore.getOrganisation().id}
-                  projectId={projectId}
-                  entityId={`${segment.id}` || ''}
-                  entityContentType={segmentContentType?.id}
-                  entity={segmentContentType?.model}
-                  onChange={(m: CustomMetadataField[]) => {
-                    setMetadata(m)
-                  }}
-                />
-              }
+          <>
+            <MetadataTitle
+              visible={visible}
+              onVisibleChange={(v) => {
+                setVisible(v)
+              }}
+              hasRequiredMetadata={hasMetadataRequired}
             />
-          </FormGroup>
+            {(hasMetadataRequired || visible) && (
+              <AddMetadataToEntity
+                organisationId={AccountStore.getOrganisation().id}
+                projectId={projectId}
+                entityId={`${segment.id}` || ''}
+                entityContentType={segmentContentType?.id}
+                entity={segmentContentType?.model}
+                onChange={(m: CustomMetadataField[]) => {
+                  setMetadata(m)
+                }}
+                setHasMetadataRequired={(b) => {
+                  setHasMetadataRequired(b)
+                }}
+              />
+            )}
+          </>
         )}
         <Flex className='mb-3'>
           <label className='cols-sm-2 control-label mb-1'>

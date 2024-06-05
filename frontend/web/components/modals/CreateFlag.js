@@ -40,6 +40,7 @@ import { getSupportedContentType } from 'common/services/useSupportedContentType
 import { getGithubIntegration } from 'common/services/useGithubIntegration'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
+import MetadataTitle from 'components/metadata/MetadataTitle'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -52,7 +53,6 @@ const CreateFlag = class extends Component {
       feature_state_value,
       is_archived,
       is_server_key_only,
-      metadata,
       multivariate_options,
       name,
       tags,
@@ -81,7 +81,7 @@ const CreateFlag = class extends Component {
       featureContentType: {},
       githubId: '',
       hasIntegrationWithGithub: false,
-      hasMetadataRequired: false,
+      hasMetadataRequired: true,
       identityVariations:
         this.props.identityFlag &&
         this.props.identityFlag.multivariate_feature_state_values
@@ -102,6 +102,7 @@ const CreateFlag = class extends Component {
       period: 30,
       selectedIdentity: null,
       tags: tags || [],
+      visible: false,
     }
   }
 
@@ -580,34 +581,34 @@ const CreateFlag = class extends Component {
           </FormGroup>
         )}
         {metadataEnable && featureContentType?.id && (
-          <FormGroup className='mb-5 setting'>
-            <InputGroup
-              title={'Metadata'}
-              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
-                'feature',
-              )}`}
-              tooltipPlace='right'
-              component={
-                <AddMetadataToEntity
-                  organisationId={AccountStore.getOrganisation().id}
-                  projectId={this.props.projectId}
-                  entityId={projectFlag?.id}
-                  entityContentType={featureContentType?.id}
-                  entity={featureContentType?.model}
-                  setHasMetadataRequired={(b) => {
-                    this.setState({
-                      hasMetadataRequired: true,
-                    })
-                  }}
-                  onChange={(m) => {
-                    this.setState({
-                      metadata: m,
-                    })
-                  }}
-                />
-              }
+          <>
+            <MetadataTitle
+              visible={this.state.visible}
+              onVisibleChange={(v) => {
+                this.setState({ visible: v })
+              }}
+              hasRequiredMetadata={this.state.hasMetadataRequired}
             />
-          </FormGroup>
+            {(this.state.hasMetadataRequired || this.state.visible) && (
+              <AddMetadataToEntity
+                organisationId={AccountStore.getOrganisation().id}
+                projectId={this.props.projectId}
+                entityId={projectFlag?.id}
+                entityContentType={featureContentType?.id}
+                entity={featureContentType?.model}
+                setHasMetadataRequired={(b) => {
+                  this.setState({
+                    hasMetadataRequired: b,
+                  })
+                }}
+                onChange={(m) => {
+                  this.setState({
+                    metadata: m,
+                  })
+                }}
+              />
+            )}
+          </>
         )}
         {!identity && projectFlag && (
           <Permission

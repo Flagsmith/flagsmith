@@ -102,9 +102,6 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
   }, [metadataFieldsAssociatedtoEntity])
 
   const [metadataChanged, setMetadataChanged] = useState<boolean>(false)
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [metadataFieldsAssociatedtoEntity])
 
   const mergeMetadataEntityWithMetadataField = (
     metadata: Metadata[], // Metadata array
@@ -160,9 +157,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
           })
           // Determine if isRequiredFor should be true or false based on is_required_for array
           const isRequiredFor = !!matchingItem?.is_required_for.length
-          if (isRequiredFor) {
-            setHasMetadataRequired?.()
-          }
+          setHasMetadataRequired?.(isRequiredFor)
           // Return the metadata field with additional metadata model field information including isRequiredFor
           return {
             ...meta,
@@ -215,7 +210,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
   ])
   return (
     <>
-      <FormGroup className='mt-4 setting'>
+      <FormGroup className='setting'>
         <PanelSearch
           className='mt-1 no-pad'
           header={
@@ -247,6 +242,12 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
               />
             )
           }}
+          renderNoResults={
+            <FormGroup>
+              No metadata configurated for {entity} entity. Add metadata field
+              in your <b>Settings Project</b>
+            </FormGroup>
+          }
         />
         {entity === 'environment' && (
           <div className='text-right'>
