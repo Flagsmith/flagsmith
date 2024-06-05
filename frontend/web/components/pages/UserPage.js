@@ -143,7 +143,6 @@ const UserPage = class extends Component {
       <CreateSegmentModal
         segment={segment.id}
         readOnly
-        isEdit
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,

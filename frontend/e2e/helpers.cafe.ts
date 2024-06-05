@@ -458,6 +458,7 @@ export const createSegment = async (
   await click(byId('create-segment'))
   await waitForElementVisible(byId(`segment-${index}-name`))
   await assertTextContent(byId(`segment-${index}-name`), id)
+  await closeModal()
 }
 
 export const waitAndRefresh = async (waitFor = 3000) => {

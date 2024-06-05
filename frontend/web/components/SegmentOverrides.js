@@ -647,7 +647,6 @@ class TheComponent extends Component {
                   <CreateSegmentModal
                     className='my-2'
                     segment={this.state.segmentEditId}
-                    isEdit
                     condensed
                     onComplete={() => {
                       this.setState({
