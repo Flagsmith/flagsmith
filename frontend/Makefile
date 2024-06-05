@@ -2,6 +2,8 @@
 
 DOTENV_OVERRIDE_FILE ?= .env
 
+E2E_CONCURRENCY ?= 3
+
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
 
@@ -20,3 +22,8 @@ build:
 .PHONY: serve
 serve:
 	npm run dev
+
+.PHONY: test
+test:
+	docker compose -f docker-compose-e2e-tests.yml run frontend \
+		npx cross-env E2E_CONCURRENCY=${E2E_CONCURRENCY} npm run test -- $(opts)

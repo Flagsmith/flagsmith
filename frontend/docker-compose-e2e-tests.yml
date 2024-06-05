@@ -13,6 +13,7 @@ services:
     container_name: flagsmith_postgres
 
   flagsmith-api:
+    image: ${API_IMAGE:-ghcr.io/flagsmith/flagsmith-api:dev}
     build:
       context: ../
       dockerfile: Dockerfile
@@ -38,6 +39,7 @@ services:
       retries: 30
 
   frontend:
+    image: ${E2E_IMAGE:-ghcr.io/flagsmith/flagsmith-e2e:dev}
     build:
       context: ../
       dockerfile: frontend/Dockerfile.e2e
