@@ -148,13 +148,16 @@ const ChangeRequestsPage = class extends Component {
     AppActions.actionChangeRequest(this.props.match.params.id, 'approve')
   }
 
+  getScheduledDate = (changeRequest) => {
+    return changeRequest.environment_feature_versions.length > 0
+      ? moment(changeRequest.environment_feature_versions[0].live_from)
+      : moment(changeRequest.feature_states[0].live_from)
+  }
+
   publishChangeRequest = () => {
     const id = this.props.match.params.id
     const changeRequest = ChangeRequestStore.model[id]
-    const scheduledDate =
-      changeRequest.environment_feature_versions.length > 0
-        ? moment(changeRequest.environment_feature_versions[0].live_from)
-        : moment(changeRequest.feature_states[0].live_from)
+    const scheduledDate = this.getScheduledDate(changeRequest)
     const isScheduled = scheduledDate > moment()
 
     openConfirm({
@@ -253,11 +256,8 @@ const ChangeRequestsPage = class extends Component {
         orgUsers &&
         orgUsers.find((v) => v.id === changeRequest.committed_by)) ||
       {}
-    const scheduledDate =
-      changeRequest.environment_feature_versions.length > 0
-        ? moment(changeRequest.environment_feature_versions[0].live_from)
-        : moment(changeRequest.feature_states[0].live_from)
 
+    const scheduledDate = this.getScheduledDate(changeRequest)
     const isScheduled = scheduledDate > moment()
 
     const approval =
