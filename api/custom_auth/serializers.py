@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
@@ -15,6 +17,8 @@ from .constants import (
     INVALID_PASSWORD_ERROR,
     USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class CustomTokenSerializer(serializers.ModelSerializer):
@@ -76,15 +80,21 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
         user = super(CustomUserCreateSerializer, self).save(**kwargs)
 
-        request = self.context["request"]
-        raw_sign_up_meta = request.COOKIES.get("inbound_query_params")
-        if raw_sign_up_meta and (
-            sign_up_meta := SignUpMeta.model_validate_json(raw_sign_up_meta)
-        ):
-            UserSignUpMeta.objects.create(
-                user=user,
-                json_meta=sign_up_meta.model_dump_json(),
-            )
+        try:
+            request = self.context["request"]
+            raw_sign_up_meta = request.COOKIES.get("inbound_query_params")
+            if raw_sign_up_meta and (
+                sign_up_meta := SignUpMeta.model_validate_json(raw_sign_up_meta)
+            ):
+                UserSignUpMeta.objects.create(
+                    user=user,
+                    json_meta=sign_up_meta.model_dump_json(),
+                )
+        except Exception as e:
+            # We want to be sensitive about not preventing user signups if anything fails
+            # trying to capture (and store) their attribution data.
+            logger.error(e, exc_info=True, stack_info=True)
+            pass
 
         return user
 
