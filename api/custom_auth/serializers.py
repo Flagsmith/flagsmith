@@ -76,9 +76,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
         user = super(CustomUserCreateSerializer, self).save(**kwargs)
 
-        request = self.context.get("request")
-        assert request
-
+        request = self.context["request"]
         raw_sign_up_meta = request.COOKIES.get("inbound_query_params")
         if raw_sign_up_meta and (
             sign_up_meta := SignUpMeta.model_validate_json(raw_sign_up_meta)
