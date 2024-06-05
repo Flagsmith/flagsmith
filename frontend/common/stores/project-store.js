@@ -15,6 +15,7 @@ const data = require('../data/base/_data')
 const controller = {
   createEnv: (name, projectId, cloneId, description) => {
     API.trackEvent(Constants.events.CREATE_ENVIRONMENT)
+    store.saving()
     const req = cloneId
       ? data.post(`${Project.api}environments/${cloneId}/clone/`, {
           description,
@@ -26,39 +27,43 @@ const controller = {
           project: projectId,
         })
 
-    req.then((res) =>
-      data
-        .put(`${Project.api}environments/${res.api_key}/`, {
-          description,
-          name,
-          project: projectId,
-        })
-        .then((res) =>
-          data
-            .post(
-              `${Project.api}environments/${
-                res.api_key
-              }/${Utils.getIdentitiesEndpoint()}/`,
-              {
-                environment: res.api_key,
-                identifier: `${name.toLowerCase()}_user_123456`,
-              },
-            )
-            .then(() => {
-              store.savedEnv = res
-              if (store.model && store.model.environments) {
-                store.model.environments = store.model.environments.concat([
-                  res,
-                ])
-              }
-              store.saved()
-              getStore().dispatch(
-                environmentService.util.invalidateTags(['Environment']),
+    req
+      .then((res) =>
+        data
+          .put(`${Project.api}environments/${res.api_key}/`, {
+            description,
+            name,
+            project: projectId,
+          })
+          .then((res) =>
+            data
+              .post(
+                `${Project.api}environments/${
+                  res.api_key
+                }/${Utils.getIdentitiesEndpoint()}/`,
+                {
+                  environment: res.api_key,
+                  identifier: `${name.toLowerCase()}_user_123456`,
+                },
               )
-              AppActions.refreshOrganisation()
-            }),
-        ),
-    )
+              .then(() => {
+                store.savedEnv = res
+                if (store.model && store.model.environments) {
+                  store.model.environments = store.model.environments.concat([
+                    res,
+                  ])
+                }
+                store.saved()
+                getStore().dispatch(
+                  environmentService.util.invalidateTags(['Environment']),
+                )
+                AppActions.refreshOrganisation()
+              }),
+          ),
+      )
+      .catch((e) => {
+        API.ajaxHandler(store, e)
+      })
   },
 
   deleteEnv: (env) => {
