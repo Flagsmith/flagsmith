@@ -440,6 +440,11 @@ class HubspotLead(models.Model):
 
 
 class SignUpMeta(BaseModel):
+    """
+    Dataclass to hold the meta information (i.e. ad information, utm etc.)
+    about a user signup.
+    """
+
     utm_adgroup: str | None = None
     device: str | None = None
     network: str | None = None
@@ -466,6 +471,13 @@ class SignUpMeta(BaseModel):
 
 
 class UserSignUpMeta(models.Model):
+    """
+    Model used to store meta information captured about how the user arrived at Flagsmith on signup.
+    When a user reaches Flagsmith to sign up via a Google Ad, they are redirected with a bunch of
+    query parameters that include the relevant ad information. This information is cookied by the
+    FE and included in the request to signup from the FE to the API.
+    """
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
