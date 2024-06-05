@@ -1,5 +1,5 @@
-export const saveFeatureWithValidation = (cb: () => void) => {
-  return () => {
+export const saveFeatureWithValidation = (cb: (schedule?: boolean) => void) => {
+  return (schedule: boolean) => {
     if (document.getElementById('language-validation-error')) {
       openConfirm({
         body: 'Your remote config value does not pass validation for the language you have selected. Are you sure you wish to save?',
@@ -9,7 +9,11 @@ export const saveFeatureWithValidation = (cb: () => void) => {
         yesText: 'Save',
       })
     } else {
-      cb()
+      if (schedule) {
+        cb(schedule)
+      } else {
+        cb()
+      }
     }
   }
 }
