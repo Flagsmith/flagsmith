@@ -57,8 +57,11 @@ class EnvironmentFeatureVersionManager(SoftDeleteManager):
             params={
                 "environment_id": environment_id,
                 "api_key": environment_api_key,
-                # It seems as though there is a timezone issue when using postgres's
-                # built in now() function, so we pass in the current time from python.
+                # TODO:
+                #  It seems as though there is a timezone issue when using postgres's
+                #  built in now() function, so we pass in the current time from python.
+                #  Using <= now() in the SQL query returns incorrect results.
+                #  More investigation is needed here to understand the cause.
                 "live_from_before": timezone.now().isoformat(),
             },
         )
