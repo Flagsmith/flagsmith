@@ -10,6 +10,7 @@ from django.db import models
 from django.db.models import Count, QuerySet
 from django.utils import timezone
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
+from pydantic import BaseModel
 
 from integrations.lead_tracking.hubspot.tasks import (
     track_hubspot_lead_without_organisation,
@@ -436,3 +437,41 @@ class HubspotLead(models.Model):
     hubspot_id = models.CharField(unique=True, max_length=100, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class SignUpMeta(BaseModel):
+    utm_adgroup: str | None = None
+    device: str | None = None
+    network: str | None = None
+    placement: str | None = None
+    matchtype: str | None = None
+    target: str | None = None
+    utm_source: str | None = None
+    utm_medium: str | None = None
+    utm_campaign: str | None = None
+    utm_term: str | None = None
+    utm_content: str | None = None
+    hsa_acc: str | None = None
+    hsa_cam: str | None = None
+    hsa_grp: str | None = None
+    hsa_ad: str | None = None
+    hsa_src: str | None = None
+    hsa_tgt: str | None = None
+    hsa_kw: str | None = None
+    hsa_mt: str | None = None
+    hsa_net: str | None = None
+    hsa_ver: str | None = None
+    gad_source: str | None = None
+    gclid: str | None = None
+
+
+class UserSignUpMeta(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    user = models.OneToOneField(FFAdminUser, on_delete=models.CASCADE)
+    json_meta = models.TextField()
+
+    @property
+    def meta(self) -> SignUpMeta:
+        return SignUpMeta.parse_raw(self.json_meta)

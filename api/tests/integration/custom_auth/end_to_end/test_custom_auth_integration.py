@@ -5,13 +5,14 @@ from collections import ChainMap
 import pyotp
 from django.conf import settings
 from django.core import mail
+from django.http import SimpleCookie
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, override_settings
 
 from organisations.invites.models import Invite
 from organisations.models import Organisation
-from users.models import FFAdminUser
+from users.models import FFAdminUser, UserSignUpMeta
 
 
 def test_register_and_login_workflows(db: None, api_client: APIClient) -> None:
@@ -392,3 +393,35 @@ def test_register_with_sign_up_type(client, db, settings):
     assert response_json["sign_up_type"] == sign_up_type
 
     assert FFAdminUser.objects.filter(email=email, sign_up_type=sign_up_type).exists()
+
+
+def test_sign_up_with_sign_up_meta(api_client: APIClient, db: None) -> None:
+    # Given
+    gclid = "foo"
+    api_client.cookies = SimpleCookie(
+        {"inbound_query_params": json.dumps({"gclid": gclid})}
+    )
+
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    email = "test@example.com"
+    password = FFAdminUser.objects.make_random_password()
+    data = {
+        "email": email,
+        "password": password,
+        "re_password": password,
+        "first_name": "John",
+        "last_name": "Smith",
+    }
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    user_sign_up_meta = UserSignUpMeta.objects.filter(user__email=email).first()
+    assert user_sign_up_meta is not None
+    assert user_sign_up_meta.meta.gclid == gclid
