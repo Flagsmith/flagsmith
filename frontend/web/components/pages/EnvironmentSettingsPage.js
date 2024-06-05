@@ -24,7 +24,6 @@ import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersion
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
 import EnvironmentVersioningListener from 'components/EnvironmentVersioningListener'
-import MetadataTitle from 'components/metadata/MetadataTitle'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
