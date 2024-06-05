@@ -154,7 +154,9 @@ const ChangeRequestsPage = class extends Component {
     const isScheduled =
       new Date(changeRequest.feature_states[0].live_from).valueOf() >
       new Date().valueOf()
-    const scheduledDate = moment(changeRequest.feature_states[0].live_from)
+    const scheduledDate = changeRequest.feature_states
+      ? moment(changeRequest.feature_states[0].live_from)
+      : moment(changeRequest.environment_feature_versions[0].live_from)
 
     openConfirm({
       body: (
@@ -256,7 +258,9 @@ const ChangeRequestsPage = class extends Component {
       new Date(changeRequest.feature_states[0].live_from).valueOf() >
       new Date().valueOf()
 
-    const scheduledDate = moment(changeRequest.feature_states[0].live_from)
+    const scheduledDate = changeRequest.feature_states
+      ? moment(changeRequest.feature_states[0].live_from)
+      : moment(changeRequest.environment_feature_versions[0].live_from)
 
     const approval =
       changeRequest &&
