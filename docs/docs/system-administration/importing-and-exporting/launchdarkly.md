@@ -5,7 +5,7 @@ sidebar_label: LaunchDarkly
 sidebar_position: 10
 ---
 
-# LaunchDarkly Importer
+# LaunchDarkly Migrator - Migrate from LaunchDarkly
 
 You can import your Flags and Segments from LaunchDarkly into Flagsmith.
 
