@@ -68,6 +68,9 @@ const controller = {
         store.model.environments,
         (e) => e.id !== env.id,
       )
+      getStore().dispatch(
+        environmentService.util.invalidateTags(['Environment']),
+      )
       store.trigger('removed')
       store.saved()
       AppActions.refreshOrganisation()
