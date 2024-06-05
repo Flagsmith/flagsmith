@@ -135,11 +135,12 @@ export const featureVersionService = service
           }
 
           const ret = {
-            data: res.map((item) => ({
+            feature_states: res.map((item) => ({
               ...item,
               version_sha: versionRes.data.uuid,
             })),
             error: res.find((v) => !!v.error)?.error,
+            version_sha: versionRes.data.uuid,
           }
 
           // Step 5: Publish the feature version
@@ -151,7 +152,7 @@ export const featureVersionService = service
             })
           }
 
-          return ret as any
+          return { data: ret } as any
         },
       }),
       createFeatureVersion: builder.mutation<
