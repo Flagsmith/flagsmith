@@ -27,6 +27,7 @@ export const featureVersionService = service
             await createFeatureVersion(getStore(), {
               environmentId: query.environmentId,
               featureId: query.featureId,
+              liveFrom: query.liveFrom,
             })
 
           // Step 2: Get the feature states for the live version
@@ -161,7 +162,7 @@ export const featureVersionService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
         query: (query: Req['createFeatureVersion']) => ({
-          body: {},
+          body: { live_from: query.liveFrom },
           method: 'POST',
           url: `environments/${query.environmentId}/features/${query.featureId}/versions/`,
         }),
