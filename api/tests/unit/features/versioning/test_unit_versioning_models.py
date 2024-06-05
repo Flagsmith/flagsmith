@@ -1,4 +1,5 @@
 import typing
+from datetime import timedelta
 
 import pytest
 from django.utils import timezone
@@ -248,3 +249,31 @@ def test_update_version_webhooks_triggered_when_version_published(
         kwargs={"environment_feature_version_uuid": str(new_version.uuid)},
         delay_until=new_version.live_from,
     )
+
+
+def test_get_latest_versions_does_not_return_versions_scheduled_for_the_future(
+    environment_v2_versioning: Environment,
+    feature: "Feature",
+    admin_user: "FFAdminUser",
+) -> None:
+    # Given
+    version_0 = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    # Let's create a version scheduled for the future, that we'll publish
+    scheduled_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning,
+        feature=feature,
+        live_from=timezone.now() + timedelta(hours=1),
+    )
+    scheduled_version.publish(admin_user)
+
+    # When
+    latest_versions = EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(
+        environment_id=environment_v2_versioning.id
+    )
+
+    # Then
+    assert latest_versions.count() == 1
+    assert latest_versions.first() == version_0
