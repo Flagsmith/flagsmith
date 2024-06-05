@@ -271,8 +271,12 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
                     project: parseInt(`${projectId}`),
                   },
                   id: entityId,
-                }).then(() => {
-                  toast('Environment Metadata Updated')
+                }).then((res) => {
+                  if (res?.error) {
+                    toast(res?.error?.data.metadata[0], 'danger')
+                  } else {
+                    toast('Environment Metadata Updated')
+                  }
                 })
               }}
             >

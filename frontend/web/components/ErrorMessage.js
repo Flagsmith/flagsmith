@@ -14,6 +14,7 @@ export default class ErrorMessage extends PureComponent {
     }`
     const error =
       this.props.error?.data?.metadata?.find((item) =>
+        // eslint-disable-next-line no-prototype-builtins
         item.hasOwnProperty('non_field_errors'),
       )?.non_field_errors[0] ||
       this.props.error?.data ||

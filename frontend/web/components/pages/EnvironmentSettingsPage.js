@@ -7,7 +7,6 @@ import CreateWebhookModal from 'components/modals/CreateWebhook'
 import ConfirmRemoveWebhook from 'components/modals/ConfirmRemoveWebhook'
 import ConfirmToggleEnvFeature from 'components/modals/ConfirmToggleEnvFeature'
 import EditPermissions from 'components/EditPermissions'
-import ServerSideSDKKeys from 'components/ServerSideSDKKeys'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
@@ -25,6 +24,7 @@ import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersion
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
 import EnvironmentVersioningListener from 'components/EnvironmentVersioningListener'
+import MetadataTitle from 'components/metadata/MetadataTitle'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },

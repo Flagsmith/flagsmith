@@ -96,7 +96,8 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         </div>
       ),
       destructive: true,
-      onYes: () => deleteMetadata({ id }),
+      onYes: () =>
+        deleteMetadata({ id }).then(() => toast('Metadata Field Deleted')),
       title: 'Delete Metadata Field',
       yesText: 'Confirm',
     })
