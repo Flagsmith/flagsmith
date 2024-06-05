@@ -59,7 +59,10 @@ export type Req = {
     organisationId: string
     projectId?: string
     environmentId?: string
-    period?: string
+    billing_period?:
+      | 'current_billing_period'
+      | 'previous_billing_period'
+      | '90_day_period'
   }
   deleteIdentity: {
     id: string

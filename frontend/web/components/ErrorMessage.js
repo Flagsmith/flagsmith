@@ -34,15 +34,6 @@ export default class ErrorMessage extends PureComponent {
                 .join('<br/>'),
             }}
           />
-        ) : this.props.exceeded ? (
-          <>
-            Your organisation has exceeded its API usage quota {`(${error}).`}{' '}
-            {Utils.getPlanName(this.props.organisationPlan) === 'Free' ? (
-              <b>Please upgrade your plan to continue receiving service.</b>
-            ) : (
-              <b>Automated billing for the overages may apply.</b>
-            )}
-          </>
         ) : (
           error
         )}

@@ -1,10 +1,10 @@
 import { FC } from 'react'
 import WarningMessage from './WarningMessage'
-import ErrorMessage from './ErrorMessage'
 import Utils from 'common/utils/utils'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import Format from 'common/utils/format'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
+import QuotaExceededMessage from './QuotaExceededMessage'
 
 type OrganisationLimitType = {
   id: string
@@ -17,7 +17,7 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({
 }) => {
   let body = { organisationId: id }
   if (Utils.getPlanName(organisationPlan) !== 'free') {
-    body = { ...body, ...{ period: 'current_billing_period' } }
+    body = { ...body, ...{ billing_period: 'current_billing_period' } }
   }
 
   const { data: totalApiCalls } = useGetOrganisationUsageQuery(body, {
@@ -48,12 +48,9 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({
           />
         ) : (
           maxApiCallsPercentage >= 100 && (
-            <ErrorMessage
+            <QuotaExceededMessage
               error={apiUsageMessageText}
               organisationPlan={organisationPlan}
-              errorMessageClass={'announcement'}
-              enabledButton
-              exceeded
             />
           )
         ))}
