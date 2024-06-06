@@ -29,7 +29,7 @@ import segmentOverrides from 'components/SegmentOverrides'
 import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 let createdFirstFeature = false
-const PAGE_SIZE = 200
+const PAGE_SIZE = 50
 function recursivePageGet(url, parentRes) {
   return data.get(url).then((res) => {
     let response
