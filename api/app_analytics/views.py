@@ -150,7 +150,7 @@ class SDKAnalyticsFlags(GenericAPIView):
                 )
             )
         elif settings.INFLUXDB_TOKEN:
-            track_feature_evaluation_influxdb.delay(
+            track_feature_evaluation_influxdb.run_in_thread(
                 args=(
                     request.environment.id,
                     request.data,
