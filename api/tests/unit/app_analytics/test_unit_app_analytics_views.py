@@ -70,7 +70,9 @@ def test_sdk_analytics_allows_valid_data(mocker, settings, environment, feature)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    mocked_track_feature_eval.delay.assert_called_once_with(args=(environment.id, data))
+    mocked_track_feature_eval.run_in_thread.assert_called_once_with(
+        args=(environment.id, data)
+    )
 
 
 def test_get_usage_data(mocker, admin_client, organisation):
@@ -445,8 +447,10 @@ def test_set_sdk_analytics_flags_v1_to_influxdb(
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     feature_request_count = 2
     data = {feature.name: feature_request_count}
-    mock = mocker.patch("app_analytics.track.InfluxDBWrapper")
-    add_data_point_mock = mock.return_value.add_data_point
+
+    mocked_track_feature_eval = mocker.patch(
+        "app_analytics.views.track_feature_evaluation_influxdb"
+    )
 
     # When
     response = api_client.post(
@@ -455,8 +459,9 @@ def test_set_sdk_analytics_flags_v1_to_influxdb(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    add_data_point_mock.assert_called_with(
-        "request_count",
-        feature_request_count,
-        tags={"feature_id": feature.name, "environment_id": environment.id},
+    mocked_track_feature_eval.run_in_thread.assert_called_once_with(
+        args=(
+            environment.id,
+            data,
+        )
     )
