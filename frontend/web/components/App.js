@@ -381,21 +381,23 @@ const App = class extends Component {
                       />
                     )}
                     {user && showBanner && (
-                      <Row className={'px-3 mt-4'}>
-                        <InfoMessage
-                          title={announcementValue.title}
-                          isClosable={announcementValue.isClosable}
-                          close={() =>
-                            this.closeAnnouncement(announcementValue.id)
-                          }
-                          buttonText={announcementValue.buttonText}
-                          url={announcementValue.url}
-                        >
-                          <div>
-                            <div>{announcementValue.description}</div>
-                          </div>
-                        </InfoMessage>
-                      </Row>
+                      <div className='container mt-4'>
+                        <div className='row'>
+                          <InfoMessage
+                            title={announcementValue.title}
+                            isClosable={announcementValue.isClosable}
+                            close={() =>
+                              this.closeAnnouncement(announcementValue.id)
+                            }
+                            buttonText={announcementValue.buttonText}
+                            url={announcementValue.url}
+                          >
+                            <div>
+                              <div>{announcementValue.description}</div>
+                            </div>
+                          </InfoMessage>
+                        </div>
+                      </div>
                     )}
                     {this.props.children}
                   </Fragment>
