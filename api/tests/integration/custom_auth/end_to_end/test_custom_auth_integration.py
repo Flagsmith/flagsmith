@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core import mail
 from django.http import SimpleCookie
 from django.urls import reverse
+from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 from rest_framework.test import APIClient, override_settings
 
@@ -365,7 +366,12 @@ def test_delete_token(test_user, auth_token):
     assert client.delete(url).status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_register_with_sign_up_type(client, db, settings):
+def test_register_with_sign_up_type(
+    client: APIClient,
+    db: None,
+    settings: SettingsWrapper,
+    reset_cache: None,
+):
     # Given
     password = FFAdminUser.objects.make_random_password()
     sign_up_type = "NO_INVITE"
@@ -395,7 +401,9 @@ def test_register_with_sign_up_type(client, db, settings):
     assert FFAdminUser.objects.filter(email=email, sign_up_type=sign_up_type).exists()
 
 
-def test_sign_up_with_sign_up_meta(api_client: APIClient, db: None) -> None:
+def test_sign_up_with_sign_up_meta(
+    api_client: APIClient, db: None, reset_cache: None
+) -> None:
     # Given
     gclid = "foo"
     api_client.cookies = SimpleCookie(
