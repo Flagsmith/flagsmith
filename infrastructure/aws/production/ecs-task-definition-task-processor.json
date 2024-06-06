@@ -142,6 +142,10 @@
                     "value": "44"
                 },
                 {
+                    "name": "TASK_DELETE_BATCH_SIZE",
+                    "value": "50000"
+                },
+                {
                     "name": "ENABLE_HUBSPOT_LEAD_TRACKING",
                     "value": "True"
                 },
