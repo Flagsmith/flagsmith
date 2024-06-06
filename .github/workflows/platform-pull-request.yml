@@ -6,6 +6,8 @@ on:
     paths-ignore:
       - docs/**
       - infrastructure/**
+    branches-ignore:
+      - release-please-*
 
 jobs:
   validate-pr-title:
