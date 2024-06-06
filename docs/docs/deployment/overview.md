@@ -475,7 +475,6 @@ The list of the flags and remote config we're currently using in production is b
  {
   "value": "IN",
   "label": "In",
-  "warning": "Check your SDK version supports the IN operator. <a href=\"https://docs.flagsmith.com/clients/overview#sdk-compatibility\">See SDK compatibility docs</a>.",
   "valuePlaceholder": "Value1,Value2"
  },
  {
