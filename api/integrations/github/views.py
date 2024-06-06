@@ -15,13 +15,17 @@ from rest_framework.response import Response
 
 from integrations.github.client import (
     ResourceType,
+    create_flagsmith_flag_label,
     delete_github_installation,
     fetch_github_repo_contributors,
     fetch_github_repositories,
     fetch_search_github_resource,
 )
 from integrations.github.exceptions import DuplicateGitHubIntegration
-from integrations.github.github import handle_github_webhook_event
+from integrations.github.github import (
+    handle_github_webhook_event,
+    tag_by_event_type,
+)
 from integrations.github.helpers import github_webhook_payload_is_valid
 from integrations.github.models import GithubConfiguration, GithubRepository
 from integrations.github.permissions import HasPermissionToGithubConfiguration
@@ -139,7 +143,16 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
 
         try:
-            return super().create(request, *args, **kwargs)
+            response = super().create(request, *args, **kwargs)
+            github_configuration = GithubConfiguration.objects.get(
+                id=self.kwargs["github_pk"]
+            )
+            create_flagsmith_flag_label(
+                installation_id=github_configuration.installation_id,
+                owner=request.data.get("repository_owner"),
+                repo=request.data.get("repository_name"),
+            )
+            return response
 
         except IntegrityError as e:
             if re.search(
@@ -250,7 +263,7 @@ def github_webhook(request) -> Response:
         payload_body=payload, secret_token=secret, signature_header=signature
     ):
         data = json.loads(payload.decode("utf-8"))
-        if github_event == "installation":
+        if github_event == "installation" or github_event in tag_by_event_type:
             handle_github_webhook_event(event_type=github_event, payload=data)
             return Response({"detail": "Event processed"}, status=200)
         else:

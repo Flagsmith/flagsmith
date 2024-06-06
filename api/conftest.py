@@ -987,14 +987,20 @@ def flagsmith_environments_v2_table(dynamodb: DynamoDBServiceResource) -> Table:
 
 
 @pytest.fixture()
-def feature_external_resource(
-    feature: Feature, post_request_mock: MagicMock, mocker: MockerFixture
-) -> FeatureExternalResource:
-    mocker.patch(
+def mock_github_client_generate_token(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch(
         "integrations.github.client.generate_token",
         return_value="mocked_token",
     )
 
+
+@pytest.fixture()
+def feature_external_resource(
+    feature: Feature,
+    post_request_mock: MagicMock,
+    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
+) -> FeatureExternalResource:
     return FeatureExternalResource.objects.create(
         url="https://github.com/repositoryownertest/repositorynametest/issues/11",
         type="GITHUB_ISSUE",
@@ -1007,13 +1013,8 @@ def feature_external_resource(
 def feature_with_value_external_resource(
     feature_with_value: Feature,
     post_request_mock: MagicMock,
-    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
 ) -> FeatureExternalResource:
-    mocker.patch(
-        "integrations.github.client.generate_token",
-        return_value="mocked_token",
-    )
-
     return FeatureExternalResource.objects.create(
         url="https://github.com/repositoryownertest/repositorynametest/issues/11",
         type="GITHUB_ISSUE",

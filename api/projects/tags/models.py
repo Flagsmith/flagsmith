@@ -7,6 +7,7 @@ from projects.models import Project
 class TagType(models.Choices):
     NONE = "NONE"
     STALE = "STALE"
+    GITHUB = "GITHUB"
 
 
 class Tag(AbstractBaseExportableModel):
