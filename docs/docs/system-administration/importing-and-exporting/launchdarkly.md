@@ -1,11 +1,11 @@
 ---
-title: LaunchDarkly Importer
-description: Import your LaunchDarkly data into Flagsmith
+title: LaunchDarkly Migrator - Migrate from LaunchDarkly
+description: Migrate your flags and project from LaunchDarkly into Flagsmith
 sidebar_label: LaunchDarkly
 sidebar_position: 10
 ---
 
-# LaunchDarkly Importer
+# LaunchDarkly Migrator - Migrate from LaunchDarkly
 
 You can import your Flags and Segments from LaunchDarkly into Flagsmith.
 
