@@ -47,7 +47,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
             {'Create a SAML Configuration'}
           </Button>
         }
-      ></PageTitle>
+      />
 
       <FormGroup className='mb-4'>
         <PanelSearch
@@ -61,10 +61,12 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
           }
           header={
             <Row className='table-header'>
-              <Flex className='table-column'>
-                <div className='font-weight-medium mb-1'>SAML Name</div>
+              <Flex className='table-column px-3'>
+                <div className='font-weight-medium'>SAML Name</div>
               </Flex>
-              <div className='table-column'>Allow IDP Initiated</div>
+              <div className='table-column' style={{ width: '205px' }}>
+                Allow IDP Initiated
+              </div>
             </Row>
           }
           items={data?.results || []}
@@ -84,7 +86,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
               <Flex className='table-column px-3'>
                 <div className='font-weight-medium mb-1'>{samlConf.name}</div>
               </Flex>
-              <div className='table-column'>
+              <div className='table-column' style={{ width: '95px' }}>
                 <Switch checked={samlConf.allow_idp_initiated} />
               </div>
               <div className='table-column'>

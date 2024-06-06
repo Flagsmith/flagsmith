@@ -42,10 +42,10 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
     setIsLoading(true)
     getSamlConfigurationMetadata(getStore(), { name: name })
       .then((res) => {
-        if (res.data) {
-          const blob = new Blob([JSON.stringify(res.data, null, 2)])
+        if (res.error) {
+          const blob = new Blob([res.error.data], { type: 'application/xml' })
           const link = document.createElement('a')
-          link.download = `${data?.name}.json`
+          link.download = `${data?.name}.xml`
           link.href = window.URL.createObjectURL(blob)
           link.click()
         }
@@ -57,36 +57,32 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
 
   return (
     <div className='create-feature-tab px-3'>
-      <Tooltip
-        title={
-          <InputGroup
-            className='mt-2'
-            title='Name*'
-            data-test='saml-name'
-            value={name}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              const nuevoNombre = Utils.safeParseEventValue(event)
-              if (validateName(nuevoNombre)) {
-                setName(nuevoNombre)
-              }
-            }}
-            inputProps={{
-              className: 'full-width',
-            }}
-            type='text'
-            name='Name*'
-          />
-        }
-      >
-        {
-          'A short name for the organization, used as the input when clicking "Single Sign-on" at login, should only consist of alphanumeric characters, plus (+), underscore (_), and hyphen (-).'
-        }
-      </Tooltip>
+      <InputGroup
+        className='mt-2'
+        title='Name*'
+        data-test='saml-name'
+        tooltip='A short name for the organization, used as the input when clicking "Single Sign-on" at login, should only consist of alphanumeric characters, plus (+), underscore (_), and hyphen (-).'
+        tooltipPlace='right'
+        value={name}
+        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+          const nuevoNombre = Utils.safeParseEventValue(event)
+          if (validateName(nuevoNombre)) {
+            setName(nuevoNombre)
+          }
+        }}
+        inputProps={{
+          className: 'full-width',
+        }}
+        type='text'
+        name='Name*'
+      />
 
       <InputGroup
         className='mt-2 mb-4'
         title='Frontend URL*'
         data-test='frontend-url'
+        tooltip='The base URL of the Flagsmith dashboard'
+        tooltipPlace='right'
         value={frontendUrl}
         onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
           setFrontendUrl(Utils.safeParseEventValue(event))
@@ -101,6 +97,8 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
       <InputGroup
         className='mt-2 mb-4'
         title='Allow IDP initiated'
+        tooltip='Determines whether logins can be initiated from the IDP'
+        tooltipPlace='right'
         component={
           <Switch
             checked={allowIdpInitiated || data?.allow_idp_initiated}
@@ -110,7 +108,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
           />
         }
       />
-      <FormGroup className='mb-4'>
+      <FormGroup className='mb-1'>
         <InputGroup
           component={
             <ValueEditor
@@ -128,7 +126,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
         />
       </FormGroup>
 
-      <div className='text-right mt-2'>
+      <div className='text-right pb-2'>
         {data?.idp_metadata_xml && (
           <Button disabled={isLoading} onClick={download} className='mr-2'>
             {isLoading ? 'Downloading' : 'Download Service Provider Metadata'}
@@ -176,7 +174,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
             }
           }}
         >
-          {data ? 'Edit Configuration' : 'Create Configuration'}
+          {data ? 'Update Configuration' : 'Create Configuration'}
         </Button>
       </div>
       {!!createError ||

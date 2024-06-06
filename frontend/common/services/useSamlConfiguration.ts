@@ -54,6 +54,7 @@ export const samlConfigurationService = service
           { id: res?.entity_id, type: 'SamlConfiguration' },
         ],
         query: (query: Req['getSamlConfigurationMetadata']) => ({
+          headers: { Accept: 'application/xml' },
           url: `auth/saml/${query.name}/metadata/`,
         }),
       }),
