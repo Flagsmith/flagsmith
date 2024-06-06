@@ -13,6 +13,9 @@ import Button from 'components/base/forms/Button'
 import { Req } from 'common/types/requests'
 import ErrorMessage from 'components/ErrorMessage'
 import { getStore } from 'common/store'
+import XMLUpload from 'components/XMLUpload'
+import Tabs from 'components/base/forms/Tabs'
+import TabItem from 'components/base/forms/TabItem'
 
 type CreateSAML = {
   organisationId: number
@@ -25,6 +28,8 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
   const [metadataXml, setMetadataXml] = useState<string>('')
   const [allowIdpInitiated, setAllowIdpInitiated] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [file, setFile] = useState<File | null>(null)
+  const [uploadMetadataXml, setUploadMetadataXml] = useState<string>('')
   const [createSamlConfiguration, createError] =
     useCreateSamlConfigurationMutation()
   const [editSamlConfiguration, updateError] =
@@ -111,22 +116,51 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
       <FormGroup className='mb-1'>
         <InputGroup
           component={
-            <ValueEditor
-              data-test='featureValue'
-              name='featureValue'
-              className='full-width'
-              value={metadataXml || data?.idp_metadata_xml}
-              onChange={setMetadataXml}
-              placeholder="e.g. '<xml>time<xml>' "
-              onlyOneLang
-              language='xml'
-            />
+            <Tabs uncontrolled theme='pill m-0'>
+              <TabItem tabLabel='Paste XML'>
+                <div className='mt-2 p-0'>
+                  <ValueEditor
+                    data-test='featureValue'
+                    name='featureValue'
+                    className='full-width'
+                    value={metadataXml || data?.idp_metadata_xml}
+                    onChange={setMetadataXml}
+                    placeholder="e.g. '<xml>time<xml>' "
+                    onlyOneLang
+                    language='xml'
+                  />
+                </div>
+              </TabItem>
+              <TabItem tabLabel={'Upload file'}>
+                <div className='mt-2 p-0'>
+                  {uploadMetadataXml && (
+                    <ValueEditor
+                      data-test='featureValue'
+                      name='featureValue'
+                      className='full-width'
+                      value={uploadMetadataXml}
+                      placeholder="e.g. '<xml>time<xml>' "
+                      onlyOneLang
+                      language='xml'
+                    />
+                  )}
+                  <XMLUpload
+                    value={file}
+                    onChange={(file, data) => {
+                      setFile(file)
+                      setUploadMetadataXml(data as string)
+                      setMetadataXml(data as string)
+                    }}
+                  />
+                </div>
+              </TabItem>
+            </Tabs>
           }
           title={'IDP Metadata XML'}
         />
       </FormGroup>
 
-      <div className='text-right pb-2'>
+      <div className='text-right py-2'>
         {data?.idp_metadata_xml && (
           <Button disabled={isLoading} onClick={download} className='mr-2'>
             {isLoading ? 'Downloading' : 'Download Service Provider Metadata'}

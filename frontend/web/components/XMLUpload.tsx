@@ -1,49 +1,21 @@
-import { FC, useCallback, useState } from 'react'
+import { FC, useCallback } from 'react'
 import DropIcon from './svg/DropIcon'
 import Button from './base/forms/Button'
 import { useDropzone } from 'react-dropzone'
+import { DropAreaType } from './JSONUpload'
 
-export type DropAreaType = {
-  value: File | null
-  onChange: (file: File, json: Record<string, any> | string) => void
-}
-
-const JSONUpload: FC<DropAreaType> = ({ onChange, value }) => {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-
+const XMLUpload: FC<DropAreaType> = ({ onChange, value }) => {
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    setIsLoading(true)
-    setError('')
-    // Do something with the files
     const reader = new FileReader()
 
     reader.addEventListener(
       'load',
       () => {
-        let json
         try {
-          json = JSON.parse(reader.result)
-          onChange(acceptedFiles[0], json)
+          onChange(acceptedFiles[0], reader.result as string)
         } catch (e) {
-          setError('File is not valid JSON')
+          toast('File is not valid XML')
         }
-      },
-      false,
-    )
-
-    reader.addEventListener(
-      'error',
-      () => {
-        setIsLoading(false)
-        setError('Error reading file')
-      },
-      false,
-    )
-    reader.addEventListener(
-      'abort',
-      () => {
-        setIsLoading(false)
       },
       false,
     )
@@ -51,10 +23,11 @@ const JSONUpload: FC<DropAreaType> = ({ onChange, value }) => {
     if (acceptedFiles[0]) {
       reader.readAsText(acceptedFiles[0])
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  const { getInputProps, getRootProps, isDragActive } = useDropzone({
+  const { getInputProps, getRootProps } = useDropzone({
     accept: {
-      'application/json': [],
+      'text/xml': [],
     },
     multiple: false,
     onDrop,
@@ -85,7 +58,7 @@ const JSONUpload: FC<DropAreaType> = ({ onChange, value }) => {
             <div className='mb-2'>
               <strong>Select a file or drag and drop here</strong>
             </div>
-            <div className='text-muted fs-small mb-4'>JSON File</div>
+            <div className='text-muted fs-small mb-4'>XML File</div>
             <Button>Select File</Button>
           </div>
         </div>
@@ -94,4 +67,4 @@ const JSONUpload: FC<DropAreaType> = ({ onChange, value }) => {
   )
 }
 
-export default JSONUpload
+export default XMLUpload
