@@ -152,7 +152,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def set_password(self, raw_password):
         super().set_password(raw_password)
-        self.password_reset_requests.all().delete()
+        if self.id:
+            self.password_reset_requests.all().delete()
 
     @property
     def auth_type(self):
