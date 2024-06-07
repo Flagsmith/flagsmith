@@ -27,6 +27,7 @@ export type CustomMetadataField = MetadataField & {
 type CustomMetadata = (Metadata & CustomMetadataField) | null
 
 type AddMetadataToEntityType = {
+  isCloningEnvironment?: boolean
   organisationId: string
   projectId: string | number
   entityContentType: number
@@ -42,6 +43,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
   entityContentType,
   entityId,
   envName,
+  isCloningEnvironment,
   onChange,
   organisationId,
   projectId,
@@ -249,7 +251,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
             </FormGroup>
           }
         />
-        {entity === 'environment' && (
+        {entity === 'environment' && !isCloningEnvironment && (
           <div className='text-right'>
             <Button
               theme='primary'
