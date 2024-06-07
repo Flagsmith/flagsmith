@@ -44,22 +44,22 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: make install-packages
 
-      - name: Checkout rbac package
-        uses: actions/checkout@v4
-        with:
-          repository: flagsmith/flagsmith-rbac
-          token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-          ref: ${{ env.FLAGSMITH_RBAC_REVISION }}
-          path: ./flagsmith-rbac
+      # - name: Checkout rbac package
+      #   uses: actions/checkout@v4
+      #   with:
+      #     repository: flagsmith/flagsmith-rbac
+      #     token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+      #     ref: ${{ env.FLAGSMITH_RBAC_REVISION }}
+      #     path: ./flagsmith-rbac
 
-      - name: Integrate RBAC module
-        run: mv $GITHUB_WORKSPACE/flagsmith-rbac/rbac .
-        shell: bash
+      # - name: Integrate RBAC module
+      #   run: mv $GITHUB_WORKSPACE/flagsmith-rbac/rbac .
+      #   shell: bash
 
-      - name: integrate rbac tests
-        run: ln -s $GITHUB_WORKSPACE/flagsmith-rbac/tests tests/rbac_tests
-        shell: bash
-        working-directory: api
+      # - name: integrate rbac tests
+      #   run: ln -s $GITHUB_WORKSPACE/flagsmith-rbac/tests tests/rbac_tests
+      #   shell: bash
+      #   working-directory: api
 
       - name: Run Tests
         env:
