@@ -14,8 +14,8 @@ import { Req } from 'common/types/requests'
 import ErrorMessage from 'components/ErrorMessage'
 import { getStore } from 'common/store'
 import XMLUpload from 'components/XMLUpload'
-import Tabs from 'components/base/forms/Tabs'
-import TabItem from 'components/base/forms/TabItem'
+import { IonIcon } from '@ionic/react'
+import { cloudDownloadOutline } from 'ionicons/icons'
 
 type CreateSAML = {
   organisationId: number
@@ -43,21 +43,31 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
     return regularExpresion.test(name)
   }
 
-  const download = () => {
+  const convetToXmlFile = (fileName: string, data: string) => {
+    const blob = new Blob([data], { type: 'application/xml' })
+    const link = document.createElement('a')
+    link.download = `${fileName}.xml`
+    link.href = window.URL.createObjectURL(blob)
+    link.click()
+  }
+
+  const downloadServiceProvider = () => {
     setIsLoading(true)
-    getSamlConfigurationMetadata(getStore(), { name: name })
+    const name = data?.name || samlName
+    getSamlConfigurationMetadata(getStore(), { name: name! })
       .then((res) => {
         if (res.error) {
-          const blob = new Blob([res.error.data], { type: 'application/xml' })
-          const link = document.createElement('a')
-          link.download = `${data?.name}.xml`
-          link.href = window.URL.createObjectURL(blob)
-          link.click()
+          convetToXmlFile(name!, res.error.data)
         }
       })
       .finally(() => {
         setIsLoading(false)
       })
+  }
+
+  const downloadIDPMetadata = () => {
+    const name = data?.name || samlName
+    convetToXmlFile(`IDP metadata ${name!}`, data?.idp_metadata_xml || '')
   }
 
   return (
@@ -114,58 +124,60 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
         }
       />
       <FormGroup className='mb-1'>
-        <InputGroup
-          component={
-            <Tabs uncontrolled theme='pill m-0'>
-              <TabItem tabLabel='Paste XML'>
-                <div className='mt-2 p-0'>
-                  <ValueEditor
-                    data-test='featureValue'
-                    name='featureValue'
-                    className='full-width'
-                    value={metadataXml || data?.idp_metadata_xml}
-                    onChange={setMetadataXml}
-                    placeholder="e.g. '<xml>time<xml>' "
-                    onlyOneLang
-                    language='xml'
-                  />
-                </div>
-              </TabItem>
-              <TabItem tabLabel={'Upload file'}>
-                <div className='mt-2 p-0'>
-                  {uploadMetadataXml && (
-                    <ValueEditor
-                      data-test='featureValue'
-                      name='featureValue'
-                      className='full-width'
-                      value={uploadMetadataXml}
-                      placeholder="e.g. '<xml>time<xml>' "
-                      onlyOneLang
-                      language='xml'
+        <div className='mt-2 p-0'>
+          <Row>
+            <label className='form-label'>IDP Metadata XML</label>
+            {data?.idp_metadata_xml && (
+              <div className='ml-2' onClick={downloadIDPMetadata}>
+                <Tooltip
+                  title={
+                    <IonIcon
+                      className='text-primary'
+                      icon={cloudDownloadOutline}
+                      style={{ fontSize: '18px' }}
                     />
-                  )}
-                  <XMLUpload
-                    value={file}
-                    onChange={(file, data) => {
-                      setFile(file)
-                      setUploadMetadataXml(data as string)
-                      setMetadataXml(data as string)
-                    }}
-                  />
-                </div>
-              </TabItem>
-            </Tabs>
-          }
-          title={'IDP Metadata XML'}
-        />
+                  }
+                  place='right'
+                >
+                  Download IDP Metadata
+                </Tooltip>
+              </div>
+            )}
+          </Row>
+          <ValueEditor
+            data-test='featureValue'
+            name='featureValue'
+            className='full-width'
+            value={metadataXml || data?.idp_metadata_xml}
+            onChange={setMetadataXml}
+            placeholder="e.g. '<xml>time<xml>' "
+            onlyOneLang
+            language='xml'
+          />
+          <Row className='or-divider my-1'>
+            <Flex className='or-divider__line' />
+            Or
+            <Flex className='or-divider__line' />
+          </Row>
+          <XMLUpload
+            value={file}
+            onChange={(file, data) => {
+              setFile(file)
+              setUploadMetadataXml(data as string)
+              setMetadataXml(data as string)
+            }}
+          />
+        </div>
       </FormGroup>
 
       <div className='text-right py-2'>
-        {data?.idp_metadata_xml && (
-          <Button disabled={isLoading} onClick={download} className='mr-2'>
-            {isLoading ? 'Downloading' : 'Download Service Provider Metadata'}
-          </Button>
-        )}
+        <Button
+          disabled={isLoading}
+          onClick={downloadServiceProvider}
+          className='mr-2'
+        >
+          {isLoading ? 'Downloading' : 'Download Service Provider Metadata'}
+        </Button>
         <Button
           type='submit'
           disabled={!name || !frontendUrl}

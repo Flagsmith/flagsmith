@@ -56,10 +56,9 @@ const XMLUpload: FC<DropAreaType> = ({ onChange, value }) => {
           <div className='droparea text-center'>
             <DropIcon />
             <div className='mb-2'>
-              <strong>Select a file or drag and drop here</strong>
+              <strong>Drag a file or click to select a file</strong>
             </div>
             <div className='text-muted fs-small mb-4'>XML File</div>
-            <Button>Select File</Button>
           </div>
         </div>
       )}
