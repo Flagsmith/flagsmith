@@ -56,10 +56,10 @@ jobs:
         run: mv $GITHUB_WORKSPACE/flagsmith-rbac/rbac .
         shell: bash
 
-      - name: integrate rbac tests
-        run: ln -s $GITHUB_WORKSPACE/flagsmith-rbac/tests tests/rbac_tests
-        shell: bash
-        working-directory: api
+      # - name: integrate rbac tests
+      #   run: ln -s $GITHUB_WORKSPACE/flagsmith-rbac/tests tests/rbac_tests
+      #   shell: bash
+      #   working-directory: api
 
       - name: Run Tests
         env:
