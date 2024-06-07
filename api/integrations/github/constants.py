@@ -22,6 +22,11 @@ FEATURE_ENVIRONMENT_URL = "%s/project/%s/environment/%s/features?feature=%s&tab=
 GITHUB_API_CALLS_TIMEOUT = 10
 
 GITHUB_TAG_COLOR = "#838992"
+GITHUB_FLAGSMITH_LABEL = "Flagsmith Flag"
+GITHUB_FLAGSMITH_LABEL_DESCRIPTION = (
+    "This GitHub Issue/PR is linked to a Flagsmith Feature Flag"
+)
+GITHUB_FLAGSMITH_LABEL_COLOR = "6633FF"
 
 
 class GitHubEventType(Enum):

@@ -10,6 +10,9 @@ from integrations.github.constants import (
     GITHUB_API_CALLS_TIMEOUT,
     GITHUB_API_URL,
     GITHUB_API_VERSION,
+    GITHUB_FLAGSMITH_LABEL,
+    GITHUB_FLAGSMITH_LABEL_COLOR,
+    GITHUB_FLAGSMITH_LABEL_DESCRIPTION,
 )
 from integrations.github.dataclasses import (
     IssueQueryParams,
@@ -256,10 +259,24 @@ def create_flagsmith_flag_label(
     url = f"{GITHUB_API_URL}repos/{owner}/{repo}/labels"
     headers = build_request_headers(installation_id)
     payload = {
-        "name": "Flagsmith Flag",
-        "color": "6633FF",
-        "description": "This GitHub Issue/PR is linked to a Flagsmith Feature Flag",
+        "name": GITHUB_FLAGSMITH_LABEL,
+        "color": GITHUB_FLAGSMITH_LABEL_COLOR,
+        "description": GITHUB_FLAGSMITH_LABEL_DESCRIPTION,
     }
+    response = requests.post(
+        url, json=payload, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+# Label linked GitHub Issue or PR with the "Flagsmith Flag" label
+def label_github_issue_pr(
+    installation_id: str, owner: str, repo: str, issue: str
+) -> dict[str, Any]:
+    url = f"{GITHUB_API_URL}repos/{owner}/{repo}/issues/{issue}/labels"
+    headers = build_request_headers(installation_id)
+    payload = [GITHUB_FLAGSMITH_LABEL]
     response = requests.post(
         url, json=payload, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT
     )

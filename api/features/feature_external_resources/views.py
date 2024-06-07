@@ -16,7 +16,10 @@ from features.permissions import (
     FeatureExternalResourceGitHubActionPermissions,
     FeatureExternalResourcePermissions,
 )
-from integrations.github.client import get_github_issue_pr_title_and_state
+from integrations.github.client import (
+    get_github_issue_pr_title_and_state,
+    label_github_issue_pr,
+)
 from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
 from organisations.models import Organisation
@@ -62,15 +65,13 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
             ),
         )
 
-        if not (
-            (
-                Organisation.objects.prefetch_related("github_config")
-                .get(id=feature.project.organisation_id)
-                .github_config.first()
-            )
-            or not hasattr(feature.project, "github_project")
-        ):
+        github_configuration = (
+            Organisation.objects.prefetch_related("github_config")
+            .get(id=feature.project.organisation_id)
+            .github_config.first()
+        )
 
+        if not github_configuration or not hasattr(feature.project, "github_project"):
             return Response(
                 data={
                     "detail": "This Project doesn't have a valid GitHub integration configuration"
@@ -80,8 +81,30 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            return super().create(request, *args, **kwargs)
+            # Get repository owner and name, and issue/PR number from the external resource URL
+            url = request.data.get("url")
+            if request.data.get("type") == "GITHUB_PR":
+                pattern = r"github.com/([^/]+)/([^/]+)/pull/(\d+)$"
+            else:
+                pattern = r"github.com/([^/]+)/([^/]+)/issues/(\d+)$"
+            match = re.search(pattern, url)
+            if match:
+                owner, repo, issue = match.groups()
 
+                label_github_issue_pr(
+                    installation_id=github_configuration.installation_id,
+                    owner=owner,
+                    repo=repo,
+                    issue=issue,
+                )
+                response = super().create(request, *args, **kwargs)
+                return response
+            else:
+                return Response(
+                    data={"detail": "Invalid GitHub Issue/PR URL"},
+                    content_type="application/json",
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         except IntegrityError as e:
             if re.search(r"Key \(feature_id, url\)", str(e)) and re.search(
                 r"already exists.$", str(e)
