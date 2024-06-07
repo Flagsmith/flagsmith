@@ -21,7 +21,7 @@ You can either set up the integration from the Flagsmith side or from the Github
 
 ### From Flagsmith
 
-1. In the Integrations Option in the side bar, find the GitHub integration and click on 'Add Integration'.
+1. In the Integrations Option in the top navigation bar, find the GitHub integration and click on 'Add Integration'.
 2. A window will open asking you to select the organization you belong to.
 3. Select the repositories and save.
 4. Back in the Flagsmith application, click on the 'Manage Integration' button.
@@ -40,13 +40,11 @@ You can either set up the integration from the Flagsmith side or from the Github
 ## Adding a Flagsmith Flag to a GitHub issue or pull request
 
 1. Create or select a Feature Flag.
-2. Go to settings section.
-3. Select your integration.
-4. Select GitHub Issue or GitHub PR.
-5. Select your external resource and save.
+2. Go to the 'Link' Tab inside the Feature modal.
+3. Select your GitHub integration.
+4. Select GitHub Issue or GitHub PR and Save.
 
 ## Removing the GitHub Integration
 
 1. From Flagsmith, click 'Integrations', find the GitHub integration and click on 'Manage Integration'.
 2. Click on 'Delete Integration' button, and confirm.
-3. In your GitHub organisation, uninstall the Flagsmith GitHub App.
