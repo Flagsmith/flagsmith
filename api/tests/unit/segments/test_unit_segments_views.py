@@ -2,6 +2,7 @@ import json
 import random
 
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
@@ -363,10 +364,10 @@ def test_get_segment_by_uuid(client, project, segment):
 
 
 @pytest.mark.parametrize(
-    "client, num_queries",
+    "client,is_admin_master_api_key_client, num_queries",
     [
-        (lazy_fixture("admin_master_api_key_client"), 12),
-        (lazy_fixture("admin_client"), 14),
+        (lazy_fixture("admin_master_api_key_client"), True, 12),
+        (lazy_fixture("admin_client"), False, 14),
     ],
 )
 def test_list_segments(
@@ -375,9 +376,15 @@ def test_list_segments(
     client: APIClient,
     num_queries: int,
     required_a_segment_metadata_field: MetadataModelField,
+    is_admin_master_api_key_client: bool,
 ):
     # Given
     num_segments = 5
+    if (
+        settings.IS_RBAC_INSTALLED and not is_admin_master_api_key_client
+    ):  # pragma: no cover
+        num_queries += 1
+
     segments = []
     for i in range(num_segments):
         segment = Segment.objects.create(project=project, name=f"segment {i}")

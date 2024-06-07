@@ -7,6 +7,7 @@ import pytest
 import pytz
 from app_analytics.dataclasses import FeatureEvaluationData
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
+from django.conf import settings
 from django.forms import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
@@ -2588,6 +2589,10 @@ def test_list_features_n_plus_1(
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])
+    num_queries = 16
+
+    if settings.IS_RBAC_INSTALLED:  # pragma: no cover
+        num_queries += 1
 
     base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
     url = f"{base_url}?environment={environment.id}"
@@ -2600,7 +2605,7 @@ def test_list_features_n_plus_1(
         v1_feature_state.clone(env=environment, version=i, live_from=timezone.now())
 
     # When
-    with django_assert_num_queries(16):
+    with django_assert_num_queries(num_queries):
         response = staff_client.get(url)
 
     # Then
@@ -2740,6 +2745,10 @@ def test_list_features_with_feature_state(
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])
+    num_queries = 16
+
+    if settings.IS_RBAC_INSTALLED:  # pragma: no cover
+        num_queries += 1
 
     feature2 = Feature.objects.create(
         name="another_feature", project=project, initial_value="initial_value"
@@ -2827,7 +2836,7 @@ def test_list_features_with_feature_state(
     url = f"{base_url}?environment={environment.id}"
 
     # When
-    with django_assert_num_queries(16):
+    with django_assert_num_queries(num_queries):
         response = staff_client.get(url)
 
     # Then
@@ -3092,6 +3101,10 @@ def test_feature_list_last_modified_values(
     environment_v2_versioning_2 = Environment.objects.create(
         name="environment 2", project=project, use_v2_feature_versioning=True
     )
+    num_queries = 18
+
+    if settings.IS_RBAC_INSTALLED:  # pragma: no cover
+        num_queries += 1
 
     url = "{base_url}?environment={environment_id}".format(
         base_url=reverse("api-v1:projects:project-features-list", args=[project.id]),
@@ -3121,7 +3134,7 @@ def test_feature_list_last_modified_values(
         Feature.objects.create(name=f"feature_{i}", project=project)
 
     # When
-    with django_assert_num_queries(18):  # TODO: reduce this number of queries!
+    with django_assert_num_queries(num_queries):  # TODO: reduce this number of queries!
         response = staff_client.get(url)
 
     # Then
