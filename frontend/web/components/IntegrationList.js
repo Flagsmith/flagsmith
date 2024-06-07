@@ -231,9 +231,13 @@ class IntegrationList extends Component {
   }
 
   fetchGithubIntegration = () => {
-    getGithubIntegration(getStore(), {
-      organisation_id: AccountStore.getOrganisation().id,
-    }).then((res) => {
+    getGithubIntegration(
+      getStore(),
+      {
+        organisation_id: AccountStore.getOrganisation().id,
+      },
+      { forceRefetch: true },
+    ).then((res) => {
       this.setState({
         githubId: res?.data?.results[0]?.id,
         hasIntegrationWithGithub: !!res?.data?.results?.length,
@@ -286,7 +290,6 @@ class IntegrationList extends Component {
         }
       }),
     ).then((res) => {
-      console.log(res)
       this.setState({
         activeIntegrations: _.map(res, (item) =>
           !!item && item.length ? item : [],
@@ -371,7 +374,7 @@ class IntegrationList extends Component {
         }
         githubMeta={{ githubId: githubId, installationId: installationId }}
         projectId={this.props.projectId}
-        onComplete={githubId ? this.fetch : this.fetchGithubIntegration}
+        onComplete={githubId ? this.fetchGithubIntegration : this.fetch}
       />,
       'side-modal',
     )

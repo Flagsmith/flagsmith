@@ -245,7 +245,7 @@ const SegmentOverrideInner = class Override extends React.Component {
         <div className='text-left mt-2'>
           {showValue ? (
             <>
-              <label>Value (optional)</label>
+              <label>Value</label>
               <ValueEditor
                 readOnly={readOnly}
                 disabled={readOnly}
@@ -502,9 +502,11 @@ class TheComponent extends Component {
     openConfirm({
       body: (
         <div>
-          {
-            'Are you sure you want to delete this segment override? This will be applied when you click Update Segment Overrides and cannot be undone.'
-          }
+          {`Are you sure you want to delete this segment override?${
+            this.props.is4Eyes
+              ? ''
+              : ' This will be applied when you click Update Segment Overrides and cannot be undone.'
+          }`}
         </div>
       ),
       destructive: true,

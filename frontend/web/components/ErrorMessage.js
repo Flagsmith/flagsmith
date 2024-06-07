@@ -18,6 +18,7 @@ export default class ErrorMessage extends PureComponent {
         item.hasOwnProperty('non_field_errors'),
       )?.non_field_errors[0] ||
       this.props.error?.data ||
+      this.props.error?.message ||
       this.props.error
     return this.props.error ? (
       <div

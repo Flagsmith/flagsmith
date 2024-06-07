@@ -41,6 +41,7 @@ import { getGithubIntegration } from 'common/services/useGithubIntegration'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
 import MetadataTitle from 'components/metadata/MetadataTitle'
+import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -75,7 +76,6 @@ const CreateFlag = class extends Component {
       description,
       enabledIndentity: false,
       enabledSegment: false,
-      environmentFlag: this.props.environmentFlag,
       externalResource: {},
       externalResources: [],
       featureContentType: {},
@@ -179,7 +179,7 @@ const CreateFlag = class extends Component {
     if (
       !Project.disableAnalytics &&
       this.props.projectFlag &&
-      this.state.environmentFlag
+      this.props.environmentFlag
     ) {
       this.getFeatureUsage()
     }
@@ -262,10 +262,10 @@ const CreateFlag = class extends Component {
   }
 
   getFeatureUsage = () => {
-    if (this.state.environmentFlag) {
+    if (this.props.environmentFlag) {
       AppActions.getFeatureUsage(
         this.props.projectId,
-        this.state.environmentFlag.environment,
+        this.props.environmentFlag.environment,
         this.props.projectFlag.id,
         this.state.period,
       )
@@ -273,6 +273,7 @@ const CreateFlag = class extends Component {
   }
   save = (func, isSaving) => {
     const {
+      environmentFlag,
       environmentId,
       identity,
       identityFlag,
@@ -282,7 +283,6 @@ const CreateFlag = class extends Component {
     const {
       default_enabled,
       description,
-      environmentFlag,
       initial_value,
       is_archived,
       is_server_key_only,
@@ -293,9 +293,9 @@ const CreateFlag = class extends Component {
       ..._projectFlag,
     }
     const hasMultivariate =
-      this.state.environmentFlag &&
-      this.state.environmentFlag.multivariate_feature_state_values &&
-      this.state.environmentFlag.multivariate_feature_state_values.length
+      this.props.environmentFlag &&
+      this.props.environmentFlag.multivariate_feature_state_values &&
+      this.props.environmentFlag.multivariate_feature_state_values.length
     if (identity) {
       !isSaving &&
         name &&
@@ -306,7 +306,7 @@ const CreateFlag = class extends Component {
           identityFlag: Object.assign({}, identityFlag || {}, {
             enabled: default_enabled,
             feature_state_value: hasMultivariate
-              ? this.state.environmentFlag.feature_state_value
+              ? this.props.environmentFlag.feature_state_value
               : initial_value,
             multivariate_options: this.state.identityVariations,
           }),
@@ -565,7 +565,7 @@ const CreateFlag = class extends Component {
         {!identity && this.state.tags && (
           <FormGroup className='mb-5 setting'>
             <InputGroup
-              title={identity ? 'Tags' : 'Tags (optional)'}
+              title={identity ? 'Tags' : 'Tags'}
               tooltip={Constants.strings.TAGS_DESCRIPTION}
               component={
                 <AddEditTags
@@ -652,7 +652,7 @@ const CreateFlag = class extends Component {
             }
             ds
             type='text'
-            title={identity ? 'Description' : 'Description (optional)'}
+            title={identity ? 'Description' : 'Description'}
             placeholder="e.g. 'This determines what size the header is' "
           />
         </FormGroup>
@@ -787,7 +787,7 @@ const CreateFlag = class extends Component {
                 this.setState({ description: Utils.safeParseEventValue(e) })
               }
               type='text'
-              title={identity ? 'Description' : 'Description (optional)'}
+              title={identity ? 'Description' : 'Description'}
               placeholder='No description'
             />
           </FormGroup>
@@ -815,7 +815,7 @@ const CreateFlag = class extends Component {
               onChangeIdentityVariations={(identityVariations) => {
                 this.setState({ identityVariations, valueChanged: true })
               }}
-              environmentFlag={this.state.environmentFlag}
+              environmentFlag={this.props.environmentFlag}
               projectFlag={projectFlag}
               onValueChange={(e) => {
                 const initial_value = Utils.getTypedValue(
@@ -858,7 +858,7 @@ const CreateFlag = class extends Component {
                 editFeatureValue,
               },
             ) => {
-              const saveFeatureValue = (schedule) => {
+              const saveFeatureValue = saveFeatureWithValidation((schedule) => {
                 this.setState({ valueChanged: false })
                 if ((is4Eyes || schedule) && !identity) {
                   openModal2(
@@ -929,29 +929,17 @@ const CreateFlag = class extends Component {
                       }}
                     />,
                   )
-                } else if (
-                  document.getElementById('language-validation-error')
-                ) {
-                  openConfirm({
-                    body: 'Your remote config value does not pass validation for the language you have selected. Are you sure you wish to save?',
-                    noText: 'Cancel',
-                    onYes: () => {
-                      this.save(editFeatureValue, isSaving)
-                    },
-                    title: 'Validation error',
-                    yesText: 'Save',
-                  })
                 } else {
                   this.save(editFeatureValue, isSaving)
                 }
-              }
+              })
 
               const saveSettings = () => {
                 this.setState({ settingsChanged: false })
                 this.save(editFeatureSettings, isSaving)
               }
 
-              const saveFeatureSegments = () => {
+              const saveFeatureSegments = saveFeatureWithValidation(() => {
                 this.setState({ segmentsChanged: false })
 
                 if (is4Eyes && isVersioned && !identity) {
@@ -1024,11 +1012,11 @@ const CreateFlag = class extends Component {
                 } else {
                   this.save(editFeatureSegments, isSaving)
                 }
-              }
+              })
 
-              const onCreateFeature = () => {
+              const onCreateFeature = saveFeatureWithValidation(() => {
                 this.save(createFlag, isSaving)
-              }
+              })
 
               const featureLimitAlert =
                 Utils.calculateRemainingLimitsPercentage(
@@ -1107,7 +1095,7 @@ const CreateFlag = class extends Component {
                                         />
                                         <JSONReference
                                           title={'Feature state'}
-                                          json={this.state.environmentFlag}
+                                          json={this.props.environmentFlag}
                                         />
                                       </>
                                     )}
@@ -1323,6 +1311,7 @@ const CreateFlag = class extends Component {
                                                 return (
                                                   <SegmentOverrides
                                                     readOnly={isReadOnly}
+                                                    is4Eyes={is4Eyes}
                                                     showEditSegment
                                                     showCreateSegment={
                                                       this.state
@@ -1980,7 +1969,10 @@ const FeatureProvider = (WrappedComponent) => {
               changeRequest ? 'Change Request' : 'Feature'
             }`,
           )
+          const envFlags = FeatureListStore.getEnvironmentFlags()
+
           if (createdFlag) {
+            //update the create flag modal to edit view
             const projectFlag = FeatureListStore.getProjectFlags()?.find?.(
               (flag) => flag.name === createdFlag,
             )
@@ -1988,7 +1980,6 @@ const FeatureProvider = (WrappedComponent) => {
               {},
               `${document.location.pathname}?feature=${projectFlag.id}`,
             )
-            const envFlags = FeatureListStore.getEnvironmentFlags()
             const newEnvironmentFlag = envFlags?.[projectFlag.id] || {}
             setModalTitle(`Edit Feature ${projectFlag.name}`)
             this.setState({
@@ -1997,6 +1988,20 @@ const FeatureProvider = (WrappedComponent) => {
                 ...(newEnvironmentFlag || {}),
               },
               projectFlag,
+            })
+          } else if (this.props.projectFlag) {
+            //update the environmentFlag and projectFlag to the new values
+            const newEnvironmentFlag =
+              envFlags?.[this.props.projectFlag.id] || {}
+            const newProjectFlag = FeatureListStore.getProjectFlags()?.find?.(
+              (flag) => flag.id === this.props.projectFlag.id,
+            )
+            this.setState({
+              environmentFlag: {
+                ...this.state.environmentFlag,
+                ...(newEnvironmentFlag || {}),
+              },
+              projectFlag: newProjectFlag,
             })
           }
           if (changeRequest) {

@@ -190,6 +190,11 @@ const CreateEnvironmentPage = class extends Component {
                                     />
                                   )}
                               </CondensedRow>
+                              {error && (
+                                <CondensedRow>
+                                  <ErrorMessage error={error} />
+                                </CondensedRow>
+                              )}
                             </div>
                             {Utils.getFlagsmithHasFeature('enable_metadata') &&
                               envContentType?.id && (
@@ -228,7 +233,6 @@ const CreateEnvironmentPage = class extends Component {
                                 </CondensedRow>
                               )}
 
-                            {error && <ErrorMessage error={error} />}
                             <CondensedRow>
                               <div className='text-right'>
                                 {permission ? (

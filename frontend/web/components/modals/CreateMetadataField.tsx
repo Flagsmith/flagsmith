@@ -267,7 +267,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           setDescription(Utils.safeParseEventValue(event))
         }}
         type='text'
-        title={'Description (optional)'}
+        title={'Description'}
         placeholder={"e.g. 'The JIRA Ticket Number associated with this flag'"}
       />
       <InputGroup

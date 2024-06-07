@@ -27,8 +27,9 @@ import flagsmith from 'flagsmith'
 import API from 'project/api'
 import segmentOverrides from 'components/SegmentOverrides'
 import { Req } from 'common/types/requests'
+import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 let createdFirstFeature = false
-const PAGE_SIZE = 200
+const PAGE_SIZE = 50
 function recursivePageGet(url, parentRes) {
   return data.get(url).then((res) => {
     let response
@@ -357,7 +358,11 @@ const controller = {
               `${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`,
               Object.assign({}, environmentFlag, {
                 enabled: flag.default_enabled,
-                feature_state_value: flag.initial_value,
+                feature_state_value: Utils.getTypedValue(
+                  flag.initial_value,
+                  undefined,
+                  true,
+                ),
               }),
             )
           })
@@ -472,13 +477,14 @@ const controller = {
         ]
       }
 
-      const version = await createAndSetFeatureVersion(getStore(), {
+      const { data: version } = await createAndSetFeatureVersion(getStore(), {
         environmentId: env.id,
         featureId: projectFlag.id,
         featureStates,
+        liveFrom: changeRequest.live_from,
         skipPublish: true,
       })
-      environment_feature_versions = version.data.map((v) => v.version_sha)
+      environment_feature_versions = [version.version_sha]
     }
     const prom = data
       .get(
@@ -607,10 +613,24 @@ const controller = {
           environmentId: res,
           featureId: projectFlag.id,
           featureStates,
-        }).then((res) => {
-          if (res.error) {
-            throw res.error
+        }).then((version) => {
+          if (version.error) {
+            throw version.error
           }
+          // Fetch and update the latest environment feature state
+          return getVersionFeatureState(getStore(), {
+            environmentId: ProjectStore.getEnvironmentIdFromKey(environmentId),
+            featureId: projectFlag.id,
+            sha: version.data.version_sha,
+          }).then((res) => {
+            const environmentFeatureState = res.data.find(
+              (v) => !v.feature_segment,
+            )
+            store.model.keyedEnvironmentFeatures[projectFlag.id] = {
+              ...store.model.keyedEnvironmentFeatures[projectFlag.id],
+              ...environmentFeatureState,
+            }
+          })
         })
       })
     } else if (environmentFlag) {
@@ -650,11 +670,11 @@ const controller = {
               environmentId: res,
               featureId: projectFlag.id,
               featureStates: [data],
-            }).then((res) => {
-              if (res.error) {
-                throw res.error
+            }).then((version) => {
+              if (version.error) {
+                throw version.error
               }
-              const featureState = res.data[0].data
+              const featureState = version.data.feature_states[0].data
               store.model.keyedEnvironmentFeatures[projectFlag.id] = {
                 ...featureState,
                 feature_state_value: Utils.featureStateToValue(

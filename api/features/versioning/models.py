@@ -1,6 +1,7 @@
 import datetime
 import typing
 import uuid
+from copy import deepcopy
 
 from core.models import (
     SoftDeleteExportableModel,
@@ -11,6 +12,7 @@ from django.db import models
 from django.db.models import Index
 from django.utils import timezone
 
+from api_keys.models import MasterAPIKey
 from features.versioning.exceptions import FeatureVersioningError
 from features.versioning.managers import EnvironmentFeatureVersionManager
 from features.versioning.signals import environment_feature_version_published
@@ -46,8 +48,23 @@ class EnvironmentFeatureVersion(
         null=True,
         blank=True,
     )
+    created_by_api_key = models.ForeignKey(
+        "api_keys.MasterAPIKey",
+        related_name="created_environment_feature_versions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
     published_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        related_name="published_environment_feature_versions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    published_by_api_key = models.ForeignKey(
+        "api_keys.MasterAPIKey",
         related_name="published_environment_feature_versions",
         on_delete=models.SET_NULL,
         null=True,
@@ -106,7 +123,7 @@ class EnvironmentFeatureVersion(
             self.__class__.objects.filter(
                 environment=self.environment,
                 feature=self.feature,
-                live_from__lt=timezone.now(),
+                live_from__lt=self.live_from or timezone.now(),
                 published_at__isnull=False,
             )
             .order_by("-live_from")
@@ -117,14 +134,32 @@ class EnvironmentFeatureVersion(
     def publish(
         self,
         published_by: typing.Union["FFAdminUser", None] = None,
+        published_by_api_key: MasterAPIKey | None = None,
         live_from: datetime.datetime | None = None,
         persist: bool = True,
     ) -> None:
+        assert not (
+            published_by and published_by_api_key
+        ), "Version must be published by either a user or a MasterAPIKey"
+
         now = timezone.now()
 
         self.live_from = live_from or (self.live_from or now)
         self.published_at = now
         self.published_by = published_by
+        self.published_by_api_key = published_by_api_key
+
         if persist:
             self.save()
             environment_feature_version_published.send(self.__class__, instance=self)
+
+    def clone_to_environment(
+        self, environment: "Environment"
+    ) -> "EnvironmentFeatureVersion":
+        _clone = deepcopy(self)
+
+        _clone.uuid = None
+        _clone.environment = environment
+
+        _clone.save()
+        return _clone

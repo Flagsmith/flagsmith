@@ -311,10 +311,12 @@ export type Req = {
       | 'toRemove'
       | 'multivariate_feature_state_values'
     >[]
+    liveFrom?: string
   }
   createFeatureVersion: {
     environmentId: number
     featureId: number
+    liveFrom?: string
   }
   publishFeatureVersion: {
     sha: string
@@ -341,8 +343,6 @@ export type Req = {
   }>
   getUsers: { organisationId: number }
   getFeatureVersion: {
-    environmentId: string
-    featureId: string
     uuid: string
   }
   enableFeatureVersioning: {
@@ -412,16 +412,12 @@ export type Req = {
       repository_owner: string
     }
   }
-  getGithubIssues: {
+  getGithubResources: PagedRequest<{
     organisation_id: string
     repo_name: string
     repo_owner: string
-  }
-  getGithubPulls: {
-    organisation_id: string
-    repo_name: string
-    repo_owner: string
-  }
+    github_resource: string
+  }>
   getGithubRepos: { installation_id: string; organisation_id: string }
   getServersideEnvironmentKeys: { environmentId: string }
   deleteServersideEnvironmentKeys: { environmentId: string; id: string }
