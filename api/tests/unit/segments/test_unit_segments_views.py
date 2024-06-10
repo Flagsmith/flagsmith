@@ -3,8 +3,10 @@ import random
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from flag_engine.segments.constants import EQUAL
+from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
@@ -15,7 +17,7 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature
-from metadata.models import MetadataModelField
+from metadata.models import Metadata, MetadataModelField
 from projects.models import Project
 from projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
@@ -367,16 +369,28 @@ def test_get_segment_by_uuid(client, project, segment):
 @pytest.mark.parametrize(
     "client, num_queries",
     [
-        (lazy_fixture("admin_master_api_key_client"), 16),
-        (lazy_fixture("admin_client"), 15),
+        (lazy_fixture("admin_master_api_key_client"), 12),
+        (lazy_fixture("admin_client"), 11),
     ],
 )
-def test_list_segments(django_assert_num_queries, project, client, num_queries):
+def test_list_segments(
+    django_assert_num_queries: DjangoAssertNumQueries,
+    project: Project,
+    client: APIClient,
+    num_queries: int,
+    required_a_segment_metadata_field: MetadataModelField,
+):
     # Given
     num_segments = 5
     segments = []
     for i in range(num_segments):
         segment = Segment.objects.create(project=project, name=f"segment {i}")
+        Metadata.objects.create(
+            object_id=segment.id,
+            content_type=ContentType.objects.get_for_model(segment),
+            model_field=required_a_segment_metadata_field,
+            field_value="test",
+        )
         all_rule = SegmentRule.objects.create(
             segment=segment, type=SegmentRule.ALL_RULE
         )

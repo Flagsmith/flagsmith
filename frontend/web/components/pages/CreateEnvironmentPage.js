@@ -170,9 +170,13 @@ const CreateEnvironmentPage = class extends Component {
                                     />
                                   )}
                               </CondensedRow>
+                              {error && (
+                                <CondensedRow>
+                                  <ErrorMessage error={error} />
+                                </CondensedRow>
+                              )}
                             </div>
 
-                            {error && <ErrorMessage error={error} />}
                             <CondensedRow>
                               <div className='text-right'>
                                 {permission ? (

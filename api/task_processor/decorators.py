@@ -99,9 +99,10 @@ class TaskHandler(typing.Generic[P]):
     def run_in_thread(
         self,
         *,
-        args: tuple[typing.Any] = (),
+        args: tuple[typing.Any, ...] = (),
         kwargs: dict[str, typing.Any] | None = None,
     ) -> None:
+        kwargs = kwargs or {}
         _validate_inputs(*args, **kwargs)
         thread = Thread(target=self.unwrapped, args=args, kwargs=kwargs, daemon=True)
 

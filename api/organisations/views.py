@@ -325,8 +325,8 @@ class OrganisationAPIUsageNotificationView(ListAPIView):
         billing_starts_at = subscription_cache.current_billing_term_starts_at
         now = timezone.now()
 
-        # Handle case where billing dates are not set by
-        # defaulting to something as a reasonable default.
+        # Handle case where billing dates are not set (most often in a free plan)
+        # by defaulting to something as a reasonable default.
         billing_starts_at = billing_starts_at or now - timedelta(days=30)
 
         month_delta = relativedelta(now, billing_starts_at).months

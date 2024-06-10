@@ -1,5 +1,81 @@
 # Changelog
 
+## [2.119.1](https://github.com/Flagsmith/flagsmith/compare/v2.119.0...v2.119.1) (2024-06-06)
+
+
+### Bug Fixes
+
+* use python3.11 as base image ([#4121](https://github.com/Flagsmith/flagsmith/issues/4121)) ([418e026](https://github.com/Flagsmith/flagsmith/commit/418e026796863ba361c8750c8da6f2abd5e1b283))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* run influxdb feature evaluation in thread ([#4125](https://github.com/Flagsmith/flagsmith/issues/4125)) ([b135b38](https://github.com/Flagsmith/flagsmith/commit/b135b38703be391ec68a841a8d9d11635742cf89))
+* task processor settings tweaks ([#4126](https://github.com/Flagsmith/flagsmith/issues/4126)) ([ea96db9](https://github.com/Flagsmith/flagsmith/commit/ea96db9f70e90476fb2e829715571d063ca615b8))
+
+## [2.119.0](https://github.com/Flagsmith/flagsmith/compare/v2.118.1...v2.119.0) (2024-06-06)
+
+
+### Features
+
+* Improve API key UX ([#4102](https://github.com/Flagsmith/flagsmith/issues/4102)) ([1600ed7](https://github.com/Flagsmith/flagsmith/commit/1600ed7633827051b92bf94e83b01bc493473da9))
+
+
+### Bug Fixes
+
+* Add autocomplete for login ([#4103](https://github.com/Flagsmith/flagsmith/issues/4103)) ([5ffdd51](https://github.com/Flagsmith/flagsmith/commit/5ffdd51d61b2840b927eca0c6ca26dd8c06e7382))
+* announcement width ([#4122](https://github.com/Flagsmith/flagsmith/issues/4122)) ([f6ac4e5](https://github.com/Flagsmith/flagsmith/commit/f6ac4e52b9c3c0457aef3e096d82dbef5c64a53c))
+* delete environment refreshing list ([#4107](https://github.com/Flagsmith/flagsmith/issues/4107)) ([902b3cd](https://github.com/Flagsmith/flagsmith/commit/902b3cdbd26fc6c4c7dd53e9d0094773365a5b8f))
+* environment click sizes ([#4104](https://github.com/Flagsmith/flagsmith/issues/4104)) ([9d1622f](https://github.com/Flagsmith/flagsmith/commit/9d1622f7e6445b1b88ad5a369ea6174746458910))
+* Environment creating state ([#4060](https://github.com/Flagsmith/flagsmith/issues/4060)) ([652af8f](https://github.com/Flagsmith/flagsmith/commit/652af8f9f2f87e65eb06187c17a7979075f0a57a))
+* Flag update scheduling ([#4115](https://github.com/Flagsmith/flagsmith/issues/4115)) ([e90d248](https://github.com/Flagsmith/flagsmith/commit/e90d248de1026200c6134f32b7b104e62ddd69ae))
+* Limit feature paging to 50 ([#4120](https://github.com/Flagsmith/flagsmith/issues/4120)) ([c14c3a8](https://github.com/Flagsmith/flagsmith/commit/c14c3a86995e0b44ee080322dda41633d101e56e))
+* Protect inputs from autofill ([#3980](https://github.com/Flagsmith/flagsmith/issues/3980)) ([dad3041](https://github.com/Flagsmith/flagsmith/commit/dad304101e073fd7767b8623751f52e4d806a330))
+* Reload integrations on create ([#4106](https://github.com/Flagsmith/flagsmith/issues/4106)) ([5155018](https://github.com/Flagsmith/flagsmith/commit/5155018a38d717f167c9e9794067a4013da66c3a))
+* save empty segment overrides request ([#4112](https://github.com/Flagsmith/flagsmith/issues/4112)) ([6dbcb4a](https://github.com/Flagsmith/flagsmith/commit/6dbcb4aadace2dccb5c32adfbe3f145ac894982d))
+* show audit logs url ([#4123](https://github.com/Flagsmith/flagsmith/issues/4123)) ([bc256ee](https://github.com/Flagsmith/flagsmith/commit/bc256ee6f1788d00a31ad9ee566a895e4484c9f9))
+* **versioning:** scheduled changes incorrectly considered live ([#4119](https://github.com/Flagsmith/flagsmith/issues/4119)) ([6856e64](https://github.com/Flagsmith/flagsmith/commit/6856e64ae1028336801fc1c6acd3fd5da8bff8db))
+* **versioning:** send live from when creating versions for change requests ([#4116](https://github.com/Flagsmith/flagsmith/issues/4116)) ([765b12a](https://github.com/Flagsmith/flagsmith/commit/765b12a8c049ec65956707c0ab5792376d5dee47))
+* **versioning:** use version live from ([#4118](https://github.com/Flagsmith/flagsmith/issues/4118)) ([0345aff](https://github.com/Flagsmith/flagsmith/commit/0345aff4146596f29ff294941fe0ee27ad6db735))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* reduce Sentry sampling rate ([#4098](https://github.com/Flagsmith/flagsmith/issues/4098)) ([da3f186](https://github.com/Flagsmith/flagsmith/commit/da3f1863a5c0c90b99bf30a8991b9617a037e8ea))
+
+## [2.118.1](https://github.com/Flagsmith/flagsmith/compare/v2.118.0...v2.118.1) (2024-06-03)
+
+
+### Bug Fixes
+
+* **audit:** audit and history UI tweaks ([#4092](https://github.com/Flagsmith/flagsmith/issues/4092)) ([e65dc34](https://github.com/Flagsmith/flagsmith/commit/e65dc345850c4c656b55bea9337571994a706ba7))
+* facilitate FE display of environment version from audit log ([#4077](https://github.com/Flagsmith/flagsmith/issues/4077)) ([be9b7ce](https://github.com/Flagsmith/flagsmith/commit/be9b7ce1f11a343b1c1d2566d851f11e909cebbc))
+* select propagation ([#4085](https://github.com/Flagsmith/flagsmith/issues/4085)) ([0e16068](https://github.com/Flagsmith/flagsmith/commit/0e160684e37d5640d4d2be94036765d2d7d5af5d))
+* **sentry-FLAGSMITH-API-4FY:** resolve metadata segment n+1 ([#4030](https://github.com/Flagsmith/flagsmith/issues/4030)) ([a22f86c](https://github.com/Flagsmith/flagsmith/commit/a22f86c6a5555960be8227fecf6afb7f8b2d2011))
+* **versioning:** ensure get_previous_version returns previous version, not latest version ([#4083](https://github.com/Flagsmith/flagsmith/issues/4083)) ([22d371b](https://github.com/Flagsmith/flagsmith/commit/22d371bd60650abce4c692e1b3032bbd5c1b8e7f))
+* **versioning:** ensure that audit log record is created when committing versions via CR ([#4091](https://github.com/Flagsmith/flagsmith/issues/4091)) ([8246dca](https://github.com/Flagsmith/flagsmith/commit/8246dca4f468e851ee5bf0544ca0e4ba0409712e))
+* **versioning:** prevent FeatureSegment from writing audit log on delete when v2 versioning enabled ([#4088](https://github.com/Flagsmith/flagsmith/issues/4088)) ([60c0748](https://github.com/Flagsmith/flagsmith/commit/60c07480b298e8a32321e631fe0ec178cdc5f017))
+
+## [2.118.0](https://github.com/Flagsmith/flagsmith/compare/v2.117.1...v2.118.0) (2024-05-31)
+
+
+### Features
+
+* add audit log when environment feature version is published ([#4064](https://github.com/Flagsmith/flagsmith/issues/4064)) ([88cfc76](https://github.com/Flagsmith/flagsmith/commit/88cfc762f201967f5a4a2b362eecae444b1a2b19))
+
+
+### Bug Fixes
+
+* don't create audit log for FeatureStateValue when not published ([#4065](https://github.com/Flagsmith/flagsmith/issues/4065)) ([8b73b5c](https://github.com/Flagsmith/flagsmith/commit/8b73b5c5bb4336d5fe5947e3fe3004736c942ae2))
+* versioned remove segment override ([#4063](https://github.com/Flagsmith/flagsmith/issues/4063)) ([e4cd25a](https://github.com/Flagsmith/flagsmith/commit/e4cd25ae9d79c66447377bb087061193a6264eff))
+
+## [2.117.1](https://github.com/Flagsmith/flagsmith/compare/v2.117.0...v2.117.1) (2024-05-30)
+
+
+### Bug Fixes
+
+* Validate feature values before saving ([#4043](https://github.com/Flagsmith/flagsmith/issues/4043)) ([fef9f8f](https://github.com/Flagsmith/flagsmith/commit/fef9f8fdcc3c7153bdc6752cfbfa5df2cffe3b62))
+
 ## [2.117.0](https://github.com/Flagsmith/flagsmith/compare/v2.116.3...v2.117.0) (2024-05-30)
 
 

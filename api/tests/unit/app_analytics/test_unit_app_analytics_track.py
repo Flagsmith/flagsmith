@@ -2,9 +2,11 @@ from unittest import mock
 
 import pytest
 from app_analytics.track import (
+    track_feature_evaluation_influxdb,
     track_request_googleanalytics,
     track_request_influxdb,
 )
+from pytest_mock import MockerFixture
 
 
 @pytest.mark.parametrize(
@@ -129,3 +131,36 @@ def test_track_request_does_not_send_data_to_influxdb_for_not_tracked_uris(
 
     # Then
     MockInfluxDBWrapper.assert_not_called()
+
+
+def test_track_feature_evaluation_influxdb(mocker: MockerFixture) -> None:
+    # Given
+    mock_influxdb_wrapper = mock.MagicMock()
+    mocker.patch(
+        "app_analytics.track.InfluxDBWrapper", return_value=mock_influxdb_wrapper
+    )
+
+    data = {
+        "foo": 12,
+        "bar": 19,
+        "baz": 44,
+    }
+    environment_id = 1
+
+    # When
+    track_feature_evaluation_influxdb(
+        environment_id=environment_id, feature_evaluations=data
+    )
+
+    # Then
+    calls = mock_influxdb_wrapper.add_data_point.call_args_list
+    assert len(calls) == 3
+    for i, feature_name in enumerate(data):
+        assert calls[i].args[0] == "request_count"
+        assert calls[i].args[1] == data[feature_name]
+        assert calls[i].kwargs["tags"] == {
+            "environment_id": environment_id,
+            "feature_id": feature_name,
+        }
+
+    mock_influxdb_wrapper.write.assert_called_once_with()

@@ -311,10 +311,12 @@ export type Req = {
       | 'toRemove'
       | 'multivariate_feature_state_values'
     >[]
+    liveFrom?: string
   }
   createFeatureVersion: {
     environmentId: number
     featureId: number
+    liveFrom?: string
   }
   publishFeatureVersion: {
     sha: string
@@ -341,8 +343,6 @@ export type Req = {
   }>
   getUsers: { organisationId: number }
   getFeatureVersion: {
-    environmentId: string
-    featureId: string
     uuid: string
   }
   enableFeatureVersioning: {

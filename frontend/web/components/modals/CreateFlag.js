@@ -76,7 +76,6 @@ const CreateFlag = class extends Component {
       description,
       enabledIndentity: false,
       enabledSegment: false,
-      environmentFlag: this.props.environmentFlag,
       externalResource: {},
       externalResources: [],
       featureContentType: {},
@@ -179,7 +178,7 @@ const CreateFlag = class extends Component {
     if (
       !Project.disableAnalytics &&
       this.props.projectFlag &&
-      this.state.environmentFlag
+      this.props.environmentFlag
     ) {
       this.getFeatureUsage()
     }
@@ -262,10 +261,10 @@ const CreateFlag = class extends Component {
   }
 
   getFeatureUsage = () => {
-    if (this.state.environmentFlag) {
+    if (this.props.environmentFlag) {
       AppActions.getFeatureUsage(
         this.props.projectId,
-        this.state.environmentFlag.environment,
+        this.props.environmentFlag.environment,
         this.props.projectFlag.id,
         this.state.period,
       )
@@ -273,6 +272,7 @@ const CreateFlag = class extends Component {
   }
   save = (func, isSaving) => {
     const {
+      environmentFlag,
       environmentId,
       identity,
       identityFlag,
@@ -282,7 +282,6 @@ const CreateFlag = class extends Component {
     const {
       default_enabled,
       description,
-      environmentFlag,
       initial_value,
       is_archived,
       is_server_key_only,
@@ -293,9 +292,9 @@ const CreateFlag = class extends Component {
       ..._projectFlag,
     }
     const hasMultivariate =
-      this.state.environmentFlag &&
-      this.state.environmentFlag.multivariate_feature_state_values &&
-      this.state.environmentFlag.multivariate_feature_state_values.length
+      this.props.environmentFlag &&
+      this.props.environmentFlag.multivariate_feature_state_values &&
+      this.props.environmentFlag.multivariate_feature_state_values.length
     if (identity) {
       !isSaving &&
         name &&
@@ -306,7 +305,7 @@ const CreateFlag = class extends Component {
           identityFlag: Object.assign({}, identityFlag || {}, {
             enabled: default_enabled,
             feature_state_value: hasMultivariate
-              ? this.state.environmentFlag.feature_state_value
+              ? this.props.environmentFlag.feature_state_value
               : initial_value,
             multivariate_options: this.state.identityVariations,
           }),
@@ -447,8 +446,7 @@ const CreateFlag = class extends Component {
   }
 
   addItem = () => {
-    const { environmentId, identity, projectFlag } = this.props
-    const { environmentFlag } = this.state
+    const { environmentFlag, environmentId, identity, projectFlag } = this.props
     this.setState({ isLoading: true })
     const selectedIdentity = this.state.selectedIdentity.value
     const identities = identity ? identity.identifier : []
@@ -565,7 +563,7 @@ const CreateFlag = class extends Component {
         {!identity && this.state.tags && (
           <FormGroup className='mb-5 setting'>
             <InputGroup
-              title={identity ? 'Tags' : 'Tags (optional)'}
+              title={identity ? 'Tags' : 'Tags'}
               tooltip={Constants.strings.TAGS_DESCRIPTION}
               component={
                 <AddEditTags
@@ -650,7 +648,7 @@ const CreateFlag = class extends Component {
             }
             ds
             type='text'
-            title={identity ? 'Description' : 'Description (optional)'}
+            title={identity ? 'Description' : 'Description'}
             placeholder="e.g. 'This determines what size the header is' "
           />
         </FormGroup>
@@ -785,7 +783,7 @@ const CreateFlag = class extends Component {
                 this.setState({ description: Utils.safeParseEventValue(e) })
               }
               type='text'
-              title={identity ? 'Description' : 'Description (optional)'}
+              title={identity ? 'Description' : 'Description'}
               placeholder='No description'
             />
           </FormGroup>
@@ -813,7 +811,7 @@ const CreateFlag = class extends Component {
               onChangeIdentityVariations={(identityVariations) => {
                 this.setState({ identityVariations, valueChanged: true })
               }}
-              environmentFlag={this.state.environmentFlag}
+              environmentFlag={this.props.environmentFlag}
               projectFlag={projectFlag}
               onValueChange={(e) => {
                 const initial_value = Utils.getTypedValue(
@@ -1093,7 +1091,7 @@ const CreateFlag = class extends Component {
                                         />
                                         <JSONReference
                                           title={'Feature state'}
-                                          json={this.state.environmentFlag}
+                                          json={this.props.environmentFlag}
                                         />
                                       </>
                                     )}
@@ -1309,6 +1307,7 @@ const CreateFlag = class extends Component {
                                                 return (
                                                   <SegmentOverrides
                                                     readOnly={isReadOnly}
+                                                    is4Eyes={is4Eyes}
                                                     showEditSegment
                                                     showCreateSegment={
                                                       this.state
@@ -1966,7 +1965,10 @@ const FeatureProvider = (WrappedComponent) => {
               changeRequest ? 'Change Request' : 'Feature'
             }`,
           )
+          const envFlags = FeatureListStore.getEnvironmentFlags()
+
           if (createdFlag) {
+            //update the create flag modal to edit view
             const projectFlag = FeatureListStore.getProjectFlags()?.find?.(
               (flag) => flag.name === createdFlag,
             )
@@ -1974,7 +1976,6 @@ const FeatureProvider = (WrappedComponent) => {
               {},
               `${document.location.pathname}?feature=${projectFlag.id}`,
             )
-            const envFlags = FeatureListStore.getEnvironmentFlags()
             const newEnvironmentFlag = envFlags?.[projectFlag.id] || {}
             setModalTitle(`Edit Feature ${projectFlag.name}`)
             this.setState({
@@ -1983,6 +1984,20 @@ const FeatureProvider = (WrappedComponent) => {
                 ...(newEnvironmentFlag || {}),
               },
               projectFlag,
+            })
+          } else if (this.props.projectFlag) {
+            //update the environmentFlag and projectFlag to the new values
+            const newEnvironmentFlag =
+              envFlags?.[this.props.projectFlag.id] || {}
+            const newProjectFlag = FeatureListStore.getProjectFlags()?.find?.(
+              (flag) => flag.id === this.props.projectFlag.id,
+            )
+            this.setState({
+              environmentFlag: {
+                ...this.state.environmentFlag,
+                ...(newEnvironmentFlag || {}),
+              },
+              projectFlag: newProjectFlag,
             })
           }
           if (changeRequest) {

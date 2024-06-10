@@ -24,6 +24,7 @@ const ProjectProvider = class extends React.Component {
       this.setState(
         Object.assign(
           {
+            error: ProjectStore.error,
             isLoading: ProjectStore.isLoading,
             isSaving: ProjectStore.isSaving,
           },
