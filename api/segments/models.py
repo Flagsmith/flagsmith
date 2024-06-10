@@ -230,7 +230,7 @@ class SegmentRule(SoftDeleteExportableModel):
 
         for sub_rule in self.rules.all():
             if sub_rule.rules.exists():
-                logger.error("Expected two layers of rules, not more")
+                assert False, "Expected two layers of rules, not more"
 
             new_sub_rule = SegmentRule.objects.create(
                 rule=new_rule,
