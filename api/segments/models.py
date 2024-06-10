@@ -3,6 +3,7 @@ import typing
 from copy import deepcopy
 
 from core.models import (
+    SoftDeleteExportableManager,
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
@@ -10,6 +11,7 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.db import models
+from django_lifecycle import AFTER_CREATE, LifecycleModelMixin, hook
 from flag_engine.segments import constants
 
 from audit.constants import (
@@ -22,10 +24,13 @@ from features.models import Feature
 from metadata.models import Metadata
 from projects.models import Project
 
+from .managers import SegmentManager
+
 logger = logging.getLogger(__name__)
 
 
 class Segment(
+    LifecycleModelMixin,
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
 ):
@@ -45,7 +50,21 @@ class Segment(
         Feature, on_delete=models.CASCADE, related_name="segments", null=True
     )
 
+    version = models.IntegerField(default=1)
+    version_of = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        related_name="versioned_segments",
+        null=True,
+        blank=True,
+    )
     metadata = GenericRelation(Metadata)
+
+    # Only serves segments that are the canonical version.
+    objects = SegmentManager()
+
+    # Includes versioned segments.
+    all_objects = SoftDeleteExportableManager()
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
@@ -83,6 +102,41 @@ class Segment(
                     return True
 
         return False
+
+    @hook(AFTER_CREATE, when="version_of", is_now=None)
+    def set_version_of_to_self_if_none(self):
+        """
+        This allows the segment model to reference all versions of
+        itself including itself.
+        """
+        self.version_of = self
+        self.save()
+
+    def deep_clone(self) -> "Segment":
+        new_segment = Segment.objects.create(
+            name=self.name,
+            description=self.description,
+            project=self.project,
+            feature=self.feature,
+            version=self.version,
+            version_of=self,
+        )
+
+        self.version += 1
+        self.save()
+
+        new_rules = []
+        for rule in self.rules.all():
+            new_rule = rule.deep_clone(new_segment)
+            new_rules.append(new_rule)
+
+        new_segment.refresh_from_db()
+
+        assert (
+            len(self.rules.all()) == len(new_rules) == len(new_segment.rules.all())
+        ), "Mismatch during rules creation"
+
+        return new_segment
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return SEGMENT_CREATED_MESSAGE % self.name
@@ -139,6 +193,51 @@ class SegmentRule(SoftDeleteExportableModel):
         while not rule.segment:
             rule = rule.rule
         return rule.segment
+
+    def deep_clone(self, versioned_segment: Segment) -> "SegmentRule":
+        if self.rule:
+            assert False, "Unexpected rule, expecting segment set not rule"
+        new_rule = SegmentRule.objects.create(
+            segment=versioned_segment,
+            type=self.type,
+        )
+
+        new_conditions = []
+        for condition in self.conditions.all():
+            new_condition = Condition(
+                operator=condition.operator,
+                property=condition.property,
+                value=condition.value,
+                description=condition.description,
+                created_with_segment=condition.created_with_segment,
+                rule=new_rule,
+            )
+            new_conditions.append(new_condition)
+        Condition.objects.bulk_create(new_conditions)
+
+        for sub_rule in self.rules.all():
+            if sub_rule.rules.exists():
+                logger.error("Expected two layers of rules, not more")
+
+            new_sub_rule = SegmentRule.objects.create(
+                rule=new_rule,
+                type=sub_rule.type,
+            )
+
+            new_conditions = []
+            for condition in sub_rule.conditions.all():
+                new_condition = Condition(
+                    operator=condition.operator,
+                    property=condition.property,
+                    value=condition.value,
+                    description=condition.description,
+                    created_with_segment=condition.created_with_segment,
+                    rule=new_sub_rule,
+                )
+                new_conditions.append(new_condition)
+            Condition.objects.bulk_create(new_conditions)
+
+        return new_rule
 
 
 class Condition(
