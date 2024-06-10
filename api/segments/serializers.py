@@ -81,11 +81,15 @@ class SegmentSerializer(serializers.ModelSerializer, SerializerWithMetadata):
         self._update_or_create_metadata(metadata_data, segment=segment)
         return segment
 
-    def update(self, instance, validated_data):
+    def update(self, instance: Segment, validated_data: dict[str, typing.Any]) -> None:
         # use the initial data since we need the ids included to determine which to update & which to create
         rules_data = self.initial_data.pop("rules", [])
         metadata_data = validated_data.pop("metadata", [])
         self.validate_segment_rules_conditions_limit(rules_data)
+
+        # Create a version of the segment now that we're updating.
+        instance.deep_clone()
+
         self._update_segment_rules(rules_data, segment=instance)
         self._update_or_create_metadata(metadata_data, segment=instance)
         # remove rules from validated data to prevent error trying to create segment with nested rules
