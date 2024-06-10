@@ -158,6 +158,7 @@ def test_create_segments_reaching_max_limit(project, client, settings):
 def test_audit_log_created_when_segment_updated(project, segment, client):
     # Given
     segment = Segment.objects.create(name="Test segment", project=project)
+
     url = reverse(
         "api-v1:projects:project-segments-detail",
         args=[project.id, segment.id],
@@ -173,11 +174,14 @@ def test_audit_log_created_when_segment_updated(project, segment, client):
 
     # Then
     assert res.status_code == status.HTTP_200_OK
+
+    # Three audit log records created, two for the primary
+    # segment and one for the newly versioned segment.
     assert (
         AuditLog.objects.filter(
             related_object_type=RelatedObjectType.SEGMENT.name
         ).count()
-        == 1
+        == 3
     )
 
 
@@ -248,11 +252,14 @@ def test_audit_log_created_when_segment_created(project, client):
 
     # Then
     assert res.status_code == status.HTTP_201_CREATED
+
+    # Two AuditLog instances are created because of the AFTER_CREATE hook
+    # of the Segment model which sets the version_of field to self.
     assert (
         AuditLog.objects.filter(
             related_object_type=RelatedObjectType.SEGMENT.name
         ).count()
-        == 1
+        == 2
     )
 
 
@@ -468,11 +475,12 @@ def test_create_segments_with_description_condition(project, client):
     assert segment_condition_description_value == "test-description"
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_update_segment_add_new_condition(project, client, segment, segment_rule):
+def test_update_segment_add_new_condition(
+    project: Project,
+    admin_client_new: APIClient,
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
     # Given
     url = reverse(
         "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
@@ -521,7 +529,9 @@ def test_update_segment_add_new_condition(project, client, segment, segment_rule
     }
 
     # When
-    response = client.put(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert response.status_code == status.HTTP_200_OK
