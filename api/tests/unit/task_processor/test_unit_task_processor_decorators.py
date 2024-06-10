@@ -3,7 +3,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
-from django_capture_on_commit_callbacks import capture_on_commit_callbacks
+from pytest_django import DjangoCaptureOnCommitCallbacks
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
@@ -33,6 +33,7 @@ def mock_thread_class(
 def test_register_task_handler_run_in_thread__transaction_commit__true__default(
     get_task_processor_caplog: GetTaskProcessorCaplog,
     mock_thread_class: MagicMock,
+    django_capture_on_commit_callbacks: DjangoCaptureOnCommitCallbacks,
 ) -> None:
     # Given
     caplog = get_task_processor_caplog()
@@ -47,9 +48,7 @@ def test_register_task_handler_run_in_thread__transaction_commit__true__default(
     kwargs = {"bar": "baz"}
 
     # When
-    # TODO Switch to pytest-django's django_capture_on_commit_callbacks
-    # fixture when migrating to Django 4
-    with capture_on_commit_callbacks(execute=True):
+    with django_capture_on_commit_callbacks(execute=True):
         my_function.run_in_thread(args=args, kwargs=kwargs)
 
     # Then

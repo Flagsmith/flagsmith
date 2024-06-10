@@ -38,13 +38,13 @@ test = ["coverage", "mypy", "pexpect", "ruff", "wheel"]
 
 [[package]]
 name = "asgiref"
-version = "3.5.2"
+version = "3.8.1"
 description = "ASGI specs, helper code, and adapters"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "asgiref-3.5.2-py3-none-any.whl", hash = "sha256:1d2880b792ae8757289136f1db2b7b99100ce959b2aa57fd69dab783d05afac4"},
-    {file = "asgiref-3.5.2.tar.gz", hash = "sha256:4a29362a6acebe09bf1d6640db38c1dc3d9217c68e6f9f6204d72667fc19a424"},
+    {file = "asgiref-3.8.1-py3-none-any.whl", hash = "sha256:3e1e3ecc849832fe52ccf2cb6686b7a55f82bb1d6aee72a58826471390335e47"},
+    {file = "asgiref-3.8.1.tar.gz", hash = "sha256:c343bd80a0bec947a9860adb4c432ffa7db769836c64238fc34bdc3fec84d590"},
 ]
 
 [package.extras]
@@ -759,19 +759,19 @@ files = [
 
 [[package]]
 name = "django"
-version = "3.2.25"
-description = "A high-level Python Web framework that encourages rapid development and clean, pragmatic design."
+version = "4.2.13"
+description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.8"
 files = [
-    {file = "Django-3.2.25-py3-none-any.whl", hash = "sha256:a52ea7fcf280b16f7b739cec38fa6d3f8953a5456986944c3ca97e79882b4e38"},
-    {file = "Django-3.2.25.tar.gz", hash = "sha256:7ca38a78654aee72378594d63e51636c04b8e28574f5505dff630895b5472777"},
+    {file = "Django-4.2.13-py3-none-any.whl", hash = "sha256:a17fcba2aad3fc7d46fdb23215095dbbd64e6174bf4589171e732b18b07e426a"},
+    {file = "Django-4.2.13.tar.gz", hash = "sha256:837e3cf1f6c31347a1396a3f6b65688f2b4bb4a11c580dcb628b5afe527b68a5"},
 ]
 
 [package.dependencies]
-asgiref = ">=3.3.2,<4"
-pytz = "*"
-sqlparse = ">=0.2.2"
+asgiref = ">=3.6.0,<4"
+sqlparse = ">=0.3.1"
+tzdata = {version = "*", markers = "sys_platform == \"win32\""}
 
 [package.extras]
 argon2 = ["argon2-cffi (>=19.1.0)"]
@@ -779,17 +779,17 @@ bcrypt = ["bcrypt"]
 
 [[package]]
 name = "django-admin-sso"
-version = "3.1.0"
+version = "5.2.0"
 description = "Django SSO solution"
 optional = false
-python-versions = "*"
+python-versions = ">=3.8"
 files = [
-    {file = "django-admin-sso-3.1.0.tar.gz", hash = "sha256:7357a20b7bb77655b1d7efc82985206c9724d37563697b41d4b737588566ee81"},
-    {file = "django_admin_sso-3.1.0-py2.py3-none-any.whl", hash = "sha256:4af7d5ac639e24b293e47ba6309a9fc92bdc94c826d4ac035e782c6ab2a7f693"},
+    {file = "django-admin-sso-5.2.0.tar.gz", hash = "sha256:878f1776825c8454c440781153b9a7a755192f97f6a09d66961cd2d1066fd04c"},
+    {file = "django_admin_sso-5.2.0-py2.py3-none-any.whl", hash = "sha256:5cab4c9a3746a60c36f384ec7aa9cd4bc6eb73f44de6bcdba7293346d31fcfc8"},
 ]
 
 [package.dependencies]
-Django = ">=1.11"
+Django = ">=3.2"
 oauth2client = ">=1.2"
 
 [[package]]
@@ -807,20 +807,6 @@ files = [
 django = ">=3.2"
 django-ipware = ">=3"
 setuptools = "*"
-
-[[package]]
-name = "django-capture-on-commit-callbacks"
-version = "1.11.0"
-description = "Capture and make assertions on transaction.on_commit() callbacks."
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "django-capture-on-commit-callbacks-1.11.0.tar.gz", hash = "sha256:ee5a79dc74937a0318c192b54d904ce0826ced47748d160bf15324fc77e98c41"},
-    {file = "django_capture_on_commit_callbacks-1.11.0-py3-none-any.whl", hash = "sha256:a75300586390411a7e4641128c4251fdc5db25b6e76543329d82fb2c2bc71163"},
-]
-
-[package.dependencies]
-Django = ">=3.2"
 
 [[package]]
 name = "django-cors-headers"
@@ -892,17 +878,21 @@ Django = ">=2.2"
 
 [[package]]
 name = "django-health-check"
-version = "3.14.3"
+version = "3.18.2"
 description = "Run checks on services like databases, queue servers, celery processes, etc."
 optional = false
-python-versions = "*"
+python-versions = ">=3.8"
 files = [
-    {file = "django-health-check-3.14.3.tar.gz", hash = "sha256:6e84e7a3e5f1fcb82b7692833fa205bc274415850d333d5a50259de06080dfa8"},
-    {file = "django_health_check-3.14.3-py2.py3-none-any.whl", hash = "sha256:d5f5cbf3c34bc5ea297696e183c5084b0c15d3bd13d9eb997c25258241589c75"},
+    {file = "django_health_check-3.18.2-py2.py3-none-any.whl", hash = "sha256:16f9c9186236cbc2858fa0d0ecc3566ba2ad2b72683e5678d0d58eb9e8bbba1a"},
+    {file = "django_health_check-3.18.2.tar.gz", hash = "sha256:21235120f8d756fa75ba430d0b0dbb04620fbd7bfac92ed6a0b911915ba38918"},
 ]
 
 [package.dependencies]
-django = ">=1.11"
+django = ">=2.2"
+
+[package.extras]
+docs = ["sphinx"]
+test = ["boto3", "celery", "django-storages", "pytest", "pytest-cov", "pytest-django", "redis"]
 
 [[package]]
 name = "django-ipware"
@@ -957,19 +947,19 @@ files = [
 
 [[package]]
 name = "django-python3-ldap"
-version = "0.15.5"
+version = "0.15.6"
 description = "Django LDAP user authentication backend for Python 3."
 optional = false
 python-versions = "*"
 files = [
-    {file = "django-python3-ldap-0.15.5.tar.gz", hash = "sha256:44cac6638184cdefb2ed2934a6ca20c9c2512d36bc3ddb801d26fcf119cfbc0f"},
-    {file = "django_python3_ldap-0.15.5-py3-none-any.whl", hash = "sha256:7f1142a3ca4500fe433d2c5d5aadb9fafa21774a36d37acb4a939c7cff130a0c"},
+    {file = "django-python3-ldap-0.15.6.tar.gz", hash = "sha256:780ac3a2d20de17857990dd0a1bdb8f899855a59725c23638fd07f349439f588"},
+    {file = "django_python3_ldap-0.15.6-py3-none-any.whl", hash = "sha256:04f59c25d76265e8f112d0563928877c5b08fa3422c4afea34912f02473e7fcb"},
 ]
 
 [package.dependencies]
 django = ">=1.11"
 ldap3 = ">=2.5,<3"
-pyasn1 = ">=0.4.6,<0.5"
+pyasn1 = ">=0.4.6,<0.6"
 
 [[package]]
 name = "django-redis"
@@ -1311,13 +1301,13 @@ tests = ["dj-database-url", "dj-email-url", "django-cache-url", "pytest"]
 
 [[package]]
 name = "execnet"
-version = "2.0.2"
+version = "2.1.1"
 description = "execnet: rapid multi-Python deployment"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "execnet-2.0.2-py3-none-any.whl", hash = "sha256:88256416ae766bc9e8895c76a87928c0012183da3cc4fc18016e6f050e025f41"},
-    {file = "execnet-2.0.2.tar.gz", hash = "sha256:cc59bc4423742fd71ad227122eb0dd44db51efb3dc4095b45ac9a08c770096af"},
+    {file = "execnet-2.1.1-py3-none-any.whl", hash = "sha256:26dee51f1b80cebd6d0ca8e74dd8745419761d3bef34163928cbebbdc4749fdc"},
+    {file = "execnet-2.1.1.tar.gz", hash = "sha256:5189b52c6121c24feae288166ab41b32549c7e2348652736540b9e6e7d4e72e3"},
 ]
 
 [package.extras]
@@ -1390,19 +1380,18 @@ name = "flagsmith-ldap"
 version = "0.1.0"
 description = "LDAP plugin for Flagsmith application."
 optional = false
-python-versions = "^3.10"
+python-versions = ">=3.10,<4.0"
 files = []
 develop = false
 
 [package.dependencies]
-django = "~3.2.23"
-django-python3-ldap = "^0.15.4"
+django-python3-ldap = "^0.15.6"
 
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-ldap"
-reference = "v0.1.0"
-resolved_reference = "e9edc5668711523eabdb833203d677bf64f98531"
+reference = "v0.1.1"
+resolved_reference = "d7cf0dd9e306a529498839c3f7a1d7c652093228"
 
 [[package]]
 name = "flagsmith-task-processor"
@@ -1416,7 +1405,7 @@ develop = false
 [package.dependencies]
 backoff = "~2.2.1"
 dj-database-url = "~0.5.0"
-django-health-check = "~3.14.3"
+django-health-check = "~3.18.2"
 drf-yasg = "~1.21.6"
 environs = "~9.2.0"
 psycopg2-binary = "~2.9.5"
@@ -1425,8 +1414,8 @@ simplejson = "~3.19.1"
 [package.source]
 type = "git"
 url = "https://git@github.com/Flagsmith/flagsmith-task-processor"
-reference = "0.1.0.alpha4"
-resolved_reference = "a3af43a0d8cb8a3cf099585007fa4ea55ac17217"
+reference = "0.1.0.alpha5"
+resolved_reference = "d3018fa2ebf288625e20474d74b84643c2592391"
 
 [[package]]
 name = "flake8"
@@ -3355,13 +3344,13 @@ testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtuale
 
 [[package]]
 name = "pytest-django"
-version = "4.7.0"
+version = "4.8.0"
 description = "A Django plugin for pytest."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pytest-django-4.7.0.tar.gz", hash = "sha256:92d6fd46b1d79b54fb6b060bbb39428073396cec717d5f2e122a990d4b6aa5e8"},
-    {file = "pytest_django-4.7.0-py3-none-any.whl", hash = "sha256:4e1c79d5261ade2dd58d91208017cd8f62cb4710b56e012ecd361d15d5d662a2"},
+    {file = "pytest-django-4.8.0.tar.gz", hash = "sha256:5d054fe011c56f3b10f978f41a8efb2e5adfc7e680ef36fb571ada1f24779d90"},
+    {file = "pytest_django-4.8.0-py3-none-any.whl", hash = "sha256:ca1ddd1e0e4c227cf9e3e40a6afc6d106b3e70868fd2ac5798a22501271cd0c7"},
 ]
 
 [package.dependencies]
@@ -3419,18 +3408,18 @@ dev = ["pre-commit", "pytest-asyncio", "tox"]
 
 [[package]]
 name = "pytest-xdist"
-version = "3.2.1"
+version = "3.6.1"
 description = "pytest xdist plugin for distributed testing, most importantly across multiple CPUs"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "pytest-xdist-3.2.1.tar.gz", hash = "sha256:1849bd98d8b242b948e472db7478e090bf3361912a8fed87992ed94085f54727"},
-    {file = "pytest_xdist-3.2.1-py3-none-any.whl", hash = "sha256:37290d161638a20b672401deef1cba812d110ac27e35d213f091d15b8beb40c9"},
+    {file = "pytest_xdist-3.6.1-py3-none-any.whl", hash = "sha256:9ed4adfb68a016610848639bb7e02c9352d5d9f03d04809919e2dafc3be4cca7"},
+    {file = "pytest_xdist-3.6.1.tar.gz", hash = "sha256:ead156a4db231eec769737f57668ef58a2084a34b2e55c4a8fa20d861107300d"},
 ]
 
 [package.dependencies]
-execnet = ">=1.1"
-pytest = ">=6.2.0"
+execnet = ">=2.1"
+pytest = ">=7.0.0"
 
 [package.extras]
 psutil = ["psutil (>=3.0)"]
@@ -4224,6 +4213,17 @@ files = [
 ]
 
 [[package]]
+name = "tzdata"
+version = "2024.1"
+description = "Provider of IANA time zone data"
+optional = false
+python-versions = ">=2"
+files = [
+    {file = "tzdata-2024.1-py2.py3-none-any.whl", hash = "sha256:9068bc196136463f5245e51efda838afa15aaeca9903f49050dfa2679db4d252"},
+    {file = "tzdata-2024.1.tar.gz", hash = "sha256:2674120f8d891909751c38abcdfd386ac0a5a1127954fbc332af6b5ceae07efd"},
+]
+
+[[package]]
 name = "uritemplate"
 version = "3.0.1"
 description = "URI templates"
@@ -4353,13 +4353,13 @@ files = []
 develop = false
 
 [package.dependencies]
-flagsmith-task-processor = {git = "https://git@github.com/Flagsmith/flagsmith-task-processor", rev = "0.1.0.alpha4"}
+flagsmith-task-processor = {git = "https://git@github.com/Flagsmith/flagsmith-task-processor", rev = "0.1.0.alpha5"}
 
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
-reference = "v2.3.4"
-resolved_reference = "8024294ca27064f34e0f2c8b5219598f1e34eb0c"
+reference = "v2.3.5"
+resolved_reference = "fe5bdddec02939c2c2e1526228d7e2524e97fd33"
 
 [[package]]
 name = "wrapt"
@@ -4478,4 +4478,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "5e1a10d25dfba65b6f275786cd40158cf377d0eab2af331c5f4d8f9dc88d233b"
+content-hash = "97bd4d730d261dccbdbc2e622fba65a96e4bef6c03bfc62359052657aab428ad"

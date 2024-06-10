@@ -160,7 +160,9 @@ class RecurringTask(AbstractBaseTask):
     @property
     def should_execute(self) -> bool:
         now = timezone.now()
-        last_task_run = self.task_runs.order_by("-started_at").first()
+        last_task_run = None
+        if self.pk:
+            last_task_run = self.task_runs.order_by("-started_at").first()
 
         if not last_task_run:
             # If we have never run this task, then we should execute it only if
