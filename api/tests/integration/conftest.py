@@ -103,7 +103,6 @@ def dynamo_enabled_environment(
     admin_client: APIClient,
     dynamo_enabled_project: int,
     environment_api_key: str,
-    app_settings_for_dynamodb: None,
 ) -> int:
     environment_data = {
         "name": "Test Environment",
