@@ -358,3 +358,58 @@ def test_manager_returns_only_highest_version_of_segments(
     assert queryset2.first() == new_segment
     assert queryset3.first() == segment
     assert queryset4.first() == segment
+
+
+def test_deep_clone_of_segment_with_sub_rule(
+    project: Project,
+    feature: Feature,
+) -> None:
+    # Given
+    segment = Segment.objects.create(
+        name="SpecialSegment",
+        description="A lovely, special segment.",
+        project=project,
+        feature=feature,
+    )
+
+    sub_rule = SegmentRule.objects.create(type=SegmentRule.ALL_RULE)
+
+    # Parent rule with invalid sub rule.
+    SegmentRule.objects.create(
+        segment=segment, type=SegmentRule.ALL_RULE, rule=sub_rule
+    )
+
+    with pytest.raises(AssertionError) as exception:
+        segment.deep_clone()
+
+    assert (
+        "AssertionError: Unexpected rule, expecting segment set not rule"
+        == exception.exconly()
+    )
+
+
+def test_deep_clone_of_segment_with_grandchild_rule(
+    project: Project,
+    feature: Feature,
+) -> None:
+    # Given
+    segment = Segment.objects.create(
+        name="SpecialSegment",
+        description="A lovely, special segment.",
+        project=project,
+        feature=feature,
+    )
+
+    parent_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+
+    child_rule = SegmentRule.objects.create(rule=parent_rule, type=SegmentRule.ANY_RULE)
+
+    # Grandchild rule, which is invalid
+    SegmentRule.objects.create(rule=child_rule, type=SegmentRule.ANY_RULE)
+
+    with pytest.raises(AssertionError) as exception:
+        segment.deep_clone()
+
+    assert (
+        "AssertionError: Expected two layers of rules, not more" == exception.exconly()
+    )
