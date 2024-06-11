@@ -892,17 +892,21 @@ Django = ">=2.2"
 
 [[package]]
 name = "django-health-check"
-version = "3.14.3"
+version = "3.18.2"
 description = "Run checks on services like databases, queue servers, celery processes, etc."
 optional = false
-python-versions = "*"
+python-versions = ">=3.8"
 files = [
-    {file = "django-health-check-3.14.3.tar.gz", hash = "sha256:6e84e7a3e5f1fcb82b7692833fa205bc274415850d333d5a50259de06080dfa8"},
-    {file = "django_health_check-3.14.3-py2.py3-none-any.whl", hash = "sha256:d5f5cbf3c34bc5ea297696e183c5084b0c15d3bd13d9eb997c25258241589c75"},
+    {file = "django_health_check-3.18.2-py2.py3-none-any.whl", hash = "sha256:16f9c9186236cbc2858fa0d0ecc3566ba2ad2b72683e5678d0d58eb9e8bbba1a"},
+    {file = "django_health_check-3.18.2.tar.gz", hash = "sha256:21235120f8d756fa75ba430d0b0dbb04620fbd7bfac92ed6a0b911915ba38918"},
 ]
 
 [package.dependencies]
-django = ">=1.11"
+django = ">=2.2"
+
+[package.extras]
+docs = ["sphinx"]
+test = ["boto3", "celery", "django-storages", "pytest", "pytest-cov", "pytest-django", "redis"]
 
 [[package]]
 name = "django-ipware"
@@ -1416,7 +1420,7 @@ develop = false
 [package.dependencies]
 backoff = "~2.2.1"
 dj-database-url = "~0.5.0"
-django-health-check = "~3.14.3"
+django-health-check = "~3.18.2"
 drf-yasg = "~1.21.6"
 environs = "~9.2.0"
 psycopg2-binary = "~2.9.5"
@@ -1425,8 +1429,8 @@ simplejson = "~3.19.1"
 [package.source]
 type = "git"
 url = "https://git@github.com/Flagsmith/flagsmith-task-processor"
-reference = "0.1.0.alpha4"
-resolved_reference = "a3af43a0d8cb8a3cf099585007fa4ea55ac17217"
+reference = "0.1.0.alpha5"
+resolved_reference = "d3018fa2ebf288625e20474d74b84643c2592391"
 
 [[package]]
 name = "flake8"
@@ -4353,13 +4357,13 @@ files = []
 develop = false
 
 [package.dependencies]
-flagsmith-task-processor = {git = "https://git@github.com/Flagsmith/flagsmith-task-processor", rev = "0.1.0.alpha4"}
+flagsmith-task-processor = {git = "https://git@github.com/Flagsmith/flagsmith-task-processor", rev = "0.1.0.alpha5"}
 
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
-reference = "v2.3.4"
-resolved_reference = "8024294ca27064f34e0f2c8b5219598f1e34eb0c"
+reference = "v2.3.6"
+resolved_reference = "1cb875ae066d2fd7f0d3821c384a00eeef3d8114"
 
 [[package]]
 name = "wrapt"
@@ -4478,4 +4482,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "5e1a10d25dfba65b6f275786cd40158cf377d0eab2af331c5f4d8f9dc88d233b"
+content-hash = "d987b854497373da44a9adb4946815982795de0275d5b719c484c79d6bb8bd00"
