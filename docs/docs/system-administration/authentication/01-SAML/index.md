@@ -15,17 +15,17 @@ SAML tab, you'll be able to configure it.
 
 In the UI, you will be able to configure the following fields.
 
-**Name:** (**Requierd**) A short name for the organisation, used as the input when clicking "Single Sign-on" at login
+**Name:** (**Required**) A short name for the organisation, used as the input when clicking "Single Sign-on" at login
 (note this is unique across all tenants and will form part of the URL so should only be alphanumeric + '-,\_').
 
-**Frontend URL**: (**Requierd**) This should be the base URL of the Flagsmith dashboard.
+**Frontend URL**: (**Required**) This should be the base URL of the Flagsmith dashboard.
 
 **Allow IdP initiated**: This field determines whether logins can be initiated from the IdP.
 
 **IdP metadata xml**: The metadata from the IdP.
 
-Once Flagsmith has configured your identity provider, you can download the service provider metadata XML document whit
-the button "Download Service Provider Metadata".
+Once Flagsmith you have configured your identity provider, you can download the service provider metadata XML document
+with the button "Download Service Provider Metadata".
 
 ### Assertion Consumer Service URL
 
