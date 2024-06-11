@@ -128,7 +128,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
           <Row>
             <label className='form-label'>IDP Metadata XML</label>
             {data?.idp_metadata_xml && (
-              <div className='ml-2' onClick={downloadIDPMetadata}>
+              <div className='ml-2 clickable' onClick={downloadIDPMetadata}>
                 <Tooltip
                   title={
                     <IonIcon
