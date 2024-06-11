@@ -81,7 +81,7 @@ const CreateFlag = class extends Component {
       featureContentType: {},
       githubId: '',
       hasIntegrationWithGithub: false,
-      hasMetadataRequired: true,
+      hasMetadataRequired: false,
       identityVariations:
         this.props.identityFlag &&
         this.props.identityFlag.multivariate_feature_state_values
@@ -102,7 +102,6 @@ const CreateFlag = class extends Component {
       period: 30,
       selectedIdentity: null,
       tags: tags || [],
-      visible: false,
     }
   }
 
@@ -652,7 +651,7 @@ const CreateFlag = class extends Component {
             }
             ds
             type='text'
-            title={identity ? 'Description' : 'Description'}
+            title={identity ? 'Description' : 'Description (optional)'}
             placeholder="e.g. 'This determines what size the header is' "
           />
         </FormGroup>
@@ -787,7 +786,7 @@ const CreateFlag = class extends Component {
                 this.setState({ description: Utils.safeParseEventValue(e) })
               }
               type='text'
-              title={identity ? 'Description' : 'Description'}
+              title={identity ? 'Description' : 'Description (optional)'}
               placeholder='No description'
             />
           </FormGroup>
@@ -1972,7 +1971,6 @@ const FeatureProvider = (WrappedComponent) => {
           const envFlags = FeatureListStore.getEnvironmentFlags()
 
           if (createdFlag) {
-            //update the create flag modal to edit view
             const projectFlag = FeatureListStore.getProjectFlags()?.find?.(
               (flag) => flag.name === createdFlag,
             )
