@@ -87,6 +87,13 @@ You can integrate Flagsmith with Dynatrace. Send flag change events from Flagsmi
 
 ---
 
+<a href="/integrations/apm/grafana" alt="Grafana"><img width="30%" src="/img/integrations/grafana/grafana-logo.svg"/></a>
+
+You can integrate Flagsmith with Grafana. Send flag change events from Flagsmith into Grafana as annotations.
+[Learn more](/integrations/apm/grafana).
+
+---
+
 <a href="/integrations/apm/newrelic" alt="New Relic"><img width="30%" src="/img/integrations/newrelic/newrelic-logo.svg"/></a>
 
 You can integrate Flagsmith with New Relic. Send flag change events from Flagsmith into your Datadog event stream.
