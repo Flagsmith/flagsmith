@@ -1,5 +1,6 @@
 import logging
 import typing
+import uuid
 from copy import deepcopy
 
 from core.models import (
@@ -126,14 +127,11 @@ class Segment(
         self.save()
 
     def deep_clone(self) -> "Segment":
-        new_segment = Segment.objects.create(
-            name=self.name,
-            description=self.description,
-            project=self.project,
-            feature=self.feature,
-            version=self.version,
-            version_of=self,
-        )
+        new_segment = deepcopy(self)
+        new_segment.id = None
+        new_segment.uuid = uuid.uuid4()
+        new_segment.version_of = self
+        new_segment.save()
 
         self.version += 1
         self.save()
@@ -209,22 +207,21 @@ class SegmentRule(SoftDeleteExportableModel):
 
     def deep_clone(self, versioned_segment: Segment) -> "SegmentRule":
         if self.rule:
+            # Since we're expecting a rule that is only belonging to a
+            # segment, we don't expect there also to be a rule associated.
             assert False, "Unexpected rule, expecting segment set not rule"
-        new_rule = SegmentRule.objects.create(
-            segment=versioned_segment,
-            type=self.type,
-        )
+        new_rule = deepcopy(self)
+        new_rule.segment = versioned_segment
+        new_rule.uuid = uuid.uuid4()
+        new_rule.id = None
+        new_rule.save()
 
         new_conditions = []
         for condition in self.conditions.all():
-            new_condition = Condition(
-                operator=condition.operator,
-                property=condition.property,
-                value=condition.value,
-                description=condition.description,
-                created_with_segment=condition.created_with_segment,
-                rule=new_rule,
-            )
+            new_condition = deepcopy(condition)
+            new_condition.uuid = uuid.uuid4()
+            new_condition.rule = new_rule
+            new_condition.id = None
             new_conditions.append(new_condition)
         Condition.objects.bulk_create(new_conditions)
 
@@ -232,21 +229,18 @@ class SegmentRule(SoftDeleteExportableModel):
             if sub_rule.rules.exists():
                 assert False, "Expected two layers of rules, not more"
 
-            new_sub_rule = SegmentRule.objects.create(
-                rule=new_rule,
-                type=sub_rule.type,
-            )
+            new_sub_rule = deepcopy(sub_rule)
+            new_sub_rule.rule = new_rule
+            new_sub_rule.uuid = uuid.uuid4()
+            new_sub_rule.id = None
+            new_sub_rule.save()
 
             new_conditions = []
             for condition in sub_rule.conditions.all():
-                new_condition = Condition(
-                    operator=condition.operator,
-                    property=condition.property,
-                    value=condition.value,
-                    description=condition.description,
-                    created_with_segment=condition.created_with_segment,
-                    rule=new_sub_rule,
-                )
+                new_condition = deepcopy(condition)
+                new_condition.rule = new_sub_rule
+                new_condition.uuid = uuid.uuid4()
+                new_condition.id = None
                 new_conditions.append(new_condition)
             Condition.objects.bulk_create(new_conditions)
 
