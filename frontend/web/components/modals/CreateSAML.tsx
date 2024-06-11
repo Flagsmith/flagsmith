@@ -29,7 +29,6 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
   const [allowIdpInitiated, setAllowIdpInitiated] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [file, setFile] = useState<File | null>(null)
-  const [uploadMetadataXml, setUploadMetadataXml] = useState<string>('')
   const [createSamlConfiguration, createError] =
     useCreateSamlConfigurationMutation()
   const [editSamlConfiguration, updateError] =
@@ -144,16 +143,21 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
               </div>
             )}
           </Row>
-          <ValueEditor
-            data-test='featureValue'
-            name='featureValue'
-            className='full-width'
-            value={metadataXml || data?.idp_metadata_xml}
-            onChange={setMetadataXml}
-            placeholder="e.g. '<xml>time<xml>' "
-            onlyOneLang
-            language='xml'
-          />
+          {(!samlName ||
+            (data &&
+              ((data.name && !data.idp_metadata_xml) ||
+                data.idp_metadata_xml))) && (
+            <ValueEditor
+              data-test='featureValue'
+              name='featureValue'
+              className='full-width'
+              value={metadataXml || data?.idp_metadata_xml}
+              onChange={setMetadataXml}
+              placeholder="e.g. '<xml>time<xml>' "
+              onlyOneLang
+              language='xml'
+            />
+          )}
           <Row className='or-divider my-1'>
             <Flex className='or-divider__line' />
             Or
@@ -163,7 +167,6 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
             value={file}
             onChange={(file, data) => {
               setFile(file)
-              setUploadMetadataXml(data as string)
               setMetadataXml(data as string)
             }}
           />
