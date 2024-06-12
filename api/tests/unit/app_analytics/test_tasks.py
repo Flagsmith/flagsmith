@@ -280,6 +280,74 @@ def test_populate_feature_evaluation_bucket_15m(freezer):
 
 @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
 @pytest.mark.django_db(databases=["analytics"])
+def test_populate_feature_evaluation_bucket__upserts_buckets(freezer) -> None:
+    # Given
+    environment_id = 1
+    bucket_size = 15
+    feature_name = "feature1"
+    then = timezone.now()
+
+    _create_feature_evaluation_event(environment_id, feature_name, 1, then)
+
+    # move the time to 9:47
+    freezer.move_to(timezone.now().replace(minute=47))
+
+    # populate buckets to have an existing one
+    populate_feature_evaluation_bucket(bucket_size=bucket_size, run_every=60)
+
+    # add historical raw data
+    _create_feature_evaluation_event(environment_id, feature_name, 1, then)
+
+    # When
+    # Feature usage is populated over existing buckets
+    populate_feature_evaluation_bucket(bucket_size=bucket_size, run_every=60)
+
+    # Then
+    # Buckets are correctly set according to current raw data
+    buckets = FeatureEvaluationBucket.objects.filter(
+        environment_id=environment_id,
+        bucket_size=bucket_size,
+    ).all()
+    assert len(buckets) == 1
+    assert buckets[0].total_count == 2
+
+
+@pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
+@pytest.mark.django_db(databases=["analytics"])
+def test_populate_api_usage_bucket__upserts_buckets(freezer) -> None:
+    # Given
+    environment_id = 1
+    bucket_size = 15
+
+    then = timezone.now()
+
+    _create_api_usage_event(environment_id, then)
+
+    # move the time to 9:47
+    freezer.move_to(timezone.now().replace(minute=47))
+
+    # populate buckets to have an existing one
+    populate_api_usage_bucket(bucket_size=bucket_size, run_every=60)
+
+    # add historical raw data
+    _create_api_usage_event(environment_id, then)
+
+    # When
+    # API usage is populated over existing buckets
+    populate_api_usage_bucket(bucket_size=bucket_size, run_every=60)
+
+    # Then
+    # Buckets are correctly set according to current raw data
+    buckets = APIUsageBucket.objects.filter(
+        environment_id=environment_id,
+        bucket_size=bucket_size,
+    ).all()
+    assert len(buckets) == 1
+    assert buckets[0].total_count == 2
+
+
+@pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
+@pytest.mark.django_db(databases=["analytics"])
 def test_populate_api_usage_bucket_using_a_bucket(freezer):
     # Given
     environment_id = 1
