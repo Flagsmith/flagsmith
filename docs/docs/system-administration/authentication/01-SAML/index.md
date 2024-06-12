@@ -24,7 +24,7 @@ In the UI, you will be able to configure the following fields.
 
 **IdP metadata xml**: The metadata from the IdP.
 
-Once Flagsmith you have configured your identity provider, you can download the service provider metadata XML document
+Once you have configured your identity provider, you can download the service provider metadata XML document
 with the button "Download Service Provider Metadata".
 
 ### Assertion Consumer Service URL
