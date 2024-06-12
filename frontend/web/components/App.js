@@ -456,6 +456,7 @@ const App = class extends Component {
                                       >
                                         <NavLink
                                           id='org-settings-link'
+                                          data-test='org-settings-link'
                                           activeClassName='active'
                                           className={classNames(
                                             'breadcrumb-link',
@@ -672,6 +673,7 @@ const App = class extends Component {
                               <NavSubLink
                                 icon={<SettingsIcon />}
                                 id='org-settings-link'
+                                data-test='org-settings-link'
                                 to={`/organisation/${
                                   AccountStore.getOrganisation().id
                                 }/settings`}

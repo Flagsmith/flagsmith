@@ -65,6 +65,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
     >
       <TabItem
         tabLabel={<Row className='justify-content-center'>Organisation</Row>}
+        data-test='organisation-permissions-tab'
       >
         <EditPermissionsModal
           id={orgId}
@@ -76,7 +77,10 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
           role={role}
         />
       </TabItem>
-      <TabItem tabLabel={<Row className='justify-content-center'>Project</Row>}>
+      <TabItem
+        tabLabel={<Row className='justify-content-center'>Project</Row>}
+        data-test='project-permissions-tab'
+      >
         <Row className='justify-content-between'>
           <h5 className='my-3'>Permissions</h5>
           <Input
@@ -104,6 +108,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
       </TabItem>
       <TabItem
         tabLabel={<Row className='justify-content-center'>Environment</Row>}
+        data-test='environment-permissions-tab'
       >
         <Row className='justify-content-between'>
           <h5 className='my-3'>Permissions</h5>
