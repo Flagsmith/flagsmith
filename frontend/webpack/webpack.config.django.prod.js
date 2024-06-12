@@ -48,15 +48,6 @@ module.exports = {
                 chunkFilename: '[id].[fullhash].css',
             }),
 
-            // Copy static content
-            new CopyWebpackPlugin(
-                {
-                    patterns: [
-                        { from: path.join(__dirname, '../web/static'), to: path.join(__dirname, '../../api/static') },
-                    ],
-                },
-            ),
-
         ]).concat(require('./pages').map(page => new HtmlWebpackPlugin({
             filename: `../app/templates/webpack/${page}.html`, // output template (relative from static dir)
             template: `web/${page}.html`, // template to use (use the same template used for running FE outside of vercel)
