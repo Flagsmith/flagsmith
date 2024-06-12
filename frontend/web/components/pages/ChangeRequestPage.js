@@ -21,6 +21,7 @@ import { IonIcon } from '@ionic/react'
 import Breadcrumb from 'components/Breadcrumb'
 import SettingsButton from 'components/SettingsButton'
 import DiffChangeRequest from 'components/diff/DiffChangeRequest'
+import NewVersionWarning from 'components/NewVersionWarning'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -481,6 +482,12 @@ const ChangeRequestsPage = class extends Component {
                       </Row>
                     </div>
                   </Panel>
+
+                  <NewVersionWarning
+                      environmentId={environment?.id}
+                      featureId={featureId}
+                      date={changeRequest?.created_at}
+                  />
                   <DiffChangeRequest
                     isVersioned={isVersioned}
                     changeRequest={changeRequest}
