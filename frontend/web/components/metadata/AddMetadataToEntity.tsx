@@ -246,8 +246,16 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
           }}
           renderNoResults={
             <FormGroup>
-              No metadata configurated for {entity} entity. Add metadata field
-              in your <b>Settings Project</b>
+              No metadata configured for {entity} entity. Add metadata field in
+              your{' '}
+              <a
+                href={`/project/${projectId}/settings?tab=metadata`}
+                target='_blank'
+                rel='noreferrer'
+              >
+                Project Settings
+              </a>
+              .
             </FormGroup>
           }
         />
