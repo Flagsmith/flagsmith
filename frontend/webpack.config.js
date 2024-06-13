@@ -2,9 +2,7 @@ const path = require('path')
 
 // This is the base webpack configuration used by files in /webpack
 module.exports = {
-  externals: {
-    'jquery': 'jQuery',
-  },
+  externals: {},
   resolve: {
     alias: {
       'common': path.resolve(__dirname, '../common'),

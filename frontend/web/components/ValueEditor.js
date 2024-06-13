@@ -4,6 +4,8 @@ import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { Clipboard } from 'polyfill-react-native'
 import Icon from './Icon'
+import { IonIcon } from '@ionic/react'
+import { checkmarkCircle, warning } from 'ionicons/icons'
 
 const toml = require('toml')
 const yaml = require('yaml')
@@ -91,24 +93,25 @@ class Validation extends Component {
   render() {
     const displayLanguage =
       this.props.language === 'ini' ? 'toml' : this.props.language
-    return (
+    return this.state.error ? (
       <Tooltip
         position='top'
         title={
-          !this.state.error ? (
-            <span className='language-icon ion-ios-checkmark-circle' />
-          ) : (
-            <span
-              id='language-validation-error'
-              className='language-icon ion-ios-warning'
-            />
-          )
+          <IonIcon
+            id='language-validation-error'
+            className='language-icon text-danger'
+            icon={warning}
+          />
         }
       >
-        {!this.state.error
-          ? `${displayLanguage} validation passed`
-          : `${displayLanguage} validation error, please check your value.<br/>Error: ${this.state.error}`}
+        {`${displayLanguage} validation error, please check your value.<br/>Error: ${this.state.error}`}
       </Tooltip>
+    ) : (
+      <IonIcon
+        id='language-validation-success'
+        className='language-icon text-success'
+        icon={checkmarkCircle}
+      />
     )
   }
 }
@@ -127,7 +130,11 @@ class ValueEditor extends Component {
   }
 
   renderValidation = () => (
-    <Validation language={this.state.language} value={this.props.value} />
+    <Validation
+      key={this.state.language}
+      language={this.state.language}
+      value={this.props.value}
+    />
   )
 
   render() {
@@ -217,6 +224,7 @@ class ValueEditor extends Component {
             data-test={rest['data-test']}
             disabled={rest.disabled}
             onChange={rest.disabled ? null : rest.onChange}
+            onBlur={rest.disabled ? null : rest.onBlur}
             className={this.state.language}
           >
             {typeof rest.value !== 'undefined' && rest.value != null

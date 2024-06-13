@@ -117,16 +117,17 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return null
     }
 
-    if (typeof featureState.integer_value === 'number') {
-      return Utils.getTypedValue(featureState.integer_value)
+    //@ts-ignore value_type is the type key on core traits
+    switch (featureState.value_type || featureState.type) {
+      case 'bool':
+        return featureState.boolean_value
+      case 'float':
+        return featureState.float_value
+      case 'int':
+        return featureState.integer_value
+      default:
+        return featureState.string_value
     }
-    if (typeof featureState.float_value === 'number') {
-      return Utils.getTypedValue(featureState.float_value)
-    }
-
-    return Utils.getTypedValue(
-      featureState.string_value || featureState.boolean_value,
-    )
   },
   findOperator(
     operator: SegmentCondition['operator'],
@@ -462,7 +463,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return id ? 'put' : 'post'
   },
 
-  getTypedValue(str: FlagsmithValue, boolToString?: boolean) {
+  getTypedValue(
+    str: FlagsmithValue,
+    boolToString?: boolean,
+    testWithTrim?: boolean,
+  ) {
     if (typeof str === 'undefined') {
       return ''
     }
@@ -470,26 +475,27 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return str
     }
 
-    const isNum = /^\d+$/.test(str)
+    const typedValue = testWithTrim ? str.trim() : str
+    const isNum = /^\d+$/.test(typedValue)
 
-    if (isNum && parseInt(str) > Number.MAX_SAFE_INTEGER) {
+    if (isNum && parseInt(typedValue) > Number.MAX_SAFE_INTEGER) {
       return `${str}`
     }
 
-    if (str === 'true') {
+    if (typedValue === 'true') {
       if (boolToString) return 'true'
       return true
     }
-    if (str === 'false') {
+    if (typedValue === 'false') {
       if (boolToString) return 'false'
       return false
     }
 
     if (isNum) {
       if (str.indexOf('.') !== -1) {
-        return parseFloat(str)
+        return parseFloat(typedValue)
       }
-      return parseInt(str)
+      return parseInt(typedValue)
     }
 
     return str
@@ -667,8 +673,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         )
     }
   },
-  valueToFeatureState(value: FlagsmithValue) {
-    const val = Utils.getTypedValue(value)
+  valueToFeatureState(value: FlagsmithValue, trimSpaces = true) {
+    const val = Utils.getTypedValue(value, undefined, trimSpaces)
 
     if (typeof val === 'boolean') {
       return {

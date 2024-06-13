@@ -1,6 +1,7 @@
 import logging
 import typing
 from dataclasses import asdict
+from typing import Any
 
 from core.helpers import get_current_site_url
 from django.utils.formats import get_format
@@ -23,6 +24,24 @@ from integrations.github.tasks import call_github_app_webhook_for_feature_state
 from webhooks.webhooks import WebhookEventType
 
 logger = logging.getLogger(__name__)
+
+
+def handle_installation_deleted(payload: dict[str, Any]) -> None:
+    installation_id = payload.get("installation", {}).get("id")
+    if installation_id is not None:
+        try:
+            GithubConfiguration.objects.get(installation_id=installation_id).delete()
+        except GithubConfiguration.DoesNotExist:
+            logger.error(
+                f"GitHub Configuration with installation_id {installation_id} does not exist"
+            )
+    else:
+        logger.error(f"The installation_id is not present in the payload: {payload}")
+
+
+def handle_github_webhook_event(event_type: str, payload: dict[str, Any]) -> None:
+    if event_type == "installation" and payload.get("action") == "deleted":
+        handle_installation_deleted(payload)
 
 
 def generate_body_comment(

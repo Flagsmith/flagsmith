@@ -1,4 +1,5 @@
 import Constants from 'common/constants'
+import Utils from 'common/utils/utils'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -95,7 +96,11 @@ const controller = {
               {
                 enabled: identityFlag.enabled,
                 feature: projectFlag.id,
-                feature_state_value: identityFlag.feature_state_value,
+                feature_state_value: Utils.getTypedValue(
+                  identityFlag.feature_state_value,
+                  undefined,
+                  true,
+                ),
                 id: identityFlag.id || identityFlag.featurestate_uuid,
                 multivariate_feature_state_values:
                   identityFlag.multivariate_options,
@@ -109,7 +114,11 @@ const controller = {
             {
               enabled: identityFlag.enabled,
               feature: projectFlag.id,
-              feature_state_value: identityFlag.feature_state_value,
+              feature_state_value: Utils.getTypedValue(
+                identityFlag.feature_state_value,
+                undefined,
+                true,
+              ),
               multivariate_feature_state_values:
                 identityFlag.multivariate_options,
             },
