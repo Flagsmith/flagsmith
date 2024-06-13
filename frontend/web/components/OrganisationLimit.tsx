@@ -37,7 +37,7 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({
   const alertMaxApiCallsText = `You have used ${apiUsageMessageText} of your allowed requests.`
 
   return (
-    <Row>
+    <Row className='justify-content-center'>
       {Utils.getFlagsmithHasFeature('payments_enabled') &&
         Utils.getFlagsmithHasFeature('max_api_calls_alert') &&
         (maxApiCallsPercentage < 100 ? (
