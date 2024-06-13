@@ -1,8 +1,6 @@
 import React from 'react'
+import hljs from 'highlight.js'
 
-if (typeof hljs !== 'undefined') {
-  hljs.initHighlightingOnLoad()
-}
 function escapeHtml(unsafe) {
   if (!unsafe || !unsafe.__html) return unsafe
   return {

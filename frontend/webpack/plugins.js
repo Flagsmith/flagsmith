@@ -4,11 +4,6 @@ const webpack = require('webpack');
 
 module.exports = [
 
-    new webpack.ProvidePlugin({
-        $: 'jquery',
-        jQuery: 'jquery',
-    }),
-
     new webpack.DefinePlugin({
         E2E: process.env.E2E,
         SENTRY_RELEASE_VERSION: true,
