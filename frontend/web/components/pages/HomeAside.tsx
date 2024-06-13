@@ -241,6 +241,7 @@ const HomeAside: FC<HomeAsideType> = ({
                                     {environmentAdmin && (
                                       <NavLink
                                         id='env-settings-link'
+                                        data-test='env-settings-link'
                                         className='aside__environment-list-item'
                                         to={`/project/${project.id}/environment/${environment.api_key}/settings`}
                                       >

@@ -1,6 +1,7 @@
 import {
   byId,
   click,
+  closeModal,
   log,
   login,
   setText,
@@ -40,11 +41,7 @@ export default async function () {
   await Selector(byId('admin-switch-project')).hasClass('rc-switch-checked')
   await click(byId('environment-permissions-tab'))
   log('User with permissions can see any group')
-  await t.hover(Selector('body'), {
-    offsetX: 300,
-    offsetY: 300,
-  })
-  await t.click(Selector('body'))
+  await closeModal()
   await waitForElementVisible(byId('tab-item-groups'))
   await click(byId('tab-item-groups'))
   await waitForElementVisible(byId('user-item-0'))

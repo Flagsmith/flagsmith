@@ -11,7 +11,7 @@ import { PASSWORD, E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS } from '../config'
 export default async function () {
   log('Login')
   await login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
-  await click('#project-select-4')
+  await click('#project-select-1')
   log('Create environment')
   await click('#create-env-link')
   await setText('[name="envName"]', 'Staging')
