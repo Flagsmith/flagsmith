@@ -52,7 +52,7 @@ import AddMetadataToEntity, {
   CustomMetadataField,
 } from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
-import { setInterceptClose } from './base/ModalDefault'
+import { setInterceptClose, setModalTitle } from './base/ModalDefault'
 
 type PageType = {
   number: number
@@ -90,7 +90,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
   identities,
   identitiesLoading,
   identity,
-  isEdit,
   onCancel,
   onComplete,
   page,
@@ -125,7 +124,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
       },
     ],
   }
-  const segment = _segment || defaultSegment
+  const [segment, setSegment] = useState(_segment || defaultSegment)
+  const isEdit = !!segment.id
   const [
     createSegment,
     {
@@ -273,6 +273,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   }, [])
   useEffect(() => {
     if (createSuccess && createSegmentData) {
+      setSegment(createSegmentData)
       onComplete?.(createSegmentData)
     }
     //eslint-disable-next-line
@@ -746,7 +747,8 @@ type LoadingCreateSegmentType = {
   environmentId: string
   isEdit?: boolean
   readOnly?: boolean
-  onComplete?: () => void
+  onSegmentRetrieved?: (segment: Segment) => void
+  onComplete?: (segment: Segment) => void
   projectId: string
   segment?: number
 }
@@ -778,6 +780,11 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
     },
   )
 
+  useEffect(() => {
+    if (segmentData) {
+      props.onSegmentRetrieved?.(segmentData)
+    }
+  }, [segmentData])
   const isEdge = Utils.getIsEdge()
 
   const { data: identities, isLoading: identitiesLoading } =
