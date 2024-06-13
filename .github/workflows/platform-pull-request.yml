@@ -31,6 +31,12 @@ jobs:
             test
             chore
 
+  add-labels:
+    name: Add labels based on Conventional Commit title
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
       - name: Auto-label PR with Conventional Commit title
         uses: bcoe/conventional-release-labels@v1
         with:
