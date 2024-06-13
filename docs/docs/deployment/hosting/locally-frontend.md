@@ -101,6 +101,10 @@ Current variables used between 'frontend/environment.js' and 'frontend/common/pr
   Further reading on this value is available [here](https://web.dev/articles/samesite-cookies-explained). Default:
   'none'.
 
+### GitHub Integration Environment Variables
+
+- `GITHUB_APP_URL`: the URL from your GitHub App
+
 ## E2E testing
 
 This project uses [Test Cafe](https://testcafe.io/) for automated end to end testing with Chromedriver.

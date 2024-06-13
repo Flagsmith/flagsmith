@@ -9,13 +9,7 @@ hide_title: true
 
 View your Flagsmith Flags inside GitHub Issues and Pull Requests.
 
-:::tip
-
-The GitHub integration is currently only supported with our hosted Flagsmith SaaS service.
-
-:::
-
-## Integration Setup
+## Integration Setup (SaaS)
 
 You can either set up the integration from the Flagsmith side or from the Github side.
 
@@ -48,3 +42,9 @@ You can either set up the integration from the Flagsmith side or from the Github
 
 1. From Flagsmith, click 'Integrations', find the GitHub integration and click on 'Manage Integration'.
 2. Click on 'Delete Integration' button, and confirm.
+
+## Integration Setup (Self-Hosted)
+
+You have to set the [API Env variables](/deployment/hosting/locally-api.md#github-integration-environment-variables) and
+the [Frontend Env variables](/deployment/hosting/locally-frontend.md#github-integration-environment-variables) for your
+GitHub to use your own GitHub App.

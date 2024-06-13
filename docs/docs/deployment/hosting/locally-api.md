@@ -360,6 +360,12 @@ services:
 If not running our application via docker, you can find gunicorn's documentation on statsd instrumentation
 [here](https://docs.gunicorn.org/en/stable/instrumentation.html)
 
+### GitHub Integration Environment Variables
+
+- `GITHUB_PEM`: create an PEM in your GitHub App, copy and paste it.
+- `GITHUB_APP_ID`: your GitHub App Id
+- `GITHUB_WEBHOOK_SECRET`: your GitHub webhook secret
+
 ## Caching
 
 The application makes use of caching in a couple of locations:
