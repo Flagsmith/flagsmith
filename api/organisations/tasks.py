@@ -194,7 +194,7 @@ def handle_api_usage_notifications() -> None:
         "subscription_information_cache",
     ):
         feature_enabled = flagsmith_client.get_identity_flags(
-            f"org.{organisation.id}.{organisation.name}",
+            organisation.flagsmith_identifier,
             traits={"organisation_id": organisation.id},
         ).is_feature_enabled("api_usage_alerting")
         if not feature_enabled:
@@ -333,7 +333,7 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
 
     for organisation in organisations:
         flags = flagsmith_client.get_identity_flags(
-            f"org.{organisation.id}.{organisation.name}",
+            organisation.flagsmith_identifier,
             traits={"organisation_id": organisation.id},
         )
 
