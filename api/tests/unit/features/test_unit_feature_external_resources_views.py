@@ -277,9 +277,42 @@ def test_cannot_create_feature_external_resource_due_to_unique_constraint(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        "Duplication error. The feature already has this resource URI"
-        in response.json()[0]
+        response.json()["non_field_errors"][0]
+        == "The fields feature, url must make a unique set."
     )
+
+
+def test_update_feature_external_resource(
+    admin_client_new: APIClient,
+    feature: Feature,
+    feature_external_resource: FeatureExternalResource,
+    project: Project,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    post_request_mock: MagicMock,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_generate_token = mocker.patch(
+        "integrations.github.client.generate_token",
+    )
+    mock_generate_token.return_value = "mocked_token"
+    mock_generate_token.return_value = "mocked_token"
+    feature_external_resource_data = {
+        "type": "GITHUB_ISSUE",
+        "url": "https://github.com/userexample/example-project-repo/issues/12",
+        "feature": feature.id,
+    }
+    url = reverse(
+        "api-v1:projects:feature-external-resources-detail",
+        args=[project.id, feature.id, feature_external_resource.id],
+    )
+    # When
+    response = admin_client_new.put(url, data=feature_external_resource_data)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["url"] == feature_external_resource_data["url"]
 
 
 def test_delete_feature_external_resource(

@@ -42,6 +42,7 @@ export const featureVersionService = service
             await createFeatureVersion(getStore(), {
               environmentId: query.environmentId,
               featureId: query.featureId,
+              liveFrom: query.liveFrom,
               feature_states_to_create: transformFeatureStates(
                 featureStatesToCreate,
               ),
@@ -74,28 +75,24 @@ export const featureVersionService = service
           return ret as any
         },
       }),
-      createFeatureVersion: builder.mutation<
-        Res['featureVersion'],
-        Req['createFeatureVersion']
-      >({
-        invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
-        query: ({
-          environmentId,
-          featureId,
-          ...rest
-        }: Req['createFeatureVersion']) => ({
-          body: { ...rest },
-          method: 'POST',
-          url: `environments/${environmentId}/features/${featureId}/versions/`,
+        createFeatureVersion: builder.mutation<
+            Res['featureVersion'],
+            Req['createFeatureVersion']
+        >({
+            invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
+            query: (query: Req['createFeatureVersion']) => ({
+                body: { live_from: query.liveFrom },
+                method: 'POST',
+                url: `environments/${query.environmentId}/features/${query.featureId}/versions/`,
+            }),
         }),
-      }),
       getFeatureVersion: builder.query<
         Res['featureVersion'],
         Req['getFeatureVersion']
       >({
         providesTags: (res) => [{ id: res?.uuid, type: 'FeatureVersion' }],
         query: (query: Req['getFeatureVersion']) => ({
-          url: `environments/${query.environmentId}/features/${query.featureId}/versions/${query.uuid}`,
+          url: `environment-feature-versions/${query.uuid}/`,
         }),
       }),
       getFeatureVersions: builder.query<

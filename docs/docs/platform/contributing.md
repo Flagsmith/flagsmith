@@ -16,6 +16,22 @@ suggesting the next steps.
 - If your PR involves a lot of commits, squash them using `git rebase -i` as this makes it easier for us to review.
 - Keep lines under 80 characters.
 
+### Conventional Commits
+
+Please prefix the title of your PRs with one of the following
+[Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/#summary) labels. E.g. `feat: My great feature`:
+
+- **feat**: A new feature or improvement to an existing feature
+- **fix**: A bug fix
+- **infra**: For Infrastructure-as-code type work
+- **ci**: Changes to our CI/CD or build setup
+- **docs**: Documentation only changes
+- **deps**: Updating library dependencies
+- **perf**: A code change that improves performance
+- **refactor**: A code change that neither fixes a bug nor adds a feature
+- **test**: Adding missing tests or correcting existing tests
+- **chore**: Changes that don’t really live anywhere else (_please try NOT to use this label if possible_)
+
 ## Pre-commit
 
 The application uses pre-commit configuration ( `.pre-commit-config.yaml` ) to run `black`, `flake8` and `isort`

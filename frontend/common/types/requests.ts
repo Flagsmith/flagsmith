@@ -301,7 +301,17 @@ export type Req = {
     environmentId: number
     featureId: number
     skipPublish?: boolean
-    featureStates: FeatureState[]
+    featureStates: Pick<
+      FeatureState,
+      | 'enabled'
+      | 'feature_segment'
+      | 'uuid'
+      | 'feature_state_value'
+      | 'id'
+      | 'toRemove'
+      | 'multivariate_feature_state_values'
+    >[]
+    liveFrom?: string
   }
   createFeatureVersion: {
     environmentId: number
@@ -337,8 +347,6 @@ export type Req = {
   }>
   getUsers: { organisationId: number }
   getFeatureVersion: {
-    environmentId: string
-    featureId: string
     uuid: string
   }
   enableFeatureVersioning: {
