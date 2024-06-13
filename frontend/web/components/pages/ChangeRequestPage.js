@@ -160,7 +160,13 @@ const ChangeRequestsPage = class extends Component {
     const changeRequest = ChangeRequestStore.model[id]
     const scheduledDate = this.getScheduledDate(changeRequest)
     const isScheduled = scheduledDate > moment()
-
+    const featureId =
+      changeRequest &&
+      changeRequest.feature_states[0] &&
+      changeRequest.feature_states[0].feature
+    const environment = ProjectStore.getEnvironment(
+      this.props.match.params.environmentId,
+    )
     openConfirm({
       body: (
         <div>
@@ -170,6 +176,11 @@ const ChangeRequestsPage = class extends Component {
             ? ` for ${scheduledDate.format('Do MMM YYYY hh:mma')}`
             : ''}
           ? This will adjust the feature for your environment.
+          <NewVersionWarning
+            environmentId={environment?.id}
+            featureId={featureId}
+            date={changeRequest?.created_at}
+          />
         </div>
       ),
       onYes: () => {
@@ -484,9 +495,9 @@ const ChangeRequestsPage = class extends Component {
                   </Panel>
 
                   <NewVersionWarning
-                      environmentId={environment?.id}
-                      featureId={featureId}
-                      date={changeRequest?.created_at}
+                    environmentId={environment?.id}
+                    featureId={featureId}
+                    date={changeRequest?.created_at}
                   />
                   <DiffChangeRequest
                     isVersioned={isVersioned}
