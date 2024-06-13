@@ -518,6 +518,15 @@ E2E_SIGNUP_USER = f"e2e_signup_user@{E2E_TEST_EMAIL_DOMAIN}"
 E2E_CHANGE_EMAIL_USER = f"e2e_change_email@{E2E_TEST_EMAIL_DOMAIN}"
 # User email address used for the rest of the E2E tests
 E2E_USER = f"e2e_user@{E2E_TEST_EMAIL_DOMAIN}"
+E2E_NON_ADMIN_USER_WITH_ORG_PERMISSIONS = (
+    f"e2e_non_admin_user_with_org_permissions@{E2E_TEST_EMAIL_DOMAIN}"
+)
+E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS = (
+    f"e2e_non_admin_user_with_project_permissions@{E2E_TEST_EMAIL_DOMAIN}"
+)
+E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS = (
+    f"e2e_non_admin_user_with_env_permissions@{E2E_TEST_EMAIL_DOMAIN}"
+)
 #  Identity for E2E segment tests
 E2E_IDENTITY = "test-identity"
 
