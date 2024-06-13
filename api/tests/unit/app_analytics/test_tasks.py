@@ -17,6 +17,7 @@ from app_analytics.tasks import (
 )
 from django.conf import settings
 from django.utils import timezone
+from freezegun.api import FrozenDateTimeFactory
 from pytest_django.fixtures import SettingsWrapper
 
 if "analytics" not in settings.DATABASES:
@@ -40,7 +41,7 @@ def _create_api_usage_event(environment_id: str, when: datetime):
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.django_db(databases=["analytics"])
-def test_populate_api_usage_bucket_multiple_runs(freezer):
+def test_populate_api_usage_bucket_multiple_runs(freezer: FrozenDateTimeFactory):
     # Given
     environment_id = 1
     bucket_size = 15
@@ -111,7 +112,9 @@ def test_populate_api_usage_bucket_multiple_runs(freezer):
 )
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.django_db(databases=["analytics"])
-def test_populate_api_usage_bucket(freezer, bucket_size, runs_every):
+def test_populate_api_usage_bucket(
+    freezer: FrozenDateTimeFactory, bucket_size: int, runs_every: int
+):
     # Given
     environment_id = 1
     now = timezone.now()
@@ -194,7 +197,7 @@ def test_track_feature_evaluation():
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.django_db(databases=["analytics"])
-def test_populate_feature_evaluation_bucket_15m(freezer):
+def test_populate_feature_evaluation_bucket_15m(freezer: FrozenDateTimeFactory):
     # Given
     environment_id = 1
     bucket_size = 15
@@ -280,7 +283,9 @@ def test_populate_feature_evaluation_bucket_15m(freezer):
 
 @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
 @pytest.mark.django_db(databases=["analytics"])
-def test_populate_feature_evaluation_bucket__upserts_buckets(freezer) -> None:
+def test_populate_feature_evaluation_bucket__upserts_buckets(
+    freezer: FrozenDateTimeFactory,
+) -> None:
     # Given
     environment_id = 1
     bucket_size = 15
@@ -314,7 +319,9 @@ def test_populate_feature_evaluation_bucket__upserts_buckets(freezer) -> None:
 
 @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
 @pytest.mark.django_db(databases=["analytics"])
-def test_populate_api_usage_bucket__upserts_buckets(freezer) -> None:
+def test_populate_api_usage_bucket__upserts_buckets(
+    freezer: FrozenDateTimeFactory,
+) -> None:
     # Given
     environment_id = 1
     bucket_size = 15
@@ -348,7 +355,7 @@ def test_populate_api_usage_bucket__upserts_buckets(freezer) -> None:
 
 @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
 @pytest.mark.django_db(databases=["analytics"])
-def test_populate_api_usage_bucket_using_a_bucket(freezer):
+def test_populate_api_usage_bucket_using_a_bucket(freezer: FrozenDateTimeFactory):
     # Given
     environment_id = 1
 
