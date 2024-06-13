@@ -301,16 +301,7 @@ export type Req = {
     environmentId: number
     featureId: number
     skipPublish?: boolean
-    featureStates: Pick<
-      FeatureState,
-      | 'enabled'
-      | 'feature_segment'
-      | 'uuid'
-      | 'feature_state_value'
-      | 'id'
-      | 'toRemove'
-      | 'multivariate_feature_state_values'
-    >[]
+    featureStates: FeatureState[]
     liveFrom?: string
   }
   createFeatureVersion: {

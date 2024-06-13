@@ -32,7 +32,7 @@ export const featureVersionService = service
             query.featureStates.filter((v) => !v.id && !v.toRemove)
           const featureStatesToUpdate: Req['createFeatureVersion']['feature_states_to_update'] =
             query.featureStates.filter((v) => !!v.id && !v.toRemove)
-          const segmentIdsToDeleteOverrides: Req['createFeatureVersion']['feature_states_to_update'] =
+          const segmentIdsToDeleteOverrides: Req['createFeatureVersion']['segment_ids_to_delete_overrides'] =
             query.featureStates
               .filter((v) => !!v.id && !!v.toRemove && !!v.feature_segment)
               .map((v) => v.feature_segment!.segment)
@@ -42,13 +42,13 @@ export const featureVersionService = service
             await createFeatureVersion(getStore(), {
               environmentId: query.environmentId,
               featureId: query.featureId,
-              liveFrom: query.liveFrom,
               feature_states_to_create: transformFeatureStates(
                 featureStatesToCreate,
               ),
               feature_states_to_update: transformFeatureStates(
                 featureStatesToUpdate,
               ),
+              live_from: query.liveFrom,
               publish_immediately: !query.skipPublish,
               segment_ids_to_delete_overrides: segmentIdsToDeleteOverrides,
             })
@@ -63,29 +63,28 @@ export const featureVersionService = service
           const res = currentFeatureStates.data
 
           const ret = {
-            data: res.map((item) => ({
-              data: {
-                ...item,
-              },
+            error: res.find((v) => !!v.error)?.error,
+            feature_states: res.map((item) => ({
+              data: item,
               version_sha: versionRes.data.uuid,
             })),
-            error: res.find((v) => !!v.error)?.error,
+            version_sha: versionRes.data.uuid,
           }
 
-          return ret as any
+          return { data: ret } as any
         },
       }),
-        createFeatureVersion: builder.mutation<
-            Res['featureVersion'],
-            Req['createFeatureVersion']
-        >({
-            invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
-            query: (query: Req['createFeatureVersion']) => ({
-                body: { live_from: query.liveFrom },
-                method: 'POST',
-                url: `environments/${query.environmentId}/features/${query.featureId}/versions/`,
-            }),
+      createFeatureVersion: builder.mutation<
+        Res['featureVersion'],
+        Req['createFeatureVersion']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
+        query: (query: Req['createFeatureVersion']) => ({
+          body: query,
+          method: 'POST',
+          url: `environments/${query.environmentId}/features/${query.featureId}/versions/`,
         }),
+      }),
       getFeatureVersion: builder.query<
         Res['featureVersion'],
         Req['getFeatureVersion']
