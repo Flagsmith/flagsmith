@@ -158,7 +158,7 @@ const ChangeRequestsPage = class extends Component {
                       AppActions.getChangeRequests(
                         this.props.match.params.environmentId,
                         {},
-                        `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`,
+                        `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}&committed=0`,
                       )
                     }
                     renderFooter={() => (
@@ -257,7 +257,7 @@ const ChangeRequestsPage = class extends Component {
                       AppActions.getChangeRequests(
                         this.props.match.params.environmentId,
                         { committed: true },
-                        `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`,
+                        `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}&committed=1`,
                       )
                     }
                     renderFooter={() => (
