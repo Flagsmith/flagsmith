@@ -465,32 +465,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
               : 'Show condition descriptions'}
           </span>
         </Row>
-        {metadataEnable && segmentContentType?.id && (
-          <>
-            <MetadataTitle
-              visible={visible}
-              onVisibleChange={(v) => {
-                setVisible(v)
-              }}
-              hasRequiredMetadata={hasMetadataRequired}
-            />
-            {(hasMetadataRequired || visible) && (
-              <AddMetadataToEntity
-                organisationId={AccountStore.getOrganisation().id}
-                projectId={projectId}
-                entityId={`${segment.id}` || ''}
-                entityContentType={segmentContentType?.id}
-                entity={segmentContentType?.model}
-                onChange={(m: CustomMetadataField[]) => {
-                  setMetadata(m)
-                }}
-                setHasMetadataRequired={(b) => {
-                  setHasMetadataRequired(b)
-                }}
-              />
-            )}
-          </>
-        )}
         <Flex className='mb-3'>
           <label className='cols-sm-2 control-label mb-1'>
             Include users when all of the following rules apply:
@@ -562,6 +536,34 @@ const CreateSegment: FC<CreateSegmentType> = ({
         </div>
       )}
     </form>
+  )
+
+  const MetadataTab = (
+    <>
+      <MetadataTitle
+        visible={visible}
+        onVisibleChange={(v) => {
+          setVisible(v)
+        }}
+        hasRequiredMetadata={hasMetadataRequired}
+      />
+      {(hasMetadataRequired || visible) && (
+        <AddMetadataToEntity
+          organisationId={AccountStore.getOrganisation().id}
+          projectId={projectId}
+          entityId={`${segment.id}` || ''}
+          entityContentType={segmentContentType?.id}
+          entity={segmentContentType?.model}
+          onChange={(m: CustomMetadataField[]) => {
+            setMetadata(m)
+            setValueChanged(true)
+          }}
+          setHasMetadataRequired={(b) => {
+            setHasMetadataRequired(b)
+          }}
+        />
+      )}
+    </>
   )
 
   return (
@@ -734,6 +736,31 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 </FormGroup>
               </div>
             </div>
+          </TabItem>
+          {metadataEnable && segmentContentType?.id && (
+            <TabItem tabLabelString='Metadata' tabLabel={'Metadata'}>
+              <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
+            </TabItem>
+          )}
+        </Tabs>
+      ) : metadataEnable && segmentContentType?.id ? (
+        <Tabs value={tab} onChange={(tab: number) => setTab(tab)}>
+          <TabItem
+            tabLabelString='Basic configuration'
+            tabLabel={'Basic configuration'}
+          >
+            <div className={className || 'my-3 mx-4'}>{Tab1}</div>
+          </TabItem>
+          <TabItem
+            tabLabelString='Metadata'
+            tabLabel={
+              <Row className='justify-content-center'>
+                Metadata{' '}
+                {valueChanged && <div className='unread px-1'>{'*'}</div>}
+              </Row>
+            }
+          >
+            <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
           </TabItem>
         </Tabs>
       ) : (
