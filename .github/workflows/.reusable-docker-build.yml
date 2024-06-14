@@ -30,6 +30,10 @@ on:
       image:
         description: Resulting image specifier
         value: ${{ inputs.registry-url }}/flagsmith/${{ inputs.image-name }}:${{ jobs.build.outputs.version }}
+    secrets:
+      secrets:
+        description: List of secrets to expose to the build (e.g., `key=string, GIT_AUTH_TOKEN=mytoken`)
+        required: false
 
 jobs:
   build:
@@ -67,14 +71,15 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
             type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
 
       - name: Build and push image
         uses: depot/build-push-action@v1
         with:
           push: true
           platforms: linux/amd64,linux/arm64
-          secrets: |
-            github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+          secrets: ${{ secrets.secrets }}
           build-args: |
             CI_COMMIT_SHA=${{ github.sha }}
             ${{ inputs.build-args }}
