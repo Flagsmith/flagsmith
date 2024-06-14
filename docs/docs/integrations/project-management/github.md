@@ -33,14 +33,10 @@ You can either set up the integration from the Flagsmith side or from the Github
 
 ## Integration Setup (Self-Hosted)
 
-You have to set the [API Env variables](/deployment/hosting/locally-api.md#github-integration-environment-variables) and
-the [Frontend Env variables](/deployment/hosting/locally-frontend.md#github-integration-environment-variables) for your
-GitHub to use your own GitHub App.
+### Creating and Configuring your GitHub App
 
-### Configure you GitHub App
-
-You can create your own GitHub App follow the
-[next steps](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app).
+You can create your own GitHub App by following these
+[steps from GitHub Docs](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app).
 
 In the Permissions and Events section, configure the following permissions and events:
 
@@ -57,16 +53,21 @@ In the Permissions and Events section, configure the following permissions and e
 
 In the Post Installation section, you need to add the Setup URL and check the option 'Redirect on update':
 
-**The setup URL:** Is a combination of your Flagsmith dashboard's base URL with the following string
-`login?github-redirect=true`.
+**The setup URL:** Is your Flagsmith dashboard's base URL foolowed by `login?github-redirect=true`.
 
-E.g. `http://localhost:8000/login?github-redirect=true`
+E.g. `https://flagsmith.example.com/login?github-redirect=true`
 
 In the Webhook section, you need to check the 'active' option and add the webhook URL:
 
-**The webhook URL:** Is a combination of your API base URL with the following string `github-webhook/`.
+**The webhook URL:** Is your API base URL followed by `github-webhook/`.
 
-E.g. `http://localhost:8000/api/v1/github-webhook/`
+E.g. `https://flagsmith-api.example.com/api/v1/github-webhook/`
+
+### Configuring Flagsmith
+
+You must set the [API Env variables](/deployment/hosting/locally-api.md#github-integration-environment-variables) and
+the [Frontend Env variables](/deployment/hosting/locally-frontend.md#github-integration-environment-variables) to use
+your own GitHub App.
 
 ## Adding a Flagsmith Flag to a GitHub issue or pull request
 
