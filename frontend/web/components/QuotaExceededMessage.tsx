@@ -13,10 +13,6 @@ const QuotaExceededMessage: FC<QuotaExceededMessageType> = ({
   error,
   organisationPlan,
 }) => {
-  const exceeded = true
-
-  if (!exceeded) return null
-
   return (
     <div
       className={'alert alert-danger announcement'}
