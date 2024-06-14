@@ -37,6 +37,7 @@ ARG POETRY_OPTS
 RUN make install-packages opts="${POETRY_OPTS}"
 
 ARG PRIVATE_CLOUD="0"
+ENV GIT_TERMINAL_PROMPT="0"
 
 # Install SAML binary dependency if required and integrate SAML module
 ARG SAML_REVISION=v1.6.0
