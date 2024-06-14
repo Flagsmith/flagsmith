@@ -446,8 +446,7 @@ const CreateFlag = class extends Component {
   }
 
   addItem = () => {
-    const { environmentId, identity, projectFlag } = this.props
-    const { environmentFlag } = this.state
+    const { environmentFlag, environmentId, identity, projectFlag } = this.props
     this.setState({ isLoading: true })
     const selectedIdentity = this.state.selectedIdentity.value
     const identities = identity ? identity.identifier : []

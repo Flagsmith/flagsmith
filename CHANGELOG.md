@@ -1,5 +1,35 @@
 # Changelog
 
+## [2.121.0](https://github.com/Flagsmith/flagsmith/compare/v2.120.0...v2.121.0) (2024-06-13)
+
+
+### Features
+
+* **analytics:** Command to populate arbitrary periods of analytics data ([#4155](https://github.com/Flagsmith/flagsmith/issues/4155)) ([20fb43e](https://github.com/Flagsmith/flagsmith/commit/20fb43ee2c032ba3ebc02ac838ce5596e0953538))
+* Keep segment modal open on create / edit, add segment name to modal ([#4109](https://github.com/Flagsmith/flagsmith/issues/4109)) ([1daedc2](https://github.com/Flagsmith/flagsmith/commit/1daedc22ea5dc4800f625804e99b924dbdfb6338))
+* Show new version warning in change requests ([#4153](https://github.com/Flagsmith/flagsmith/issues/4153)) ([69f6ae6](https://github.com/Flagsmith/flagsmith/commit/69f6ae6827fee07e173429b25f3f49e357f4d6d7))
+
+
+### Bug Fixes
+
+* cascade delete versions when corresponding change request is deleted ([#4152](https://github.com/Flagsmith/flagsmith/issues/4152)) ([baf8ddb](https://github.com/Flagsmith/flagsmith/commit/baf8ddb92b78241d3b0d41e421eeee662f6a6782))
+* Edge V2-enabled environments are not rebuilt on feature version publish ([#4132](https://github.com/Flagsmith/flagsmith/issues/4132)) ([7e0c9fd](https://github.com/Flagsmith/flagsmith/commit/7e0c9fdf7cf36930b2bd7ebb153df06650bdb879))
+* feature state value conversion ([#3946](https://github.com/Flagsmith/flagsmith/issues/3946)) ([d4f948d](https://github.com/Flagsmith/flagsmith/commit/d4f948d44da6b295d10f585caad30561ac6fe8af))
+* **migrate_analytics:** fix migrate_to_pg command ([#4139](https://github.com/Flagsmith/flagsmith/issues/4139)) ([c0f373a](https://github.com/Flagsmith/flagsmith/commit/c0f373aae3681c6cfc35dfc0f4bb010d1096227a))
+
+## [2.120.0](https://github.com/Flagsmith/flagsmith/compare/v2.119.1...v2.120.0) (2024-06-11)
+
+
+### Features
+
+* Add default rule for segments ([#4095](https://github.com/Flagsmith/flagsmith/issues/4095)) ([c3bf3bf](https://github.com/Flagsmith/flagsmith/commit/c3bf3bf2b25639ac46ed9008f9dfad359940cf9d))
+
+
+### Bug Fixes
+
+* **deps:** Migrate MFA code to our codebase and bump djangorestframework ([#3988](https://github.com/Flagsmith/flagsmith/issues/3988)) ([e217df7](https://github.com/Flagsmith/flagsmith/commit/e217df7cf3779d3934d8a0a2836d0a3e4484266b))
+* Identity overrides tab ([#4134](https://github.com/Flagsmith/flagsmith/issues/4134)) ([1a51fd3](https://github.com/Flagsmith/flagsmith/commit/1a51fd3346e8ff27ffccd8b6878b88cc81df9f4e))
+
 ## [2.119.1](https://github.com/Flagsmith/flagsmith/compare/v2.119.0...v2.119.1) (2024-06-06)
 
 
