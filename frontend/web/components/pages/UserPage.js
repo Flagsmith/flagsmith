@@ -1044,6 +1044,7 @@ const UserPage = class extends Component {
                                             <Button
                                               disabled={!manageUserPermission}
                                               id='add-trait'
+                                              data-test='add-trait'
                                               onClick={this.createTrait}
                                               size='small'
                                             >
@@ -1149,6 +1150,7 @@ const UserPage = class extends Component {
                                                   }
                                                   className='mb-2'
                                                   id='add-trait'
+                                                  data-test='add-trait'
                                                   onClick={this.createTrait}
                                                   size='small'
                                                 >

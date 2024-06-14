@@ -596,6 +596,7 @@ const App = class extends Component {
                                   icon={<AuditLogIcon />}
                                   id='audit-log-link'
                                   to={`/project/${projectId}/audit-log`}
+                                  data-test='audit-log-link'
                                 >
                                   Audit Log
                                 </NavSubLink>
