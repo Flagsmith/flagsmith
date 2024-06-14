@@ -4,9 +4,9 @@ import {
   FeatureState,
   FeatureStateValue,
   ImportStrategy,
-  APIKey,
   Approval,
   MultivariateOption,
+  SAMLConfiguration,
   Segment,
   Tag,
   ProjectFlag,
@@ -476,5 +476,11 @@ export type Req = {
     feature?: number
   }
   getFeatureSegment: { id: string }
+  getSamlConfiguration: { name: string }
+  getSamlConfigurations: { organisation_id: number }
+  getSamlConfigurationMetadata: { name: string }
+  updateSamlConfiguration: { name: string; body: SAMLConfiguration }
+  deleteSamlConfiguration: { name: string }
+  createSamlConfiguration: SAMLConfiguration
   // END OF TYPES
 }
