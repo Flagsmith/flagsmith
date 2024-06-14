@@ -73,7 +73,7 @@ jobs:
         with:
           push: true
           secrets: |
-            github_private_access_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+            github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
           build-args: |
             CI_COMMIT_SHA=${{ github.sha }}
             ${{ inputs.build-args }}

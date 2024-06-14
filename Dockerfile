@@ -28,10 +28,10 @@ ARG POETRY_VIRTUALENVS_CREATE=false
 RUN make install-poetry
 ENV PATH="$PATH:/root/.local/bin"
 
-RUN --mount=type=secret,id=github_private_access_token \
-  if [ -f /run/secrets/github_private_access_token ]; then \
-  echo "https://$(cat /run/secrets/github_private_access_token):@github.com" > ${HOME}/.git-credentials && \
-  git-config --global credential.helper store; fi
+RUN --mount=type=secret,id=github_private_cloud_token \
+  if [ -f /run/secrets/github_private_cloud_token ]; then \
+  echo "https://$(cat /run/secrets/github_private_cloud_token):@github.com" > ${HOME}/.git-credentials && \
+  git config --global credential.helper store; fi
 
 ARG POETRY_OPTS
 RUN make install-packages opts="${POETRY_OPTS}"
