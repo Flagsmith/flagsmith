@@ -97,7 +97,7 @@ jobs:
       image-name: flagsmith-private-cloud
       build-args: |
         PRIVATE_CLOUD=1
-        POETRY_OPTS=--with saml,auth-controller,workflows
+        POETRY_OPTS=--with saml,auth-controller,ldap,workflows
     secrets: inherit
 
   run-e2e-tests:
