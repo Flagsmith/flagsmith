@@ -11,10 +11,20 @@ You can integrate Flagsmith with Grafana. Send flag change events from Flagsmith
 
 ## Integration Setup
 
-1. Log into Grafana and navigate to...XXX
-2. Generate a new API key...XXX
-3. Go to your Flagsmith project, and click Integrations. Add the Grafana Integration. Enter the Grafana...XXX
-4. Click Save...XXX
+Log into Grafana and generate a Service Account Key:
+
+1. Navigate to Administration > Users and access > Service accounts
+2. Add Service Account
+3. Change the Role selection to "Annotation Writer" or "Editor".
+4. Click on Add service account token and make a note of the generated token.
+
+In Flagsmith:
+
+1. Navigate to Integrations, then add the Grafana integration
+2. Enter the URL for your web interface of your Grafana installation. For example, `https://grafana.flagsmith.com/`.
+   Make sure to add the trailing slash.
+3. The `API Key` is the service account token you created in Grafana.
+4. Click Save.
 
 Flag change events will now be sent to Grafana as
 [Annotations](https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/annotate-visualizations/).

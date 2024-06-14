@@ -7,13 +7,12 @@ from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 
 logger = logging.getLogger(__name__)
 
+ANNOTATIONS_API_URI = "api/annotations"
+
 
 class GrafanaWrapper(AbstractBaseEventIntegrationWrapper):
     def __init__(self, base_url: str, api_key: str) -> None:
-        self.base_url = base_url
-        if self.base_url[-1] != "/":
-            self.base_url += "/"
-        self.events_url = self.base_url
+        self.url = f"{base_url}{ANNOTATIONS_API_URI}"
         self.api_key = api_key
 
     @staticmethod
