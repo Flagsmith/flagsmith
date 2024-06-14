@@ -362,9 +362,9 @@ If not running our application via docker, you can find gunicorn's documentation
 
 ### GitHub Integration Environment Variables
 
-- `GITHUB_PEM`: create an PEM in your GitHub App, copy and paste it.
-- `GITHUB_APP_ID`: your GitHub App Id
-- `GITHUB_WEBHOOK_SECRET`: your GitHub webhook secret
+- `GITHUB_PEM`: Create an PEM in your GitHub App, copy and paste it.
+- `GITHUB_APP_ID`: Your GitHub App ID
+- `GITHUB_WEBHOOK_SECRET`: Your GitHub webhook secret
 
 ## Caching
 

@@ -103,7 +103,7 @@ Current variables used between 'frontend/environment.js' and 'frontend/common/pr
 
 ### GitHub Integration Environment Variables
 
-- `GITHUB_APP_URL`: the URL from your GitHub App
+- `GITHUB_APP_URL`: The URL from your GitHub App
 
 ## E2E testing
 

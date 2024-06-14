@@ -53,11 +53,6 @@ services:
       # EMAIL_HOST_PASSWORD: smtp_account_password
       # EMAIL_PORT: 587 # optional
       # EMAIL_USE_TLS: 'true' # optional
-      # Env vars for GitHub Integration
-      # GITHUB_CLIENT_ID: '-----SOMEKEY-----'
-      # GITHUB_APP_ID: 7654321
-      # GITHUB_WEBHOOK_SECRET: 'your_github_webhook_secret'
-      # GITHUB_APP_URL: 'https://github.com/apps/yourapp/installations/select_target'
     ports:
       - 8000:8000
     healthcheck:
