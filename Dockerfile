@@ -28,21 +28,38 @@ ARG POETRY_VIRTUALENVS_CREATE=false
 RUN make install-poetry
 ENV PATH="$PATH:/root/.local/bin"
 
-ARG GH_TOKEN
-RUN if [ -n "${GH_TOKEN}" ]; \
-  then echo "https://${GH_TOKEN}:@github.com" > ${HOME}/.git-credentials \
-  && git config --global credential.helper store; fi;
+RUN --mount=type=secret,id=github_private_access_token \
+  if [ -f /run/secrets/github_private_access_token ]; then \
+  echo "https://$(cat /run/secrets/github_private_access_token):@github.com" > ${HOME}/.git-credentials && \
+  git-config --global credential.helper store; fi
 
 ARG POETRY_OPTS
 RUN make install-packages opts="${POETRY_OPTS}"
 
+ARG PRIVATE_CLOUD="0"
+
+# Install SAML binary dependency if required and integrate SAML module
+ARG SAML_REVISION=v1.6.0
+RUN if [ "${PRIVATE_CLOUD}" = "1" ]; \
+  then apt-get update && apt-get install -y xmlsec1 && \
+  git clone https://github.com/flagsmith/flagsmith-saml --depth 1 --branch ${SAML_REVISION} && \
+  mv ./flagsmith-saml/saml /usr/local/lib/python3.11/site-packages; fi;
+
+# Integrate Auth Controller module if required
+ARG AUTH_CONTROLLER_REVISION=v0.0.1
+RUN if [ "${PRIVATE_CLOUD}" = "1" ]; \
+  then git clone https://github.com/flagsmith/flagsmith-auth-controller --depth 1 --branch ${AUTH_CONTROLLER_REVISION} && \
+  mv ./flagsmith-auth-controller/auth_controller /usr/local/lib/python3.11/site-packages; fi;
+
+# Integrate RBAC module if required
+ARG RBAC_REVISION=v0.7.0
+RUN if [ "${PRIVATE_CLOUD}" = "1" ]; \
+  then git clone https://github.com/flagsmith/flagsmith-rbac --depth 1 --branch ${RBAC_REVISION} && \
+  mv ./flagsmith-rbac/rbac /usr/local/lib/python3.11/site-packages; fi;
+
 # Step 3 - Build Django Application
 FROM python:3.11-slim as application
 WORKDIR /app
-
-# Install SAML dependency if required
-ARG SAML_INSTALLED="0"
-RUN if [ "${SAML_INSTALLED}" = "1" ]; then apt-get update && apt-get install -y xmlsec1; fi;
 
 # arm architecture platform builds need postgres drivers installing via apt
 ARG TARGETARCH
@@ -66,6 +83,11 @@ COPY --from=build-frontend /app/api/app/templates/webpack /app/app/templates/web
 ARG ACCESS_LOG_LOCATION="/dev/null"
 ENV ACCESS_LOG_LOCATION=${ACCESS_LOG_LOCATION}
 ENV DJANGO_SETTINGS_MODULE=app.settings.production
+
+ARG CI_COMMIT_SHA=dev
+RUN echo ${CI_COMMIT_SHA} > ./CI_COMMIT_SHA
+ARG SHIP_REASON=DEVELOPMENT
+RUN touch ./${SHIP_REASON}
 
 EXPOSE 8000
 

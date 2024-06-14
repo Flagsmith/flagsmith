@@ -72,7 +72,11 @@ jobs:
         uses: depot/build-push-action@v1
         with:
           push: true
-          build-args: ${{ inputs.build-args }}
+          secrets: |
+            github_private_access_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+          build-args: |
+            CI_COMMIT_SHA=${{ github.sha }}
+            ${{ inputs.build-args }}
           file: ${{ inputs.file }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

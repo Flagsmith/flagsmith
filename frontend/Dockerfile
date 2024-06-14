@@ -32,5 +32,8 @@ COPY --from=build --chown=node:node /srv/bt/ .
 
 ENV NODE_ENV=production
 
+ARG CI_COMMIT_SHA=dev
+RUN echo ${CI_COMMIT_SHA} > ./CI_COMMIT_SHA
+
 EXPOSE 8080
 CMD ["node",  "./api/index.js"]
