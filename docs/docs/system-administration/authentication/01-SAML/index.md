@@ -8,45 +8,24 @@ SAML authentication requires an [Enterprise subscription](https://flagsmith.com/
 
 :::
 
-## Setup (SaaS)
+## Setup
 
-To enable SAML authentication for your Flagsmith organisation, you must send your identity provider metadata XML
-document to [support@flagsmith.com](mailto:support@flagsmith.com).
+To enable SAML authentication for your Flagsmith organisation, you have to go to your organisations settings, and in the
+SAML tab, you'll be able to configure it.
 
-Once Flagsmith has configured your identity provider, we will send you a service provider metadata XML document or an
-Assertion Consumer Service (ACS) URL to use with your identity provider.
+In the UI, you will be able to configure the following fields.
 
-## Setup (self-hosted)
+**Name:** (**Required**) A short name for the organisation, used as the input when clicking "Single Sign-on" at login
+(note this is unique across all tenants and will form part of the URL so should only be alphanumeric + '-,\_').
 
-To enable SAML for your Flagsmith organisation in a self-hosted environment, you will need access the
-[Django admin interface](/deployment/configuration/django-admin).
+**Frontend URL**: (**Required**) This should be the base URL of the Flagsmith dashboard.
 
-In the Django admin interface, click on the "SAML Configurations" option in the menu on the left. To create a new SAML
-configuration, click on "Add SAML Configuration" in the top right corner.
+**Allow IdP initiated**: This field determines whether logins can be initiated from the IdP.
 
-You should see a screen similar to the following:
+**IdP metadata xml**: The metadata from the IdP.
 
-![SAML Auth Setup](/img/saml-auth-setup.png)
-
-From the drop down next to **Organisation**, select the organisation that you want to configure for SAML authentication.
-
-Next to **Organisation name**, add a URI-safe name that uniquely identifies the organisation. Users will need to provide
-this name when selecting the "Single Sign-On" option at the Flagsmith login screen.
-
-Next to **Frontend URL**, add the URL where your Flagsmith frontend is running. Users will be redirected to this URL
-when they authenticate using SAML.
-
-Copy your identity provider's XML metadata document into the **IdP metadata XML** field, or leave it blank and come back
-to this step later if you do not have it.
-
-If you want to enable IdP-initiated SSO, check the box next to **Allow IdP-initiated (unsolicited) login**. If you are
-unsure, leave this box unchecked.
-
-Hit the **Save** button to create the SAML configuration.
-
-Once your SAML configuration is created, you can download your Flagsmith service provider metadata by going back to the
-list of SAML configurations in the Django admin interface and clicking "Download" on the SAML configuration you just
-created.
+Once you have configured your identity provider, you can download the service provider metadata XML document with the
+button "Download Service Provider Metadata".
 
 ### Assertion Consumer Service URL
 
