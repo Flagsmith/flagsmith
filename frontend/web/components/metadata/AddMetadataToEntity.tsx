@@ -32,7 +32,7 @@ type AddMetadataToEntityType = {
   projectId: string | number
   entityContentType: number
   entityId: string
-  entity: number | string
+  entity: string
   envName?: string
   onChange?: (m: CustomMetadataField[]) => void
   setHasMetadataRequired?: (b: boolean) => void
@@ -226,6 +226,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
             return (
               <MetadataRow
                 metadata={m}
+                entity={entity}
                 getMetadataValue={(m: CustomMetadata) => {
                   setMetadataFieldsAssociatedtoEntity((prevState) =>
                     prevState?.map((metadata) => {
@@ -302,8 +303,13 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
 type MetadataRowType = {
   metadata: CustomMetadata
   getMetadataValue?: (metadata: CustomMetadata) => void
+  entity: string
 }
-const MetadataRow: FC<MetadataRowType> = ({ getMetadataValue, metadata }) => {
+const MetadataRow: FC<MetadataRowType> = ({
+  entity,
+  getMetadataValue,
+  metadata,
+}) => {
   const [metadataValue, setMetadataValue] = useState<string | boolean>(() => {
     if (metadata?.type === 'bool') {
       return metadata?.field_value === 'true' ? true : false
@@ -322,7 +328,9 @@ const MetadataRow: FC<MetadataRowType> = ({ getMetadataValue, metadata }) => {
     useState<boolean>(false)
   return (
     <Row className='space list-item clickable py-2'>
-      {metadataValueChanged && <div className='unread ml-2 px-1'>{'*'}</div>}
+      {metadataValueChanged && entity !== 'segment' && (
+        <div className='unread ml-2 px-1'>{'*'}</div>
+      )}
       <Flex className='table-column'>{`${metadata?.name} ${
         metadata?.isRequiredFor ? '*' : ''
       }`}</Flex>

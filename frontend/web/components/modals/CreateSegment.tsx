@@ -155,8 +155,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [metadata, setMetadata] = useState<CustomMetadataField[]>(
     segment.metadata,
   )
-  const [visible, setVisible] = useState<boolean>(false)
-  const [hasMetadataRequired, setHasMetadataRequired] = useState<boolean>(true)
   const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
 
   const error = createError || updateError
@@ -238,6 +236,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   }
 
   const [valueChanged, setValueChanged] = useState(false)
+  const [metadataValueChanged, setMetadataValueChanged] = useState(false)
   const onClosing = useCallback(() => {
     return new Promise((resolve) => {
       if (valueChanged) {
@@ -546,31 +545,30 @@ const CreateSegment: FC<CreateSegmentType> = ({
   )
 
   const MetadataTab = (
-    <>
-      <MetadataTitle
-        visible={visible}
-        onVisibleChange={(v) => {
-          setVisible(v)
-        }}
-        hasRequiredMetadata={hasMetadataRequired}
-      />
-      {(hasMetadataRequired || visible) && (
-        <AddMetadataToEntity
-          organisationId={AccountStore.getOrganisation().id}
-          projectId={projectId}
-          entityId={`${segment.id}` || ''}
-          entityContentType={segmentContentType?.id}
-          entity={segmentContentType?.model}
-          onChange={(m: CustomMetadataField[]) => {
-            setMetadata(m)
-            setValueChanged(true)
-          }}
-          setHasMetadataRequired={(b) => {
-            setHasMetadataRequired(b)
-          }}
+    <TabItem tabLabel='Metadata'>
+      <FormGroup className='mt-5 setting'>
+        <InputGroup
+          title={'Metadata'}
+          component={
+            <AddMetadataToEntity
+              organisationId={AccountStore.getOrganisation().id}
+              projectId={projectId}
+              entityId={`${segment.id}` || ''}
+              entityContentType={segmentContentType?.id}
+              entity={segmentContentType?.model}
+              onChange={(m: CustomMetadataField[]) => {
+                setMetadata(m)
+                if (isEdit) {
+                  setValueChanged(true)
+                } else {
+                  setMetadataValueChanged(true)
+                }
+              }}
+            />
+          }
         />
-      )}
-    </>
+      </FormGroup>
+    </TabItem>
   )
 
   return (
@@ -762,8 +760,12 @@ const CreateSegment: FC<CreateSegmentType> = ({
             tabLabelString='Metadata'
             tabLabel={
               <Row className='justify-content-center'>
-                Metadata{' '}
-                {valueChanged && <div className='unread px-1'>{'*'}</div>}
+                Metadata
+                {metadataValueChanged && (
+                  <div className='unread px-1' style={{ right: '100px' }}>
+                    {'*'}
+                  </div>
+                )}
               </Row>
             }
           >
