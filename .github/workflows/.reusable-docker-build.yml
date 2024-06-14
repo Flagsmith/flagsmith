@@ -86,3 +86,6 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ inputs.registry-url }}/flagsmith/${{ inputs.image-name }}:${{ steps.meta.outputs.version }}
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
