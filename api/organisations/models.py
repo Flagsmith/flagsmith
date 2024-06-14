@@ -40,6 +40,8 @@ from organisations.subscriptions.constants import (
     FREE_PLAN_SUBSCRIPTION_METADATA,
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
+    PLAN_SUBSCRIPTION_METADATA_FOR_TEST,
+    SCALE_UP,
     SUBSCRIPTION_BILLING_STATUSES,
     SUBSCRIPTION_PAYMENT_METHODS,
     TRIAL_SUBSCRIPTION_ID,
@@ -358,6 +360,11 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
             # increased access for all deployment types on the free
             # plan.
             return FREE_PLAN_SUBSCRIPTION_METADATA
+
+        if self.plan == SCALE_UP and self.subscription_id == "test_subscription_id":
+
+            # test_subscription_id subscription_id is the only for test
+            return PLAN_SUBSCRIPTION_METADATA_FOR_TEST
 
         return (
             self._get_subscription_metadata_for_saas()

@@ -527,6 +527,9 @@ E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS = (
 E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS = (
     f"e2e_non_admin_user_with_env_permissions@{E2E_TEST_EMAIL_DOMAIN}"
 )
+E2E_NON_ADMIN_USER_WITH_A_ROLE = (
+    f"e2e_non_admin_user_with_a_role@{E2E_TEST_EMAIL_DOMAIN}"
+)
 #  Identity for E2E segment tests
 E2E_IDENTITY = "test-identity"
 

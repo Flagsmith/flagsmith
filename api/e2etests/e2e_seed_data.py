@@ -5,10 +5,6 @@ from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.models import Environment
 from environments.permissions.constants import (
-    APPROVE_CHANGE_REQUEST,
-    CREATE_CHANGE_REQUEST,
-    MANAGE_IDENTITIES,
-    MANAGE_SEGMENT_OVERRIDES,
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
     VIEW_IDENTITIES,
@@ -20,12 +16,11 @@ from organisations.permissions.permissions import (
     CREATE_PROJECT,
     MANAGE_USER_GROUPS,
 )
+from organisations.subscriptions.constants import SCALE_UP
 from projects.models import Project, UserProjectPermission
 from projects.permissions import (
     CREATE_ENVIRONMENT,
     CREATE_FEATURE,
-    DELETE_FEATURE,
-    MANAGE_SEGMENTS,
     VIEW_AUDIT_LOG,
     VIEW_PROJECT,
 )
@@ -57,6 +52,9 @@ def teardown() -> None:
     delete_user_and_its_organisations(
         user_email=settings.E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS
     )
+    delete_user_and_its_organisations(
+        user_email=settings.E2E_NON_ADMIN_USER_WITH_A_ROLE
+    )
 
 
 def seed_data() -> None:
@@ -84,6 +82,11 @@ def seed_data() -> None:
         password=PASSWORD,
         username=settings.E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS,
     )
+    non_admin_user_with_a_role: FFAdminUser = FFAdminUser.objects.create_user(
+        email=settings.E2E_NON_ADMIN_USER_WITH_A_ROLE,
+        password=PASSWORD,
+        username=settings.E2E_NON_ADMIN_USER_WITH_A_ROLE,
+    )
     org_admin.add_organisation(organisation, OrganisationRole.ADMIN)
     non_admin_user_with_org_permissions.add_organisation(
         organisation,
@@ -92,6 +95,9 @@ def seed_data() -> None:
         organisation,
     )
     non_admin_user_with_env_permissions.add_organisation(
+        organisation,
+    )
+    non_admin_user_with_a_role.add_organisation(
         organisation,
     )
 
@@ -117,10 +123,11 @@ def seed_data() -> None:
         {"name": "My Test Project 4", "environments": ["Development"]},
         {"name": "My Project Permission Project Test", "environments": ["Development"]},
         {"name": "My Env Permission Project Test", "environments": ["Development"]},
+        {"name": "My Role Project Test", "environments": ["Development"]},
     ]
     # Upgrade organisation seats
     Subscription.objects.filter(organisation__in=org_admin.organisations.all()).update(
-        max_seats=5, plan="enterprise"
+        max_seats=6, plan=SCALE_UP, subscription_id="test_subscription_id"
     )
 
     # Create projects and environments
@@ -142,9 +149,7 @@ def seed_data() -> None:
                 for permission_key in [
                     VIEW_PROJECT,
                     CREATE_ENVIRONMENT,
-                    MANAGE_SEGMENTS,
                     CREATE_FEATURE,
-                    DELETE_FEATURE,
                     VIEW_AUDIT_LOG,
                 ]
             ]
@@ -158,16 +163,19 @@ def seed_data() -> None:
                 user_env_permission = UserEnvironmentPermission.objects.create(
                     user=non_admin_user_with_env_permissions, environment=environment
                 )
+                user_env_proj_permission: UserProjectPermission = (
+                    UserProjectPermission.objects.create(
+                        user=non_admin_user_with_env_permissions, project=project
+                    )
+                )
+                user_env_proj_permission.add_permission(VIEW_PROJECT)
+                user_env_proj_permission.add_permission(CREATE_FEATURE)
                 [
                     user_env_permission.add_permission(permission_key)
                     for permission_key in [
                         VIEW_ENVIRONMENT,
                         UPDATE_FEATURE_STATE,
-                        MANAGE_IDENTITIES,
                         VIEW_IDENTITIES,
-                        CREATE_CHANGE_REQUEST,
-                        APPROVE_CHANGE_REQUEST,
-                        MANAGE_SEGMENT_OVERRIDES,
                     ]
                 ]
             environments.append(environment)
@@ -179,6 +187,9 @@ def seed_data() -> None:
         {"identifier": settings.E2E_IDENTITY, "environment": environments[2]},
         {"identifier": settings.E2E_IDENTITY, "environment": environments[3]},
         {"identifier": settings.E2E_IDENTITY, "environment": environments[4]},
+        {"identifier": settings.E2E_IDENTITY, "environment": environments[5]},
+        {"identifier": settings.E2E_IDENTITY, "environment": environments[6]},
+        {"identifier": settings.E2E_IDENTITY, "environment": environments[7]},
     ]
 
     for identity_info in identities_test_data:
