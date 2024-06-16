@@ -29,19 +29,19 @@
 # Stages are described as stage-name [dependencies]
 
 # - Intermediary stages
-# * build-node
+# * build-node [node]
 # * build-node-django [build-node]
 # * build-node-selfhosted [build-node]
-# * build-python
+# * build-python [python]
 # * build-python-private [build-python]
-# * api-runtime
+# * api-runtime [python:slim]
 
 # - Target (shippable) stages
 # * private-cloud-api [api-runtime, build-python-private]
 # * private-cloud-unified [api-runtime, build-python-private, build-node-django]
 # * saas-api [api-runtime, build-python-private]
-# * oss-api [build-python]
-# * oss-frontend [build-node-selfhosted]
+# * oss-api [api-runtime, build-python]
+# * oss-frontend [node:slim, build-node-selfhosted]
 # * oss-unified [api-runtime, build-python, build-node-django]
 
 ARG CI_COMMIT_SHA=dev
@@ -170,7 +170,7 @@ RUN touch ./SAAS_DEPLOYMENT
 
 USER nobody
 
-# * oss-api [build-python]
+# * oss-api [api-runtime, build-python]
 FROM api-runtime as oss-api
 
 COPY --from=build-python /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
