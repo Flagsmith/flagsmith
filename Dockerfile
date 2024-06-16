@@ -62,21 +62,19 @@ COPY frontend/env/ ./frontend/env/
 ARG ENV=selfhosted
 RUN cd frontend && ENV=${ENV} npm ci --quiet --production
 
+COPY frontend /app/frontend
+
 # * build-node-django [build-node]
 FROM build-node as build-node-django
 
-# Copy the entire project - Webpack puts compiled assets into the Django folder
-COPY . .
+RUN mkdir /app/api
 ENV STATIC_ASSET_CDN_URL=/static/
 RUN cd frontend && npm run bundledjango
 
 # * build-node-selfhosted [build-node]
 FROM build-node as build-node-selfhosted
-WORKDIR /srv/bt
 
-COPY --chown=node:node frontend .
-COPY .release-please-manifest.json .
-RUN npm run bundle
+RUN cd frontend && npm run bundle
 
 # * build-python
 FROM python:3.11 as build-python
@@ -110,6 +108,7 @@ RUN make install-private-modules
 
 # * api-runtime
 FROM python:3.11-slim as api-runtime
+
 WORKDIR /app
 
 COPY api /app/
@@ -119,13 +118,11 @@ ARG ACCESS_LOG_LOCATION="/dev/null"
 ENV ACCESS_LOG_LOCATION=${ACCESS_LOG_LOCATION}
 ENV DJANGO_SETTINGS_MODULE=app.settings.production
 
-RUN echo ${CI_COMMIT_SHA} > ./CI_COMMIT_SHA
+RUN echo ${CI_COMMIT_SHA} > /app/CI_COMMIT_SHA
 
 EXPOSE 8000
 
-USER nobody
-
-ENTRYPOINT ["./scripts/run-docker.sh"]
+ENTRYPOINT ["/app/scripts/run-docker.sh"]
 
 # other options below are `migrate` or `serve`
 CMD ["migrate-and-serve"]
@@ -137,26 +134,28 @@ FROM api-runtime as private-cloud-api
 COPY --from=build-python-private /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=build-python-private /usr/local/bin /usr/local/bin
 
-# Compile static Django assets
 RUN python manage.py collectstatic --no-input
-
 RUN touch ./ENTERPRISE_VERSION
+
+USER nobody
 
 # * private-cloud-unified [api-runtime, build-python-private, build-node-django]
 FROM api-runtime as private-cloud-unified
 
-COPY --from=build-node-django /app/api/static /app/static/
+COPY --from=build-node-django /app/api/static /app/static
 COPY --from=build-node-django /app/api/app/templates/webpack /app/app/templates/webpack
 COPY --from=build-python-private /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=build-python-private /usr/local/bin /usr/local/bin
 
-# Compile static Django assets
 RUN python manage.py collectstatic --no-input
-
 RUN touch ./ENTERPRISE_VERSION
+
+USER nobody
 
 # * saas-api [api-runtime, build-python-private]
 FROM api-runtime as saas-api
+
+USER nobody
 
 # Install GnuPG and import private key
 RUN --mount=type=secret,id=sse_pgp_pkey \
@@ -165,9 +164,10 @@ RUN --mount=type=secret,id=sse_pgp_pkey \
   mv /root/.gnupg /app/; \
   chown -R nobody /app/.gnupg
 
-COPY --from=build-python-private /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=build-python-private /usr/local/bin /usr/local/bin
+COPY --from=build-python-private --chown=nobody:nobody /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=build-python-private --chown=nobody:nobody /usr/local/bin /usr/local/bin
 
+RUN python manage.py collectstatic --no-input
 RUN touch ./SAAS_DEPLOYMENT
 
 # * oss-api [build-python]
@@ -176,16 +176,22 @@ FROM api-runtime as oss-api
 COPY --from=build-python /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=build-python /usr/local/bin /usr/local/bin
 
+RUN python manage.py collectstatic --no-input
+
+USER nobody
+
 # * oss-frontend [build-node-selfhosted]
 FROM node:16-slim AS oss-frontend
+
 USER node
 WORKDIR /srv/bt
 
-COPY --from=build-node-selfhosted --chown=node:node /srv/bt/ .
+COPY --from=build-node-selfhosted --chown=node:node /app/frontend .
 
 ENV NODE_ENV=production
 
-RUN echo ${CI_COMMIT_SHA} > ./CI_COMMIT_SHA
+RUN echo ${CI_COMMIT_SHA} > /srv/bt/CI_COMMIT_SHA
+COPY .release-please-manifest.json /srv/bt/.versions.json
 
 EXPOSE 8080
 CMD ["node",  "./api/index.js"]
@@ -197,3 +203,7 @@ COPY --from=build-node-django /app/api/static /app/static/
 COPY --from=build-node-django /app/api/app/templates/webpack /app/app/templates/webpack
 COPY --from=build-python /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=build-python /usr/local/bin /usr/local/bin
+
+RUN python manage.py collectstatic --no-input
+
+USER nobody
