@@ -16,7 +16,6 @@ services:
     image: ${API_IMAGE:-ghcr.io/flagsmith/flagsmith-api:dev}
     build:
       context: ../
-      dockerfile: ../Dockerfile
       target: oss-api
     environment:
       E2E_TEST_AUTH_TOKEN: some-token
