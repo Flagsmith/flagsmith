@@ -13,7 +13,8 @@
 # $ docker build -t flagsmith-api:dev --target oss-api .
 
 # Build an Open Source Unified image:
-# $ docker build -t flagsmith:dev --target oss-unified .
+# (`oss-unified` stage is the default one, so there's no need to specify a target stage)
+# $ docker build -t flagsmith:dev .
 
 # Build a SaaS API image:
 # $ docker build -t flagsmith-saas-api:dev --target saas-api \
