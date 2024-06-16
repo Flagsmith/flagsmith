@@ -84,7 +84,7 @@ WORKDIR /app
 COPY api/pyproject.toml api/poetry.lock api/Makefile ./
 ENV POETRY_VIRTUALENVS_CREATE=false
 ENV POETRY_HOME=/usr/local
-RUN make install
+RUN make install opts='--without dev'
 
 # * build-python-private [build-python]
 FROM build-python AS build-python-private
@@ -99,7 +99,7 @@ RUN --mount=type=secret,id=github_private_cloud_token \
 RUN apt-get update && apt-get install -y xmlsec1
 
 # Install private Python dependencies
-RUN make install-packages opts='--with saml,auth-controller,ldap,workflows'
+RUN make install-packages opts='--without dev --with saml,auth-controller,ldap,workflows'
 
 # Integrate private modules
 ARG SAML_REVISION
