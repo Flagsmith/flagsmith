@@ -155,8 +155,6 @@ USER nobody
 # * saas-api [api-runtime, build-python-private]
 FROM api-runtime as saas-api
 
-USER nobody
-
 # Install GnuPG and import private key
 RUN --mount=type=secret,id=sse_pgp_pkey \
   apt-get update && apt-get install -y gnupg && \
@@ -164,11 +162,13 @@ RUN --mount=type=secret,id=sse_pgp_pkey \
   mv /root/.gnupg /app/; \
   chown -R nobody /app/.gnupg
 
-COPY --from=build-python-private --chown=nobody:nobody /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=build-python-private --chown=nobody:nobody /usr/local/bin /usr/local/bin
+COPY --from=build-python-private /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=build-python-private /usr/local/bin /usr/local/bin
 
 RUN python manage.py collectstatic --no-input
 RUN touch ./SAAS_DEPLOYMENT
+
+USER nobody
 
 # * oss-api [build-python]
 FROM api-runtime as oss-api
