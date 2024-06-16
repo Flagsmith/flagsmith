@@ -1,3 +1,5 @@
+ARG CI_COMMIT_SHA=dev
+
 FROM ghcr.io/flagsmith/e2e-frontend-base:latest
 
 # Build Flagsmith
@@ -13,5 +15,7 @@ RUN npm ci
 COPY frontend .
 COPY .release-please-manifest.json ./.versions.json
 RUN npm run env
+
+RUN echo ${CI_COMMIT_SHA} > ./CI_COMMIT_SHA
 
 CMD ["bash", "-l"]
