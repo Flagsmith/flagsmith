@@ -43,6 +43,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
+          target: oss-unified
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           push: true
