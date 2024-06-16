@@ -91,9 +91,8 @@ FROM build-python AS build-python-private
 
 # Authenticate git with token to install private packages
 RUN --mount=type=secret,id=github_private_cloud_token \
-  if [ -f /run/secrets/github_private_cloud_token ]; then \
   echo "https://$(cat /run/secrets/github_private_cloud_token):@github.com" > ${HOME}/.git-credentials && \
-  git config --global credential.helper store; fi
+  git config --global credential.helper store
 
 # Install SAML binary dependency
 RUN apt-get update && apt-get install -y xmlsec1
