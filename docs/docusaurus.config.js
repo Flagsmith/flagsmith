@@ -182,7 +182,7 @@ const config = {
                         ],
                     },
                 ],
-                copyright: `Copyright © ${new Date().getFullYear()} Bullet Train Ltd. Built with Docusaurus.`,
+                copyright: `Copyright © ${new Date().getFullYear()} Bullet Train Ltd. Built with Docusaurus.<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=3bd13eaa-d37d-454b-b503-322643e72574" />`,
             },
             announcementBar: {
                 id: 'support_us',
