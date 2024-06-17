@@ -4,7 +4,9 @@ import Utils from 'common/utils/utils'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import Format from 'common/utils/format'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
-import QuotaExceededMessage from './QuotaExceededMessage'
+import Icon from './Icon'
+import { Button } from './base/forms/Button'
+import Constants from 'common/constants'
 
 type OrganisationLimitType = {
   id: string
@@ -36,6 +38,36 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({
 
   const alertMaxApiCallsText = `You have used ${apiUsageMessageText} of your allowed requests.`
 
+  const QuotaExceededMessage = () => {
+    return (
+      <div
+        className={'alert alert-danger announcement'}
+        style={{ display: 'initial' }}
+      >
+        <span className='icon-alert'>
+          <Icon name='close-circle' />
+        </span>
+        <>
+          Your organisation has exceeded its API usage quota{' '}
+          {`(${alertMaxApiCallsText}).`}{' '}
+          {Utils.getPlanName(organisationPlan) === 'Free' ? (
+            <b>Please upgrade your plan to continue receiving service.</b>
+          ) : (
+            <b>Automated billing for the overages may apply.</b>
+          )}
+        </>
+        <Button
+          className='btn ml-3'
+          onClick={() => {
+            document.location.replace(Constants.upgradeURL)
+          }}
+        >
+          Upgrade plan
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <Row className='justify-content-center'>
       {Utils.getFlagsmithHasFeature('payments_enabled') &&
@@ -47,12 +79,7 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({
             enabledButton
           />
         ) : (
-          maxApiCallsPercentage >= 100 && (
-            <QuotaExceededMessage
-              error={apiUsageMessageText}
-              organisationPlan={organisationPlan}
-            />
-          )
+          maxApiCallsPercentage >= 100 && <QuotaExceededMessage />
         ))}
     </Row>
   )
