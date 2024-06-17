@@ -88,13 +88,24 @@ class SegmentSerializer(serializers.ModelSerializer, SerializerWithMetadata):
         self.validate_segment_rules_conditions_limit(rules_data)
 
         # Create a version of the segment now that we're updating.
-        instance.deep_clone()
+        cloned_segment = instance.deep_clone()
 
-        self._update_segment_rules(rules_data, segment=instance)
-        self._update_or_create_metadata(metadata_data, segment=instance)
-        # remove rules from validated data to prevent error trying to create segment with nested rules
-        del validated_data["rules"]
-        return super().update(instance, validated_data)
+        try:
+            self._update_segment_rules(rules_data, segment=instance)
+            self._update_or_create_metadata(metadata_data, segment=instance)
+
+            # remove rules from validated data to prevent error trying to create segment with nested rules
+            del validated_data["rules"]
+            response = super().update(instance, validated_data)
+        except Exception:
+            # Since there was a problem during the update we now delete the cloned segment,
+            # since we no longer need a versioned segment.
+            instance.refresh_from_db()
+            instance.version = cloned_segment.version
+            instance.save()
+            cloned_segment.deep_delete(hard=True)
+            raise
+        return response
 
     def validate_project_segment_limit(self, project: Project) -> None:
         if project.segments.count() >= project.max_segments_allowed:
