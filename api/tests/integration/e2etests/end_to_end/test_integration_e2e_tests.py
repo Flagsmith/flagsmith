@@ -41,7 +41,7 @@ def test_e2e_teardown(settings, db) -> None:
     for subscription in Subscription.objects.filter(
         organisation__in=e2e_user.organisations.all()
     ):
-        assert subscription.max_seats == 2
+        assert subscription.max_seats == 6
 
 
 def test_e2e_teardown_with_incorrect_token(settings, db):
