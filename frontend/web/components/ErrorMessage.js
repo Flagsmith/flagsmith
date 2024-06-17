@@ -12,7 +12,8 @@ export default class ErrorMessage extends PureComponent {
     const errorMessageClassName = `alert alert-danger ${
       this.props.errorMessageClass || 'flex-1 align-items-center'
     }`
-    const error = this.props.error?.data || this.props.error?.message || this.props.error
+    const error =
+      this.props.error?.data || this.props.error?.message || this.props.error
     return this.props.error ? (
       <div
         className={errorMessageClassName}

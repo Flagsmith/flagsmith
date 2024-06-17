@@ -50,9 +50,9 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
     isLoading: versionsLoading,
   } = useGetFeatureVersionsQuery(
     {
-      is_live: true,
       environmentId,
       featureId: featureId as any,
+      is_live: true,
     },
     {
       skip: !featureId,

@@ -482,5 +482,9 @@ export type Req = {
   updateSamlConfiguration: { name: string; body: SAMLConfiguration }
   deleteSamlConfiguration: { name: string }
   createSamlConfiguration: SAMLConfiguration
+  getSamlAttributeMapping: { id: string }
+  updateSamlAttributeMapping: { id: string }
+  deleteSamlAttributeMapping: { id: string }
+  createSamlAttributeMapping: {}
   // END OF TYPES
 }
