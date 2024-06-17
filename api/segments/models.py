@@ -30,6 +30,7 @@ from features.models import Feature
 from metadata.models import Metadata
 from projects.models import Project
 
+from .helpers import segment_audit_log_helper
 from .managers import SegmentManager
 
 logger = logging.getLogger(__name__)
@@ -81,6 +82,16 @@ class Segment(
     def __str__(self):
         return "Segment - %s" % self.name
 
+    def get_skip_create_audit_log(self) -> bool:
+        skip = segment_audit_log_helper.should_skip_audit_log(self.id)
+        if skip is not None:
+            return skip
+
+        if self.version_of != self:
+            return True
+
+        return False
+
     @staticmethod
     def id_exists_in_rules_data(rules_data: typing.List[dict]) -> bool:
         """
@@ -123,31 +134,58 @@ class Segment(
         This allows the segment model to reference all versions of
         itself including itself.
         """
+        segment_audit_log_helper.set_skip_audit_log(self.id)
         self.version_of = self
         self.save()
+        segment_audit_log_helper.unset_skip_audit_log(self.id)
+
+    def deep_delete(self, hard: bool) -> None:
+        for rule in self.rules.all():
+            for child_rule in rule.rules.all():
+                for condition in child_rule.conditions.all():
+                    if hard:
+                        condition.hard_delete()
+                    else:
+                        condition.delete()
+                if hard:
+                    child_rule.hard_delete()
+                else:
+                    child_rule.delete()
+            if hard:
+                rule.hard_delete()
+            else:
+                rule.delete()
+        if hard:
+            self.hard_delete()
+        else:
+            self.delete()
 
     def deep_clone(self) -> "Segment":
-        new_segment = deepcopy(self)
-        new_segment.id = None
-        new_segment.uuid = uuid.uuid4()
-        new_segment.version_of = self
-        new_segment.save()
+        cloned_segment = deepcopy(self)
+        cloned_segment.id = None
+        cloned_segment.uuid = uuid.uuid4()
+        cloned_segment.version_of = self
+        cloned_segment.save()
 
+        segment_audit_log_helper.set_skip_audit_log(self.id)
         self.version += 1
         self.save()
+        segment_audit_log_helper.unset_skip_audit_log(self.id)
 
-        new_rules = []
+        cloned_rules = []
         for rule in self.rules.all():
-            new_rule = rule.deep_clone(new_segment)
-            new_rules.append(new_rule)
+            cloned_rule = rule.deep_clone(cloned_segment)
+            cloned_rules.append(cloned_rule)
 
-        new_segment.refresh_from_db()
+        cloned_segment.refresh_from_db()
 
         assert (
-            len(self.rules.all()) == len(new_rules) == len(new_segment.rules.all())
+            len(self.rules.all())
+            == len(cloned_rules)
+            == len(cloned_segment.rules.all())
         ), "Mismatch during rules creation"
 
-        return new_segment
+        return cloned_segment
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return SEGMENT_CREATED_MESSAGE % self.name
@@ -193,6 +231,10 @@ class SegmentRule(SoftDeleteExportableModel):
             str(self.segment) if self.segment else str(self.rule),
         )
 
+    def get_skip_create_audit_log(self) -> bool:
+        segment = self.get_segment()
+        return segment.version_of != segment
+
     def get_segment(self):
         """
         rules can be a child of a parent rule instead of a segment, this method iterates back up the tree to find the
@@ -205,46 +247,47 @@ class SegmentRule(SoftDeleteExportableModel):
             rule = rule.rule
         return rule.segment
 
-    def deep_clone(self, versioned_segment: Segment) -> "SegmentRule":
+    def deep_clone(self, cloned_segment: Segment) -> "SegmentRule":
         if self.rule:
             # Since we're expecting a rule that is only belonging to a
-            # segment, we don't expect there also to be a rule associated.
+            # segment, since a rule either belongs to a segment xor belongs
+            # to a rule, we don't expect there also to be a rule associated.
             assert False, "Unexpected rule, expecting segment set not rule"
-        new_rule = deepcopy(self)
-        new_rule.segment = versioned_segment
-        new_rule.uuid = uuid.uuid4()
-        new_rule.id = None
-        new_rule.save()
+        cloned_rule = deepcopy(self)
+        cloned_rule.segment = cloned_segment
+        cloned_rule.uuid = uuid.uuid4()
+        cloned_rule.id = None
+        cloned_rule.save()
 
-        new_conditions = []
+        cloned_conditions = []
         for condition in self.conditions.all():
-            new_condition = deepcopy(condition)
-            new_condition.uuid = uuid.uuid4()
-            new_condition.rule = new_rule
-            new_condition.id = None
-            new_conditions.append(new_condition)
-        Condition.objects.bulk_create(new_conditions)
+            cloned_condition = deepcopy(condition)
+            cloned_condition.uuid = uuid.uuid4()
+            cloned_condition.rule = cloned_rule
+            cloned_condition.id = None
+            cloned_conditions.append(cloned_condition)
+        Condition.objects.bulk_create(cloned_conditions)
 
         for sub_rule in self.rules.all():
             if sub_rule.rules.exists():
                 assert False, "Expected two layers of rules, not more"
 
-            new_sub_rule = deepcopy(sub_rule)
-            new_sub_rule.rule = new_rule
-            new_sub_rule.uuid = uuid.uuid4()
-            new_sub_rule.id = None
-            new_sub_rule.save()
+            cloned_sub_rule = deepcopy(sub_rule)
+            cloned_sub_rule.rule = cloned_rule
+            cloned_sub_rule.uuid = uuid.uuid4()
+            cloned_sub_rule.id = None
+            cloned_sub_rule.save()
 
-            new_conditions = []
+            cloned_conditions = []
             for condition in sub_rule.conditions.all():
-                new_condition = deepcopy(condition)
-                new_condition.rule = new_sub_rule
-                new_condition.uuid = uuid.uuid4()
-                new_condition.id = None
-                new_conditions.append(new_condition)
-            Condition.objects.bulk_create(new_conditions)
+                cloned_condition = deepcopy(condition)
+                cloned_condition.rule = cloned_sub_rule
+                cloned_condition.uuid = uuid.uuid4()
+                cloned_condition.id = None
+                cloned_conditions.append(cloned_condition)
+            Condition.objects.bulk_create(cloned_conditions)
 
-        return new_rule
+        return cloned_rule
 
 
 class Condition(
@@ -293,6 +336,10 @@ class Condition(
             self.operator,
             self.value,
         )
+
+    def get_skip_create_audit_log(self) -> bool:
+        segment = self.rule.get_segment()
+        return segment.version_of != segment
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         return f"Condition updated on segment '{self._get_segment().name}'."
