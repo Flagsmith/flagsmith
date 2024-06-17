@@ -87,7 +87,10 @@ class Segment(
         if skip is not None:
             return skip
 
-        if self.version_of != self:
+        try:
+            if self.version_of and self.version_of != self:
+                return True
+        except Segment.DoesNotExist:
             return True
 
         return False
