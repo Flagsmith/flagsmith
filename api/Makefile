@@ -12,7 +12,6 @@ POETRY_VERSION ?= 1.8.3
 GUNICORN_LOGGER_CLASS ?= util.logging.GunicornJsonCapableLogger
 
 SAML_REVISION ?= v1.6.0
-AUTH_CONTROLLER_REVISION ?= v0.0.1
 RBAC_REVISION ?= v0.7.0
 
 -include .env-local
@@ -34,9 +33,8 @@ install-packages:
 install-private-modules:
 	$(eval SITE_PACKAGES_DIR := $(shell poetry run python -c 'import site; print(site.getsitepackages()[0])'))
 	git clone https://github.com/flagsmith/flagsmith-saml --depth 1 --branch ${SAML_REVISION} && mv ./flagsmith-saml/saml $(SITE_PACKAGES_DIR)
-	git clone https://github.com/flagsmith/flagsmith-auth-controller --depth 1 --branch ${AUTH_CONTROLLER_REVISION} && mv ./flagsmith-auth-controller/auth_controller $(SITE_PACKAGES_DIR)
 	git clone https://github.com/flagsmith/flagsmith-rbac --depth 1 --branch ${RBAC_REVISION} && mv ./flagsmith-rbac/rbac $(SITE_PACKAGES_DIR)
-	rm -rf ./flagsmith-saml ./flagsmith-auth-controller ./flagsmith-rbac
+	rm -rf ./flagsmith-saml ./flagsmith-rbac
 
 .PHONY: install
 install: install-pip install-poetry install-packages
