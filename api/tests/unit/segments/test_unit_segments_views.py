@@ -157,10 +157,9 @@ def test_create_segments_reaching_max_limit(project, client, settings):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_audit_log_created_when_segment_updated(project, segment, client):
+def test_audit_log_created_when_segment_updated(project, client):
     # Given
     segment = Segment.objects.create(name="Test segment", project=project)
-
     url = reverse(
         "api-v1:projects:project-segments-detail",
         args=[project.id, segment.id],
@@ -172,18 +171,16 @@ def test_audit_log_created_when_segment_updated(project, segment, client):
     }
 
     # When
-    res = client.put(url, data=json.dumps(data), content_type="application/json")
+    response = client.put(url, data=json.dumps(data), content_type="application/json")
 
     # Then
-    assert res.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_200_OK
 
-    # Three audit log records created, two for the primary
-    # segment and one for the newly versioned segment.
     assert (
         AuditLog.objects.filter(
             related_object_type=RelatedObjectType.SEGMENT.name
         ).count()
-        == 3
+        == 1
     )
 
 
@@ -255,13 +252,11 @@ def test_audit_log_created_when_segment_created(project, client):
     # Then
     assert res.status_code == status.HTTP_201_CREATED
 
-    # Two AuditLog instances are created because of the AFTER_CREATE hook
-    # of the Segment model which sets the version_of field to self.
     assert (
         AuditLog.objects.filter(
             related_object_type=RelatedObjectType.SEGMENT.name
         ).count()
-        == 2
+        == 1
     )
 
 
@@ -556,6 +551,91 @@ def test_update_segment_add_new_condition(
         == new_condition_property
     )
     assert nested_rule.conditions.order_by("-id").first().value == new_condition_value
+
+
+def test_update_segment_versioned_segment(
+    project: Project,
+    admin_client_new: APIClient,
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    nested_rule = SegmentRule.objects.create(
+        rule=segment_rule, type=SegmentRule.ANY_RULE
+    )
+    existing_condition = Condition.objects.create(
+        rule=nested_rule, property="foo", operator=EQUAL, value="bar"
+    )
+
+    # Before updating the segment confirm pre-existing version count which is
+    # automatically set by the fixture.
+    assert Segment.all_objects.filter(version_of=segment).count() == 2
+
+    new_condition_property = "foo2"
+    new_condition_value = "bar"
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "id": segment_rule.id,
+                "type": segment_rule.type,
+                "rules": [
+                    {
+                        "id": nested_rule.id,
+                        "type": nested_rule.type,
+                        "rules": [],
+                        "conditions": [
+                            # existing condition
+                            {
+                                "id": existing_condition.id,
+                                "property": existing_condition.property,
+                                "operator": existing_condition.operator,
+                                "value": existing_condition.value,
+                            },
+                            # new condition
+                            {
+                                "property": new_condition_property,
+                                "operator": EQUAL,
+                                "value": new_condition_value,
+                            },
+                        ],
+                    }
+                ],
+                "conditions": [],
+            }
+        ],
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    # Now verify that a new versioned segment has been set.
+    assert Segment.all_objects.filter(version_of=segment).count() == 3
+
+    # Now check the previously versioned segment to match former count of conditions.
+
+    versioned_segment = Segment.all_objects.filter(
+        version_of=segment, version=2
+    ).first()
+    assert versioned_segment != segment
+    assert versioned_segment.rules.count() == 1
+    versioned_rule = versioned_segment.rules.first()
+    assert versioned_rule.rules.count() == 1
+
+    nested_versioned_rule = versioned_rule.rules.first()
+    assert nested_versioned_rule.conditions.count() == 1
+    versioned_condition = nested_versioned_rule.conditions.first()
+    assert versioned_condition != existing_condition
+    assert versioned_condition.property == existing_condition.property
 
 
 @pytest.mark.parametrize(
