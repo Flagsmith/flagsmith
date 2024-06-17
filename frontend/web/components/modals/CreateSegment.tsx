@@ -207,6 +207,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const save = (e: FormEvent) => {
     Utils.preventDefault(e)
     setValueChanged(false)
+    setMetadataValueChanged(false)
     const segmentData: Omit<Segment, 'id' | 'uuid'> = {
       description,
       feature: feature,
@@ -545,30 +546,25 @@ const CreateSegment: FC<CreateSegmentType> = ({
   )
 
   const MetadataTab = (
-    <TabItem tabLabel='Metadata'>
-      <FormGroup className='mt-5 setting'>
-        <InputGroup
-          title={'Metadata'}
-          component={
-            <AddMetadataToEntity
-              organisationId={AccountStore.getOrganisation().id}
-              projectId={projectId}
-              entityId={`${segment.id}` || ''}
-              entityContentType={segmentContentType?.id}
-              entity={segmentContentType?.model}
-              onChange={(m: CustomMetadataField[]) => {
-                setMetadata(m)
-                if (isEdit) {
-                  setValueChanged(true)
-                } else {
-                  setMetadataValueChanged(true)
-                }
-              }}
-            />
-          }
-        />
-      </FormGroup>
-    </TabItem>
+    <FormGroup className='mt-5 setting'>
+      <InputGroup
+        component={
+          <AddMetadataToEntity
+            organisationId={AccountStore.getOrganisation().id}
+            projectId={projectId}
+            entityId={`${segment.id}` || ''}
+            entityContentType={segmentContentType?.id}
+            entity={segmentContentType?.model}
+            onChange={(m: CustomMetadataField[]) => {
+              setMetadata(m)
+              if (isEdit) {
+                setMetadataValueChanged(true)
+              }
+            }}
+          />
+        }
+      />
+    </FormGroup>
   )
 
   return (
@@ -743,7 +739,17 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </div>
           </TabItem>
           {metadataEnable && segmentContentType?.id && (
-            <TabItem tabLabelString='Metadata' tabLabel={'Metadata'}>
+            <TabItem
+              tabLabelString='Metadata'
+              tabLabel={
+                <Row className='justify-content-center'>
+                  Metadata
+                  {metadataValueChanged && (
+                    <div className='unread ml-2 px-1'>{'*'}</div>
+                  )}
+                </Row>
+              }
+            >
               <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
             </TabItem>
           )}
@@ -758,16 +764,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
           <TabItem
             tabLabelString='Metadata'
-            tabLabel={
-              <Row className='justify-content-center'>
-                Metadata
-                {metadataValueChanged && (
-                  <div className='unread px-1' style={{ right: '100px' }}>
-                    {'*'}
-                  </div>
-                )}
-              </Row>
-            }
+            tabLabel={<Row className='justify-content-center'>Metadata</Row>}
           >
             <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
           </TabItem>
