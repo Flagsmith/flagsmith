@@ -117,7 +117,14 @@ def get_usage_data_from_local_db(
         bucket_size=constants.ANALYTICS_READ_BUCKET_SIZE,
     )
     if project_id:
-        qs = qs.filter(project_id=project_id)
+        environment_ids = Environment.objects.filter(project_id=project_id).values_list(
+            "id", flat=True
+        )
+        # evaluate the queryset because analytics db does not have
+        # access to environment/project table
+        environment_ids = list(environment_ids)
+        qs = qs.filter(environment_id__in=environment_ids)
+
     if environment_id:
         qs = qs.filter(environment_id=environment_id)
 
