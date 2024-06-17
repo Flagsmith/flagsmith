@@ -202,6 +202,16 @@ const config = {
         swaggerURL: '/api-static/edge-api.yaml',
     },
 
+    headTags: [
+        {
+            tagName: 'img',
+            attributes: {
+                src: 'https://static.scarf.sh/a.png?x-pxid=3bd13eaa-d37d-454b-b503-322643e72574',
+                referrerpolicy: 'no-referrer-when-downgrade',
+            },
+        },
+    ],
+
     presets: [
         [
             'classic',
