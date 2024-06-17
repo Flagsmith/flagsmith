@@ -104,7 +104,7 @@ Current variables used between 'frontend/environment.js' and 'frontend/common/pr
 ### GitHub Integration Environment Variables
 
 - `GITHUB_APP_URL`: You can obtain the URL of your GitHub App in the 'About' section -> 'public link' and append
-  '/installations/select_target' to it.
+  '/installations/select_target' to it. E.g. `https://github.com/apps/my-github-app/installations/select_target`
 
 ## E2E testing
 
