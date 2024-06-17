@@ -171,13 +171,13 @@ DJANGO_DB_CONN_MAX_AGE = None if db_conn_max_age == -1 else db_conn_max_age
 DATABASE_ROUTERS = ["app.routers.PrimaryReplicaRouter"]
 NUM_DB_REPLICAS = 0
 NUM_CROSS_REGION_DB_REPLICAS = 0
+DATABASES = {"default": {}}
+
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
 if "DATABASE_URL" in os.environ:
-    DATABASES = {
-        "default": dj_database_url.parse(
-            env("DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
-        ),
-    }
+    DATABASES["default"] = dj_database_url.parse(
+        env("DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
+    )
     REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
     REPLICA_DATABASE_URLS = env.list(
         "REPLICA_DATABASE_URLS", default=[], delimiter=REPLICA_DATABASE_URLS_DELIMITER
@@ -221,16 +221,14 @@ if "DATABASE_URL" in os.environ:
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
 elif "DJANGO_DB_NAME" in os.environ:
     # If there is no DATABASE_URL configured, check for old style DB config parameters
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ["DJANGO_DB_NAME"],
-            "USER": os.environ["DJANGO_DB_USER"],
-            "PASSWORD": os.environ["DJANGO_DB_PASSWORD"],
-            "HOST": os.environ["DJANGO_DB_HOST"],
-            "PORT": os.environ["DJANGO_DB_PORT"],
-            "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
-        },
+    DATABASES["default"] = {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ["DJANGO_DB_NAME"],
+        "USER": os.environ["DJANGO_DB_USER"],
+        "PASSWORD": os.environ["DJANGO_DB_PASSWORD"],
+        "HOST": os.environ["DJANGO_DB_HOST"],
+        "PORT": os.environ["DJANGO_DB_PORT"],
+        "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
     }
     if "DJANGO_DB_NAME_ANALYTICS" in os.environ:
         DATABASES["analytics"] = {
@@ -244,6 +242,10 @@ elif "DJANGO_DB_NAME" in os.environ:
         }
 
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
+
+DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
+if "analytics" in DATABASES:
+    DATABASES["analytics"]["DISABLE_SERVER_SIDE_CURSORS"] = True
 
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
