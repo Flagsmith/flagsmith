@@ -8,13 +8,18 @@ on:
         type: string
         description: The environment to deploy to
         required: true
+      saas-image-name:
+        type: string
+        description: SaaS image name
+        required: false
+        default: flagsmith-saas-api
 
 jobs:
   docker-build-saas-api:
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
     outputs:
-      image-url: ${{ steps.login-ecr.outputs.registry }}/flagsmith-api:${{ steps.meta.outputs.version }}
+      image-url: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.saas-image-name }}:${{ steps.meta.outputs.version }}
 
     permissions:
       id-token: write
@@ -43,7 +48,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ steps.login-ecr.outputs.registry }}/flagsmith-saas-api
+            ${{ steps.login-ecr.outputs.registry }}/${{ inputs.saas-image-name }}
           tags: |
             type=ref,event=branch
             type=ref,event=tag
