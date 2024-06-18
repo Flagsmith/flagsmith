@@ -1,10 +1,10 @@
 ---
-title: Data Migration
+title: Organisations
 sidebar_position: 110
 ---
 
-The data migration option is useful when you want to migrate your Flagsmith application from one location to another.
-It's not a useful tool to merge Flagsmith data into another Flagsmith instance, for that use-case consider
+The Organisations data migration option is useful when you want to migrate your Flagsmith Organisation from one location
+to another. It's not a useful tool to merge Flagsmith data into another Flagsmith instance, for that use-case consider
 [feature flag importing](/system-administration/importing-and-exporting/features).
 
 If, for example, you wanted to move from self hosting Flagsmith to our SaaS version, the process looks something like
@@ -28,6 +28,7 @@ from our SaaS platform, you will need to get in touch with us to operate that pa
 
 We **will** export the following entities:
 
+- Projects
 - Flags
 - Segments
 - Identities
