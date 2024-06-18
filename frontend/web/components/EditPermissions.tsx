@@ -737,7 +737,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             title='Permissions'
             className='no-pad mb-2'
             items={permissions}
-            renderRow={(p: AvailablePermission) => {
+            renderRow={(p: AvailablePermission, index: number) => {
               const levelUpperCase = level.toUpperCase()
               const disabled =
                 level !== 'organisation' &&
@@ -755,6 +755,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                       <div className='list-item-subtitle'>{p.description}</div>
                     </Flex>
                     <Switch
+                      data-test={`permission-switch-${level}-${index}`}
                       onChange={() => {
                         setValueChanged(true)
                         togglePermission(p.key)

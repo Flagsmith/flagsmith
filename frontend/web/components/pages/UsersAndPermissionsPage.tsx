@@ -724,7 +724,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                         />
                       </div>
                     </TabItem>
-                    <TabItem tabLabel='Roles'>
+                    <TabItem tabLabel='Roles' data-test='tab-item-roles'>
                       {hasRbacPermission ? (
                         <>
                           <RolesTable
