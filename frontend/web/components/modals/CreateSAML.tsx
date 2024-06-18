@@ -9,10 +9,7 @@ import {
   useGetSamlConfigurationQuery,
   getSamlConfigurationMetadata,
 } from 'common/services/useSamlConfiguration'
-import {
-  useCreateSamlAttributeMappingMutation,
-  useUpdateSamlAttributeMappingMutation,
-} from 'common/services/useSamlAttributeMapping'
+import { useCreateSamlAttributeMappingMutation } from 'common/services/useSamlAttributeMapping'
 import Button from 'components/base/forms/Button'
 import { Req } from 'common/types/requests'
 import ErrorMessage from 'components/ErrorMessage'
