@@ -1,8 +1,8 @@
 import logging
 import time
-import traceback
 from threading import Thread
 
+from django.db import close_old_connections
 from django.utils import timezone
 
 from task_processor.processor import run_recurring_tasks, run_tasks
@@ -42,8 +42,8 @@ class TaskRunner(Thread):
             # TODO: is this also what is causing tasks to get stuck as locked? Can we unlock
             #  tasks here?
 
-            logger.error("Received error retrieving tasks: %s.", e)
-            logger.debug(traceback.format_exc())
+            logger.error("Received error retrieving tasks: %s.", e, exc_info=e)
+            close_old_connections()
 
     def stop(self):
         self._stopped = True
