@@ -12,6 +12,7 @@ import {
   ProjectFlag,
   Environment,
   UserGroup,
+  AttributeName,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -482,9 +483,22 @@ export type Req = {
   updateSamlConfiguration: { name: string; body: SAMLConfiguration }
   deleteSamlConfiguration: { name: string }
   createSamlConfiguration: SAMLConfiguration
-  getSamlAttributeMapping: { id: string }
-  updateSamlAttributeMapping: { id: string }
-  deleteSamlAttributeMapping: { id: string }
-  createSamlAttributeMapping: {}
+  getSamlAttributeMapping: { saml_configuration_id: number }
+  updateSamlAttributeMapping: {
+    attribute_id: number
+    body: {
+      saml_configuration: number
+      django_attribute_name: AttributeName
+      idp_attribute_name: string
+    }
+  }
+  deleteSamlAttributeMapping: { attribute_id: number }
+  createSamlAttributeMapping: {
+    body: {
+      saml_configuration: number
+      django_attribute_name: AttributeName
+      idp_attribute_name: string
+    }
+  }
   // END OF TYPES
 }

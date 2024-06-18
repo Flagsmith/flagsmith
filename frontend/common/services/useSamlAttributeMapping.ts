@@ -12,7 +12,7 @@ export const samlAttributeMappingService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'SamlAttributeMapping' }],
         query: (query: Req['createSamlAttributeMapping']) => ({
-          body: query,
+          body: query.body,
           method: 'POST',
           url: `auth/saml/attribute-mapping/`,
         }),
@@ -23,32 +23,28 @@ export const samlAttributeMappingService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'SamlAttributeMapping' }],
         query: (query: Req['deleteSamlAttributeMapping']) => ({
-          body: query,
           method: 'DELETE',
-          url: `auth/saml/attribute-mapping/`,
+          url: `auth/saml/attribute-mapping/${query.attribute_id}`,
         }),
       }),
       getSamlAttributeMapping: builder.query<
         Res['samlAttributeMapping'],
         Req['getSamlAttributeMapping']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'SamlAttributeMapping' }],
+        providesTags: () => [{ id: 'LIST', type: 'SamlAttributeMapping' }],
         query: (query: Req['getSamlAttributeMapping']) => ({
-          url: `auth/saml/attribute-mapping/`,
+          url: `auth/saml/attribute-mapping/?saml_configuration=${query.saml_configuration_id}`,
         }),
       }),
       updateSamlAttributeMapping: builder.mutation<
         Res['samlAttributeMapping'],
         Req['updateSamlAttributeMapping']
       >({
-        invalidatesTags: (res) => [
-          { id: 'LIST', type: 'SamlAttributeMapping' },
-          { id: res?.id, type: 'SamlAttributeMapping' },
-        ],
+        invalidatesTags: () => [{ id: 'LIST', type: 'SamlAttributeMapping' }],
         query: (query: Req['updateSamlAttributeMapping']) => ({
-          body: query,
+          body: query.body,
           method: 'PUT',
-          url: `auth/saml/attribute-mapping/`,
+          url: `auth/saml/attribute-mapping/${query.attribute_id}`,
         }),
       }),
       // END OF ENDPOINTS
