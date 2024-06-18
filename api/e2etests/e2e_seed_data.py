@@ -121,13 +121,16 @@ def seed_data() -> None:
         {"name": "My Test Project 2", "environments": ["Development"]},
         {"name": "My Test Project 3", "environments": ["Development"]},
         {"name": "My Test Project 4", "environments": ["Development"]},
-        {"name": "My Project Permission Project Test", "environments": ["Development"]},
-        {"name": "My Env Permission Project Test", "environments": ["Development"]},
-        {"name": "My Role Project Test", "environments": ["Development"]},
+        {
+            "name": "My Test Project 5 Project Permission",
+            "environments": ["Development"],
+        },
+        {"name": "My Test Project 6 Env Permission", "environments": ["Development"]},
+        {"name": "My Test Project 7 Role", "environments": ["Development"]},
     ]
     # Upgrade organisation seats
     Subscription.objects.filter(organisation__in=org_admin.organisations.all()).update(
-        max_seats=6, plan=SCALE_UP, subscription_id="test_subscription_id"
+        max_seats=8, plan=SCALE_UP, subscription_id="test_subscription_id"
     )
 
     # Create projects and environments
