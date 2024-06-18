@@ -17,6 +17,13 @@ this:
 - **Step 5.** Register and re-add your users and passwords (Flagsmith support will need to assign at least one
   organisation administrator to the newly imported organisation)
 
+:::tip
+
+You can import and export from any combination of self-hosted/SaaS to and from self-hosted/SaaS. If you need to go to or
+from our SaaS platform, you will need to get in touch with us to operate that part of the process for you.
+
+:::
+
 ## What is exported?
 
 We **will** export the following entities:
@@ -33,13 +40,15 @@ We **will not** export the following entities:
 - Change requests
 - Scheduled flag changes
 
+## Dealing with existing data
+
+The data migration process is designed to import data into a completely new Organisation within the target Flagsmith
+instance. This target instance could be a completely new installation, or it could have existing data in it, in separate
+Organisations.
+
+This process does **not** support importing data into an existing Organisation.
+
 ## Exporting
-
-:::info
-
-Please contact us if you need to be sent an export of your Organisation from our SaaS platform.
-
-:::
 
 The export process involves running a command from a terminal window. This must either be run from a running container
 in your self hosted deployment or, alternatively, you can run a separate container that can connect to the same database
@@ -48,7 +57,7 @@ You can do this through the django admin interface. Information about accessing 
 [here](/deployment/configuration/django-admin.md). Once you've obtained access to the admin interface, if you browse to
 the 'Organisations' menu item on the left, you should see something along the lines of the following:
 
-![](/img/organisations-admin.png)
+![Image](/img/organisations-admin.png)
 
 The ID you need is the one in brackets after the organisation name, so here it would be 1.
 
