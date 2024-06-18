@@ -102,7 +102,6 @@ RUN make install-packages opts='--without dev --with saml,auth-controller,ldap,w
 
 # Integrate private modules
 ARG SAML_REVISION
-ARG AUTH_CONTROLLER_REVISION
 ARG RBAC_REVISION
 RUN make install-private-modules
 
