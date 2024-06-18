@@ -262,14 +262,8 @@ class SegmentRule(SoftDeleteExportableModel):
         cloned_rule.id = None
         cloned_rule.save()
 
-        cloned_conditions = []
-        for condition in self.conditions.all():
-            cloned_condition = deepcopy(condition)
-            cloned_condition.uuid = uuid.uuid4()
-            cloned_condition.rule = cloned_rule
-            cloned_condition.id = None
-            cloned_conditions.append(cloned_condition)
-        Condition.objects.bulk_create(cloned_conditions)
+        # Conditions are only part of the sub-rules.
+        assert self.conditions.exists() is False
 
         for sub_rule in self.rules.all():
             if sub_rule.rules.exists():
