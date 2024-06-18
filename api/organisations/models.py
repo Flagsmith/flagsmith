@@ -367,7 +367,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
         if self.plan == SCALE_UP and self.subscription_id == "test_subscription_id":
 
-            # test_subscription_id subscription_id is the only for test
+            # test_subscription_id is the subscription_id for test e2e
             return PLAN_SUBSCRIPTION_METADATA_FOR_TEST
 
         return (
