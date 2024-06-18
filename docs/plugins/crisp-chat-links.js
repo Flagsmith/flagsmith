@@ -7,8 +7,9 @@ const enableCrispLinks = () => {
         oc.onclick = ({ target }) => {
             if (typeof $crisp !== 'undefined') {
                 $crisp.push(['do', 'chat:open']);
-                if (target.dataset.crispChatMessage) {
-                    $crisp.push(['set', 'message:text', [e.target.dataset.crispChatMessage]]);
+                let dataCrispChatMessage = target.getAttribute('data-crisp-chat-message');
+                if (dataCrispChatMessage) {
+                    $crisp.push(['set', 'message:text', [dataCrispChatMessage]]);
                 }
             }
         };

@@ -21,9 +21,9 @@ influx_org = settings.INFLUXDB_ORG
 read_bucket = settings.INFLUXDB_BUCKET + "_downsampled_15m"
 
 range_bucket_mappings = {
-    "24h": settings.INFLUXDB_BUCKET + "_downsampled_15m",
-    "7d": settings.INFLUXDB_BUCKET + "_downsampled_15m",
-    "30d": settings.INFLUXDB_BUCKET + "_downsampled_1h",
+    "-24h": settings.INFLUXDB_BUCKET + "_downsampled_15m",
+    "-7d": settings.INFLUXDB_BUCKET + "_downsampled_15m",
+    "-30d": settings.INFLUXDB_BUCKET + "_downsampled_1h",
 }
 retries = Retry(connect=3, read=3, redirect=3)
 # Set a timeout to prevent threads being potentially stuck open due to network weirdness

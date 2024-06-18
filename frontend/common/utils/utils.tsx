@@ -117,16 +117,17 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return null
     }
 
-    if (typeof featureState.integer_value === 'number') {
-      return Utils.getTypedValue(featureState.integer_value)
+    //@ts-ignore value_type is the type key on core traits
+    switch (featureState.value_type || featureState.type) {
+      case 'bool':
+        return featureState.boolean_value
+      case 'float':
+        return featureState.float_value
+      case 'int':
+        return featureState.integer_value
+      default:
+        return featureState.string_value
     }
-    if (typeof featureState.float_value === 'number') {
-      return Utils.getTypedValue(featureState.float_value)
-    }
-
-    return Utils.getTypedValue(
-      featureState.string_value || featureState.boolean_value,
-    )
   },
   findOperator(
     operator: SegmentCondition['operator'],
@@ -374,6 +375,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         break
       }
       case 'STALE_FLAGS': {
+        valid = isEnterprise
+        break
+      }
+      case 'SAML': {
         valid = isEnterprise
         break
       }

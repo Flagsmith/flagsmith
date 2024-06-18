@@ -52,7 +52,7 @@ import AddMetadataToEntity, {
   CustomMetadataField,
 } from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
-import { setInterceptClose } from './base/ModalDefault'
+import { setInterceptClose, setModalTitle } from './base/ModalDefault'
 
 type PageType = {
   number: number
@@ -90,7 +90,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
   identities,
   identitiesLoading,
   identity,
-  isEdit,
   onCancel,
   onComplete,
   page,
@@ -114,12 +113,19 @@ const CreateSegment: FC<CreateSegmentType> = ({
     rules: [
       {
         conditions: [],
-        rules: [],
+        rules: [
+          {
+            conditions: [{ ...Constants.defaultRule }],
+            rules: [],
+            type: 'ANY',
+          },
+        ],
         type: 'ALL',
       },
     ],
   }
-  const segment = _segment || defaultSegment
+  const [segment, setSegment] = useState(_segment || defaultSegment)
+  const isEdit = !!segment.id
   const [
     createSegment,
     {
@@ -267,6 +273,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   }, [])
   useEffect(() => {
     if (createSuccess && createSegmentData) {
+      setSegment(createSegmentData)
       onComplete?.(createSegmentData)
     }
     //eslint-disable-next-line
@@ -313,49 +320,51 @@ const CreateSegment: FC<CreateSegmentType> = ({
   }, [operators, rules])
   //Find any non-deleted rules
   const hasNoRules = !rules[0]?.rules?.find((v) => !v.delete)
-
+  const rulesToShow = rules[0].rules.filter((v) => !v.delete)
   const rulesEl = (
     <div className='overflow-visible'>
       <div>
         <div className='mb-4'>
-          {rules[0].rules
-            ?.filter((v) => !v?.delete)
-            .map((rule, i) => {
-              return (
-                <div key={i}>
-                  <Row
-                    className={classNames('and-divider my-1', {
-                      'text-danger': rule.type !== 'ANY',
-                    })}
-                  >
-                    <Flex className='and-divider__line' />
-                    {Format.camelCase(
-                      `${i > 0 ? 'And ' : ''}${
-                        rule.type === 'ANY'
-                          ? 'Any of the following'
-                          : 'None of the following'
-                      }`,
-                    )}
-                    <Flex className='and-divider__line' />
-                  </Row>
-                  <Rule
-                    showDescription={showDescriptions}
-                    readOnly={readOnly}
-                    data-test={`rule-${i}`}
-                    rule={rule}
-                    operators={operators}
-                    onRemove={() => {
-                      setValueChanged(true)
-                      removeRule(0, i)
-                    }}
-                    onChange={(v: SegmentRule) => {
-                      setValueChanged(true)
-                      updateRule(0, i, v)
-                    }}
-                  />
-                </div>
-              )
-            })}
+          {rules[0].rules.map((rule, i) => {
+            if (rule.delete) {
+              return null
+            }
+            const displayIndex = rulesToShow.indexOf(rule)
+            return (
+              <div key={i}>
+                <Row
+                  className={classNames('and-divider my-1', {
+                    'text-danger': rule.type !== 'ANY',
+                  })}
+                >
+                  <Flex className='and-divider__line' />
+                  {Format.camelCase(
+                    `${displayIndex > 0 ? 'And ' : ''}${
+                      rule.type === 'ANY'
+                        ? 'Any of the following'
+                        : 'None of the following'
+                    }`,
+                  )}
+                  <Flex className='and-divider__line' />
+                </Row>
+                <Rule
+                  showDescription={showDescriptions}
+                  readOnly={readOnly}
+                  data-test={`rule-${displayIndex}`}
+                  rule={rule}
+                  operators={operators}
+                  onRemove={() => {
+                    setValueChanged(true)
+                    removeRule(0, i)
+                  }}
+                  onChange={(v: SegmentRule) => {
+                    setValueChanged(true)
+                    updateRule(0, i, v)
+                  }}
+                />
+              </div>
+            )
+          })}
         </div>
         {hasNoRules && (
           <InfoMessage>
@@ -457,9 +466,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             style={{ fontWeight: 'normal', marginLeft: '12px' }}
             className='mb-0 fs-small text-dark'
           >
-            {showDescriptions
-              ? 'Hide condition descriptions'
-              : 'Show condition descriptions'}
+            Show condition descriptions
           </span>
         </Row>
         {metadataEnable && segmentContentType?.id && (
@@ -740,7 +747,8 @@ type LoadingCreateSegmentType = {
   environmentId: string
   isEdit?: boolean
   readOnly?: boolean
-  onComplete?: () => void
+  onSegmentRetrieved?: (segment: Segment) => void
+  onComplete?: (segment: Segment) => void
   projectId: string
   segment?: number
 }
@@ -772,6 +780,11 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
     },
   )
 
+  useEffect(() => {
+    if (segmentData) {
+      props.onSegmentRetrieved?.(segmentData)
+    }
+  }, [segmentData])
   const isEdge = Utils.getIsEdge()
 
   const { data: identities, isLoading: identitiesLoading } =
