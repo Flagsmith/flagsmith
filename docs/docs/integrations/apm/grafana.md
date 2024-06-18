@@ -26,5 +26,8 @@ In Flagsmith:
 3. The `API Key` is the service account token you created in Grafana.
 4. Click Save.
 
-Flag change events will now be sent to Grafana as
+Flag change events will now be sent to Grafana as _Organisation Level_
 [Annotations](https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/annotate-visualizations/).
+
+You can view the annotations in your Grafana dashboards but going to Dashboard Settings > Annotations, selecting the
+`Grafana` data source and then filtering on annotations that are tagged with the `Flagsmith Event` tag.
