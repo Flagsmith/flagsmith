@@ -124,7 +124,6 @@ def send_audit_log_event_to_grafana(sender, instance, **kwargs):
     grafana = GrafanaWrapper(
         base_url=grafana_config.base_url,
         api_key=grafana_config.api_key,
-        entity_selector=grafana_config.entity_selector,
     )
     _track_event_async(instance, grafana)
 

@@ -2,6 +2,8 @@ import json
 import logging
 import time
 
+import requests
+
 from audit.models import AuditLog
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 
@@ -33,13 +35,14 @@ class GrafanaWrapper(AbstractBaseEventIntegrationWrapper):
     def _headers(self) -> dict:
         return {
             "Content-Type": "application/json",
-            "Authorization:": "Bearer %s" % self.api_key,
+            "Authorization": "Bearer %s" % self.api_key,
         }
 
     def _track_event(self, event: dict) -> None:
-        response = self.session.post(
-            f"{self.events_url}?api_key={self.api_key}", data=json.dumps(event)
+        response = requests.post(
+            self.url, headers=self._headers(), data=json.dumps(event)
         )
+
         logger.debug(
-            "Sent event to DataDog. Response code was %s" % response.status_code
+            "Sent event to Grafana. Response code was %s" % response.status_code
         )
