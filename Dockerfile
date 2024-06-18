@@ -68,9 +68,7 @@ COPY frontend /app/frontend
 # * build-node-django [build-node]
 FROM build-node as build-node-django
 
-RUN mkdir /app/api
-ENV STATIC_ASSET_CDN_URL=/static/
-RUN cd frontend && npm run bundledjango
+RUN mkdir /app/api && cd frontend && npm run bundledjango
 
 # * build-node-selfhosted [build-node]
 FROM build-node as build-node-selfhosted
@@ -82,28 +80,22 @@ FROM python:3.11 as build-python
 WORKDIR /app
 
 COPY api/pyproject.toml api/poetry.lock api/Makefile ./
-ENV POETRY_VIRTUALENVS_CREATE=false
-ENV POETRY_HOME=/usr/local
+ENV POETRY_VIRTUALENVS_CREATE=false POETRY_HOME=/usr/local
 RUN make install opts='--without dev'
 
 # * build-python-private [build-python]
 FROM build-python AS build-python-private
 
-# Authenticate git with token to install private packages
-RUN --mount=type=secret,id=github_private_cloud_token \
-  echo "https://$(cat /run/secrets/github_private_cloud_token):@github.com" > ${HOME}/.git-credentials && \
-  git config --global credential.helper store
-
-# Install SAML binary dependency
-RUN apt-get update && apt-get install -y xmlsec1
-
-# Install private Python dependencies
-RUN make install-packages opts='--without dev --with saml,auth-controller,ldap,workflows'
-
-# Integrate private modules
+# Authenticate git with token, install SAML binary dependency,
+# private Python dependencies, and integrate private modules
 ARG SAML_REVISION
 ARG RBAC_REVISION
-RUN make install-private-modules
+RUN --mount=type=secret,id=github_private_cloud_token \
+  echo "https://$(cat /run/secrets/github_private_cloud_token):@github.com" > ${HOME}/.git-credentials && \
+  git config --global credential.helper store && \
+  apt-get update && apt-get install -y xmlsec1 && \
+  make install-packages opts='--without dev --with saml,auth-controller,ldap,workflows' && \
+  make install-private-modules
 
 # * api-runtime
 FROM python:3.11-slim as api-runtime
@@ -114,8 +106,7 @@ COPY api /app/
 COPY .release-please-manifest.json /app/.versions.json
 
 ARG ACCESS_LOG_LOCATION="/dev/null"
-ENV ACCESS_LOG_LOCATION=${ACCESS_LOG_LOCATION}
-ENV DJANGO_SETTINGS_MODULE=app.settings.production
+ENV ACCESS_LOG_LOCATION=${ACCESS_LOG_LOCATION} DJANGO_SETTINGS_MODULE=app.settings.production
 
 RUN echo ${CI_COMMIT_SHA} > /app/CI_COMMIT_SHA
 
