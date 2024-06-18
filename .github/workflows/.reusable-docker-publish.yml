@@ -45,8 +45,12 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
+      # Setup Docker buildx with Depot's builder so imagetools have access to Depot's cache
+      - uses: docker/setup-buildx-action@v3
+      - uses: depot/use-action@v1
+
       - name: Publish Image
-        uses: contiamo/retag-push@main
+        uses: kphrx/docker-buildx-imagetools-action@v0.1.2
         with:
-          source: ${{ inputs.source-images }}
-          target: ${{ steps.meta.outputs.tags }}
+          sources: ${{ inputs.source-images }}
+          tags: ${{ steps.meta.outputs.tags }}
