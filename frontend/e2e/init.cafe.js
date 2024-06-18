@@ -14,6 +14,7 @@ import versioningTests from './tests/versioning-tests'
 import organisationPermissionTest from './tests/organisation-permission-test'
 import projectPermissionTest from './tests/project-permission-test'
 import environmentPermissionTest from './tests/environment-permission-test'
+import rolesTest from './tests/roles-test'
 
 require('dotenv').config()
 
@@ -140,5 +141,10 @@ test('Project-permission', async () => {
 
 test('Environment-permission', async () => {
   await environmentPermissionTest()
+  await logout()
+})
+
+test('Roles', async () => {
+  await rolesTest()
   await logout()
 })
