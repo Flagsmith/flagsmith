@@ -9,6 +9,7 @@ from flag_engine.segments.constants import EQUAL
 from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
 from pytest_lazyfixture import lazy_fixture
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -636,6 +637,82 @@ def test_update_segment_versioned_segment(
     versioned_condition = nested_versioned_rule.conditions.first()
     assert versioned_condition != existing_condition
     assert versioned_condition.property == existing_condition.property
+
+
+def test_update_segment_versioned_segment_with_thrown_exception(
+    project: Project,
+    admin_client_new: APIClient,
+    segment: Segment,
+    segment_rule: SegmentRule,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    nested_rule = SegmentRule.objects.create(
+        rule=segment_rule, type=SegmentRule.ANY_RULE
+    )
+    existing_condition = Condition.objects.create(
+        rule=nested_rule, property="foo", operator=EQUAL, value="bar"
+    )
+
+    assert (
+        segment.version == 2 == Segment.all_objects.filter(version_of=segment).count()
+    )
+
+    new_condition_property = "foo2"
+    new_condition_value = "bar"
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "id": segment_rule.id,
+                "type": segment_rule.type,
+                "rules": [
+                    {
+                        "id": nested_rule.id,
+                        "type": nested_rule.type,
+                        "rules": [],
+                        "conditions": [
+                            {
+                                "id": existing_condition.id,
+                                "property": existing_condition.property,
+                                "operator": existing_condition.operator,
+                                "value": existing_condition.value,
+                            },
+                            {
+                                "property": new_condition_property,
+                                "operator": EQUAL,
+                                "value": new_condition_value,
+                            },
+                        ],
+                    }
+                ],
+                "conditions": [],
+            }
+        ],
+    }
+
+    update_super_patch = mocker.patch(
+        "rest_framework.serializers.ModelSerializer.update"
+    )
+    update_super_patch.side_effect = Exception("Mocked exception")
+
+    # When
+    with pytest.raises(Exception):
+        admin_client_new.put(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+    # Then
+    segment.refresh_from_db()
+
+    # Now verify that the version of the segment has not been changed.
+    assert (
+        segment.version == 2 == Segment.all_objects.filter(version_of=segment).count()
+    )
 
 
 @pytest.mark.parametrize(
