@@ -18,5 +18,3 @@ AWS_SSE_LOGS_BUCKET_NAME = "test_bucket"
 RETRY_WEBHOOKS = True
 
 INFLUXDB_BUCKET = "test_bucket"
-
-LOG_LEVEL = "DEBUG"
