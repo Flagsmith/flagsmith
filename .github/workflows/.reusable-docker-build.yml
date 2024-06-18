@@ -93,6 +93,7 @@ jobs:
           file: ${{ inputs.file }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          provenance: false
 
       - name: Run Trivy vulnerability scanner
         id: trivy
