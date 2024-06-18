@@ -457,3 +457,35 @@ def test_deep_delete_soft(segment: Segment) -> None:
     assert child_rule.deleted_at > before_delete
     condition.refresh_from_db()
     assert condition.deleted_at > before_delete
+
+
+def test_segment_rule_get_skip_create_audit_log_when_doesnt_skip(
+    segment: Segment,
+) -> None:
+    # Given
+    assert segment == segment.version_of
+    segment_rule = SegmentRule.objects.create(
+        segment=segment, type=SegmentRule.ALL_RULE
+    )
+
+    # When
+    result = segment_rule.get_skip_create_audit_log()
+
+    # Then
+    assert result is False
+
+
+def test_segment_rule_get_skip_create_audit_log_when_skips(segment: Segment) -> None:
+    # Given
+    cloned_segment = segment.deep_clone()
+    assert cloned_segment != cloned_segment.version_of
+
+    segment_rule = SegmentRule.objects.create(
+        segment=cloned_segment, type=SegmentRule.ALL_RULE
+    )
+
+    # When
+    result = segment_rule.get_skip_create_audit_log()
+
+    # Then
+    assert result is True
