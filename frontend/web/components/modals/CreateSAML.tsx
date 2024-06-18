@@ -264,6 +264,8 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
       <div className='create-feature-tab mt-3'>
         <InputGroup
           title={'SAML Attribute Name*'}
+          tooltip='This is the attribute name where you want to store the information received from the SAML identity provider'
+          tooltipPlace='right'
           component={
             <Select
               value={djangoAttributeName}
@@ -280,7 +282,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
           className='mt-2'
           title='IDP Attribute Name*'
           data-test='attribute-name'
-          tooltip='You can create a new attribute mapping by clicking the "Add Attribute" button. The name of the attribute should be the same as the one in the SAML response.'
+          tooltip='This is the specific value of the attribute sent by the SAML identity provider'
           tooltipPlace='right'
           value={ipdAttributeName}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {

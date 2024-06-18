@@ -8,6 +8,7 @@ import PanelSearch from './PanelSearch'
 import Button from './base/forms/Button'
 import Icon from './Icon'
 import { SAMLAttributeMapping } from 'common/types/responses'
+import Format from 'common/utils/format'
 
 type SAMLAttributeMappingTableType = {
   samlConfigurationId: number
@@ -24,7 +25,7 @@ const SAMLAttributeMappingTable: FC<SAMLAttributeMappingTableType> = ({
   return (
     <div>
       <PanelSearch
-        className='no-pad overflow-visible'
+        className='no-pad overflow-visible mt-4'
         id='features-list'
         renderSearchWithNoResults
         itemHeight={65}
@@ -48,7 +49,9 @@ const SAMLAttributeMappingTable: FC<SAMLAttributeMappingTableType> = ({
           >
             <Flex className='table-column px-3'>
               <div className='font-weight-medium mb-1'>
-                {attribute.django_attribute_name}
+                {Format.camelCase(
+                  attribute.django_attribute_name.replace(/_/g, ' '),
+                )}
               </div>
             </Flex>
             <div className='table-column' style={{ width: '95px' }}>
@@ -64,7 +67,10 @@ const SAMLAttributeMappingTable: FC<SAMLAttributeMappingTableType> = ({
                     'Delete SAML attribute',
                     <div>
                       <div>
-                        Are you sure you want to delete this SAML attribute?
+                        Are you sure you want to delete the attribute{' '}
+                        <b>{`${Format.camelCase(
+                          attribute.django_attribute_name.replace(/_/g, ' '),
+                        )}?`}</b>
                       </div>
                       <div className='text-right'>
                         <Button
