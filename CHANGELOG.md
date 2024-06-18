@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.123.0](https://github.com/Flagsmith/flagsmith/compare/v2.122.0...v2.123.0) (2024-06-18)
+
+
+### Features
+
+* Add alert message in the FE when exceeded the API usage ([#4027](https://github.com/Flagsmith/flagsmith/issues/4027)) ([da46dab](https://github.com/Flagsmith/flagsmith/commit/da46dab0f82dfa38d68c0108ee6fdbfb2c3a344f))
+
+
+### Bug Fixes
+
+* code highlighting ([#4181](https://github.com/Flagsmith/flagsmith/issues/4181)) ([e6d1f62](https://github.com/Flagsmith/flagsmith/commit/e6d1f620d73ae506767be2daeeb8fcbd1ccea4a1))
+
 ## [2.122.0](https://github.com/Flagsmith/flagsmith/compare/v2.121.0...v2.122.0) (2024-06-18)
 
 
