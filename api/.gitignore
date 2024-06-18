@@ -8,4 +8,3 @@ features/workflows/logic/
 
 # Unit test coverage
 .coverage
-.venv
