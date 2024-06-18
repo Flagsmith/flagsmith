@@ -41,7 +41,7 @@ FREE_PLAN_SUBSCRIPTION_METADATA = BaseSubscriptionMetadata(
 PLAN_SUBSCRIPTION_METADATA_FOR_TEST = BaseSubscriptionMetadata(
     seats=6,
     api_calls=MAX_API_CALLS_IN_FREE_PLAN,
-    projects=7,
+    projects=8,
 )
 FREE_PLAN_ID = "free"
 TRIAL_SUBSCRIPTION_ID = "trial"
