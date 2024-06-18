@@ -140,7 +140,7 @@ def seed_data() -> None:
         project = Project.objects.create(
             name=project_info["name"], organisation=organisation
         )
-        if project_info["name"] == "My Project Permission Project Test":
+        if project_info["name"] == "My Test Project 5 Project Permission":
             # Add permissions to the non-admin user with project permissions
             user_proj_permission: UserProjectPermission = (
                 UserProjectPermission.objects.create(
@@ -161,7 +161,7 @@ def seed_data() -> None:
         for env_name in project_info["environments"]:
             environment = Environment.objects.create(name=env_name, project=project)
 
-            if project_info["name"] == "My Env Permission Project Test":
+            if project_info["name"] == "My Test Project 6 Env Permission":
                 # Add permissions to the non-admin user with env permissions
                 user_env_permission = UserEnvironmentPermission.objects.create(
                     user=non_admin_user_with_env_permissions, environment=environment
