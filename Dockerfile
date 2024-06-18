@@ -17,13 +17,13 @@
 # $ docker build -t flagsmith:dev .
 
 # Build a SaaS API image:
-# $ docker build -t flagsmith-saas-api:dev --target saas-api \
-#     --secret="id=sse_pgp_pkey,src=/etc/sse_pgp_key"\
-#     --secret="id=github_private_cloud_token,src=/etc/github_private_cloud_token" . 
+# $ GH_TOKEN=$(gh auth token) docker build -t flagsmith-saas-api:dev --target saas-api \
+#     --secret="id=sse_pgp_pkey,src=./sse_pgp_pkey.key"\
+#     --secret="id=github_private_cloud_token,env=GH_TOKEN" . 
 
 # Build a Private Cloud Unified image:
-# $ docker build -t flagsmith-private-cloud:dev --target private-cloud-unified \
-#     --secret="id=github_private_cloud_token,src=/etc/github_private_cloud_token" . 
+# $ GH_TOKEN=$(gh auth token) docker build -t flagsmith-private-cloud:dev --target private-cloud-unified \
+#     --secret="id=github_private_cloud_token,env=GH_TOKEN" . 
 
 # Table of Contents
 # Stages are described as stage-name [dependencies]
