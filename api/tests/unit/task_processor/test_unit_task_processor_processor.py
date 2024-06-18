@@ -218,9 +218,7 @@ def test_run_task_runs_task_and_creates_task_run_object_when_failure(
 
     msg = "Error!"
     task = Task.create(
-        _raise_exception.task_identifier,
-        args=(msg,),
-        scheduled_for=timezone.now()
+        _raise_exception.task_identifier, args=(msg,), scheduled_for=timezone.now()
     )
     task.save()
 

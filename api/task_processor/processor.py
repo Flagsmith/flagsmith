@@ -103,7 +103,7 @@ def _run_task(task: typing.Union[Task, RecurringTask]) -> typing.Tuple[Task, Tas
             "Failed to execute task '%s'. Exception was: %s",
             task.task_identifier,
             str(e),
-            exc_info=True
+            exc_info=True,
         )
         logger.debug("args: %s", str(task.args))
         logger.debug("kwargs: %s", str(task.kwargs))
