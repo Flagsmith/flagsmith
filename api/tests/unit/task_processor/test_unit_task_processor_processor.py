@@ -208,9 +208,20 @@ def test_run_recurring_tasks_deletes_the_task_if_unregistered_task_is_old(
     )
 
 
-def test_run_task_runs_task_and_creates_task_run_object_when_failure(db):
+def test_run_task_runs_task_and_creates_task_run_object_when_failure(
+    db: None, caplog: pytest.LogCaptureFixture
+) -> None:
     # Given
-    task = Task.create(_raise_exception.task_identifier, scheduled_for=timezone.now())
+    task_processor_logger = logging.getLogger("task_processor")
+    task_processor_logger.propagate = True
+    task_processor_logger.level = logging.DEBUG
+
+    msg = "Error!"
+    task = Task.create(
+        _raise_exception.task_identifier,
+        args=(msg,),
+        scheduled_for=timezone.now()
+    )
     task.save()
 
     # When
@@ -226,6 +237,21 @@ def test_run_task_runs_task_and_creates_task_run_object_when_failure(db):
 
     task.refresh_from_db()
     assert not task.completed
+
+    assert len(caplog.records) == 3
+
+    warning_log = caplog.records[0]
+    assert warning_log.levelname == "WARNING"
+    assert warning_log.message == (
+        f"Failed to execute task '{task.task_identifier}'. Exception was: {msg}"
+    )
+
+    debug_log_args, debug_log_kwargs = caplog.records[1:]
+    assert debug_log_args.levelname == "DEBUG"
+    assert debug_log_args.message == f"args: ['{msg}']"
+
+    assert debug_log_kwargs.levelname == "DEBUG"
+    assert debug_log_kwargs.message == "kwargs: {}"
 
 
 def test_run_task_runs_failed_task_again(db):
@@ -438,8 +464,8 @@ def _create_organisation(name: str):
 
 
 @register_task_handler()
-def _raise_exception():
-    raise Exception()
+def _raise_exception(msg: str):
+    raise Exception(msg)
 
 
 @register_task_handler()
