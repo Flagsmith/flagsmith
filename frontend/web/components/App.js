@@ -104,7 +104,6 @@ const App = class extends Component {
     this.getOrganisationUsage()
     window.addEventListener('scroll', this.handleScroll)
     const updateLastViewed = () => {
-      debugger
       AsyncStorage.getItem('lastEnv').then((res) => {
         if (res) {
           const lastEnv = JSON.parse(res)
