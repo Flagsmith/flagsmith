@@ -122,15 +122,15 @@ const controller = {
       .then(() =>
         Promise.all([
           data.get(`${Project.api}projects/${projectId}/features/`),
-          data.get(
-            `${Project.api}environments/${environmentId}/featurestates/`,
-          ),
-        ]).then(([features, environmentFeatures]) => {
+        ]).then(([features]) => {
+          const environmentFeatures = features.results.map((v) => ({
+            ...v.environment_feature_state,
+            feature: v.id,
+          }))
           store.model = {
             features: features.results,
             keyedEnvironmentFeatures:
-              environmentFeatures &&
-              _.keyBy(environmentFeatures.results, 'feature'),
+              environmentFeatures && _.keyBy(environmentFeatures, 'feature'),
           }
           store.model.lastSaved = new Date().valueOf()
           store.saved({ createdFlag: flag.name })
@@ -481,8 +481,8 @@ const controller = {
         environmentId: env.id,
         featureId: projectFlag.id,
         featureStates,
-        skipPublish: true,
         liveFrom: changeRequest.live_from,
+        skipPublish: true,
       })
       environment_feature_versions = [version.version_sha]
     }
@@ -771,16 +771,17 @@ const controller = {
 
           return Promise.all([
             data.get(featuresEndpoint),
-            recursivePageGet(
-              `${Project.api}environments/${environmentId}/featurestates/?page_size=${PAGE_SIZE}`,
-            ),
             feature
               ? data.get(
                   `${Project.api}projects/${projectId}/features/${feature}/`,
                 )
               : Promise.resolve(),
           ])
-            .then(([features, environmentFeatures, feature]) => {
+            .then(([features, feature]) => {
+              const environmentFeatures = features.results.map((v) => ({
+                ...v.environment_feature_state,
+                feature: v.id,
+              }))
               if (store.filter !== filter) {
                 //The filter has been changed since, ignore the api response. This will be resolved when moving to RTK.
                 return
@@ -812,9 +813,10 @@ const controller = {
 
               store.model = {
                 features: features.results.map(controller.parseFlag),
-                keyedEnvironmentFeatures:
-                  environmentFeatures.results &&
-                  _.keyBy(environmentFeatures.results, 'feature'),
+                keyedEnvironmentFeatures: _.keyBy(
+                  environmentFeatures,
+                  'feature',
+                ),
               }
               store.loaded()
             })
