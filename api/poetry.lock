@@ -1445,9 +1445,9 @@ simplejson = "~3.19.1"
 
 [package.source]
 type = "git"
-url = "https://git@github.com/Flagsmith/flagsmith-task-processor"
-reference = "0.1.0.alpha5"
-resolved_reference = "d3018fa2ebf288625e20474d74b84643c2592391"
+url = "https://github.com/Flagsmith/flagsmith-task-processor"
+reference = "v1.0.0"
+resolved_reference = "5f43c67eab5919412a74a61589563342642ced72"
 
 [[package]]
 name = "flake8"
@@ -4364,13 +4364,13 @@ files = []
 develop = false
 
 [package.dependencies]
-flagsmith-task-processor = {git = "https://git@github.com/Flagsmith/flagsmith-task-processor", rev = "0.1.0.alpha5"}
+flagsmith-task-processor = {git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.0.0"}
 
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
-reference = "v2.3.6"
-resolved_reference = "1cb875ae066d2fd7f0d3821c384a00eeef3d8114"
+reference = "v2.3.7"
+resolved_reference = "1f963178c57a2889e8f8277d828e1e8875d49809"
 
 [[package]]
 name = "wrapt"
@@ -4489,4 +4489,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "954044ab1ffb0d27cdda9cfef88b073e348cb7c7300c413678f123750ceb24ea"
+content-hash = "c6464d8ebd780d2e19984173690d24fd7c30ce8a4ddb8bbeca2e0141602b574f"
