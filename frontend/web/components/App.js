@@ -101,6 +101,10 @@ const App = class extends Component {
     this.listenTo(OrganisationStore, 'change', () => this.forceUpdate())
     this.listenTo(ProjectStore, 'change', () => this.forceUpdate())
     this.listenTo(AccountStore, 'change', this.getOrganisationUsage)
+    if (AccountStore.model) {
+      console.log("Model already loaded")
+      this.onLogin()
+    }
     this.getOrganisationUsage()
     window.addEventListener('scroll', this.handleScroll)
     AsyncStorage.getItem('lastEnv').then((res) => {
