@@ -7,7 +7,6 @@ import CreateWebhookModal from 'components/modals/CreateWebhook'
 import ConfirmRemoveWebhook from 'components/modals/ConfirmRemoveWebhook'
 import ConfirmToggleEnvFeature from 'components/modals/ConfirmToggleEnvFeature'
 import EditPermissions from 'components/EditPermissions'
-import ServerSideSDKKeys from 'components/ServerSideSDKKeys'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
@@ -224,15 +223,18 @@ const EnvironmentSettingsPage = class extends Component {
     )
   }
 
-  confirmToggle = (title, description, feature) => {
+  confirmToggle = (title, environmentProperty, environmentPropertyValue) => {
     openModal(
       title,
       <ConfirmToggleEnvFeature
-        description={`${description} Are you sure that you want to change this value?`}
-        feature={feature}
-        featureValue={this.state[feature]}
-        onToggleChange={(value) => {
-          this.setState({ [feature]: value }, this.saveEnv)
+        description={'Are you sure that you want to change this value?'}
+        feature={environmentProperty}
+        featureValue={environmentPropertyValue}
+        onToggleChange={() => {
+          this.setState(
+            { [environmentProperty]: !environmentPropertyValue },
+            this.saveEnv,
+          )
           closeModal()
         }}
       />,
