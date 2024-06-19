@@ -30,23 +30,6 @@ import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 let createdFirstFeature = false
 const PAGE_SIZE = 50
-function recursivePageGet(url, parentRes) {
-  return data.get(url).then((res) => {
-    let response
-    if (parentRes) {
-      response = {
-        ...parentRes,
-        results: parentRes.results.concat(res.results),
-      }
-    } else {
-      response = res
-    }
-    if (res.next) {
-      return recursivePageGet(res.next, response)
-    }
-    return Promise.resolve(response)
-  })
-}
 
 const convertSegmentOverrideToFeatureState = (
   override,
