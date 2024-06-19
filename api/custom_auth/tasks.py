@@ -2,9 +2,9 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.utils import timezone
+from task_processor.decorators import register_recurring_task
 
 from custom_auth.models import UserPasswordResetRequest
-from task_processor.decorators import register_recurring_task
 
 
 @register_recurring_task(

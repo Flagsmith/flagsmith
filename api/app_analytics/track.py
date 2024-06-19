@@ -6,9 +6,9 @@ from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from django.conf import settings
 from django.core.cache import caches
 from six.moves.urllib.parse import quote  # python 2/3 compatible urllib import
+from task_processor.decorators import register_task_handler
 
 from environments.models import Environment
-from task_processor.decorators import register_task_handler
 from util.util import postpone
 
 logger = logging.getLogger(__name__)
