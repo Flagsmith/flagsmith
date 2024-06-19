@@ -102,3 +102,5 @@ jobs:
             concurrency: 2
           - tests: versioning
             concurrency: 1
+          - tests: organisation-permission environment-permission project-permission roles
+            concurrency: 1

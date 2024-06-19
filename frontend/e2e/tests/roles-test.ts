@@ -16,12 +16,12 @@ import {
   E2E_NON_ADMIN_USER_WITH_A_ROLE,
   E2E_USER,
 } from '../config'
-import { Selector, t } from 'testcafe'
+import { t } from 'testcafe'
 
 export default async function () {
   log('Login')
   await login(E2E_USER, PASSWORD)
-  await click('#project-select-')
+  await click('#project-select-6')
   await createFeature(0, 'test_feature', false)
   log('Go to Roles')
   await click(byId('org-settings-link'))
@@ -41,21 +41,17 @@ export default async function () {
   await click(byId('permissions-tab'))
   await waitForElementVisible(byId('project-permissions-tab'))
   await click(byId('project-permissions-tab'))
-  await waitForElementVisible(byId('permissions-list-item-project-4'))
-  await click(byId('permissions-list-item-project-4'))
+  await waitForElementVisible(byId('permissions-list-item-project-6'))
+  await click(byId('permissions-list-item-project-6'))
   await waitForElementVisible(byId('admin-switch-project'))
   await click(byId('permission-switch-project-0'))
-  await t.wait(2000)
   await click(byId('permission-switch-project-2'))
-  await t.wait(2000)
   await click(byId('permission-switch-project-4'))
-  await t.wait(2000)
-  await Selector(byId('admin-switch-project')).hasClass('rc-switch-checked')
   await waitForElementVisible(byId('environment-permissions-tab'))
   await click(byId('environment-permissions-tab'))
   await click(byId('project-select'))
-  await waitForElementVisible(byId('project-select-option-2'))
-  await click(byId('project-select-option-2'))
+  await waitForElementVisible(byId('project-select-option-6'))
+  await click(byId('project-select-option-6'))
   await waitForElementVisible(byId('permissions-list-item-environment-0'))
   await click(byId('permissions-list-item-environment-0'))
   await click(byId('permissions-list-item-environment-0'))
@@ -67,7 +63,6 @@ export default async function () {
   await click(byId('permission-switch-environment-6'))
   await closeModal()
   await logout(t)
-  await t.wait(10000)
   log('Login with the user with a new Role')
   await login(E2E_NON_ADMIN_USER_WITH_A_ROLE, PASSWORD)
   await click('#project-select-0')
