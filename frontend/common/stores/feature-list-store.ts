@@ -481,8 +481,8 @@ const controller = {
         environmentId: env.id,
         featureId: projectFlag.id,
         featureStates,
-        skipPublish: true,
         liveFrom: changeRequest.live_from,
+        skipPublish: true,
       })
       environment_feature_versions = [version.version_sha]
     }

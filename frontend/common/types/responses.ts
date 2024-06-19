@@ -679,5 +679,6 @@ export type Res = {
     response_url: string
     metadata_xml: string
   }
+  features: {}
   // END OF TYPES
 }

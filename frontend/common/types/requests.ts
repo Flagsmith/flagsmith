@@ -12,13 +12,16 @@ import {
   ProjectFlag,
   Environment,
   UserGroup,
+  TagStrategy,
 } from './responses'
+import { SortDirection } from '@material-ui/core'
 
 export type PagedRequest<T> = T & {
   page?: number
   page_size?: number
   q?: string
 }
+export type SortDirection = 'ASC' | 'DESC'
 export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
 export type CreateVersionFeatureState = {
@@ -486,5 +489,19 @@ export type Req = {
   updateSamlConfiguration: { name: string; body: SAMLConfiguration }
   deleteSamlConfiguration: { name: string }
   createSamlConfiguration: SAMLConfiguration
+  getFeatures: PagedRequest<{
+    search?: string
+    sort_field: 'created_date' | 'name'
+    sort_direction: SortDirection
+    tags?: number[]
+    tag_strategy: TagStrategy
+    is_archived: boolean
+    environment: string
+    project_id: string
+    is_enabled?: boolean
+    value_search?: string
+    owners?: number[]
+    group_owners?: number[]
+  }>
   // END OF TYPES
 }
