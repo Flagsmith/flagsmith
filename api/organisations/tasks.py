@@ -9,10 +9,6 @@ from django.core.mail import send_mail
 from django.db.models import F, Max
 from django.template.loader import render_to_string
 from django.utils import timezone
-from task_processor.decorators import (
-    register_recurring_task,
-    register_task_handler,
-)
 
 from integrations.flagsmith.client import get_client
 from organisations import subscription_info_cache
@@ -31,6 +27,10 @@ from organisations.models import (
 from organisations.subscriptions.constants import FREE_PLAN_ID
 from organisations.subscriptions.subscription_service import (
     get_subscription_metadata,
+)
+from task_processor.decorators import (
+    register_recurring_task,
+    register_task_handler,
 )
 from users.models import FFAdminUser
 

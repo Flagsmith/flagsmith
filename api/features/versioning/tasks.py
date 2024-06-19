@@ -2,7 +2,6 @@ import logging
 import typing
 
 from django.utils import timezone
-from task_processor.decorators import register_task_handler
 
 from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
@@ -15,6 +14,7 @@ from features.versioning.schemas import (
 from features.versioning.versioning_service import (
     get_environment_flags_queryset,
 )
+from task_processor.decorators import register_task_handler
 from webhooks.webhooks import WebhookEventType, call_environment_webhooks
 
 if typing.TYPE_CHECKING:

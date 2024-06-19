@@ -15,7 +15,6 @@ from pytest_django.plugin import blocking_manager_key
 from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
-from task_processor.task_run_method import TaskRunMethod
 from urllib3.connectionpool import HTTPConnectionPool
 from xdist import get_xdist_worker_id
 
@@ -65,6 +64,7 @@ from projects.models import (
 from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
+from task_processor.task_run_method import TaskRunMethod
 from tests.test_helpers import fix_issue_3869
 from tests.types import (
     WithEnvironmentPermissionsCallable,

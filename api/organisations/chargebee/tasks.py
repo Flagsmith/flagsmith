@@ -1,6 +1,5 @@
-from task_processor.decorators import register_task_handler
-
 from organisations.chargebee.cache import ChargebeeCache
+from task_processor.decorators import register_task_handler
 
 
 @register_task_handler()
