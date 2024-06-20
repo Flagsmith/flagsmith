@@ -48,7 +48,7 @@ ARG CI_COMMIT_SHA=dev
 
 # - Intermediary stages
 # * build-node
-FROM  --platform=$TARGETPLATFORM node:16 AS build-node
+FROM --platform=$TARGETPLATFORM node:16 AS build-node
 
 # Copy the files required to install npm packages
 WORKDIR /app
@@ -66,17 +66,17 @@ RUN cd frontend && ENV=${ENV} npm ci --quiet --production
 COPY frontend /app/frontend
 
 # * build-node-django [build-node]
-FROM  --platform=$TARGETPLATFORM build-node as build-node-django
+FROM --platform=$TARGETPLATFORM build-node as build-node-django
 
 RUN mkdir /app/api && cd frontend && npm run bundledjango
 
 # * build-node-selfhosted [build-node]
-FROM  --platform=$TARGETPLATFORM build-node as build-node-selfhosted
+FROM --platform=$TARGETPLATFORM build-node as build-node-selfhosted
 
 RUN cd frontend && npm run bundle
 
 # * build-python
-FROM  --platform=$TARGETPLATFORM python:3.11 as build-python
+FROM --platform=$TARGETPLATFORM python:3.11 as build-python
 WORKDIR /app
 
 COPY api/pyproject.toml api/poetry.lock api/Makefile ./
@@ -84,7 +84,7 @@ ENV POETRY_VIRTUALENVS_CREATE=false POETRY_HOME=/usr/local
 RUN make install opts='--without dev'
 
 # * build-python-private [build-python]
-FROM  --platform=$TARGETPLATFORM build-python AS build-python-private
+FROM --platform=$TARGETPLATFORM build-python AS build-python-private
 
 # Authenticate git with token, install SAML binary dependency,
 # private Python dependencies, and integrate private modules
@@ -98,7 +98,7 @@ RUN --mount=type=secret,id=github_private_cloud_token \
   make install-private-modules
 
 # * api-runtime
-FROM  --platform=$TARGETPLATFORM python:3.11-slim as api-runtime
+FROM --platform=$TARGETPLATFORM python:3.11-slim as api-runtime
 
 WORKDIR /app
 
@@ -119,7 +119,7 @@ CMD ["migrate-and-serve"]
 
 # - Target (shippable) stages
 # * private-cloud-api [api-runtime, build-python-private]
-FROM  --platform=$TARGETPLATFORM api-runtime as private-cloud-api
+FROM --platform=$TARGETPLATFORM api-runtime as private-cloud-api
 
 COPY --from=build-python-private /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=build-python-private /usr/local/bin /usr/local/bin
@@ -130,7 +130,7 @@ RUN touch ./ENTERPRISE_VERSION
 USER nobody
 
 # * private-cloud-unified [api-runtime, build-python-private, build-node-django]
-FROM  --platform=$TARGETPLATFORM api-runtime as private-cloud-unified
+FROM --platform=$TARGETPLATFORM api-runtime as private-cloud-unified
 
 COPY --from=build-node-django /app/api/static /app/static
 COPY --from=build-node-django /app/api/app/templates/webpack /app/app/templates/webpack
@@ -143,7 +143,7 @@ RUN touch ./ENTERPRISE_VERSION
 USER nobody
 
 # * saas-api [api-runtime, build-python-private]
-FROM  --platform=$TARGETPLATFORM api-runtime as saas-api
+FROM --platform=$TARGETPLATFORM api-runtime as saas-api
 
 # Install GnuPG and import private key
 RUN --mount=type=secret,id=sse_pgp_pkey \
@@ -161,7 +161,7 @@ RUN touch ./SAAS_DEPLOYMENT
 USER nobody
 
 # * oss-api [api-runtime, build-python]
-FROM  --platform=$TARGETPLATFORM api-runtime as oss-api
+FROM --platform=$TARGETPLATFORM api-runtime as oss-api
 
 COPY --from=build-python /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=build-python /usr/local/bin /usr/local/bin
@@ -171,7 +171,7 @@ RUN python manage.py collectstatic --no-input
 USER nobody
 
 # * oss-frontend [build-node-selfhosted]
-FROM  --platform=$TARGETPLATFORM node:16-slim AS oss-frontend
+FROM --platform=$TARGETPLATFORM node:16-slim AS oss-frontend
 
 USER node
 WORKDIR /srv/bt
@@ -187,7 +187,7 @@ EXPOSE 8080
 CMD ["node",  "./api/index.js"]
 
 # * oss-unified [build-python, build-node-django]
-FROM  --platform=$TARGETPLATFORM api-runtime as oss-unified
+FROM --platform=$TARGETPLATFORM api-runtime as oss-unified
 
 COPY --from=build-node-django /app/api/static /app/static/
 COPY --from=build-node-django /app/api/app/templates/webpack /app/app/templates/webpack
