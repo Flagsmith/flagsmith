@@ -25,6 +25,7 @@ from organisations.subscriptions.constants import (
     FREE_PLAN_ID,
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
+    SCALE_UP,
 )
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from organisations.tasks import (
@@ -290,6 +291,8 @@ def test_handle_api_usage_notifications_below_100(
 ) -> None:
     # Given
     now = timezone.now()
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.save()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -382,6 +385,8 @@ def test_handle_api_usage_notifications_above_100(
 ) -> None:
     # Given
     now = timezone.now()
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.save()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -410,6 +415,94 @@ def test_handle_api_usage_notifications_above_100(
 
     # Then
     mock_api_usage.assert_called_once_with(organisation.id, "-14d")
+
+    assert len(mailoutbox) == 1
+    email = mailoutbox[0]
+    assert email.subject == "Flagsmith API use has reached 100%"
+    assert email.body == (
+        "Hi there,\n\nThe API usage for Test Org has breached "
+        "100% within the current subscription period. Please "
+        "upgrade your organisations account to ensure "
+        "continued service.\n\nThank you!\n\n"
+        "The Flagsmith Team\n"
+    )
+
+    assert len(email.alternatives) == 1
+    assert len(email.alternatives[0]) == 2
+    assert email.alternatives[0][1] == "text/html"
+
+    assert email.alternatives[0][0] == (
+        "<table>\n\n        <tr>\n\n               <td>Hi "
+        "there,</td>\n\n        </tr>\n\n        <tr>\n\n    "
+        "           <td>\n                 The API usage for Test Org "
+        "has breached\n                 100% within the "
+        "current subscription period.\n                 "
+        "Please upgrade your organisations account to ensure "
+        "continued service.\n               </td>\n\n\n      "
+        "  </tr>\n\n        <tr>\n\n               <td>"
+        "Thank you!</td>\n\n        </tr>\n\n        <tr>\n\n"
+        "               <td>The Flagsmith Team</td>\n\n        "
+        "</tr>\n\n</table>\n"
+    )
+
+    assert email.from_email == "noreply@flagsmith.com"
+    # Extra staff included because threshold is over 100.
+    assert email.to == ["admin@example.com", "staff@example.com"]
+
+    assert (
+        OrganisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 1
+    )
+    api_usage_notification = OrganisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+    ).first()
+
+    assert api_usage_notification.percent_usage == 100
+
+    # Now re-run the usage to make sure the notification isn't resent.
+    handle_api_usage_notifications()
+
+    assert (
+        OrganisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 1
+    )
+
+    assert OrganisationAPIUsageNotification.objects.first() == api_usage_notification
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_handle_api_usage_notifications_for_free_accounts(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    mailoutbox: list[EmailMultiAlternatives],
+) -> None:
+    # Given
+    assert organisation.subscription.is_free_plan
+    assert organisation.subscription.max_api_calls == MAX_API_CALLS_IN_FREE_PLAN
+
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    mock_api_usage.return_value = MAX_API_CALLS_IN_FREE_PLAN + 5_000
+
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
+    assert not OrganisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+    ).exists()
+
+    # When
+    handle_api_usage_notifications()
+
+    # Then
+    mock_api_usage.assert_called_once_with(organisation.id, "-30d")
 
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
