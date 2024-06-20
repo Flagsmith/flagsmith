@@ -101,6 +101,9 @@ const App = class extends Component {
     this.listenTo(OrganisationStore, 'change', () => this.forceUpdate())
     this.listenTo(ProjectStore, 'change', () => this.forceUpdate())
     this.listenTo(AccountStore, 'change', this.getOrganisationUsage)
+    if (AccountStore.model) {
+      this.onLogin()
+    }
     this.getOrganisationUsage()
     window.addEventListener('scroll', this.handleScroll)
     const updateLastViewed = () => {
