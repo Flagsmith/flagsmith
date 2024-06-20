@@ -269,6 +269,10 @@ def test_handle_api_usage_notifications_when_feature_flag_is_off(
     # Then
     mock_api_usage.assert_not_called()
 
+    client_mock.get_identity_flags.assert_called_once_with(
+        organisation.flagsmith_identifier, traits={"organisation_id": organisation.id}
+    )
+
     assert len(mailoutbox) == 0
     assert (
         OrganisationAPIUsageNotification.objects.filter(
@@ -312,7 +316,7 @@ def test_handle_api_usage_notifications_below_100(
     handle_api_usage_notifications()
 
     # Then
-    mock_api_usage.assert_called_once_with(organisation.id, "14d")
+    mock_api_usage.assert_called_once_with(organisation.id, "-14d")
 
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
@@ -405,7 +409,7 @@ def test_handle_api_usage_notifications_above_100(
     handle_api_usage_notifications()
 
     # Then
-    mock_api_usage.assert_called_once_with(organisation.id, "14d")
+    mock_api_usage.assert_called_once_with(organisation.id, "-14d")
 
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
@@ -476,7 +480,7 @@ def test_charge_for_api_call_count_overages_scale_up(
         organisation=organisation,
         allowed_seats=10,
         allowed_projects=3,
-        allowed_30d_api_calls=10_000,
+        allowed_30d_api_calls=100_000,
         chargebee_email="test@example.com",
         current_billing_term_starts_at=now - timedelta(days=30),
         current_billing_term_ends_at=now + timedelta(minutes=30),
@@ -498,7 +502,7 @@ def test_charge_for_api_call_count_overages_scale_up(
     mock_api_usage = mocker.patch(
         "organisations.tasks.get_current_api_usage",
     )
-    mock_api_usage.return_value = 12_005
+    mock_api_usage.return_value = 212_005
     assert OrganisationAPIBilling.objects.count() == 0
 
     # When
@@ -511,7 +515,7 @@ def test_charge_for_api_call_count_overages_scale_up(
             "addons": [
                 {
                     "id": "additional-api-scale-up-monthly",
-                    "quantity": 2,  # Two thousand API requests.
+                    "quantity": 2,  # 200k API requests.
                 }
             ],
             "prorate": False,
@@ -522,9 +526,52 @@ def test_charge_for_api_call_count_overages_scale_up(
     assert OrganisationAPIBilling.objects.count() == 1
     api_billing = OrganisationAPIBilling.objects.first()
     assert api_billing.organisation == organisation
-    assert api_billing.api_overage == 2000
+    assert api_billing.api_overage == 200_000
     assert api_billing.immediate_invoice is False
     assert api_billing.billed_at == now
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_charge_for_api_call_count_overages_grace_period(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100_000,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    mock_chargebee_update = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+    )
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    # Set the return value to something less than 200% of base rate
+    mock_api_usage.return_value = 115_000
+    assert OrganisationAPIBilling.objects.count() == 0
+
+    # When
+    charge_for_api_call_count_overages()
+
+    # Then
+    mock_chargebee_update.assert_not_called()
+    assert OrganisationAPIBilling.objects.count() == 0
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -575,7 +622,7 @@ def test_charge_for_api_call_count_overages_with_not_covered_plan(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_sub_1_api_usage_ratio(
+def test_charge_for_api_call_count_overages_under_api_limit(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -629,7 +676,7 @@ def test_charge_for_api_call_count_overages_start_up(
         organisation=organisation,
         allowed_seats=10,
         allowed_projects=3,
-        allowed_30d_api_calls=10_000,
+        allowed_30d_api_calls=100_000,
         chargebee_email="test@example.com",
         current_billing_term_starts_at=now - timedelta(days=30),
         current_billing_term_ends_at=now + timedelta(minutes=30),
@@ -651,7 +698,7 @@ def test_charge_for_api_call_count_overages_start_up(
     mock_api_usage = mocker.patch(
         "organisations.tasks.get_current_api_usage",
     )
-    mock_api_usage.return_value = 12_005
+    mock_api_usage.return_value = 202_005
     assert OrganisationAPIBilling.objects.count() == 0
 
     # When
@@ -664,7 +711,7 @@ def test_charge_for_api_call_count_overages_start_up(
             "addons": [
                 {
                     "id": "additional-api-start-up-monthly",
-                    "quantity": 2,  # Two thousand API requests.
+                    "quantity": 2,  # 200k API requests.
                 }
             ],
             "prorate": False,
@@ -675,17 +722,81 @@ def test_charge_for_api_call_count_overages_start_up(
     assert OrganisationAPIBilling.objects.count() == 1
     api_billing = OrganisationAPIBilling.objects.first()
     assert api_billing.organisation == organisation
-    assert api_billing.api_overage == 2000
+    assert api_billing.api_overage == 200_000
     assert api_billing.immediate_invoice is False
     assert api_billing.billed_at == now
 
     # Now attempt to rebill the account should fail
     calls_mock = mocker.patch(
-        "organisations.tasks.add_1000_api_calls_start_up",
+        "organisations.tasks.add_100k_api_calls_start_up",
     )
     charge_for_api_call_count_overages()
     assert OrganisationAPIBilling.objects.count() == 1
     calls_mock.assert_not_called()
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_charge_for_api_call_count_overages_start_up_with_api_billing(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100_000,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = "startup-v2"
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    OrganisationAPIBilling.objects.create(
+        organisation=organisation,
+        api_overage=100_000,
+        immediate_invoice=False,
+        billed_at=now,
+    )
+
+    mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
+    mock_chargebee_update = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+    )
+
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 202_005
+    assert OrganisationAPIBilling.objects.count() == 1
+
+    # When
+    charge_for_api_call_count_overages()
+
+    # Then
+    mock_chargebee_update.assert_called_once_with(
+        organisation.subscription.subscription_id,
+        {
+            "addons": [
+                {
+                    "id": "additional-api-start-up-monthly",
+                    "quantity": 1,  # 100k API requests.
+                }
+            ],
+            "prorate": False,
+            "invoice_immediately": False,
+        },
+    )
+
+    assert OrganisationAPIBilling.objects.count() == 2
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")

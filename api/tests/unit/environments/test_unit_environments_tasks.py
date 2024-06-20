@@ -1,6 +1,7 @@
 from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
+from environments.models import Environment
 from environments.tasks import (
     delete_environment_from_dynamo,
     process_environment_update,
@@ -8,18 +9,22 @@ from environments.tasks import (
 )
 
 
-def test_rebuild_environment_document(environment, mocker):
+def test_rebuild_environment_document(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
     # Given
-    mock_dynamo_wrapper = mocker.MagicMock(is_enabled=True)
-    mocker.patch(
-        "environments.tasks.DynamoEnvironmentWrapper", return_value=mock_dynamo_wrapper
+    mock_write_environments_to_dynamodb = mocker.patch(
+        "environments.tasks.Environment.write_environments_to_dynamodb",
     )
 
     # When
     rebuild_environment_document(environment_id=environment.id)
 
     # Then
-    mock_dynamo_wrapper.write_environment.assert_called_once_with(environment)
+    mock_write_environments_to_dynamodb.assert_called_once_with(
+        environment_id=environment.id
+    )
 
 
 def test_process_environment_update_with_environment_audit_log(environment, mocker):

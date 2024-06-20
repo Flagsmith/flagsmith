@@ -127,7 +127,7 @@ INSTALLED_APPS = [
     "api_keys",
     "features.feature_external_resources",
     # 2FA
-    "trench",
+    "custom_auth.mfa.trench",
     # health check plugins
     "health_check",
     "health_check.db",
@@ -750,7 +750,6 @@ CACHES = {
 }
 
 TRENCH_AUTH = {
-    "FROM_EMAIL": DEFAULT_FROM_EMAIL,
     "BACKUP_CODES_QUANTITY": 5,
     "BACKUP_CODES_LENGTH": 10,  # keep (quantity * length) under 200
     "BACKUP_CODES_CHARACTERS": (
@@ -759,6 +758,7 @@ TRENCH_AUTH = {
     "DEFAULT_VALIDITY_PERIOD": 30,
     "CONFIRM_BACKUP_CODES_REGENERATION_WITH_CODE": True,
     "APPLICATION_ISSUER_NAME": "app.bullet-train.io",
+    "ENCRYPT_BACKUP_CODES": True,
     "MFA_METHODS": {
         "app": {
             "VERBOSE_NAME": "TOTP App",

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import List, Tuple
 
-from app_analytics.analytics_db_service import ANALYTICS_READ_BUCKET_SIZE
+from app_analytics.constants import ANALYTICS_READ_BUCKET_SIZE
 from django.conf import settings
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
@@ -145,10 +145,10 @@ def populate_api_usage_bucket(
             bucket_start_time, bucket_end_time, source_bucket_size
         )
         for row in data:
-            APIUsageBucket.objects.create(
+            APIUsageBucket.objects.update_or_create(
+                defaults={"total_count": row["count"]},
                 environment_id=row["environment_id"],
                 resource=row["resource"],
-                total_count=row["count"],
                 bucket_size=bucket_size,
                 created_at=bucket_start_time,
             )
@@ -162,10 +162,10 @@ def populate_feature_evaluation_bucket(
             bucket_start_time, bucket_end_time, source_bucket_size
         )
         for row in data:
-            FeatureEvaluationBucket.objects.create(
+            FeatureEvaluationBucket.objects.update_or_create(
+                defaults={"total_count": row["count"]},
                 environment_id=row["environment_id"],
                 feature_name=row["feature_name"],
-                total_count=row["count"],
                 bucket_size=bucket_size,
                 created_at=bucket_start_time,
             )

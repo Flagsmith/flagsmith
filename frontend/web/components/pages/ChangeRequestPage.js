@@ -21,6 +21,7 @@ import { IonIcon } from '@ionic/react'
 import Breadcrumb from 'components/Breadcrumb'
 import SettingsButton from 'components/SettingsButton'
 import DiffChangeRequest from 'components/diff/DiffChangeRequest'
+import NewVersionWarning from 'components/NewVersionWarning'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -148,14 +149,24 @@ const ChangeRequestsPage = class extends Component {
     AppActions.actionChangeRequest(this.props.match.params.id, 'approve')
   }
 
+  getScheduledDate = (changeRequest) => {
+    return changeRequest.environment_feature_versions.length > 0
+      ? moment(changeRequest.environment_feature_versions[0].live_from)
+      : moment(changeRequest.feature_states[0].live_from)
+  }
+
   publishChangeRequest = () => {
     const id = this.props.match.params.id
     const changeRequest = ChangeRequestStore.model[id]
-    const isScheduled =
-      new Date(changeRequest.feature_states[0].live_from).valueOf() >
-      new Date().valueOf()
-    const scheduledDate = moment(changeRequest.feature_states[0].live_from)
-
+    const scheduledDate = this.getScheduledDate(changeRequest)
+    const isScheduled = scheduledDate > moment()
+    const featureId =
+      changeRequest &&
+      changeRequest.feature_states[0] &&
+      changeRequest.feature_states[0].feature
+    const environment = ProjectStore.getEnvironment(
+      this.props.match.params.environmentId,
+    )
     openConfirm({
       body: (
         <div>
@@ -165,6 +176,11 @@ const ChangeRequestsPage = class extends Component {
             ? ` for ${scheduledDate.format('Do MMM YYYY hh:mma')}`
             : ''}
           ? This will adjust the feature for your environment.
+          <NewVersionWarning
+            environmentId={environment?.id}
+            featureId={featureId}
+            date={changeRequest?.created_at}
+          />
         </div>
       ),
       onYes: () => {
@@ -252,11 +268,9 @@ const ChangeRequestsPage = class extends Component {
         orgUsers &&
         orgUsers.find((v) => v.id === changeRequest.committed_by)) ||
       {}
-    const isScheduled =
-      new Date(changeRequest.feature_states[0].live_from).valueOf() >
-      new Date().valueOf()
 
-    const scheduledDate = moment(changeRequest.feature_states[0].live_from)
+    const scheduledDate = this.getScheduledDate(changeRequest)
+    const isScheduled = scheduledDate > moment()
 
     const approval =
       changeRequest &&
@@ -479,6 +493,12 @@ const ChangeRequestsPage = class extends Component {
                       </Row>
                     </div>
                   </Panel>
+
+                  <NewVersionWarning
+                    environmentId={environment?.id}
+                    featureId={featureId}
+                    date={changeRequest?.created_at}
+                  />
                   <DiffChangeRequest
                     isVersioned={isVersioned}
                     changeRequest={changeRequest}

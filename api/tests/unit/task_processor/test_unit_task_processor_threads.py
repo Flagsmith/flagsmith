@@ -33,13 +33,10 @@ def test_task_runner_is_resilient_to_errors(
     task_runner.run_iteration()
 
     # Then
-    assert len(caplog.records) == 2
+    assert len(caplog.records) == 1
 
     assert caplog.records[0].levelno == logging.ERROR
     assert (
         caplog.records[0].message
         == f"Received error retrieving tasks: {exception_message}."
     )
-
-    assert caplog.records[1].levelno == logging.DEBUG
-    assert caplog.records[1].message.startswith("Traceback")

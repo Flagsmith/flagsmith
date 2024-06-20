@@ -3,6 +3,9 @@ import typing
 
 from django.utils import timezone
 
+from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from features.models import FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.schemas import (
@@ -129,5 +132,24 @@ def trigger_update_version_webhooks(environment_feature_version_uuid: str) -> No
     call_environment_webhooks(
         environment=environment_feature_version.environment_id,
         data=data,
-        event_type=WebhookEventType.NEW_VERSION_PUBLISHED,
+        event_type=WebhookEventType.NEW_VERSION_PUBLISHED.value,
+    )
+
+
+@register_task_handler()
+def create_environment_feature_version_published_audit_log_task(
+    environment_feature_version_uuid: str,
+) -> None:
+    environment_feature_version = EnvironmentFeatureVersion.objects.select_related(
+        "environment", "feature"
+    ).get(uuid=environment_feature_version_uuid)
+
+    AuditLog.objects.create(
+        environment=environment_feature_version.environment,
+        related_object_type=RelatedObjectType.EF_VERSION.name,
+        related_object_uuid=environment_feature_version.uuid,
+        log=ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
+        % environment_feature_version.feature.name,
+        author_id=environment_feature_version.published_by_id,
+        master_api_key_id=environment_feature_version.published_by_api_key_id,
     )

@@ -103,15 +103,19 @@ const App = class extends Component {
     this.listenTo(AccountStore, 'change', this.getOrganisationUsage)
     this.getOrganisationUsage()
     window.addEventListener('scroll', this.handleScroll)
-    AsyncStorage.getItem('lastEnv').then((res) => {
-      if (res) {
-        const lastEnv = JSON.parse(res)
-        this.setState({
-          lastEnvironmentId: lastEnv.environmentId,
-          lastProjectId: lastEnv.projectId,
-        })
-      }
-    })
+    const updateLastViewed = () => {
+      AsyncStorage.getItem('lastEnv').then((res) => {
+        if (res) {
+          const lastEnv = JSON.parse(res)
+          this.setState({
+            lastEnvironmentId: lastEnv.environmentId,
+            lastProjectId: lastEnv.projectId,
+          })
+        }
+      })
+    }
+    this.props.history.listen(updateLastViewed)
+    updateLastViewed()
   }
 
   getOrganisationUsage = () => {
@@ -378,25 +382,29 @@ const App = class extends Component {
                     {user && (
                       <OrganisationLimit
                         id={AccountStore.getOrganisation()?.id}
+                        organisationPlan={
+                          AccountStore.getOrganisation()?.subscription.plan
+                        }
                       />
                     )}
                     {user && showBanner && (
-                      <Row className={'px-3'}>
-                        <InfoMessage
-                          title={announcementValue.title}
-                          infoMessageClass={'announcement'}
-                          isClosable={announcementValue.isClosable}
-                          close={() =>
-                            this.closeAnnouncement(announcementValue.id)
-                          }
-                          buttonText={announcementValue.buttonText}
-                          url={announcementValue.url}
-                        >
-                          <div>
-                            <div>{announcementValue.description}</div>
-                          </div>
-                        </InfoMessage>
-                      </Row>
+                      <div className='container mt-4'>
+                        <div className='row'>
+                          <InfoMessage
+                            title={announcementValue.title}
+                            isClosable={announcementValue.isClosable}
+                            close={() =>
+                              this.closeAnnouncement(announcementValue.id)
+                            }
+                            buttonText={announcementValue.buttonText}
+                            url={announcementValue.url}
+                          >
+                            <div>
+                              <div>{announcementValue.description}</div>
+                            </div>
+                          </InfoMessage>
+                        </div>
+                      </div>
                     )}
                     {this.props.children}
                   </Fragment>

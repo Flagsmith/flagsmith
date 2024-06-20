@@ -38,6 +38,7 @@ from audit.tasks import (
 from environments.tasks import rebuild_environment_document
 from features.models import FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.signals import environment_feature_version_published
 from features.versioning.tasks import trigger_update_version_webhooks
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
@@ -169,6 +170,9 @@ class ChangeRequest(
                     kwargs={"environment_id": self.environment_id},
                     delay_until=environment_feature_version.live_from,
                 )
+                environment_feature_version_published.send(
+                    EnvironmentFeatureVersion, instance=environment_feature_version
+                )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title
@@ -246,14 +250,14 @@ class ChangeRequest(
         # feature states, we also want to prevent it at the ORM level.
         if self.committed_at and not (
             self.environment.deleted_at
-            or (self._live_from and self._live_from > timezone.now())
+            or (self.live_from and self.live_from > timezone.now())
         ):
             raise ChangeRequestDeletionError(
                 "Cannot delete a Change Request that has been committed."
             )
 
     @property
-    def _live_from(self) -> datetime | None:
+    def live_from(self) -> datetime | None:
         # First we check if there are feature states associated with the change request
         # and, if so, we return the live_from of the feature state with the earliest
         # live_from.

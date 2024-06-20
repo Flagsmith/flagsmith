@@ -9,7 +9,7 @@ from pytest_mock import MockerFixture
 from pytz import UTC
 
 from organisations.chargebee import (
-    add_1000_api_calls,
+    add_100k_api_calls,
     add_single_seat,
     extract_subscription_metadata,
     get_customer_id_from_subscription_id,
@@ -605,12 +605,12 @@ def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(
     )
 
 
-def test_add_1000_api_calls_when_count_is_empty(mocker: MockerFixture) -> None:
+def test_add_100k_api_calls_when_count_is_empty(mocker: MockerFixture) -> None:
     # Given
     subscription_mock = mocker.patch("chargebee.Subscription.update")
 
     # When
-    result = add_1000_api_calls(
+    result = add_100k_api_calls(
         addon_id=ADDITIONAL_API_SCALE_UP_ADDON_ID,
         subscription_id="subscription23",
         count=0,
@@ -622,7 +622,7 @@ def test_add_1000_api_calls_when_count_is_empty(mocker: MockerFixture) -> None:
     subscription_mock.assert_not_called()
 
 
-def test_add_1000_api_calls_when_chargebee_api_error_has_error_code(
+def test_add_100k_api_calls_when_chargebee_api_error_has_error_code(
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -641,7 +641,7 @@ def test_add_1000_api_calls_when_chargebee_api_error_has_error_code(
 
     # When / Then
     with pytest.raises(UpgradeAPIUsagePaymentFailure):
-        add_1000_api_calls(
+        add_100k_api_calls(
             addon_id=ADDITIONAL_API_SCALE_UP_ADDON_ID,
             subscription_id="subscription23",
             count=1,
@@ -649,7 +649,7 @@ def test_add_1000_api_calls_when_chargebee_api_error_has_error_code(
         )
 
 
-def test_add_1000_api_calls_when_chargebee_api_error_has_no_error_code(
+def test_add_100k_api_calls_when_chargebee_api_error_has_no_error_code(
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -668,7 +668,7 @@ def test_add_1000_api_calls_when_chargebee_api_error_has_no_error_code(
 
     # When / Then
     with pytest.raises(UpgradeAPIUsageError):
-        add_1000_api_calls(
+        add_100k_api_calls(
             addon_id=ADDITIONAL_API_SCALE_UP_ADDON_ID,
             subscription_id="subscription23",
             count=1,

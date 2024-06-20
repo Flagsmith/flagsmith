@@ -117,6 +117,10 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
             self.has_paid_subscription() and self.subscription.cancellation_date is None
         )
 
+    @property
+    def flagsmith_identifier(self):
+        return f"org.{self.id}"
+
     def over_plan_seats_limit(self, additional_seats: int = 0):
         if self.has_paid_subscription():
             susbcription_metadata = self.subscription.get_subscription_metadata()
@@ -498,10 +502,12 @@ class OrganisationAPIBilling(models.Model):
     limits. This model is what allows subsequent billing runs
     to not double bill an organisation for the same use.
 
-    Even though api_overage is charge per thousand API calls, this
+    Even though api_overage is charge per 100k API calls, this
     class tracks the actual rounded count of API calls that are
-    billed for (i.e., 52000 for an account with 52233 api calls).
-    We're intentionally rounding down to the closest thousands.
+    billed for (i.e., 200000 for an account with 234323 api calls
+    and a allowed_30d_api_calls set to 100000, the overage is
+    beyond the allowed api calls).
+    We're intentionally rounding up to the closest hundred thousand.
 
     The option to set immediate_invoice means whether or not the
     API billing was processed immediately versus pushed onto the
