@@ -482,7 +482,7 @@ const EnvironmentSettingsPage = class extends Component {
                               checked={hide_sensitive_data}
                               onChange={(v) => {
                                 this.confirmToggle(
-                                  'The data returned from the API will change and could break your existing code. Are you sure that you want to change this value?',
+                                  'The data returned from the API will change and could break your existing code',
                                   'hide_sensitive_data',
                                   hide_sensitive_data,
                                 )
