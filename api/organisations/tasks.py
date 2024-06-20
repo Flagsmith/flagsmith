@@ -157,7 +157,7 @@ def _handle_api_usage_notifications(organisation: Organisation) -> None:
         # Default to a rolling month for free accounts
         days = 30
         period_starts_at = now - timedelta(days)
-    elif not organisation.has_subscription_information_cache:
+    elif not organisation.has_subscription_information_cache():
         # Since the calling code is a list of many organisations
         # log the error and return without raising an exception.
         logger.error(
