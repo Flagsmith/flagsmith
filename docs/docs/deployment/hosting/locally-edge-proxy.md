@@ -282,7 +282,7 @@ services:
      source: ./config.json
      target: /app/config.json
   ports:
-    - "8000:8000"
+   - '8000:8000'
 ```
 
 The Proxy is now running and available on port 8000.
