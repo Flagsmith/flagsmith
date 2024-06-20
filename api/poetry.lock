@@ -1374,6 +1374,24 @@ requests-futures = ">=1.0.0,<2.0.0"
 sseclient-py = ">=1.8.0,<2.0.0"
 
 [[package]]
+name = "flagsmith-auth-controller"
+version = "0.1.1"
+description = "Flagsmith auth controller."
+optional = false
+python-versions = ">=3.11,<4.0"
+files = []
+develop = false
+
+[package.dependencies]
+django-multiselectfield = "0.1.12"
+
+[package.source]
+type = "git"
+url = "https://github.com/flagsmith/flagsmith-auth-controller"
+reference = "v0.1.1"
+resolved_reference = "24217c74a33cfa7635301fb752f1675a5009c7b4"
+
+[[package]]
 name = "flagsmith-flag-engine"
 version = "5.1.1"
 description = "Flag engine for the Flagsmith API."
@@ -4250,13 +4268,13 @@ files = [
 
 [[package]]
 name = "urllib3"
-version = "1.26.18"
+version = "1.26.19"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
 files = [
-    {file = "urllib3-1.26.18-py2.py3-none-any.whl", hash = "sha256:34b97092d7e0a3a8cf7cd10e386f401b3737364026c45e622aa02903dffe0f07"},
-    {file = "urllib3-1.26.18.tar.gz", hash = "sha256:f8ecc1bba5667413457c529ab955bf8c67b45db799d159066261719e328580a0"},
+    {file = "urllib3-1.26.19-py2.py3-none-any.whl", hash = "sha256:37a0344459b199fce0e80b0d3569837ec6b6937435c5244e7fd73fa6006830f3"},
+    {file = "urllib3-1.26.19.tar.gz", hash = "sha256:3e3d753a8618b86d7de333b4223005f68720bcd6a7d2bcb9fbd2229ec7c1e429"},
 ]
 
 [package.extras]
@@ -4492,4 +4510,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "d987b854497373da44a9adb4946815982795de0275d5b719c484c79d6bb8bd00"
+content-hash = "4fe77ed75c7df351f352754dbc9c3486e4c19cf2477a6bc6ad38f0fd6340e269"

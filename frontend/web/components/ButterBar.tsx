@@ -26,6 +26,7 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
     { skip: !projectId },
   )
   const processingRef = useRef(false)
+
   const checkProcessing = useCallback(
     (processing: FeatureImport | undefined) => {
       if (processing) {

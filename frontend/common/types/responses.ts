@@ -643,7 +643,7 @@ export type Res = {
   rolesPermissionUsers: PagedResponse<RolePermissionUser>
   createRolePermissionGroup: RolePermissionGroup
   rolePermissionGroup: PagedResponse<RolePermissionGroup>
-  getSubscriptionMetadata: { id: string }
+  getSubscriptionMetadata: { id: string; max_api_calls: number }
   environment: Environment
   metadataModelFieldList: PagedResponse<MetadataModelField>
   metadataModelField: MetadataModelField

@@ -170,7 +170,7 @@ def test_trigger_update_version_webhooks(
                 }
             ],
         },
-        event_type=WebhookEventType.NEW_VERSION_PUBLISHED,
+        event_type=WebhookEventType.NEW_VERSION_PUBLISHED.value,
     )
 
 
