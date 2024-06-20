@@ -52,7 +52,7 @@ logger = logging.getLogger(__name__)
 
 
 @register_task_handler()
-def send_org_over_limit_alert(organisation_id) -> None:
+def send_org_over_limit_alert(organisation_id: int) -> None:
     organisation = Organisation.objects.get(id=organisation_id)
 
     subscription_metadata = get_subscription_metadata(organisation)
@@ -150,18 +150,34 @@ def send_admin_api_usage_notification(
 
 
 def _handle_api_usage_notifications(organisation: Organisation) -> None:
-    subscription_cache = organisation.subscription_information_cache
-    billing_starts_at = subscription_cache.current_billing_term_starts_at
     now = timezone.now()
 
-    # Truncate to the closest active month to get start of current period.
-    month_delta = relativedelta(now, billing_starts_at).months
-    period_starts_at = relativedelta(months=month_delta) + billing_starts_at
+    if organisation.subscription.is_free_plan:
+        allowed_api_calls = organisation.subscription.max_api_calls
+        # Default to a rolling month for free accounts
+        days = 30
+        period_starts_at = now - timedelta(days)
+    elif not organisation.has_subscription_information_cache():
+        # Since the calling code is a list of many organisations
+        # log the error and return without raising an exception.
+        logger.error(
+            f"Paid organisation {organisation.id} is missing subscription information cache"
+        )
+        return
+    else:
+        subscription_cache = organisation.subscription_information_cache
+        billing_starts_at = subscription_cache.current_billing_term_starts_at
 
-    days = relativedelta(now, period_starts_at).days
+        # Truncate to the closest active month to get start of current period.
+        month_delta = relativedelta(now, billing_starts_at).months
+        period_starts_at = relativedelta(months=month_delta) + billing_starts_at
+
+        days = relativedelta(now, period_starts_at).days
+        allowed_api_calls = subscription_cache.allowed_30d_api_calls
+
     api_usage = get_current_api_usage(organisation.id, f"-{days}d")
 
-    api_usage_percent = int(100 * api_usage / subscription_cache.allowed_30d_api_calls)
+    api_usage_percent = int(100 * api_usage / allowed_api_calls)
 
     matched_threshold = None
     for threshold in API_USAGE_ALERT_THRESHOLDS:
@@ -176,7 +192,7 @@ def _handle_api_usage_notifications(organisation: Organisation) -> None:
 
     if OrganisationAPIUsageNotification.objects.filter(
         notified_at__gt=period_starts_at,
-        percent_usage=matched_threshold,
+        percent_usage__gte=matched_threshold,
     ).exists():
         # Already sent the max notification level so don't resend.
         return
@@ -187,10 +203,7 @@ def _handle_api_usage_notifications(organisation: Organisation) -> None:
 def handle_api_usage_notifications() -> None:
     flagsmith_client = get_client("local", local_eval=True)
 
-    for organisation in Organisation.objects.filter(
-        subscription_information_cache__current_billing_term_starts_at__isnull=False,
-        subscription_information_cache__current_billing_term_ends_at__isnull=False,
-    ).select_related(
+    for organisation in Organisation.objects.all().select_related(
         "subscription_information_cache",
     ):
         feature_enabled = flagsmith_client.get_identity_flags(
@@ -234,21 +247,27 @@ def charge_for_api_call_count_overages():
         ).values_list("organisation_id", flat=True)
     )
 
-    for organisation in Organisation.objects.filter(
-        id__in=organisation_ids,
-        subscription_information_cache__current_billing_term_ends_at__lte=closing_billing_term,
-        subscription_information_cache__current_billing_term_ends_at__gte=now,
-        subscription_information_cache__current_billing_term_starts_at__lte=F(
-            "subscription_information_cache__current_billing_term_ends_at"
+    for organisation in (
+        Organisation.objects.filter(
+            id__in=organisation_ids,
+            subscription_information_cache__current_billing_term_ends_at__lte=closing_billing_term,
+            subscription_information_cache__current_billing_term_ends_at__gte=now,
+            subscription_information_cache__current_billing_term_starts_at__lte=F(
+                "subscription_information_cache__current_billing_term_ends_at"
+            )
+            - month_window_start,
+            subscription_information_cache__current_billing_term_starts_at__gte=F(
+                "subscription_information_cache__current_billing_term_ends_at"
+            )
+            - month_window_end,
         )
-        - month_window_start,
-        subscription_information_cache__current_billing_term_starts_at__gte=F(
-            "subscription_information_cache__current_billing_term_ends_at"
+        .exclude(
+            subscription__plan=FREE_PLAN_ID,
         )
-        - month_window_end,
-    ).select_related(
-        "subscription_information_cache",
-        "subscription",
+        .select_related(
+            "subscription_information_cache",
+            "subscription",
+        )
     ):
         subscription_cache = organisation.subscription_information_cache
         api_usage = get_current_api_usage(organisation.id, "30d")
