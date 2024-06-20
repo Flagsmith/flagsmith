@@ -6,7 +6,7 @@ on:
       - '*'
 
 env:
-  FLAGSMITH_SAML_REVISION: v1.6.0
+  FLAGSMITH_SAML_REVISION: v1.6.2
   FLAGSMITH_RBAC_REVISION: v0.7.0
 
 jobs:
