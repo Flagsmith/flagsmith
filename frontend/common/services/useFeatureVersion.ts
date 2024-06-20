@@ -136,11 +136,11 @@ export const featureVersionService = service
           }
 
           const ret = {
+            error: res.find((v) => !!v.error)?.error,
             feature_states: res.map((item) => ({
               ...item,
               version_sha: versionRes.data.uuid,
             })),
-            error: res.find((v) => !!v.error)?.error,
             version_sha: versionRes.data.uuid,
           }
 

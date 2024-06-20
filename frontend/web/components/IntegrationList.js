@@ -374,7 +374,7 @@ class IntegrationList extends Component {
         }
         githubMeta={{ githubId: githubId, installationId: installationId }}
         projectId={this.props.projectId}
-        onComplete={githubId ? this.fetchGithubIntegration : this.fetch }
+        onComplete={githubId ? this.fetchGithubIntegration : this.fetch}
       />,
       'side-modal',
     )

@@ -22,7 +22,6 @@ import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import Switch from 'components/Switch'
-import Panel from 'components/base/grid/Panel'
 import { setModalTitle } from 'components/modals/base/ModalDefault'
 
 const CodeHelp = require('../../components/CodeHelp')

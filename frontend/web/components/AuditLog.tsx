@@ -65,7 +65,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
       search,
     },
     {
-      refetchOnMountOrArgChange: true
+      refetchOnMountOrArgChange: true,
     },
   )
 
@@ -128,13 +128,13 @@ const AuditLog: FC<AuditLogType> = (props) => {
             style={{ width: widths[2] }}
             to={`/project/${props.projectId}/environment/${environment?.api_key}/features/`}
           >
-              <Tag
-                tag={{
-                  color: Utils.getTagColour(colour),
-                  label: environment?.name,
-                }}
-                className='chip--sm'
-              />
+            <Tag
+              tag={{
+                color: Utils.getTagColour(colour),
+                label: environment?.name,
+              }}
+              className='chip--sm'
+            />
           </Link>
         ) : (
           <div className='table-column' style={{ width: widths[2] }} />

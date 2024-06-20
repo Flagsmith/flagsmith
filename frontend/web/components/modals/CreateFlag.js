@@ -40,6 +40,7 @@ import { getSupportedContentType } from 'common/services/useSupportedContentType
 import { getGithubIntegration } from 'common/services/useGithubIntegration'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
+import MetadataTitle from 'components/metadata/MetadataTitle'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 
 const CreateFlag = class extends Component {
@@ -53,7 +54,6 @@ const CreateFlag = class extends Component {
       feature_state_value,
       is_archived,
       is_server_key_only,
-      metadata,
       multivariate_options,
       name,
       tags,
@@ -579,32 +579,34 @@ const CreateFlag = class extends Component {
           </FormGroup>
         )}
         {metadataEnable && featureContentType?.id && (
-          <FormGroup className='mb-5 setting'>
-            <InputGroup
-              title={'Metadata'}
-              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} feature`}
-              tooltipPlace='right'
-              component={
-                <AddMetadataToEntity
-                  organisationId={AccountStore.getOrganisation().id}
-                  projectId={this.props.projectId}
-                  entityId={projectFlag?.id}
-                  entityContentType={featureContentType?.id}
-                  entity={featureContentType?.model}
-                  setHasMetadataRequired={(b) => {
-                    this.setState({
-                      hasMetadataRequired: true,
-                    })
-                  }}
-                  onChange={(m) => {
-                    this.setState({
-                      metadata: m,
-                    })
-                  }}
-                />
-              }
+          <>
+            <MetadataTitle
+              visible={this.state.visible}
+              onVisibleChange={(v) => {
+                this.setState({ visible: v })
+              }}
+              hasRequiredMetadata={this.state.hasMetadataRequired}
             />
-          </FormGroup>
+            {(this.state.hasMetadataRequired || this.state.visible) && (
+              <AddMetadataToEntity
+                organisationId={AccountStore.getOrganisation().id}
+                projectId={this.props.projectId}
+                entityId={projectFlag?.id}
+                entityContentType={featureContentType?.id}
+                entity={featureContentType?.model}
+                setHasMetadataRequired={(b) => {
+                  this.setState({
+                    hasMetadataRequired: b,
+                  })
+                }}
+                onChange={(m) => {
+                  this.setState({
+                    metadata: m,
+                  })
+                }}
+              />
+            )}
+          </>
         )}
         {!identity && projectFlag && (
           <Permission
@@ -648,7 +650,7 @@ const CreateFlag = class extends Component {
             }
             ds
             type='text'
-            title={identity ? 'Description' : 'Description'}
+            title={identity ? 'Description' : 'Description (optional)'}
             placeholder="e.g. 'This determines what size the header is' "
           />
         </FormGroup>
@@ -783,7 +785,7 @@ const CreateFlag = class extends Component {
                 this.setState({ description: Utils.safeParseEventValue(e) })
               }
               type='text'
-              title={identity ? 'Description' : 'Description'}
+              title={identity ? 'Description' : 'Description (optional)'}
               placeholder='No description'
             />
           </FormGroup>
@@ -1968,7 +1970,6 @@ const FeatureProvider = (WrappedComponent) => {
           const envFlags = FeatureListStore.getEnvironmentFlags()
 
           if (createdFlag) {
-            //update the create flag modal to edit view
             const projectFlag = FeatureListStore.getProjectFlags()?.find?.(
               (flag) => flag.name === createdFlag,
             )

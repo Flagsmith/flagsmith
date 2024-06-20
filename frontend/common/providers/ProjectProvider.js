@@ -40,8 +40,8 @@ const ProjectProvider = class extends React.Component {
     })
   }
 
-  createEnv = (env, projectId, cloneId, description) => {
-    AppActions.createEnv(env, projectId, cloneId, description)
+  createEnv = (env, projectId, cloneId, description, metadata) => {
+    AppActions.createEnv(env, projectId, cloneId, description, metadata)
   }
 
   editEnv = (env) => {
