@@ -152,12 +152,15 @@ def test_login_with_google_updates_existing_user_case_insensitive(
 
     django_user_model.objects.create(email=email_lower)
 
-    mocker.patch("custom_auth.oauth.serializers.get_user_info", return_value={
-        "email": email_upper,
-        "first_name": "John",
-        "last_name": "Smith",
-        "google_user_id": google_user_id
-    })
+    mocker.patch(
+        "custom_auth.oauth.serializers.get_user_info",
+        return_value={
+            "email": email_upper,
+            "first_name": "John",
+            "last_name": "Smith",
+            "google_user_id": google_user_id,
+        },
+    )
 
     url = reverse("api-v1:custom_auth:oauth:google-oauth-login")
 
