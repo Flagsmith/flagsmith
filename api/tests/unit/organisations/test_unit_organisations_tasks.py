@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import timedelta
 from unittest.mock import MagicMock, call
@@ -560,6 +561,51 @@ def test_handle_api_usage_notifications_for_free_accounts(
     )
 
     assert OrganisationAPIUsageNotification.objects.first() == api_usage_notification
+
+
+def test_handle_api_usage_notifications_missing_info_cache(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    mailoutbox: list[EmailMultiAlternatives],
+    inspecting_handler: logging.Handler,
+) -> None:
+    # Given
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.save()
+
+    from organisations.tasks import logger
+
+    logger.addHandler(inspecting_handler)
+
+    assert organisation.has_subscription_information_cache() is False
+
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
+    assert not OrganisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+    ).exists()
+
+    # When
+    handle_api_usage_notifications()
+
+    # Then
+    mock_api_usage.assert_not_called()
+
+    assert len(mailoutbox) == 0
+    assert not OrganisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+    ).exists()
+
+    assert inspecting_handler.messages == [
+        f"Paid organisation {organisation.id} is missing subscription information cache"
+    ]
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
