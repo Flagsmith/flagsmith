@@ -118,7 +118,10 @@ const withAdminPermissions = (InnerComponent: any) => {
     }
     if (!permission) {
       return (
-        <div className='my-4 text-center text-muted'>
+        <div
+          className='my-4 text-center text-muted'
+          data-test='no-organisation-permissions'
+        >
           To manage permissions you need to be admin of this {level}.
         </div>
       )
@@ -707,6 +710,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                 </Flex>
                 <Switch
                   disabled={!hasRbacPermission || saving}
+                  data-test={`admin-switch-${level}`}
                   onChange={() => {
                     toggleAdmin()
                     setValueChanged(true)
@@ -733,7 +737,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             title='Permissions'
             className='no-pad mb-2'
             items={permissions}
-            renderRow={(p: AvailablePermission) => {
+            renderRow={(p: AvailablePermission, index: number) => {
               const levelUpperCase = level.toUpperCase()
               const disabled =
                 level !== 'organisation' &&
@@ -751,6 +755,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                       <div className='list-item-subtitle'>{p.description}</div>
                     </Flex>
                     <Switch
+                      data-test={`permission-switch-${level}-${index}`}
                       onChange={() => {
                         setValueChanged(true)
                         togglePermission(p.key)

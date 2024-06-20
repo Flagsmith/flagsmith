@@ -689,7 +689,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                         </FormGroup>
                       ) : null}
                     </TabItem>
-                    <TabItem tabLabel='Groups'>
+                    <TabItem tabLabel='Groups' data-test='tab-item-groups'>
                       <div>
                         <Row space className='mt-4 mb-1'>
                           <h5 className='mb-0'>User Groups</h5>
@@ -724,7 +724,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                         />
                       </div>
                     </TabItem>
-                    <TabItem tabLabel='Roles'>
+                    <TabItem tabLabel='Roles' data-test='tab-item-roles'>
                       {hasRbacPermission ? (
                         <>
                           <RolesTable
