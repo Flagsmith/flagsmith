@@ -1,7 +1,9 @@
 from unittest import mock
 
+from django.db.models import Model
 from django.test import override_settings
 from django.urls import reverse
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -135,3 +137,39 @@ def test_can_login_with_github_if_registration_disabled(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert "key" in response.json()
+
+
+def test_login_with_google_updates_existing_user_case_insensitive(
+    db: None,
+    django_user_model: type[Model],
+    mocker: MockerFixture,
+    api_client: APIClient,
+) -> None:
+    # Given
+    email_lower = "test@example.com"
+    email_upper = email_lower.upper()
+    google_user_id = "abc123"
+
+    django_user_model.objects.create(email=email_lower)
+
+    mocker.patch("custom_auth.oauth.serializers.get_user_info", return_value={
+        "email": email_upper,
+        "first_name": "John",
+        "last_name": "Smith",
+        "google_user_id": google_user_id
+    })
+
+    url = reverse("api-v1:custom_auth:oauth:google-oauth-login")
+
+    # When
+    response = api_client.post(url, data={"access_token": "some-token"})
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    qs = django_user_model.objects.filter(email__iexact=email_lower)
+    assert qs.count() == 1
+
+    user = qs.first()
+    assert user.email == email_lower
+    assert user.google_user_id == google_user_id
