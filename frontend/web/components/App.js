@@ -103,15 +103,19 @@ const App = class extends Component {
     this.listenTo(AccountStore, 'change', this.getOrganisationUsage)
     this.getOrganisationUsage()
     window.addEventListener('scroll', this.handleScroll)
-    AsyncStorage.getItem('lastEnv').then((res) => {
-      if (res) {
-        const lastEnv = JSON.parse(res)
-        this.setState({
-          lastEnvironmentId: lastEnv.environmentId,
-          lastProjectId: lastEnv.projectId,
-        })
-      }
-    })
+    const updateLastViewed = () => {
+      AsyncStorage.getItem('lastEnv').then((res) => {
+        if (res) {
+          const lastEnv = JSON.parse(res)
+          this.setState({
+            lastEnvironmentId: lastEnv.environmentId,
+            lastProjectId: lastEnv.projectId,
+          })
+        }
+      })
+    }
+    this.props.history.listen(updateLastViewed)
+    updateLastViewed()
   }
 
   getOrganisationUsage = () => {
