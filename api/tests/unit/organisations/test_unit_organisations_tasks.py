@@ -327,7 +327,7 @@ def test_handle_api_usage_notifications_below_100(
     assert email.body == (
         "Hi there,\n\nThe API usage for Test Org has reached "
         "90% within the current subscription period. Please "
-        "consider upgrading your organisations account limits.\n\n"
+        "consider upgrading your organisation's account limits.\n\n"
         "Thank you!\n\nThe Flagsmith Team\n"
     )
 
@@ -341,7 +341,7 @@ def test_handle_api_usage_notifications_below_100(
         "<tr>\n\n               <td>\n                 "
         "The API usage for Test Org has reached\n                 "
         "90% within the current subscription period.\n                 "
-        "Please consider upgrading your organisations account limits.\n"
+        "Please consider upgrading your organisation's account limits.\n"
         "               </td>\n\n\n        </tr>\n\n        "
         "<tr>\n\n               <td>Thank you!</td>\n\n      "
         "  </tr>\n\n        <tr>\n\n               "
@@ -422,7 +422,7 @@ def test_handle_api_usage_notifications_above_100(
     assert email.body == (
         "Hi there,\n\nThe API usage for Test Org has breached "
         "100% within the current subscription period. Please "
-        "upgrade your organisations account to ensure "
+        "upgrade your organisation's account to ensure "
         "continued service.\n\nThank you!\n\n"
         "The Flagsmith Team\n"
     )
@@ -437,7 +437,7 @@ def test_handle_api_usage_notifications_above_100(
         "           <td>\n                 The API usage for Test Org "
         "has breached\n                 100% within the "
         "current subscription period.\n                 "
-        "Please upgrade your organisations account to ensure "
+        "Please upgrade your organisation's account to ensure "
         "continued service.\n               </td>\n\n\n      "
         "  </tr>\n\n        <tr>\n\n               <td>"
         "Thank you!</td>\n\n        </tr>\n\n        <tr>\n\n"
@@ -510,7 +510,7 @@ def test_handle_api_usage_notifications_for_free_accounts(
     assert email.body == (
         "Hi there,\n\nThe API usage for Test Org has breached "
         "100% within the current subscription period. Please "
-        "upgrade your organisations account to ensure "
+        "upgrade your organisation's account to ensure "
         "continued service.\n\nThank you!\n\n"
         "The Flagsmith Team\n"
     )
@@ -525,7 +525,7 @@ def test_handle_api_usage_notifications_for_free_accounts(
         "           <td>\n                 The API usage for Test Org "
         "has breached\n                 100% within the "
         "current subscription period.\n                 "
-        "Please upgrade your organisations account to ensure "
+        "Please upgrade your organisation's account to ensure "
         "continued service.\n               </td>\n\n\n      "
         "  </tr>\n\n        <tr>\n\n               <td>"
         "Thank you!</td>\n\n        </tr>\n\n        <tr>\n\n"
