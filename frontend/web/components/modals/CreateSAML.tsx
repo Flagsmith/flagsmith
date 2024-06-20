@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import Switch from 'components/Switch'
@@ -31,12 +31,14 @@ type samlAttributeType = { id: number; label: string; value: AttributeName }
 type samlAttributesType = samlAttributeType[]
 
 const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
+  const [previousName, setPreviousName] = useState<string>(samlName || '')
   const [name, setName] = useState<string>(samlName || '')
   const [frontendUrl, setFrontendUrl] = useState<string>(window.location.origin)
   const [metadataXml, setMetadataXml] = useState<string>('')
   const [allowIdpInitiated, setAllowIdpInitiated] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [file, setFile] = useState<File | null>(null)
+  const [isEdit, setIsEdit] = useState<boolean>(!!samlName || false)
   const [
     createSamlConfiguration,
     { error: createError, isError: hasCreateError },
@@ -45,10 +47,17 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
     editSamlConfiguration,
     { error: updateError, isError: hasUpdateError },
   ] = useUpdateSamlConfigurationMutation()
-  const { data } = useGetSamlConfigurationQuery(
+  const { data, isSuccess } = useGetSamlConfigurationQuery(
     { name: samlName! },
     { skip: !samlName },
   )
+
+  useEffect(() => {
+    if (isSuccess && data) {
+      setPreviousName(data.name)
+    }
+  }, [data, isSuccess])
+
   const samlAttributes: samlAttributesType = [
     { id: 1, label: 'Email', value: 'email' },
     { id: 2, label: 'First name', value: 'first_name' },
@@ -70,11 +79,10 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
 
   const downloadServiceProvider = () => {
     setIsLoading(true)
-    const name = data?.name || samlName
-    getSamlConfigurationMetadata(getStore(), { name: name! })
+    getSamlConfigurationMetadata(getStore(), { name: previousName })
       .then((res) => {
         if (res.error) {
-          convetToXmlFile(name!, res.error.data)
+          convetToXmlFile(previousName, res.error.data)
         }
       })
       .finally(() => {
@@ -97,7 +105,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
         tooltipPlace='right'
         value={name}
         onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-          const newName = Utils.safeParseEventValue(event)
+          const newName = Utils.safeParseEventValue(event).replace(/ /g, '_')
           if (validateName(newName)) {
             setName(newName)
           }
@@ -196,13 +204,15 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
         </div>
       )}
       <div className='text-right py-2'>
-        <Button
-          disabled={isLoading}
-          onClick={downloadServiceProvider}
-          className='mr-2'
-        >
-          {isLoading ? 'Downloading' : 'Download Service Provider Metadata'}
-        </Button>
+        {isEdit && (
+          <Button
+            disabled={isLoading}
+            onClick={downloadServiceProvider}
+            className='mr-2'
+          >
+            {isLoading ? 'Downloading' : 'Download Service Provider Metadata'}
+          </Button>
+        )}
         <Button
           type='submit'
           disabled={!name || !frontendUrl}
@@ -218,16 +228,18 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
             if (allowIdpInitiated) {
               body.allow_idp_initiated = allowIdpInitiated
             }
-            if (data) {
+            if (isEdit) {
+              const samlNameConfiguration = previousName
               editSamlConfiguration({
                 body: { ...body },
-                name: samlName!,
+                name: samlNameConfiguration,
               }).then((res) => {
                 if (res.data) {
                   setName(res.data.name)
                   setFrontendUrl(res.data.frontend_url)
                   setMetadataXml(res.data.idp_metadata_xml)
                   setAllowIdpInitiated(res.data.allow_idp_initiated)
+                  setPreviousName(res.data.name)
                   toast('SAML configuration updated!')
                 }
               })
@@ -239,13 +251,14 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
                   setMetadataXml(res.data.idp_metadata_xml)
                   setAllowIdpInitiated(res.data.allow_idp_initiated)
                   toast('SAML configuration Created!')
-                  closeModal()
+                  setIsEdit(true)
+                  setPreviousName(res.data.name)
                 }
               })
             }
           }}
         >
-          {data ? 'Update Configuration' : 'Create Configuration'}
+          {isEdit ? 'Update Configuration' : 'Create Configuration'}
         </Button>
       </div>
     </div>
@@ -300,7 +313,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
                 body: {
                   django_attribute_name: djangoAttributeName?.value ?? '',
                   idp_attribute_name: ipdAttributeName,
-                  saml_configuration: data?.id ?? 0,
+                  saml_configuration: data?.id,
                 },
               })
             }}
@@ -320,7 +333,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
 
   return (
     <>
-      {!samlName ? (
+      {!isEdit ? (
         Tab1
       ) : (
         <Tabs uncontrolled>

@@ -16,9 +16,12 @@ type SAMLAttributeMappingTableType = {
 const SAMLAttributeMappingTable: FC<SAMLAttributeMappingTableType> = ({
   samlConfigurationId,
 }) => {
-  const { data } = useGetSamlAttributeMappingQuery({
-    saml_configuration_id: samlConfigurationId,
-  })
+  const { data } = useGetSamlAttributeMappingQuery(
+    {
+      saml_configuration_id: samlConfigurationId,
+    },
+    { skip: !samlConfigurationId },
+  )
 
   const [deleteSamlAttribute] = useDeleteSamlAttributeMappingMutation()
 
@@ -35,16 +38,18 @@ const SAMLAttributeMappingTable: FC<SAMLAttributeMappingTableType> = ({
             <Flex className='table-column px-3'>
               <div className='font-weight-medium'>SAML Attribute Name</div>
             </Flex>
-            <div className='table-column' style={{ width: '205px' }}>
-              IDP Attribute Name
-            </div>
+            <Flex className='table-column px-3'>
+              <div className='table-column' style={{ width: '375px' }}>
+                IDP Attribute Name
+              </div>
+            </Flex>
           </Row>
         }
         items={data?.results || []}
         renderRow={(attribute: SAMLAttributeMapping) => (
           <Row
             space
-            className='list-item clickable cursor-pointer'
+            className='list-item'
             key={attribute.django_attribute_name}
           >
             <Flex className='table-column px-3'>
@@ -54,9 +59,11 @@ const SAMLAttributeMappingTable: FC<SAMLAttributeMappingTableType> = ({
                 )}
               </div>
             </Flex>
-            <div className='table-column' style={{ width: '95px' }}>
-              {attribute.idp_attribute_name}
-            </div>
+            <Flex className='table-column px-3'>
+              <div className='table-column' style={{ width: '305px' }}>
+                {attribute.idp_attribute_name}
+              </div>
+            </Flex>
             <div className='table-column'>
               <Button
                 id='delete-attribute'
