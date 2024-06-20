@@ -35,20 +35,31 @@
 # * build-python [python]
 # * build-python-private [build-python]
 # * api-runtime [python:slim]
+# * api-runtime-private [api-runtime]
 
 # - Target (shippable) stages
-# * private-cloud-api [api-runtime, build-python-private]
-# * private-cloud-unified [api-runtime, build-python-private, build-node-django]
-# * saas-api [api-runtime, build-python-private]
+# * private-cloud-api [api-runtime-private, build-python-private]
+# * private-cloud-unified [api-runtime-private, build-python-private, build-node-django]
+# * saas-api [api-runtime-private, build-python-private]
 # * oss-api [api-runtime, build-python]
 # * oss-frontend [node:slim, build-node-selfhosted]
 # * oss-unified [api-runtime, build-python, build-node-django]
 
 ARG CI_COMMIT_SHA=dev
 
+# Pin runtimes versions
+ARG NODE_VERSION=16
+ARG PYTHON_VERSION=3.11
+ARG PYTHON_SITE_DIR=/usr/local/lib/python${PYTHON_VERSION}/site-packages
+
+FROM node:${NODE_VERSION} as node
+FROM node:${NODE_VERSION}-slim as node-slim
+FROM python:${PYTHON_VERSION} as python
+FROM python:${PYTHON_VERSION}-slim as python-slim
+
 # - Intermediary stages
 # * build-node
-FROM --platform=$TARGETPLATFORM node:16 AS build-node
+FROM node AS build-node
 
 # Copy the files required to install npm packages
 WORKDIR /app
@@ -56,27 +67,23 @@ COPY frontend/package.json frontend/package-lock.json frontend/.npmrc ./frontend
 COPY frontend/bin/ ./frontend/bin/
 COPY frontend/env/ ./frontend/env/
 
-# since ENV is only used for the purposes of copying the correct
-# project_${env}.js file to common/project.js, this is a build arg
-# which subsequently gets set as an environment variable. This is
-# done to avoid confusion since it is not a required run time var.
 ARG ENV=selfhosted
 RUN cd frontend && ENV=${ENV} npm ci --quiet --production
 
 COPY frontend /app/frontend
 
 # * build-node-django [build-node]
-FROM --platform=$TARGETPLATFORM build-node as build-node-django
+FROM build-node as build-node-django
 
 RUN mkdir /app/api && cd frontend && npm run bundledjango
 
 # * build-node-selfhosted [build-node]
-FROM --platform=$TARGETPLATFORM build-node as build-node-selfhosted
+FROM build-node as build-node-selfhosted
 
 RUN cd frontend && npm run bundle
 
 # * build-python
-FROM --platform=$TARGETPLATFORM python:3.11 as build-python
+FROM python as build-python
 WORKDIR /app
 
 COPY api/pyproject.toml api/poetry.lock api/Makefile ./
@@ -84,7 +91,7 @@ ENV POETRY_VIRTUALENVS_CREATE=false POETRY_HOME=/usr/local
 RUN make install opts='--without dev'
 
 # * build-python-private [build-python]
-FROM --platform=$TARGETPLATFORM build-python AS build-python-private
+FROM build-python AS build-python-private
 
 # Authenticate git with token, install SAML binary dependency,
 # private Python dependencies, and integrate private modules
@@ -93,12 +100,15 @@ ARG RBAC_REVISION
 RUN --mount=type=secret,id=github_private_cloud_token \
   echo "https://$(cat /run/secrets/github_private_cloud_token):@github.com" > ${HOME}/.git-credentials && \
   git config --global credential.helper store && \
-  apt-get update && apt-get install -y xmlsec1 && \
   make install-packages opts='--without dev --with saml,auth-controller,ldap,workflows' && \
   make install-private-modules
 
 # * api-runtime
-FROM --platform=$TARGETPLATFORM python:3.11-slim as api-runtime
+FROM python-slim as api-runtime
+
+ARG TARGETARCH
+RUN if [ "${TARGETARCH}" != "amd64" ]; then \
+  apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
 
 WORKDIR /app
 
@@ -108,20 +118,27 @@ COPY .release-please-manifest.json /app/.versions.json
 ARG ACCESS_LOG_LOCATION="/dev/null"
 ENV ACCESS_LOG_LOCATION=${ACCESS_LOG_LOCATION} DJANGO_SETTINGS_MODULE=app.settings.production
 
+ARG CI_COMMIT_SHA
 RUN echo ${CI_COMMIT_SHA} > /app/CI_COMMIT_SHA
 
 EXPOSE 8000
 
 ENTRYPOINT ["/app/scripts/run-docker.sh"]
 
-# other options below are `migrate` or `serve`
 CMD ["migrate-and-serve"]
 
-# - Target (shippable) stages
-# * private-cloud-api [api-runtime, build-python-private]
-FROM --platform=$TARGETPLATFORM api-runtime as private-cloud-api
+# * api-runtime-private [api-runtime]
+FROM api-runtime as api-runtime-private
 
-COPY --from=build-python-private /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+# Install SAML binary dependency
+RUN apt-get update && apt-get install -y xmlsec1 && rm -rf /var/lib/apt/lists/*
+
+# - Target (shippable) stages
+# * private-cloud-api [api-runtime-private, build-python-private]
+FROM api-runtime-private as private-cloud-api
+
+ARG PYTHON_SITE_DIR
+COPY --from=build-python-private ${PYTHON_SITE_DIR} ${PYTHON_SITE_DIR}
 COPY --from=build-python-private /usr/local/bin /usr/local/bin
 
 RUN python manage.py collectstatic --no-input
@@ -129,21 +146,22 @@ RUN touch ./ENTERPRISE_VERSION
 
 USER nobody
 
-# * private-cloud-unified [api-runtime, build-python-private, build-node-django]
-FROM --platform=$TARGETPLATFORM api-runtime as private-cloud-unified
+# * private-cloud-unified [api-runtime-private, build-python-private, build-node-django]
+FROM api-runtime-private as private-cloud-unified
 
+ARG PYTHON_SITE_DIR
+COPY --from=build-python-private ${PYTHON_SITE_DIR} ${PYTHON_SITE_DIR}
+COPY --from=build-python-private /usr/local/bin /usr/local/bin
 COPY --from=build-node-django /app/api/static /app/static
 COPY --from=build-node-django /app/api/app/templates/webpack /app/app/templates/webpack
-COPY --from=build-python-private /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=build-python-private /usr/local/bin /usr/local/bin
 
 RUN python manage.py collectstatic --no-input
 RUN touch ./ENTERPRISE_VERSION
 
 USER nobody
 
-# * saas-api [api-runtime, build-python-private]
-FROM --platform=$TARGETPLATFORM api-runtime as saas-api
+# * saas-api [api-runtime-private, build-python-private]
+FROM api-runtime-private as saas-api
 
 # Install GnuPG and import private key
 RUN --mount=type=secret,id=sse_pgp_pkey \
@@ -152,7 +170,8 @@ RUN --mount=type=secret,id=sse_pgp_pkey \
   mv /root/.gnupg /app/; \
   chown -R nobody /app/.gnupg
 
-COPY --from=build-python-private /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+ARG PYTHON_SITE_DIR
+COPY --from=build-python-private ${PYTHON_SITE_DIR} ${PYTHON_SITE_DIR}
 COPY --from=build-python-private /usr/local/bin /usr/local/bin
 
 RUN python manage.py collectstatic --no-input
@@ -161,9 +180,10 @@ RUN touch ./SAAS_DEPLOYMENT
 USER nobody
 
 # * oss-api [api-runtime, build-python]
-FROM --platform=$TARGETPLATFORM api-runtime as oss-api
+FROM api-runtime as oss-api
 
-COPY --from=build-python /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+ARG PYTHON_SITE_DIR
+COPY --from=build-python ${PYTHON_SITE_DIR} ${PYTHON_SITE_DIR}
 COPY --from=build-python /usr/local/bin /usr/local/bin
 
 RUN python manage.py collectstatic --no-input
@@ -171,7 +191,7 @@ RUN python manage.py collectstatic --no-input
 USER nobody
 
 # * oss-frontend [build-node-selfhosted]
-FROM --platform=$TARGETPLATFORM node:16-slim AS oss-frontend
+FROM node-slim AS oss-frontend
 
 USER node
 WORKDIR /srv/bt
@@ -180,19 +200,21 @@ COPY --from=build-node-selfhosted --chown=node:node /app/frontend .
 
 ENV NODE_ENV=production
 
+ARG CI_COMMIT_SHA
 RUN echo ${CI_COMMIT_SHA} > /srv/bt/CI_COMMIT_SHA
 COPY .release-please-manifest.json /srv/bt/.versions.json
 
 EXPOSE 8080
 CMD ["node",  "./api/index.js"]
 
-# * oss-unified [build-python, build-node-django]
-FROM --platform=$TARGETPLATFORM api-runtime as oss-unified
+# * oss-unified [api-runtime, build-python, build-node-django]
+FROM api-runtime as oss-unified
 
+ARG PYTHON_SITE_DIR
+COPY --from=build-python ${PYTHON_SITE_DIR} ${PYTHON_SITE_DIR}
+COPY --from=build-python /usr/local/bin /usr/local/bin
 COPY --from=build-node-django /app/api/static /app/static/
 COPY --from=build-node-django /app/api/app/templates/webpack /app/app/templates/webpack
-COPY --from=build-python /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=build-python /usr/local/bin /usr/local/bin
 
 RUN python manage.py collectstatic --no-input
 
