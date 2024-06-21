@@ -60,11 +60,23 @@ class OAuthLoginSerializer(serializers.Serializer):
     def _get_user(self, user_data: dict):
         email: str = user_data.pop("email")
 
+        # There are a number of scenarios that we're catering for in this
+        # query:
+        #  1. A new user arriving, and immediately authenticating with
+        #     the given social auth method.
+        #  2. A user that has previously authenticated with method A is now
+        #     authenticating with method B. Using the `email__iexact` means
+        #     that we'll always retrieve the user that already authenticated
+        #     with A.
+        #  3. A user that (prior to the case sensitivity fix) authenticated
+        #     with multiple methods and ended up with duplicate user accounts.
+        #     Since it's difficult for us to know which user account they are
+        #     using as their primary, we order by the method they are currently
+        #     authenticating with and grab the first one in the list.
         existing_user = (
             UserModel.objects.filter(email__iexact=email)
             .order_by(
-                F("google_user_id").desc(nulls_last=True),
-                F("github_user_id").desc(nulls_last=True),
+                F(self.user_model_id_attribute).desc(nulls_last=True),
             )
             .first()
         )
