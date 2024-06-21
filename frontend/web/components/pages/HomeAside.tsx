@@ -115,11 +115,20 @@ const HomeAside: FC<HomeAsideType> = ({
                             }}
                             onChange={(newEnvironmentId) => {
                               if (newEnvironmentId !== environmentId) {
+                              AsyncStorage.setItem(
+                                'lastEnv',
+                                JSON.stringify({
+                                  environmentId: newEnvironmentId,
+                                  orgId: AccountStore.getOrganisation().id,
+                                  projectId: projectId,
+                                }),
+                              ).finally(() => {
                                 history.push(
                                   `${document.location.pathname}${
                                     document.location.search || ''
                                   }`.replace(environmentId, newEnvironmentId),
                                 )
+                              })
                               }
                             }}
                           />
@@ -267,19 +276,6 @@ const HomeAside: FC<HomeAsideType> = ({
                     projectId={projectId}
                     environmentId={environmentId}
                     clearableValue={false}
-                    onChange={(environment: string) => {
-                      history.push(
-                        `/project/${projectId}/environment/${environment}/features`,
-                      )
-                      AsyncStorage.setItem(
-                        'lastEnv',
-                        JSON.stringify({
-                          environmentId: environment,
-                          orgId: AccountStore.getOrganisation().id,
-                          projectId: projectId,
-                        }),
-                      )
-                    }}
                   />
                 </div>
 

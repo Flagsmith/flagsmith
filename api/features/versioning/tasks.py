@@ -132,7 +132,7 @@ def trigger_update_version_webhooks(environment_feature_version_uuid: str) -> No
     call_environment_webhooks(
         environment=environment_feature_version.environment_id,
         data=data,
-        event_type=WebhookEventType.NEW_VERSION_PUBLISHED,
+        event_type=WebhookEventType.NEW_VERSION_PUBLISHED.value,
     )
 
 
