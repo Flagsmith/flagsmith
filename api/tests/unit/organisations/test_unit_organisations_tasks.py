@@ -293,6 +293,7 @@ def test_handle_api_usage_notifications_below_100(
     # Given
     now = timezone.now()
     organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
     organisation.subscription.save()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
@@ -328,7 +329,9 @@ def test_handle_api_usage_notifications_below_100(
     assert email.body == (
         "Hi there,\n\nThe API usage for Test Org has reached "
         "90% within the current subscription period. Please "
-        "consider upgrading your organisation's account limits.\n\n"
+        "consider upgrading your organisation's account limits.\n\n\n"
+        "Please note that once the 100% use has been breached "
+        "automated charges for your account may apply.\n\n"
         "Thank you!\n\nThe Flagsmith Team\n"
     )
 
@@ -337,16 +340,18 @@ def test_handle_api_usage_notifications_below_100(
     assert email.alternatives[0][1] == "text/html"
 
     assert email.alternatives[0][0] == (
-        "<table>\n\n        <tr>\n\n               "
-        "<td>Hi there,</td>\n\n        </tr>\n\n        "
-        "<tr>\n\n               <td>\n                 "
-        "The API usage for Test Org has reached\n                 "
-        "90% within the current subscription period.\n                 "
-        "Please consider upgrading your organisation's account limits.\n"
-        "               </td>\n\n\n        </tr>\n\n        "
-        "<tr>\n\n               <td>Thank you!</td>\n\n      "
-        "  </tr>\n\n        <tr>\n\n               "
-        "<td>The Flagsmith Team</td>\n\n        "
+        "<table>\n\n        <tr>\n\n               <td>Hi "
+        "there,</td>\n\n        </tr>\n\n        <tr>\n\n       "
+        "        <td>\n                 The API usage for Test "
+        "Org has reached\n                 90% within the current "
+        "subscription period.\n                 Please consider "
+        "upgrading your organisation's account limits.\n         "
+        "        \n                 Please note that once the 100%"
+        " use has been breached automated charges for your account "
+        "may apply.\n                 \n\n               </td>\n\n"
+        "\n        </tr>\n\n        <tr>\n\n               <td>"
+        "Thank you!</td>\n\n        </tr>\n\n        <tr>\n\n    "
+        "           <td>The Flagsmith Team</td>\n\n        "
         "</tr>\n\n</table>\n"
     )
 
@@ -387,6 +392,7 @@ def test_handle_api_usage_notifications_above_100(
     # Given
     now = timezone.now()
     organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
     organisation.subscription.save()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
@@ -421,11 +427,10 @@ def test_handle_api_usage_notifications_above_100(
     email = mailoutbox[0]
     assert email.subject == "Flagsmith API use has reached 100%"
     assert email.body == (
-        "Hi there,\n\nThe API usage for Test Org has breached "
-        "100% within the current subscription period. Please "
-        "upgrade your organisation's account to ensure "
-        "continued service.\n\nThank you!\n\n"
-        "The Flagsmith Team\n"
+        "Hi there,\n\nThe API usage for Test Org has breached 100% "
+        "within the current subscription period.\n\n\nPlease note "
+        "that automated charges for your account may apply.\n\n\n"
+        "Thank you!\n\nThe Flagsmith Team\n"
     )
 
     assert len(email.alternatives) == 1
@@ -433,17 +438,16 @@ def test_handle_api_usage_notifications_above_100(
     assert email.alternatives[0][1] == "text/html"
 
     assert email.alternatives[0][0] == (
-        "<table>\n\n        <tr>\n\n               <td>Hi "
-        "there,</td>\n\n        </tr>\n\n        <tr>\n\n    "
-        "           <td>\n                 The API usage for Test Org "
-        "has breached\n                 100% within the "
-        "current subscription period.\n                 "
-        "Please upgrade your organisation's account to ensure "
-        "continued service.\n               </td>\n\n\n      "
-        "  </tr>\n\n        <tr>\n\n               <td>"
-        "Thank you!</td>\n\n        </tr>\n\n        <tr>\n\n"
-        "               <td>The Flagsmith Team</td>\n\n        "
-        "</tr>\n\n</table>\n"
+        "<table>\n\n        <tr>\n\n               <td>Hi there,"
+        "</td>\n\n        </tr>\n\n        <tr>\n\n               <td>"
+        "\n                 The API usage for Test Org has breached"
+        "\n                 100% within the current subscription period."
+        "\n                 \n                 Please note that "
+        "automated charges for your account may apply.\n                 "
+        "\n               </td>\n\n\n        </tr>\n\n        <tr>"
+        "\n\n               <td>Thank you!</td>\n\n        </tr>"
+        "\n\n        <tr>\n\n               <td>The Flagsmith "
+        "Team</td>\n\n        </tr>\n\n</table>\n"
     )
 
     assert email.from_email == "noreply@flagsmith.com"
@@ -482,7 +486,8 @@ def test_handle_api_usage_notifications_for_free_accounts(
     mailoutbox: list[EmailMultiAlternatives],
 ) -> None:
     # Given
-    assert organisation.subscription.is_free_plan
+    assert organisation.is_paid is False
+    assert organisation.subscription.is_free_plan is True
     assert organisation.subscription.max_api_calls == MAX_API_CALLS_IN_FREE_PLAN
 
     mock_api_usage = mocker.patch(
@@ -510,10 +515,11 @@ def test_handle_api_usage_notifications_for_free_accounts(
     assert email.subject == "Flagsmith API use has reached 100%"
     assert email.body == (
         "Hi there,\n\nThe API usage for Test Org has breached "
-        "100% within the current subscription period. Please "
-        "upgrade your organisation's account to ensure "
-        "continued service.\n\nThank you!\n\n"
-        "The Flagsmith Team\n"
+        "100% within the current subscription period.\n\n\nPlease "
+        "note that the serving of feature flags and admin access "
+        "may be disabled after a grace period, so please upgrade "
+        "your organisation's account to ensure continued service."
+        "\n\n\nThank you!\n\nThe Flagsmith Team\n"
     )
 
     assert len(email.alternatives) == 1
@@ -521,17 +527,19 @@ def test_handle_api_usage_notifications_for_free_accounts(
     assert email.alternatives[0][1] == "text/html"
 
     assert email.alternatives[0][0] == (
-        "<table>\n\n        <tr>\n\n               <td>Hi "
-        "there,</td>\n\n        </tr>\n\n        <tr>\n\n    "
-        "           <td>\n                 The API usage for Test Org "
-        "has breached\n                 100% within the "
-        "current subscription period.\n                 "
-        "Please upgrade your organisation's account to ensure "
-        "continued service.\n               </td>\n\n\n      "
-        "  </tr>\n\n        <tr>\n\n               <td>"
-        "Thank you!</td>\n\n        </tr>\n\n        <tr>\n\n"
-        "               <td>The Flagsmith Team</td>\n\n        "
-        "</tr>\n\n</table>\n"
+        "<table>\n\n        <tr>\n\n               <td>Hi there,"
+        "</td>\n\n        </tr>\n\n        <tr>\n\n             "
+        "  <td>\n                 The API usage for Test Org has"
+        " breached\n                 100% within the current "
+        "subscription period.\n                 \n             "
+        "    Please note that the serving of feature flags and "
+        "admin access may be disabled after a grace period, so "
+        "please upgrade your organisation's account to ensure "
+        "continued service.\n                 \n               "
+        "</td>\n\n\n        </tr>\n\n        <tr>\n\n          "
+        "     <td>Thank you!</td>\n\n        </tr>\n\n        "
+        "<tr>\n\n               <td>The Flagsmith Team</td>"
+        "\n\n        </tr>\n\n</table>\n"
     )
 
     assert email.from_email == "noreply@flagsmith.com"
