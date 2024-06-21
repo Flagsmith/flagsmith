@@ -78,7 +78,7 @@ class OAuthLoginSerializer(serializers.Serializer):
         existing_user = (
             UserModel.objects.filter(email__iexact=email)
             .order_by(
-                F(self.get_user_model_id_attribute()).desc(nulls_last=True),
+                F(self.user_model_id_attribute).desc(nulls_last=True),
             )
             .first()
         )
@@ -99,11 +99,10 @@ class OAuthLoginSerializer(serializers.Serializer):
             # In this scenario, we're seeing a user that had previously
             # authenticated with another authentication method and is now
             # authenticating with a new OAuth provider.
-            user_model_id_attribute = self.get_user_model_id_attribute()
             setattr(
                 existing_user,
-                user_model_id_attribute,
-                user_data[user_model_id_attribute],
+                self.user_model_id_attribute,
+                user_data[self.user_model_id_attribute],
             )
             existing_user.save()
 
@@ -119,9 +118,6 @@ class OAuthLoginSerializer(serializers.Serializer):
                 "`auth_type` must be set, or `get_auth_type()` must be implemented."
             )
         return self.auth_type
-
-    def get_user_model_id_attribute(self) -> str:
-        return self.user_model_id_attribute
 
 
 class GoogleLoginSerializer(OAuthLoginSerializer):
