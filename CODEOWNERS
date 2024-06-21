@@ -1,0 +1,6 @@
+@flagsmith/flagsmith
+
+/api/            @flagsmith/flagsmith-back-end
+/docs/           @flagsmith/flagsmith-docs
+/frontend/       @flagsmith/flagsmith-front-end
+/infrastructure/ @flagsmith/flagsmith-back-end
