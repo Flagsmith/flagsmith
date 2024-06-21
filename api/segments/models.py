@@ -88,7 +88,7 @@ class Segment(
             return skip
 
         try:
-            if self.version_of and self.version_of != self:
+            if self.version_of_id and self.version_of_id != self.id:
                 return True
         except Segment.DoesNotExist:
             return True
@@ -143,6 +143,14 @@ class Segment(
         segment_audit_log_helper.unset_skip_audit_log(self.id)
 
     def deep_delete(self, hard: bool) -> None:
+        # WIP: This is the updated code to reflect what we want.
+        if hard:
+            self.hard_delete()
+        else:
+            self.delete()
+
+        return
+        # This is the code the ran with success.
         for rule in self.rules.all():
             for child_rule in rule.rules.all():
                 for condition in child_rule.conditions.all():
@@ -236,7 +244,7 @@ class SegmentRule(SoftDeleteExportableModel):
 
     def get_skip_create_audit_log(self) -> bool:
         segment = self.get_segment()
-        return segment.version_of != segment
+        return segment.version_of_id != segment.id
 
     def get_segment(self):
         """
@@ -336,7 +344,7 @@ class Condition(
 
     def get_skip_create_audit_log(self) -> bool:
         segment = self.rule.get_segment()
-        return segment.version_of != segment
+        return segment.version_of_id != segment.id
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         return f"Condition updated on segment '{self._get_segment().name}'."
