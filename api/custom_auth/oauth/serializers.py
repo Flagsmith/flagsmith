@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.signals import user_logged_in
@@ -107,11 +109,12 @@ class OAuthLoginSerializer(serializers.Serializer):
 
         return existing_user
 
+    @abstractmethod
     def get_user_info(self):
         raise NotImplementedError("`get_user_info()` must be implemented.")
 
     def get_auth_type(self) -> AuthType:
-        if not self.auth_type:
+        if not self.auth_type:  # pragma: no cover
             raise NotImplementedError(
                 "`auth_type` must be set, or `get_auth_type()` must be implemented."
             )
