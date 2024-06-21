@@ -115,10 +115,8 @@ const EnvironmentSettingsPage = class extends Component {
   }
 
   onRemove = () => {
+    toast('Your project has been removed')
     this.context.router.history.replace(Utils.getOrganisationHomePage())
-    setTimeout(() => {
-      toast('Your project has been removed')
-    }, 500)
   }
 
   confirmRemove = (environment, cb) => {
