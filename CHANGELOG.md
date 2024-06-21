@@ -1,5 +1,58 @@
 # Changelog
 
+## [2.123.1](https://github.com/Flagsmith/flagsmith/compare/v2.123.0...v2.123.1) (2024-06-19)
+
+
+### Bug Fixes
+
+* not serializable arguments when calling environment feature version webhooks ([#4187](https://github.com/Flagsmith/flagsmith/issues/4187)) ([319708c](https://github.com/Flagsmith/flagsmith/commit/319708c1f2ac8ae5f4e8c1208e9cceab0f939552))
+* scarf image formatting ([#4178](https://github.com/Flagsmith/flagsmith/issues/4178)) ([710ed87](https://github.com/Flagsmith/flagsmith/commit/710ed878e3d20f8170544894c4db5c1176e2d149))
+* Stale connections after task processor errors ([#4179](https://github.com/Flagsmith/flagsmith/issues/4179)) ([17782bd](https://github.com/Flagsmith/flagsmith/commit/17782bdc39ba010e3e823bf2b7f89f20b61d3234))
+
+## [2.123.0](https://github.com/Flagsmith/flagsmith/compare/v2.122.0...v2.123.0) (2024-06-18)
+
+
+### Features
+
+* Add alert message in the FE when exceeded the API usage ([#4027](https://github.com/Flagsmith/flagsmith/issues/4027)) ([da46dab](https://github.com/Flagsmith/flagsmith/commit/da46dab0f82dfa38d68c0108ee6fdbfb2c3a344f))
+
+
+### Bug Fixes
+
+* code highlighting ([#4181](https://github.com/Flagsmith/flagsmith/issues/4181)) ([e6d1f62](https://github.com/Flagsmith/flagsmith/commit/e6d1f620d73ae506767be2daeeb8fcbd1ccea4a1))
+
+## [2.122.0](https://github.com/Flagsmith/flagsmith/compare/v2.121.0...v2.122.0) (2024-06-18)
+
+
+### Features
+
+* add scarf pixel to docs ([#4169](https://github.com/Flagsmith/flagsmith/issues/4169)) ([ca071dc](https://github.com/Flagsmith/flagsmith/commit/ca071dc1b7d86c6aae87fc097f97871d0c6f43a7))
+* Add UI for configuring SAML in Flagsmith ([#4055](https://github.com/Flagsmith/flagsmith/issues/4055)) ([d2c2aba](https://github.com/Flagsmith/flagsmith/commit/d2c2aba01b16683b045aa50b21cf8718bc2aca12))
+
+
+### Bug Fixes
+
+* **dev:** add management command to manually send API usage to influx ([#4159](https://github.com/Flagsmith/flagsmith/issues/4159)) ([77eeaa7](https://github.com/Flagsmith/flagsmith/commit/77eeaa7576e3f89db0710cb0eff6b209a86e5c20))
+* **postgres-analytics/usage:** fix project_id filter ([#4171](https://github.com/Flagsmith/flagsmith/issues/4171)) ([5dafecf](https://github.com/Flagsmith/flagsmith/commit/5dafecf0d5ca612c2cc0caabfdd2c69e1bb71e5b))
+* various fixes for API usage alerting / billing ([#4158](https://github.com/Flagsmith/flagsmith/issues/4158)) ([9a6e335](https://github.com/Flagsmith/flagsmith/commit/9a6e33514d183763073c0854b2787cc6708ecd85))
+
+## [2.121.0](https://github.com/Flagsmith/flagsmith/compare/v2.120.0...v2.121.0) (2024-06-13)
+
+
+### Features
+
+* **analytics:** Command to populate arbitrary periods of analytics data ([#4155](https://github.com/Flagsmith/flagsmith/issues/4155)) ([20fb43e](https://github.com/Flagsmith/flagsmith/commit/20fb43ee2c032ba3ebc02ac838ce5596e0953538))
+* Keep segment modal open on create / edit, add segment name to modal ([#4109](https://github.com/Flagsmith/flagsmith/issues/4109)) ([1daedc2](https://github.com/Flagsmith/flagsmith/commit/1daedc22ea5dc4800f625804e99b924dbdfb6338))
+* Show new version warning in change requests ([#4153](https://github.com/Flagsmith/flagsmith/issues/4153)) ([69f6ae6](https://github.com/Flagsmith/flagsmith/commit/69f6ae6827fee07e173429b25f3f49e357f4d6d7))
+
+
+### Bug Fixes
+
+* cascade delete versions when corresponding change request is deleted ([#4152](https://github.com/Flagsmith/flagsmith/issues/4152)) ([baf8ddb](https://github.com/Flagsmith/flagsmith/commit/baf8ddb92b78241d3b0d41e421eeee662f6a6782))
+* Edge V2-enabled environments are not rebuilt on feature version publish ([#4132](https://github.com/Flagsmith/flagsmith/issues/4132)) ([7e0c9fd](https://github.com/Flagsmith/flagsmith/commit/7e0c9fdf7cf36930b2bd7ebb153df06650bdb879))
+* feature state value conversion ([#3946](https://github.com/Flagsmith/flagsmith/issues/3946)) ([d4f948d](https://github.com/Flagsmith/flagsmith/commit/d4f948d44da6b295d10f585caad30561ac6fe8af))
+* **migrate_analytics:** fix migrate_to_pg command ([#4139](https://github.com/Flagsmith/flagsmith/issues/4139)) ([c0f373a](https://github.com/Flagsmith/flagsmith/commit/c0f373aae3681c6cfc35dfc0f4bb010d1096227a))
+
 ## [2.120.0](https://github.com/Flagsmith/flagsmith/compare/v2.119.1...v2.120.0) (2024-06-11)
 
 

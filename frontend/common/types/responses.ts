@@ -553,6 +553,14 @@ export type MetadataModelField = {
   is_required_for: isRequiredFor[]
 }
 
+export type SAMLConfiguration = {
+  organisation: number
+  name: string
+  frontend_url: string
+  idp_metadata_xml?: string
+  allow_idp_initiated?: boolean
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -625,7 +633,7 @@ export type Res = {
   rolesPermissionUsers: PagedResponse<RolePermissionUser>
   createRolePermissionGroup: RolePermissionGroup
   rolePermissionGroup: PagedResponse<RolePermissionGroup>
-  getSubscriptionMetadata: { id: string }
+  getSubscriptionMetadata: { id: string; max_api_calls: number }
   environment: Environment
   metadataModelFieldList: PagedResponse<MetadataModelField>
   metadataModelField: MetadataModelField
@@ -664,5 +672,12 @@ export type Res = {
   identityFeatureStates: PagedResponse<FeatureState>
   cloneidentityFeatureStates: IdentityFeatureState
   featureStates: PagedResponse<FeatureState>
+  samlConfiguration: SAMLConfiguration
+  samlConfigurations: PagedResponse<SAMLConfiguration>
+  samlMetadata: {
+    entity_id: string
+    response_url: string
+    metadata_xml: string
+  }
   // END OF TYPES
 }
