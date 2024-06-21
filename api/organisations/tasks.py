@@ -105,11 +105,14 @@ def finish_subscription_cancellation() -> None:
         subscription.save_as_free_subscription()
 
 
-def send_admin_api_usage_notification(
+def send_api_usage_notification(
     organisation: Organisation, matched_threshold: int
 ) -> None:
     """
-    Send notification to admins that the API has breached a threshold.
+    Send notification to users that the API has breached a threshold.
+
+    Only admins are included if the matched threshold is under
+    100% of the API usage limits.
     """
 
     recipient_list = FFAdminUser.objects.filter(
@@ -197,7 +200,7 @@ def _handle_api_usage_notifications(organisation: Organisation) -> None:
         # Already sent the max notification level so don't resend.
         return
 
-    send_admin_api_usage_notification(organisation, matched_threshold)
+    send_api_usage_notification(organisation, matched_threshold)
 
 
 def handle_api_usage_notifications() -> None:
