@@ -150,6 +150,10 @@
                 {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL",
                     "value": "https://edge.api.flagsmith.com/api/v1/"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
+                    "value": "False"
                 }
             ],
             "secrets": [
