@@ -116,8 +116,10 @@ const EnvironmentSettingsPage = class extends Component {
   }
 
   onRemove = () => {
-    toast('Your project has been removed')
     this.context.router.history.replace(Utils.getOrganisationHomePage())
+    setTimeout(() => {
+      toast('Your project has been removed')
+    }, 500)
   }
 
   confirmRemove = (environment, cb) => {
@@ -128,7 +130,7 @@ const EnvironmentSettingsPage = class extends Component {
     )
   }
 
-  onRemoveEnvironment = () => {
+  onRemoveEnvironment = (environment) => {
     const envs = ProjectStore.getEnvs()
     if (envs && envs.length) {
       this.context.router.history.replace(
@@ -140,6 +142,11 @@ const EnvironmentSettingsPage = class extends Component {
         `/project/${this.props.match.params.projectId}/environment/create`,
       )
     }
+    toast(
+      <div>
+        Removed Environment: <strong>{environment.name}</strong>
+      </div>,
+    )
   }
 
   saveEnv = (e) => {
