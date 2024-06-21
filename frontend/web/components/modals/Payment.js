@@ -6,6 +6,7 @@ import Constants from 'common/constants'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
 import firstpromoter from 'project/firstPromoter'
+import Utils from 'common/utils/utils'
 
 const PaymentButton = (props) => {
   const activeSubscription = AccountStore.getOrganisationPlan(
@@ -744,29 +745,45 @@ const Payment = class extends Component {
   }
 }
 
+Payment.propTypes = {}
+export const onPaymentLoad = () => {
+  const planId = API.getCookie('plan')
+  let link
+  if (planId && Utils.getFlagsmithHasFeature('payments_enabled')) {
+    ;(function () {
+      // Create a link element with data-cb-plan-id attribute
+      link = document.createElement('a')
+      link.setAttribute('data-cb-type', 'checkout')
+      link.setAttribute('data-cb-plan-id', planId)
+      link.setAttribute('href', 'javascript:void(0)')
+      // Append the link to the body
+      document.body.appendChild(link)
+    })()
+    // API.setCookie('plan', null)
+  }
+  Chargebee.init({
+    site: Project.chargebee.site,
+  })
+  Chargebee.registerAgain()
+  firstpromoter()
+  Chargebee.getInstance().setCheckoutCallbacks(() => ({
+    success: (hostedPageId) => {
+      AppActions.updateSubscription(hostedPageId)
+    },
+  }))
+  if (link) {
+    link.click()
+    document.body.removeChild(link)
+    API.setCookie('plan', null)
+  }
+}
+
 const WrappedPayment = makeAsyncScriptLoader(
   'https://js.chargebee.com/v2/chargebee.js',
   {
     removeOnUnmount: true,
   },
 )(ConfigProvider(Payment))
-
-Payment.propTypes = {}
-
-module.exports = (props) => (
-  <WrappedPayment
-    {...props}
-    asyncScriptOnLoad={() => {
-      Chargebee.init({
-        site: Project.chargebee.site,
-      })
-      Chargebee.registerAgain()
-      firstpromoter()
-      Chargebee.getInstance().setCheckoutCallbacks(() => ({
-        success: (hostedPageId) => {
-          AppActions.updateSubscription(hostedPageId)
-        },
-      }))
-    }}
-  />
+export default (props) => (
+  <WrappedPayment {...props} asyncScriptOnLoad={onPaymentLoad} />
 )
