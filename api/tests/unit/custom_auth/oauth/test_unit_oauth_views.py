@@ -105,7 +105,12 @@ def test_can_login_with_google_if_registration_disabled(
     client = APIClient()
 
     email = "test@example.com"
-    mock_get_user_info.return_value = {"email": email}
+    mock_get_user_info.return_value = {
+        "email": email,
+        "first_name": "John",
+        "last_name": "Smith",
+        "google_user_id": "abc123",
+    }
     django_user_model.objects.create(email=email)
 
     # When
@@ -128,7 +133,12 @@ def test_can_login_with_github_if_registration_disabled(
     email = "test@example.com"
     mock_github_user = mock.MagicMock()
     MockGithubUser.return_value = mock_github_user
-    mock_github_user.get_user_info.return_value = {"email": email}
+    mock_github_user.get_user_info.return_value = {
+        "email": email,
+        "first_name": "John",
+        "last_name": "Smith",
+        "github_user_id": "abc123",
+    }
     django_user_model.objects.create(email=email)
 
     # When

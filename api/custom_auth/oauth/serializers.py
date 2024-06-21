@@ -33,7 +33,7 @@ class OAuthLoginSerializer(serializers.Serializer):
     )
 
     auth_type: AuthType | None = None
-    user_model_id_attribute: str = None
+    user_model_id_attribute: str = "id"
 
     class Meta:
         abstract = True
@@ -76,7 +76,7 @@ class OAuthLoginSerializer(serializers.Serializer):
         existing_user = (
             UserModel.objects.filter(email__iexact=email)
             .order_by(
-                F(self.user_model_id_attribute).desc(nulls_last=True),
+                F(self.get_user_model_id_attribute()).desc(nulls_last=True),
             )
             .first()
         )
@@ -118,11 +118,6 @@ class OAuthLoginSerializer(serializers.Serializer):
         return self.auth_type
 
     def get_user_model_id_attribute(self) -> str:
-        if not self.user_model_id_attribute:
-            raise NotImplementedError(
-                "`user_model_id_attribute` must be set, "
-                "or `get_user_model_id_attribute()` must be implemented."
-            )
         return self.user_model_id_attribute
 
 
