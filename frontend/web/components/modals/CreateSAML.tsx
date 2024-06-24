@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import Switch from 'components/Switch'
@@ -9,6 +9,7 @@ import {
   useGetSamlConfigurationQuery,
   getSamlConfigurationMetadata,
 } from 'common/services/useSamlConfiguration'
+import { useCreateSamlAttributeMappingMutation } from 'common/services/useSamlAttributeMapping'
 import Button from 'components/base/forms/Button'
 import { Req } from 'common/types/requests'
 import ErrorMessage from 'components/ErrorMessage'
@@ -16,27 +17,53 @@ import { getStore } from 'common/store'
 import XMLUpload from 'components/XMLUpload'
 import { IonIcon } from '@ionic/react'
 import { cloudDownloadOutline } from 'ionicons/icons'
+import Tabs from 'components/base/forms/Tabs'
+import TabItem from 'components/base/forms/TabItem'
+import { AttributeName } from 'common/types/responses'
+import SAMLAttributeMappingTable from 'components/SAMLAttributeMappingTable'
 
 type CreateSAML = {
   organisationId: number
   samlName?: string
 }
 
+type samlAttributeType = { id: number; label: string; value: AttributeName }
+type samlAttributesType = samlAttributeType[]
+
 const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
+  const [previousName, setPreviousName] = useState<string>(samlName || '')
   const [name, setName] = useState<string>(samlName || '')
   const [frontendUrl, setFrontendUrl] = useState<string>(window.location.origin)
   const [metadataXml, setMetadataXml] = useState<string>('')
   const [allowIdpInitiated, setAllowIdpInitiated] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [file, setFile] = useState<File | null>(null)
-  const [createSamlConfiguration, createError] =
-    useCreateSamlConfigurationMutation()
-  const [editSamlConfiguration, updateError] =
-    useUpdateSamlConfigurationMutation()
-  const { data } = useGetSamlConfigurationQuery(
+  const [isEdit, setIsEdit] = useState<boolean>(!!samlName || false)
+  const [
+    createSamlConfiguration,
+    { error: createError, isError: hasCreateError },
+  ] = useCreateSamlConfigurationMutation()
+  const [
+    editSamlConfiguration,
+    { error: updateError, isError: hasUpdateError },
+  ] = useUpdateSamlConfigurationMutation()
+  const { data, isSuccess } = useGetSamlConfigurationQuery(
     { name: samlName! },
     { skip: !samlName },
   )
+
+  useEffect(() => {
+    if (isSuccess && data) {
+      setPreviousName(data.name)
+    }
+  }, [data, isSuccess])
+
+  const samlAttributes: samlAttributesType = [
+    { id: 1, label: 'Email', value: 'email' },
+    { id: 2, label: 'First name', value: 'first_name' },
+    { id: 3, label: 'Last name', value: 'last_name' },
+    { id: 4, label: 'Groups', value: 'groups' },
+  ]
   const validateName = (name: string) => {
     const regularExpresion = /^$|^[a-zA-Z0-9_+-]+$/
     return regularExpresion.test(name)
@@ -52,11 +79,10 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
 
   const downloadServiceProvider = () => {
     setIsLoading(true)
-    const name = data?.name || samlName
-    getSamlConfigurationMetadata(getStore(), { name: name! })
+    getSamlConfigurationMetadata(getStore(), { name: previousName })
       .then((res) => {
         if (res.error) {
-          convetToXmlFile(name!, res.error.data)
+          convetToXmlFile(previousName, res.error.data)
         }
       })
       .finally(() => {
@@ -69,8 +95,8 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
     convetToXmlFile(`IDP metadata ${name!}`, data?.idp_metadata_xml || '')
   }
 
-  return (
-    <div className='create-feature-tab px-3'>
+  const Tab1 = (
+    <div className='create-feature-tab px-3 mt-3'>
       <InputGroup
         className='mt-2'
         title='Name*'
@@ -79,9 +105,9 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
         tooltipPlace='right'
         value={name}
         onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-          const nuevoNombre = Utils.safeParseEventValue(event)
-          if (validateName(nuevoNombre)) {
-            setName(nuevoNombre)
+          const newName = Utils.safeParseEventValue(event).replace(/ /g, '_')
+          if (validateName(newName)) {
+            setName(newName)
           }
         }}
         inputProps={{
@@ -172,15 +198,21 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
           />
         </div>
       </FormGroup>
-
+      {(!!hasCreateError || !!hasUpdateError) && (
+        <div className='mt-2'>
+          <ErrorMessage error={createError || updateError} />
+        </div>
+      )}
       <div className='text-right py-2'>
-        <Button
-          disabled={isLoading}
-          onClick={downloadServiceProvider}
-          className='mr-2'
-        >
-          {isLoading ? 'Downloading' : 'Download Service Provider Metadata'}
-        </Button>
+        {isEdit && (
+          <Button
+            disabled={isLoading}
+            onClick={downloadServiceProvider}
+            className='mr-2'
+          >
+            {isLoading ? 'Downloading' : 'Download Service Provider Metadata'}
+          </Button>
+        )}
         <Button
           type='submit'
           disabled={!name || !frontendUrl}
@@ -196,16 +228,18 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
             if (allowIdpInitiated) {
               body.allow_idp_initiated = allowIdpInitiated
             }
-            if (data) {
+            if (isEdit) {
+              const samlNameConfiguration = previousName
               editSamlConfiguration({
                 body: { ...body },
-                name: samlName!,
+                name: samlNameConfiguration,
               }).then((res) => {
                 if (res.data) {
                   setName(res.data.name)
                   setFrontendUrl(res.data.frontend_url)
                   setMetadataXml(res.data.idp_metadata_xml)
                   setAllowIdpInitiated(res.data.allow_idp_initiated)
+                  setPreviousName(res.data.name)
                   toast('SAML configuration updated!')
                 }
               })
@@ -217,22 +251,111 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
                   setMetadataXml(res.data.idp_metadata_xml)
                   setAllowIdpInitiated(res.data.allow_idp_initiated)
                   toast('SAML configuration Created!')
-                  closeModal()
+                  setIsEdit(true)
+                  setPreviousName(res.data.name)
                 }
               })
             }
           }}
         >
-          {data ? 'Update Configuration' : 'Create Configuration'}
+          {isEdit ? 'Update Configuration' : 'Create Configuration'}
         </Button>
       </div>
-      {!!createError ||
-        (!!updateError && (
-          <div className='mt-2'>
-            <ErrorMessage error={createError || updateError} />
-          </div>
-        ))}
     </div>
+  )
+
+  const Tab2: FC<any> = () => {
+    const [ipdAttributeName, setIdpAttributeName] = useState<string>('')
+    const [djangoAttributeName, setDjangoAttributeName] =
+      useState<samlAttributeType>(samlAttributes[0])
+    const [CreateSamlAttributeMapping, { error: errorAttributeCreation }] =
+      useCreateSamlAttributeMappingMutation()
+    return (
+      <div className='create-feature-tab mt-3'>
+        <InputGroup
+          title={'SAML Attribute Name*'}
+          tooltip='This is the attribute name where you want to store the information received from the SAML identity provider'
+          tooltipPlace='right'
+          component={
+            <Select
+              value={djangoAttributeName}
+              placeholder='Select a SAML attribute name'
+              options={samlAttributes}
+              onChange={(m: samlAttributeType) => {
+                setDjangoAttributeName(m)
+              }}
+              className='mb-4 react-select'
+            />
+          }
+        />
+        <InputGroup
+          className='mt-2'
+          title='IDP Attribute Name*'
+          data-test='attribute-name'
+          tooltip='This is the specific value of the attribute sent by the SAML identity provider'
+          tooltipPlace='right'
+          value={ipdAttributeName}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            setIdpAttributeName(Utils.safeParseEventValue(event))
+          }}
+          inputProps={{
+            className: 'full-width',
+          }}
+          type='text'
+          name='Name*'
+        />
+        <div className='text-right'>
+          <Button
+            disabled={!ipdAttributeName}
+            className='text-right'
+            onClick={() => {
+              CreateSamlAttributeMapping({
+                body: {
+                  django_attribute_name: djangoAttributeName?.value ?? '',
+                  idp_attribute_name: ipdAttributeName,
+                  saml_configuration: data?.id,
+                },
+              })
+            }}
+          >
+            Add Attribute
+          </Button>
+        </div>
+        {errorAttributeCreation && (
+          <div className='mt-2'>
+            <ErrorMessage error={errorAttributeCreation} />
+          </div>
+        )}
+        <SAMLAttributeMappingTable samlConfigurationId={data?.id || 0} />
+      </div>
+    )
+  }
+
+  return (
+    <>
+      {!isEdit ? (
+        Tab1
+      ) : (
+        <Tabs uncontrolled>
+          <TabItem
+            tabLabel={
+              <Row className='justify-content-center'>Basic Configuration</Row>
+            }
+          >
+            {Tab1}
+          </TabItem>
+          <TabItem
+            tabLabel={
+              <Row className='justify-content-center'>Attribute Mapping</Row>
+            }
+          >
+            <div className='create-feature-tab px-3'>
+              <Tab2 />
+            </div>
+          </TabItem>
+        </Tabs>
+      )}
+    </>
   )
 }
 export default CreateSAML

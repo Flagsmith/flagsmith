@@ -95,7 +95,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
                   type='button'
                   onClick={(e) => {
                     openModal(
-                      'Delete Github Integration',
+                      'Delete SAML configuration',
                       <div>
                         <div>
                           Are you sure you want to delete the SAML
@@ -105,7 +105,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
                           <Button
                             className='mr-2'
                             onClick={() => {
-                              closeModal2()
+                              closeModal()
                             }}
                           >
                             Cancel

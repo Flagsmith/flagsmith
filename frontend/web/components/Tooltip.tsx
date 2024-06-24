@@ -35,7 +35,10 @@ const Tooltip: FC<TooltipProps> = ({
           {plainText ? (
             `${children}`
           ) : (
-            <div dangerouslySetInnerHTML={{ __html: children }} />
+            <div
+              style={{ wordBreak: 'break-word' }}
+              dangerouslySetInnerHTML={{ __html: children }}
+            />
           )}
         </ReactTooltip>
       )}
