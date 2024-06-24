@@ -14,3 +14,4 @@ jobs:
     uses: ./.github/workflows/.reusable-deploy-ecs.yml
     with:
       environment: production
+    secrets: inherit
