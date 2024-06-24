@@ -254,7 +254,7 @@ class SegmentRule(SoftDeleteExportableModel):
         TODO: denormalise the segment information so that we don't have to make multiple queries here in complex cases
         """
         rule = self
-        while not rule.segment:
+        while not rule.segment_id:
             rule = rule.rule
         return rule.segment
 
