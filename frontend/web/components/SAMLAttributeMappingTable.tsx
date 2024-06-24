@@ -9,6 +9,7 @@ import Button from './base/forms/Button'
 import Icon from './Icon'
 import { SAMLAttributeMapping } from 'common/types/responses'
 import Format from 'common/utils/format'
+import Tooltip from './Tooltip'
 
 type SAMLAttributeMappingTableType = {
   samlConfigurationId: number
@@ -60,9 +61,22 @@ const SAMLAttributeMappingTable: FC<SAMLAttributeMappingTableType> = ({
               </div>
             </Flex>
             <Flex className='table-column px-3'>
-              <div className='table-column' style={{ width: '305px' }}>
+              <Tooltip
+                title={
+                  <div
+                    className='table-column'
+                    style={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      width: '305px',
+                    }}
+                  >
+                    {attribute.idp_attribute_name}
+                  </div>
+                }
+              >
                 {attribute.idp_attribute_name}
-              </div>
+              </Tooltip>
             </Flex>
             <div className='table-column'>
               <Button
