@@ -1,4 +1,4 @@
-from core.models import _AbstractBaseAuditableModel
+from core.models import AbstractBaseAuditableModel
 from django.conf import settings
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
@@ -9,7 +9,7 @@ from users.models import FFAdminUser
 
 
 def create_audit_log_from_historical_record(
-    instance: _AbstractBaseAuditableModel,
+    instance: AbstractBaseAuditableModel,
     history_user: FFAdminUser,
     history_instance,
     **kwargs,
