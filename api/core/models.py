@@ -98,7 +98,7 @@ def base_historical_model_factory(
     return BaseHistoricalModel
 
 
-class _AbstractBaseAuditableModel(models.Model):
+class AbstractBaseAuditableModel(models.Model):
     """
     A base Model class that all models we want to be included in the audit log should inherit from.
 
@@ -196,8 +196,8 @@ def abstract_base_auditable_model_factory(
     historical_records_excluded_fields: typing.List[str] = None,
     change_details_excluded_fields: typing.Sequence[str] = None,
     show_change_details_for_create: bool = False,
-) -> typing.Type[_AbstractBaseAuditableModel]:
-    class Base(_AbstractBaseAuditableModel):
+) -> typing.Type[AbstractBaseAuditableModel]:
+    class Base(AbstractBaseAuditableModel):
         history = HistoricalRecords(
             bases=[
                 base_historical_model_factory(
