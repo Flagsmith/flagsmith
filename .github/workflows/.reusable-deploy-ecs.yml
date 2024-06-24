@@ -61,7 +61,7 @@ jobs:
           build-args: CI_COMMIT_SHA=${{ github.sha }}
           secrets: |
             github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-            sse_pgp_pkey="${{ secrets.SSE_PGP_PRIVATE_KEY }}"
+            "sse_pgp_pkey=${{ secrets.SSE_PGP_PRIVATE_KEY }}"
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
