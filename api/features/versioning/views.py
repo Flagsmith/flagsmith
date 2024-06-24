@@ -29,6 +29,7 @@ from features.versioning.permissions import (
     EnvironmentFeatureVersionRetrievePermissions,
 )
 from features.versioning.serializers import (
+    EnvironmentFeatureVersionCreateSerializer,
     EnvironmentFeatureVersionFeatureStateSerializer,
     EnvironmentFeatureVersionPublishSerializer,
     EnvironmentFeatureVersionQuerySerializer,
@@ -66,6 +67,8 @@ class EnvironmentFeatureVersionViewSet(
                 return EnvironmentFeatureVersionPublishSerializer
             case "retrieve":
                 return EnvironmentFeatureVersionRetrieveSerializer
+            case "create":
+                return EnvironmentFeatureVersionCreateSerializer
             case _:
                 return EnvironmentFeatureVersionSerializer
 
