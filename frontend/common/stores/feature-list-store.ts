@@ -851,6 +851,7 @@ const controller = {
         )
         store.model.lastSaved = new Date().valueOf()
         store.saved({})
+        store.trigger('removed', flag)
       })
   },
   searchFeatures: _.throttle(
