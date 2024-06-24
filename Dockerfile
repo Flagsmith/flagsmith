@@ -167,8 +167,8 @@ FROM api-runtime-private as saas-api
 RUN --mount=type=secret,id=sse_pgp_pkey \
   apt-get update && apt-get install -y gnupg && \
   gpg --import /run/secrets/sse_pgp_pkey && \
-  mv /root/.gnupg /app/; \
-  chown -R nobody /app/.gnupg
+  mv /root/.gnupg/ /app/ && \
+  chown -R nobody /app/.gnupg/
 
 ARG PYTHON_SITE_DIR
 COPY --from=build-python-private ${PYTHON_SITE_DIR} ${PYTHON_SITE_DIR}

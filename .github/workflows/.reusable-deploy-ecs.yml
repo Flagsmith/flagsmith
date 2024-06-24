@@ -33,11 +33,12 @@ jobs:
         uses: depot/setup-action@v1
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-2
+          mask-aws-account-id: 'no'
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -61,7 +62,7 @@ jobs:
           build-args: CI_COMMIT_SHA=${{ github.sha }}
           secrets: |
             github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-            sse_pgp_pkey=${{ secrets.SSE_PGP_PRIVATE_KEY }}
+            "sse_pgp_pkey=${{ secrets.SSE_PGP_PRIVATE_KEY }}"
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -85,7 +86,6 @@ jobs:
           aws_ecs_service_name: ${{ vars.AWS_ECS_SERVICE_NAME }}
           aws_vpc_subnet_id: ${{ vars.AWS_VPC_SUBNET_ID }}
           aws_ecs_security_group_id: ${{ vars.AWS_ECS_SECURITY_GROUP_ID }}
-          aws_ecr_repository_arn: ${{ vars.AWS_ECR_REPOSITORY_ARN }}
           aws_identity_migration_event_bus_name: ${{ vars.AWS_IDENTITY_MIGRATION_EVENT_BUS_NAME }}
           aws_identity_migration_event_bus_rule_id: ${{ vars.AWS_IDENTITY_MIGRATION_EVENT_BUS_RULE_ID }}
           aws_identity_migration_task_role_arn: ${{ vars.AWS_IDENTITY_MIGRATION_TASK_ROLE_ARN }}
