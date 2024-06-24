@@ -103,7 +103,7 @@ class SegmentSerializer(serializers.ModelSerializer, SerializerWithMetadata):
             instance.refresh_from_db()
             instance.version = cloned_segment.version
             instance.save()
-            cloned_segment.deep_delete(hard=True)
+            cloned_segment.hard_delete()
             raise
         return response
 

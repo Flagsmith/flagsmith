@@ -1,5 +1,4 @@
 import pytest
-from django.utils import timezone
 from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
 
 from features.models import Feature
@@ -400,63 +399,6 @@ def test_deep_clone_of_segment_with_grandchild_rule(
     assert (
         "AssertionError: Expected two layers of rules, not more" == exception.exconly()
     )
-
-
-def test_deep_delete_hard(segment: Segment) -> None:
-    # Given
-    parent_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
-
-    child_rule = SegmentRule.objects.create(rule=parent_rule, type=SegmentRule.ANY_RULE)
-
-    condition = Condition.objects.create(
-        rule=child_rule,
-        property="child_rule",
-        operator=EQUAL,
-        value="condition",
-        created_with_segment=True,
-    )
-
-    # When
-    segment.deep_delete(hard=True)
-
-    # Then
-    with pytest.raises(Segment.DoesNotExist):
-        segment.refresh_from_db()
-    with pytest.raises(SegmentRule.DoesNotExist):
-        parent_rule.refresh_from_db()
-    with pytest.raises(SegmentRule.DoesNotExist):
-        child_rule.refresh_from_db()
-    with pytest.raises(Condition.DoesNotExist):
-        condition.refresh_from_db()
-
-
-def test_deep_delete_soft(segment: Segment) -> None:
-    # Given
-    parent_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
-
-    child_rule = SegmentRule.objects.create(rule=parent_rule, type=SegmentRule.ANY_RULE)
-
-    condition = Condition.objects.create(
-        rule=child_rule,
-        property="child_rule",
-        operator=EQUAL,
-        value="condition",
-        created_with_segment=True,
-    )
-    before_delete = timezone.now()
-
-    # When
-    segment.deep_delete(hard=False)
-
-    # Then
-    segment.refresh_from_db()
-    assert segment.deleted_at > before_delete
-    parent_rule.refresh_from_db()
-    assert parent_rule.deleted_at > before_delete
-    child_rule.refresh_from_db()
-    assert child_rule.deleted_at > before_delete
-    condition.refresh_from_db()
-    assert condition.deleted_at > before_delete
 
 
 def test_segment_rule_get_skip_create_audit_log_when_doesnt_skip(

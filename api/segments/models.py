@@ -142,35 +142,6 @@ class Segment(
         self.save()
         segment_audit_log_helper.unset_skip_audit_log(self.id)
 
-    def deep_delete(self, hard: bool) -> None:
-        # WIP: This is the updated code to reflect what we want.
-        if hard:
-            self.hard_delete()
-        else:
-            self.delete()
-
-        return
-        # This is the code the ran with success.
-        for rule in self.rules.all():
-            for child_rule in rule.rules.all():
-                for condition in child_rule.conditions.all():
-                    if hard:
-                        condition.hard_delete()
-                    else:
-                        condition.delete()
-                if hard:
-                    child_rule.hard_delete()
-                else:
-                    child_rule.delete()
-            if hard:
-                rule.hard_delete()
-            else:
-                rule.delete()
-        if hard:
-            self.hard_delete()
-        else:
-            self.delete()
-
     def deep_clone(self) -> "Segment":
         cloned_segment = deepcopy(self)
         cloned_segment.id = None
