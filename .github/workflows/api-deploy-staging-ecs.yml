@@ -8,7 +8,6 @@ on:
       - api/**
       - .github/**
       - infrastructure/aws/staging/**
-      - fix/ecs-deploy-secrets
   workflow_dispatch:
 
 jobs:
