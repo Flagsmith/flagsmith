@@ -356,6 +356,9 @@ const App = class extends Component {
       (!dismissed || dismissed !== announcementValue.id) &&
       Utils.getFlagsmithHasFeature('announcement') &&
       this.state.showAnnouncement
+    const announcementInPage = announcementValue?.pages?.some((page) =>
+      pathname.includes(page),
+    )
     const isOrganisationSelect = document.location.pathname === '/organisations'
     const integrations = Object.keys(
       JSON.parse(Utils.getFlagsmithValue('integration_data') || '{}'),
@@ -390,7 +393,8 @@ const App = class extends Component {
                         }
                       />
                     )}
-                    {user && showBanner && (
+                    {((user && showBanner && !announcementValue?.pages) ||
+                      announcementInPage) && (
                       <div className='container mt-4'>
                         <div className='row'>
                           <InfoMessage
