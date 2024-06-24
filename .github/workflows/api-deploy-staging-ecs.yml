@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - fix/ecs-deploy-secrets
     paths:
       - api/**
       - .github/**
