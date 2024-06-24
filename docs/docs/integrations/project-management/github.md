@@ -9,6 +9,8 @@ hide_title: true
 
 View your Flagsmith Flags inside GitHub Issues and Pull Requests.
 
+![Github Integration](/img/integrations/github/github-integration-1.png)
+
 ## Integration Setup (SaaS)
 
 You can either set up the integration from the Flagsmith side or from the Github side.
