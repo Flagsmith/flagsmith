@@ -139,15 +139,16 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
     def create(
         self, validated_data: dict[str, typing.Any]
     ) -> EnvironmentFeatureVersion:
+        # Note that we use self.initial_data below for handling the feature states
+        # since we want the raw data (rather than the serialized ORM objects) to pass
+        # into the serializers in the separate private methods used for modifying the
+        # FeatureState objects. As such, we just want to blindly remove the non-model
+        # attribute keys from the validated before calling super to create the version.
         for field_name in self.Meta.non_model_fields:
             validated_data.pop(field_name, None)
 
         version = super().create(validated_data)
 
-        # Note that we use self.initial_data for handling the feature states here
-        # since we want the raw data (rather than the serialized ORM objects) to
-        # pass into the serializers in the separate private methods used for modifying
-        # the FeatureState objects.
         for feature_state_to_create in self.initial_data.get(
             "feature_states_to_create", []
         ):
