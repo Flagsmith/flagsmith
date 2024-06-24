@@ -12,38 +12,36 @@ set the `TASK_RUN_METHOD` to `TASK_PROCESSOR` in the flagsmith container running
 A basic docker-compose setup might look like:
 
 ```yaml
-    postgres:
-        image: postgres:15.5-alpine
-        environment:
-            POSTGRES_PASSWORD: password
-            POSTGRES_DB: flagsmith
-        container_name: flagsmith_postgres
+postgres:
+ image: postgres:15.5-alpine
+ environment:
+  POSTGRES_PASSWORD: password
+  POSTGRES_DB: flagsmith
+ container_name: flagsmith_postgres
 
-    flagsmith:
-        image: flagsmith/flagsmith-api
-        environment:
-            DJANGO_ALLOWED_HOSTS: '*'
-            DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
-            ENV: prod
-            TASK_RUN_METHOD: TASK_PROCESSOR
-        ports:
-            - '8000:8000'
-        depends_on:
-            - postgres
-        links:
-            - postgres
+flagsmith:
+ image: flagsmith/flagsmith-api:latest
+ environment:
+  DJANGO_ALLOWED_HOSTS: '*'
+  DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
+  ENV: prod
+  TASK_RUN_METHOD: TASK_PROCESSOR
+ ports:
+  - '8000:8000'
+ depends_on:
+  - postgres
+ links:
+  - postgres
 
-   flagsmith_processor:
-       build:
-           dockerfile: api/Dockerfile
-           context: .
-       environment:
-           DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
-       command:
-           - run-task-processor
-       depends_on:
-           - flagsmith
-           - postgres
+flagsmith_processor:
+ image: flagsmith/flagsmith-api:latest
+ environment:
+  DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
+ command:
+  - run-task-processor
+ depends_on:
+  - flagsmith
+  - postgres
 ```
 
 ## Configuring the Processor
