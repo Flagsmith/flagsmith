@@ -29,6 +29,9 @@ from users.models import FFAdminUser, UserPermissionGroup
 # Password used by all the test users
 PASSWORD = "str0ngp4ssw0rd!"
 
+PROJECT_PERMISSION_PROJECT = "My Test Project 5 Project Permission"
+ENV_PERMISSION_PROJECT = "My Test Project 6 Env Permission"
+
 
 def delete_user_and_its_organisations(user_email: str) -> None:
     user: FFAdminUser | None = FFAdminUser.objects.filter(email=user_email).first()
@@ -68,24 +71,20 @@ def seed_data() -> None:
     non_admin_user_with_org_permissions: FFAdminUser = FFAdminUser.objects.create_user(
         email=settings.E2E_NON_ADMIN_USER_WITH_ORG_PERMISSIONS,
         password=PASSWORD,
-        username=settings.E2E_NON_ADMIN_USER_WITH_ORG_PERMISSIONS,
     )
     non_admin_user_with_project_permissions: FFAdminUser = (
         FFAdminUser.objects.create_user(
             email=settings.E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS,
             password=PASSWORD,
-            username=settings.E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS,
         )
     )
     non_admin_user_with_env_permissions: FFAdminUser = FFAdminUser.objects.create_user(
         email=settings.E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS,
         password=PASSWORD,
-        username=settings.E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS,
     )
     non_admin_user_with_a_role: FFAdminUser = FFAdminUser.objects.create_user(
         email=settings.E2E_NON_ADMIN_USER_WITH_A_ROLE,
         password=PASSWORD,
-        username=settings.E2E_NON_ADMIN_USER_WITH_A_ROLE,
     )
     org_admin.add_organisation(organisation, OrganisationRole.ADMIN)
     non_admin_user_with_org_permissions.add_organisation(
@@ -122,10 +121,10 @@ def seed_data() -> None:
         {"name": "My Test Project 3", "environments": ["Development"]},
         {"name": "My Test Project 4", "environments": ["Development"]},
         {
-            "name": "My Test Project 5 Project Permission",
+            "name": PROJECT_PERMISSION_PROJECT,
             "environments": ["Development"],
         },
-        {"name": "My Test Project 6 Env Permission", "environments": ["Development"]},
+        {"name": ENV_PERMISSION_PROJECT, "environments": ["Development"]},
         {"name": "My Test Project 7 Role", "environments": ["Development"]},
     ]
     # Upgrade organisation seats
@@ -140,7 +139,7 @@ def seed_data() -> None:
         project = Project.objects.create(
             name=project_info["name"], organisation=organisation
         )
-        if project_info["name"] == "My Test Project 5 Project Permission":
+        if project_info["name"] == PROJECT_PERMISSION_PROJECT:
             # Add permissions to the non-admin user with project permissions
             user_proj_permission: UserProjectPermission = (
                 UserProjectPermission.objects.create(
@@ -161,7 +160,7 @@ def seed_data() -> None:
         for env_name in project_info["environments"]:
             environment = Environment.objects.create(name=env_name, project=project)
 
-            if project_info["name"] == "My Test Project 6 Env Permission":
+            if project_info["name"] == ENV_PERMISSION_PROJECT:
                 # Add permissions to the non-admin user with env permissions
                 user_env_permission = UserEnvironmentPermission.objects.create(
                     user=non_admin_user_with_env_permissions, environment=environment
