@@ -92,8 +92,6 @@ Current variables used between 'frontend/environment.js' and 'frontend/common/pr
 - `MIXPANEL_API_KEY`: Mixpanel analytics key to use for behaviour tracking.
 - `SENTRY_API_KEY`: Sentry key for error reporting.
 - `ALBACROSS_CLIENT_ID`: Albacross client ID key for behaviour tracking.
-- `STATIC_ASSET_CDN_URL`: Used for replacing local static paths with a cdn, .e.g https://cdn.flagsmith.com. Defaults to
-  `/`, i.e. no CDN.
 - `BASE_URL`: Used for specifying a base url path that's ignored during routing if serving from a subdirectory.
 - `USE_SECURE_COOKIES`: Enable / disable the use of secure cookies. If deploying the FE in a private network without a
   domain / SSL cert, disable secure cookies to ensure that session token is persisted. Default: true.

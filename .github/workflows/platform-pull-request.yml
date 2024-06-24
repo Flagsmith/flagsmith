@@ -60,7 +60,7 @@ jobs:
     name: Build Unified Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      file: Dockerfile
+      target: oss-unified
       image-name: flagsmith
 
   docker-build-api:
@@ -68,7 +68,7 @@ jobs:
     name: Build API Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      file: api/Dockerfile
+      target: oss-api
       image-name: flagsmith-api
 
   docker-build-frontend:
@@ -76,7 +76,7 @@ jobs:
     name: Build Frontend Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      file: frontend/Dockerfile
+      target: oss-frontend
       image-name: flagsmith-frontend
 
   docker-build-e2e:
@@ -88,17 +88,31 @@ jobs:
       image-name: flagsmith-e2e
       scan: false
 
+  docker-build-private-cloud:
+    if: github.event.pull_request.draft == false
+    name: Build Private Cloud Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: private-cloud-unified
+      image-name: flagsmith-private-cloud
+    secrets:
+      secrets: |
+        github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+
   run-e2e-tests:
-    needs: [docker-build-api, docker-build-e2e]
+    needs: [docker-build-api, docker-build-private-cloud, docker-build-e2e]
     uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
     with:
-      api-image: ${{ needs.docker-build-api.outputs.image }}
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
+      api-image: ${{ matrix.api-image }}
       concurrency: ${{ matrix.args.concurrency }}
       tests: ${{ matrix.args.tests }}
 
     strategy:
       matrix:
+        api-image:
+          - ${{ needs.docker-build-api.outputs.image }}
+          - ${{ needs.docker-build-private-cloud.outputs.image }}
         args:
           - tests: segment-part-1 environment
             concurrency: 1

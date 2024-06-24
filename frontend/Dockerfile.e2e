@@ -14,4 +14,7 @@ COPY frontend .
 COPY .release-please-manifest.json ./.versions.json
 RUN npm run env
 
+ARG CI_COMMIT_SHA=dev
+RUN echo ${CI_COMMIT_SHA} > ./CI_COMMIT_SHA
+
 CMD ["bash", "-l"]

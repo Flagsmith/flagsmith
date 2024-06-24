@@ -1,5 +1,7 @@
 import json
 import pathlib
+from functools import lru_cache
+from typing import TypedDict
 
 import shortuuid
 
@@ -7,20 +9,28 @@ UNKNOWN = "unknown"
 VERSIONS_INFO_FILE_LOCATION = ".versions.json"
 
 
-def create_hash():
+class VersionInfo(TypedDict):
+    ci_commit_sha: str
+    image_tag: str
+    is_enterprise: bool
+    is_saas: bool
+
+
+def create_hash() -> str:
     """Helper function to create a short hash"""
     return shortuuid.uuid()
 
 
-def is_enterprise():
+def is_enterprise() -> bool:
     return pathlib.Path("./ENTERPRISE_VERSION").exists()
 
 
-def is_saas():
+def is_saas() -> bool:
     return pathlib.Path("./SAAS_DEPLOYMENT").exists()
 
 
-def get_version_info() -> dict:
+@lru_cache
+def get_version_info() -> VersionInfo:
     """Reads the version info baked into src folder of the docker container"""
     version_json = {}
     image_tag = UNKNOWN
