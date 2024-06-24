@@ -76,7 +76,7 @@ const controller = {
       getStore().dispatch(
         environmentService.util.invalidateTags(['Environment']),
       )
-      store.trigger('removed')
+      store.trigger('removed', env)
       store.saved()
       AppActions.refreshOrganisation()
     })

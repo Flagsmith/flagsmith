@@ -303,7 +303,16 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                 const segment = find(segments, { id })
                                 if (segment) {
                                   confirmRemove(segment, () => {
-                                    removeSegment({ id, projectId })
+                                    removeSegment({ id, projectId }).then(
+                                      (res) => {
+                                        toast(
+                                          <div>
+                                            Removed Segment:{' '}
+                                            <strong>{segment.name}</strong>
+                                          </div>,
+                                        )
+                                      },
+                                    )
                                   })
                                 }
                               }}
