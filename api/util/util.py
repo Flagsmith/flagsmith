@@ -11,7 +11,6 @@ def postpone(function):
         t = Thread(target=function, args=args, kwargs=kwargs)
         t.daemon = True
         t.start()
-        return t
 
     return decorator
 
