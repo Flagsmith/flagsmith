@@ -85,7 +85,6 @@ jobs:
           aws_ecs_service_name: ${{ vars.AWS_ECS_SERVICE_NAME }}
           aws_vpc_subnet_id: ${{ vars.AWS_VPC_SUBNET_ID }}
           aws_ecs_security_group_id: ${{ vars.AWS_ECS_SECURITY_GROUP_ID }}
-          aws_ecr_repository_arn: ${{ vars.AWS_ECR_REPOSITORY_ARN }}
           aws_identity_migration_event_bus_name: ${{ vars.AWS_IDENTITY_MIGRATION_EVENT_BUS_NAME }}
           aws_identity_migration_event_bus_rule_id: ${{ vars.AWS_IDENTITY_MIGRATION_EVENT_BUS_RULE_ID }}
           aws_identity_migration_task_role_arn: ${{ vars.AWS_IDENTITY_MIGRATION_TASK_ROLE_ARN }}
