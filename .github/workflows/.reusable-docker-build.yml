@@ -50,6 +50,7 @@ jobs:
     permissions:
       packages: write
       id-token: write
+      security-events: write
       contents: read
 
     steps:
