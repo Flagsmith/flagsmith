@@ -66,6 +66,7 @@ jobs:
       api-image: ${{ matrix.api-image }}
       concurrency: ${{ matrix.args.concurrency }}
       tests: ${{ matrix.args.tests }}
+    secrets: inherit
 
     strategy:
       matrix:
