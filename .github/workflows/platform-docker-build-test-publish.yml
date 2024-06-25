@@ -78,6 +78,7 @@ jobs:
     with:
       source-images: ${{ needs.docker-build-api.outputs.image }}
       target-images: flagsmith/flagsmith-api
+    secrets: inherit
 
   docker-publish-frontend:
     needs: [docker-build-frontend, run-e2e-tests]
@@ -86,6 +87,7 @@ jobs:
     with:
       source-images: ${{ needs.docker-build-frontend.outputs.image }}
       target-images: flagsmith/flagsmith-frontend
+    secrets: inherit
 
   docker-publish-unified:
     needs: [docker-build-unified, run-e2e-tests]
@@ -94,6 +96,7 @@ jobs:
     with:
       source-images: ${{ needs.docker-build-unified.outputs.image }}
       target-images: flagsmith/flagsmith
+    secrets: inherit
 
   docker-publish-private-cloud-api:
     needs: [docker-build-private-cloud-api, run-e2e-tests]
@@ -102,6 +105,7 @@ jobs:
     with:
       source-images: ${{ needs.docker-build-private-cloud-api.outputs.image }}
       target-images: flagsmith/flagsmith-private-cloud-api
+    secrets: inherit
 
   docker-publish-private-cloud:
     needs: [docker-build-private-cloud, run-e2e-tests]
@@ -110,6 +114,7 @@ jobs:
     with:
       source-images: ${{ needs.docker-build-private-cloud.outputs.image }}
       target-images: flagsmith/flagsmith-private-cloud
+    secrets: inherit
 
   update-charts:
     needs: [docker-publish-api, docker-publish-frontend, docker-publish-unified]
