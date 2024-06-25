@@ -62,6 +62,7 @@ jobs:
     with:
       target: oss-unified
       image-name: flagsmith
+      ephemeral: ${{ github.event.pull_request.author_association != 'MEMBER' }}
 
   docker-build-api:
     if: github.event.pull_request.draft == false
@@ -70,6 +71,7 @@ jobs:
     with:
       target: oss-api
       image-name: flagsmith-api
+      ephemeral: ${{ github.event.pull_request.author_association != 'MEMBER' }}
 
   docker-build-frontend:
     if: github.event.pull_request.draft == false
@@ -78,6 +80,7 @@ jobs:
     with:
       target: oss-frontend
       image-name: flagsmith-frontend
+      ephemeral: ${{ github.event.pull_request.author_association != 'MEMBER' }}
 
   docker-build-e2e:
     if: github.event.pull_request.draft == false
@@ -86,10 +89,11 @@ jobs:
     with:
       file: frontend/Dockerfile.e2e
       image-name: flagsmith-e2e
+      ephemeral: ${{ github.event.pull_request.author_association != 'MEMBER' }}
       scan: false
 
   docker-build-private-cloud:
-    if: github.event.pull_request.draft == false
+    if: github.event.pull_request.draft == false && github.event.pull_request.author_association == 'MEMBER'
     name: Build Private Cloud Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
@@ -100,19 +104,17 @@ jobs:
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
 
   run-e2e-tests:
-    needs: [docker-build-api, docker-build-private-cloud, docker-build-e2e]
+    needs: [docker-build-api, docker-build-e2e]
     uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
     with:
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
-      api-image: ${{ matrix.api-image }}
+      api-image: ${{ needs.docker-build-api.outputs.image }}
       concurrency: ${{ matrix.args.concurrency }}
       tests: ${{ matrix.args.tests }}
+    secrets: inherit
 
     strategy:
       matrix:
-        api-image:
-          - ${{ needs.docker-build-api.outputs.image }}
-          - ${{ needs.docker-build-private-cloud.outputs.image }}
         args:
           - tests: segment-part-1 environment
             concurrency: 1
