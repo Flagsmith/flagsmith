@@ -32,16 +32,16 @@ const ProjectProvider = class extends React.Component {
         ),
       )
     })
-    this.listenTo(ProjectStore, 'removed', () => {
-      this.props.onRemoveEnvironment && this.props.onRemoveEnvironment()
+    this.listenTo(ProjectStore, 'removed', (data) => {
+      this.props.onRemoveEnvironment && this.props.onRemoveEnvironment(data)
     })
     this.listenTo(OrganisationStore, 'removed', () => {
       this.props.onRemove && this.props.onRemove()
     })
   }
 
-  createEnv = (env, projectId, cloneId, description) => {
-    AppActions.createEnv(env, projectId, cloneId, description)
+  createEnv = (env, projectId, cloneId, description, metadata) => {
+    AppActions.createEnv(env, projectId, cloneId, description, metadata)
   }
 
   editEnv = (env) => {

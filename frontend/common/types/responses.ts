@@ -429,6 +429,8 @@ export type AuthType = 'EMAIL' | 'GITHUB' | 'GOOGLE'
 
 export type SignupType = 'NO_INVITE' | 'INVITE_EMAIL' | 'INVITE_LINK'
 
+export type AttributeName = 'email' | 'first_name' | 'last_name' | 'groups'
+
 export type Invite = {
   id: number
   email: string
@@ -554,11 +556,19 @@ export type MetadataModelField = {
 }
 
 export type SAMLConfiguration = {
+  id: number
   organisation: number
   name: string
   frontend_url: string
   idp_metadata_xml?: string
   allow_idp_initiated?: boolean
+}
+
+export type SAMLAttributeMapping = {
+  id: number
+  saml_configuration: number
+  django_attribute_name: AttributeName
+  idp_attribute_name: string
 }
 
 export type Res = {
@@ -679,5 +689,6 @@ export type Res = {
     response_url: string
     metadata_xml: string
   }
+  samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
   // END OF TYPES
 }

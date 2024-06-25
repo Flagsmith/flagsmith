@@ -11,6 +11,9 @@ POETRY_VERSION ?= 1.8.3
 
 GUNICORN_LOGGER_CLASS ?= util.logging.GunicornJsonCapableLogger
 
+SAML_REVISION ?= v1.6.2
+RBAC_REVISION ?= v0.7.0
+
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
 
@@ -25,6 +28,13 @@ install-poetry:
 .PHONY: install-packages
 install-packages:
 	poetry install --no-root $(opts)
+
+.PHONY: install-private-modules
+install-private-modules:
+	$(eval SITE_PACKAGES_DIR := $(shell poetry run python -c 'import site; print(site.getsitepackages()[0])'))
+	git clone https://github.com/flagsmith/flagsmith-saml --depth 1 --branch ${SAML_REVISION} && mv ./flagsmith-saml/saml $(SITE_PACKAGES_DIR)
+	git clone https://github.com/flagsmith/flagsmith-rbac --depth 1 --branch ${RBAC_REVISION} && mv ./flagsmith-rbac/rbac $(SITE_PACKAGES_DIR)
+	rm -rf ./flagsmith-saml ./flagsmith-rbac
 
 .PHONY: install
 install: install-pip install-poetry install-packages
@@ -46,23 +56,24 @@ lint: lint-black lint-isort lint-flake8
 
 .PHONY: docker-up
 docker-up:
-	docker-compose up --force-recreate --remove-orphans -d
-	docker-compose ps
+	docker compose up --force-recreate --remove-orphans -d
+	docker compose ps
 
 .PHONY: docker-down
 docker-down:
-	docker-compose stop
+	docker compose stop
 
 .PHONY: docker-logs
 docker-logs:
-	docker-compose logs --follow
+	docker compose logs --follow
 
 .PHONY: docker-build
 docker-build:
 	@docker build \
 		--tag=$(DOCKER_TAG) \
-		--file=Dockerfile \
-		.
+		--file=../Dockerfile \
+		--target=oss-api \
+		../
 
 .PHONY: test
 test:

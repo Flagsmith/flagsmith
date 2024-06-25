@@ -13,7 +13,7 @@ const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
 
 const controller = {
-  createEnv: (name, projectId, cloneId, description) => {
+  createEnv: (name, projectId, cloneId, description, metadata) => {
     API.trackEvent(Constants.events.CREATE_ENVIRONMENT)
     store.saving()
     const req = cloneId
@@ -26,12 +26,12 @@ const controller = {
           name,
           project: projectId,
         })
-
     req
       .then((res) =>
         data
           .put(`${Project.api}environments/${res.api_key}/`, {
             description,
+            metadata: metadata || [],
             name,
             project: projectId,
           })
@@ -76,7 +76,7 @@ const controller = {
       getStore().dispatch(
         environmentService.util.invalidateTags(['Environment']),
       )
-      store.trigger('removed')
+      store.trigger('removed', env)
       store.saved()
       AppActions.refreshOrganisation()
     })
@@ -247,6 +247,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
         action.projectId,
         action.cloneId,
         action.description,
+        action.metadata,
       )
       break
     case Actions.EDIT_ENVIRONMENT:

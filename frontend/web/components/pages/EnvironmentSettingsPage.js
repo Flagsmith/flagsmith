@@ -128,7 +128,7 @@ const EnvironmentSettingsPage = class extends Component {
     )
   }
 
-  onRemoveEnvironment = () => {
+  onRemoveEnvironment = (environment) => {
     const envs = ProjectStore.getEnvs()
     if (envs && envs.length) {
       this.context.router.history.replace(
@@ -140,6 +140,11 @@ const EnvironmentSettingsPage = class extends Component {
         `/project/${this.props.match.params.projectId}/environment/create`,
       )
     }
+    toast(
+      <div>
+        Removed Environment: <strong>{environment.name}</strong>
+      </div>,
+    )
   }
 
   saveEnv = (e) => {
@@ -900,7 +905,9 @@ const EnvironmentSettingsPage = class extends Component {
                           <FormGroup className='mt-5 setting'>
                             <InputGroup
                               title={'Metadata'}
-                              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} environments`}
+                              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
+                                'environments',
+                              )}`}
                               tooltipPlace='right'
                               component={
                                 <AddMetadataToEntity
