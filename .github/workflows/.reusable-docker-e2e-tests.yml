@@ -13,10 +13,18 @@ on:
         type: string
         description: Core API Docker image to use, e.g., `ghcr.io/flagsmith/flagsmith-api:main`
         required: true
+      api-image-build-id:
+        type: string
+        description: Depot build ID for the Core API Docker image
+        required: false
       e2e-image:
         type: string
         description: Frontend Docker with E2E capabilities image to use, e.g., `ghcr.io/flagsmith/flagsmith-e2e:main`
         required: true
+      e2e-image-build-id:
+        type: string
+        description: Depot build ID for the Frontend Docker with E2E capabilities
+        required: false
       tests:
         type: string
         description: Space-delimited list of E2E tests to be executed
@@ -33,11 +41,29 @@ jobs:
     name: "E2E${{ inputs.tests && format(': {0}', inputs.tests) || '' }}"
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+
     steps:
       - name: Cloning repo
         uses: actions/checkout@v4
 
+      - name: Set up Depot CLI
+        if: ${{ inputs.api-image-build-id || inputs.e2e-image-build-id }}
+        uses: depot/setup-action@v1
+
+      - name: Pull API image from Depot
+        if: inputs.api-image-build-id
+        run: depot pull ${{ inputs.api-image-build-id }} -t ${{ inputs.api-image }}
+
+      - name: Pull E2E image from Depot
+        if: inputs.e2e-image-build-id
+        run: depot pull ${{ inputs.api-image-build-id }} -t ${{ inputs.e2e-image }}
+
       - name: Login to Github Container Registry
+        if: ${{ !inputs.api-image-build-id && !inputs.e2e-image-build-id }}
         uses: docker/login-action@v3
         with:
           registry: ${{ inputs.registry-url }}
@@ -61,10 +87,3 @@ jobs:
           E2E_CONCURRENCY: ${{ inputs.concurrency }}
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-      - name: Output Core API container status and logs
-        if: failure()
-        working-directory: frontend
-        run: |
-          docker compose -f docker-compose-e2e-tests.yml logs flagsmith-api
-        shell: bash
