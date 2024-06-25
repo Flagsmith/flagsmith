@@ -1,6 +1,6 @@
 import logging
 
-from core.models import _AbstractBaseAuditableModel
+from core.models import AbstractBaseAuditableModel
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_audit_log_from_historical_record(
-    instance: _AbstractBaseAuditableModel,
+    instance: AbstractBaseAuditableModel,
     history_user: FFAdminUser,
     history_instance,
     **kwargs,

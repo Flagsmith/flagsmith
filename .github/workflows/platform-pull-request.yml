@@ -55,47 +55,79 @@ jobs:
             }
           ignored_types: '[]'
 
+  check-permissions:
+    name: Check actor permissions
+    runs-on: ubuntu-latest
+    outputs:
+      can-write: ${{ steps.check.outputs.require-result }}
+    steps:
+      - uses: actions-cool/check-user-permission@main
+        id: check
+        with:
+          require: write
+
   docker-build-unified:
     if: github.event.pull_request.draft == false
+    needs: check-permissions
     name: Build Unified Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      file: Dockerfile
+      ephemeral: ${{ !needs.check-permissions.outputs.can-write }}
+      target: oss-unified
       image-name: flagsmith
 
   docker-build-api:
     if: github.event.pull_request.draft == false
+    needs: check-permissions
     name: Build API Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      file: api/Dockerfile
+      ephemeral: ${{ !needs.check-permissions.outputs.can-write }}
+      target: oss-api
       image-name: flagsmith-api
 
   docker-build-frontend:
     if: github.event.pull_request.draft == false
+    needs: check-permissions
     name: Build Frontend Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      file: frontend/Dockerfile
+      ephemeral: ${{ !needs.check-permissions.outputs.can-write }}
+      target: oss-frontend
       image-name: flagsmith-frontend
 
   docker-build-e2e:
     if: github.event.pull_request.draft == false
+    needs: check-permissions
     name: Build E2E Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
+      ephemeral: ${{ !needs.check-permissions.outputs.can-write }}
       file: frontend/Dockerfile.e2e
       image-name: flagsmith-e2e
       scan: false
+
+  docker-build-private-cloud:
+    if: github.event.pull_request.draft == false && needs.check-permissions.outputs.can-write
+    needs: check-permissions
+    name: Build Private Cloud Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: private-cloud-unified
+      image-name: flagsmith-private-cloud
+    secrets:
+      secrets: |
+        github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
 
   run-e2e-tests:
     needs: [docker-build-api, docker-build-e2e]
     uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
     with:
-      api-image: ${{ needs.docker-build-api.outputs.image }}
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
+      api-image: ${{ needs.docker-build-api.outputs.image }}
       concurrency: ${{ matrix.args.concurrency }}
       tests: ${{ matrix.args.tests }}
+    secrets: inherit
 
     strategy:
       matrix:

@@ -91,6 +91,10 @@ class AuditLog(LifecycleModel):
         return klass.objects.filter(history_id=self.history_record_id).first()
 
     @property
+    def project_name(self) -> str:
+        return getattr(self.project, "name", "unknown")
+
+    @property
     def environment_name(self) -> str:
         return getattr(self.environment, "name", "unknown")
 

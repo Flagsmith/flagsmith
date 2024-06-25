@@ -8,6 +8,7 @@ from audit.models import AuditLog, RelatedObjectType
 from audit.serializers import AuditLogListSerializer
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
+from integrations.grafana.grafana import GrafanaWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
 from integrations.slack.slack import SlackWrapper
 from organisations.models import OrganisationWebhook
@@ -111,6 +112,20 @@ def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):
         entity_selector=dynatrace_config.entity_selector,
     )
     _track_event_async(instance, dynatrace)
+
+
+@receiver(post_save, sender=AuditLog)
+@track_only_feature_related_events
+def send_audit_log_event_to_grafana(sender, instance, **kwargs):
+    grafana_config = _get_integration_config(instance, "grafana_config")
+    if not grafana_config:
+        return
+
+    grafana = GrafanaWrapper(
+        base_url=grafana_config.base_url,
+        api_key=grafana_config.api_key,
+    )
+    _track_event_async(instance, grafana)
 
 
 @receiver(post_save, sender=AuditLog)
