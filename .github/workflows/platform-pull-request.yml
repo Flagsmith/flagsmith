@@ -55,45 +55,61 @@ jobs:
             }
           ignored_types: '[]'
 
+  check-permissions:
+    name: Check actor permissions
+    runs-on: ubuntu-latest
+    outputs:
+      can-write: ${{ steps.check.outputs.require-result }}
+    steps:
+      - uses: actions-cool/check-user-permission@main
+        id: check
+        with:
+          require: write
+
   docker-build-unified:
     if: github.event.pull_request.draft == false
+    needs: check-permissions
     name: Build Unified Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
+      ephemeral: ${{ !needs.check-permissions.outputs.can-write }}
       target: oss-unified
       image-name: flagsmith
-      ephemeral: ${{ github.event.pull_request.author_association != 'MEMBER' }}
 
   docker-build-api:
     if: github.event.pull_request.draft == false
+    needs: check-permissions
     name: Build API Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
+      ephemeral: ${{ !needs.check-permissions.outputs.can-write }}
       target: oss-api
       image-name: flagsmith-api
-      ephemeral: ${{ github.event.pull_request.author_association != 'MEMBER' }}
 
   docker-build-frontend:
     if: github.event.pull_request.draft == false
+    needs: check-permissions
     name: Build Frontend Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
+      ephemeral: ${{ !needs.check-permissions.outputs.can-write }}
       target: oss-frontend
       image-name: flagsmith-frontend
-      ephemeral: ${{ github.event.pull_request.author_association != 'MEMBER' }}
 
   docker-build-e2e:
     if: github.event.pull_request.draft == false
+    needs: check-permissions
     name: Build E2E Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
+      ephemeral: ${{ !needs.check-permissions.outputs.can-write }}
       file: frontend/Dockerfile.e2e
       image-name: flagsmith-e2e
-      ephemeral: ${{ github.event.pull_request.author_association != 'MEMBER' }}
       scan: false
 
   docker-build-private-cloud:
-    if: github.event.pull_request.draft == false && github.event.pull_request.author_association == 'MEMBER'
+    if: github.event.pull_request.draft == false && needs.check-permissions.outputs.can-write
+    needs: check-permissions
     name: Build Private Cloud Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
