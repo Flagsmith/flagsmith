@@ -1,5 +1,8 @@
+from unittest.mock import PropertyMock
+
 import pytest
 from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
+from pytest_mock import MockerFixture
 
 from features.models import Feature
 from projects.models import Project
@@ -428,6 +431,23 @@ def test_segment_rule_get_skip_create_audit_log_when_skips(segment: Segment) -> 
 
     # When
     result = segment_rule.get_skip_create_audit_log()
+
+    # Then
+    assert result is True
+
+
+def test_segment_get_skip_create_audit_log_when_exception(
+    mocker: MockerFixture,
+    segment: Segment,
+) -> None:
+    # Given
+    patched_segment = mocker.patch.object(
+        Segment, "version_of_id", new_callable=PropertyMock
+    )
+    patched_segment.side_effect = Segment.DoesNotExist("Segment missing")
+
+    # When
+    result = segment.get_skip_create_audit_log()
 
     # Then
     assert result is True
