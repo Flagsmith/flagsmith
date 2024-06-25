@@ -118,3 +118,7 @@ generate-ld-client-types:
 .PHONY: get-workflow-version
 get-workflow-version:
 	@grep -A 1 "\[tool.poetry.group.workflows.dependencies\]" pyproject.toml | awk -F '"' '{printf $$4}'
+
+.PHONY: get-auth-controller-version
+get-auth-controller-version:
+	@grep -A 1 "\[tool.poetry.group.auth-controller.dependencies\]" pyproject.toml | awk -F '"' '{printf $$4}'
