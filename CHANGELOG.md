@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.124.1](https://github.com/Flagsmith/flagsmith/compare/v2.124.0...v2.124.1) (2024-06-25)
+
+
+### Bug Fixes
+
+* **ci:** Secrets unavailable to Docker publish jobs ([#4220](https://github.com/Flagsmith/flagsmith/issues/4220)) ([30ba49d](https://github.com/Flagsmith/flagsmith/commit/30ba49dea45f1f54f3f805a7dc14b36ed49c9acf))
+* versioning webhooks and update test to correctly test end to end ([#4221](https://github.com/Flagsmith/flagsmith/issues/4221)) ([47eb149](https://github.com/Flagsmith/flagsmith/commit/47eb149ffa6840a2f36f2378737b8aa0ce4b2199))
+
 ## [2.124.0](https://github.com/Flagsmith/flagsmith/compare/v2.123.1...v2.124.0) (2024-06-24)
 
 
