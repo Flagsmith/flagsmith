@@ -1,32 +1,41 @@
 import React, { FC } from 'react'
 import InfoMessage from './InfoMessage'
 import flagsmith from 'flagsmith'
+import Utils from 'common/utils/utils'
+import { AnnouncementValueType } from './Announcement'
 
-type AnnouncementPerPageValueType = {
-  id: string
-  title: string
-  description: string
-  isClosable: boolean
-  buttonText: string
-  url: string
+type AnnouncementPerPageValueType = AnnouncementValueType & {
+  pages: string[]
 }
 
-type AnnouncementPerPageType = {
-  announcementPerPageValue: AnnouncementPerPageValueType
-}
+type AnnouncementPerPageType = { pathname: string }
 
-const AnnouncementPerPage: FC<AnnouncementPerPageType> = ({
-  announcementPerPageValue,
-}) => {
-  const { buttonText, description, id, isClosable, title, url } =
-    announcementPerPageValue
+const AnnouncementPerPage: FC<AnnouncementPerPageType> = ({ pathname }) => {
   const closeAnnouncement = (id: string) => {
     flagsmith.setTrait(`dismissed_announcement_per_page`, id)
   }
 
+  const announcementPerPageDismissed = flagsmith.getTrait(
+    'dismissed_announcement_per_page',
+  )
+  const announcementPerPageValue = Utils.getFlagsmithJSONValue(
+    'announcement_per_page',
+    null,
+  ) as AnnouncementPerPageValueType
+
+  const { buttonText, description, id, isClosable, pages, title, url } =
+    announcementPerPageValue
+
+  const showAnnouncementPerPage =
+    (!announcementPerPageDismissed ||
+      announcementPerPageDismissed !== announcementPerPageValue.id) &&
+    Utils.getFlagsmithHasFeature('announcement_per_page') &&
+    pages?.length > 0
+
+  const announcementInPage = pages?.some((page) => pathname.includes(page))
   return (
-    <div className='container mt-4'>
-      <div className='row'>
+    <>
+      {showAnnouncementPerPage && announcementInPage && (
         <InfoMessage
           title={title}
           isClosable={isClosable}
@@ -38,8 +47,8 @@ const AnnouncementPerPage: FC<AnnouncementPerPageType> = ({
             <div>{description}</div>
           </div>
         </InfoMessage>
-      </div>
-    </div>
+      )}
+    </>
   )
 }
 
