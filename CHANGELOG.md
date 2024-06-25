@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.124.0](https://github.com/Flagsmith/flagsmith/compare/v2.123.1...v2.124.0) (2024-06-24)
+
+
+### Features
+
+* Add confirmations when removing features, segments and environments ([#4210](https://github.com/Flagsmith/flagsmith/issues/4210)) ([cdc3410](https://github.com/Flagsmith/flagsmith/commit/cdc3410ccb6941e22ab1c3529ebc7d0330e4eb22))
+* Add logic to API usage notification templates ([#4206](https://github.com/Flagsmith/flagsmith/issues/4206)) ([6afa63d](https://github.com/Flagsmith/flagsmith/commit/6afa63d7e2e5e452854944c5034cd2195cf7cffa))
+* Add UI for SAML attribute mapping ([#4184](https://github.com/Flagsmith/flagsmith/issues/4184)) ([318fb85](https://github.com/Flagsmith/flagsmith/commit/318fb85e471a96b10274c4f502cfac7971169acf))
+* Grafana integration ([#4144](https://github.com/Flagsmith/flagsmith/issues/4144)) ([5c25c41](https://github.com/Flagsmith/flagsmith/commit/5c25c41e01ba68b18887759f2a5650caa6a9f39d))
+* **versioning:** add logic to create version in single endpoint ([#3991](https://github.com/Flagsmith/flagsmith/issues/3991)) ([57f8d68](https://github.com/Flagsmith/flagsmith/commit/57f8d68449577228a6f32cd317c4693cf5282824))
+
+
+### Bug Fixes
+
+* **ci:** Docker build CodeQL permission ([#4217](https://github.com/Flagsmith/flagsmith/issues/4217)) ([7554d15](https://github.com/Flagsmith/flagsmith/commit/7554d159aa46338381d392237e662d43286d9cdd))
+* **ci:** Secrets unavailable for deploy jobs ([#4215](https://github.com/Flagsmith/flagsmith/issues/4215)) ([d56ad08](https://github.com/Flagsmith/flagsmith/commit/d56ad08d332d10ee440170afec64bd1efecc5282))
+* Include free plans for api use notifications ([#4204](https://github.com/Flagsmith/flagsmith/issues/4204)) ([e1f3a7b](https://github.com/Flagsmith/flagsmith/commit/e1f3a7b92344b909f3547024589086685e7c04fa))
+* login redirect ([#4192](https://github.com/Flagsmith/flagsmith/issues/4192)) ([b0bc87a](https://github.com/Flagsmith/flagsmith/commit/b0bc87acbe8c0187eaaa6e01880c64712eea1dba))
+* Metadata UI issues ([#4069](https://github.com/Flagsmith/flagsmith/issues/4069)) ([36c8bb3](https://github.com/Flagsmith/flagsmith/commit/36c8bb3c401ed153dcc0e866e0edab49746a4ff9))
+* oauth user case sensitivity ([#4207](https://github.com/Flagsmith/flagsmith/issues/4207)) ([af955bf](https://github.com/Flagsmith/flagsmith/commit/af955bf7ef3b35965b5675d957fe56a8383c7d5b))
+* Preserve selected environment ([#4190](https://github.com/Flagsmith/flagsmith/issues/4190)) ([6bf9858](https://github.com/Flagsmith/flagsmith/commit/6bf9858ce23400445a3ace960acf78123141cdf0))
+
 ## [2.123.1](https://github.com/Flagsmith/flagsmith/compare/v2.123.0...v2.123.1) (2024-06-19)
 
 
