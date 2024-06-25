@@ -39,10 +39,7 @@ on:
     outputs:
       image:
         description: Resulting image specifier
-        value: ${{ jobs.build.outputs.image-tag }}
-      build-id:
-        description: Depot build ID (if `ephemeral` was set to `true`)
-        value: ${{ inputs.ephemeral && jobs.build.outputs.build-id || '' }}
+        value: ${{ jobs.build.outputs.image }}
     secrets:
       secrets:
         description: List of secrets to expose to the build (e.g., `key=string, GIT_AUTH_TOKEN=mytoken`)
@@ -53,8 +50,7 @@ jobs:
     name: Build ${{ inputs.scan && 'and verify ' || '' }}${{ inputs.image-name }} image
     runs-on: ubuntu-latest
     outputs:
-      image-tag: ${{ steps.image-tag.outputs.image-tag }}
-      build-id: ${{ steps.build.outputs.build-id }}
+      image: ${{ steps.image-tag.outputs.image-tag }}
 
     permissions:
       packages: write
@@ -111,12 +107,13 @@ jobs:
       - name: Render image tag
         id: image-tag
         run: >
-          echo image-tag=${{ inputs.registry-url }}/flagsmith/${{ inputs.image-name}}:${{ steps.meta.outputs.version }}
-          >> $GITHUB_OUTPUT
+          echo image-tag=${{ inputs.ephemeral && format('registry.depot.dev/{0}:{1}', steps.build.outputs.project-id,
+          steps.build.outputs.build-id) || format('{0}/flagsmith/{1}:{2}', inputs.registry-url, inputs.image-name,
+          steps.meta.outputs.version) }} >> $GITHUB_OUTPUT
 
-      - name: Pull image from Depot
+      - name: Login to Depot Registry
         if: inputs.scan && inputs.ephemeral
-        run: depot pull ${{ steps.build.outputs.build-id }} -t ${{ steps.image-tag.outputs.image-tag }}
+        run: depot pull-token | docker login -u x-token --password-stdin registry.depot.dev
 
       - name: Run Trivy vulnerability scanner
         id: trivy

@@ -108,9 +108,7 @@ jobs:
     uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
     with:
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
-      e2e-image-build-id: ${{ needs.docker-build-e2e.outputs.build-id }}
       api-image: ${{ needs.docker-build-api.outputs.image }}
-      api-image-build-id: ${{ needs.docker-build-api.outputs.build-id }}
       concurrency: ${{ matrix.args.concurrency }}
       tests: ${{ matrix.args.tests }}
     secrets: inherit

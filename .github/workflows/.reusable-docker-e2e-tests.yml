@@ -4,27 +4,14 @@ name: Run Docker E2E tests
 on:
   workflow_call:
     inputs:
-      registry-url:
-        type: string
-        description: Github Container Registry base URL
-        required: false
-        default: ghcr.io
       api-image:
         type: string
         description: Core API Docker image to use, e.g., `ghcr.io/flagsmith/flagsmith-api:main`
         required: true
-      api-image-build-id:
-        type: string
-        description: Depot build ID for the Core API Docker image
-        required: false
       e2e-image:
         type: string
         description: Frontend Docker with E2E capabilities image to use, e.g., `ghcr.io/flagsmith/flagsmith-e2e:main`
         required: true
-      e2e-image-build-id:
-        type: string
-        description: Depot build ID for the Frontend Docker with E2E capabilities
-        required: false
       tests:
         type: string
         description: Space-delimited list of E2E tests to be executed
@@ -50,25 +37,17 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v4
 
-      - name: Set up Depot CLI
-        if: ${{ inputs.api-image-build-id || inputs.e2e-image-build-id }}
-        uses: depot/setup-action@v1
-
-      - name: Pull API image from Depot
-        if: inputs.api-image-build-id
-        run: depot pull ${{ inputs.api-image-build-id }} -t ${{ inputs.api-image }}
-
-      - name: Pull E2E image from Depot
-        if: inputs.e2e-image-build-id
-        run: depot pull ${{ inputs.api-image-build-id }} -t ${{ inputs.e2e-image }}
-
       - name: Login to Github Container Registry
-        if: ${{ !inputs.api-image-build-id && !inputs.e2e-image-build-id }}
+        if: ${{ startsWith(inputs.api-image, 'ghcr.io') || startsWith(inputs.e2e-image, 'ghcr.io') }}
         uses: docker/login-action@v3
         with:
-          registry: ${{ inputs.registry-url }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Depot Registry
+        if: startsWith(inputs.api-image, 'registry.depot.dev') || startsWith(inputs.e2e-image, 'registry.depot.dev')
+        run: depot pull-token | docker login -u x-token --password-stdin registry.depot.dev
 
       - name: Run tests on dockerised frontend
         uses: nick-fields/retry@v3
