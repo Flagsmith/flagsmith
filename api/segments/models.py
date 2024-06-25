@@ -47,6 +47,9 @@ class Segment(
 
     metadata = GenericRelation(Metadata)
 
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)
+
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
@@ -112,6 +115,9 @@ class SegmentRule(SoftDeleteExportableModel):
     )
 
     type = models.CharField(max_length=50, choices=RULE_TYPES)
+
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)
 
     def clean(self):
         super().clean()
@@ -179,6 +185,9 @@ class Condition(
     rule = models.ForeignKey(
         SegmentRule, on_delete=models.CASCADE, related_name="conditions"
     )
+
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)
 
     def __str__(self):
         return "Condition for %s: %s %s %s" % (
