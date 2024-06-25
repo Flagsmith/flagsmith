@@ -111,9 +111,13 @@ jobs:
           steps.build.outputs.build-id) || format('{0}/flagsmith/{1}:{2}', inputs.registry-url, inputs.image-name,
           steps.meta.outputs.version) }} >> $GITHUB_OUTPUT
 
-      - name: Login to Depot Registry
+      - name: Render Depot token
+        id: depot-token
         if: inputs.scan && inputs.ephemeral
-        run: depot pull-token | docker login -u x-token --password-stdin registry.depot.dev
+        run: |
+          export DEPOT_TOKEN=$(depot pull-token)
+          echo ::add-mask::$DEPOT_TOKEN
+          echo depot-token=$DEPOT_TOKEN >> $GITHUB_OUTPUT
 
       - name: Run Trivy vulnerability scanner
         id: trivy
@@ -124,8 +128,8 @@ jobs:
           format: sarif
           output: trivy-results.sarif
         env:
-          TRIVY_USERNAME: ${{ github.actor }}
-          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          TRIVY_USERNAME: ${{ inputs.ephemeral && 'x-token' || github.actor }}
+          TRIVY_PASSWORD: ${{ inputs.ephemeral && steps.depot-token.outputs.depot-token || secrets.GITHUB_TOKEN }}
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v2
