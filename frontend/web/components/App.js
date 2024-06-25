@@ -36,6 +36,7 @@ import AuditLogIcon from './svg/AuditLogIcon'
 import Permission from 'common/providers/Permission'
 import HomeAside from './pages/HomeAside'
 import ScrollToTop from './ScrollToTop'
+import AnnouncementPerPage from './AnnouncementPerPage'
 
 const App = class extends Component {
   static propTypes = {
@@ -350,13 +351,25 @@ const App = class extends Component {
       return <div>{this.props.children}</div>
     }
     const announcementValue = Utils.getFlagsmithJSONValue('announcement', null)
+    const announcementPerPageDismissed = flagsmith.getTrait(
+      'dismissed_announcement_per_page',
+    )
+    const announcementPerPageValue = Utils.getFlagsmithJSONValue(
+      'announcement_per_page',
+      null,
+    )
+    const showAnnouncementPerPage =
+      !announcementPerPageDismissed ||
+      announcementPerPageDismissed !== announcementPerPageValue.id
+    Utils.getFlagsmithHasFeature('announcement_per_page') &&
+      announcementPerPageValue?.pages?.length > 0
     const dismissed = flagsmith.getTrait('dismissed_announcement')
     const showBanner =
       announcementValue &&
       (!dismissed || dismissed !== announcementValue.id) &&
       Utils.getFlagsmithHasFeature('announcement') &&
       this.state.showAnnouncement
-    const announcementInPage = announcementValue?.pages?.some((page) =>
+    const announcementInPage = announcementPerPageValue?.pages?.some((page) =>
       pathname.includes(page),
     )
     const isOrganisationSelect = document.location.pathname === '/organisations'
@@ -393,8 +406,7 @@ const App = class extends Component {
                         }
                       />
                     )}
-                    {((user && showBanner && !announcementValue?.pages) ||
-                      announcementInPage) && (
+                    {user && showBanner && (
                       <div className='container mt-4'>
                         <div className='row'>
                           <InfoMessage
@@ -413,6 +425,12 @@ const App = class extends Component {
                         </div>
                       </div>
                     )}
+                    {user && showAnnouncementPerPage && announcementInPage && (
+                      <AnnouncementPerPage
+                        announcementPerPageValue={announcementPerPageValue}
+                      />
+                    )}
+
                     {this.props.children}
                   </Fragment>
                 )}
