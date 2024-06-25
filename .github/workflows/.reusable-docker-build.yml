@@ -42,7 +42,7 @@ on:
         value: ${{ jobs.build.outputs.image-tag }}
       build-id:
         description: Depot build ID (if `ephemeral` was set to `true`)
-        value: ${{ jobs.build.outputs.build-id  }}
+        value: ${{ inputs.ephemeral && jobs.build.outputs.build-id || '' }}
     secrets:
       secrets:
         description: List of secrets to expose to the build (e.g., `key=string, GIT_AUTH_TOKEN=mytoken`)
