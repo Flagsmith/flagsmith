@@ -24,6 +24,7 @@ import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersion
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
 import EnvironmentVersioningListener from 'components/EnvironmentVersioningListener'
+import Format from 'common/utils/format'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -228,7 +229,7 @@ const EnvironmentSettingsPage = class extends Component {
       title,
       <ConfirmToggleEnvFeature
         description={'Are you sure that you want to change this value?'}
-        feature={environmentProperty}
+        feature={Format.enumeration.get(environmentProperty)}
         featureValue={environmentPropertyValue}
         onToggleChange={() => {
           this.setState(
@@ -482,7 +483,7 @@ const EnvironmentSettingsPage = class extends Component {
                               checked={hide_sensitive_data}
                               onChange={(v) => {
                                 this.confirmToggle(
-                                  'The data returned from the API will change and could break your existing code',
+                                  'Confirm Environment Setting',
                                   'hide_sensitive_data',
                                   hide_sensitive_data,
                                 )
