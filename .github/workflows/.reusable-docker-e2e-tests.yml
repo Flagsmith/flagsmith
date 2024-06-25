@@ -22,12 +22,6 @@ on:
         description: The concurrent number of browsers to be used on testing
         required: false
         default: 3
-      use-depot:
-        type: boolean
-        required: false
-        default: >
-          ${{ startsWith(inputs.api-image, 'registry.depot.dev') || 
-            startsWith(inputs.e2e-image, 'registry.depot.dev') }}
 
 jobs:
   run-e2e:
@@ -44,7 +38,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Login to Github Container Registry
-        if: ${{ startsWith(inputs.api-image, 'ghcr.io') || startsWith(inputs.e2e-image, 'ghcr.io') }}
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -52,11 +45,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Depot CLI
-        if: inputs.use-depot
         uses: depot/setup-action@v1
 
       - name: Login to Depot Registry
-        if: inputs.use-depot
         run: depot pull-token | docker login -u x-token --password-stdin registry.depot.dev
 
       - name: Run tests on dockerised frontend
