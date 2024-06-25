@@ -57,7 +57,7 @@ jobs:
       - name: Get workflows-logic package version
         id: workflow-version
         run: |
-          tag=$(grep -A 1 "\[tool.poetry.group.workflows.dependencies\]" pyproject.toml | awk -F '"' '{printf $4}')
+          tag=$(make get-workflow-version)
           echo "Workflow Tag: $tag"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 

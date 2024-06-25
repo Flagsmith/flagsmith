@@ -114,3 +114,7 @@ generate-ld-client-types:
 		--use-standard-collections \
 		--wrap-string-literal \
 		--special-field-name-prefix=
+
+.PHONY: get-workflow-version
+get-workflow-version:
+	@grep -A 1 "\[tool.poetry.group.workflows.dependencies\]" pyproject.toml | awk -F '"' '{printf $$4}'
