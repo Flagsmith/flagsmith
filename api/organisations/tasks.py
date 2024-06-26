@@ -207,7 +207,7 @@ def handle_api_usage_notifications() -> None:
     flagsmith_client = get_client("local", local_eval=True)
 
     for organisation in Organisation.objects.all().select_related(
-        "subscription_information_cache",
+        "subscription", "subscription_information_cache"
     ):
         feature_enabled = flagsmith_client.get_identity_flags(
             organisation.flagsmith_identifier,
