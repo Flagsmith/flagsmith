@@ -253,6 +253,8 @@ def charge_for_api_call_count_overages():
         ).values_list("organisation_id", flat=True)
     )
 
+    flagsmith_client = get_client("local", local_eval=True)
+
     for organisation in (
         Organisation.objects.filter(
             id__in=organisation_ids,
@@ -275,6 +277,16 @@ def charge_for_api_call_count_overages():
             "subscription",
         )
     ):
+        flags = flagsmith_client.get_identity_flags(
+            organisation.flagsmith_identifier,
+            traits={
+                "organisation_id": organisation.id,
+                "subscription.plan": organisation.subscription.plan,
+            },
+        )
+        if not flags.is_feature_enabled("api_usage_overage_charges"):
+            continue
+
         subscription_cache = organisation.subscription_information_cache
         api_usage = get_current_api_usage(organisation.id, "30d")
 
