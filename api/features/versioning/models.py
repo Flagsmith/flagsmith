@@ -210,6 +210,7 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
         #    as well perhaps?)
         #  - handle API keys
         #  - handle scheduled change requests
+        #  - handle conflicts
 
         serializer = EnvironmentFeatureVersionCreateSerializer(
             data={
