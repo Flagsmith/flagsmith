@@ -516,7 +516,8 @@ const ProjectSettingsPage = class extends Component {
                       tabLabel='SDK Settings'
                     >
                       {Utils.isSaas() &&
-                        Utils.getFlagsmithHasFeature('realtime_setting') && (
+                        Utils.getFlagsmithHasFeature('realtime_setting') &&
+                        Utils.isSaas() && (
                           <FormGroup className='mt-4 col-md-6'>
                             <Row className='mb-2'>
                               <Switch

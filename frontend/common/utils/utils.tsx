@@ -24,6 +24,24 @@ import Format from './format'
 
 const semver = require('semver')
 
+export type PaidFeature =
+  | 'FLAG_OWNERS'
+  | 'VERSIONING'
+  | 'RBAC'
+  | 'AUDIT'
+  | 'FORCE_2FA'
+  | '4_EYES'
+  | 'STALE_FLAGS'
+  | 'AUTO_SEATS'
+  | 'REALTIME'
+  | 'SAML'
+  | 'SCHEDULE_FLAGS'
+  | 'CREATE_ADDITIONAL_PROJECT'
+  | '2FA'
+
+// Define a type for plan categories
+type Plan = 'start-up' | 'scale-up' | 'enterprise' | null
+
 export const planNames = {
   enterprise: 'Enterprise',
   free: 'Free',
@@ -323,73 +341,27 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return planNames.free
   },
-  getPlanPermission: (plan: string, permission: string) => {
-    let valid = true
+  getPlanPermission: (plan: string, feature: PaidFeature) => {
     const planName = Utils.getPlanName(plan)
-
     if (!plan || planName === planNames.free) {
       return false
     }
     const isScaleupOrGreater = planName !== planNames.startup
     const isEnterprise = planName === planNames.enterprise
-    const isSaas = Utils.isSaas()
-    switch (permission) {
-      case 'FLAG_OWNERS': {
-        valid = isScaleupOrGreater
-        break
-      }
-      case 'CREATE_ADDITIONAL_PROJECT': {
-        valid = true // startup or greater
-        break
-      }
-      case '2FA': {
-        valid = true // startup or greater
-        break
-      }
-      case 'RBAC': {
-        valid = isScaleupOrGreater
-        break
-      }
-      case 'AUDIT': {
-        valid = isScaleupOrGreater
-        break
-      }
-      case 'AUTO_SEATS': {
-        valid = isScaleupOrGreater && !isEnterprise
-        break
-      }
-      case 'FORCE_2FA': {
-        valid = isScaleupOrGreater
-        break
-      }
-      case 'SCHEDULE_FLAGS': {
-        valid = true // startup or greater
-        break
-      }
-      case '4_EYES': {
-        valid = isScaleupOrGreater
-        break
-      }
-      case 'REALTIME': {
-        valid = isEnterprise && isSaas
-        break
-      }
-      case 'STALE_FLAGS': {
-        valid = isEnterprise
-        break
-      }
-      case 'SAML': {
-        valid = isEnterprise
-        break
-      }
-      default:
-        valid = true
-        break
+    if (feature === 'AUTO_SEATS') {
+      return isScaleupOrGreater && !isEnterprise
     }
-    return valid
+
+    const requiredPlan = Utils.getRequiredPlan()
+    if (requiredPlan === 'enterprise') {
+      return isEnterprise
+    } else if (requiredPlan === 'scale-up') {
+      return isScaleupOrGreater
+    }
+    return true
   },
-  getPlansPermission: (permission: string) => {
-    const isOrgPermission = permission !== '2FA'
+  getPlansPermission: (feature: PaidFeature) => {
+    const isOrgPermission = feature !== '2FA'
     const plans = isOrgPermission
       ? AccountStore.getActiveOrgPlan()
         ? [AccountStore.getActiveOrgPlan()]
@@ -400,14 +372,46 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return false
     }
     const found = _.find(
-      plans.map((plan: string) => Utils.getPlanPermission(plan, permission)),
+      plans.map((plan: string) => Utils.getPlanPermission(plan, feature)),
       (perm) => !!perm,
     )
     return !!found
   },
-
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
+  },
+
+  getRequiredPlan: (feature: PaidFeature) => {
+    let plan
+    switch (feature) {
+      case 'FLAG_OWNERS':
+      case 'RBAC':
+      case 'AUDIT':
+      case 'FORCE_2FA':
+      case '4_EYES': {
+        plan = 'scale-up'
+        break
+      }
+      case 'STALE_FLAGS':
+      case 'REALTIME':
+      case 'VERSIONING':
+      case 'SAML': {
+        plan = 'enterprise'
+        break
+      }
+
+      case 'SCHEDULE_FLAGS':
+      case 'CREATE_ADDITIONAL_PROJECT':
+      case '2FA': {
+        plan = 'start-up' // startup or greater
+        break
+      }
+      default: {
+        plan = null
+        break
+      }
+    }
+    return plan as Plan
   },
 
   getSDKEndpoint(_project: ProjectType) {
