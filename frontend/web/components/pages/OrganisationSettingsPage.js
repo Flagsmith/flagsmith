@@ -16,6 +16,8 @@ import _data from 'common/data/base/_data'
 import AccountStore from 'common/stores/account-store'
 import PageTitle from 'components/PageTitle'
 import SamlTab from 'components/SamlTab'
+import Setting from 'components/Setting'
+import AccountProvider from 'common/providers/AccountProvider'
 
 const SettingsTab = {
   'Billing': 'billing',
@@ -308,31 +310,12 @@ const OrganisationSettingsPage = class extends Component {
                                 </div>
                                 <hr className='mt-0 mb-4' />
                                 <div className='col-md-6'>
-                                  <Row className='mt-4 mb-2'>
-                                    {!force2faPermission ? (
-                                      <Tooltip
-                                        title={
-                                          <Switch
-                                            checked={organisation.force_2fa}
-                                            onChange={this.save2FA}
-                                          />
-                                        }
-                                      >
-                                        To access this feature please upgrade
-                                        your account to scaleup or higher."
-                                      </Tooltip>
-                                    ) : (
-                                      <Switch
-                                        checked={organisation.force_2fa}
-                                        onChange={this.save2FA}
-                                      />
-                                    )}
-                                    <h5 className='mb-0 ml-3'>Enforce 2FA</h5>
-                                  </Row>
-                                  <p className='fs-small lh-sm'>
-                                    Enabling this setting forces users within
-                                    the organisation to setup 2 factor security.
-                                  </p>
+                                  <Setting
+                                    className='mt-4 mb-2'
+                                    feature={'FORCE_2FA'}
+                                    checked={organisation.force_2fa}
+                                    onChange={this.save2FA}
+                                  />
                                 </div>
                                 {Utils.getFlagsmithHasFeature(
                                   'restrict_project_create_to_admin',
