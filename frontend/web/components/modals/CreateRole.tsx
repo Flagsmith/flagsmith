@@ -374,10 +374,20 @@ const CreateRole: FC<CreateRoleType> = ({
         <FormGroup className='mb-5 setting'>
           <InputGroup
             title={'Tags'}
-            tooltip={'Select the project where you want to manage your tags'}
             unsaved={isEdit && roleTagsChanged}
             component={
               <>
+                <p className='fs-small lh-sm'>
+                  Select the project where you want to manage your tags.{' '}
+                  <Button
+                    theme='text'
+                    target='_blank'
+                    href='https://docs.flagsmith.com/system-administration/rbac#add-tags-to-a-role'
+                    className='fw-normal'
+                  >
+                    Learn more.
+                  </Button>
+                </p>
                 <div className='mb-2' style={{ width: 250 }}>
                   <ProjectFilter
                     organisationId={organisationId!}
