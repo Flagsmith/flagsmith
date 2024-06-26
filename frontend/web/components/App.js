@@ -387,7 +387,7 @@ const App = class extends Component {
                     )}
                     {user && (
                       <div className='container mt-4'>
-                        <div className='row'>
+                        <div>
                           <Announcement />
                           <AnnouncementPerPage pathname={pathname} />
                         </div>
