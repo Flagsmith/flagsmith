@@ -102,14 +102,19 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
               <Row className='list-item py-2 mh-auto'>
                 <div className='flex-fill'>
                   <div className='flex-row flex-fill'>
-                    <div className='table-column' style={{ width: widths[0] }}>
-                      {moment(v.live_from).format('Do MMM HH:mma')}
-                      {!i && <span className='chip ms-2'>Live</span>}
-                    </div>
-                    <div className='table-column text-left flex-fill'>
-                      {user
-                        ? `${user.first_name || ''} ${user.last_name || ''} `
-                        : 'System '}
+                    <div
+                      className='table-column flex-fill'
+                      style={{ width: widths[0] }}
+                    >
+                      <div className='font-weight-medium'>
+                        {moment(v.live_from).format('Do MMM HH:mma')}
+                        {!i && <span className='chip ms-2'>Live</span>}
+                      </div>
+                      <div className='text-muted text-small'>
+                        {user
+                          ? `${user.first_name || ''} ${user.last_name || ''} `
+                          : 'System '}
+                      </div>
                     </div>
                     <div className='table-column' style={{ width: widths[1] }}>
                       <Link
