@@ -14,7 +14,6 @@ You can integrate Flagsmith with Grafana. Send flag change events from Flagsmith
 The video below will walk you through the steps of adding the integration:
 
 <ReactPlayer
-    playing
     controls
     width="100%"
     height="460px"
