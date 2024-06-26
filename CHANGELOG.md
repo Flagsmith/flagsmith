@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.125.0](https://github.com/Flagsmith/flagsmith/compare/v2.124.2...v2.125.0) (2024-06-26)
+
+
+### Features
+
+* **api-usage:** add `subscription.plan` trait to `flagsmith.get_identity_flags` ([#4247](https://github.com/Flagsmith/flagsmith/issues/4247)) ([182ea04](https://github.com/Flagsmith/flagsmith/commit/182ea04c7f776606c931f34c4fad32849f667d2c))
+
+
+### Bug Fixes
+
+* **ci:** Authenticate Trivy correctly for ephemeral build ([#4227](https://github.com/Flagsmith/flagsmith/issues/4227)) ([b9a6f92](https://github.com/Flagsmith/flagsmith/commit/b9a6f92ec099cac58f16c989d44b86bead443a81))
+* **ci:** Enable Docker builds and E2E for external PRs ([#4224](https://github.com/Flagsmith/flagsmith/issues/4224)) ([fe7cc53](https://github.com/Flagsmith/flagsmith/commit/fe7cc53b5b4242db6af5ee818dd1e7c42a8d44ab))
+* **ci:** Use correct `ENV` value for production ([#4237](https://github.com/Flagsmith/flagsmith/issues/4237)) ([81753ba](https://github.com/Flagsmith/flagsmith/commit/81753bae01c6665bd4a50349107d709991eabfc4))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* add production environment variables for FoF and API usage alerting ([#4248](https://github.com/Flagsmith/flagsmith/issues/4248)) ([af61d52](https://github.com/Flagsmith/flagsmith/commit/af61d52bb0da1ba95a45f5ea877fc01abc20d262))
+
 ## [2.124.2](https://github.com/Flagsmith/flagsmith/compare/v2.124.1...v2.124.2) (2024-06-25)
 
 
