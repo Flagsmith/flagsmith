@@ -10,23 +10,13 @@ import React, {
 import InputGroup from 'components/base/forms/InputGroup'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
-import RolePermissionsList from 'components/RolePermissionsList'
 import {
   useCreateRoleMutation,
   useGetRoleQuery,
   useUpdateRoleMutation,
 } from 'common/services/useRole'
 
-import { EditPermissionsModal } from 'components/EditPermissions'
-import OrganisationStore from 'common/stores/organisation-store'
-import ProjectFilter from 'components/ProjectFilter'
-import {
-  Environment,
-  Project,
-  Role,
-  User,
-  UserGroup,
-} from 'common/types/responses'
+import { Role, User, UserGroup } from 'common/types/responses'
 import { setInterceptClose } from './base/ModalDefault'
 import UserSelect from 'components/UserSelect'
 import MyGroupsSelect from 'components/MyGroupsSelect'
@@ -44,10 +34,13 @@ import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
-import Input from 'components/base/forms/Input'
 import SettingsButton from 'components/SettingsButton'
 import PermissionsTabs from 'components/PermissionsTabs'
 import AccountStore from 'common/stores/account-store'
+import AddEditTags from 'components/tags/AddEditTags'
+import ProjectFilter from 'components/ProjectFilter'
+import { getStore } from 'common/store'
+import { getTags } from 'common/services/useTag'
 
 type TabRef = {
   onClosing: () => Promise<void>
@@ -267,18 +260,21 @@ const CreateRole: FC<CreateRoleType> = ({
       },
       { skip: !role || !organisationId },
     )
+    const [project, setProject] = useState<string>('')
+    const [tags, setTags] = useState<number[]>(roleData?.tags || [])
     const [roleName, setRoleName] = useState<string>('')
     const [roleDesc, setRoleDesc] = useState<string>('')
     const [isSaving, setIsSaving] = useState<boolean>(false)
     const [roleNameChanged, setRoleNameChanged] = useState<boolean>(false)
     const [roleDescChanged, setRoleDescChanged] = useState<boolean>(false)
+    const [roleTagsChanged, setRoleTagsChanged] = useState<boolean>(false)
 
     useImperativeHandle(
       ref,
       () => {
         return {
           onClosing() {
-            if (roleNameChanged || roleDescChanged) {
+            if (roleNameChanged || roleDescChanged || roleTagsChanged) {
               return new Promise((resolve) => {
                 openConfirm({
                   body: 'Closing this will discard your unsaved changes.',
@@ -298,7 +294,7 @@ const CreateRole: FC<CreateRoleType> = ({
           },
         }
       },
-      [roleNameChanged, roleDescChanged],
+      [roleNameChanged, roleDescChanged, roleTagsChanged],
     )
     useEffect(() => {
       if (!isLoading && isEdit && roleData) {
@@ -315,6 +311,7 @@ const CreateRole: FC<CreateRoleType> = ({
       if (createSuccess || updateSuccess) {
         setRoleNameChanged(false)
         setRoleDescChanged(false)
+        setRoleTagsChanged(false)
         setIsSaving(false)
         onComplete?.()
       }
@@ -324,7 +321,7 @@ const CreateRole: FC<CreateRoleType> = ({
       if (!organisationId) return
       if (isEdit && role) {
         editRole({
-          body: { description: roleDesc, name: roleName },
+          body: { description: roleDesc, name: roleName, tags: tags },
           organisation_id: role.organisation,
           role_id: role.id,
         })
@@ -333,6 +330,7 @@ const CreateRole: FC<CreateRoleType> = ({
           description: roleDesc,
           name: roleName,
           organisation_id: organisationId,
+          tags: tags,
         })
       }
     }
@@ -373,6 +371,44 @@ const CreateRole: FC<CreateRoleType> = ({
           id='description'
           placeholder='E.g. Some role description'
         />
+        <FormGroup className='mb-5 setting'>
+          <InputGroup
+            title={'Tags'}
+            tooltip={'Select the project where you want to manage your tags'}
+            unsaved={isEdit && roleTagsChanged}
+            component={
+              <>
+                <div className='mb-2' style={{ width: 250 }}>
+                  <ProjectFilter
+                    organisationId={organisationId!}
+                    onChange={(p) => {
+                      setProject(p)
+                      getTags(
+                        getStore(),
+                        {
+                          projectId: p,
+                        },
+                        { forceRefetch: true },
+                      )
+                    }}
+                    value={project}
+                  />
+                </div>
+                {project && (
+                  <AddEditTags
+                    readOnly={false}
+                    projectId={`${project}`}
+                    value={tags}
+                    onChange={(tags) => {
+                      setRoleTagsChanged(true)
+                      setTags(tags)
+                    }}
+                  />
+                )}
+              </>
+            }
+          />
+        </FormGroup>
         <div className='text-right mb-2'>
           <Button
             onClick={() => save()}
@@ -393,7 +429,6 @@ const CreateRole: FC<CreateRoleType> = ({
 
   const TabValue = () => {
     const ref = useRef<TabRef>(null)
-    const ref2 = useRef<TabRef>(null)
     useEffect(() => {
       if (isEdit) {
         setInterceptClose(() => ref.current?.onClosing() || Promise.resolve())
