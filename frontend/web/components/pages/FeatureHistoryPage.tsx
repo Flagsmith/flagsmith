@@ -19,6 +19,7 @@ import InlineModal from 'components/InlineModal'
 import TableFilterItem from 'components/tables/TableFilterItem'
 import moment from 'moment'
 import { Link } from 'react-router-dom'
+import DateList from 'components/DateList'
 
 const widths = [250, 150]
 type FeatureHistoryPageType = {
@@ -46,12 +47,13 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
     organisationId: AccountStore.getOrganisation().id,
   })
   const [page, setPage] = useState(1)
-  const { data } = useGetFeatureVersionsQuery(
+  const { data, isLoading } = useGetFeatureVersionsQuery(
     {
       environmentId,
       featureId: feature,
       is_live: true,
       page,
+      page_size: 30,
     },
     { skip: !env || !feature },
   )
@@ -87,25 +89,13 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
           </div>
         </div>
       </div>
-      <div>
-        <PanelSearch
-          className='no-pad overflow-visible'
-          items={data?.results}
+      <div className='mt-4'>
+        <DateList<TFeatureVersion>
+          items={data}
+          isLoading={isLoading}
+          nextPage={() => setPage(page + 1)}
+          prevPage={() => setPage(page + 1)}
           goToPage={setPage}
-          header={
-            <Row className='table-header'>
-              <div className='table-column' style={{ width: widths[0] }}>
-                Date
-              </div>
-              <div className='table-column text-left flex-fill'>User</div>
-              <div className='table-column' style={{ width: widths[1] }}>
-                View
-              </div>
-              <div className='table-column' style={{ width: widths[1] }}>
-                Compare
-              </div>
-            </Row>
-          }
           renderRow={(v: TFeatureVersion, i: number) => {
             const user = users?.find((user) => v.published_by === user.id)
 
