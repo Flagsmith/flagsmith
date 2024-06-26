@@ -164,6 +164,10 @@
                 {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
                     "value": "False"
+                },
+                {
+                    "name": "ENABLE_API_USAGE_ALERTING",
+                    "value": "True"
                 }
             ],
             "secrets": [
@@ -230,10 +234,6 @@
                 {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:FLAGSMITH_ON_FLAGSMITH_SERVER_KEY::"
-                },
-                {
-                    "name": "ENABLE_API_USAGE_ALERTING",
-                    "value": "True"
                 }
             ],
             "logConfiguration": {
