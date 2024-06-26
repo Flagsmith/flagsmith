@@ -211,7 +211,10 @@ def handle_api_usage_notifications() -> None:
     ):
         feature_enabled = flagsmith_client.get_identity_flags(
             organisation.flagsmith_identifier,
-            traits={"organisation_id": organisation.id},
+            traits={
+                "organisation_id": organisation.id,
+                "subscription.plan": organisation.subscription.plan,
+            },
         ).is_feature_enabled("api_usage_alerting")
         if not feature_enabled:
             continue

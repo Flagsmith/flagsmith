@@ -272,7 +272,11 @@ def test_handle_api_usage_notifications_when_feature_flag_is_off(
     mock_api_usage.assert_not_called()
 
     client_mock.get_identity_flags.assert_called_once_with(
-        organisation.flagsmith_identifier, traits={"organisation_id": organisation.id}
+        organisation.flagsmith_identifier,
+        traits={
+            "organisation_id": organisation.id,
+            "subscription.plan": organisation.subscription.plan,
+        },
     )
 
     assert len(mailoutbox) == 0
