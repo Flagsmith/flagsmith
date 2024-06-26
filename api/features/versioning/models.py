@@ -1,4 +1,5 @@
 import datetime
+import json
 import typing
 import uuid
 from copy import deepcopy
@@ -11,6 +12,8 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Index
 from django.utils import timezone
+from django_lifecycle import LifecycleModelMixin
+from softdelete.models import SoftDeleteObject
 
 from api_keys.models import MasterAPIKey
 from features.versioning.exceptions import FeatureVersioningError
@@ -163,3 +166,63 @@ class EnvironmentFeatureVersion(
 
         _clone.save()
         return _clone
+
+
+class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
+    change_request = models.ForeignKey(
+        "workflows_core.ChangeRequest",
+        on_delete=models.CASCADE,
+        related_name="change_sets",
+    )
+    feature = models.ForeignKey(
+        "features.Feature",
+        on_delete=models.CASCADE,
+    )
+
+    # TODO: should this be a JSON blob or actual feature states?
+    #  Essentially it's the difference between approaches 1 & 2 here:
+    #  https://www.notion.so/flagsmith/Versioned-Change-Requests-improvements-d6ecf07ff3274fe586141525dbc5203f
+    feature_states_to_create = models.TextField(
+        null=True,
+        help_text="JSON blob describing the feature states that should be "
+        "created when the change request is published",
+    )
+    feature_states_to_update = models.TextField(
+        null=True,
+        help_text="JSON blob describing the feature states that should be "
+        "updated when the change request is published",
+    )
+    segment_ids_to_delete_overrides = models.TextField(
+        null=True,
+        help_text="JSON blob describing the segment overrides for which"
+        "the segment overrides should be deleted when the change "
+        "request is published",
+    )
+
+    def publish(self, created_by: "FFAdminUser", live_from: datetime = None) -> None:
+        from features.versioning.serializers import (
+            EnvironmentFeatureVersionCreateSerializer,
+        )
+
+        # TODO:
+        #  - how do we handle live from here - should it be on this model, or on the change request itself perhaps?
+        #  - this is super hacky, is there another abstraction layer we can add (and reuse in the serializer
+        #    as well perhaps?)
+        #  - handle API keys
+
+        serializer = EnvironmentFeatureVersionCreateSerializer(
+            data={
+                "feature_states_to_create": json.loads(self.feature_states_to_create),
+                "feature_states_to_update": json.loads(self.feature_states_to_update),
+                "segment_ids_to_delete_overrides": json.loads(
+                    self.segment_ids_to_delete_overrides
+                ),
+            }
+        )
+        serializer.is_valid(raise_exception=True)
+        version: EnvironmentFeatureVersion = serializer.save(
+            feature=self.feature,
+            environment=self.change_request.environment,
+            created_by=created_by,
+        )
+        version.publish(published_by=created_by, live_from=live_from or timezone.now())
