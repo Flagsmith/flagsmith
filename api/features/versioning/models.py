@@ -209,6 +209,7 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
         #  - this is super hacky, is there another abstraction layer we can add (and reuse in the serializer
         #    as well perhaps?)
         #  - handle API keys
+        #  - handle scheduled change requests
 
         serializer = EnvironmentFeatureVersionCreateSerializer(
             data={
