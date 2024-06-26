@@ -53,7 +53,6 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
       featureId: feature,
       is_live: true,
       page,
-      page_size: 30,
     },
     { skip: !env || !feature },
   )

@@ -83,15 +83,13 @@ const DateList = <T extends { [key: string]: any }>({
         </div>
       ))}
       {!!items && (
-        <div className='text-center'>
-          <Paging
-            paging={items}
-            isLoading={isLoading}
-            nextPage={nextPage}
-            prevPage={prevPage}
-            goToPage={goToPage}
-          />
-        </div>
+        <Paging
+          paging={items}
+          isLoading={isLoading}
+          nextPage={nextPage}
+          prevPage={prevPage}
+          goToPage={goToPage}
+        />
       )}
     </>
   )
