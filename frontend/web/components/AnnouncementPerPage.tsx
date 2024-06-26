@@ -23,28 +23,27 @@ const AnnouncementPerPage: FC<AnnouncementPerPageType> = ({ pathname }) => {
     null,
   ) as AnnouncementPerPageValueType
 
-  const { buttonText, description, id, isClosable, pages, title, url } =
-    announcementPerPageValue
-
   const showAnnouncementPerPage =
     (!announcementPerPageDismissed ||
       announcementPerPageDismissed !== announcementPerPageValue.id) &&
     Utils.getFlagsmithHasFeature('announcement_per_page') &&
-    pages?.length > 0
+    announcementPerPageValue?.pages?.length > 0
 
-  const announcementInPage = pages?.some((page) => pathname.includes(page))
+  const announcementInPage = announcementPerPageValue?.pages?.some((page) =>
+    pathname.includes(page),
+  )
   return (
     <>
       {showAnnouncementPerPage && announcementInPage && (
         <InfoMessage
-          title={title}
-          isClosable={isClosable}
-          close={() => closeAnnouncement(id)}
-          buttonText={buttonText}
-          url={url}
+          title={announcementPerPageValue?.title}
+          isClosable={announcementPerPageValue?.isClosable}
+          close={() => closeAnnouncement(announcementPerPageValue?.id)}
+          buttonText={announcementPerPageValue?.buttonText}
+          url={announcementPerPageValue?.url}
         >
           <div>
-            <div>{description}</div>
+            <div>{announcementPerPageValue?.description}</div>
           </div>
         </InfoMessage>
       )}
