@@ -25,7 +25,6 @@ without having to leave the Datadog application.
 The video below will walk you through the steps of adding the integration:
 
 <ReactPlayer
-    playing
     controls
     width="100%"
     height="460px"
