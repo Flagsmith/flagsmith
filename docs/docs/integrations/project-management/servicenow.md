@@ -6,10 +6,6 @@ hide_title: true
 
 ![Adobe](/img/integrations/servicenow/servicenow-logo.svg)
 
-You can integrate Flagsmith with ServiceNow. Manage your Flagsmith Change Requests inside ServiceNow.
-
-:::tip
-
-The ServiceNow integration is in Alpha - please contact us to join the Alpha!
-
-:::
+Flagsmith does not currently support integrating with ServiceNow, but we are open to the possibility.
+<a class="open-chat" data-crisp-chat-message="Hello, I'm interested in integrating with ServiceNow.">Contact us</a> if
+you are interested in this or any other integrations.
