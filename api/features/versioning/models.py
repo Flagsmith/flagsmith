@@ -178,6 +178,7 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
         "features.Feature",
         on_delete=models.CASCADE,
     )
+    live_from = models.DateTimeField(null=True)
 
     # TODO: should this be a JSON blob or actual feature states?
     #  Essentially it's the difference between approaches 1 & 2 here:
@@ -199,13 +200,13 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
         "request is published",
     )
 
-    def publish(self, created_by: "FFAdminUser", live_from: datetime = None) -> None:
+    def publish(self, created_by: "FFAdminUser") -> None:
         from features.versioning.serializers import (
             EnvironmentFeatureVersionCreateSerializer,
         )
 
         # TODO:
-        #  - how do we handle live from here - should it be on this model, or on the change request itself perhaps?
+        #  - how do we handle live_from here - should it be on this model, or on the change request itself perhaps?
         #  - this is super hacky, is there another abstraction layer we can add (and reuse in the serializer
         #    as well perhaps?)
         #  - handle API keys
@@ -227,4 +228,6 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
             environment=self.change_request.environment,
             created_by=created_by,
         )
-        version.publish(published_by=created_by, live_from=live_from or timezone.now())
+        version.publish(
+            published_by=created_by, live_from=self.live_from or timezone.now()
+        )
