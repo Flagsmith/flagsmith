@@ -12,6 +12,7 @@ You can integrate Flagsmith with Datadog in three ways:
 
 - [1. Integrate Flagsmith into your Datadog Dashboard](#1-integrate-flagsmith-into-your-datadog-dashboard)
 - [2. Send Flag Change events to Datadog](#2-send-flag-change-events-to-datadog)
+  - [Custom Source](#custom-source)
 - [3. Integrate with the DataDog RUM](#3-integrate-with-the-datadog-rum)
 
 ## 1. Integrate Flagsmith into your Datadog Dashboard
@@ -28,7 +29,7 @@ The video below will walk you through the steps of adding the integration:
     controls
     width="100%"
     height="460px"
-    url='https://getleda.wistia.com/medias/76558s9yj7' />
+    url='https://flagsmith.wistia.com/medias/76558s9yj7' />
 
 ## 2. Send Flag Change events to Datadog
 
