@@ -93,8 +93,8 @@ RUN make install opts='--without dev'
 # * build-python-private [build-python]
 FROM build-python AS build-python-private
 
-# Authenticate git with token, install SAML binary dependency,
-# private Python dependencies, and integrate private modules
+# Authenticate git with token, install private Python dependencies,
+# and integrate private modules
 ARG SAML_REVISION
 ARG RBAC_REVISION
 RUN --mount=type=secret,id=github_private_cloud_token \
