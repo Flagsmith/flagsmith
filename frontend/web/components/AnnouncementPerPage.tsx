@@ -3,6 +3,8 @@ import InfoMessage from './InfoMessage'
 import flagsmith from 'flagsmith'
 import Utils from 'common/utils/utils'
 import { AnnouncementValueType } from './Announcement'
+import { matchPath } from 'react-router'
+import { routes } from 'web/routes'
 
 type AnnouncementPerPageValueType = AnnouncementValueType & {
   pages: string[]
@@ -29,9 +31,16 @@ const AnnouncementPerPage: FC<AnnouncementPerPageType> = ({ pathname }) => {
     Utils.getFlagsmithHasFeature('announcement_per_page') &&
     announcementPerPageValue?.pages?.length > 0
 
-  const announcementInPage = announcementPerPageValue?.pages?.some((page) =>
-    pathname.includes(page),
-  )
+  const announcementInPage = announcementPerPageValue?.pages?.some((page) => {
+    if (Object.keys(routes).includes(page)) {
+      return !!matchPath(pathname, {
+        exact: false,
+        path: routes[page],
+        strict: false,
+      })
+    }
+    return false
+  })
   return (
     <>
       {showAnnouncementPerPage && announcementInPage && (
