@@ -272,7 +272,11 @@ def test_handle_api_usage_notifications_when_feature_flag_is_off(
     mock_api_usage.assert_not_called()
 
     client_mock.get_identity_flags.assert_called_once_with(
-        organisation.flagsmith_identifier, traits={"organisation_id": organisation.id}
+        organisation.flagsmith_identifier,
+        traits={
+            "organisation_id": organisation.id,
+            "subscription.plan": organisation.subscription.plan,
+        },
     )
 
     assert len(mailoutbox) == 0
@@ -646,6 +650,11 @@ def test_charge_for_api_call_count_overages_scale_up(
         "organisations.chargebee.chargebee.chargebee.Subscription.update"
     )
 
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
     mock_api_usage = mocker.patch(
         "organisations.tasks.get_current_api_usage",
     )
@@ -679,6 +688,63 @@ def test_charge_for_api_call_count_overages_scale_up(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_charge_for_api_call_count_overages_scale_up_when_flagsmith_client_sets_is_enabled_to_false(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100_000,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
+    mock_chargebee_update = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+    )
+
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = False
+
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 212_005
+    assert OrganisationAPIBilling.objects.count() == 0
+
+    # When
+    charge_for_api_call_count_overages()
+
+    # Then
+    # No charges are applied to the account.
+    client_mock.get_identity_flags.assert_called_once_with(
+        organisation.flagsmith_identifier,
+        traits={
+            "organisation_id": organisation.id,
+            "subscription.plan": organisation.subscription.plan,
+        },
+    )
+    mock_chargebee_update.assert_not_called()
+    assert OrganisationAPIBilling.objects.count() == 0
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_charge_for_api_call_count_overages_grace_period(
     organisation: Organisation,
     mocker: MockerFixture,
@@ -702,6 +768,11 @@ def test_charge_for_api_call_count_overages_grace_period(
         percent_usage=100,
         notified_at=now,
     )
+
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
 
     mock_chargebee_update = mocker.patch(
         "organisations.chargebee.chargebee.chargebee.Subscription.update"
@@ -749,6 +820,11 @@ def test_charge_for_api_call_count_overages_with_not_covered_plan(
         notified_at=now,
     )
 
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
     mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
     mock_chargebee_update = mocker.patch(
         "organisations.chargebee.chargebee.chargebee.Subscription.update"
@@ -792,6 +868,11 @@ def test_charge_for_api_call_count_overages_under_api_limit(
         percent_usage=100,
         notified_at=now,
     )
+
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
 
     mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
     mock_chargebee_update = mocker.patch(
@@ -837,6 +918,10 @@ def test_charge_for_api_call_count_overages_start_up(
         notified_at=now,
     )
 
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
     mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
     mock_chargebee_update = mocker.patch(
         "organisations.chargebee.chargebee.chargebee.Subscription.update"
@@ -914,6 +999,10 @@ def test_charge_for_api_call_count_overages_start_up_with_api_billing(
         billed_at=now,
     )
 
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
     mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
     mock_chargebee_update = mocker.patch(
         "organisations.chargebee.chargebee.chargebee.Subscription.update"
@@ -1132,6 +1221,23 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     assert organisation2.stop_serving_flags is True
     assert organisation2.block_access_to_admin is True
     assert organisation2.api_limit_access_block
+
+    client_mock.get_identity_flags.call_args_list == [
+        call(
+            f"org.{organisation.id}",
+            traits={
+                "organisation_id": organisation.id,
+                "subscription.plan": organisation.subscription.plan,
+            },
+        ),
+        call(
+            f"org.{organisation2.id}",
+            traits={
+                "organisation_id": organisation2.id,
+                "subscription.plan": organisation2.subscription.plan,
+            },
+        ),
+    ]
 
     # Organisations that change their subscription are unblocked.
     organisation.subscription.plan = "scale-up-v2"

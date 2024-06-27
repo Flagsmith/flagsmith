@@ -5,9 +5,19 @@ sidebar_label: Grafana
 hide_title: true
 ---
 
+import ReactPlayer from 'react-player'
+
 ![Image](/img/integrations/grafana/grafana-logo.svg)
 
 You can integrate Flagsmith with Grafana. Send flag change events from Flagsmith into Grafana as annotations.
+
+The video below will walk you through the steps of adding the integration:
+
+<ReactPlayer
+    controls
+    width="100%"
+    height="460px"
+    url='https://flagsmith.wistia.com/medias/z9vkon54qh' />
 
 ## Integration Setup
 
