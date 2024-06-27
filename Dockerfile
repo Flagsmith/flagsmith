@@ -52,10 +52,10 @@ ARG NODE_VERSION=16
 ARG PYTHON_VERSION=3.11
 ARG PYTHON_SITE_DIR=/usr/local/lib/python${PYTHON_VERSION}/site-packages
 
-FROM node:${NODE_VERSION} as node
-FROM node:${NODE_VERSION}-slim as node-slim
-FROM python:${PYTHON_VERSION} as python
-FROM python:${PYTHON_VERSION}-slim as python-slim
+FROM node:${NODE_VERSION}-bookworm as node
+FROM node:${NODE_VERSION}-bookworm-slim as node-slim
+FROM python:${PYTHON_VERSION}-bookworm as python
+FROM python:${PYTHON_VERSION}-slim-bookworm as python-slim
 
 # - Intermediary stages
 # * build-node
