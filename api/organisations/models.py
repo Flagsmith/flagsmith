@@ -468,7 +468,7 @@ class OrganisationAPIUsageNotification(models.Model):
     )
     percent_usage = models.IntegerField(
         null=False,
-        validators=[MinValueValidator(75), MaxValueValidator(120)],
+        validators=[MinValueValidator(75), MaxValueValidator(500)],
     )
     notified_at = models.DateTimeField(null=True)
 
