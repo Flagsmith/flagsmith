@@ -4,6 +4,10 @@ import Utils from 'common/utils/utils'
 import { FixedSizeList } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
 import { useGitHubResourceSelectProvider } from './GitHubResourceSelectProvider'
+import { components } from 'react-select'
+import Button from './base/forms/Button'
+import Icon from './Icon'
+import Select from 'react-select'
 
 type MenuListType = {
   children: React.ReactNode
@@ -106,6 +110,23 @@ const MenuList: FC<MenuListType> = ({
   )
 }
 
+const CustomControl = ({
+  children,
+  ...props
+}: {
+  children: React.ReactNode
+}) => {
+  const { refetchData } = useGitHubResourceSelectProvider()
+  return (
+    <components.Control {...props}>
+      {children}
+      <Button style={{ marginLeft: 'auto' }} theme='icon' onClick={refetchData}>
+        <Icon name='refresh' />
+      </Button>
+    </components.Control>
+  )
+}
+
 export type GitHubResourcesSelectType = {
   onChange: (value: string) => void
   lastSavedResource: string | undefined
@@ -163,6 +184,7 @@ const GitHubResourcesSelect: FC<GitHubResourcesSelectType> = ({
           searchItems(Utils.safeParseEventValue(e))
         }}
         components={{
+          Control: CustomControl,
           MenuList,
         }}
         data={{ searchText }}

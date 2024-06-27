@@ -43,7 +43,7 @@ export const githubRepositoryService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'GithubRepository' }],
         query: (query: Req['updateGithubRepository']) => ({
-          body: query,
+          body: query.body,
           method: 'PUT',
           url: `organisations/${query.organisation_id}/integrations/github/${query.github_id}/repositories/${query.id}/`,
         }),

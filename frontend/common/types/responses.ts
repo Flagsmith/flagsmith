@@ -189,6 +189,7 @@ export type GithubRepository = {
   project: number
   repository_owner: string
   repository_name: string
+  tagging_enabled: boolean
 }
 
 export type githubIntegration = {
