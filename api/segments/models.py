@@ -70,6 +70,9 @@ class Segment(
     )
     metadata = GenericRelation(Metadata)
 
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)
+
     # Only serves segments that are the canonical version.
     objects = SegmentManager()
 
@@ -198,6 +201,9 @@ class SegmentRule(SoftDeleteExportableModel):
 
     type = models.CharField(max_length=50, choices=RULE_TYPES)
 
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)
+
     def clean(self):
         super().clean()
         parents = [self.segment, self.rule]
@@ -304,6 +310,9 @@ class Condition(
     rule = models.ForeignKey(
         SegmentRule, on_delete=models.CASCADE, related_name="conditions"
     )
+
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)
 
     def __str__(self):
         return "Condition for %s: %s %s %s" % (
