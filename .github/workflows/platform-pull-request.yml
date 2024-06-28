@@ -66,15 +66,6 @@ jobs:
         with:
           require: write
 
-  docker-build-api-test:
-    if: github.event.pull_request.draft == false && needs.check-permissions.outputs.can-write
-    needs: check-permissions
-    name: Build API Test Image
-    uses: ./.github/workflows/.reusable-docker-build.yml
-    with:
-      target: api-test
-      image-name: flagsmith-api-test
-
   docker-build-unified:
     if: github.event.pull_request.draft == false
     needs: check-permissions
@@ -104,6 +95,16 @@ jobs:
       ephemeral: ${{ !needs.check-permissions.outputs.can-write }}
       target: oss-frontend
       image-name: flagsmith-frontend
+
+  docker-build-api-test:
+    if: github.event.pull_request.draft == false && needs.check-permissions.outputs.can-write
+    needs: check-permissions
+    name: Build API Test Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: api-test
+      image-name: flagsmith-api-test
+      scan: false
 
   docker-build-e2e:
     if: github.event.pull_request.draft == false
