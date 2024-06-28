@@ -64,5 +64,5 @@ elif [ "$1" == "migrate-and-serve" ]; then
     bootstrap
     serve
 else
-   default
+   default "$@"
 fi
