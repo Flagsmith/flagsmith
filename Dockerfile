@@ -138,7 +138,7 @@ RUN apt-get update && apt-get install -y xmlsec1 && rm -rf /var/lib/apt/lists/*
 
 # - Internal stages
 # * api-test [build-python]
-FROM build-python AS api-runtime-dev
+FROM build-python AS api-test
 
 RUN make install-packages opts='--with dev'
 
