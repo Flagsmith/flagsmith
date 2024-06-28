@@ -36,6 +36,8 @@ import AuditLogIcon from './svg/AuditLogIcon'
 import Permission from 'common/providers/Permission'
 import HomeAside from './pages/HomeAside'
 import ScrollToTop from './ScrollToTop'
+import AnnouncementPerPage from './AnnouncementPerPage'
+import Announcement from './Announcement'
 
 const App = class extends Component {
   static propTypes = {
@@ -349,13 +351,6 @@ const App = class extends Component {
     if (document.location.href.includes('widget')) {
       return <div>{this.props.children}</div>
     }
-    const announcementValue = Utils.getFlagsmithJSONValue('announcement', null)
-    const dismissed = flagsmith.getTrait('dismissed_announcement')
-    const showBanner =
-      announcementValue &&
-      (!dismissed || dismissed !== announcementValue.id) &&
-      Utils.getFlagsmithHasFeature('announcement') &&
-      this.state.showAnnouncement
     const isOrganisationSelect = document.location.pathname === '/organisations'
     const integrations = Object.keys(
       JSON.parse(Utils.getFlagsmithValue('integration_data') || '{}'),
@@ -390,25 +385,15 @@ const App = class extends Component {
                         }
                       />
                     )}
-                    {user && showBanner && (
+                    {user && (
                       <div className='container mt-4'>
-                        <div className='row'>
-                          <InfoMessage
-                            title={announcementValue.title}
-                            isClosable={announcementValue.isClosable}
-                            close={() =>
-                              this.closeAnnouncement(announcementValue.id)
-                            }
-                            buttonText={announcementValue.buttonText}
-                            url={announcementValue.url}
-                          >
-                            <div>
-                              <div>{announcementValue.description}</div>
-                            </div>
-                          </InfoMessage>
+                        <div>
+                          <Announcement />
+                          <AnnouncementPerPage pathname={pathname} />
                         </div>
                       </div>
                     )}
+
                     {this.props.children}
                   </Fragment>
                 )}
