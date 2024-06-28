@@ -14,6 +14,7 @@ from environments.models import Environment
 from features.models import Feature, FeatureState
 from integrations.github.constants import GitHubEventType, GitHubTag
 from integrations.github.github import call_github_task
+from integrations.github.models import GithubRepository
 from organisations.models import Organisation
 from projects.tags.models import Tag, TagType
 
@@ -68,21 +69,29 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
         # Tag the feature with the external resource type
         metadata = json.loads(self.metadata) if self.metadata else {}
         state = metadata.get("state", "open")
-        github_tag = Tag.objects.get(
-            label=tag_by_type_and_state[self.type][state],
-            project=self.feature.project,
-            is_system_tag=True,
-            type=TagType.GITHUB.value,
-        )
-
-        self.feature.tags.add(github_tag)
 
         # Add a comment to GitHub Issue/PR when feature is linked to the GH external resource
+        # and tag the feature with the corresponding tag if tagging is enabled
         if (
-            Organisation.objects.prefetch_related("github_config")
+            github_configuration := Organisation.objects.prefetch_related(
+                "github_config"
+            )
             .get(id=self.feature.project.organisation_id)
             .github_config.first()
         ):
+            github_repo = GithubRepository.objects.get(
+                github_configuration=github_configuration.id,
+                project=self.feature.project,
+            )
+            if github_repo.tagging_enabled:
+                github_tag = Tag.objects.get(
+                    label=tag_by_type_and_state[self.type][state],
+                    project=self.feature.project,
+                    is_system_tag=True,
+                    type=TagType.GITHUB.value,
+                )
+                self.feature.tags.add(github_tag)
+
             feature_states: list[FeatureState] = []
 
             environments = Environment.objects.filter(

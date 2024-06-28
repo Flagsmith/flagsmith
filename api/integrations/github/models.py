@@ -54,6 +54,7 @@ class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
         null=False,
         on_delete=models.CASCADE,
     )
+    tagging_enabled = models.BooleanField(default=True)
 
     class Meta:
         constraints = [
