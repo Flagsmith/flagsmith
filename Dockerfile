@@ -37,6 +37,9 @@
 # * api-runtime [python:slim]
 # * api-runtime-private [api-runtime]
 
+# - Internal stages
+# * api-test [build-python]
+
 # - Target (shippable) stages
 # * private-cloud-api [api-runtime-private, build-python-private]
 # * private-cloud-unified [api-runtime-private, build-python-private, build-node-django]
@@ -137,6 +140,20 @@ FROM api-runtime as api-runtime-private
 
 # Install SAML binary dependency
 RUN apt-get update && apt-get install -y xmlsec1 && rm -rf /var/lib/apt/lists/*
+
+# - Internal stages
+# * api-test [build-python]
+FROM build-python AS api-runtime-dev
+
+RUN make install-packages opts='--with dev'
+
+WORKDIR /app
+
+COPY api /app/
+
+ENTRYPOINT ["/bin/bash"]
+
+CMD ["-c 'make test'"]
 
 # - Target (shippable) stages
 # * private-cloud-api [api-runtime-private, build-python-private]
