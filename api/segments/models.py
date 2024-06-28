@@ -68,6 +68,14 @@ class Segment(
         null=True,
         blank=True,
     )
+
+    change_request = models.ForeignKey(
+        "workflows_core.ChangeRequest",
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="segments",
+    )
+
     metadata = GenericRelation(Metadata)
 
     # Only serves segments that are the canonical version.
