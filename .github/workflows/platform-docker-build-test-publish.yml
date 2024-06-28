@@ -9,6 +9,13 @@ on:
       - released
 
 jobs:
+  docker-build-api-test:
+    name: Build API Test Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: api-test
+      image-name: flagsmith-api-test
+
   docker-build-api:
     name: Build API Image
     uses: ./.github/workflows/.reusable-docker-build.yml
