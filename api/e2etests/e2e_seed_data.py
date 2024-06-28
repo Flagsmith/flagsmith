@@ -68,6 +68,7 @@ def seed_data() -> None:
         password=PASSWORD,
         username=settings.E2E_USER,
     )
+    org_admin.add_organisation(organisation, OrganisationRole.ADMIN)
     non_admin_user_with_org_permissions: FFAdminUser = FFAdminUser.objects.create_user(
         email=settings.E2E_NON_ADMIN_USER_WITH_ORG_PERMISSIONS,
         password=PASSWORD,
@@ -86,7 +87,6 @@ def seed_data() -> None:
         email=settings.E2E_NON_ADMIN_USER_WITH_A_ROLE,
         password=PASSWORD,
     )
-    org_admin.add_organisation(organisation, OrganisationRole.ADMIN)
     non_admin_user_with_org_permissions.add_organisation(
         organisation,
     )
