@@ -2,16 +2,22 @@ import { FeatureState, FeatureVersion, Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import { getStore } from 'common/store'
-import {
-  createVersionFeatureState,
-  getVersionFeatureState,
-  updateVersionFeatureState,
-} from './useVersionFeatureState'
-import { deleteFeatureSegment } from './useFeatureSegment'
+import { getVersionFeatureState } from './useVersionFeatureState'
 import transformCorePaging from 'common/transformCorePaging'
 import Utils from 'common/utils/utils'
-import { updateSegmentPriorities } from './useSegmentPriority'
 
+const transformFeatureStates = (featureStates: FeatureState[]) =>
+  featureStates?.map((v) => ({
+    ...v,
+    feature_state_value: Utils.valueToFeatureState(v.feature_state_value),
+    id: undefined,
+    multivariate_feature_state_values: v.multivariate_feature_state_values?.map(
+      (v) => ({
+        ...v,
+        id: undefined,
+      }),
+    ),
+  }))
 export const featureVersionService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureVersion'] })
   .injectEndpoints({
@@ -22,15 +28,31 @@ export const featureVersionService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
         queryFn: async (query: Req['createAndSetFeatureVersion']) => {
+          const featureStatesToCreate: Req['createFeatureVersion']['feature_states_to_create'] =
+            query.featureStates.filter((v) => !v.id && !v.toRemove)
+          const featureStatesToUpdate: Req['createFeatureVersion']['feature_states_to_update'] =
+            query.featureStates.filter((v) => !!v.id && !v.toRemove)
+          const segmentIdsToDeleteOverrides: Req['createFeatureVersion']['segment_ids_to_delete_overrides'] =
+            query.featureStates
+              .filter((v) => !!v.id && !!v.toRemove && !!v.feature_segment)
+              .map((v) => v.feature_segment!.segment)
+
           // Step 1: Create a new feature version
           const versionRes: { data: FeatureVersion } =
             await createFeatureVersion(getStore(), {
               environmentId: query.environmentId,
               featureId: query.featureId,
-              liveFrom: query.liveFrom,
+              feature_states_to_create: transformFeatureStates(
+                featureStatesToCreate,
+              ),
+              feature_states_to_update: transformFeatureStates(
+                featureStatesToUpdate,
+              ),
+              live_from: query.liveFrom,
+              publish_immediately: !query.skipPublish,
+              segment_ids_to_delete_overrides: segmentIdsToDeleteOverrides,
             })
 
-          // Step 2: Get the feature states for the live version
           const currentFeatureStates: { data: FeatureState[] } =
             await getVersionFeatureState(getStore(), {
               environmentId: query.environmentId,
@@ -38,119 +60,15 @@ export const featureVersionService = service
               sha: versionRes.data.uuid,
             })
 
-          // Step 3: update, create or delete feature states from the new version
-          const res: { data: FeatureState }[] = (
-            await Promise.all(
-              query.featureStates.map((featureState) => {
-                const matchingVersionState = currentFeatureStates.data.find(
-                  (feature) => {
-                    return (
-                      feature.feature_segment?.segment ===
-                      featureState.feature_segment?.segment
-                    )
-                  },
-                )
-                // Matching feature state exists, meaning we need to either modify or delete it
-                if (matchingVersionState) {
-                  //Feature state is marked as to remove, delete it from the current version
-                  if (
-                    featureState.toRemove &&
-                    matchingVersionState.feature_segment
-                  ) {
-                    return deleteFeatureSegment(getStore(), {
-                      id: matchingVersionState.feature_segment.id,
-                    })
-                  }
-                  //Feature state is not marked as remove, so we update it
-                  const multivariate_feature_state_values =
-                    featureState.multivariate_feature_state_values
-                      ? featureState.multivariate_feature_state_values?.map(
-                          (featureStateValue) => {
-                            const newId =
-                              matchingVersionState?.multivariate_feature_state_values?.find(
-                                (v) => {
-                                  return (
-                                    v.multivariate_feature_option ===
-                                    featureStateValue.multivariate_feature_option
-                                  )
-                                },
-                              )
-
-                            return {
-                              ...featureStateValue,
-                              id: newId!.id,
-                            }
-                          },
-                        )
-                      : []
-
-                  return updateVersionFeatureState(getStore(), {
-                    environmentId: query.environmentId,
-                    featureId: matchingVersionState.feature,
-                    featureState: {
-                      ...featureState,
-                      feature_segment: matchingVersionState?.feature_segment
-                        ? {
-                            ...(matchingVersionState.feature_segment as any),
-                            priority: featureState.feature_segment!.priority,
-                          }
-                        : undefined,
-                      id: matchingVersionState.id,
-                      multivariate_feature_state_values,
-                      uuid: matchingVersionState.uuid,
-                    },
-                    id: matchingVersionState.id,
-                    sha: versionRes.data.uuid,
-                    uuid: matchingVersionState.uuid,
-                  })
-                }
-                // Matching feature state does not exist, meaning we need to create it
-                else {
-                  return createVersionFeatureState(getStore(), {
-                    environmentId: query.environmentId,
-                    featureId: query.featureId,
-                    featureState,
-                    sha: versionRes.data.uuid,
-                  })
-                }
-              }),
-            )
-          ).filter((v) => !!v?.data)
-
-          //Step 4: Update feature segment priorities before saving feature states
-          const prioritiesToUpdate = query.featureStates
-            .filter((v) => !v.toRemove && !!v.feature_segment)
-            .map((v) => {
-              const matchingFeatureSegment = res?.find(
-                (currentFeatureState) =>
-                  v.feature_segment?.segment ===
-                  currentFeatureState.data.feature_segment?.segment,
-              )
-              return {
-                id: matchingFeatureSegment!.data.feature_segment!.id!,
-                priority: v.feature_segment!.priority,
-              }
-            })
-          if (prioritiesToUpdate.length) {
-            await updateSegmentPriorities(getStore(), prioritiesToUpdate)
-          }
+          const res = currentFeatureStates.data
 
           const ret = {
             error: res.find((v) => !!v.error)?.error,
             feature_states: res.map((item) => ({
-              ...item,
+              data: item,
               version_sha: versionRes.data.uuid,
             })),
             version_sha: versionRes.data.uuid,
-          }
-
-          // Step 5: Publish the feature version
-          if (!query.skipPublish) {
-            await publishFeatureVersion(getStore(), {
-              environmentId: query.environmentId,
-              featureId: query.featureId,
-              sha: versionRes.data.uuid,
-            })
           }
 
           return { data: ret } as any
@@ -162,7 +80,7 @@ export const featureVersionService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
         query: (query: Req['createFeatureVersion']) => ({
-          body: { live_from: query.liveFrom },
+          body: query,
           method: 'POST',
           url: `environments/${query.environmentId}/features/${query.featureId}/versions/`,
         }),
