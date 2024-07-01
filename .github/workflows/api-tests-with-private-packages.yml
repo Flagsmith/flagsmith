@@ -41,7 +41,10 @@ jobs:
           python-version: '3.12'
           cache: 'poetry'
 
-      - name: Install Dependencies and Tests
+      - name: Install SAML Dependencies
+        run: sudo apt-get install -y xmlsec1
+
+      - name: Install packages and Tests
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         shell: bash
         run: |
