@@ -126,7 +126,7 @@ flagsmith-auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth
 optional = true
 
 [tool.poetry.group.saml.dependencies]
-pysaml2 = "^7.0.0"
+pysaml2 = "^7.4.2"
 
 [tool.poetry.group.ldap]
 optional = true
