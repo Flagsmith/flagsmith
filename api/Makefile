@@ -115,10 +115,12 @@ generate-ld-client-types:
 		--wrap-string-literal \
 		--special-field-name-prefix=
 
-.PHONY: get-workflow-version
-get-workflow-version:
-	@grep -A 1 "\[tool.poetry.group.workflows.dependencies\]" pyproject.toml | awk -F '"' '{printf $$4}'
-
-.PHONY: get-auth-controller-version
-get-auth-controller-version:
-	@grep -A 1 "\[tool.poetry.group.auth-controller.dependencies\]" pyproject.toml | awk -F '"' '{printf $$4}'
+.PHONY: integrate-private-tests
+integrate-private-tests:
+	$(eval WORKFLOW_REVISION := $(shell grep -A 1 "\[tool.poetry.group.workflows.dependencies\]" pyproject.toml | awk -F '"' '{printf $$4}'))
+	$(eval AUTH_CONTROLLER_REVISION := $(shell grep -A 1 "\[tool.poetry.group.auth-controller.dependencies\]" pyproject.toml | awk -F '"' '{printf $$4}'))
+	git clone https://github.com/flagsmith/flagsmith-saml --depth 1 --branch ${SAML_REVISION} && mv ./flagsmith-saml/tests tests/saml_tests
+	git clone https://github.com/flagsmith/flagsmith-rbac --depth 1 --branch ${RBAC_REVISION} && mv ./flagsmith-rbac/tests tests/rbac_tests
+	git clone https://github.com/flagsmith/flagsmith-workflows --depth 1 --branch ${WORKFLOW_REVISION} && mv ./flagsmith-workflows/tests tests/workflow_tests
+	git clone https://github.com/flagsmith/flagsmith-auth-controller --depth 1 --branch ${AUTH_CONTROLLER_REVISION} && mv ./flagsmith-auth-controller/tests tests/auth_controller_tests
+	rm -rf ./flagsmith-saml ./flagsmith-rbac ./flagsmith-workflows ./flagsmith-auth-controller

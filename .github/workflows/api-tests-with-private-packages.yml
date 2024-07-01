@@ -41,90 +41,16 @@ jobs:
           python-version: '3.12'
           cache: 'poetry'
 
-      - name: Install Dependencies
+      - name: Install Dependencies and Tests
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         shell: bash
         run: |
           echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > ${HOME}/.git-credentials
           git config --global credential.helper store
           make install-packages opts="--with saml,auth-controller,workflows"
+          make install-private-modules
+          make integrate-private-tests
           rm -rf ${HOME}/.git-credentials
-
-      - name: Install SAML Dependencies
-        run: sudo apt-get install -y xmlsec1
-
-      - name: Get workflows-logic package version
-        id: workflow-version
-        run: |
-          tag=$(make get-workflow-version)
-          echo "Workflow Tag: $tag"
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-
-      - name: Get auth-controller package version
-        id: auth-controller-version
-        run: |
-          tag=$(make get-auth-controller-version)
-          echo "Workflow Tag: $tag"
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-
-      - name: Checkout workflow package
-        uses: actions/checkout@v4
-        with:
-          repository: flagsmith/flagsmith-workflows
-          token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-          ref: ${{ steps.workflow-version.outputs.tag }}
-          path: ./workflows_logic
-
-      - name: integrate workflow tests
-        run: ln -s $GITHUB_WORKSPACE/workflows_logic/tests tests/workflow_logic_tests
-        shell: bash
-        working-directory: api
-
-      - name: Checkout rbac package
-        uses: actions/checkout@v4
-        with:
-          repository: flagsmith/flagsmith-rbac
-          token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-          ref: ${{ env.FLAGSMITH_RBAC_REVISION }}
-          path: ./flagsmith-rbac
-
-      - name: Integrate RBAC module
-        run: mv $GITHUB_WORKSPACE/flagsmith-rbac/rbac .
-        shell: bash
-
-      - name: integrate rbac tests
-        run: ln -s $GITHUB_WORKSPACE/flagsmith-rbac/tests tests/rbac_tests
-        shell: bash
-        working-directory: api
-
-      - name: Checkout Auth Controller package
-        uses: actions/checkout@v4
-        with:
-          repository: flagsmith/flagsmith-auth-controller
-          token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-          ref: ${{ steps.auth-controller-version.outputs.tag }}
-          path: ./flagsmith-auth-controller
-
-      - name: integrate auth_controller tests
-        run: ln -s $GITHUB_WORKSPACE/flagsmith-auth-controller/tests tests/auth_controller_tests
-        shell: bash
-        working-directory: api
-
-      - name: Checkout SAML package
-        uses: actions/checkout@v4
-        with:
-          repository: flagsmith/flagsmith-saml
-          token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-          ref: ${{ env.flagsmith_saml_revision }}
-          path: ./flagsmith-saml
-
-      - name: Integrate SAML module
-        run: mv $GITHUB_WORKSPACE/flagsmith-saml/saml .
-
-      - name: integrate saml tests
-        run: ln -s $GITHUB_WORKSPACE/flagsmith-saml/tests tests/saml_tests
-        shell: bash
-        working-directory: api
 
       - name: Run Tests
         env:
