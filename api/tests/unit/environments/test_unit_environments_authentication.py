@@ -66,14 +66,16 @@ def test_authenticate_raises_authentication_failed_if_organisation_set_to_stop_s
         authenticator.authenticate(request)
 
 
+# TODO: this test should not be here?
 def test_brute_force_access_attempts(db: None, settings: SettingsWrapper) -> None:
-    invalid_user_name = "invalid_user"
+    invalid_user_name = "invalid_user@mail.com"
     login_attempts_to_make = settings.AXES_FAILURE_LIMIT + 1
 
     assert AccessAttempt.objects.all().count() == 0
 
     for _ in range(login_attempts_to_make):
         request = HttpRequest()
+        request.path = "/api/v1/auth/login/"
         authenticate(request, username=invalid_user_name, password="invalid_password")
 
     assert AccessAttempt.objects.filter(username=invalid_user_name).count() == 1

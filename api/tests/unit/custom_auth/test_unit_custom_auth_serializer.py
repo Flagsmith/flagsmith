@@ -12,19 +12,30 @@ user_dict = {
 }
 
 
-def test_CustomUserCreateSerializer_converts_email_to_lower_case(db):
+def test_CustomUserCreateSerializer_converts_email_to_lower_case(
+    db: None, rf: RequestFactory
+) -> None:
     # Given
-    serializer = CustomUserCreateSerializer(data=user_dict)
+    request = rf.post("/api/v1/auth/users/")
+    serializer = CustomUserCreateSerializer(
+        data=user_dict, context={"request": request}
+    )
     # When
     serializer.is_valid(raise_exception=True)
     # Then
     assert serializer.validated_data["email"] == "testuser@mail.com"
 
 
-def test_CustomUserCreateSerializer_does_case_insensitive_lookup_with_email(db):
+def test_CustomUserCreateSerializer_does_case_insensitive_lookup_with_email(
+    db: None, rf: RequestFactory
+) -> None:
     # Given
+    request = rf.post("/api/v1/auth/users/")
     FFAdminUser.objects.create(email="testuser@mail.com")
-    serializer = CustomUserCreateSerializer(data=user_dict)
+
+    serializer = CustomUserCreateSerializer(
+        data=user_dict, context={"request": request}
+    )
 
     # When
     assert serializer.is_valid() is False
@@ -72,7 +83,7 @@ def test_CustomUserCreateSerializer_allows_registration_if_sign_up_type_is_invit
     }
 
     serializer = CustomUserCreateSerializer(
-        data=data, context={"request": rf.post("/v1/auth/users/")}
+        data=data, context={"request": rf.post("/api/v1/auth/users/")}
     )
     assert serializer.is_valid()
 

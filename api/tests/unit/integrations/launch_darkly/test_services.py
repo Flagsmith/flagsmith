@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from django.conf import settings
 from django.core import signing
 from flag_engine.segments import constants as segment_constants
 from requests.exceptions import HTTPError, RequestException, Timeout
@@ -96,6 +97,11 @@ def test_process_import_request__success__expected_status(
     project: Project,
     import_request: LaunchDarklyImportRequest,
 ):
+    # Given
+    if settings.WORKFLOWS_LOGIC_INSTALLED:
+        # Delete any default tags created by workflows logic
+        project.tags.all().delete()  # pragma: no cover
+
     # When
     process_import_request(import_request)
 
