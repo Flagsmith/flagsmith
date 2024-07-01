@@ -37,7 +37,7 @@ use_parentheses = true
 multi_line_output = 3
 include_trailing_comma = true
 line_length = 79
-known_first_party=['analytics','app','custom_auth','environments','integrations','organisations','projects','segments','tests','users','webhooks','api','audit','e2etests','features','permissions','util']
+known_first_party=['analytics','app','custom_auth','environments','integrations','organisations','projects','segments','tests','users','webhooks','api','audit','e2etests','features','permissions','task_processor','util']
 known_third_party=['_pytest','apiclient','app_analytics','axes','chargebee','core','coreapi','corsheaders','dj_database_url','django','django_lifecycle','djoser','drf_writable_nested','drf_yasg','environs','google','influxdb_client','ordered_model','pyotp','pytest','pytz','requests','responses','rest_framework','rest_framework_nested','rest_framework_recursive','sentry_sdk','shortuuid','simple_history','six','telemetry','tests','trench','whitenoise']
 skip = ['migrations','.venv','.direnv']
 
@@ -115,6 +115,7 @@ pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
+flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.0.0" }
 
 [tool.poetry.group.auth-controller]
 optional = true
@@ -138,7 +139,7 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.3.6" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.3.7" }
 
 [tool.poetry.group.dev.dependencies]
 django-test-migrations = "~1.2.0"
