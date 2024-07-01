@@ -68,6 +68,14 @@ class Segment(
         null=True,
         blank=True,
     )
+
+    change_request = models.ForeignKey(
+        "workflows_core.ChangeRequest",
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="segments",
+    )
+
     metadata = GenericRelation(Metadata)
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
@@ -131,6 +139,10 @@ class Segment(
 
     @hook(BEFORE_CREATE, when="version_of", is_now=None)
     def set_default_version_to_one_if_new_segment(self):
+        # Change request segments default to None.
+        if self.change_request_id:
+            return
+
         if self.version is None:
             self.version = 1
 
@@ -144,6 +156,19 @@ class Segment(
         self.version_of = self
         self.save()
         segment_audit_log_helper.unset_skip_audit_log(self.id)
+
+    def shallow_clone(
+        self,
+        name: str,
+        description: str,
+        change_request: typing.Optional["ChangeRequest"],  # noqa: F821
+    ) -> "Segment":
+        cloned_segment = deepcopy(self)
+        cloned_segment.name = name
+        cloned_segment.description = description
+        cloned_segment.change_request = change_request
+        cloned_segment.save()
+        return cloned_segment
 
     def deep_clone(self) -> "Segment":
         cloned_segment = deepcopy(self)
