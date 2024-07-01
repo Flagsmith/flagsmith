@@ -161,7 +161,7 @@ class Segment(
         self,
         name: str,
         description: str,
-        change_request: None | "ChangeRequest",  # noqa: F821
+        change_request: typing.Optional["ChangeRequest"],  # noqa: F821
     ) -> "Segment":
         cloned_segment = deepcopy(self)
         cloned_segment.name = name
