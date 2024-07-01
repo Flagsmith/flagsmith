@@ -766,7 +766,6 @@ const CreateFlag = class extends Component {
               }
               placeholder='E.g. header_size'
             />
-            <ErrorMessage error={error?.name?.[0]} />
           </FormGroup>
         )}
 
@@ -789,6 +788,11 @@ const CreateFlag = class extends Component {
               placeholder='No description'
             />
           </FormGroup>
+        )}
+        {!!error && (
+          <ErrorMessage
+            error={typeof error?.name === 'array' ? error?.name?.[0] : error}
+          />
         )}
         {!hideValue && (
           <div
