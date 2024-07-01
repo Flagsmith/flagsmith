@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
@@ -8,13 +10,15 @@ from rest_framework.validators import UniqueValidator
 from organisations.invites.models import Invite
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
-from users.models import FFAdminUser, SignUpType
+from users.models import FFAdminUser, SignUpMeta, SignUpType, UserSignUpMeta
 
 from .constants import (
     FIELD_BLANK_ERROR,
     INVALID_PASSWORD_ERROR,
     USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class CustomTokenSerializer(serializers.ModelSerializer):
@@ -74,7 +78,25 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         ):
             raise PermissionDenied(USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE)
 
-        return super(CustomUserCreateSerializer, self).save(**kwargs)
+        user = super(CustomUserCreateSerializer, self).save(**kwargs)
+
+        try:
+            request = self.context["request"]
+            raw_sign_up_meta = request.COOKIES.get("inbound_query_params")
+            if raw_sign_up_meta and (
+                sign_up_meta := SignUpMeta.model_validate_json(raw_sign_up_meta)
+            ):
+                UserSignUpMeta.objects.create(
+                    user=user,
+                    json_meta=sign_up_meta.model_dump_json(),
+                )
+        except Exception as e:
+            # We want to be sensitive about not preventing user signups if anything fails
+            # trying to capture (and store) their attribution data.
+            logger.error(e, exc_info=True, stack_info=True)
+            pass
+
+        return user
 
 
 class CustomUserDelete(serializers.Serializer):
