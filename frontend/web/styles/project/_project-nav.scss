@@ -101,7 +101,9 @@ nav a {
     }
   }
 }
-
+.border-1 {
+  border: 1px solid $hr-border-color;
+}
 .border-right {
   border-right:  1px solid $hr-border-color;
 }
