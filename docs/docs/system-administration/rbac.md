@@ -42,6 +42,12 @@ will also be able to assign API keys to a Role in future versions.
 
 You can create a Role in the Organisation Settings page.
 
+#### Add Tags to a Role
+
+You can add tags to roles to achieve more granular permissions, specifically for updating and deleting flags. This
+functionality works such that if a feature has a tag and a role does not, then the role lacks permissions for updating
+and deleting the flag.
+
 #### Add Permissions to a Role
 
 Once the role is created you can assign the corresponding permissions.

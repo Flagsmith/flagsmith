@@ -470,6 +470,7 @@ export type Role = {
   name: string
   description?: string
   organisation: number
+  tags: number[]
 }
 
 export type RolePermissionUser = {
