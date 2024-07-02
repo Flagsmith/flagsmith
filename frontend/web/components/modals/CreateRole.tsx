@@ -393,13 +393,6 @@ const CreateRole: FC<CreateRoleType> = ({
                     organisationId={organisationId!}
                     onChange={(p) => {
                       setProject(p)
-                      getTags(
-                        getStore(),
-                        {
-                          projectId: p,
-                        },
-                        { forceRefetch: true },
-                      )
                     }}
                     value={project}
                   />
