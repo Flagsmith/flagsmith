@@ -36,18 +36,6 @@ const AnnouncementPerPage: FC<AnnouncementPerPageType> = ({ pathname }) => {
     Utils.getFlagsmithHasFeature('announcement_per_page') &&
     announcementPerPageValue?.pages?.length > 0
 
-  const convertObjectValuesToStrings = (
-    obj: AnnouncementPerPageValueType['params'],
-  ) => {
-    const newObj = {}
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        newObj[key] = String(obj[key])
-      }
-    }
-    return newObj
-  }
-
   const announcementInPage = announcementPerPageValue?.pages?.some((page) => {
     if (Object.keys(routes).includes(page)) {
       const match = matchPath(pathname, {
@@ -57,15 +45,14 @@ const AnnouncementPerPage: FC<AnnouncementPerPageType> = ({ pathname }) => {
       })
 
       if (match) {
-        const annParams =
-          convertObjectValuesToStrings(announcementPerPageValue?.params) || {}
-        const matchParams = convertObjectValuesToStrings(match?.params) || {}
+        const annParams = announcementPerPageValue?.params || {}
+        const matchParams = match?.params || {}
         const objectsMatch = (
           obj1: AnnouncementPerPageValueType['params'],
           obj2: AnnouncementPerPageValueType['params'],
         ) => {
           return Object.keys(obj1).every((key) => {
-            return obj2.hasOwnProperty(key) && obj1[key] === obj2[key]
+            return `${obj1[key]}` === `${obj2[key]}`
           })
         }
         const annParamsMatch = objectsMatch(annParams, matchParams)
