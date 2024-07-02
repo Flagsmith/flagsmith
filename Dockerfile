@@ -194,12 +194,11 @@ USER nobody
 FROM wolfi-base AS oss-frontend
 
 ARG NODE_VERSION
-RUN apk add node-${NODE_VERSION}
+RUN apk add nodejs-${NODE_VERSION}
 
-USER node
 WORKDIR /srv/bt
 
-COPY --from=build-node-selfhosted --chown=node:node /build/frontend .
+COPY --from=build-node-selfhosted /build/frontend/ /srv/bt/
 
 ENV NODE_ENV=production
 
@@ -208,7 +207,10 @@ RUN echo ${CI_COMMIT_SHA} > /srv/bt/CI_COMMIT_SHA
 COPY .release-please-manifest.json /srv/bt/.versions.json
 
 EXPOSE 8080
+
 CMD ["node",  "./api/index.js"]
+
+USER node
 
 # * oss-unified [api-runtime, build-python, build-node-django]
 FROM api-runtime as oss-unified
