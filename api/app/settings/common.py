@@ -105,6 +105,7 @@ INSTALLED_APPS = [
     "organisations",
     "organisations.invites",
     "organisations.permissions",
+    "organisations.subscriptions.licensing",  # TODO: should this be added conditionally?
     "projects",
     "sales_dashboard",
     "environments",

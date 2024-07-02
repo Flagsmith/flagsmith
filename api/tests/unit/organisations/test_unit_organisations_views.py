@@ -1,3 +1,4 @@
+import importlib
 import json
 from datetime import datetime, timedelta
 from typing import Type
@@ -9,6 +10,7 @@ from _pytest.logging import LogCaptureFixture
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models import Model
 from django.urls import reverse
 from django.utils import timezone
@@ -20,6 +22,7 @@ from pytz import UTC
 from rest_framework import status
 from rest_framework.test import APIClient, override_settings
 
+import organisations.urls
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature
@@ -42,6 +45,7 @@ from organisations.subscriptions.constants import (
     SUBSCRIPTION_BILLING_STATUS_ACTIVE,
     SUBSCRIPTION_BILLING_STATUS_DUNNING,
 )
+from organisations.subscriptions.licensing.models import OrganisationLicence
 from projects.models import Project, UserProjectPermission
 from segments.models import Segment
 from users.models import (
@@ -1873,3 +1877,37 @@ def test_validation_error_if_non_numeric_organisation_id(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_create_or_update_licence(
+    organisation: Organisation, admin_client: APIClient, mocker: MockerFixture
+) -> None:
+    # Given
+    mocker.patch("organisations.urls.is_enterprise", return_value=True)
+
+    importlib.reload(organisations.urls)
+
+    url = reverse(
+        "api-v1:organisations:create-or-update-licence", args=[organisation.id]
+    )
+
+    licence_data = {
+        "organisation_name": "Test Organisation",
+        "plan": "Enterprise",
+        "num_seats": 20,
+        "num_projects": 3,
+    }
+
+    licence = SimpleUploadedFile(
+        name="licence.txt",
+        content=json.dumps(licence_data).encode(),
+        content_type="text/plain",
+    )
+
+    # When
+    response = admin_client.put(url, data={"licence": licence})
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert OrganisationLicence.objects.filter(organisation=organisation).exists()
