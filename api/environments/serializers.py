@@ -30,6 +30,7 @@ class EnvironmentSerializerFull(serializers.ModelSerializer):
             "api_key",
             "minimum_change_request_approvals",
             "allow_client_traits",
+            "is_creating",
         )
 
 
@@ -53,6 +54,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "use_identity_composite_key_for_hashing",
             "hide_sensitive_data",
             "use_v2_feature_versioning",
+            "is_creating",
         )
         read_only_fields = ("use_v2_feature_versioning",)
 
