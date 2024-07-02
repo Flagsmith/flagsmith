@@ -182,7 +182,7 @@ def seed_data() -> None:
                 ]
             environments.append(environment)
 
-    # We're only creating identities for 3 of the 5 environments because
+    # We're only creating identities for 6 of the 7 environments because
     # they are necessary for the environments created above and to keep
     # the e2e tests isolated."
     identities_test_data = [
