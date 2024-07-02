@@ -111,11 +111,7 @@ RUN --mount=type=secret,id=github_private_cloud_token \
 FROM python-slim as api-runtime
 
 # Uninstall pip to reduce CVE-2018-20225 noise
-# and install binary dependencies required for ARM64
-ARG TARGETARCH
-RUN pip uninstall -y pip && \
-  if [ "${TARGETARCH}" != "amd64" ]; then \
-  apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
+RUN pip uninstall -y pip
 
 WORKDIR /app
 
