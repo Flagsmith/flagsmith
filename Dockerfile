@@ -153,8 +153,7 @@ USER nobody
 FROM api-runtime-private as private-cloud-unified
 
 COPY --from=build-python-private /build/.venv/ /usr/local/
-COPY --from=build-node-django /build/api/static /app/static
-COPY --from=build-node-django /build/api/app/templates/webpack /app/app/templates/webpack
+COPY --from=build-node-django /build/api/ /app/
 
 RUN python manage.py collectstatic --no-input
 RUN touch ./ENTERPRISE_VERSION
@@ -208,8 +207,7 @@ CMD ["node",  "./api/index.js"]
 FROM api-runtime as oss-unified
 
 COPY --from=build-python /build/.venv/ /usr/local/
-COPY --from=build-node-django /build/api/static /app/static/
-COPY --from=build-node-django /build/api/app/templates/webpack /app/app/templates/webpack
+COPY --from=build-node-django /build/api/ /app/
 
 RUN python manage.py collectstatic --no-input
 
