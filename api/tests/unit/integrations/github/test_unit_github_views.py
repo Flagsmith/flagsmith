@@ -1094,3 +1094,39 @@ def test_enable_linked_feature(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert feature_state.enabled is True
+
+
+@responses.activate
+def test_label_and_tags_no_added_when_tagging_is_disabled(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    github_repository: GithubRepository,
+    feature_with_value: Feature,
+    mock_github_client_generate_token: MagicMock,
+    post_request_mock: MagicMock,
+) -> None:
+    # Given
+    github_repository.tagging_enabled = False
+    github_repository.save()
+
+    feature_external_resource_data = {
+        "type": "GITHUB_ISSUE",
+        "url": "https://github.com/repoowner/repo-name/issues/35",
+        "feature": feature_with_value.id,
+        "metadata": {"state": "open"},
+    }
+
+    url = reverse(
+        "api-v1:projects:feature-external-resources-list",
+        kwargs={"project_pk": project.id, "feature_pk": feature_with_value.id},
+    )
+
+    # When
+    response = admin_client_new.post(
+        url, data=feature_external_resource_data, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert feature_with_value.tags.count() == 0
