@@ -111,7 +111,9 @@ RUN --mount=type=secret,id=github_private_cloud_token \
 FROM python-slim as api-runtime
 
 # Uninstall pip to reduce CVE-2018-20225 noise
-RUN pip uninstall -y pip
+# and make system Python available to venv entrypoints
+RUN pip uninstall -y pip && mkdir -p /build/.venv/bin && \
+  ln -s /usr/local/bin/python /build/.venv/bin/python
 
 WORKDIR /app
 
