@@ -1751,6 +1751,7 @@ const CreateFlag = class extends Component {
                                         }
                                         featureId={projectFlag.id}
                                         projectId={`${this.props.projectId}`}
+                                        environmentId={this.props.environmentId}
                                       />
                                     </TabItem>
                                   )}
