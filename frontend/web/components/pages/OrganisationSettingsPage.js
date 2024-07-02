@@ -211,7 +211,6 @@ const OrganisationSettingsPage = class extends Component {
       props: { webhooks, webhooksLoading },
     } = this
     const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
-    const force2faPermission = Utils.getPlansPermission('FORCE_2FA')
 
     return (
       <div className='app-container container'>
@@ -311,7 +310,6 @@ const OrganisationSettingsPage = class extends Component {
                                 <hr className='mt-0 mb-4' />
                                 <div className='col-md-6'>
                                   <Setting
-                                    className='mt-4 mb-2'
                                     feature={'FORCE_2FA'}
                                     checked={organisation.force_2fa}
                                     onChange={this.save2FA}
@@ -321,23 +319,20 @@ const OrganisationSettingsPage = class extends Component {
                                   'restrict_project_create_to_admin',
                                 ) && (
                                   <FormGroup className='mt-4 col-md-6'>
-                                    <h5>Admin Settings</h5>
-                                    <Row className='mb-2'>
-                                      <Switch
-                                        checked={
-                                          organisation.restrict_project_create_to_admin
-                                        }
-                                        onChange={() =>
-                                          this.setAdminCanCreateProject(
-                                            !organisation.restrict_project_create_to_admin,
-                                          )
-                                        }
-                                      />
-                                      <p className='fs-small ml-3 mb-0 lh-sm'>
-                                        Only allow organisation admins to create
-                                        projects
-                                      </p>
-                                    </Row>
+                                    <Setting
+                                      checked={
+                                        organisation.restrict_project_create_to_admin
+                                      }
+                                      onChange={() =>
+                                        this.setAdminCanCreateProject(
+                                          !organisation.restrict_project_create_to_admin,
+                                        )
+                                      }
+                                      title='Admin Settings'
+                                      description={
+                                        'Only allow organisation admins to create projects'
+                                      }
+                                    />
                                   </FormGroup>
                                 )}
                               </div>

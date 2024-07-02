@@ -7,33 +7,40 @@ import PlanBasedBanner, { featureDescriptions } from './PlanBasedAccess'
 type PlanBasedAccessSettingType = {
   feature?: PaidFeature
   disabled?: boolean
-  checked: boolean
-  onChange: (newValue: boolean) => void
+  checked?: boolean
+  onChange?: (newValue: boolean) => void
   title?: ReactNode
   description?: ReactNode
-  className?: string
+  component?: ReactNode
+  'data-test'?: string
 }
 
 const Setting: FC<PlanBasedAccessSettingType> = ({
   checked,
-  className,
+  component,
   description,
   disabled,
   feature,
   onChange,
   title,
+  ...props
 }) => {
   const hasPlan = !feature || Utils.getPlansPermission(feature)
 
   return (
     <>
-      <Row className={className}>
-        <Switch
-          disabled={disabled || !hasPlan}
-          checked={checked}
-          onChange={onChange}
-        />
-        <h5 className={'mb-0 d-flex gap-2 align-items-center ml-3'}>
+      <Row className={'mb-2'}>
+        {!component && (
+          <div className='me-3'>
+            <Switch
+              disabled={disabled || !hasPlan}
+              checked={checked}
+              onChange={onChange}
+              {...props}
+            />
+          </div>
+        )}
+        <h5 className={'mb-0 d-flex gap-2 align-items-center'}>
           <span
             className={classNames({
               'opacity-50': !hasPlan,
@@ -45,17 +52,11 @@ const Setting: FC<PlanBasedAccessSettingType> = ({
         </h5>
       </Row>
       {feature ? (
-        <p className={classNames('fs-small lh-sm', { 'opacity-50': !hasPlan })}>
-          {featureDescriptions[feature].description}
-        </p>
+        <PlanBasedBanner feature={feature} theme={'description'} />
       ) : (
         <p className='fs-small lh-sm'>{description}</p>
       )}
-      {!!feature && (
-        <>
-          <hr />
-        </>
-      )}
+      {!!feature && !!hasPlan && component}
     </>
   )
 }

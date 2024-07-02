@@ -68,7 +68,7 @@ services:
   # The flagsmith_processor service is only needed if TASK_RUN_METHOD set to TASK_PROCESSOR
   # in the application environment
   flagsmith_processor:
-    image: flagsmith.docker.scarf.sh/flagsmith/flagsmith:latest
+    image: ghcr.io/flagsmith/flagsmith-private-cloud:pr-4245
     environment:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
       USE_POSTGRES_FOR_ANALYTICS: 'true'

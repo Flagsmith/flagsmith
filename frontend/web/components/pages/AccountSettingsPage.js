@@ -18,6 +18,7 @@ import PageTitle from 'components/PageTitle'
 import { Link } from 'react-router-dom'
 import InfoMessage from 'components/InfoMessage'
 import Constants from 'common/constants'
+import Setting from 'components/Setting'
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -152,7 +153,6 @@ class TheComponent extends Component {
         {({}) => {
           const { isSaving } = this.state
           const forced2Factor = AccountStore.forced2Factor()
-          const has2fPermission = Utils.getPlansPermission('2FA')
 
           return forced2Factor ? (
             <div className='app-container container'>
@@ -279,22 +279,16 @@ class TheComponent extends Component {
                     </div>
                     <hr className='py-0 my-4' />
                     <div className='col-md-6'>
-                      <Row>
-                        <Switch
-                          onChange={(v) => {
-                            flagsmith.setTrait('json_inspect', v).then(() => {
-                              toast('Updated')
-                            })
-                          }}
-                          checked={flagsmith.getTrait('json_inspect')}
-                          className='mr-3'
-                        />
-                        <h5 className='mb-0'>Show JSON References</h5>
-                      </Row>
-                      <p className='fs-small lh-sm mt-2'>
-                        Enabling this will allow you to inspect the JSON of
-                        entities such as features within the platform.
-                      </p>
+                      <Setting
+                        onChange={(v) => {
+                          flagsmith.setTrait('json_inspect', v).then(() => {
+                            toast('Updated')
+                          })
+                        }}
+                        checked={flagsmith.getTrait('json_inspect')}
+                        title={'Show JSON References'}
+                        description={`Enabling this will allow you to inspect the JSON of entities such as features within the platform.`}
+                      />
                     </div>
                     <hr className='py-0 my-4' />
                     <div className='col-md-6'>
@@ -448,25 +442,7 @@ class TheComponent extends Component {
                     )}
                     <hr className='py-0 my-4' />
                     <div className='col-md-6 col-sm-12'>
-                      <h5 className='mb-1'>Two-Factor Authentication</h5>
-                      <p className='fs-small lh-sm mb-4'>
-                        Increase your account's security by enabling Two-Factor
-                        Authentication (2FA).
-                      </p>
-                    </div>
-                    <div className='col-md-6 col-sm-12'>
-                      {has2fPermission ? (
-                        <TwoFactor />
-                      ) : (
-                        <div className='text-right'>
-                          <Link
-                            to={Constants.upgradeURL}
-                            className='btn btn-primary text-center ml-auto mt-2 mb-2'
-                          >
-                            Manage payment plan
-                          </Link>
-                        </div>
-                      )}
+                      <Setting component={<TwoFactor />} feature='2FA' />
                     </div>
                   </div>
                 </TabItem>

@@ -1,14 +1,17 @@
-import React, { FC } from 'react'
+import React, { FC, ReactNode } from 'react'
 import Utils, { PaidFeature } from 'common/utils/utils'
 import Button from './base/forms/Button'
 import { Link } from 'react-router-dom'
 import Constants from 'common/constants'
 import { IonIcon } from '@ionic/react'
-import { lockClosed } from 'ionicons/icons'
+import { checkmarkCircle, lockClosed, lockOpen, rocket } from 'ionicons/icons'
+import classNames from 'classnames'
+import PageTitle from './PageTitle'
 
 type PlanBasedBannerType = {
   feature: keyof typeof featureDescriptions
-  theme: 'banner' | 'badge' | 'description'
+  theme: 'page' | 'badge' | 'description'
+  children?: ReactNode
 }
 
 export const featureDescriptions: Record<PaidFeature, any> = {
@@ -24,7 +27,7 @@ export const featureDescriptions: Record<PaidFeature, any> = {
 
   'AUDIT': {
     description:
-      'Keep track of every action taken within the Flagsmith administration application.',
+      'View all activity that occurred across the project and specific environments.',
     title: 'Audit Log',
   },
   'CREATE_ADDITIONAL_PROJECT': {
@@ -62,19 +65,23 @@ export const featureDescriptions: Record<PaidFeature, any> = {
   },
 }
 
-const PlanBasedBanner: FC<PlanBasedBannerType> = ({ feature, theme }) => {
+const PlanBasedBanner: FC<PlanBasedBannerType> = ({
+  children,
+  feature,
+  theme,
+}) => {
   const hasPlan = Utils.getPlansPermission(feature)
+  const planUrl = Utils.isSaas()
+    ? Constants.upgradeURL
+    : 'https://www.flagsmith.com/on-premises-and-private-cloud-hosting#contact'
   const ctas = (
     <div className='d-flex gap-4'>
       {Utils.isSaas() ? (
         <Link to={Constants.upgradeURL}>
-          <Button>View our Plans</Button>
+          <Button size='xSmall'>Start Free Trial</Button>
         </Link>
       ) : (
-        <Button
-          href='https://www.flagsmith.com/on-premises-and-private-cloud-hosting#contact'
-          target='_blank'
-        >
+        <Button size='xSmall' href={planUrl} target='_blank'>
           Contact Us
         </Button>
       )}
@@ -89,38 +96,54 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({ feature, theme }) => {
       )}
     </div>
   )
-  if (hasPlan) {
-    return null
-  }
+
+  const BadgeTag = Utils.isSaas() ? Link : 'a'
   if (theme === 'badge') {
     return (
       <div>
-        <div className='chip chip--xs font-weight-medium text-white bg-primary'>
-          <IonIcon className='me-1' icon={lockClosed} />{' '}
+        <BadgeTag
+          to={planUrl}
+          href={planUrl}
+          target={Utils.isSaas() ? undefined : '_blank'}
+          className='chip cursor-pointer chip--xs d-flex align-items-center font-weight-medium text-white bg-primary'
+        >
+          {
+            <IonIcon
+              className='me-1'
+              icon={hasPlan ? checkmarkCircle : lockClosed}
+            />
+          }
           {Utils.getPlanName(Utils.getRequiredPlan(feature))}
+        </BadgeTag>
+      </div>
+    )
+  } else if (theme === 'description') {
+    if (hasPlan) {
+      return (
+        <p className={classNames('fs-small lh-sm')}>
+          {featureDescriptions[feature].description}
+        </p>
+      )
+    }
+    return (
+      <div className='p-2 rounded bg-primary bg-opacity-10'>
+        <div className='d-flex gap-2 justify-content-between align-items-center'>
+          <div>{featureDescriptions[feature].description}</div>
+          {ctas}
         </div>
       </div>
     )
-  } else if(theme === 'description') {
-
+  }
+  if (hasPlan) {
+    return <>{children}</>
   }
   return (
-    <div className='border-1 bg-primaryAlfa8'>
-      <h5>
-        {featureDescriptions[feature]}{' '}
-        <div className='chip chip--xs bg-primary'>
-          {Utils.getPlanName(Utils.getRequiredPlan(feature))}
-        </div>
-      </h5>
-      {Utils.isSaas() ? (
-        <p>
-          Start a free, 14 day trial to access this feature along with many
-          others.
-        </p>
-      ) : (
-        <p></p>
-      )}
-      {ctas}
+    <div>
+      <h4 className='d-flex align-items-center gap-2'>
+        <span>{featureDescriptions[feature].title}</span>
+        <PlanBasedBanner feature={feature} theme={'badge'} />
+      </h4>
+      <PlanBasedBanner feature={feature} theme={'description'} />
     </div>
   )
 }
