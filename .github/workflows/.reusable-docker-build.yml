@@ -136,3 +136,4 @@ jobs:
         if: inputs.scan && (success() || failure())
         with:
           sarif_file: trivy-results.sarif
+          category: ${{ inputs.image-name }}
