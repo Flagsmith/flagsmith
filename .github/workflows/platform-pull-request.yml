@@ -131,6 +131,7 @@ jobs:
 
     strategy:
       matrix:
+        runs-on: [ubuntu-latest, ARM64-2c]
         args:
           - tests: segment-part-1 environment
             concurrency: 1
