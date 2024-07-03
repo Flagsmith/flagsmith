@@ -10,6 +10,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
+import PasswordRequirements from 'components/PasswordRequirements';
 import { informationCircleOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import classNames from 'classnames'
@@ -32,6 +33,10 @@ const HomePage = class extends React.Component {
     // can handle always setting the marketing consent.
     API.setCookie('marketing_consent_given', 'true')
     this.state = {
+      email: '',
+      first_name: '',
+      last_name: '',
+      password: '',
       marketing_consent_given: true,
     }
   }
@@ -603,6 +608,7 @@ const HomePage = class extends React.Component {
                                       name='password'
                                       id='password'
                                     />
+                                    <PasswordRequirements password={password} />
                                     <div className='form-cta'>
                                       <Button
                                         data-test='signup-btn'
