@@ -32,25 +32,27 @@ export const featureVersionService = service
             query.featureStates.filter((v) => !v.id && !v.toRemove)
           const featureStatesToUpdate: Req['createFeatureVersion']['feature_states_to_update'] =
             query.featureStates.filter((v) => !!v.id && !v.toRemove)
-          const segmentIdsToDeleteOverrides: Req['createFeatureVersion']['segment_ids_to_delete_overrides'] =
+          const segment_ids_to_delete_overrides: Req['createFeatureVersion']['segment_ids_to_delete_overrides'] =
             query.featureStates
               .filter((v) => !!v.id && !!v.toRemove && !!v.feature_segment)
               .map((v) => v.feature_segment!.segment)
 
           // Step 1: Create a new feature version
+          const feature_states_to_create = transformFeatureStates(
+            featureStatesToCreate,
+          )
+          const feature_states_to_update = transformFeatureStates(
+            featureStatesToUpdate,
+          )
           const versionRes: { data: FeatureVersion } =
             await createFeatureVersion(getStore(), {
               environmentId: query.environmentId,
               featureId: query.featureId,
-              feature_states_to_create: transformFeatureStates(
-                featureStatesToCreate,
-              ),
-              feature_states_to_update: transformFeatureStates(
-                featureStatesToUpdate,
-              ),
+              feature_states_to_create,
+              feature_states_to_update,
               live_from: query.liveFrom,
               publish_immediately: !query.skipPublish,
-              segment_ids_to_delete_overrides: segmentIdsToDeleteOverrides,
+              segment_ids_to_delete_overrides,
             })
 
           const currentFeatureStates: { data: FeatureState[] } =
@@ -68,6 +70,9 @@ export const featureVersionService = service
               data: item,
               version_sha: versionRes.data.uuid,
             })),
+            feature_states_to_create,
+            feature_states_to_update,
+            segment_ids_to_delete_overrides,
             version_sha: versionRes.data.uuid,
           }
 

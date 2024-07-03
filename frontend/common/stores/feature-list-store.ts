@@ -460,7 +460,16 @@ const controller = {
     store.saving()
     API.trackEvent(Constants.events.EDIT_FEATURE)
     const env: Environment = ProjectStore.getEnvironment(environmentId) as any
-    let environment_feature_versions = []
+    let environment_feature_versions: string[] = []
+    let feature_states_to_create:
+        | Req['createFeatureVersion']['feature_states_to_create']
+        | undefined = undefined,
+      feature_states_to_update:
+        | Req['createFeatureVersion']['feature_states_to_update']
+        | undefined = undefined,
+      segment_ids_to_delete_overrides:
+        | Req['createFeatureVersion']['segment_ids_to_delete_overrides']
+        | undefined = undefined
     if (env.use_v2_feature_versioning) {
       let featureStates
       if (mode === 'SEGMENT') {
@@ -485,6 +494,9 @@ const controller = {
         skipPublish: true,
       })
       environment_feature_versions = [version.version_sha]
+      feature_states_to_create = version.feature_states_to_create
+      feature_states_to_update = version.feature_states_to_update
+      segment_ids_to_delete_overrides = version.feature_states_to_update
     }
     const prom = data
       .get(
@@ -525,7 +537,16 @@ const controller = {
                 },
               ]
             : [],
+          feature_states_to_create: feature_states_to_create
+            ? JSON.stringify(feature_states_to_create)
+            : undefined,
+          feature_states_to_update: feature_states_to_update
+            ? JSON.stringify(feature_states_to_update)
+            : undefined,
           group_assignments,
+          segment_ids_to_delete_overrides: segment_ids_to_delete_overrides
+            ? JSON.stringify(segment_ids_to_delete_overrides)
+            : undefined,
           ...changeRequestData,
         }
         const reqType = req.id ? 'put' : 'post'
