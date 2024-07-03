@@ -202,6 +202,7 @@ export const getPlanBasedOption = function (
 ) {
   return {
     ...data,
+    isDisabled: !Utils.getPlansPermission(feature),
     label: (
       <div className='d-flex gap-2'>
         {data.label}
