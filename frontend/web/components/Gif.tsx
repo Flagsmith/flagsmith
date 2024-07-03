@@ -95,11 +95,11 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   thumbnail: {
     display: 'block',
-    opacity: 0.8,
+    opacity: 0.4,
     width: '100%',
   },
   thumbnailContainer: {
-    background: 'rgba(0, 0, 0, 0.2)',
+    background: 'rgba(0, 0, 0, 0.75)',
     cursor: 'pointer',
     position: 'relative',
   },
