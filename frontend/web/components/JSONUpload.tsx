@@ -3,9 +3,9 @@ import DropIcon from './svg/DropIcon'
 import Button from './base/forms/Button'
 import { useDropzone } from 'react-dropzone'
 
-type DropAreaType = {
+export type DropAreaType = {
   value: File | null
-  onChange: (file: File, json: Record<string, any>) => void
+  onChange: (file: File, json: Record<string, any> | string) => void
 }
 
 const JSONUpload: FC<DropAreaType> = ({ onChange, value }) => {

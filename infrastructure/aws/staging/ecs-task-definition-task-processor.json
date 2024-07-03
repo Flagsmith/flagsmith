@@ -146,6 +146,14 @@
                 {
                     "name": "GITHUB_APP_ID",
                     "value": "811209"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL",
+                    "value": "https://edge.api.flagsmith.com/api/v1/"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
+                    "value": "False"
                 }
             ],
             "secrets": [
@@ -196,6 +204,10 @@
                 {
                     "name": "GITHUB_PEM",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:GITHUB_PEM-Bfoaql"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:FLAGSMITH_ON_FLAGSMITH_SERVER_KEY::"
                 }
             ],
             "logConfiguration": {

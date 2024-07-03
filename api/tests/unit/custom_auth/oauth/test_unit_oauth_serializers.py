@@ -23,7 +23,7 @@ def test_create_oauth_login_serializer(
     sign_up_type = "NO_INVITE"
     data = {"access_token": access_token, "sign_up_type": sign_up_type}
     rf = RequestFactory()
-    request = rf.post("placeholer-login-url")
+    request = rf.post("/api/v1/auth/oauth/google/")
     email = "testytester@example.com"
     first_name = "testy"
     last_name = "tester"

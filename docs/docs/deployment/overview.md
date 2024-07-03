@@ -257,6 +257,26 @@ The list of the flags and remote config we're currently using in production is b
   "title": "Dynatrace",
   "description": "Sends events to Dynatrace for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production."
  },
+ "grafana": {
+  "perEnvironment": false,
+  "image": "/static/images/integrations/grafana.svg",
+  "docs": "https://docs.flagsmith.com/integrations/apm/grafana",
+  "fields": [
+   {
+    "key": "base_url",
+    "label": "Base URL",
+    "default": "https://grafana.com"
+   },
+   {
+    "key": "api_key",
+    "label": "Service account token",
+    "hidden": true
+   }
+  ],
+  "tags": ["logging"],
+  "title": "Grafana",
+  "description": "Receive Flagsmith annotations to your Grafana instance on feature flag and segment changes."
+ },
  "jira": {
   "perEnvironment": false,
   "image": "https://docs.flagsmith.com/img/integrations/jira/jira-logo.svg",
@@ -475,7 +495,6 @@ The list of the flags and remote config we're currently using in production is b
  {
   "value": "IN",
   "label": "In",
-  "warning": "Check your SDK version supports the IN operator. <a href=\"https://docs.flagsmith.com/clients/overview#sdk-compatibility\">See SDK compatibility docs</a>.",
   "valuePlaceholder": "Value1,Value2"
  },
  {

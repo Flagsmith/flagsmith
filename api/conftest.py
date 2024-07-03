@@ -1,3 +1,4 @@
+import logging
 import os
 import typing
 from unittest.mock import MagicMock
@@ -326,8 +327,13 @@ def project(organisation):
 
 
 @pytest.fixture()
-def segment(project):
-    return Segment.objects.create(name="segment", project=project)
+def segment(project: Project):
+    _segment = Segment.objects.create(name="segment", project=project)
+    # Deep clone the segment to ensure that any bugs around
+    # versioning get bubbled up through the test suite.
+    _segment.deep_clone()
+
+    return _segment
 
 
 @pytest.fixture()
@@ -465,6 +471,13 @@ def multivariate_feature(project):
         )
 
     return feature
+
+
+@pytest.fixture()
+def multivariate_options(
+    multivariate_feature: Feature,
+) -> list[MultivariateFeatureOption]:
+    return list(multivariate_feature.multivariate_options.all())
 
 
 @pytest.fixture()
@@ -1072,3 +1085,20 @@ def superuser():
 def superuser_client(superuser: FFAdminUser, client: APIClient):
     client.force_login(superuser, backend="django.contrib.auth.backends.ModelBackend")
     return client
+
+
+@pytest.fixture
+def inspecting_handler() -> logging.Handler:
+    """
+    Fixture used to test the output of logger related output.
+    """
+
+    class InspectingHandler(logging.Handler):
+        def __init__(self, *args, **kwargs) -> None:
+            super().__init__(*args, **kwargs)
+            self.messages = []
+
+        def handle(self, record: logging.LogRecord) -> None:
+            self.messages.append(self.format(record))
+
+    return InspectingHandler()

@@ -26,6 +26,7 @@ import TableValueFilter from 'components/tables/TableValueFilter'
 import Utils from 'common/utils/utils'
 import makeAsyncScriptLoader from 'react-async-script'
 import { onPaymentLoad } from 'components/modals/Payment'
+import classNames from 'classnames'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -229,7 +230,17 @@ const FeaturesPage = class extends Component {
         id='features-page'
         className='app-container container'
       >
-        <FeatureListProvider onSave={this.onSave} onError={this.onError}>
+        <FeatureListProvider
+          onRemove={(feature) =>
+            toast(
+              <div>
+                Removed feature: <strong>{feature.name}</strong>
+              </div>,
+            )
+          }
+          onSave={this.onSave}
+          onError={this.onError}
+        >
           {(
             {
               environmentFlags,
@@ -240,6 +251,7 @@ const FeaturesPage = class extends Component {
             { removeFlag, toggleFlag },
           ) => {
             const isLoading = !FeatureListStore.hasLoaded
+            const isSaving = FeatureListStore.isSaving
             const featureLimitAlert = Utils.calculateRemainingLimitsPercentage(
               totalFeatures,
               maxFeaturesAllowed,
@@ -330,7 +342,11 @@ const FeaturesPage = class extends Component {
                           id={this.props.match.params.environmentId}
                         >
                           {({ permission }) => (
-                            <FormGroup className='mb-4'>
+                            <FormGroup
+                              className={classNames('mb-4', {
+                                'opacity-50': isSaving,
+                              })}
+                            >
                               <PanelSearch
                                 className='no-pad overflow-visible'
                                 id='features-list'

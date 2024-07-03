@@ -371,6 +371,7 @@ const HomePage = class extends React.Component {
                                             title='Password'
                                             inputProps={{
                                               className: 'full-width',
+                                              enableAutoComplete: true,
                                               error: error && error.password,
                                               name: 'password',
                                             }}
@@ -573,6 +574,7 @@ const HomePage = class extends React.Component {
                                       data-test='email'
                                       inputProps={{
                                         className: 'full-width',
+                                        enableAutoComplete: true,
                                         error: error && error.email,
                                         name: 'email',
                                       }}

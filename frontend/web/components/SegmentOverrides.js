@@ -502,9 +502,11 @@ class TheComponent extends Component {
     openConfirm({
       body: (
         <div>
-          {
-            'Are you sure you want to delete this segment override? This will be applied when you click Update Segment Overrides and cannot be undone.'
-          }
+          {`Are you sure you want to delete this segment override?${
+            this.props.is4Eyes
+              ? ''
+              : ' This will be applied when you click Update Segment Overrides and cannot be undone.'
+          }`}
         </div>
       ),
       destructive: true,
@@ -647,7 +649,6 @@ class TheComponent extends Component {
                   <CreateSegmentModal
                     className='my-2'
                     segment={this.state.segmentEditId}
-                    isEdit
                     condensed
                     onComplete={() => {
                       this.setState({

@@ -27,6 +27,7 @@ export const featureVersionService = service
             await createFeatureVersion(getStore(), {
               environmentId: query.environmentId,
               featureId: query.featureId,
+              liveFrom: query.liveFrom,
             })
 
           // Step 2: Get the feature states for the live version
@@ -135,11 +136,12 @@ export const featureVersionService = service
           }
 
           const ret = {
-            data: res.map((item) => ({
+            error: res.find((v) => !!v.error)?.error,
+            feature_states: res.map((item) => ({
               ...item,
               version_sha: versionRes.data.uuid,
             })),
-            error: res.find((v) => !!v.error)?.error,
+            version_sha: versionRes.data.uuid,
           }
 
           // Step 5: Publish the feature version
@@ -151,7 +153,7 @@ export const featureVersionService = service
             })
           }
 
-          return ret as any
+          return { data: ret } as any
         },
       }),
       createFeatureVersion: builder.mutation<
@@ -160,7 +162,7 @@ export const featureVersionService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
         query: (query: Req['createFeatureVersion']) => ({
-          body: {},
+          body: { live_from: query.liveFrom },
           method: 'POST',
           url: `environments/${query.environmentId}/features/${query.featureId}/versions/`,
         }),

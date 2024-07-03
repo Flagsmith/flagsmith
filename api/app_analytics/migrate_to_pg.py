@@ -9,7 +9,11 @@ def migrate_feature_evaluations(migrate_till: int = 30) -> None:
     for i in range(migrate_till):
         range_start = f"-{i+1}d"
         range_stop = f"-{i}d"
-        query = f"from (bucket: {read_bucket}) |> range(start: {range_start}, stop: {range_stop})"
+        query = (
+            f'from (bucket: "{read_bucket}") '
+            f"|> range(start: {range_start}, stop: {range_stop}) "
+            f'|> filter(fn: (r) => r._measurement == "feature_evaluation")'
+        )
 
         result = query_api.query(query)
 

@@ -18,6 +18,8 @@ import {
   getRolesMasterAPIKeyWithMasterAPIKeyRoles,
   updateMasterAPIKeyWithMasterAPIKeyRoles,
 } from 'common/services/useMasterAPIKeyWithMasterAPIKeyRole'
+import { setInterceptClose, setModalTitle } from './modals/base/ModalDefault'
+import SuccessMessage from './SuccessMessage'
 
 export class CreateAPIKey extends PureComponent {
   state = {
@@ -31,6 +33,28 @@ export class CreateAPIKey extends PureComponent {
 
   componentDidMount() {
     this.props.isEdit && this.getApiKeyByPrefix(this.props.prefix)
+    if (!this.props.isEdit) {
+      setInterceptClose(() => {
+        if (!this.state.key) {
+          return Promise.resolve(true)
+        } else {
+          return new Promise((resolve) => {
+            openConfirm({
+              body: 'Please confirm you have a copy of the API key prior to closing.',
+              noText: 'Cancel',
+              onNo: () => resolve(false),
+              onYes: () => resolve(true),
+              title: 'Confirm saved API key',
+              yesText: 'Confirm',
+            })
+          })
+        }
+      })
+    }
+  }
+
+  componentWillUnmount() {
+    setInterceptClose(null)
   }
 
   submit = () => {
@@ -50,6 +74,7 @@ export class CreateAPIKey extends PureComponent {
           isSaving: false,
           key: res.key,
         })
+        setModalTitle('Save your new API key')
         Promise.all(
           this.state.roles.map((role) =>
             createRoleMasterApiKey(getStore(), {
@@ -163,6 +188,11 @@ export class CreateAPIKey extends PureComponent {
                   <label>Name</label>
                 </div>
                 <Input
+                  ref={(v) => {
+                    setTimeout(() => {
+                      v.focus()
+                    }, 500)
+                  }}
                   value={this.state.name}
                   onChange={(e) =>
                     this.setState({ name: Utils.safeParseEventValue(e) })
@@ -257,11 +287,11 @@ export class CreateAPIKey extends PureComponent {
           )}
 
           {this.state.key && (
-            <div className='mb-4'>
-              <InfoMessage>
-                Please keep a note of your API key once it's created, we do not
-                store it.
-              </InfoMessage>
+            <div className='my-4'>
+              <SuccessMessage>
+                Your key has been created. Please keep a note of your API key
+                once it's created, we do not store it.
+              </SuccessMessage>
 
               <Token show token={this.state.key} />
             </div>

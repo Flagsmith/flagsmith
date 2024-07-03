@@ -74,7 +74,7 @@ class EnvironmentFeatureVersion(
     change_request = models.ForeignKey(
         "workflows_core.ChangeRequest",
         related_name="environment_feature_versions",
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
     )

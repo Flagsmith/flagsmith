@@ -52,6 +52,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
     {
       environmentId,
       featureId: featureId as any,
+      is_live: true,
     },
     {
       skip: !featureId,
