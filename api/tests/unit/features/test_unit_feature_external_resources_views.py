@@ -206,8 +206,9 @@ def test_cannot_create_feature_external_resource_for_the_same_feature_and_resour
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+    error_response = response.json()
     assert (
-        response.json()[0]
+        error_response[0]
         == "Duplication error. The feature already has this resource URI"
     )
 
