@@ -197,18 +197,3 @@ class FeatureExternalResourcePermissions(FeaturePermissions):
         return request.user.has_project_permission(
             ACTION_PERMISSIONS_MAP[view.action], obj.feature.project
         )
-
-
-class FeatureExternalResourceGitHubActionPermissions(IsAuthenticated):
-    def has_permission(self, request: Request, view: GenericViewSet) -> bool:
-        if not super().has_permission(request, view):
-            return False
-
-        try:
-            project_id = view.kwargs.get("project_pk") or request.data.get("project")
-            project = Project.objects.get(id=project_id)
-
-        except Project.DoesNotExist:
-            return False
-
-        return request.user.has_project_permission(CREATE_FEATURE, project)
