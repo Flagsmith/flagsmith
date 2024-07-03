@@ -23,9 +23,6 @@ import EnvironmentDocumentCodeHelp from 'components/EnvironmentDocumentCodeHelp'
 import TableOwnerFilter from 'components/tables/TableOwnerFilter'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableValueFilter from 'components/tables/TableValueFilter'
-import Utils from 'common/utils/utils'
-import makeAsyncScriptLoader from 'react-async-script'
-import { onPaymentLoad } from 'components/modals/Payment'
 import classNames from 'classnames'
 
 const FeaturesPage = class extends Component {
@@ -730,14 +727,5 @@ const FeaturesPage = class extends Component {
 }
 
 FeaturesPage.propTypes = {}
-const InnerComponent = ConfigProvider(FeaturesPage)
 
-const WrappedPayment = makeAsyncScriptLoader(
-  'https://js.chargebee.com/v2/chargebee.js',
-  {
-    removeOnUnmount: true,
-  },
-)(InnerComponent)
-export default (props) => (
-  <WrappedPayment {...props} asyncScriptOnLoad={onPaymentLoad} />
-)
+module.exports = ConfigProvider(FeaturesPage)

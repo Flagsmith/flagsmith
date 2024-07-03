@@ -7,6 +7,9 @@ import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
 import firstpromoter from 'project/firstPromoter'
 import Utils from 'common/utils/utils'
+import AccountProvider from 'common/providers/AccountProvider'
+import classNames from 'classnames'
+import Switch from 'components/Switch'
 
 const PaymentButton = (props) => {
   const activeSubscription = AccountStore.getOrganisationPlan(
@@ -59,7 +62,9 @@ const Payment = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = {}
+    this.state = {
+      yearly: true,
+    }
   }
 
   componentDidMount = () => {
@@ -99,7 +104,7 @@ const Payment = class extends Component {
               ''
             return (
               <div className='col-md-12'>
-                <Row space className='mb-4'>
+                <Row space className='mb-2'>
                   <h5>Manage Payment Plan</h5>
                   {this.props.isDisableAccountText && (
                     <Row>
@@ -116,6 +121,28 @@ const Payment = class extends Component {
                     </Row>
                   )}
                 </Row>
+                <div className='d-flex mb-4 font-weight-medium justify-content-center align-items-center gap-2'>
+                  <h5
+                    className={classNames('mb-0', {
+                      'text-muted': !this.state.yearly,
+                    })}
+                  >
+                    Pay Yearly (Save 10%)
+                  </h5>
+                  <Switch
+                    checked={!this.state.yearly}
+                    onChange={() => {
+                      this.setState({ yearly: !this.state.yearly })
+                    }}
+                  />
+                  <h5
+                    className={classNames('mb-0', {
+                      'text-muted': this.state.yearly,
+                    })}
+                  >
+                    Pay Monthly
+                  </h5>
+                </div>
                 <Row className='pricing-container align-start'>
                   <Flex className='pricing-panel p-2'>
                     <div className='panel panel-default'>
