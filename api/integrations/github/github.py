@@ -14,7 +14,6 @@ from integrations.github.constants import (
     FEATURE_ENVIRONMENT_URL,
     FEATURE_TABLE_HEADER,
     FEATURE_TABLE_ROW,
-    FEATURE_UPDATED_FROM_GHA_TEXT,
     LINK_FEATURE_TITLE,
     LINK_SEGMENT_TITLE,
     UNLINKED_FEATURE_TEXT,
@@ -130,8 +129,6 @@ def generate_body_comment(
     result = ""
     if event_type == GitHubEventType.FLAG_UPDATED.value:
         result = UPDATED_FEATURE_TEXT % (name)
-    elif event_type == GitHubEventType.FLAG_UPDATED_FROM_GHA.value:
-        result = FEATURE_UPDATED_FROM_GHA_TEXT % (name)
     else:
         result = LINK_FEATURE_TITLE % (name)
 

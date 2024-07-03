@@ -1023,6 +1023,21 @@ def feature_external_resource(
 
 
 @pytest.fixture()
+def feature_external_resource_gh_pr(
+    feature: Feature,
+    post_request_mock: MagicMock,
+    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
+) -> FeatureExternalResource:
+    return FeatureExternalResource.objects.create(
+        url="https://github.com/repositoryownertest/repositorynametest/pull/1",
+        type="GITHUB_PR",
+        feature=feature,
+        metadata='{"status": "open"}',
+    )
+
+
+@pytest.fixture()
 def feature_with_value_external_resource(
     feature_with_value: Feature,
     post_request_mock: MagicMock,

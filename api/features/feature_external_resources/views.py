@@ -78,7 +78,11 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
             elif request.data.get("type") == "GITHUB_ISSUE":
                 pattern = r"github.com/([^/]+)/([^/]+)/issues/(\d+)$"
             else:
-                assert False, "Could not find a matching GitHub type"
+                return Response(
+                    data={"detail": "Incorrect GitHub type"},
+                    content_type="application/json",
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             match = re.search(pattern, url)
             if match:
