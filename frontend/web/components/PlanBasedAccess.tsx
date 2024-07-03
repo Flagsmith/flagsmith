@@ -136,6 +136,9 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
     )
   }
   if (theme === 'badge') {
+    if (hasPlan) {
+      return null
+    }
     return renderWithTooltip(
       <div>
         <a
@@ -144,12 +147,7 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
           className='chip cursor-pointer chip--xs d-flex align-items-center font-weight-medium text-white bg-primary800'
           rel='noreferrer'
         >
-          {
-            <IonIcon
-              className='me-1'
-              icon={hasPlan ? checkmarkCircle : lockClosed}
-            />
-          }
+          {<IonIcon className='me-1' icon={lockClosed} />}
           {Utils.getPlanName(Utils.getRequiredPlan(feature))}
         </a>
       </div>,

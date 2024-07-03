@@ -59,7 +59,7 @@ class TheComponent extends Component {
           return (
             <div>
               <SettingsButton
-                feature='FLAG_OWNER_GROUPS'
+                feature='FLAG_OWNERS'
                 content={
                   <ConnectedGroupSelect
                     orgId={AccountStore.getOrganisation()?.id}
