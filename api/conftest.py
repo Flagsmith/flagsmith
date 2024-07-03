@@ -327,8 +327,13 @@ def project(organisation):
 
 
 @pytest.fixture()
-def segment(project):
-    return Segment.objects.create(name="segment", project=project)
+def segment(project: Project):
+    _segment = Segment.objects.create(name="segment", project=project)
+    # Deep clone the segment to ensure that any bugs around
+    # versioning get bubbled up through the test suite.
+    _segment.deep_clone()
+
+    return _segment
 
 
 @pytest.fixture()

@@ -24,6 +24,7 @@ import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersion
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
 import EnvironmentVersioningListener from 'components/EnvironmentVersioningListener'
+import Format from 'common/utils/format'
 import Setting from 'components/Setting'
 
 const showDisabledFlagOptions = [
@@ -229,15 +230,18 @@ const EnvironmentSettingsPage = class extends Component {
     )
   }
 
-  confirmToggle = (title, description, feature) => {
+  confirmToggle = (title, environmentProperty, environmentPropertyValue) => {
     openModal(
       title,
       <ConfirmToggleEnvFeature
-        description={`${description} Are you sure that you want to change this value?`}
-        feature={feature}
-        featureValue={this.state[feature]}
-        onToggleChange={(value) => {
-          this.setState({ [feature]: value }, this.saveEnv)
+        description={'Are you sure that you want to change this value?'}
+        feature={Format.enumeration.get(environmentProperty)}
+        featureValue={environmentPropertyValue}
+        onToggleChange={() => {
+          this.setState(
+            { [environmentProperty]: !environmentPropertyValue },
+            this.saveEnv,
+          )
           closeModal()
         }}
       />,
@@ -476,7 +480,7 @@ const EnvironmentSettingsPage = class extends Component {
                             checked={hide_sensitive_data}
                             onChange={(v) => {
                               this.confirmToggle(
-                                'The data returned from the API will change and could break your existing code. Are you sure that you want to change this value?',
+                                  'Confirm Environment Setting',
                                 'hide_sensitive_data',
                                 hide_sensitive_data,
                               )
