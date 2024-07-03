@@ -57,6 +57,7 @@ export const featureDescriptions: Record<PaidFeature, any> = {
   'RBAC': {
     description:
       'Configure fine-grained permissions and roles to manage access across organisations, projects and environments.',
+    docs: 'https://docs.flagsmith.com/system-administration/rbac',
     preview: 'rbac.gif',
     title: 'Role-based access control',
   },
@@ -69,6 +70,7 @@ export const featureDescriptions: Record<PaidFeature, any> = {
   'SCHEDULE_FLAGS': {
     description:
       'Manage feature state changes that have been scheduled to go live.',
+    docs: 'https://docs.flagsmith.com/advanced-use/scheduled-flags',
     preview: 'scheduled-flags.gif',
     title: 'Scheduled Flags',
   },
