@@ -1,7 +1,9 @@
 from unittest import mock
 
+from django.db.models import Model
 from django.test import override_settings
 from django.urls import reverse
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -103,7 +105,12 @@ def test_can_login_with_google_if_registration_disabled(
     client = APIClient()
 
     email = "test@example.com"
-    mock_get_user_info.return_value = {"email": email}
+    mock_get_user_info.return_value = {
+        "email": email,
+        "first_name": "John",
+        "last_name": "Smith",
+        "google_user_id": "abc123",
+    }
     django_user_model.objects.create(email=email)
 
     # When
@@ -126,7 +133,12 @@ def test_can_login_with_github_if_registration_disabled(
     email = "test@example.com"
     mock_github_user = mock.MagicMock()
     MockGithubUser.return_value = mock_github_user
-    mock_github_user.get_user_info.return_value = {"email": email}
+    mock_github_user.get_user_info.return_value = {
+        "email": email,
+        "first_name": "John",
+        "last_name": "Smith",
+        "github_user_id": "abc123",
+    }
     django_user_model.objects.create(email=email)
 
     # When
@@ -135,3 +147,144 @@ def test_can_login_with_github_if_registration_disabled(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert "key" in response.json()
+
+
+def test_login_with_google_updates_existing_user_case_insensitive(
+    db: None,
+    django_user_model: type[Model],
+    mocker: MockerFixture,
+    api_client: APIClient,
+) -> None:
+    # Given
+    email_lower = "test@example.com"
+    email_upper = email_lower.upper()
+    google_user_id = "abc123"
+
+    django_user_model.objects.create(email=email_lower)
+
+    mocker.patch(
+        "custom_auth.oauth.serializers.get_user_info",
+        return_value={
+            "email": email_upper,
+            "first_name": "John",
+            "last_name": "Smith",
+            "google_user_id": google_user_id,
+        },
+    )
+
+    url = reverse("api-v1:custom_auth:oauth:google-oauth-login")
+
+    # When
+    response = api_client.post(url, data={"access_token": "some-token"})
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    qs = django_user_model.objects.filter(email__iexact=email_lower)
+    assert qs.count() == 1
+
+    user = qs.first()
+    assert user.email == email_lower
+    assert user.google_user_id == google_user_id
+
+
+def test_login_with_github_updates_existing_user_case_insensitive(
+    db: None,
+    django_user_model: type[Model],
+    mocker: MockerFixture,
+    api_client: APIClient,
+) -> None:
+    # Given
+    email_lower = "test@example.com"
+    email_upper = email_lower.upper()
+    github_user_id = "abc123"
+
+    django_user_model.objects.create(email=email_lower)
+
+    mock_github_user = mock.MagicMock()
+    mocker.patch(
+        "custom_auth.oauth.serializers.GithubUser", return_value=mock_github_user
+    )
+    mock_github_user.get_user_info.return_value = {
+        "email": email_upper,
+        "first_name": "John",
+        "last_name": "Smith",
+        "github_user_id": github_user_id,
+    }
+
+    url = reverse("api-v1:custom_auth:oauth:github-oauth-login")
+
+    # When
+    response = api_client.post(url, data={"access_token": "some-token"})
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    qs = django_user_model.objects.filter(email__iexact=email_lower)
+    assert qs.count() == 1
+
+    user = qs.first()
+    assert user.email == email_lower
+    assert user.github_user_id == github_user_id
+
+
+def test_user_with_duplicate_accounts_authenticates_as_the_correct_oauth_user(
+    db: None,
+    django_user_model: type[Model],
+    api_client: APIClient,
+    mocker: MockerFixture,
+) -> None:
+    """
+    Specific test to verify the correct behaviour for users affected by
+    https://github.com/Flagsmith/flagsmith/issues/4185.
+    """
+
+    # Given
+    email_lower = "test@example.com"
+    email_upper = email_lower.upper()
+
+    github_user = django_user_model.objects.create(
+        email=email_lower, github_user_id="abc123"
+    )
+    google_user = django_user_model.objects.create(
+        email=email_upper, google_user_id="abc123"
+    )
+
+    mock_github_user = mock.MagicMock()
+    mocker.patch(
+        "custom_auth.oauth.serializers.GithubUser", return_value=mock_github_user
+    )
+    mock_github_user.get_user_info.return_value = {
+        "email": email_lower,
+        "first_name": "John",
+        "last_name": "Smith",
+        "github_user_id": github_user.github_user_id,
+    }
+
+    mocker.patch(
+        "custom_auth.oauth.serializers.get_user_info",
+        return_value={
+            "email": email_upper,
+            "first_name": "John",
+            "last_name": "Smith",
+            "google_user_id": google_user.google_user_id,
+        },
+    )
+
+    github_auth_url = reverse("api-v1:custom_auth:oauth:github-oauth-login")
+    google_auth_url = reverse("api-v1:custom_auth:oauth:google-oauth-login")
+
+    # When
+    auth_with_github_response = api_client.post(
+        github_auth_url, data={"access_token": "some-token"}
+    )
+    auth_with_google_response = api_client.post(
+        google_auth_url, data={"access_token": "some-token"}
+    )
+
+    # Then
+    github_auth_key = auth_with_github_response.json().get("key")
+    assert github_auth_key == github_user.auth_token.key
+
+    google_auth_key = auth_with_google_response.json().get("key")
+    assert google_auth_key == google_user.auth_token.key

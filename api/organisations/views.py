@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import logging
+from datetime import timedelta
 
 from app_analytics.influxdb_wrapper import (
     get_events_for_organisation,
@@ -323,6 +324,10 @@ class OrganisationAPIUsageNotificationView(ListAPIView):
         subscription_cache = organisation.subscription_information_cache
         billing_starts_at = subscription_cache.current_billing_term_starts_at
         now = timezone.now()
+
+        # Handle case where billing dates are not set (most often in a free plan)
+        # by defaulting to something as a reasonable default.
+        billing_starts_at = billing_starts_at or now - timedelta(days=30)
 
         month_delta = relativedelta(now, billing_starts_at).months
         period_starts_at = relativedelta(months=month_delta) + billing_starts_at

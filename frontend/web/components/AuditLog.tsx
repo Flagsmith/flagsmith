@@ -1,14 +1,15 @@
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react' // we need this to make JSX compile
-import moment from 'moment'
 import Utils from 'common/utils/utils'
 import { AuditLogItem, Environment } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
 import useSearchThrottle from 'common/useSearchThrottle'
-import JSONReference from './JSONReference'
 import { Link, withRouter } from 'react-router-dom'
-import PanelSearch from './PanelSearch'
 import ProjectStore from 'common/stores/project-store'
+import Button from './base/forms/Button'
 import Tag from './tags/Tag'
+import PanelSearch from './PanelSearch'
+import JSONReference from './JSONReference'
+import moment from 'moment'
 
 type AuditLogType = {
   environmentId: string
@@ -25,7 +26,7 @@ type AuditLogType = {
   }
 }
 
-const widths = [210, 210, 210]
+const widths = [210, 210, 130]
 const AuditLog: FC<AuditLogType> = (props) => {
   const [page, setPage] = useState(1)
   const { search, searchInput, setSearchInput } = useSearchThrottle(
@@ -55,13 +56,18 @@ const AuditLog: FC<AuditLogType> = (props) => {
     data: projectAuditLog,
     isError,
     isFetching,
-  } = useGetAuditLogsQuery({
-    environments,
-    page,
-    page_size: props.pageSize,
-    project: props.projectId,
-    search,
-  })
+  } = useGetAuditLogsQuery(
+    {
+      environments,
+      page,
+      page_size: props.pageSize,
+      project: props.projectId,
+      search,
+    },
+    {
+      refetchOnMountOrArgChange: true,
+    },
+  )
 
   useEffect(() => {
     props.onErrorChange?.(isError)
@@ -78,12 +84,30 @@ const AuditLog: FC<AuditLogType> = (props) => {
     environment,
     id,
     log,
+    project,
+    related_feature_id,
+    related_object_type,
+    related_object_uuid,
   }: AuditLogItem) => {
     const environments = ProjectStore.getEnvs() as Environment[] | null
     const index = environments?.findIndex((v) => {
       return v.id === environment?.id
     })
     const colour = index === -1 ? 0 : index
+    let link: ReactNode = null
+    if (
+      related_object_uuid &&
+      related_object_type === 'EF_VERSION' &&
+      environment
+    ) {
+      link = (
+        <Link
+          to={`/project/${project.id}/environment/${environment.api_key}/history/${related_object_uuid}/`}
+        >
+          <Button theme='text'>View version</Button>
+        </Link>
+      )
+    }
     const inner = (
       <Row>
         <div
@@ -104,26 +128,29 @@ const AuditLog: FC<AuditLogType> = (props) => {
             style={{ width: widths[2] }}
             to={`/project/${props.projectId}/environment/${environment?.api_key}/features/`}
           >
-            <Row>
-              <Tag
-                tag={{
-                  color: Utils.getTagColour(colour),
-                  label: environment?.name,
-                }}
-                className='chip--sm'
-              />
-            </Row>
+            <Tag
+              tag={{
+                color: Utils.getTagColour(colour),
+                label: environment?.name,
+              }}
+              className='chip--sm'
+            />
           </Link>
         ) : (
           <div className='table-column' style={{ width: widths[2] }} />
         )}
-        <Flex className='table-column fs-small ln-sm'>{log}</Flex>
+        <Flex className='table-column fs-small ln-sm'>
+          <div className='d-flex gap-2 '>
+            {log}
+            {link}
+          </div>
+        </Flex>
       </Row>
     )
     return (
       <Link
         className='fw-normal d-flex align-items-center flex-row list-item list-item-sm link-unstyled clickable'
-        to={`/project/${props.projectId}/environment/${props.match.params.environmentId}/audit-log/${id}`}
+        to={`/project/${props.projectId}/audit-log/${id}`}
       >
         {inner}
       </Link>
@@ -203,4 +230,4 @@ const AuditLog: FC<AuditLogType> = (props) => {
   )
 }
 
-export default withRouter(AuditLog)
+export default withRouter(AuditLog as any)

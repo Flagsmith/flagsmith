@@ -107,5 +107,5 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
                 )
 
     def perform_update(self, serializer):
-        external_resource_id = int(self.kwargs["id"])
+        external_resource_id = int(self.kwargs["pk"])
         serializer.save(id=external_resource_id)

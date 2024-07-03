@@ -239,13 +239,15 @@ export type AuditLogItem = {
   author?: User
   environment?: Environment
   project: ProjectSummary
-  related_object_id: number
+  related_object_uuid?: number
+  related_feature_id?: number
   related_object_type:
     | 'FEATURE'
     | 'FEATURE_STATE'
     | 'ENVIRONMENT'
     | 'CHANGE_REQUEST'
     | 'SEGMENT'
+    | 'EF_VERSION'
     | 'EDGE_IDENTITY'
   is_system_event: boolean
 }
@@ -325,7 +327,7 @@ export type FeatureStateValue = {
   float_value?: number | null
   integer_value?: boolean | null
   string_value: string
-  type: string
+  type: 'int' | 'unicode' | 'bool' | 'float'
 }
 
 export type MultivariateOption = {
@@ -427,6 +429,8 @@ export type AuthType = 'EMAIL' | 'GITHUB' | 'GOOGLE'
 
 export type SignupType = 'NO_INVITE' | 'INVITE_EMAIL' | 'INVITE_LINK'
 
+export type AttributeName = 'email' | 'first_name' | 'last_name' | 'groups'
+
 export type Invite = {
   id: number
   email: string
@@ -508,6 +512,8 @@ export type ChangeRequest = {
 export type FeatureVersion = {
   created_at: string
   updated_at: string
+  feature?: number
+  previous_version_uuid?: string
   published: boolean
   live_from: string
   uuid: string
@@ -547,6 +553,22 @@ export type MetadataModelField = {
   field: number
   content_type: number | string
   is_required_for: isRequiredFor[]
+}
+
+export type SAMLConfiguration = {
+  id: number
+  organisation: number
+  name: string
+  frontend_url: string
+  idp_metadata_xml?: string
+  allow_idp_initiated?: boolean
+}
+
+export type SAMLAttributeMapping = {
+  id: number
+  saml_configuration: number
+  django_attribute_name: AttributeName
+  idp_attribute_name: string
 }
 
 export type Res = {
@@ -621,7 +643,7 @@ export type Res = {
   rolesPermissionUsers: PagedResponse<RolePermissionUser>
   createRolePermissionGroup: RolePermissionGroup
   rolePermissionGroup: PagedResponse<RolePermissionGroup>
-  getSubscriptionMetadata: { id: string }
+  getSubscriptionMetadata: { id: string; max_api_calls: number }
   environment: Environment
   metadataModelFieldList: PagedResponse<MetadataModelField>
   metadataModelField: MetadataModelField
@@ -660,5 +682,13 @@ export type Res = {
   identityFeatureStates: PagedResponse<FeatureState>
   cloneidentityFeatureStates: IdentityFeatureState
   featureStates: PagedResponse<FeatureState>
+  samlConfiguration: SAMLConfiguration
+  samlConfigurations: PagedResponse<SAMLConfiguration>
+  samlMetadata: {
+    entity_id: string
+    response_url: string
+    metadata_xml: string
+  }
+  samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
   // END OF TYPES
 }

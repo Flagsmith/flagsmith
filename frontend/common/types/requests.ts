@@ -4,14 +4,15 @@ import {
   FeatureState,
   FeatureStateValue,
   ImportStrategy,
-  APIKey,
   Approval,
   MultivariateOption,
+  SAMLConfiguration,
   Segment,
   Tag,
   ProjectFlag,
   Environment,
   UserGroup,
+  AttributeName,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -59,6 +60,10 @@ export type Req = {
     organisationId: string
     projectId?: string
     environmentId?: string
+    billing_period?:
+      | 'current_billing_period'
+      | 'previous_billing_period'
+      | '90_day_period'
   }
   deleteIdentity: {
     id: string
@@ -311,10 +316,12 @@ export type Req = {
       | 'toRemove'
       | 'multivariate_feature_state_values'
     >[]
+    liveFrom?: string
   }
   createFeatureVersion: {
     environmentId: number
     featureId: number
+    liveFrom?: string
   }
   publishFeatureVersion: {
     sha: string
@@ -341,8 +348,6 @@ export type Req = {
   }>
   getUsers: { organisationId: number }
   getFeatureVersion: {
-    environmentId: string
-    featureId: string
     uuid: string
   }
   enableFeatureVersioning: {
@@ -476,5 +481,28 @@ export type Req = {
     feature?: number
   }
   getFeatureSegment: { id: string }
+  getSamlConfiguration: { name: string }
+  getSamlConfigurations: { organisation_id: number }
+  getSamlConfigurationMetadata: { name: string }
+  updateSamlConfiguration: { name: string; body: SAMLConfiguration }
+  deleteSamlConfiguration: { name: string }
+  createSamlConfiguration: SAMLConfiguration
+  getSamlAttributeMapping: { saml_configuration_id: number }
+  updateSamlAttributeMapping: {
+    attribute_id: number
+    body: {
+      saml_configuration: number
+      django_attribute_name: AttributeName
+      idp_attribute_name: string
+    }
+  }
+  deleteSamlAttributeMapping: { attribute_id: number }
+  createSamlAttributeMapping: {
+    body: {
+      saml_configuration: number
+      django_attribute_name: AttributeName
+      idp_attribute_name: string
+    }
+  }
   // END OF TYPES
 }

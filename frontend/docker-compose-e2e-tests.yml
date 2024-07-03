@@ -13,9 +13,10 @@ services:
     container_name: flagsmith_postgres
 
   flagsmith-api:
+    image: ${API_IMAGE:-ghcr.io/flagsmith/flagsmith-api:dev}
     build:
       context: ../
-      dockerfile: Dockerfile
+      target: oss-api
     environment:
       E2E_TEST_AUTH_TOKEN: some-token
       ENABLE_FE_E2E: 'True'
@@ -38,6 +39,7 @@ services:
       retries: 30
 
   frontend:
+    image: ${E2E_IMAGE:-ghcr.io/flagsmith/flagsmith-e2e:dev}
     build:
       context: ../
       dockerfile: frontend/Dockerfile.e2e

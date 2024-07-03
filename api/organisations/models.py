@@ -117,6 +117,10 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
             self.has_paid_subscription() and self.subscription.cancellation_date is None
         )
 
+    @property
+    def flagsmith_identifier(self):
+        return f"org.{self.id}"
+
     def over_plan_seats_limit(self, additional_seats: int = 0):
         if self.has_paid_subscription():
             susbcription_metadata = self.subscription.get_subscription_metadata()
@@ -464,7 +468,7 @@ class OrganisationAPIUsageNotification(models.Model):
     )
     percent_usage = models.IntegerField(
         null=False,
-        validators=[MinValueValidator(75), MaxValueValidator(120)],
+        validators=[MinValueValidator(75), MaxValueValidator(500)],
     )
     notified_at = models.DateTimeField(null=True)
 
