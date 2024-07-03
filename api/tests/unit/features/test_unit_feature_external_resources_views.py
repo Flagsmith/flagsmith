@@ -292,11 +292,11 @@ def test_update_feature_external_resource(
         "integrations.github.client.generate_token",
     )
     mock_generate_token.return_value = "mocked_token"
-    mock_generate_token.return_value = "mocked_token"
     feature_external_resource_data = {
         "type": "GITHUB_ISSUE",
         "url": "https://github.com/userexample/example-project-repo/issues/12",
         "feature": feature.id,
+        "metadata": '{"state": "open"}',
     }
     url = reverse(
         "api-v1:projects:feature-external-resources-detail",
