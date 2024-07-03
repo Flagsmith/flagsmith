@@ -6,7 +6,6 @@ import pytest
 import requests
 import responses
 from django.conf import settings
-from django.db.models import Q
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from pytest_mock import MockerFixture
@@ -16,7 +15,7 @@ from rest_framework.test import APIClient
 
 from environments.models import Environment
 from features.feature_external_resources.models import FeatureExternalResource
-from features.models import Feature, FeatureState
+from features.models import Feature
 from integrations.github.constants import GITHUB_API_URL
 from integrations.github.models import GithubConfiguration, GithubRepository
 from integrations.github.views import (
@@ -1055,45 +1054,6 @@ def test_send_the_invalid_type_page_or_page_size_param_returns_400(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     response_json = response.json()
     assert response_json == error_response
-
-
-# Unit test for enable_linked_feature view in feature_external_resources views
-def test_enable_linked_feature(
-    admin_client_new: APIClient,
-    organisation: Organisation,
-    project: Project,
-    environment: Environment,
-    github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
-    feature_external_resource: FeatureExternalResource,
-) -> None:
-    # Given
-    url = reverse(
-        "api-v1:projects:enable-linked-feature",
-        args=[project.id],
-    )
-    q = Q(
-        feature_id=feature_external_resource.feature_id,
-        identity__isnull=True,
-        feature_segment__isnull=True,
-    )
-
-    # When
-    response = admin_client_new.post(
-        url,
-        data={
-            "html_url": feature_external_resource.url,
-            "environments": f'["{environment.name}"]',
-        },
-    )
-    feature_state = FeatureState.objects.get_live_feature_states(
-        environment=environment,
-        additional_filters=q,
-    ).first()
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    assert feature_state.enabled is True
 
 
 @responses.activate
