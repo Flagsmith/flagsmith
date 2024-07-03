@@ -56,7 +56,7 @@ export const Button: FC<ButtonType> = ({
     <a
       className={cn(className, themeClassNames[theme], sizeClassNames[size])}
       target={target}
-      href={hasPlan ? href : Constants.upgradeURL}
+      href={hasPlan ? href : Constants.getUpgradeUrl()}
       rel='noreferrer'
     >
       {!!iconLeft && (
