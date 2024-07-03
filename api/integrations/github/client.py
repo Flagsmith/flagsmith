@@ -252,10 +252,10 @@ def fetch_github_repo_contributors(
     return build_paginated_response(results, response)
 
 
-# Create "Flagsmith Flag" label in linked repo
 def create_flagsmith_flag_label(
     installation_id: str, owner: str, repo: str
 ) -> dict[str, Any]:
+    # Create "Flagsmith Flag" label in linked repo
     url = f"{GITHUB_API_URL}repos/{owner}/{repo}/labels"
     headers = build_request_headers(installation_id)
     payload = {
@@ -270,10 +270,10 @@ def create_flagsmith_flag_label(
     return response.json()
 
 
-# Label linked GitHub Issue or PR with the "Flagsmith Flag" label
 def label_github_issue_pr(
     installation_id: str, owner: str, repo: str, issue: str
 ) -> dict[str, Any]:
+    # Label linked GitHub Issue or PR with the "Flagsmith Flag" label
     url = f"{GITHUB_API_URL}repos/{owner}/{repo}/issues/{issue}/labels"
     headers = build_request_headers(installation_id)
     payload = [GITHUB_FLAGSMITH_LABEL]

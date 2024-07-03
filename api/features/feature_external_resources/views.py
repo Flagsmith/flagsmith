@@ -85,8 +85,11 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
             url = request.data.get("url")
             if request.data.get("type") == "GITHUB_PR":
                 pattern = r"github.com/([^/]+)/([^/]+)/pull/(\d+)$"
-            else:
+            elif request.data.get("type") == "GITHUB_ISSUE":
                 pattern = r"github.com/([^/]+)/([^/]+)/issues/(\d+)$"
+            else:
+                assert False, "Could not find a matching GitHub type"
+
             match = re.search(pattern, url)
             if match:
                 owner, repo, issue = match.groups()

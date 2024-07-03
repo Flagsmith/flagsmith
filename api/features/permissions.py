@@ -200,7 +200,7 @@ class FeatureExternalResourcePermissions(FeaturePermissions):
 
 
 class FeatureExternalResourceGitHubActionPermissions(IsAuthenticated):
-    def has_permission(self, request, view):
+    def has_permission(self, request: Request, view: GenericViewSet) -> bool:
         if not super().has_permission(request, view):
             return False
 
