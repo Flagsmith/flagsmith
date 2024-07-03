@@ -4,7 +4,6 @@ from rest_framework_nested import routers
 from audit.views import ProjectAuditLogViewSet
 from features.feature_external_resources.views import (
     FeatureExternalResourceViewSet,
-    enable_linked_feature,
 )
 from features.import_export.views import (
     FeatureExportListView,
@@ -101,10 +100,5 @@ urlpatterns = [
         "<int:project_pk>/feature-imports/",
         FeatureImportListView.as_view(),
         name="feature-imports",
-    ),
-    path(
-        "<int:project_pk>/enable-external-resource-linked-feature/",
-        enable_linked_feature,
-        name="enable-linked-feature",
     ),
 ]
