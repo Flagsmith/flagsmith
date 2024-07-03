@@ -84,16 +84,31 @@ button.btn {
 
   &-secondary {
     color: $body-color;
-    background-color: $btn-secondary-bg;
+    background-color: $btn-secondary-bg !important;
 
     &:hover,
     &:focus {
-      background-color: $btn-secondary-hover-bg;
+      background-color: $btn-secondary-hover-bg !important;
       color: $body-color;
     }
 
     &.btn:active {
-      background-color: $btn-secondary-active-bg;
+      background-color: $btn-secondary-active-bg !important;
+      color: $body-color;
+    }
+  }
+  &-tertiary {
+    color: $primary900;
+    background-color: $btn-tertiary-bg;
+    box-shadow: 0 10px 20px rgba(247, 213, 110, .2);
+    &:hover,
+    &:focus {
+      background-color: $btn-tertiary-hover-bg;
+      color: $body-color;
+    }
+
+    &.btn:active {
+      background-color: $btn-tertiary-active-bg;
       color: $body-color;
     }
   }
@@ -405,14 +420,14 @@ $add-btn-size: 34px;
     }
     &.btn-secondary {
       color: white;
-      background-color: $btn-secondary-bg-dark;
+      background-color: $btn-secondary-bg-dark !important;
       &:hover,
       &:focus {
-        background-color: $btn-secondary-hover-bg-dark;
+        background-color: $btn-secondary-hover-bg-dark !important;
       }
       &:active {
         color: white;
-        background-color: $btn-secondary-active-bg-dark;
+        background-color: $btn-secondary-active-bg-dark !important;
       }
     }
     &.btn-success {

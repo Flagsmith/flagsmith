@@ -42,6 +42,7 @@ import { removeUserOverride } from 'components/RemoveUserOverride'
 import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
 import MetadataTitle from 'components/metadata/MetadataTitle'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
+import PlanBasedBanner from 'components/PlanBasedAccess'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -539,7 +540,6 @@ const CreateFlag = class extends Component {
     const is4Eyes =
       !!environment &&
       Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)
-    const canSchedule = Utils.getPlansPermission('SCHEDULE_FLAGS')
     const project = ProjectStore.model
     const caseSensitive = project?.only_allow_lower_case_feature_names
     const regex = project?.feature_name_regex
@@ -561,7 +561,7 @@ const CreateFlag = class extends Component {
     const Settings = (projectAdmin, createFeature, featureContentType) => (
       <>
         {!identity && this.state.tags && (
-          <FormGroup className='mb-5 setting'>
+          <FormGroup className='mb-3 setting'>
             <InputGroup
               title={identity ? 'Tags' : 'Tags'}
               tooltip={Constants.strings.TAGS_DESCRIPTION}
@@ -617,24 +617,29 @@ const CreateFlag = class extends Component {
             {({ permission: projectAdmin }) =>
               projectAdmin && (
                 <>
-                  <FormGroup className='mb-5 setting'>
+                  <FormGroup className='mb-3 setting'>
                     <FlagOwners
                       projectId={this.props.projectId}
                       id={projectFlag.id}
                     />
                   </FormGroup>
-                  <FormGroup className='mb-5 setting'>
+                  <FormGroup className='mb-3 setting'>
                     <FlagOwnerGroups
                       projectId={this.props.projectId}
                       id={projectFlag.id}
                     />
                   </FormGroup>
+                  <PlanBasedBanner
+                    className='mb-3'
+                    feature={'FLAG_OWNERS'}
+                    theme={'description'}
+                  />
                 </>
               )
             }
           </Permission>
         )}
-        <FormGroup className='mb-5 setting'>
+        <FormGroup className='mb-3 setting'>
           <InputGroup
             value={description}
             data-test='featureDesc'
@@ -656,7 +661,7 @@ const CreateFlag = class extends Component {
         </FormGroup>
 
         {!identity && (
-          <FormGroup className='mb-5 mt-3 setting'>
+          <FormGroup className='mb-3 mt-3 setting'>
             <Row>
               <Switch
                 checked={this.state.is_server_key_only}
@@ -679,7 +684,7 @@ const CreateFlag = class extends Component {
         )}
 
         {!identity && isEdit && (
-          <FormGroup className='mb-5 setting'>
+          <FormGroup className='mb-3 setting'>
             <Row>
               <Switch
                 checked={this.state.is_archived}
@@ -1131,57 +1136,31 @@ const CreateFlag = class extends Component {
                                           <div className='text-right'>
                                             {!is4Eyes && (
                                               <>
-                                                {canSchedule ? (
-                                                  <Button
-                                                    theme='secondary'
-                                                    onClick={() =>
-                                                      saveFeatureValue(true)
-                                                    }
-                                                    className='mr-2'
-                                                    type='button'
-                                                    data-test='create-change-request'
-                                                    id='create-change-request-btn'
-                                                    disabled={
-                                                      isSaving ||
-                                                      !name ||
-                                                      invalid ||
-                                                      !savePermission
-                                                    }
-                                                  >
-                                                    {isSaving
-                                                      ? existingChangeRequest
-                                                        ? 'Updating Change Request'
-                                                        : 'Scheduling Update'
-                                                      : existingChangeRequest
-                                                      ? 'Update Change Request'
-                                                      : 'Schedule Update'}
-                                                  </Button>
-                                                ) : (
-                                                  <Tooltip
-                                                    title={
-                                                      <Button
-                                                        theme='outline'
-                                                        disabled
-                                                        className='mr-2'
-                                                        type='button'
-                                                        data-test='create-change-request'
-                                                        id='create-change-request-btn'
-                                                      >
-                                                        {isSaving
-                                                          ? existingChangeRequest
-                                                            ? 'Updating Change Request'
-                                                            : 'Scheduling Update'
-                                                          : existingChangeRequest
-                                                          ? 'Update Change Request'
-                                                          : 'Schedule Update'}
-                                                      </Button>
-                                                    }
-                                                  >
-                                                    {
-                                                      'This feature is available on our start-up plan'
-                                                    }
-                                                  </Tooltip>
-                                                )}
+                                                <Button
+                                                  feature='SCHEDULE_FLAGS'
+                                                  theme='secondary'
+                                                  onClick={() =>
+                                                    saveFeatureValue(true)
+                                                  }
+                                                  className='mr-2'
+                                                  type='button'
+                                                  data-test='create-change-request'
+                                                  id='create-change-request-btn'
+                                                  disabled={
+                                                    isSaving ||
+                                                    !name ||
+                                                    invalid ||
+                                                    !savePermission
+                                                  }
+                                                >
+                                                  {isSaving
+                                                    ? existingChangeRequest
+                                                      ? 'Updating Change Request'
+                                                      : 'Scheduling Update'
+                                                    : existingChangeRequest
+                                                    ? 'Update Change Request'
+                                                    : 'Schedule Update'}
+                                                </Button>
                                               </>
                                             )}
 

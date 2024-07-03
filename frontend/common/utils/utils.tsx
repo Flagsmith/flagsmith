@@ -26,7 +26,6 @@ const semver = require('semver')
 
 export type PaidFeature =
   | 'FLAG_OWNERS'
-  | 'VERSIONING'
   | 'RBAC'
   | 'AUDIT'
   | 'FORCE_2FA'
@@ -324,6 +323,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   getPlanName: (plan: string) => {
+    if (plan && plan.includes('free')) {
+      return planNames.free
+    }
     if (plan && plan.includes('scale-up')) {
       return planNames.scaleUp
     }
@@ -394,7 +396,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       }
       case 'STALE_FLAGS':
       case 'REALTIME':
-      case 'VERSIONING':
       case 'SAML': {
         plan = 'enterprise'
         break
@@ -410,6 +411,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         plan = null
         break
       }
+    }
+    if (plan && !Utils.isSaas()) {
+      plan = 'enterprise'
     }
     return plan as Plan
   },
@@ -535,7 +539,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return false
   },
 
-  isSaas: () => global.flagsmithVersion?.backend?.is_saas,
+  isSaas: () => false,
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },

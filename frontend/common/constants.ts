@@ -1,5 +1,6 @@
 import { OAuthType } from './types/requests'
 import { SegmentCondition } from './types/responses'
+import Utils from './utils/utils'
 
 const keywords = {
   FEATURE_FUNCTION: 'myCoolFeature',
@@ -435,6 +436,11 @@ export default {
       'TRAITS_ID': 150,
     },
   },
+  getUpgradeUrl: () => {
+    return Utils.isSaas()
+      ? '/organisation-settings?tab=billing'
+      : 'https://www.flagsmith.com/contact-us'
+  },
   githubType: {
     githubIssue: 'GitHub Issue',
     githubPR: 'Github PR',
@@ -548,5 +554,4 @@ export default {
     '#DE3163',
   ],
   untaggedTag: { color: '#dedede', label: 'Untagged' },
-  upgradeURL: '/organisation-settings?tab=billing',
 }

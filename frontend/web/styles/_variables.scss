@@ -42,6 +42,7 @@ $primary: #6837fc;
 $primary400: #906af6;
 $primary600: #4e25db;
 $primary700: #3919b7;
+$primary800: #2a2054;
 $primary900: #1d113e;
 
 $danger: #ef4d56;
@@ -55,8 +56,9 @@ $info: #0aaddf;
 $warning: #ff9f43;
 
 $secondary400: #fae392;
-$secondary500: #f7d56e;
-$secondary600: #d4b050;
+$secondary500: #F7D56E;
+$secondary600: #e5c55f;
+$secondary700: #d4b050;
 $secondary: #fae392;
 
 // Links and Anchors
@@ -130,6 +132,12 @@ $btn-secondary-hover-bg: $basic-alpha-16;
 $btn-secondary-hover-bg-dark: $white-alpha-16;
 $btn-secondary-active-bg: $basic-alpha-24;
 $btn-secondary-active-bg-dark: $white-alpha-24;
+$btn-tertiary-bg: $secondary500;
+$btn-tertiary-bg-dark: $secondary600;
+$btn-tertiary-hover-bg: $secondary600;
+$btn-tertiary-hover-bg-dark: $secondary700;
+$btn-tertiary-active-bg: $secondary700;
+$btn-tertiary-active-bg-dark: $secondary700;
 $btn-outline-hover-bg: $primary-alfa-8;
 $btn-outline-hover-bg-dark: $basic-alpha-8;
 $btn-outline-focus-bg-dark: $primary-alfa-8;
@@ -345,6 +353,7 @@ $scrollbar-thumb-dark-hover: $bg-dark300;
 $theme-colors: (
         light200: $bg-light200,
         primary: $primary,
+        primary800: $primary800,
         danger: $danger,
         success: $success,
         info: $info,
@@ -354,6 +363,9 @@ $theme-colors: (
 );
 .dark {
   .bg-light200 {
+    background-color: $body-bg-dark !important;
+  }
+  .bg-primary800 {
     background-color: $body-bg-dark !important;
   }
 }

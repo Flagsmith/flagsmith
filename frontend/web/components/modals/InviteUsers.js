@@ -5,6 +5,7 @@ import Constants from 'common/constants'
 import Icon from 'components/Icon'
 import { add } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
+import { getPlanBasedOption } from 'components/PlanBasedAccess'
 
 const InviteUsers = class extends Component {
   static displayName = 'InviteUsers'
@@ -63,7 +64,6 @@ const InviteUsers = class extends Component {
 
   render() {
     const { invites } = this.state
-    const hasRbacPermission = Utils.getPlansPermission('RBAC')
 
     return (
       <OrganisationProvider>
@@ -114,14 +114,20 @@ const InviteUsers = class extends Component {
                         value={invite.role}
                         onChange={(role) => this.onChange(index, 'role', role)}
                         className='pl-2 react-select'
-                        options={_.map(Constants.roles, (label, value) => ({
-                          isDisabled: value !== 'ADMIN' && !hasRbacPermission,
-                          label:
-                            value !== 'ADMIN' && !hasRbacPermission
-                              ? `${label} - Please upgrade for role based access`
-                              : label,
-                          value,
-                        }))}
+                        options={_.map(Constants.roles, (label, value) =>
+                          value === 'ADMIN'
+                            ? {
+                                label,
+                                value,
+                              }
+                            : getPlanBasedOption(
+                                {
+                                  label,
+                                  value,
+                                },
+                                'RBAC',
+                              ),
+                        )}
                       />
                     </Flex>
                     {invites.length > 1 ? (
