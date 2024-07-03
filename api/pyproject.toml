@@ -120,13 +120,13 @@ pyotp = "^2.9.0"
 optional = true
 
 [tool.poetry.group.auth-controller.dependencies]
-django-multiselectfield = "~0.1.12"
+flagsmith-auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth-controller", tag = "v0.1.1" }
 
 [tool.poetry.group.saml]
 optional = true
 
 [tool.poetry.group.saml.dependencies]
-pysaml2 = "^7.0.0"
+pysaml2 = "^7.4.2"
 
 [tool.poetry.group.ldap]
 optional = true

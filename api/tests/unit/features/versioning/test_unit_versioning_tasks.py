@@ -1,11 +1,13 @@
+import json
 from datetime import timedelta
 
 import freezegun
+import responses
 from django.utils import timezone
 from pytest_mock import MockerFixture
 
 from environments.identities.models import Identity
-from environments.models import Environment
+from environments.models import Environment, Webhook
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import (
@@ -140,6 +142,7 @@ def test_disable_v2_versioning(
     assert unaffected_environment.feature_segments.count() == 1
 
 
+@responses.activate
 def test_trigger_update_version_webhooks(
     environment_v2_versioning: Environment, feature: Feature, mocker: MockerFixture
 ) -> None:
@@ -149,17 +152,19 @@ def test_trigger_update_version_webhooks(
     )
     feature_state = version.feature_states.first()
 
-    mock_call_environment_webhooks = mocker.patch(
-        "features.versioning.tasks.call_environment_webhooks"
-    )
+    webhook_url = "https://example.com/webhook/"
+    Webhook.objects.create(environment=environment_v2_versioning, url=webhook_url)
+
+    responses.post(url=webhook_url, status=200)
 
     # When
     trigger_update_version_webhooks(str(version.uuid))
 
     # Then
-    mock_call_environment_webhooks.assert_called_once_with(
-        environment=environment_v2_versioning.id,
-        data={
+    assert len(responses.calls) == 1
+    assert responses.calls[0].request.url == webhook_url
+    assert json.loads(responses.calls[0].request.body) == {
+        "data": {
             "uuid": str(version.uuid),
             "feature": {"id": feature.id, "name": feature.name},
             "published_by": None,
@@ -170,8 +175,8 @@ def test_trigger_update_version_webhooks(
                 }
             ],
         },
-        event_type=WebhookEventType.NEW_VERSION_PUBLISHED,
-    )
+        "event_type": WebhookEventType.NEW_VERSION_PUBLISHED.name,
+    }
 
 
 def test_enable_v2_versioning_for_scheduled_changes(

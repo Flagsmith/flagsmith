@@ -12,8 +12,8 @@ import DiffString from 'components/diff/DiffString'
 import DiffEnabled from 'components/diff/DiffEnabled'
 import Format from 'common/utils/format'
 import { Environment } from 'common/types/responses'
-import { Link } from 'react-router-dom';
-import Button from 'components/base/forms/Button';
+import { Link } from 'react-router-dom'
+import Button from 'components/base/forms/Button'
 type AuditLogItemPageType = {
   match: {
     params: {
@@ -122,7 +122,7 @@ const AuditLogItemPage: FC<AuditLogItemPageType> = ({ match }) => {
                   >
                     <Button theme='text'>View version</Button>
                   </Link>
-              )}
+                )}
             </>
           )}
         </div>

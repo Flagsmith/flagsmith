@@ -22,8 +22,8 @@ import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import Switch from 'components/Switch'
-import Panel from 'components/base/grid/Panel'
 import { setModalTitle } from 'components/modals/base/ModalDefault'
+import classNames from 'classnames'
 
 const CodeHelp = require('../../components/CodeHelp')
 type SegmentsPageType = {
@@ -71,7 +71,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     projectId,
     q: search,
   })
-  const [removeSegment] = useDeleteSegmentMutation()
+  const [removeSegment, { isLoading: isRemoving }] = useDeleteSegmentMutation()
   const hasHadResults = useRef(false)
 
   const segmentsLimitAlert = Utils.calculateRemainingLimitsPercentage(
@@ -225,7 +225,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
               <div>
                 {hasNoOperators && <HowToUseSegmentsMessage />}
 
-                <FormGroup>
+                <FormGroup className={classNames({ 'opacity-50': isRemoving })}>
                   <PanelSearch
                     filterElement={
                       <div className='text-right me-2'>
@@ -303,7 +303,16 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                 const segment = find(segments, { id })
                                 if (segment) {
                                   confirmRemove(segment, () => {
-                                    removeSegment({ id, projectId })
+                                    removeSegment({ id, projectId }).then(
+                                      (res) => {
+                                        toast(
+                                          <div>
+                                            Removed Segment:{' '}
+                                            <strong>{segment.name}</strong>
+                                          </div>,
+                                        )
+                                      },
+                                    )
                                   })
                                 }
                               }}
