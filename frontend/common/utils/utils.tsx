@@ -539,7 +539,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return false
   },
 
-  isSaas: () => false,
+  isSaas: () => global.flagsmithVersion?.backend?.is_saas,
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },

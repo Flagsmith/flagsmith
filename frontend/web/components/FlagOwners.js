@@ -8,6 +8,7 @@ import { IonIcon } from '@ionic/react'
 import { getProjectFlag } from 'common/services/useProjectFlag'
 import { getStore } from 'common/store'
 import SettingsButton from './SettingsButton'
+import OrganisationProvider from 'common/providers/OrganisationProvider'
 
 class TheComponent extends Component {
   state = {}
@@ -49,8 +50,6 @@ class TheComponent extends Component {
     users ? users.filter((v) => owners.includes(v.id)) : []
 
   render() {
-    const hasPermission = Utils.getPlansPermission('FLAG_OWNERS')
-
     return (
       <OrganisationProvider>
         {({ users }) => {
@@ -81,7 +80,7 @@ class TheComponent extends Component {
                 }
                 feature={'FLAG_OWNERS'}
                 onClick={() => {
-                  if (hasPermission) this.setState({ showUsers: true })
+                  this.setState({ showUsers: !this.state.showUsers })
                 }}
               >
                 Assigned users

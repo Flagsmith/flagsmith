@@ -332,7 +332,7 @@ const EnvironmentSettingsPage = class extends Component {
                       <div className='mt-4'>
                         <h5 className='mb-5'>General Settings</h5>
                         <JSONReference title={'Environment'} json={env} />
-                        <div className='col-md-6'>
+                        <div className='col-md-8'>
                           <form onSubmit={this.saveEnv}>
                             <InputGroup
                               ref={(e) => (this.input = e)}
@@ -389,7 +389,7 @@ const EnvironmentSettingsPage = class extends Component {
                           </form>
                         </div>
                         <hr className='py-0 my-4' />
-                        <div className='col-md-6 mt-4'>
+                        <div className='col-md-8 mt-4'>
                           <Setting
                             onChange={(value) =>
                               this.setState(
@@ -403,9 +403,15 @@ const EnvironmentSettingsPage = class extends Component {
                             }
                             checked={typeof this.state.banner_text === 'string'}
                             title={'Environment Banner'}
-                            description={` This will show a banner whenever you view its pages,
-                            this is generally used to warn people that they are
-                            viewing and editing a sensitive environment.`}
+                            description={
+                              <div>
+                                This will show a banner whenever you view its
+                                pages.
+                                <br />
+                                This is generally used to warn people that they
+                                are viewing and editing a sensitive environment.
+                              </div>
+                            }
                           />
                           {typeof this.state.banner_text === 'string' && (
                             <Row className='mt-4 flex-nowrap'>
@@ -435,7 +441,7 @@ const EnvironmentSettingsPage = class extends Component {
                         </div>
                         {Utils.getFlagsmithHasFeature('feature_versioning') && (
                           <div>
-                            <div className='col-md-6 mt-4'>
+                            <div className='col-md-8 mt-4'>
                               <EnvironmentVersioningListener
                                 id={env.api_key}
                                 versioningEnabled={use_v2_feature_versioning}
@@ -450,13 +456,14 @@ const EnvironmentSettingsPage = class extends Component {
                                 description={
                                   <div>
                                     Allows you to attach versions to updating
-                                    feature values and segment overrides. This
-                                    setting may take up to a minute to take
+                                    feature values and segment overrides.
+                                    <br />
+                                    This setting may take up to a minute to take
                                     affect.
                                     <br />
-                                    <strong>
-                                      Warning! Enabling this is irreversable
-                                    </strong>
+                                    <div className='text-danger'>
+                                      Enabling this is irreversible.
+                                    </div>
                                   </div>
                                 }
                                 disabled={
@@ -474,13 +481,13 @@ const EnvironmentSettingsPage = class extends Component {
                             </div>
                           </div>
                         )}
-                        <div className='col-md-6 mt-4'>
+                        <div className='col-md-8 mt-4'>
                           <Setting
                             title='Hide sensitive data'
                             checked={hide_sensitive_data}
                             onChange={(v) => {
                               this.confirmToggle(
-                                  'Confirm Environment Setting',
+                                'Confirm Environment Setting',
                                 'hide_sensitive_data',
                                 hide_sensitive_data,
                               )
@@ -489,8 +496,10 @@ const EnvironmentSettingsPage = class extends Component {
                               <div>
                                 Exclude sensitive data from endpoints returning
                                 flags and identity information to the SDKs or
-                                via our REST API. For full information on the
-                                excluded fields see documentation{' '}
+                                via our REST API.
+                                <br />
+                                For full information on the excluded fields see
+                                documentation{' '}
                                 <Button
                                   theme='text'
                                   href='https://docs.flagsmith.com/system-administration/security#hide-sensitive-data'
@@ -500,15 +509,15 @@ const EnvironmentSettingsPage = class extends Component {
                                   here.
                                 </Button>
                                 <div className='text-danger'>
-                                  Warning! Enabling this feature will change the
-                                  response from the API and could break your
-                                  existing code.
+                                  Enabling this feature will change the response
+                                  from the API and could break your existing
+                                  code.
                                 </div>
                               </div>
                             }
                           />
                         </div>
-                        <FormGroup className='mt-4 col-md-6'>
+                        <FormGroup className='mt-4 col-md-8'>
                           <Setting
                             feature='4_EYES'
                             checked={
@@ -578,7 +587,7 @@ const EnvironmentSettingsPage = class extends Component {
                             )}
                         </FormGroup>
                         <hr className='py-0 my-4' />
-                        <FormGroup className='mt-4 col-md-6'>
+                        <FormGroup className='mt-4 col-md-8'>
                           <Row space>
                             <div className='col-md-7'>
                               <h5>Delete Environment</h5>
@@ -622,7 +631,7 @@ const EnvironmentSettingsPage = class extends Component {
                           json={env}
                           className='mb-4'
                         />
-                        <div className='col-md-6'>
+                        <div className='col-md-8'>
                           <form onSubmit={this.saveEnv}>
                             <div>
                               <h5 className='mb-2'>
@@ -694,13 +703,13 @@ const EnvironmentSettingsPage = class extends Component {
                                     with those made by local evaluation mode in
                                     our server side SDKs.
                                     <div className='text-danger'>
-                                      Warning: Toggling this setting will mean
-                                      that some users will start receiving
-                                      different values for multivariate flags
-                                      and flags with a percentage split segment
-                                      override via the API / remote evaluation.
-                                      Values received in local evaluation mode
-                                      will not change.
+                                      Toggling this setting will mean that some
+                                      users will start receiving different
+                                      values for multivariate flags and flags
+                                      with a percentage split segment override
+                                      via the API / remote evaluation. Values
+                                      received in local evaluation mode will not
+                                      change.
                                     </div>
                                   </div>
                                 }

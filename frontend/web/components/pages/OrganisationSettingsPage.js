@@ -308,7 +308,7 @@ const OrganisationSettingsPage = class extends Component {
                                   </form>
                                 </div>
                                 <hr className='mt-0 mb-4' />
-                                <div className='col-md-6'>
+                                <div className='col-md-8'>
                                   <Setting
                                     feature={'FORCE_2FA'}
                                     checked={organisation.force_2fa}
@@ -318,7 +318,7 @@ const OrganisationSettingsPage = class extends Component {
                                 {Utils.getFlagsmithHasFeature(
                                   'restrict_project_create_to_admin',
                                 ) && (
-                                  <FormGroup className='mt-4 col-md-6'>
+                                  <FormGroup className='mt-4 col-md-8'>
                                     <Setting
                                       checked={
                                         organisation.restrict_project_create_to_admin
@@ -338,7 +338,7 @@ const OrganisationSettingsPage = class extends Component {
                               </div>
                             </FormGroup>
                             <hr className='my-4' />
-                            <FormGroup className='mt-4 col-md-6'>
+                            <FormGroup className='mt-4 col-md-8'>
                               <Row space>
                                 <div className='col-md-7'>
                                   <h5 className='mn-2'>Delete Organisation</h5>

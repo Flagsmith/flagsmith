@@ -1,6 +1,7 @@
 import React, { FC, ReactElement, ReactNode, useRef } from 'react'
 import ReactTooltip, { TooltipProps as _TooltipProps } from 'react-tooltip'
 import Utils from 'common/utils/utils'
+import classNames from 'classnames'
 
 export type TooltipProps = {
   title: ReactNode
@@ -8,6 +9,7 @@ export type TooltipProps = {
   place?: _TooltipProps['place']
   plainText?: boolean
   titleClassName?: string
+  tooltipClassName?: string
 }
 
 const Tooltip: FC<TooltipProps> = ({
@@ -16,6 +18,7 @@ const Tooltip: FC<TooltipProps> = ({
   plainText,
   title,
   titleClassName,
+  tooltipClassName,
 }) => {
   const id = Utils.GUID()
 
@@ -31,7 +34,11 @@ const Tooltip: FC<TooltipProps> = ({
         </span>
       )}
       {!!children && (
-        <ReactTooltip className='rounded' id={id} place={place || 'top'}>
+        <ReactTooltip
+          className={classNames('rounded', tooltipClassName)}
+          id={id}
+          place={place || 'top'}
+        >
           {plainText ? (
             `${children}`
           ) : (
