@@ -36,6 +36,11 @@ on:
         description: Whether to skip push and use Depot's ephemeral registry
         required: false
         default: false
+      comment:
+        type: boolean
+        description: Whether to update related PR in a comment
+        required: false
+        default: false
     outputs:
       image:
         description: Resulting image specifier
@@ -86,6 +91,23 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
+      - uses: chuhlomin/render-template@v1.4
+        id: render-comment-initial
+        with:
+          template: .github/docker_build_comment_template.md
+          vars: |
+            message: "`${{ inputs.image-name }}` is being built... :hourglass_flowing_sand:"
+            imageTag: "${{ inputs.registry-url }}/flagsmith/${{ inputs.image-name }}:${{ steps.meta.outputs.version }}"
+            buildStatus: "Building :hourglass_flowing_sand:"
+            securityReportStatus: "${{ inputs.scan && 'Pending :hourglass_flowing_sand:' || 'Skipped' }}"
+
+      - uses: peter-evans/create-or-update-comment@v4
+        id: add-comment
+        if: inputs.comment && !inputs.ephemeral
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.render-comment-initial.outputs.result }}
+
       - name: Build and push image
         id: build
         uses: depot/build-push-action@v1
@@ -119,6 +141,30 @@ jobs:
           echo ::add-mask::$DEPOT_TOKEN
           echo depot-token=$DEPOT_TOKEN >> $GITHUB_OUTPUT
 
+      - uses: chuhlomin/render-template@v1.4
+        id: render-comment-on-finished-build
+        with:
+          template: .github/docker_build_comment_template.md
+          vars: |
+            message: "${{ inputs.image-name }}: image build finished :sparkles:
+
+            You can pull it now:
+
+            ```
+            docker pull ${{ steps.image-tag.outputs.image-tag }}
+            ```
+            ${{ inputs.scan && 'Waiting for security scan to complete... :hourglass_flowing_sand:' }}"
+            imageTag: "${{ steps.image-tag.outputs.image-tag }}"
+            buildStatus: "Finished :white_check_mark:"
+            securityReportStatus: "${{ inputs.scan && 'Pending :hourglass_flowing_sand:' || 'Skipped' }}"
+
+      - uses: peter-evans/create-or-update-comment@v4
+        if: inputs.comment && !inputs.ephemeral
+        with:
+          comment-id: ${{ steps.add-comment.outputs.comment-id }}
+          edit-mode: replace
+          body: ${{ steps.render-comment-on-finished-build.outputs.result }}
+
       - name: Run Trivy vulnerability scanner
         id: trivy
         if: inputs.scan
@@ -136,4 +182,29 @@ jobs:
         if: inputs.scan && (success() || failure())
         with:
           sarif_file: trivy-results.sarif
-          category: ${{ inputs.image-name }}
+
+      - name: Render scan results URL
+        id: scan-results-url
+        run: >
+          echo scan-results-url=${{ format('{0}/{1}/security/code-scanning?query=pr%3A{2}+path%3Aflagsmith%2F{3}',
+          github.server_url, github.repository, github.event.pull_request.number, inputs.image-name) }} >>
+          $GITHUB_OUTPUT
+
+      - uses: chuhlomin/render-template@v1.4
+        id: render-comment-on-finished-scan
+        if: inputs.scan
+        with:
+          template: .github/docker_build_comment_template.md
+          vars: |
+            message: "${{ inputs.image-name }}: image build finished :sparkles:
+
+            You can pull it now:
+
+            ```
+            docker pull ${{ steps.image-tag.outputs.image-tag }}
+            ```
+
+            Security scan results: ${{ steps.scan-results-url.outputs.scan-results-url }}"
+            imageTag: "${{ steps.image-tag.outputs.image-tag }}"
+            buildStatus: "Finished :white_check_mark:"
+            securityReportStatus: "${{ format('[Results]({0}) :white_check_mark:', steps.scan-results-url.outputs.scan-results-url) }}"
