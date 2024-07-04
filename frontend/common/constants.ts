@@ -228,24 +228,6 @@ export default {
       ),
       'iOS': require('./code-help/traits/traits-ios')(envId, keywords, userId),
     }),
-    gitHubActionsExample: (projectId: string, url: string) => `
-  - name: Enable linked feature(s)
-    id: enable-flagsmith-linked-features
-    uses: ./
-    with:
-      projectId: ${projectId}
-      apiToken: \${{ secrets.FLAGSMITH_API_TOKEN }}
-      environments: ["Production"]
-      flagsmithApiUrl: ${url}
-
-  - name: Print Output
-    id: output
-    run: |
-      echo \${{ steps.enable-flagsmith-linked-features.outputs.succeeded }}
-      echo \${{ steps.enable-flagsmith-linked-features.featuresEnabled }}
-      echo \${{ steps.enable-flagsmith-linked-features.error }}
-   `,
-
     keys: {
       'Java': 'java',
       'JavaScript': 'javascript',
