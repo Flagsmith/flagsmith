@@ -3,7 +3,6 @@ import re
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from features.models import Feature
@@ -106,8 +105,12 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
             if re.search(r"Key \(feature_id, url\)", str(e)) and re.search(
                 r"already exists.$", str(e)
             ):
-                raise ValidationError(
-                    detail="Duplication error. The feature already has this resource URI"
+                return Response(
+                    data={
+                        "detail": "Duplication error. The feature already has this resource URI"
+                    },
+                    content_type="application/json",
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
     def perform_update(self, serializer):

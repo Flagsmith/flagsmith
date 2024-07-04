@@ -332,7 +332,7 @@ def test_cannot_create_feature_external_resource_due_to_unique_constraint(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        response.json()[0]
+        response.json()["detail"]
         == "Duplication error. The feature already has this resource URI"
     )
 
