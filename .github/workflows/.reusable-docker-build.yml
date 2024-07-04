@@ -163,7 +163,7 @@ jobs:
           template: .github/docker_build_comment_template.md
           vars: |
             message: "`${{ inputs.image-name }}` image build finished :sparkles: ${{ inputs.scan && 'Executing security scan...' || '' }}"
-            imageTag: "${{ steps.image-tag.outputs.image-tag }}"
+            imageTag: "`${{ steps.image-tag.outputs.image-tag }}`"
             buildStatus: "Finished :white_check_mark:"
             securityReportStatus: "${{ inputs.scan && 'Pending :hourglass_flowing_sand:' || 'Skipped' }}"
 
@@ -206,7 +206,7 @@ jobs:
           template: .github/docker_build_comment_template.md
           vars: |
             message: "`${{ inputs.image-name }}` image build and security scan finished :sparkles:"
-            imageTag: "${{ steps.image-tag.outputs.image-tag }}"
+            imageTag: "`${{ steps.image-tag.outputs.image-tag }}`"
             buildStatus: "Finished :white_check_mark:"
             securityReportStatus: "${{ format('[Results]({0}) :white_check_mark:', steps.scan-results-url.outputs.scan-results-url) }}"
 
