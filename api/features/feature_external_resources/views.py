@@ -1,6 +1,5 @@
 import re
 
-from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.response import Response
@@ -11,7 +10,6 @@ from integrations.github.client import (
     get_github_issue_pr_title_and_state,
     label_github_issue_pr,
 )
-from integrations.github.exceptions import DuplicateFeatureURICombination
 from organisations.models import Organisation
 
 from .models import FeatureExternalResource
@@ -70,43 +68,37 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        try:
-            # Get repository owner and name, and issue/PR number from the external resource URL
-            url = request.data.get("url")
-            if request.data.get("type") == "GITHUB_PR":
-                pattern = r"github.com/([^/]+)/([^/]+)/pull/(\d+)$"
-            elif request.data.get("type") == "GITHUB_ISSUE":
-                pattern = r"github.com/([^/]+)/([^/]+)/issues/(\d+)$"
-            else:
-                return Response(
-                    data={"detail": "Incorrect GitHub type"},
-                    content_type="application/json",
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        # Get repository owner and name, and issue/PR number from the external resource URL
+        url = request.data.get("url")
+        if request.data.get("type") == "GITHUB_PR":
+            pattern = r"github.com/([^/]+)/([^/]+)/pull/(\d+)$"
+        elif request.data.get("type") == "GITHUB_ISSUE":
+            pattern = r"github.com/([^/]+)/([^/]+)/issues/(\d+)$"
+        else:
+            return Response(
+                data={"detail": "Incorrect GitHub type"},
+                content_type="application/json",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-            match = re.search(pattern, url)
-            if match:
-                owner, repo, issue = match.groups()
+        match = re.search(pattern, url)
+        if match:
+            owner, repo, issue = match.groups()
 
-                label_github_issue_pr(
-                    installation_id=github_configuration.installation_id,
-                    owner=owner,
-                    repo=repo,
-                    issue=issue,
-                )
-                response = super().create(request, *args, **kwargs)
-                return response
-            else:
-                return Response(
-                    data={"detail": "Invalid GitHub Issue/PR URL"},
-                    content_type="application/json",
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-        except IntegrityError as e:
-            if re.search(r"Key \(feature_id, url\)", str(e)) and re.search(
-                r"already exists.$", str(e)
-            ):
-                raise DuplicateFeatureURICombination
+            label_github_issue_pr(
+                installation_id=github_configuration.installation_id,
+                owner=owner,
+                repo=repo,
+                issue=issue,
+            )
+            response = super().create(request, *args, **kwargs)
+            return response
+        else:
+            return Response(
+                data={"detail": "Invalid GitHub Issue/PR URL"},
+                content_type="application/json",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     def perform_update(self, serializer):
         external_resource_id = int(self.kwargs["pk"])
