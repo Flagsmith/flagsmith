@@ -178,40 +178,6 @@ def test_create_feature_external_resource(
     )
 
 
-def test_cannot_create_feature_external_resource_for_the_same_feature_and_resource_uri(
-    admin_client_new: APIClient,
-    feature: Feature,
-    project: Project,
-    github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
-    feature_external_resource_gh_pr: FeatureExternalResource,
-) -> None:
-    # Given
-    feature_external_resource_data = {
-        "type": "GITHUB_PR",
-        "url": "https://github.com/repositoryownertest/repositorynametest/pull/1",
-        "feature": feature.id,
-        "metadata": {"state": "open"},
-    }
-
-    url = reverse(
-        "api-v1:projects:feature-external-resources-list",
-        kwargs={"project_pk": project.id, "feature_pk": feature.id},
-    )
-
-    # When
-    response = admin_client_new.post(
-        url, data=feature_external_resource_data, format="json"
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    error_response = response.json()
-    assert error_response == [
-        "Duplication error. The feature already has this resource URI"
-    ]
-
-
 def test_cannot_create_feature_external_resource_with_an_invalid_gh_url(
     admin_client_new: APIClient,
     feature: Feature,
@@ -366,8 +332,8 @@ def test_cannot_create_feature_external_resource_due_to_unique_constraint(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        response.json()["non_field_errors"][0]
-        == "The fields feature, url must make a unique set."
+        response.json()[0]
+        == "Duplication error. The feature already has this resource URI"
     )
 
 
