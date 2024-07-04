@@ -11,6 +11,7 @@ from integrations.github.client import (
     get_github_issue_pr_title_and_state,
     label_github_issue_pr,
 )
+from integrations.github.exceptions import DuplicateFeatureURICombination
 from organisations.models import Organisation
 
 from .models import FeatureExternalResource
@@ -105,13 +106,7 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
             if re.search(r"Key \(feature_id, url\)", str(e)) and re.search(
                 r"already exists.$", str(e)
             ):
-                return Response(
-                    data={
-                        "detail": "Duplication error. The feature already has this resource URI"
-                    },
-                    content_type="application/json",
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                raise DuplicateFeatureURICombination
 
     def perform_update(self, serializer):
         external_resource_id = int(self.kwargs["pk"])
