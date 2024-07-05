@@ -151,9 +151,7 @@ WORKDIR /app
 
 COPY api /app/
 
-ENTRYPOINT ["/bin/bash"]
-
-CMD ["-c 'make test'"]
+CMD ["make test"]
 
 # - Target (shippable) stages
 # * private-cloud-api [api-runtime-private, build-python-private]
