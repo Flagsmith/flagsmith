@@ -72,9 +72,10 @@ jobs:
     name: Build Unified Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      ephemeral: ${{ !needs.check-permissions.outputs.can-write }}
+      ephemeral: ${{ needs.check-permissions.outputs.can-write == 'false' }}
       target: oss-unified
       image-name: flagsmith
+      comment: ${{ needs.check-permissions.outputs.can-write == 'true' }}
 
   docker-build-api:
     if: github.event.pull_request.draft == false
@@ -82,9 +83,10 @@ jobs:
     name: Build API Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      ephemeral: ${{ !needs.check-permissions.outputs.can-write }}
+      ephemeral: ${{ needs.check-permissions.outputs.can-write == 'false' }}
       target: oss-api
       image-name: flagsmith-api
+      comment: ${{ needs.check-permissions.outputs.can-write == 'true' }}
 
   docker-build-frontend:
     if: github.event.pull_request.draft == false
@@ -92,9 +94,10 @@ jobs:
     name: Build Frontend Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      ephemeral: ${{ !needs.check-permissions.outputs.can-write }}
+      ephemeral: ${{ needs.check-permissions.outputs.can-write == 'false' }}
       target: oss-frontend
       image-name: flagsmith-frontend
+      comment: ${{ needs.check-permissions.outputs.can-write == 'true' }}
 
   docker-build-e2e:
     if: github.event.pull_request.draft == false
@@ -102,19 +105,21 @@ jobs:
     name: Build E2E Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      ephemeral: ${{ !needs.check-permissions.outputs.can-write }}
+      ephemeral: ${{ needs.check-permissions.outputs.can-write == 'false' }}
       file: frontend/Dockerfile.e2e
       image-name: flagsmith-e2e
       scan: false
+      comment: ${{ needs.check-permissions.outputs.can-write == 'true' }}
 
   docker-build-private-cloud:
-    if: github.event.pull_request.draft == false && needs.check-permissions.outputs.can-write
+    if: github.event.pull_request.draft == false && needs.check-permissions.outputs.can-write == 'true'
     needs: check-permissions
     name: Build Private Cloud Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
       target: private-cloud-unified
       image-name: flagsmith-private-cloud
+      comment: true
     secrets:
       secrets: |
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
@@ -123,6 +128,7 @@ jobs:
     needs: [docker-build-api, docker-build-e2e]
     uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
     with:
+      runs-on: ${{ matrix.runs-on }}
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
       api-image: ${{ needs.docker-build-api.outputs.image }}
       concurrency: ${{ matrix.args.concurrency }}
@@ -131,6 +137,7 @@ jobs:
 
     strategy:
       matrix:
+        runs-on: [ubuntu-latest, ARM64-2c]
         args:
           - tests: segment-part-1 environment
             concurrency: 1

@@ -22,6 +22,15 @@ on:
         type: string
         description: Image name
         required: true
+      tags:
+        type: string
+        required: false
+        default: |
+          type=ref,event=branch
+          type=ref,event=tag
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
       build-args:
         type: string
         description: List of build-time variables
@@ -34,6 +43,11 @@ on:
       ephemeral:
         type: boolean
         description: Whether to skip push and use Depot's ephemeral registry
+        required: false
+        default: false
+      comment:
+        type: boolean
+        description: Whether to update the build status in a PR comment
         required: false
         default: false
     outputs:
@@ -53,8 +67,9 @@ jobs:
       image: ${{ steps.image-tag.outputs.image-tag }}
 
     permissions:
-      packages: write
       id-token: write
+      packages: write
+      pull-requests: write
       security-events: write
       contents: read
 
@@ -79,12 +94,34 @@ jobs:
         with:
           images: |
             ${{ inputs.registry-url }}/flagsmith/${{ inputs.image-name }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=tag
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+          tags: ${{ inputs.tags }}
+
+      - uses: chuhlomin/render-template@v1.4
+        if: inputs.comment
+        id: render-comment-initial
+        with:
+          template: .github/docker_build_comment_template.md
+          vars: |
+            message: "`${{ inputs.image-name }}` is being built... :hourglass_flowing_sand:"
+            imageTag: "Pending :hourglass_flowing_sand:"
+            buildStatus: "Building :hourglass_flowing_sand:"
+            securityReportStatus: "${{ inputs.scan && 'Pending :hourglass_flowing_sand:' || 'Skipped' }}"
+
+      - uses: peter-evans/find-comment@v3
+        if: inputs.comment
+        id: find-comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-includes: '`${{ inputs.image-name }}` '
+
+      - uses: peter-evans/create-or-update-comment@v4
+        if: inputs.comment
+        id: add-comment
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          edit-mode: replace
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.render-comment-initial.outputs.result }}
 
       - name: Build and push image
         id: build
@@ -119,6 +156,24 @@ jobs:
           echo ::add-mask::$DEPOT_TOKEN
           echo depot-token=$DEPOT_TOKEN >> $GITHUB_OUTPUT
 
+      - uses: chuhlomin/render-template@v1.4
+        if: inputs.comment
+        id: render-comment-on-finished-build
+        with:
+          template: .github/docker_build_comment_template.md
+          vars: |
+            message: "`${{ inputs.image-name }}` image build finished :sparkles: ${{ inputs.scan && 'Executing security scan...' || '' }}"
+            imageTag: "`${{ steps.image-tag.outputs.image-tag }}`"
+            buildStatus: "Finished :white_check_mark:"
+            securityReportStatus: "${{ inputs.scan && 'Pending :hourglass_flowing_sand:' || 'Skipped' }}"
+
+      - uses: peter-evans/create-or-update-comment@v4
+        if: inputs.comment
+        with:
+          comment-id: ${{ steps.add-comment.outputs.comment-id }}
+          edit-mode: replace
+          body: ${{ steps.render-comment-on-finished-build.outputs.result }}
+
       - name: Run Trivy vulnerability scanner
         id: trivy
         if: inputs.scan
@@ -136,4 +191,28 @@ jobs:
         if: inputs.scan && (success() || failure())
         with:
           sarif_file: trivy-results.sarif
-          category: ${{ inputs.image-name }}
+
+      - name: Render scan results URL
+        id: scan-results-url
+        run: >
+          echo scan-results-url=${{ format('{0}/{1}/security/code-scanning?query=pr%3A{2}+path%3Aflagsmith%2F{3}',
+          github.server_url, github.repository, github.event.pull_request.number, inputs.image-name) }} >>
+          $GITHUB_OUTPUT
+
+      - uses: chuhlomin/render-template@v1.4
+        id: render-comment-on-finished-scan
+        if: inputs.scan && inputs.comment
+        with:
+          template: .github/docker_build_comment_template.md
+          vars: |
+            message: "`${{ inputs.image-name }}` image build and security scan finished :sparkles:"
+            imageTag: "`${{ steps.image-tag.outputs.image-tag }}`"
+            buildStatus: "Finished :white_check_mark:"
+            securityReportStatus: "${{ format('[Results]({0}) :white_check_mark:', steps.scan-results-url.outputs.scan-results-url) }}"
+
+      - uses: peter-evans/create-or-update-comment@v4
+        if: inputs.scan && inputs.comment
+        with:
+          comment-id: ${{ steps.add-comment.outputs.comment-id }}
+          edit-mode: replace
+          body: ${{ steps.render-comment-on-finished-scan.outputs.result }}
