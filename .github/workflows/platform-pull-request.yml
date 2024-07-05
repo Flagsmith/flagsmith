@@ -108,6 +108,7 @@ jobs:
       target: api-test
       image-name: flagsmith-api-test
       scan: false
+      comment: ${{ needs.check-permissions.outputs.can-write == 'true' }}
 
   docker-build-e2e:
     if: github.event.pull_request.draft == false
