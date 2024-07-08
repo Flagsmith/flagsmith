@@ -1,6 +1,5 @@
 ---
 title: Metadata
-sidebar_position: 110
 ---
 
 Flagsmith allows certain Entities within a Project to have Metadata of different types.
