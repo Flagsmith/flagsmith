@@ -5,17 +5,14 @@ const { flatten } = require('lodash')
 const {
   addFeatureSegmentsToFeatureStates,
 } = require('../services/useFeatureState')
+const { mergeChangeSets } = require('common/services/useChangeRequest')
 
 const PAGE_SIZE = 20
 const transformChangeRequest = async (changeRequest) => {
-  const res = changeRequest?.environment_feature_versions?.length
+  const res = changeRequest?.change_sets?.length
     ? {
         ...changeRequest,
-        feature_states: flatten(
-          changeRequest.environment_feature_versions.map(
-            (featureVersion) => featureVersion.feature_states,
-          ),
-        ),
+        feature_states: flatten(mergeChangeSets(changeRequest.change_sets, [])),
       }
     : changeRequest
 

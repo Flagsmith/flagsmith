@@ -18,6 +18,26 @@ const transformFeatureStates = (featureStates: FeatureState[]) =>
       }),
     ),
   }))
+
+export const getFeatureStateCrud = (featureStates: FeatureState[]) => {
+  const featureStatesToCreate: Req['createFeatureVersion']['feature_states_to_create'] =
+    featureStates.filter((v) => !v.id && !v.toRemove)
+  const featureStatesToUpdate: Req['createFeatureVersion']['feature_states_to_update'] =
+    featureStates.filter((v) => !!v.id && !v.toRemove)
+  const segment_ids_to_delete_overrides: Req['createFeatureVersion']['segment_ids_to_delete_overrides'] =
+    featureStates
+      .filter((v) => !!v.id && !!v.toRemove && !!v.feature_segment)
+      .map((v) => v.feature_segment!.segment)
+
+  // Step 1: Create a new feature version
+  const feature_states_to_create = transformFeatureStates(featureStatesToCreate)
+  const feature_states_to_update = transformFeatureStates(featureStatesToUpdate)
+  return {
+    feature_states_to_create,
+    feature_states_to_update,
+    segment_ids_to_delete_overrides,
+  }
+}
 export const featureVersionService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureVersion'] })
   .injectEndpoints({
@@ -28,22 +48,11 @@ export const featureVersionService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
         queryFn: async (query: Req['createAndSetFeatureVersion']) => {
-          const featureStatesToCreate: Req['createFeatureVersion']['feature_states_to_create'] =
-            query.featureStates.filter((v) => !v.id && !v.toRemove)
-          const featureStatesToUpdate: Req['createFeatureVersion']['feature_states_to_update'] =
-            query.featureStates.filter((v) => !!v.id && !v.toRemove)
-          const segment_ids_to_delete_overrides: Req['createFeatureVersion']['segment_ids_to_delete_overrides'] =
-            query.featureStates
-              .filter((v) => !!v.id && !!v.toRemove && !!v.feature_segment)
-              .map((v) => v.feature_segment!.segment)
-
-          // Step 1: Create a new feature version
-          const feature_states_to_create = transformFeatureStates(
-            featureStatesToCreate,
-          )
-          const feature_states_to_update = transformFeatureStates(
-            featureStatesToUpdate,
-          )
+          const {
+            feature_states_to_create,
+            feature_states_to_update,
+            segment_ids_to_delete_overrides,
+          } = getFeatureStateCrud(query.featureStates)
           const versionRes: { data: FeatureVersion } =
             await createFeatureVersion(getStore(), {
               environmentId: query.environmentId,

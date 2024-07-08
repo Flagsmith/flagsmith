@@ -1,7 +1,10 @@
 import Constants from 'common/constants'
 import { getIsWidget } from 'components/pages/WidgetPage'
 import ProjectStore from './project-store'
-import { createAndSetFeatureVersion } from 'common/services/useFeatureVersion'
+import {
+  createAndSetFeatureVersion,
+  getFeatureStateCrud,
+} from 'common/services/useFeatureVersion'
 import { updateSegmentPriorities } from 'common/services/useSegmentPriority'
 import {
   createProjectFlag,
@@ -460,7 +463,6 @@ const controller = {
     store.saving()
     API.trackEvent(Constants.events.EDIT_FEATURE)
     const env: Environment = ProjectStore.getEnvironment(environmentId) as any
-    let environment_feature_versions: string[] = []
     let feature_states_to_create:
         | Req['createFeatureVersion']['feature_states_to_create']
         | undefined = undefined,
@@ -486,14 +488,7 @@ const controller = {
         ]
       }
 
-      const { data: version } = await createAndSetFeatureVersion(getStore(), {
-        environmentId: env.id,
-        featureId: projectFlag.id,
-        featureStates,
-        liveFrom: changeRequest.live_from,
-        skipPublish: true,
-      })
-      environment_feature_versions = [version.version_sha]
+      const version = getFeatureStateCrud(featureStates)
       feature_states_to_create = version.feature_states_to_create
       feature_states_to_update = version.feature_states_to_update
       segment_ids_to_delete_overrides = version.segment_ids_to_delete_overrides
@@ -538,7 +533,6 @@ const controller = {
                   },
                 ]
               : undefined,
-          environment_feature_versions,
           feature_states: !env.use_v2_feature_versioning
             ? [
                 {

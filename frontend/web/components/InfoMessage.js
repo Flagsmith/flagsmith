@@ -1,7 +1,7 @@
 // import propTypes from 'prop-types';
 import React, { PureComponent } from 'react'
 import Icon from './Icon'
-import { close } from 'ionicons/icons'
+import { close, checkmark } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 
 export default class InfoMessage extends PureComponent {
