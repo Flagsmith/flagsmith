@@ -207,11 +207,14 @@ def handle_api_usage_notifications() -> None:
     flagsmith_client = get_client("local", local_eval=True)
 
     for organisation in Organisation.objects.all().select_related(
-        "subscription_information_cache",
+        "subscription", "subscription_information_cache"
     ):
         feature_enabled = flagsmith_client.get_identity_flags(
             organisation.flagsmith_identifier,
-            traits={"organisation_id": organisation.id},
+            traits={
+                "organisation_id": organisation.id,
+                "subscription.plan": organisation.subscription.plan,
+            },
         ).is_feature_enabled("api_usage_alerting")
         if not feature_enabled:
             continue
@@ -250,6 +253,8 @@ def charge_for_api_call_count_overages():
         ).values_list("organisation_id", flat=True)
     )
 
+    flagsmith_client = get_client("local", local_eval=True)
+
     for organisation in (
         Organisation.objects.filter(
             id__in=organisation_ids,
@@ -272,6 +277,16 @@ def charge_for_api_call_count_overages():
             "subscription",
         )
     ):
+        flags = flagsmith_client.get_identity_flags(
+            organisation.flagsmith_identifier,
+            traits={
+                "organisation_id": organisation.id,
+                "subscription.plan": organisation.subscription.plan,
+            },
+        )
+        if not flags.is_feature_enabled("api_usage_overage_charges"):
+            continue
+
         subscription_cache = organisation.subscription_information_cache
         api_usage = get_current_api_usage(organisation.id, "30d")
 
@@ -340,13 +355,17 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
     organisation_ids = []
     for result in queryset:
         organisation_ids.append(result["organisation"])
-    organisations = Organisation.objects.filter(
-        id__in=organisation_ids,
-        subscription__plan=FREE_PLAN_ID,
-        api_limit_access_block__isnull=True,
-    ).exclude(
-        stop_serving_flags=True,
-        block_access_to_admin=True,
+    organisations = (
+        Organisation.objects.filter(
+            id__in=organisation_ids,
+            subscription__plan=FREE_PLAN_ID,
+            api_limit_access_block__isnull=True,
+        )
+        .select_related("subscription")
+        .exclude(
+            stop_serving_flags=True,
+            block_access_to_admin=True,
+        )
     )
 
     update_organisations = []
@@ -356,7 +375,10 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
     for organisation in organisations:
         flags = flagsmith_client.get_identity_flags(
             organisation.flagsmith_identifier,
-            traits={"organisation_id": organisation.id},
+            traits={
+                "organisation_id": organisation.id,
+                "subscription.plan": organisation.subscription.plan,
+            },
         )
 
         stop_serving = flags.is_feature_enabled("api_limiting_stop_serving_flags")
