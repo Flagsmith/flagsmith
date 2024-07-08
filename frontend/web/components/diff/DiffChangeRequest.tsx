@@ -30,11 +30,8 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
     )
     if (!changeSets?.length) {
       return changeRequest?.feature_states
-    } else {
-      if (changeSets) {
-        return mergeChangeSets(changeSets, data?.results)
-      }
     }
+    return mergeChangeSets(changeSets, data?.results)
   }, [changeRequest, feature, data])
 
   if (!changeRequest) {
