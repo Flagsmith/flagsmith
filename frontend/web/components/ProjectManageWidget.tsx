@@ -18,7 +18,7 @@ import CreateProjectModal from './modals/CreateProject'
 
 type SegmentsPageType = {
   router: RouterChildContext['router']
-  organisationId: number | null
+  organisationId: string | null
 }
 
 const ProjectManageWidget: FC<SegmentsPageType> = ({
@@ -29,7 +29,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
   const create = Utils.fromParam()?.create
   const { data: organisations } = useGetOrganisationsQuery({})
   const organisation = useMemo(
-    () => organisations?.results?.find((v) => v.id === organisationId),
+    () => organisations?.results?.find((v) => `${v.id}` === organisationId),
     [organisations, organisationId],
   )
 
