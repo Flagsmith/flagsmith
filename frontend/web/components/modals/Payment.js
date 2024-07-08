@@ -786,7 +786,6 @@ export const onPaymentLoad = () => {
       // Append the link to the body
       document.body.appendChild(link)
     })()
-    // API.setCookie('plan', null)
   }
   Chargebee.init({
     site: Project.chargebee.site,
