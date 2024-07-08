@@ -169,11 +169,36 @@ class EnvironmentFeatureVersion(
 
 
 class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    published_at = models.DateTimeField(blank=True, null=True)
+    published_by = models.ForeignKey(
+        "users.FFAdminUser",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+
+    # TODO:
+    #  - validate that one of change_request or environment_feature_version must be non-null
+
     change_request = models.ForeignKey(
         "workflows_core.ChangeRequest",
         on_delete=models.CASCADE,
         related_name="change_sets",
+        blank=True,
+        null=True,
     )
+    environment_feature_version = models.ForeignKey(
+        "feature_versioning.EnvironmentFeatureVersion",
+        on_delete=models.CASCADE,
+        # Needs to be blank/nullable since change sets
+        # associated with a change request do not yet
+        # have a version
+        blank=True,
+        null=True,
+    )
+
     feature = models.ForeignKey(
         "features.Feature",
         on_delete=models.CASCADE,
