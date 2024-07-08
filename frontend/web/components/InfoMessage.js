@@ -21,7 +21,7 @@ export default class InfoMessage extends PureComponent {
           <div className='title'>{this.props.title || 'NOTE'}</div>
           <div className='flex-fill'>{this.props.children}</div>
         </div>
-        {this.props.url && (
+        {this.props.url && this.props.buttonText && (
           <Button
             size='small'
             className='btn my-2 ml-2'
