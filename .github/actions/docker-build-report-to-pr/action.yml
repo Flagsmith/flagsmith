@@ -2,48 +2,45 @@ name: Report Docker Build status to PR
 description: Create or update PR comment related to Docker build
 
 inputs:
-  image-name:
-    description: Image name
-    required: true
-  message:
-    description: Main report status message
-    required: true
   image-tag:
     description: Full image tag
     required: false
-    default: 'Pending :hourglass_flowing_sand:'
   build-status:
     description: Build status in short format
     required: false
-    default: 'Building :hourglass_flowing_sand:'
   security-report-status:
     description: Security report status in short format
     required: false
-    default: 'Skipped'
 
 runs:
   using: composite
 
   steps:
-    - uses: chuhlomin/render-template@v1.4
-      id: render-comment
-      with:
-        template: .github/docker_build_comment_template.md
-        vars: |
-          message: "`${{ inputs.image-name }}` ${{ inputs.message }}"
-          imageTag: "${{ inputs.image-tag }}"
-          buildStatus: "${{ inputs.build-status }}"
-          securityReportStatus: "${{ inputs.security-report-status }}"
-
     - uses: peter-evans/find-comment@v3
       id: find-comment
       with:
         issue-number: ${{ github.event.pull_request.number }}
-        body-includes: '`${{ inputs.image-name }}` '
+        body-includes: 'Docker builds report'
+
+    - uses: chuhlomin/render-template@v1.4
+      if: ${{ !inputs.image-tag }}
+      id: render-header
+      with:
+        template: .github/docker_build_comment_template.md
 
     - uses: peter-evans/create-or-update-comment@v4
+      if: ${{ !inputs.image-tag }}
       with:
         comment-id: ${{ steps.find-comment.outputs.comment-id }}
         edit-mode: replace
         issue-number: ${{ github.event.pull_request.number }}
-        body: ${{ steps.render-comment.outputs.result }}
+        body: ${{ steps.render-header.outputs.result }}
+
+    - uses: peter-evans/create-or-update-comment@v4
+      if: ${{ inputs.image-tag }}
+      with:
+        comment-id: ${{ steps.find-comment.outputs.comment-id }}
+        edit-mode: append
+        issue-number: ${{ github.event.pull_request.number }}
+        body: >
+          | `${{ inputs.image-tag }}` | ${{ inputs.build-status }} | ${{ inputs.security-report-status }} |

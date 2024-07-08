@@ -96,14 +96,6 @@ jobs:
             ${{ inputs.registry-url }}/flagsmith/${{ inputs.image-name }}
           tags: ${{ inputs.tags }}
 
-      - name: Report build start
-        uses: ./.github/actions/docker-build-report-to-pr
-        if: inputs.comment
-        with:
-          image-name: ${{ inputs.image-name }}
-          message: 'is being built... :hourglass_flowing_sand:'
-          security-report-status: ${{ inputs.scan && 'Pending :hourglass_flowing_sand:' || 'Skipped' }}
-
       - name: Build and push image
         id: build
         uses: depot/build-push-action@v1
@@ -139,13 +131,11 @@ jobs:
 
       - name: Report build finish
         uses: ./.github/actions/docker-build-report-to-pr
-        if: inputs.comment
+        if: inputs.comment && !inputs.scan
         with:
-          image-name: ${{ inputs.image-name }}
-          message: "image build finished :sparkles: ${{ inputs.scan && 'Executing security scan...' || '' }}"
-          image-tag: '`${{ steps.image-tag.outputs.image-tag }}`'
+          image-tag: ${{ steps.image-tag.outputs.image-tag }}
           build-status: 'Finished :white_check_mark:'
-          security-report-status: ${{ inputs.scan && 'Pending :hourglass_flowing_sand:' || 'Skipped' }}
+          security-report-status: 'Skipped'
 
       - name: Run Trivy vulnerability scanner
         id: trivy
@@ -175,11 +165,9 @@ jobs:
 
       - name: Report scan results URL
         uses: ./.github/actions/docker-build-report-to-pr
-        if: inputs.scan && inputs.comment
+        if: inputs.comment && inputs.scan
         with:
-          image-name: ${{ inputs.image-name }}
-          message: 'image build and security scan finished :sparkles:'
-          image-tag: '`${{ steps.image-tag.outputs.image-tag }}`'
+          image-tag: ${{ steps.image-tag.outputs.image-tag }}
           build-status: 'Finished :white_check_mark:'
           security-report-status:
             "${{ format('[Results]({0}) :white_check_mark:', steps.scan-results-url.outputs.scan-results-url) }}"
