@@ -52,7 +52,6 @@ import AddMetadataToEntity, {
   CustomMetadataField,
 } from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
-import MetadataTitle from 'components/metadata/MetadataTitle'
 import { setInterceptClose } from './base/ModalDefault'
 
 type PageType = {

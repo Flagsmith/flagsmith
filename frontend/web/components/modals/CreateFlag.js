@@ -579,7 +579,7 @@ const CreateFlag = class extends Component {
           </FormGroup>
         )}
         {metadataEnable && featureContentType?.id && (
-          <>
+          <FormGroup className='mb-3 setting'>
             <MetadataTitle
               visible={this.state.visible}
               onVisibleChange={(v) => {
@@ -606,7 +606,7 @@ const CreateFlag = class extends Component {
                 }}
               />
             )}
-          </>
+          </FormGroup>
         )}
         {!identity && projectFlag && (
           <Permission
