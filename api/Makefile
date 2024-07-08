@@ -11,7 +11,7 @@ POETRY_VERSION ?= 1.8.3
 
 GUNICORN_LOGGER_CLASS ?= util.logging.GunicornJsonCapableLogger
 
-SAML_REVISION ?= v1.6.2
+SAML_REVISION ?= v1.6.3
 RBAC_REVISION ?= v0.7.0
 
 -include .env-local
