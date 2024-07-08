@@ -111,11 +111,12 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     )
   }
 
-  const { permission: manageSegmentsPermission } = useHasPermission({
-    id: projectId,
-    level: 'project',
-    permission: 'MANAGE_SEGMENTS',
-  })
+  const { isSuccess: permissionLoaded, permission: manageSegmentsPermission } =
+    useHasPermission({
+      id: projectId,
+      level: 'project',
+      permission: 'MANAGE_SEGMENTS',
+    })
 
   const editSegment = (id: number, readOnly?: boolean) => {
     API.trackEvent(Constants.events.VIEW_SEGMENT)
@@ -161,6 +162,15 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   }
 
   const segments = data?.results
+  useEffect(() => {
+    if (!preselect.current || !permissionLoaded) {
+      return
+    }
+    if (preselect.current) {
+      editSegment(preselect.current, !manageSegmentsPermission)
+    }
+  }, [segments, permissionLoaded, manageSegmentsPermission])
+
   return (
     <div
       data-test='segments-page'
@@ -251,14 +261,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                       { description, feature, id, name }: Segment,
                       i: number,
                     ) => {
-                      if (preselect.current === `${id}`) {
-                        editSegment(
-                          preselect.current,
-                          !manageSegmentsPermission,
-                        )
-                        preselect.current = null
-                      }
-
                       // TODO: remove this check
                       // I'm leaving this here for now so that we can deploy the FE and
                       // API independently, but we should remove this once PR #3430 is
