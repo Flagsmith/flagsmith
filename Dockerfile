@@ -51,7 +51,7 @@ ARG CI_COMMIT_SHA=dev
 ARG NODE_VERSION=16
 ARG PYTHON_VERSION=3.11
 
-FROM node:${NODE_VERSION}-bookworm as node
+FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm as node
 FROM cgr.dev/chainguard/wolfi-base:latest as wolfi-base
 
 # - Intermediary stages
