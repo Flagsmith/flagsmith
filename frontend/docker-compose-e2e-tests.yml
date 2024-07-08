@@ -6,7 +6,7 @@
 version: '3'
 services:
   db:
-    image: postgres:15.5-alpine
+    image: public.ecr.aws/docker/library/postgres:15.5-alpine
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: flagsmith
