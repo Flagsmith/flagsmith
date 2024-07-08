@@ -5,23 +5,15 @@ const { flatten } = require('lodash')
 const {
   addFeatureSegmentsToFeatureStates,
 } = require('../services/useFeatureState')
-const { mergeChangeSets } = require('common/services/useChangeRequest')
 
 const PAGE_SIZE = 20
 const transformChangeRequest = async (changeRequest) => {
-  const res = changeRequest?.change_sets?.length
-    ? {
-        ...changeRequest,
-        feature_states: flatten(mergeChangeSets(changeRequest.change_sets, [])),
-      }
-    : changeRequest
-
   const feature_states = await Promise.all(
-    res.feature_states.map(addFeatureSegmentsToFeatureStates),
+    changeRequest.feature_states.map(addFeatureSegmentsToFeatureStates),
   )
 
   return {
-    ...res,
+    ...changeRequest,
     feature_states,
   }
 }
@@ -57,13 +49,13 @@ const controller = {
       .get(`${Project.api}features/workflows/change-requests/${id}/`)
       .then(async (apiResponse) => {
         const res = await transformChangeRequest(apiResponse)
+        const feature =
+          res.feature_states[0]?.feature || res.change_sets[0]?.feature
         return Promise.all([
           data.get(
-            `${Project.api}environments/${environmentId}/featurestates/?feature=${res.feature_states[0].feature}`,
+            `${Project.api}environments/${environmentId}/featurestates/?feature=${feature}`,
           ),
-          data.get(
-            `${Project.api}projects/${projectId}/features/${res.feature_states[0].feature}/`,
-          ),
+          data.get(`${Project.api}projects/${projectId}/features/${feature}/`),
         ]).then(([environmentFlag, projectFlag]) => {
           store.model[id] = res
           store.flags[id] = {

@@ -163,6 +163,8 @@ const ChangeRequestsPage = class extends Component {
   getScheduledDate = (changeRequest) => {
     return changeRequest.environment_feature_versions.length > 0
       ? moment(changeRequest.environment_feature_versions[0].live_from)
+      : changeRequest?.change_sets
+      ? changeRequest?.change_sets?.[0]?.live_from
       : moment(changeRequest.feature_states[0].live_from)
   }
 
@@ -336,8 +338,7 @@ const ChangeRequestsPage = class extends Component {
                 <PageTitle
                   cta={
                     (!changeRequest?.committed_at ||
-                      moment(changeRequest?.feature_states[0].live_from) >
-                        moment()) && (
+                      this.getScheduledDate(changeRequest) > moment()) && (
                       <Row>
                         <Button
                           theme='secondary'
