@@ -1,7 +1,8 @@
-import { FC } from 'react'
-import { ChangeRequest, ChangeRequestSummary } from 'common/types/responses'
+import { FC, useMemo } from 'react'
+import { ChangeRequest } from 'common/types/responses'
 import { useGetFeatureStatesQuery } from 'common/services/useFeatureState'
 import DiffFeature from './DiffFeature'
+import { mergeChangeSets } from 'common/services/useChangeRequest'
 
 type DiffChangeRequestType = {
   changeRequest: ChangeRequest | null
@@ -9,7 +10,6 @@ type DiffChangeRequestType = {
   projectId: string
   isVersioned: boolean
 }
-
 const DiffChangeRequest: FC<DiffChangeRequestType> = ({
   changeRequest,
   feature,
@@ -23,6 +23,20 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
     },
     { refetchOnMountOrArgChange: true, skip: !changeRequest },
   )
+
+  const newState = useMemo(() => {
+    const changeSets = changeRequest?.change_sets?.filter(
+      (v) => v.feature === feature,
+    )
+    if (!changeSets?.length) {
+      return changeRequest?.feature_states
+    } else {
+      if (changeSets) {
+        return mergeChangeSets(changeSets, data?.results)
+      }
+    }
+  }, [changeRequest, feature, data])
+
   if (!changeRequest) {
     return null
   }
@@ -39,7 +53,7 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
       featureId={feature}
       disableSegments={!isVersioned}
       projectId={projectId}
-      newState={changeRequest.feature_states}
+      newState={newState || []}
       oldState={data?.results || []}
     />
   )

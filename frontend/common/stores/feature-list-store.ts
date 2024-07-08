@@ -496,7 +496,7 @@ const controller = {
       environment_feature_versions = [version.version_sha]
       feature_states_to_create = version.feature_states_to_create
       feature_states_to_update = version.feature_states_to_update
-      segment_ids_to_delete_overrides = version.feature_states_to_update
+      segment_ids_to_delete_overrides = version.segment_ids_to_delete_overrides
     }
     const prom = data
       .get(
@@ -522,6 +522,22 @@ const controller = {
 
         const req = {
           approvals: userApprovals,
+          change_sets:
+            feature_states_to_create ||
+            feature_states_to_update ||
+            segment_ids_to_delete_overrides
+              ? [
+                  {
+                    feature: projectFlag.id,
+                    feature_states_to_create:
+                      feature_states_to_create || undefined,
+                    feature_states_to_update:
+                      feature_states_to_update || undefined,
+                    segment_ids_to_delete_overrides:
+                      segment_ids_to_delete_overrides || undefined,
+                  },
+                ]
+              : undefined,
           environment_feature_versions,
           feature_states: !env.use_v2_feature_versioning
             ? [
@@ -537,16 +553,8 @@ const controller = {
                 },
               ]
             : [],
-          feature_states_to_create: feature_states_to_create
-            ? JSON.stringify(feature_states_to_create)
-            : undefined,
-          feature_states_to_update: feature_states_to_update
-            ? JSON.stringify(feature_states_to_update)
-            : undefined,
           group_assignments,
-          segment_ids_to_delete_overrides: segment_ids_to_delete_overrides
-            ? JSON.stringify(segment_ids_to_delete_overrides)
-            : undefined,
+
           ...changeRequestData,
         }
         const reqType = req.id ? 'put' : 'post'

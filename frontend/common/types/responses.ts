@@ -472,6 +472,14 @@ export type Role = {
   organisation: number
 }
 
+export type ChangeSet = {
+  feature: number
+  live_from: string | null
+  feature_states_to_update: string // JSON stringified array of feature states
+  feature_states_to_create: string // JSON stringified array of feature states
+  segment_ids_to_delete_overrides: string // JSON stringified array of ids
+}
+
 export type RolePermissionUser = {
   user: number
   role: number
@@ -501,6 +509,7 @@ export type ChangeRequest = {
     user: number
     approved_at: null | string
   }[]
+  change_sets?: ChangeSet[]
   is_approved: boolean
   is_committed: boolean
   group_assignments: { group: number }[]
