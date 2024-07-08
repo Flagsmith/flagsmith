@@ -28,7 +28,6 @@ const { createSegmentOverride } = require('../services/useSegmentOverride')
 const { getStore } = require('../store')
 import flagsmith from 'flagsmith'
 import API from 'project/api'
-import segmentOverrides from 'components/SegmentOverrides'
 import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 let createdFirstFeature = false
@@ -58,6 +57,7 @@ const convertSegmentOverrideToFeatureState = (
 ) => {
   return {
     enabled: override.enabled,
+    feature: override.feature,
     feature_segment: {
       id: override.id,
       priority: i,
@@ -515,26 +515,27 @@ const controller = {
           return keys.includes('group')
         })
 
+        const changeSets =
+          feature_states_to_create ||
+          feature_states_to_update ||
+          segment_ids_to_delete_overrides
+            ? [
+                {
+                  feature: projectFlag.id,
+                  feature_states_to_create:
+                    feature_states_to_create || undefined,
+                  feature_states_to_update:
+                    feature_states_to_update || undefined,
+                  live_from:
+                    changeRequest.live_from || new Date().toISOString(),
+                  segment_ids_to_delete_overrides:
+                    segment_ids_to_delete_overrides || undefined,
+                },
+              ]
+            : undefined
         const req = {
           approvals: userApprovals,
-          change_sets:
-            feature_states_to_create ||
-            feature_states_to_update ||
-            segment_ids_to_delete_overrides
-              ? [
-                  {
-                    feature: projectFlag.id,
-                    feature_states_to_create:
-                      feature_states_to_create || undefined,
-                    feature_states_to_update:
-                      feature_states_to_update || undefined,
-                    live_from:
-                      changeRequest.live_from || new Date().toISOString(),
-                    segment_ids_to_delete_overrides:
-                      segment_ids_to_delete_overrides || undefined,
-                  },
-                ]
-              : undefined,
+          change_sets: changeSets,
           feature_states: !env.use_v2_feature_versioning
             ? [
                 {
@@ -581,6 +582,7 @@ const controller = {
           prom = data
             .put(`${Project.api}features/workflows/change-requests/${v.id}/`, {
               ...v,
+              change_sets: changeSets,
             })
             .then((v) => {
               if (commit) {

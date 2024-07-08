@@ -144,9 +144,20 @@ const ChangeRequestsPage = class extends Component {
       'side-modal create-feature-modal',
     )
   }
-
+  refreshChangeRequests = () => {
+    const environmentId = this.props.match.params.environmentId
+    AppActions.getChangeRequests(environmentId, {})
+    AppActions.getChangeRequests(environmentId, { committed: true })
+    AppActions.getChangeRequests(environmentId, {
+      live_from_after: new Date().toISOString(),
+    })
+  }
   approveChangeRequest = () => {
-    AppActions.actionChangeRequest(this.props.match.params.id, 'approve')
+    AppActions.actionChangeRequest(
+      this.props.match.params.id,
+      'approve',
+      this.refreshChangeRequests,
+    )
   }
 
   getScheduledDate = (changeRequest) => {
@@ -193,6 +204,7 @@ const ChangeRequestsPage = class extends Component {
               this.props.match.params.environmentId,
               true,
             )
+            this.refreshChangeRequests()
           },
         )
       },

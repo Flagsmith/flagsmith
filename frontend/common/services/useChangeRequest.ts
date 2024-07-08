@@ -103,27 +103,29 @@ export function mergeChangeSets(
     const toUpsert = (parsedChangeSet.feature_states_to_create || []).concat(
       parsedChangeSet.feature_states_to_update,
     )
+
     toUpsert.forEach((v) => {
-      /*if there's an existing feature state, replace it
-      otherwise, add to the list of feature states*/
-      mergedFeatureStates = mergedFeatureStates
-        .filter((changeSetFeatureState) => {
-          return !featureStates?.find(
-            (featureState) =>
-              changeSetFeatureState.feature_segment?.segment ===
-              featureState.feature_segment?.segment,
-          )
-        })
-        .concat([v])
-    }, [])
-    //Remove any to delete segment overrides
+      // Remove the existing feature state if it exists
+      mergedFeatureStates = mergedFeatureStates.filter((mergedFeatureState) => {
+        return (
+          mergedFeatureState.feature_segment?.segment !==
+          v.feature_segment?.segment
+        )
+      })
+
+      // Add the new or updated feature state
+      mergedFeatureStates = mergedFeatureStates.concat([v])
+    })
+
+    // Remove any to delete segment overrides
     mergedFeatureStates = mergedFeatureStates.filter(
       (v) =>
-        !!v.feature_segment?.segment &&
-        parsedChangeSet.segment_ids_to_delete_overrides?.includes(
+        !v.feature_segment?.segment ||
+        !parsedChangeSet.segment_ids_to_delete_overrides?.includes(
           v.feature_segment?.segment,
         ),
     )
   })
+
   return mergedFeatureStates
 }
