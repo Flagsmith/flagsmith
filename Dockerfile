@@ -51,10 +51,10 @@ ARG CI_COMMIT_SHA=dev
 ARG NODE_VERSION=16
 ARG PYTHON_VERSION=3.11
 
-FROM node:${NODE_VERSION}-bookworm as node
-FROM node:${NODE_VERSION}-bookworm-slim as node-slim
-FROM python:${PYTHON_VERSION}-bookworm as python
-FROM python:${PYTHON_VERSION}-slim-bookworm as python-slim
+FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm as node
+FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm-slim as node-slim
+FROM public.ecr.aws/docker/library/python:${PYTHON_VERSION}-bookworm as python
+FROM public.ecr.aws/docker/library/python:${PYTHON_VERSION}-slim-bookworm as python-slim
 
 # - Intermediary stages
 # * build-node
