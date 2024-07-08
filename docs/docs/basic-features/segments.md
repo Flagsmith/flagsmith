@@ -256,16 +256,9 @@ These are the default limits for segments and rules:
 
 See the [documentation on System Limits](system-administration/system-limits.md) for more details.
 
-## Use Metadata
+## Use Custom Fields
 
-When creating or updating a feature, you can add Metadata if you was created Metadata Fields in Project Settings ->
-Metadata.
+When creating or updating a segment, you can enhance its information by adding previously created and enabled custom
+fields. You can define the custom fields tab in the project settings page.
 
-You can add the Metadata value in the Feature Setting Tab.
-
-When creating or updating a segment, you can add Metadata. You can add the Metadata value in the Settings Setting Tab.
-
-If you have metadata for features, it will create a list of fields that can be filled, saved, and will be stored with
-the feature's save flag.
-
-![Image](/img/metadata/metadata-segment-1.png)
+![Image](/img/custom-fields/custom-fields-segment-1.png)

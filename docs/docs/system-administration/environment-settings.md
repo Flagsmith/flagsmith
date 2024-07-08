@@ -17,12 +17,9 @@ split operator) when evaluated against the remote API. Evaluations in local eval
 
 :::
 
-## Use Metadata
+## Use Custom Fields
 
-When creating or updating a segment, you can enhance its information by adding previously created and enabled metadata
-fields. To create and enable this you can do it in the metadata tab on the project settings page.
+When creating or updating a segment, you can enhance its information by adding previously created and enabled custom
+fields. You can define the custom fields tab in the project settings page.
 
-If you have metadata for features, it will create a list of fields that can be filled, saved, and will be stored with
-the feature's save flag.
-
-![Image](/img/metadata/metadata-environment.png)
+![Image](/img/custom-fields/custom-fields-environment.png)
