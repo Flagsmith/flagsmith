@@ -362,11 +362,11 @@ const controller = {
                 `${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`,
                 Object.assign({}, environmentFlag, {
                   enabled: flag.default_enabled,
-                feature_state_value: Utils.getTypedValue(
-                  flag.initial_value,
-                  undefined,
-                  true,
-                ),
+                  feature_state_value: Utils.getTypedValue(
+                    flag.initial_value,
+                    undefined,
+                    true,
+                  ),
                 }),
               )
             })
@@ -706,13 +706,17 @@ const controller = {
       )
     }
 
-    prom.then((res) => {
-      if (store.model) {
-        store.model.lastSaved = new Date().valueOf()
-      }
-      onComplete && onComplete()
-      store.saved({})
-    })
+    prom
+      .then((res) => {
+        if (store.model) {
+          store.model.lastSaved = new Date().valueOf()
+        }
+        onComplete && onComplete()
+        store.saved({})
+      })
+      .catch((e) => {
+        API.ajaxHandler(store, e)
+      })
   },
   getFeatureUsage(projectId, environmentId, flag, period) {
     data
