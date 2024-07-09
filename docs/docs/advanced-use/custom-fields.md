@@ -4,6 +4,8 @@ title: Custom Fields
 
 :::info
 
+Custom fields are available on [Enterprise plans](/version-comparison.md#enterprise-benefits).
+
 Custom fields were introduced in Flagsmith [2.116.0](https://github.com/Flagsmith/flagsmith/releases/tag/v2.116.0).
 
 :::
