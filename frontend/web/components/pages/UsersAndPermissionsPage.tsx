@@ -36,6 +36,7 @@ import sortBy from 'lodash/sortBy'
 import UserAction from 'components/UserAction'
 import Icon from 'components/Icon'
 import RolesTable from 'components/RolesTable'
+import UsersGroups from 'components/UsersGroups'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -103,9 +104,24 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
 
   const editUserPermissions = (user: User, organisationId: number) => {
     openModal(
-      'Edit Organisation Permissions',
-      <div className='p-4'>
-        <PermissionsTabs uncontrolled user={user} orgId={organisationId} />
+      `${user.first_name} ${user.last_name}`,
+      <div>
+        <Tabs uncontrolled>
+          <TabItem tabLabel='Permissions'>
+            <div className='pt-4'>
+              <PermissionsTabs
+                uncontrolled
+                user={user}
+                orgId={organisationId}
+              />
+            </div>
+          </TabItem>
+          <TabItem tabLabel='Groups'>
+            <div className='pt-4'>
+              <UsersGroups user={user} orgId={organisationId} />
+            </div>
+          </TabItem>
+        </Tabs>
       </div>,
       'p-0 side-modal',
     )
