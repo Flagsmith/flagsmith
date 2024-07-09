@@ -1,6 +1,9 @@
 import pytest
 from app_analytics.middleware import APIUsageMiddleware
 from app_analytics.models import Resource
+from django.test import RequestFactory
+from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 
 
 @pytest.mark.parametrize(
@@ -13,7 +16,11 @@ from app_analytics.models import Resource
     ],
 )
 def test_APIUsageMiddleware_calls_track_request_correctly_with_cache(
-    rf, mocker, path, enum_resource_value, settings
+    rf: RequestFactory,
+    mocker: MockerFixture,
+    path: str,
+    enum_resource_value: int,
+    settings: SettingsWrapper,
 ):
     # Given
     environment_key = "test"
@@ -47,7 +54,11 @@ def test_APIUsageMiddleware_calls_track_request_correctly_with_cache(
     ],
 )
 def test_APIUsageMiddleware_calls_track_request_correctly_without_cache(
-    rf, mocker, path, enum_resource_value, settings
+    rf: RequestFactory,
+    mocker: MockerFixture,
+    path: str,
+    enum_resource_value: int,
+    settings: SettingsWrapper,
 ):
     # Given
     environment_key = "test"
@@ -74,7 +85,7 @@ def test_APIUsageMiddleware_calls_track_request_correctly_without_cache(
 
 
 def test_APIUsageMiddleware_avoids_calling_track_request_if_resoure_is_not_tracked(
-    rf, mocker, settings
+    rf: RequestFactory, mocker: MockerFixture, settings: SettingsWrapper
 ):
     # Given
     environment_key = "test"
