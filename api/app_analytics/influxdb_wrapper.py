@@ -83,6 +83,10 @@ class InfluxDBWrapper:
         extra: str = "",
         bucket: str = read_bucket,
     ):
+        # Influx throws an error for an empty range, so just return a list.
+        if date_start == "-0d" and date_stop == "now()":
+            return []
+
         query_api = influxdb_client.query_api()
         drop_columns_input = str(list(drop_columns)).replace("'", '"')
 
