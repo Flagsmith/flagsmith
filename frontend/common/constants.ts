@@ -1,6 +1,6 @@
 import { OAuthType } from './types/requests'
 import { SegmentCondition } from './types/responses'
-
+import Project from './project'
 const keywords = {
   FEATURE_FUNCTION: 'myCoolFeature',
   FEATURE_NAME: 'my_cool_feature',
@@ -439,6 +439,8 @@ export default {
     githubIssue: 'GitHub Issue',
     githubPR: 'Github PR',
   },
+  isCustomFlagsmithUrl:
+    Project.flagsmithClientAPI !== 'https://edge.api.flagsmith.com/api/v1/',
   modals: {
     'PAYMENT': 'Payment Modal',
   },
