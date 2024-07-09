@@ -272,7 +272,16 @@ def test_create_change_request_with_change_set_throws_error_when_conflict_in_env
     publish_cr_2_response = staff_client.post(publish_cr_2_url)
     assert publish_cr_2_response.status_code == status.HTTP_400_BAD_REQUEST
 
-    # TODO: verify the error message includes details about what the conflict is.
+    assert publish_cr_2_response.json() == {
+        "detail": "1 conflict exists.",
+        "conflicts": [
+            {
+                "segment_id": None,
+                "original_cr_id": cr_1_id,
+                "is_environment_default": True,
+            }
+        ],
+    }
 
     latest_feature_states = get_environment_flags_dict(
         environment=environment_v2_versioning

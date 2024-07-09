@@ -950,6 +950,19 @@ def test_update_and_create_segment_override_in_single_request(
     assert new_version.published is True
     assert new_version.is_live is True
 
+    # TODO:
+    #  - this is a test to ver
+    assert new_version.change_set is not None
+    assert new_version.change_set.feature_states_to_update == json.dumps(
+        data["feature_states_to_update"]
+    )
+    assert new_version.change_set.feature_states_to_create == json.dumps(
+        data["feature_states_to_create"]
+    )
+    assert new_version.change_set.segment_ids_to_remove_overrides == json.dumps(
+        data["segment_ids_to_delete_overrides"]
+    )
+
 
 def test_create_environment_default_when_creating_new_version_fails(
     environment_v2_versioning: Environment,

@@ -13,6 +13,9 @@ from django.db import models
 from django.db.models import Index
 from django.utils import timezone
 from django_lifecycle import LifecycleModelMixin
+from pydantic import BaseModel, computed_field
+from rest_framework import status
+from rest_framework.exceptions import APIException
 from softdelete.models import SoftDeleteObject
 
 from api_keys.models import MasterAPIKey
@@ -168,6 +171,41 @@ class EnvironmentFeatureVersion(
         return _clone
 
 
+# TODO: move this elsewhere
+class Conflict(BaseModel):
+    segment_id: int | None = None
+    original_cr_id: int | None = None
+
+    @computed_field
+    @property
+    def is_environment_default(self) -> bool:
+        return self.segment_id is None
+
+
+# TODO: move this elsewhere
+class ConflictError(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+
+    def __init__(
+        self, detail: str = None, code: int = None, conflicts: list[Conflict] = None
+    ):
+        self.conflicts = conflicts or []
+        _num_conflicts = len(self.conflicts)
+
+        # TODO: this is a bit of a hack to prevent DRF from coercing the
+        #  values in the conflicts dictionaries to strings.
+        #  - we should probably instead set the EXCEPTION_HANDLER in the REST_FRAMEWORK settings
+        self.detail = {
+            "detail": detail
+            or (
+                "1 conflict exists."
+                if _num_conflicts == 1
+                else f"{_num_conflicts} conflicts exist."
+            ),
+            "conflicts": [conflict.model_dump() for conflict in self.conflicts],
+        }
+
+
 class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -238,6 +276,10 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
         #  - handle scheduled change requests
         #  - handle conflicts
 
+        conflicts = self.get_conflicts()
+        if conflicts:
+            raise ConflictError(conflicts=conflicts)
+
         serializer = EnvironmentFeatureVersionCreateSerializer(
             data={
                 "feature_states_to_create": json.loads(self.feature_states_to_create),
@@ -256,3 +298,113 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
         version.publish(
             published_by=created_by, live_from=self.live_from or timezone.now()
         )
+
+        self.published_at = timezone.now()
+        self.published_by = created_by
+        self.save()
+
+    def get_conflicts(self) -> list[Conflict]:
+        change_sets_since_creation = list(
+            self.__class__.objects.filter(
+                published_at__gte=self.created_at
+            ).select_related("change_request")
+        )
+        if not change_sets_since_creation:
+            return []
+
+        conflicts = [
+            *self._get_conflicts_in_feature_states_to_update(
+                change_sets_since_creation
+            ),
+            *self._get_conflicts_in_feature_states_to_create(
+                change_sets_since_creation
+            ),
+            *self._get_conflicts_in_segment_ids_to_delete_overrides(
+                change_sets_since_creation
+            ),
+        ]
+        return conflicts
+
+    def includes_change_to_environment_default(self) -> bool:
+        for fs_to_update in json.loads(self.feature_states_to_update):
+            if fs_to_update["feature_segment"] is None:
+                return True
+
+        return False
+
+    def includes_change_to_segment(self, segment_id: int) -> bool:
+        modified_segment_ids = {
+            *json.loads(self.segment_ids_to_delete_overrides),
+            *[
+                fs["feature_segment"]["segment"]
+                for fs in filter(
+                    lambda fs: fs["feature_segment"] is not None,
+                    [
+                        *json.loads(self.feature_states_to_create),
+                        *json.loads(self.feature_states_to_update),
+                    ],
+                )
+            ],
+        }
+        return segment_id in modified_segment_ids
+
+    def _get_conflicts_in_feature_states_to_update(
+        self, change_sets_since_creation: list["VersionChangeSet"]
+    ) -> list[Conflict]:
+        _conflicts = []
+        for fs_to_update in json.loads(self.feature_states_to_update):
+            for change_set in change_sets_since_creation:
+                if (
+                    fs_to_update["feature_segment"] is None
+                    and change_set.includes_change_to_environment_default()
+                ):
+                    _conflicts.append(
+                        Conflict(original_cr_id=change_set.change_request_id)
+                    )
+                elif change_set.includes_change_to_segment(
+                    fs_to_update["feature_segment"]["segment"]
+                ):
+                    _conflicts.append(
+                        Conflict(
+                            original_cr_id=change_set.change_request_id,
+                            segment_id=fs_to_update["feature_segment"]["segment"],
+                        )
+                    )
+
+        return _conflicts
+
+    def _get_conflicts_in_feature_states_to_create(
+        self, change_sets_since_creation: list["VersionChangeSet"]
+    ) -> list[Conflict]:
+        _conflicts = []
+        for fs_to_create in json.loads(self.feature_states_to_create):
+            for change_set in change_sets_since_creation:
+                # Note that feature states to create cannot be environment defaults so
+                # must always have a feature segment
+                if change_set.includes_change_to_segment(
+                    fs_to_create["feature_segment"]["segment"]
+                ):
+                    _conflicts.append(
+                        Conflict(
+                            original_cr_id=change_set.change_request_id,
+                            segment_id=fs_to_create["feature_segment"]["segment"],
+                        )
+                    )
+
+        return _conflicts
+
+    def _get_conflicts_in_segment_ids_to_delete_overrides(
+        self, change_sets_since_create: list["VersionChangeSet"]
+    ) -> list[Conflict]:
+        _conflicts = []
+        for segment_id in json.loads(self.segment_ids_to_delete_overrides):
+            for change_set in change_sets_since_create:
+                if change_set.includes_change_to_segment(segment_id):
+                    _conflicts.append(
+                        Conflict(
+                            original_cr_id=change_set.change_request_id,
+                            segment_id=segment_id,
+                        )
+                    )
+
+        return _conflicts
