@@ -37,7 +37,7 @@ const DiffString: FC<DiffType> = ({
       return null
     }
     return (
-      <div className='react-diff react-diff-line d-flex align-items-center'>
+      <div className='react-diff overflow-auto react-diff-line d-flex align-items-center'>
         <pre
           className='d-inline'
           dangerouslySetInnerHTML={{
