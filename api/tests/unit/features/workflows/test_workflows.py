@@ -193,3 +193,95 @@ def test_create_change_request_with_change_set(
     )
 
     assert (feature.id, another_segment.id, None) not in latest_feature_states
+
+
+def test_create_change_request_with_change_set_throws_error_when_conflict_in_environment_default(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    with_environment_permissions(
+        [CREATE_CHANGE_REQUEST, UPDATE_FEATURE_STATE],
+        environment_id=environment_v2_versioning.id,
+    )
+    with_project_permissions([VIEW_PROJECT])
+
+    # Let's generate the data for the change requests...
+    # In both CRs, we're going update the default environment feature state to
+    # have a new value
+    cr_1_data, cr_2_data = (
+        {
+            "title": f"CR{i}",
+            "description": "",
+            "feature_states": [],
+            "environment_feature_versions": [],
+            "change_sets": [
+                {
+                    "feature": feature.id,
+                    "feature_states_to_update": [
+                        {
+                            "feature_segment": None,
+                            "enabled": True,
+                            "feature_state_value": {
+                                "type": "unicode",
+                                "string_value": f"some_updated_value_{i}",
+                            },
+                        },
+                    ],
+                    "feature_states_to_create": [],
+                    "segment_ids_to_delete_overrides": [],
+                }
+            ],
+        }
+        for i in range(1, 3)
+    )
+
+    create_cr_url = reverse(
+        "create-change-request", args=[environment_v2_versioning.api_key]
+    )
+
+    # Now let's create the 2 CRs. Creating the 2 CRs should be possible,
+    # we only want to check for conflicts on publish.
+    create_cr_1_response = staff_client.post(
+        create_cr_url, data=json.dumps(cr_1_data), content_type="application/json"
+    )
+    assert create_cr_1_response.status_code == status.HTTP_201_CREATED
+    cr_1_id = create_cr_1_response.json()["id"]
+
+    create_cr_2_response = staff_client.post(
+        create_cr_url, data=json.dumps(cr_2_data), content_type="application/json"
+    )
+    assert create_cr_2_response.status_code == status.HTTP_201_CREATED
+    cr_2_id = create_cr_2_response.json()["id"]
+
+    # Now let's publish CR1 which should modify the environment default state
+    publish_cr_1_url = reverse(
+        "workflows:change-requests-commit",
+        args=[cr_1_id],
+    )
+    publish_cr_1_response = staff_client.post(publish_cr_1_url)
+    assert publish_cr_1_response.status_code == status.HTTP_200_OK
+
+    # Finally, let's try to publish CR2, which should fail due to a conflict
+    publish_cr_2_url = reverse(
+        "workflows:change-requests-commit",
+        args=[cr_2_id],
+    )
+    publish_cr_2_response = staff_client.post(publish_cr_2_url)
+    assert publish_cr_2_response.status_code == status.HTTP_400_BAD_REQUEST
+
+    # TODO: verify the error message includes details about what the conflict is.
+
+    latest_feature_states = get_environment_flags_dict(
+        environment=environment_v2_versioning
+    )
+
+    updated_environment_default = latest_feature_states[(feature.id, None, None)]
+    assert (
+        updated_environment_default.get_feature_state_value()
+        == cr_1_data["change_sets"][0]["feature_states_to_update"][0][
+            "feature_state_value"
+        ]["string_value"]
+    )
