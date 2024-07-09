@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.127.1](https://github.com/Flagsmith/flagsmith/compare/v2.127.0...v2.127.1) (2024-07-09)
+
+
+### Bug Fixes
+
+* **segments:** add migration to set version on existing segments ([#4315](https://github.com/Flagsmith/flagsmith/issues/4315)) ([288a47e](https://github.com/Flagsmith/flagsmith/commit/288a47efc6bec12374a05a48191380b645bb99b3))
+
 ## [2.127.0](https://github.com/Flagsmith/flagsmith/compare/v2.126.0...v2.127.0) (2024-07-09)
 
 
