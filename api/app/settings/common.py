@@ -328,6 +328,7 @@ INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
 INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
+USE_CACHE_FOR_USAGE_DATA = env.bool("USE_CACHE_FOR_USAGE_DATA", default=False)
 
 ENABLE_API_USAGE_TRACKING = env.bool("ENABLE_API_USAGE_TRACKING", default=True)
 
