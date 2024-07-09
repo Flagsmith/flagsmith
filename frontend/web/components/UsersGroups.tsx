@@ -20,7 +20,6 @@ const UsersGroups: FC<UsersGroupsType> = ({ orgId, user }) => {
     data,
     error: groupsError,
     isLoading,
-    refetch,
   } = useGetGroupsQuery({ orgId })
   const [updateGroup, { error: saveError, isLoading: isSaving }] =
     useUpdateGroupMutation({})
@@ -50,7 +49,7 @@ const UsersGroups: FC<UsersGroupsType> = ({ orgId, user }) => {
           )
         }
         id='org-members-list'
-        title='Members'
+        title='Groups'
         className='no-pad overflow-visible'
         renderSearchWithNoResults
         items={sortBy(data?.results, 'name')}
