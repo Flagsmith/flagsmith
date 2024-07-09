@@ -2,8 +2,9 @@ import React, { FC } from 'react'
 import ProjectManageWidget from './ProjectManageWidget'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import makeAsyncScriptLoader from 'react-async-script'
+import Project from 'common/project'
 import { onPaymentLoad } from './modals/Payment'
+import makeAsyncScriptLoader from 'react-async-script'
 
 type ProjectsPageType = {
   match: {
@@ -27,12 +28,11 @@ const ProjectsPage: FC<ProjectsPageType> = ({ match }) => {
 }
 
 const InnerComponent = ConfigProvider(ProjectsPage)
-const WrappedPayment = makeAsyncScriptLoader(
-  'https://js.chargebee.com/v2/chargebee.js',
-  {
-    removeOnUnmount: true,
-  },
-)(InnerComponent)
+const WrappedPayment = Project.chargebee?.site
+  ? makeAsyncScriptLoader('https://js.chargebee.com/v2/chargebee.js', {
+      removeOnUnmount: true,
+    })(InnerComponent)
+  : InnerComponent
 export default (props) => (
   <WrappedPayment {...props} asyncScriptOnLoad={onPaymentLoad} />
 )

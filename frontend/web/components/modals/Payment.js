@@ -774,6 +774,9 @@ const Payment = class extends Component {
 
 Payment.propTypes = {}
 export const onPaymentLoad = () => {
+  if (!Project.chargebee?.site) {
+    return
+  }
   const planId = API.getCookie('plan')
   let link
   if (planId && Utils.getFlagsmithHasFeature('payments_enabled')) {
