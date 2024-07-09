@@ -33,7 +33,7 @@ Updating the values of custom fields requires edit permissions for the given ent
 
 ## Defining custom fields
 
-Custom fields can be defined in **Project Settings > Metadata**.
+Custom fields can be defined in **Project Settings > Custom Fields**.
 
 Custom fields have the following properties:
 
