@@ -1,9 +1,14 @@
+import Constants from 'common/constants'
 module.exports = (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT, USER_ID },
   userId,
 ) => `final flagsmithClient = FlagsmithClient(
-        apiKey: '${envId}' 
+        apiKey: '${envId}',${
+  Constants.isCustomFlagsmithUrl
+    ? `\n        baseURI: '${Project.flagsmithClientAPI}',`
+    : ''
+}
         config: config, 
         seeds: <Flag>[
             Flag.seed('feature', enabled: true),
@@ -12,7 +17,11 @@ module.exports = (
 
 //if you prefer async initialization then you should use
 //final flagsmithClient = await FlagsmithClient.init(
-//        apiKey: 'YOUR_ENV_API_KEY',
+//        apiKey: '${envId}',${
+  Constants.isCustomFlagsmithUrl
+    ? `\n//        baseURI: '${Project.flagsmithClientAPI}',`
+    : ''
+}
 //        config: config, 
 //        seeds: <Flag>[
 //            Flag.seed('feature', enabled: true),
