@@ -195,7 +195,7 @@ def test_create_change_request_with_change_set(
     assert (feature.id, another_segment.id, None) not in latest_feature_states
 
 
-def test_create_change_request_with_change_set_throws_error_when_conflict_in_environment_default(
+def test_change_request_with_change_set_shows_conflicts_when_changes_made_after_creation(
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_client: APIClient,
@@ -203,7 +203,7 @@ def test_create_change_request_with_change_set_throws_error_when_conflict_in_env
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     with_environment_permissions(
-        [CREATE_CHANGE_REQUEST, UPDATE_FEATURE_STATE],
+        [CREATE_CHANGE_REQUEST, UPDATE_FEATURE_STATE, VIEW_ENVIRONMENT],
         environment_id=environment_v2_versioning.id,
     )
     with_project_permissions([VIEW_PROJECT])
@@ -264,33 +264,26 @@ def test_create_change_request_with_change_set_throws_error_when_conflict_in_env
     publish_cr_1_response = staff_client.post(publish_cr_1_url)
     assert publish_cr_1_response.status_code == status.HTTP_200_OK
 
-    # Finally, let's try to publish CR2, which should fail due to a conflict
+    # Now, let's retrieve CR2, which should now include the expected conflict
+    retrieve_cr_2_url = reverse(
+        "workflows:change-requests-detail",
+        args=[cr_2_id],
+    )
+    retrieve_cr2_response = staff_client.get(retrieve_cr_2_url)
+    assert retrieve_cr2_response.status_code == status.HTTP_200_OK
+
+    assert retrieve_cr2_response.json()["conflicts"] == [
+        {
+            "segment_id": None,
+            "original_cr_id": cr_1_id,
+            "is_environment_default": True,
+        }
+    ]
+
+    # But we can still publish CR2
     publish_cr_2_url = reverse(
         "workflows:change-requests-commit",
         args=[cr_2_id],
     )
-    publish_cr_2_response = staff_client.post(publish_cr_2_url)
-    assert publish_cr_2_response.status_code == status.HTTP_400_BAD_REQUEST
-
-    assert publish_cr_2_response.json() == {
-        "detail": "1 conflict exists.",
-        "conflicts": [
-            {
-                "segment_id": None,
-                "original_cr_id": cr_1_id,
-                "is_environment_default": True,
-            }
-        ],
-    }
-
-    latest_feature_states = get_environment_flags_dict(
-        environment=environment_v2_versioning
-    )
-
-    updated_environment_default = latest_feature_states[(feature.id, None, None)]
-    assert (
-        updated_environment_default.get_feature_state_value()
-        == cr_1_data["change_sets"][0]["feature_states_to_update"][0][
-            "feature_state_value"
-        ]["string_value"]
-    )
+    publish_cr2_response = staff_client.post(publish_cr_2_url)
+    assert publish_cr2_response.status_code == status.HTTP_200_OK

@@ -12,7 +12,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Index
 from django.utils import timezone
-from django_lifecycle import LifecycleModelMixin
+from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook
 from pydantic import BaseModel, computed_field
 from rest_framework import status
 from rest_framework.exceptions import APIException
@@ -217,6 +217,10 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
         on_delete=models.SET_NULL,
     )
 
+    environment = models.ForeignKey(
+        "environments.Environment", on_delete=models.CASCADE
+    )
+
     # TODO:
     #  - validate that one of change_request or environment_feature_version must be non-null
 
@@ -263,6 +267,18 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
         "request is published",
     )
 
+    @hook(BEFORE_CREATE)
+    def add_environment(self):
+        if not self.environment_id:
+            if self.change_request_id:
+                self.environment = self.change_request.environment
+            elif self.environment_feature_version_id:
+                self.environment = self.environment_feature_version.environment
+            else:
+                raise RuntimeError(
+                    "Version change set should belong to either a change request, or a version."
+                )
+
     def publish(self, created_by: "FFAdminUser") -> None:
         from features.versioning.serializers import (
             EnvironmentFeatureVersionCreateSerializer,
@@ -275,10 +291,6 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
         #  - handle API keys
         #  - handle scheduled change requests
         #  - handle conflicts
-
-        conflicts = self.get_conflicts()
-        if conflicts:
-            raise ConflictError(conflicts=conflicts)
 
         serializer = EnvironmentFeatureVersionCreateSerializer(
             data={
@@ -306,7 +318,9 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
     def get_conflicts(self) -> list[Conflict]:
         change_sets_since_creation = list(
             self.__class__.objects.filter(
-                published_at__gte=self.created_at
+                published_at__gte=self.created_at,
+                feature=self.feature,
+                environment=self.environment,
             ).select_related("change_request")
         )
         if not change_sets_since_creation:
