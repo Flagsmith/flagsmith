@@ -243,11 +243,10 @@ def get_object_id_from_base_permission_filter(
     object_ids.update(
         list(for_model.objects.filter(group_filter).values_list("id", flat=True))
     )
-    if settings.IS_RBAC_INSTALLED:
+    if settings.IS_RBAC_INSTALLED:  # pragma: no cover
         role_filter = get_role_permission_filter(
             user, for_model, permission_key, allow_admin, tag_ids
         )
-
         object_ids.update(
             list(for_model.objects.filter(role_filter).values_list("id", flat=True))
         )
