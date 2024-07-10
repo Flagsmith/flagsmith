@@ -1962,7 +1962,7 @@ const FeatureProvider = (WrappedComponent) => {
         FeatureListStore,
         'saved',
         ({ changeRequest, createdFlag, error, isCreate } = {}) => {
-          if (error.data.metadata) {
+          if (error?.data?.metadata) {
             error.data.metadata?.forEach((m) => {
               if (Object.keys(m).length > 0) {
                 toast(m.non_field_errors[0], 'danger')
@@ -1970,7 +1970,7 @@ const FeatureProvider = (WrappedComponent) => {
             })
           } else {
             toast(
-              `${createdFlag || isCreate ? 'Created2' : 'Updated3'} ${
+              `${createdFlag || isCreate ? 'Created' : 'Updated'} ${
                 changeRequest ? 'Change Request' : 'Feature'
               }`,
             )

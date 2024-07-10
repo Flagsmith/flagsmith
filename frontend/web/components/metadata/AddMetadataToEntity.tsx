@@ -15,6 +15,7 @@ import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
 import Tooltip from 'components/Tooltip'
 import { sortBy } from 'lodash'
 import Switch from 'components/Switch'
+import InputGroup from 'components/base/forms/InputGroup'
 
 export type CustomMetadataField = MetadataField & {
   metadataModelFieldId: number | string | null
@@ -334,7 +335,35 @@ const MetadataRow: FC<MetadataRowType> = ({
       <Flex className='table-column'>{`${metadata?.name} ${
         metadata?.isRequiredFor ? '*' : ''
       }`}</Flex>
-      {metadata?.type !== 'bool' ? (
+      {metadata?.type === 'bool' ? (
+        <Flex className='flex-row'>
+          <Switch
+            checked={!!metadataValue}
+            onChange={() => {
+              setMetadataValue(!metadataValue)
+              setMetadataValueChanged(true)
+              saveMetadata()
+            }}
+          />
+        </Flex>
+      ) : metadata?.type === 'multiline_str' ? (
+        <Flex className='flex-row' style={{ minWidth: '300px' }}>
+          <InputGroup
+            textarea
+            onBlur={saveMetadata}
+            value={metadataValue}
+            inputProps={{
+              style: { height: '65px', width: '250px' },
+            }}
+            onChange={(e: InputEvent) => {
+              setMetadataValue(Utils.safeParseEventValue(e))
+              setMetadataValueChanged(true)
+            }}
+            type='text'
+            placeholder='Metadata Value'
+          />
+        </Flex>
+      ) : (
         <Flex className='flex-row' style={{ minWidth: '300px' }}>
           <Tooltip
             title={
@@ -358,17 +387,6 @@ const MetadataRow: FC<MetadataRowType> = ({
           >
             {`This value has to be of type ${metadata?.type}`}
           </Tooltip>
-        </Flex>
-      ) : (
-        <Flex className='flex-row'>
-          <Switch
-            checked={!!metadataValue}
-            onChange={() => {
-              setMetadataValue(!metadataValue)
-              setMetadataValueChanged(true)
-              saveMetadata()
-            }}
-          />
         </Flex>
       )}
     </Row>
