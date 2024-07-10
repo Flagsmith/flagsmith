@@ -161,23 +161,28 @@ const Payment = class extends Component {
                           Billed Monthly
                         </div>
                         {!viewOnly ? (
-                          this.state.yearly ? (
+                          <>
                             <PaymentButton
-                              data-cb-plan-id='startup-annual-v2'
-                              className='btn btn-primary full-width mt-3'
+                              data-cb-plan-id={Project.plans.startup.annual}
+                              className={classNames(
+                                'btn btn-primary full-width mt-3',
+                                { 'd-none': !this.state.yearly },
+                              )}
                               isDisableAccount={this.props.isDisableAccountText}
                             >
                               {plan.includes('startup') ? 'Purchased' : 'Buy'}
                             </PaymentButton>
-                          ) : (
                             <PaymentButton
-                              data-cb-plan-id='startup-v2'
-                              className='btn btn-primary full-width mt-3'
+                              data-cb-plan-id={Project.plans.startup.monthly}
+                              className={classNames(
+                                'btn btn-primary full-width mt-3',
+                                { 'd-none': this.state.yearly },
+                              )}
                               isDisableAccount={this.props.isDisableAccountText}
                             >
                               {plan.includes('startup') ? 'Purchased' : 'Buy'}
                             </PaymentButton>
-                          )
+                          </>
                         ) : null}
                       </div>
                       <div className='panel-footer mt-3'>
@@ -380,23 +385,28 @@ const Payment = class extends Component {
                           Billed Monthly
                         </div>
                         {!viewOnly ? (
-                          this.state.yearly ? (
+                          <>
                             <PaymentButton
-                              data-cb-plan-id='scale-up-annual-v2'
-                              className='btn btn-success full-width mt-3'
+                              data-cb-plan-id={Project.plans.scaleUp.annual}
+                              className={classNames(
+                                'btn btn-success full-width mt-3',
+                                { 'd-none': !this.state.yearly },
+                              )}
                               isDisableAccount={this.props.isDisableAccountText}
                             >
                               {plan.includes('scale-up') ? 'Purchased' : 'Buy'}
                             </PaymentButton>
-                          ) : (
                             <PaymentButton
-                              data-cb-plan-id='scale-up-v2'
-                              className='btn btn-success full-width mt-3'
+                              data-cb-plan-id={Project.plans.scaleUp.monthly}
+                              className={classNames(
+                                'btn btn-success full-width mt-3',
+                                { 'd-none': this.state.yearly },
+                              )}
                               isDisableAccount={this.props.isDisableAccountText}
                             >
                               {plan.includes('scale-up') ? 'Purchased' : 'Buy'}
                             </PaymentButton>
-                          )
+                          </>
                         ) : null}
                       </div>
                       <div className='panel-footer mt-3'>
