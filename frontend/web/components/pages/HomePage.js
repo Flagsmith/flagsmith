@@ -65,6 +65,10 @@ const HomePage = class extends React.Component {
   }
 
   componentDidMount() {
+    const plan = Utils.fromParam().plan
+    if (plan) {
+      API.setCookie('plan', plan)
+    }
     if (
       Project.albacross &&
       this.props.location.pathname.indexOf('signup') !== -1
