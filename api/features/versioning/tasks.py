@@ -1,3 +1,4 @@
+import json
 import logging
 import typing
 
@@ -7,7 +8,10 @@ from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from features.models import FeatureState
-from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.models import (
+    EnvironmentFeatureVersion,
+    VersionChangeSet,
+)
 from features.versioning.schemas import (
     EnvironmentFeatureVersionWebhookDataSerializer,
 )
@@ -15,6 +19,7 @@ from features.versioning.versioning_service import (
     get_environment_flags_queryset,
 )
 from task_processor.decorators import register_task_handler
+from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType, call_environment_webhooks
 
 if typing.TYPE_CHECKING:
@@ -153,3 +158,52 @@ def create_environment_feature_version_published_audit_log_task(
         author_id=environment_feature_version.published_by_id,
         master_api_key_id=environment_feature_version.published_by_api_key_id,
     )
+
+
+@register_task_handler()
+def publish_version_change_set(
+    version_change_set_id: int, user_id: int, is_scheduled: bool = False
+) -> None:
+    version_change_set = VersionChangeSet.objects.get(id=version_change_set_id)
+    user = FFAdminUser.objects.get(id=user_id)
+
+    if is_scheduled and version_change_set.get_conflicts():
+        # TODO:
+        #  - alert the user (via email?) that the change request wasn't published because
+        #  of conflicts
+        return
+
+    # TODO:
+    #  - using the serializer here is kinda hacky, is there another abstraction layer we can add
+    #  (and reuse in the serializer as well perhaps?)
+
+    from features.versioning.serializers import (
+        EnvironmentFeatureVersionCreateSerializer,
+    )
+
+    serializer = EnvironmentFeatureVersionCreateSerializer(
+        data={
+            "feature_states_to_create": json.loads(
+                version_change_set.feature_states_to_create
+            ),
+            "feature_states_to_update": json.loads(
+                version_change_set.feature_states_to_update
+            ),
+            "segment_ids_to_delete_overrides": json.loads(
+                version_change_set.segment_ids_to_delete_overrides
+            ),
+        }
+    )
+    serializer.is_valid(raise_exception=True)
+    version: EnvironmentFeatureVersion = serializer.save(
+        feature=version_change_set.feature,
+        environment=version_change_set.environment,
+        created_by=user,
+    )
+    version.publish(
+        published_by=user, live_from=version_change_set.live_from or timezone.now()
+    )
+
+    version_change_set.published_at = version_change_set.live_from = timezone.now()
+    version_change_set.published_by = user
+    version_change_set.save()

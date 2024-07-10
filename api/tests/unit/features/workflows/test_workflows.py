@@ -1,9 +1,12 @@
 # TODO: this should be moved to the flagsmith-workflows repo but it's easier to write the tests here for development
 #  purposes
 import json
+from datetime import timedelta
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -193,6 +196,100 @@ def test_create_change_request_with_change_set(
     )
 
     assert (feature.id, another_segment.id, None) not in latest_feature_states
+
+
+def test_create_scheduled_change_request_with_change_set(
+    feature: Feature,
+    feature_state: FeatureState,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+    mocker: MockerFixture,
+) -> None:
+    with_environment_permissions(
+        [CREATE_CHANGE_REQUEST, UPDATE_FEATURE_STATE, VIEW_ENVIRONMENT],
+        environment_id=environment_v2_versioning.id,
+    )
+    with_project_permissions([VIEW_PROJECT])
+
+    # Let's generate the data for the change request...
+    # we update the default environment feature state to have a new value
+    environment_default_update_data = {
+        "feature_segment": None,
+        "enabled": True,
+        "feature_state_value": {
+            "type": "unicode",
+            "string_value": "some_updated_value",
+        },
+    }
+
+    # We're going to set a value for live from to ensure that the
+    # change request is scheduled for the future instead of immediately
+    # on publish
+    now = timezone.now()
+    one_hour_from_now = now + timedelta(hours=1)
+
+    data = {
+        "title": "Test CR",
+        "description": "",
+        "feature_states": [],
+        "environment_feature_versions": [],
+        "change_sets": [
+            {
+                "feature": feature.id,
+                "live_from": one_hour_from_now.isoformat(),
+                "feature_states_to_update": [
+                    environment_default_update_data,
+                ],
+                "feature_states_to_create": [],
+                "segment_ids_to_delete_overrides": [],
+            }
+        ],
+    }
+
+    publish_version_change_set_mock = mocker.patch(
+        "features.versioning.tasks.publish_version_change_set"
+    )
+
+    create_cr_url = reverse(
+        "create-change-request", args=[environment_v2_versioning.api_key]
+    )
+    create_cr_response = staff_client.post(
+        create_cr_url, data=json.dumps(data), content_type="application/json"
+    )
+    assert create_cr_response.status_code == status.HTTP_201_CREATED
+    version_change_set_id = create_cr_response.json()["change_sets"][0]["id"]
+
+    change_request_id = create_cr_response.json()["id"]
+    publish_cr_url = reverse(
+        "workflows:change-requests-commit",
+        args=[change_request_id],
+    )
+    publish_cr_response = staff_client.post(publish_cr_url)
+    assert publish_cr_response.status_code == status.HTTP_200_OK
+
+    # Then
+    # The state/value of the environment default feature state hasn't changed
+    latest_feature_states = get_environment_flags_dict(
+        environment=environment_v2_versioning
+    )
+    environment_default = latest_feature_states[(feature.id, None, None)]
+    assert environment_default.enabled == feature_state.enabled
+    assert (
+        environment_default.get_feature_state_value()
+        == feature_state.get_feature_state_value()
+    )
+
+    # and the task was correctly scheduled
+    publish_version_change_set_mock.delay.assert_called_once_with(
+        kwargs={
+            "version_change_set_id": version_change_set_id,
+            "user_id": staff_user.id,
+            "is_scheduled": True,
+        }
+    )
 
 
 def test_change_request_with_change_set_shows_conflicts_when_changes_made_after_creation(

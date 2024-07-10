@@ -280,40 +280,16 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
                 )
 
     def publish(self, created_by: "FFAdminUser") -> None:
-        from features.versioning.serializers import (
-            EnvironmentFeatureVersionCreateSerializer,
-        )
-
         # TODO:
-        #  - how do we handle live_from here - should it be on this model, or on the change request itself perhaps?
-        #  - this is super hacky, is there another abstraction layer we can add (and reuse in the serializer
-        #    as well perhaps?)
         #  - handle API keys
-        #  - handle scheduled change requests
-        #  - handle conflicts
+        from features.versioning.tasks import publish_version_change_set
 
-        serializer = EnvironmentFeatureVersionCreateSerializer(
-            data={
-                "feature_states_to_create": json.loads(self.feature_states_to_create),
-                "feature_states_to_update": json.loads(self.feature_states_to_update),
-                "segment_ids_to_delete_overrides": json.loads(
-                    self.segment_ids_to_delete_overrides
-                ),
-            }
-        )
-        serializer.is_valid(raise_exception=True)
-        version: EnvironmentFeatureVersion = serializer.save(
-            feature=self.feature,
-            environment=self.change_request.environment,
-            created_by=created_by,
-        )
-        version.publish(
-            published_by=created_by, live_from=self.live_from or timezone.now()
-        )
-
-        self.published_at = timezone.now()
-        self.published_by = created_by
-        self.save()
+        kwargs = {"version_change_set_id": self.id, "user_id": created_by.id}
+        if not self.live_from or self.live_from < timezone.now():
+            publish_version_change_set(**kwargs)
+        else:
+            kwargs["is_scheduled"] = True
+            publish_version_change_set.delay(kwargs=kwargs)
 
     def get_conflicts(self) -> list[Conflict]:
         change_sets_since_creation = list(
