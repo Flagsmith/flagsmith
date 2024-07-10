@@ -1,4 +1,5 @@
 import typing
+from itertools import chain
 
 from django.db import models
 from django.db.models import Prefetch, Q
@@ -243,7 +244,7 @@ class Identity(models.Model):
         for trait_data_item in trait_data_items:
             trait_key = trait_data_item["trait_key"]
             trait_value = trait_data_item["trait_value"]
-            transient = trait_data_item["transient"]
+            transient = trait_data_item.get("transient")
 
             if trait_value is None:
                 # build a list of trait keys to delete having been nulled by the
@@ -296,6 +297,6 @@ class Identity(models.Model):
         return [
             *{
                 trait.trait_key: trait
-                for trait in (self.identity_traits.all() + transient_traits)
+                for trait in chain(self.identity_traits.all(), transient_traits)
             }.values()
         ]
