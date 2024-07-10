@@ -238,10 +238,12 @@ class Identity(models.Model):
         keys_to_delete = []
         new_traits = []
         updated_traits = []
+        transient_traits = []
 
         for trait_data_item in trait_data_items:
             trait_key = trait_data_item["trait_key"]
             trait_value = trait_data_item["trait_value"]
+            transient = trait_data_item["transient"]
 
             if trait_value is None:
                 # build a list of trait keys to delete having been nulled by the
@@ -257,9 +259,20 @@ class Identity(models.Model):
                 if current_trait.trait_value == trait_value:
                     continue
 
+                if transient:
+                    transient_traits.append(
+                        Trait(**trait_value_data, trait_key=trait_key, identity=self)
+                    )
+                    continue
+
                 for attr, value in trait_value_data.items():
                     setattr(current_trait, attr, value)
                 updated_traits.append(current_trait)
+
+            elif transient:
+                transient_traits.append(
+                    Trait(**trait_value_data, trait_key=trait_key, identity=self)
+                )
             else:
                 new_traits.append(
                     Trait(**trait_value_data, trait_key=trait_key, identity=self)
@@ -278,5 +291,11 @@ class Identity(models.Model):
         Trait.objects.bulk_create(new_traits, ignore_conflicts=True)
 
         # return the full list of traits for this identity by refreshing from the db
+        # override persisted traits by transient traits in case of key collisions
         # TODO: handle this in the above logic to avoid a second hit to the DB
-        return self.identity_traits.all()
+        return [
+            *{
+                trait.trait_key: trait
+                for trait in (self.identity_traits.all() + transient_traits)
+            }.values()
+        ]

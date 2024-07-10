@@ -173,11 +173,17 @@ class SDKIdentities(SDKAPIView):
                 {"detail": "Missing identifier"}
             )  # TODO: add 400 status - will this break the clients?
 
-        identity, _ = Identity.objects.get_or_create_for_sdk(
-            identifier=identifier,
-            environment=request.environment,
-            integrations=IDENTITY_INTEGRATIONS,
-        )
+        if request.query_params.get("transient"):
+            identity = Identity(
+                identifier=identifier,
+                environment=request.environment,
+            )
+        else:
+            identity, _ = Identity.objects.get_or_create_for_sdk(
+                identifier=identifier,
+                environment=request.environment,
+                integrations=IDENTITY_INTEGRATIONS,
+            )
         self.identity = identity
 
         if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
