@@ -32,8 +32,8 @@ from users.models import FFAdminUser
     [
         (
             lazy_fixture("admin_client"),
-            3,
-        ),  # 1 for paging, 1 for result, 1 for getting the current live version
+            6,
+        ),  # 1 for paging, 3 for permissions, 1 for result, 1 for getting the current live version
         (
             lazy_fixture("admin_master_api_key_client"),
             4,

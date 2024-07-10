@@ -45,6 +45,10 @@ class FeaturePermissions(IsAuthenticated):
             # handled by has_object_permission
             return True
 
+        if view.action in ["list"]:
+            # handled by the view
+            return True
+
         try:
             project_id = view.kwargs.get("project_pk") or request.data.get("project")
             project = Project.objects.get(id=project_id)

@@ -2600,11 +2600,30 @@ def test_list_features_n_plus_1(
         v1_feature_state.clone(env=environment, version=i, live_from=timezone.now())
 
     # When
-    with django_assert_num_queries(17):
+    with django_assert_num_queries(16):
         response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+
+
+def test_list_features_from_different_project_returns_404(
+    staff_client: APIClient,
+    organisation_two_project_two: Project,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+
+    url = reverse(
+        "api-v1:projects:project-features-list", args=[organisation_two_project_two.id]
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_list_features_with_union_tag(
@@ -2808,7 +2827,7 @@ def test_list_features_with_feature_state(
     url = f"{base_url}?environment={environment.id}"
 
     # When
-    with django_assert_num_queries(17):
+    with django_assert_num_queries(16):
         response = staff_client.get(url)
 
     # Then
@@ -3102,7 +3121,7 @@ def test_feature_list_last_modified_values(
         Feature.objects.create(name=f"feature_{i}", project=project)
 
     # When
-    with django_assert_num_queries(19):  # TODO: reduce this number of queries!
+    with django_assert_num_queries(18):  # TODO: reduce this number of queries!
         response = staff_client.get(url)
 
     # Then
