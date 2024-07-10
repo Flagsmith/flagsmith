@@ -154,6 +154,9 @@ const controller = {
     })
       .then((res) => {
         // onComplete calls back preserving the order of multivariate_options with their updated ids
+        if (res.error) {
+          store.saved({ error: res.error })
+        }
         if (onComplete) {
           onComplete(res)
         }

@@ -1961,12 +1961,20 @@ const FeatureProvider = (WrappedComponent) => {
       this.listenTo(
         FeatureListStore,
         'saved',
-        ({ changeRequest, createdFlag, isCreate } = {}) => {
-          toast(
-            `${createdFlag || isCreate ? 'Created' : 'Updated'} ${
-              changeRequest ? 'Change Request' : 'Feature'
-            }`,
-          )
+        ({ changeRequest, createdFlag, error, isCreate } = {}) => {
+          if (error.data.metadata) {
+            error.data.metadata?.forEach((m) => {
+              if (Object.keys(m).length > 0) {
+                toast(m.non_field_errors[0], 'danger')
+              }
+            })
+          } else {
+            toast(
+              `${createdFlag || isCreate ? 'Created2' : 'Updated3'} ${
+                changeRequest ? 'Change Request' : 'Feature'
+              }`,
+            )
+          }
           const envFlags = FeatureListStore.getEnvironmentFlags()
 
           if (createdFlag) {
