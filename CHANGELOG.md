@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.128.0](https://github.com/Flagsmith/flagsmith/compare/v2.127.1...v2.128.0) (2024-07-10)
+
+
+### Features
+
+* Selected options ([#4311](https://github.com/Flagsmith/flagsmith/issues/4311)) ([d32a320](https://github.com/Flagsmith/flagsmith/commit/d32a3203036fa6fde820c1867862ff909c269b52))
+
+
+### Bug Fixes
+
+* **get_permitted_projects:** get rid of distinct ([#4320](https://github.com/Flagsmith/flagsmith/issues/4320)) ([e7252cb](https://github.com/Flagsmith/flagsmith/commit/e7252cb056645ff6982772759ca8551cd1855811))
+* version diff overflow ([#4313](https://github.com/Flagsmith/flagsmith/issues/4313)) ([2525636](https://github.com/Flagsmith/flagsmith/commit/25256367e706b611ed6e6c399b0b2fb8c672710c))
+
 ## [2.127.1](https://github.com/Flagsmith/flagsmith/compare/v2.127.0...v2.127.1) (2024-07-09)
 
 
