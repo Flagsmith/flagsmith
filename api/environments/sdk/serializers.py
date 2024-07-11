@@ -2,6 +2,7 @@ import typing
 from collections import defaultdict
 
 from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
+from django.utils import timezone
 from rest_framework import serializers
 
 from environments.identities.models import Identity
@@ -143,6 +144,7 @@ class IdentifyWithTraitsSerializer(
 
         if transient:
             identity = Identity(
+                created_date=timezone.now(),
                 identifier=self.validated_data["identifier"],
                 environment=environment,
             )
