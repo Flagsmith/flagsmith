@@ -238,28 +238,6 @@ urllib3 = {version = ">=1.25.4,<2.1", markers = "python_version >= \"3.10\""}
 crt = ["awscrt (==0.16.26)"]
 
 [[package]]
-name = "build"
-version = "0.10.0"
-description = "A simple, correct Python build frontend"
-optional = false
-python-versions = ">= 3.7"
-files = [
-    {file = "build-0.10.0-py3-none-any.whl", hash = "sha256:af266720050a66c893a6096a2f410989eeac74ff9a68ba194b3f6473e8e26171"},
-    {file = "build-0.10.0.tar.gz", hash = "sha256:d5b71264afdb5951d6704482aac78de887c80691c52b88a9ad195983ca2c9269"},
-]
-
-[package.dependencies]
-colorama = {version = "*", markers = "os_name == \"nt\""}
-packaging = ">=19.0"
-pyproject_hooks = "*"
-
-[package.extras]
-docs = ["furo (>=2021.08.31)", "sphinx (>=4.0,<5.0)", "sphinx-argparse-cli (>=1.5)", "sphinx-autodoc-typehints (>=1.10)"]
-test = ["filelock (>=3)", "pytest (>=6.2.4)", "pytest-cov (>=2.12)", "pytest-mock (>=2)", "pytest-rerunfailures (>=9.1)", "pytest-xdist (>=1.34)", "setuptools (>=42.0.0)", "setuptools (>=56.0.0)", "toml (>=0.10.0)", "wheel (>=0.36.0)"]
-typing = ["importlib-metadata (>=5.1)", "mypy (==0.991)", "tomli", "typing-extensions (>=3.7.4.3)"]
-virtualenv = ["virtualenv (>=20.0.35)"]
-
-[[package]]
 name = "cachetools"
 version = "5.3.1"
 description = "Extensible memoizing collections and decorators"
@@ -272,13 +250,13 @@ files = [
 
 [[package]]
 name = "certifi"
-version = "2023.7.22"
+version = "2024.7.4"
 description = "Python package for providing Mozilla's CA Bundle."
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "certifi-2023.7.22-py3-none-any.whl", hash = "sha256:92d6037539857d8206b8f6ae472e8b77db8058fec5937a1ef3f54304089edbb9"},
-    {file = "certifi-2023.7.22.tar.gz", hash = "sha256:539cc1d13202e33ca466e88b2807e29f4c13049d6d87031a3c110744495cb082"},
+    {file = "certifi-2024.7.4-py3-none-any.whl", hash = "sha256:c198e21b1289c2ab85ee4e67bb4b4ef3ead0892059901a8d5b622f24a1101e90"},
+    {file = "certifi-2024.7.4.tar.gz", hash = "sha256:5a1e7645bc0ec61a09e26c36f6106dd4cf40c6db3a1fb6352b0244e7fb057c7b"},
 ]
 
 [[package]]
@@ -1388,8 +1366,8 @@ django-multiselectfield = "0.1.12"
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-auth-controller"
-reference = "v0.1.1"
-resolved_reference = "24217c74a33cfa7635301fb752f1675a5009c7b4"
+reference = "v0.1.2"
+resolved_reference = "d0f73840b4d5a078077c2bb108458356476d0ee5"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -2615,39 +2593,6 @@ files = [
 ]
 
 [[package]]
-name = "pip"
-version = "24.0"
-description = "The PyPA recommended tool for installing Python packages."
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "pip-24.0-py3-none-any.whl", hash = "sha256:ba0d021a166865d2265246961bec0152ff124de910c5cc39f1156ce3fa7c69dc"},
-    {file = "pip-24.0.tar.gz", hash = "sha256:ea9bd1a847e8c5774a5777bb398c19e80bcd4e2aa16a4b301b718fe6f593aba2"},
-]
-
-[[package]]
-name = "pip-tools"
-version = "6.13.0"
-description = "pip-tools keeps your pinned dependencies fresh."
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "pip-tools-6.13.0.tar.gz", hash = "sha256:61d46bd2eb8016ed4a924e196e6e5b0a268cd3babd79e593048720db23522bb1"},
-    {file = "pip_tools-6.13.0-py3-none-any.whl", hash = "sha256:50943f151d87e752abddec8158622c34ad7f292e193836e90e30d87da60b19d9"},
-]
-
-[package.dependencies]
-build = "*"
-click = ">=8"
-pip = ">=22.2"
-setuptools = "*"
-wheel = "*"
-
-[package.extras]
-coverage = ["pytest-cov"]
-testing = ["flit-core (>=2,<4)", "poetry-core (>=1.0.0)", "pytest (>=7.2.0)", "pytest-rerunfailures", "pytest-xdist"]
-
-[[package]]
 name = "platformdirs"
 version = "3.10.0"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
@@ -3232,17 +3177,6 @@ files = [
 ]
 
 [[package]]
-name = "pyproject-hooks"
-version = "1.0.0"
-description = "Wrappers to call pyproject.toml-based build backend hooks."
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "pyproject_hooks-1.0.0-py3-none-any.whl", hash = "sha256:283c11acd6b928d2f6a7c73fa0d01cb2bdc5f07c57a2eeb6e83d5e56b97976f8"},
-    {file = "pyproject_hooks-1.0.0.tar.gz", hash = "sha256:f271b298b97f5955d53fb12b72c1fb1948c22c1a6b70b315c54cedaca0264ef5"},
-]
-
-[[package]]
 name = "pyreadline"
 version = "2.1"
 description = "A python implmementation of GNU readline."
@@ -3629,13 +3563,13 @@ ocsp = ["cryptography (>=36.0.1)", "pyopenssl (==20.0.1)", "requests (>=2.26.0)"
 
 [[package]]
 name = "requests"
-version = "2.32.0"
+version = "2.32.3"
 description = "Python HTTP for Humans."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "requests-2.32.0-py3-none-any.whl", hash = "sha256:f2c3881dddb70d056c5bd7600a4fae312b2a300e39be6a118d30b90bd27262b5"},
-    {file = "requests-2.32.0.tar.gz", hash = "sha256:fa5490319474c82ef1d2c9bc459d3652e3ae4ef4c4ebdd18a21145a47ca4b6b8"},
+    {file = "requests-2.32.3-py3-none-any.whl", hash = "sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6"},
+    {file = "requests-2.32.3.tar.gz", hash = "sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760"},
 ]
 
 [package.dependencies]
@@ -4489,4 +4423,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "c6464d8ebd780d2e19984173690d24fd7c30ce8a4ddb8bbeca2e0141602b574f"
+content-hash = "ca4356518faa3b1cf27f5accba807f2fe558e417693c23af69c60f708f9131c5"

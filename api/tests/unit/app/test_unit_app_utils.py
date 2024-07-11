@@ -1,10 +1,18 @@
 import json
 import pathlib
+from typing import Generator
 from unittest import mock
 
+import pytest
 from pytest_mock import MockerFixture
 
 from app.utils import get_version_info
+
+
+@pytest.fixture(autouse=True)
+def clear_get_version_info_cache() -> Generator[None, None, None]:
+    yield
+    get_version_info.cache_clear()
 
 
 def test_get_version_info(mocker: MockerFixture) -> None:

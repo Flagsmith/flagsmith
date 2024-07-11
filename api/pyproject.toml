@@ -37,9 +37,62 @@ use_parentheses = true
 multi_line_output = 3
 include_trailing_comma = true
 line_length = 79
-known_first_party=['analytics','app','custom_auth','environments','integrations','organisations','projects','segments','tests','users','webhooks','api','audit','e2etests','features','permissions','util']
-known_third_party=['_pytest','apiclient','app_analytics','axes','chargebee','core','coreapi','corsheaders','dj_database_url','django','django_lifecycle','djoser','drf_writable_nested','drf_yasg','environs','google','influxdb_client','ordered_model','pyotp','pytest','pytz','requests','responses','rest_framework','rest_framework_nested','rest_framework_recursive','sentry_sdk','shortuuid','simple_history','six','task_processor','telemetry','tests','trench','whitenoise']
-skip = ['migrations','.venv','.direnv']
+known_first_party = [
+  'analytics',
+  'app',
+  'custom_auth',
+  'environments',
+  'integrations',
+  'organisations',
+  'projects',
+  'segments',
+  'tests',
+  'users',
+  'webhooks',
+  'api',
+  'audit',
+  'e2etests',
+  'features',
+  'permissions',
+  'util',
+]
+known_third_party = [
+  '_pytest',
+  'apiclient',
+  'app_analytics',
+  'axes',
+  'chargebee',
+  'core',
+  'coreapi',
+  'corsheaders',
+  'dj_database_url',
+  'django',
+  'django_lifecycle',
+  'djoser',
+  'drf_writable_nested',
+  'drf_yasg',
+  'environs',
+  'google',
+  'influxdb_client',
+  'ordered_model',
+  'pyotp',
+  'pytest',
+  'pytz',
+  'requests',
+  'responses',
+  'rest_framework',
+  'rest_framework_nested',
+  'rest_framework_recursive',
+  'sentry_sdk',
+  'shortuuid',
+  'simple_history',
+  'six',
+  'task_processor','telemetry',
+  'tests',
+  'trench',
+  'whitenoise',
+]
+skip = ['migrations', '.venv', '.direnv']
 
 [tool.pytest.ini_options]
 addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings']
@@ -63,7 +116,7 @@ django-cors-headers = "~3.5.0"
 djangorestframework = "~3.15.1"
 gunicorn = "~22.0.0"
 pyparsing = "~2.4.7"
-requests = "~2.32.0"
+requests = "~2.32.2"
 six = "~1.16.0"
 whitenoise = "~6.0.0"
 dj-database-url = "~0.5.0"
@@ -121,13 +174,13 @@ flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-
 optional = true
 
 [tool.poetry.group.auth-controller.dependencies]
-flagsmith-auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth-controller", tag = "v0.1.1" }
+flagsmith-auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth-controller", tag = "v0.1.2" }
 
 [tool.poetry.group.saml]
 optional = true
 
 [tool.poetry.group.saml.dependencies]
-pysaml2 = "^7.0.0"
+pysaml2 = "^7.4.2"
 
 [tool.poetry.group.ldap]
 optional = true
@@ -157,7 +210,6 @@ autopep8 = "~2.0.1"
 pytest = "~7.2.1"
 pytest-django = "^4.5.2"
 black = "~24.3.0"
-pip-tools = "~6.13.0"
 pytest-cov = "~4.1.0"
 datamodel-code-generator = "~0.22"
 requests-mock = "^1.11.0"

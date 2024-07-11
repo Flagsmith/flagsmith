@@ -12,7 +12,14 @@ export default class ErrorMessage extends PureComponent {
     const errorMessageClassName = `alert alert-danger ${
       this.props.errorMessageClass || 'flex-1 align-items-center'
     }`
-    const error = this.props.error?.data || this.props.error?.message || this.props.error
+    const error =
+      this.props.error?.data?.metadata?.find((item) =>
+        // eslint-disable-next-line no-prototype-builtins
+        item.hasOwnProperty('non_field_errors'),
+      )?.non_field_errors[0] ||
+      this.props.error?.data ||
+      this.props.error?.message ||
+      this.props.error
     return this.props.error ? (
       <div
         className={errorMessageClassName}

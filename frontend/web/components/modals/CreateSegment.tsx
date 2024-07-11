@@ -52,7 +52,8 @@ import AddMetadataToEntity, {
   CustomMetadataField,
 } from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
-import { setInterceptClose, setModalTitle } from './base/ModalDefault'
+import MetadataTitle from 'components/metadata/MetadataTitle'
+import { setInterceptClose } from './base/ModalDefault'
 
 type PageType = {
   number: number
@@ -206,6 +207,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const save = (e: FormEvent) => {
     Utils.preventDefault(e)
     setValueChanged(false)
+    setMetadataValueChanged(false)
     const segmentData: Omit<Segment, 'id' | 'uuid'> = {
       description,
       feature: feature,
@@ -235,6 +237,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   }
 
   const [valueChanged, setValueChanged] = useState(false)
+  const [metadataValueChanged, setMetadataValueChanged] = useState(false)
   const onClosing = useCallback(() => {
     return new Promise((resolve) => {
       if (valueChanged) {
@@ -469,27 +472,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
             Show condition descriptions
           </span>
         </Row>
-        {metadataEnable && segmentContentType?.id && (
-          <FormGroup className='mb-5 setting'>
-            <InputGroup
-              title={'Metadata'}
-              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} segments`}
-              tooltipPlace='right'
-              component={
-                <AddMetadataToEntity
-                  organisationId={AccountStore.getOrganisation().id}
-                  projectId={projectId}
-                  entityId={`${segment.id}` || ''}
-                  entityContentType={segmentContentType?.id}
-                  entity={segmentContentType?.model}
-                  onChange={(m: CustomMetadataField[]) => {
-                    setMetadata(m)
-                  }}
-                />
-              }
-            />
-          </FormGroup>
-        )}
         <Flex className='mb-3'>
           <label className='cols-sm-2 control-label mb-1'>
             Include users when all of the following rules apply:
@@ -561,6 +543,28 @@ const CreateSegment: FC<CreateSegmentType> = ({
         </div>
       )}
     </form>
+  )
+
+  const MetadataTab = (
+    <FormGroup className='mt-5 setting'>
+      <InputGroup
+        component={
+          <AddMetadataToEntity
+            organisationId={AccountStore.getOrganisation().id}
+            projectId={projectId}
+            entityId={`${segment.id}` || ''}
+            entityContentType={segmentContentType?.id}
+            entity={segmentContentType?.model}
+            onChange={(m: CustomMetadataField[]) => {
+              setMetadata(m)
+              if (isEdit) {
+                setMetadataValueChanged(true)
+              }
+            }}
+          />
+        }
+      />
+    </FormGroup>
   )
 
   return (
@@ -733,6 +737,36 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 </FormGroup>
               </div>
             </div>
+          </TabItem>
+          {metadataEnable && segmentContentType?.id && (
+            <TabItem
+              tabLabelString='Metadata'
+              tabLabel={
+                <Row className='justify-content-center'>
+                  Metadata
+                  {metadataValueChanged && (
+                    <div className='unread ml-2 px-1'>{'*'}</div>
+                  )}
+                </Row>
+              }
+            >
+              <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
+            </TabItem>
+          )}
+        </Tabs>
+      ) : metadataEnable && segmentContentType?.id ? (
+        <Tabs value={tab} onChange={(tab: number) => setTab(tab)}>
+          <TabItem
+            tabLabelString='Basic configuration'
+            tabLabel={'Basic configuration'}
+          >
+            <div className={className || 'my-3 mx-4'}>{Tab1}</div>
+          </TabItem>
+          <TabItem
+            tabLabelString='Metadata'
+            tabLabel={<Row className='justify-content-center'>Metadata</Row>}
+          >
+            <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
           </TabItem>
         </Tabs>
       ) : (

@@ -65,6 +65,10 @@ const HomePage = class extends React.Component {
   }
 
   componentDidMount() {
+    const plan = Utils.fromParam().plan
+    if (plan) {
+      API.setCookie('plan', plan)
+    }
     if (
       Project.albacross &&
       this.props.location.pathname.indexOf('signup') !== -1
@@ -366,8 +370,8 @@ const HomePage = class extends React.Component {
                                           <InputGroup
                                             title='Password'
                                             inputProps={{
-                                              enableAutoComplete: true,
                                               className: 'full-width',
+                                              enableAutoComplete: true,
                                               error: error && error.password,
                                               name: 'password',
                                             }}

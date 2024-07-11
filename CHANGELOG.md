@@ -1,5 +1,123 @@
 # Changelog
 
+## [2.128.0](https://github.com/Flagsmith/flagsmith/compare/v2.127.1...v2.128.0) (2024-07-10)
+
+
+### Features
+
+* Selected options ([#4311](https://github.com/Flagsmith/flagsmith/issues/4311)) ([d32a320](https://github.com/Flagsmith/flagsmith/commit/d32a3203036fa6fde820c1867862ff909c269b52))
+
+
+### Bug Fixes
+
+* **get_permitted_projects:** get rid of distinct ([#4320](https://github.com/Flagsmith/flagsmith/issues/4320)) ([e7252cb](https://github.com/Flagsmith/flagsmith/commit/e7252cb056645ff6982772759ca8551cd1855811))
+* version diff overflow ([#4313](https://github.com/Flagsmith/flagsmith/issues/4313)) ([2525636](https://github.com/Flagsmith/flagsmith/commit/25256367e706b611ed6e6c399b0b2fb8c672710c))
+
+## [2.127.1](https://github.com/Flagsmith/flagsmith/compare/v2.127.0...v2.127.1) (2024-07-09)
+
+
+### Bug Fixes
+
+* **segments:** add migration to set version on existing segments ([#4315](https://github.com/Flagsmith/flagsmith/issues/4315)) ([288a47e](https://github.com/Flagsmith/flagsmith/commit/288a47efc6bec12374a05a48191380b645bb99b3))
+
+## [2.127.0](https://github.com/Flagsmith/flagsmith/compare/v2.126.0...v2.127.0) (2024-07-09)
+
+
+### Features
+
+* Add timestamps to segments models ([#4236](https://github.com/Flagsmith/flagsmith/issues/4236)) ([a5b2421](https://github.com/Flagsmith/flagsmith/commit/a5b24210419e6f33935b4f06d8627bcac4a039bb))
+* Announcement feature flag per page ([#4218](https://github.com/Flagsmith/flagsmith/issues/4218)) ([3bfad05](https://github.com/Flagsmith/flagsmith/commit/3bfad055a203f65af84b158daabddc2e3a776556))
+* Announcement per page accept an id list on the params key ([#4280](https://github.com/Flagsmith/flagsmith/issues/4280)) ([e2685e9](https://github.com/Flagsmith/flagsmith/commit/e2685e91abcdc78457dc0ecf56f134de877cb609))
+* Announcement per page FF accept params ([#4275](https://github.com/Flagsmith/flagsmith/issues/4275)) ([078bf1e](https://github.com/Flagsmith/flagsmith/commit/078bf1e1a8002b9c5142c866804c89df006ffaef))
+* **build:** Debian Bookworm base images ([#4263](https://github.com/Flagsmith/flagsmith/issues/4263)) ([0230b9a](https://github.com/Flagsmith/flagsmith/commit/0230b9a479cd8e513e883ae19cd694da088bbc59))
+* **build:** Docker build improvements ([#4272](https://github.com/Flagsmith/flagsmith/issues/4272)) ([627370f](https://github.com/Flagsmith/flagsmith/commit/627370f3fb7b92f911db7eba15720e96878b3cd4))
+* Create versioning for segments ([#4138](https://github.com/Flagsmith/flagsmith/issues/4138)) ([bc9b340](https://github.com/Flagsmith/flagsmith/commit/bc9b340b2a44c46e93326e9602c48dda55e8a6f8))
+* Group versions by date ([#4246](https://github.com/Flagsmith/flagsmith/issues/4246)) ([540d320](https://github.com/Flagsmith/flagsmith/commit/540d320d4fafa686f8d61aed734bafb1c4e82f20))
+* Update API usage notifications thresholds ([#4255](https://github.com/Flagsmith/flagsmith/issues/4255)) ([5162687](https://github.com/Flagsmith/flagsmith/commit/516268775ee0581a791fb4fd6244126792f579ba))
+
+
+### Bug Fixes
+
+* **build:** Avoid Docker Hub pull throttling by using public ECR registry ([#4292](https://github.com/Flagsmith/flagsmith/issues/4292)) ([30bed4e](https://github.com/Flagsmith/flagsmith/commit/30bed4efc3aff4e947d2d3aeb8589481730dbbfb))
+* Set early return when influxdb range is empty ([#4274](https://github.com/Flagsmith/flagsmith/issues/4274)) ([007351c](https://github.com/Flagsmith/flagsmith/commit/007351c2338e85cacc051102780778e457f1568a))
+
+## [2.126.0](https://github.com/Flagsmith/flagsmith/compare/v2.125.0...v2.126.0) (2024-06-26)
+
+
+### Features
+
+* **api usage:** Extra Flagsmith checks for API overage charges ([#4251](https://github.com/Flagsmith/flagsmith/issues/4251)) ([ca2b13b](https://github.com/Flagsmith/flagsmith/commit/ca2b13b06c747d026104de7f012d067905e35a88))
+
+
+### Bug Fixes
+
+* Hide Sensitive Data switch ([#4199](https://github.com/Flagsmith/flagsmith/issues/4199)) ([ff29f21](https://github.com/Flagsmith/flagsmith/commit/ff29f2184d5b5c372001cfdfb5cd9076a2f4625d))
+
+## [2.125.0](https://github.com/Flagsmith/flagsmith/compare/v2.124.2...v2.125.0) (2024-06-26)
+
+
+### Features
+
+* **api-usage:** add `subscription.plan` trait to `flagsmith.get_identity_flags` ([#4247](https://github.com/Flagsmith/flagsmith/issues/4247)) ([182ea04](https://github.com/Flagsmith/flagsmith/commit/182ea04c7f776606c931f34c4fad32849f667d2c))
+
+
+### Bug Fixes
+
+* **ci:** Authenticate Trivy correctly for ephemeral build ([#4227](https://github.com/Flagsmith/flagsmith/issues/4227)) ([b9a6f92](https://github.com/Flagsmith/flagsmith/commit/b9a6f92ec099cac58f16c989d44b86bead443a81))
+* **ci:** Enable Docker builds and E2E for external PRs ([#4224](https://github.com/Flagsmith/flagsmith/issues/4224)) ([fe7cc53](https://github.com/Flagsmith/flagsmith/commit/fe7cc53b5b4242db6af5ee818dd1e7c42a8d44ab))
+* **ci:** Use correct `ENV` value for production ([#4237](https://github.com/Flagsmith/flagsmith/issues/4237)) ([81753ba](https://github.com/Flagsmith/flagsmith/commit/81753bae01c6665bd4a50349107d709991eabfc4))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* add production environment variables for FoF and API usage alerting ([#4248](https://github.com/Flagsmith/flagsmith/issues/4248)) ([af61d52](https://github.com/Flagsmith/flagsmith/commit/af61d52bb0da1ba95a45f5ea877fc01abc20d262))
+
+## [2.124.2](https://github.com/Flagsmith/flagsmith/compare/v2.124.1...v2.124.2) (2024-06-25)
+
+
+### Bug Fixes
+
+* **ci:** `packages:read` permission lacking for Docker publish jobs ([#4223](https://github.com/Flagsmith/flagsmith/issues/4223)) ([a037f9f](https://github.com/Flagsmith/flagsmith/commit/a037f9faaea5dd9b610ca61b5ed43d170f93b0fb))
+
+## [2.124.1](https://github.com/Flagsmith/flagsmith/compare/v2.124.0...v2.124.1) (2024-06-25)
+
+
+### Bug Fixes
+
+* **ci:** Secrets unavailable to Docker publish jobs ([#4220](https://github.com/Flagsmith/flagsmith/issues/4220)) ([30ba49d](https://github.com/Flagsmith/flagsmith/commit/30ba49dea45f1f54f3f805a7dc14b36ed49c9acf))
+* versioning webhooks and update test to correctly test end to end ([#4221](https://github.com/Flagsmith/flagsmith/issues/4221)) ([47eb149](https://github.com/Flagsmith/flagsmith/commit/47eb149ffa6840a2f36f2378737b8aa0ce4b2199))
+
+## [2.124.0](https://github.com/Flagsmith/flagsmith/compare/v2.123.1...v2.124.0) (2024-06-24)
+
+
+### Features
+
+* Add confirmations when removing features, segments and environments ([#4210](https://github.com/Flagsmith/flagsmith/issues/4210)) ([cdc3410](https://github.com/Flagsmith/flagsmith/commit/cdc3410ccb6941e22ab1c3529ebc7d0330e4eb22))
+* Add logic to API usage notification templates ([#4206](https://github.com/Flagsmith/flagsmith/issues/4206)) ([6afa63d](https://github.com/Flagsmith/flagsmith/commit/6afa63d7e2e5e452854944c5034cd2195cf7cffa))
+* Add UI for SAML attribute mapping ([#4184](https://github.com/Flagsmith/flagsmith/issues/4184)) ([318fb85](https://github.com/Flagsmith/flagsmith/commit/318fb85e471a96b10274c4f502cfac7971169acf))
+* Grafana integration ([#4144](https://github.com/Flagsmith/flagsmith/issues/4144)) ([5c25c41](https://github.com/Flagsmith/flagsmith/commit/5c25c41e01ba68b18887759f2a5650caa6a9f39d))
+* **versioning:** add logic to create version in single endpoint ([#3991](https://github.com/Flagsmith/flagsmith/issues/3991)) ([57f8d68](https://github.com/Flagsmith/flagsmith/commit/57f8d68449577228a6f32cd317c4693cf5282824))
+
+
+### Bug Fixes
+
+* **ci:** Docker build CodeQL permission ([#4217](https://github.com/Flagsmith/flagsmith/issues/4217)) ([7554d15](https://github.com/Flagsmith/flagsmith/commit/7554d159aa46338381d392237e662d43286d9cdd))
+* **ci:** Secrets unavailable for deploy jobs ([#4215](https://github.com/Flagsmith/flagsmith/issues/4215)) ([d56ad08](https://github.com/Flagsmith/flagsmith/commit/d56ad08d332d10ee440170afec64bd1efecc5282))
+* Include free plans for api use notifications ([#4204](https://github.com/Flagsmith/flagsmith/issues/4204)) ([e1f3a7b](https://github.com/Flagsmith/flagsmith/commit/e1f3a7b92344b909f3547024589086685e7c04fa))
+* login redirect ([#4192](https://github.com/Flagsmith/flagsmith/issues/4192)) ([b0bc87a](https://github.com/Flagsmith/flagsmith/commit/b0bc87acbe8c0187eaaa6e01880c64712eea1dba))
+* Metadata UI issues ([#4069](https://github.com/Flagsmith/flagsmith/issues/4069)) ([36c8bb3](https://github.com/Flagsmith/flagsmith/commit/36c8bb3c401ed153dcc0e866e0edab49746a4ff9))
+* oauth user case sensitivity ([#4207](https://github.com/Flagsmith/flagsmith/issues/4207)) ([af955bf](https://github.com/Flagsmith/flagsmith/commit/af955bf7ef3b35965b5675d957fe56a8383c7d5b))
+* Preserve selected environment ([#4190](https://github.com/Flagsmith/flagsmith/issues/4190)) ([6bf9858](https://github.com/Flagsmith/flagsmith/commit/6bf9858ce23400445a3ace960acf78123141cdf0))
+
+## [2.123.1](https://github.com/Flagsmith/flagsmith/compare/v2.123.0...v2.123.1) (2024-06-19)
+
+
+### Bug Fixes
+
+* not serializable arguments when calling environment feature version webhooks ([#4187](https://github.com/Flagsmith/flagsmith/issues/4187)) ([319708c](https://github.com/Flagsmith/flagsmith/commit/319708c1f2ac8ae5f4e8c1208e9cceab0f939552))
+* scarf image formatting ([#4178](https://github.com/Flagsmith/flagsmith/issues/4178)) ([710ed87](https://github.com/Flagsmith/flagsmith/commit/710ed878e3d20f8170544894c4db5c1176e2d149))
+* Stale connections after task processor errors ([#4179](https://github.com/Flagsmith/flagsmith/issues/4179)) ([17782bd](https://github.com/Flagsmith/flagsmith/commit/17782bdc39ba010e3e823bf2b7f89f20b61d3234))
+
 ## [2.123.0](https://github.com/Flagsmith/flagsmith/compare/v2.122.0...v2.123.0) (2024-06-18)
 
 

@@ -1,3 +1,5 @@
+import typing
+
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
@@ -37,10 +39,24 @@ class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
 
 
 class CreateSegmentOverrideFeatureSegmentSerializer(serializers.ModelSerializer):
+    # Since the `priority` field on the FeatureSegment model is set to editable=False
+    # (to adhere to the django-ordered-model functionality), we redefine the priority
+    # field here, and use it manually in the save method.
+    priority = serializers.IntegerField(min_value=0, required=False)
+
     class Meta:
         model = FeatureSegment
         fields = ("id", "segment", "priority", "uuid")
-        read_only_fields = ("priority",)
+
+    def save(self, **kwargs: typing.Any) -> FeatureSegment:
+        priority: int | None = self.initial_data.pop("priority", None)
+
+        feature_segment: FeatureSegment = super().save(**kwargs)
+
+        if priority:
+            feature_segment.to(priority)
+
+        return feature_segment
 
 
 class FeatureSegmentQuerySerializer(serializers.Serializer):
