@@ -7,7 +7,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { Link, NavLink } from 'react-router-dom'
 import { IonIcon } from '@ionic/react'
-import { code, createOutline } from 'ionicons/icons'
+import { code, createOutline, statsChart } from 'ionicons/icons'
 import EnvironmentDropdown from 'components/EnvironmentDropdown'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
@@ -251,6 +251,14 @@ const HomeAside: FC<HomeAsideType> = ({
                                       >
                                         <IonIcon className='mr-2' icon={code} />
                                         SDK Keys
+                                      </NavLink>
+                                      <NavLink
+                                        id='event-link'
+                                        exact
+                                        to={`/project/${project.id}/environment/${environment.api_key}/event-sdk`}
+                                      >
+                                        <IonIcon className='mr-2' icon={statsChart} />
+                                        Event and Request Counts
                                       </NavLink>
                                       {environmentAdmin && (
                                         <NavLink
