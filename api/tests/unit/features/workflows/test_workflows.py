@@ -288,7 +288,8 @@ def test_create_scheduled_change_request_with_change_set(
             "version_change_set_id": version_change_set_id,
             "user_id": staff_user.id,
             "is_scheduled": True,
-        }
+        },
+        delay_until=one_hour_from_now,
     )
 
 

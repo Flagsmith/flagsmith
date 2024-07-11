@@ -289,7 +289,7 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
             publish_version_change_set(**kwargs)
         else:
             kwargs["is_scheduled"] = True
-            publish_version_change_set.delay(kwargs=kwargs)
+            publish_version_change_set.delay(kwargs=kwargs, delay_until=self.live_from)
 
     def get_conflicts(self) -> list[Conflict]:
         change_sets_since_creation = list(
