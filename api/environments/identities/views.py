@@ -5,6 +5,7 @@ from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.db.models import Q
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg.utils import swagger_auto_schema
@@ -175,6 +176,7 @@ class SDKIdentities(SDKAPIView):
 
         if request.query_params.get("transient"):
             identity = Identity(
+                created_date=timezone.now(),
                 identifier=identifier,
                 environment=request.environment,
             )
