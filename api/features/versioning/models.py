@@ -279,6 +279,21 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
                     "Version change set should belong to either a change request, or a version."
                 )
 
+    def get_parsed_feature_states_to_create(self) -> list[dict[str, typing.Any]]:
+        if self.feature_states_to_create:
+            return json.loads(self.feature_states_to_create)
+        return []
+
+    def get_parsed_feature_states_to_update(self) -> list[dict[str, typing.Any]]:
+        if self.feature_states_to_update:
+            return json.loads(self.feature_states_to_update)
+        return []
+
+    def get_parsed_segment_ids_to_delete_overrides(self) -> list[dict[str, typing.Any]]:
+        if self.segment_ids_to_delete_overrides:
+            return json.loads(self.segment_ids_to_delete_overrides)
+        return []
+
     def publish(self, user: "FFAdminUser") -> None:
         # TODO:
         #  - handle API keys
@@ -316,7 +331,7 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
         return conflicts
 
     def includes_change_to_environment_default(self) -> bool:
-        for fs_to_update in json.loads(self.feature_states_to_update):
+        for fs_to_update in self.get_parsed_feature_states_to_update():
             if fs_to_update["feature_segment"] is None:
                 return True
 
@@ -324,14 +339,14 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
 
     def includes_change_to_segment(self, segment_id: int) -> bool:
         modified_segment_ids = {
-            *json.loads(self.segment_ids_to_delete_overrides),
+            *self.get_parsed_segment_ids_to_delete_overrides(),
             *[
                 fs["feature_segment"]["segment"]
                 for fs in filter(
                     lambda fs: fs["feature_segment"] is not None,
                     [
-                        *json.loads(self.feature_states_to_create),
-                        *json.loads(self.feature_states_to_update),
+                        *self.get_parsed_feature_states_to_create(),
+                        *self.get_parsed_feature_states_to_update(),
                     ],
                 )
             ],
@@ -342,7 +357,7 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
         self, change_sets_since_creation: list["VersionChangeSet"]
     ) -> list[Conflict]:
         _conflicts = []
-        for fs_to_update in json.loads(self.feature_states_to_update):
+        for fs_to_update in self.get_parsed_feature_states_to_update():
             for change_set in change_sets_since_creation:
                 if (
                     fs_to_update["feature_segment"] is None
@@ -367,7 +382,7 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
         self, change_sets_since_creation: list["VersionChangeSet"]
     ) -> list[Conflict]:
         _conflicts = []
-        for fs_to_create in json.loads(self.feature_states_to_create):
+        for fs_to_create in self.get_parsed_feature_states_to_create():
             for change_set in change_sets_since_creation:
                 # Note that feature states to create cannot be environment defaults so
                 # must always have a feature segment
@@ -387,7 +402,7 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
         self, change_sets_since_create: list["VersionChangeSet"]
     ) -> list[Conflict]:
         _conflicts = []
-        for segment_id in json.loads(self.segment_ids_to_delete_overrides):
+        for segment_id in self.get_parsed_segment_ids_to_delete_overrides():
             for change_set in change_sets_since_create:
                 if change_set.includes_change_to_segment(segment_id):
                     _conflicts.append(

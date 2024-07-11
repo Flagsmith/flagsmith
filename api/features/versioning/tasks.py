@@ -2,6 +2,9 @@ import json
 import logging
 import typing
 
+from django.conf import settings
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from django.utils import timezone
 
 from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
@@ -164,13 +167,13 @@ def create_environment_feature_version_published_audit_log_task(
 def publish_version_change_set(
     version_change_set_id: int, user_id: int, is_scheduled: bool = False
 ) -> None:
-    version_change_set = VersionChangeSet.objects.get(id=version_change_set_id)
+    version_change_set = VersionChangeSet.objects.select_related(
+        "change_request", "change_request__user"
+    ).get(id=version_change_set_id)
     user = FFAdminUser.objects.get(id=user_id)
 
     if is_scheduled and version_change_set.get_conflicts():
-        # TODO:
-        #  - alert the user (via email?) that the change request wasn't published because
-        #  of conflicts
+        _send_failed_due_to_conflict_alert_to_change_request_author(version_change_set)
         return
 
     # TODO:
@@ -183,14 +186,20 @@ def publish_version_change_set(
 
     serializer = EnvironmentFeatureVersionCreateSerializer(
         data={
-            "feature_states_to_create": json.loads(
-                version_change_set.feature_states_to_create
+            "feature_states_to_create": (
+                json.loads(version_change_set.feature_states_to_create)
+                if version_change_set.feature_states_to_create
+                else []
             ),
-            "feature_states_to_update": json.loads(
-                version_change_set.feature_states_to_update
+            "feature_states_to_update": (
+                json.loads(version_change_set.feature_states_to_update)
+                if version_change_set.feature_states_to_update
+                else []
             ),
-            "segment_ids_to_delete_overrides": json.loads(
-                version_change_set.segment_ids_to_delete_overrides
+            "segment_ids_to_delete_overrides": (
+                json.loads(version_change_set.segment_ids_to_delete_overrides)
+                if version_change_set.segment_ids_to_delete_overrides
+                else []
             ),
         }
     )
@@ -207,3 +216,21 @@ def publish_version_change_set(
     version_change_set.published_at = version_change_set.live_from = timezone.now()
     version_change_set.published_by = user
     version_change_set.save()
+
+
+def _send_failed_due_to_conflict_alert_to_change_request_author(
+    version_change_set: VersionChangeSet,
+) -> None:
+    context = {
+        "change_request": version_change_set.change_request,
+        "user": version_change_set.change_request.user,
+        "feature": version_change_set.feature,
+    }
+    send_mail(
+        subject=version_change_set.change_request.email_subject,
+        message=render_to_string(
+            "versioning/scheduled_change_failed_conflict_email.txt", context
+        ),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[version_change_set.change_request.user.email],
+    )

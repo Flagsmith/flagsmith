@@ -1,21 +1,28 @@
 import json
 from datetime import timedelta
+from unittest import mock
 
 import freezegun
 import responses
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
 from django.utils import timezone
-from pytest_mock import MockerFixture
 
 from environments.identities.models import Identity
 from environments.models import Environment, Webhook
 from features.models import Feature, FeatureSegment, FeatureState
-from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.models import (
+    EnvironmentFeatureVersion,
+    VersionChangeSet,
+)
 from features.versioning.tasks import (
     disable_v2_versioning,
     enable_v2_versioning,
+    publish_version_change_set,
     trigger_update_version_webhooks,
 )
 from features.versioning.versioning_service import (
+    get_environment_flags_dict,
     get_environment_flags_queryset,
 )
 from features.workflows.core.models import ChangeRequest
@@ -144,7 +151,7 @@ def test_disable_v2_versioning(
 
 @responses.activate
 def test_trigger_update_version_webhooks(
-    environment_v2_versioning: Environment, feature: Feature, mocker: MockerFixture
+    environment_v2_versioning: Environment, feature: Feature
 ) -> None:
     # Given
     version = EnvironmentFeatureVersion.objects.get(
@@ -246,3 +253,107 @@ def test_enable_v2_versioning_for_scheduled_changes(
             environment_flags_queryset_two_hours_later.first()
             == scheduled_feature_state
         )
+
+
+def test_publish_version_change_set_sends_email_to_change_request_owner_if_conflicts_when_scheduled(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+    mailoutbox: list[EmailMessage],
+) -> None:
+    # Given
+    live_from = timezone.now() + timedelta(hours=1)
+
+    # First, we need to create the change request, and change set
+    # that we want to publish in this test (but should fail because
+    # of a conflict with another change set that we will create
+    # afterwards and publish immediately).
+    change_request_1 = ChangeRequest.objects.create(
+        title="CR 1",
+        environment=environment_v2_versioning,
+        user=staff_user,
+    )
+    change_set_to_publish = VersionChangeSet.objects.create(
+        feature=feature,
+        change_request=change_request_1,
+        live_from=live_from,
+        feature_states_to_update=json.dumps(
+            [
+                {
+                    "feature": feature.id,
+                    "enabled": True,
+                    "feature_segment": None,
+                    "feature_state_value": {"type": "unicode", "string_value": "foo"},
+                }
+            ]
+        ),
+    )
+    with mock.patch(
+        "features.versioning.tasks.publish_version_change_set"
+    ) as mock_publish:
+        change_request_1.commit(staff_user)
+        task_kwargs = {
+            "version_change_set_id": change_set_to_publish.id,
+            "user_id": staff_user.id,
+            "is_scheduled": True,
+        }
+        mock_publish.delay.assert_called_once_with(
+            kwargs=task_kwargs,
+            delay_until=live_from,
+        )
+
+    # Now, we'll create another change request and change set that will
+    # conflict with the first one and publish it immediately.
+    conflict_change_request = ChangeRequest.objects.create(
+        title="Conflict CR",
+        environment=environment_v2_versioning,
+        user=staff_user,
+    )
+    conflict_feature_value = "bar"
+    conflict_feature_enabled = False
+    VersionChangeSet.objects.create(
+        feature=feature,
+        change_request=conflict_change_request,
+        feature_states_to_update=json.dumps(
+            [
+                {
+                    "feature": feature.id,
+                    "enabled": conflict_feature_enabled,
+                    "feature_segment": None,
+                    "feature_state_value": {
+                        "type": "unicode",
+                        "string_value": conflict_feature_value,
+                    },
+                }
+            ]
+        ),
+    )
+    conflict_change_request.commit(staff_user)
+
+    # When
+    # We simulate the task being called by the task processor at the correct time,
+    # as per the mock call that we asserted above.
+    with freezegun.freeze_time(live_from):
+        publish_version_change_set(**task_kwargs)
+
+    # Then
+    # an alert was sent to the change request owner
+    assert len(mailoutbox) == 1
+    assert mailoutbox[0].subject == change_request_1.email_subject
+    assert mailoutbox[0].to == [staff_user.email]
+    assert mailoutbox[0].body == render_to_string(
+        "versioning/scheduled_change_failed_conflict_email.txt",
+        context={
+            "change_request": change_request_1,
+            "user": staff_user,
+            "feature": feature,
+        },
+    )
+
+    # and the change is not reflected in the flags
+    latest_flags = get_environment_flags_dict(environment=environment_v2_versioning)
+    assert latest_flags[(feature.id, None, None)].enabled is conflict_feature_enabled
+    assert (
+        latest_flags[(feature.id, None, None)].get_feature_state_value()
+        == conflict_feature_value
+    )

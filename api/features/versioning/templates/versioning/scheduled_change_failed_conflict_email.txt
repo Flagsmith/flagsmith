@@ -1,0 +1,9 @@
+Hi {{ user.first_name | default:"there" }},
+
+Your change to feature '{{ feature.name }}' as part of change request '{{ change_request.title }}' was not published
+due to a conflict.
+
+Please review the change request and re-create the change.
+
+Thanks,
+The Flagsmith team
