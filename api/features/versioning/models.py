@@ -279,12 +279,12 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
                     "Version change set should belong to either a change request, or a version."
                 )
 
-    def publish(self, created_by: "FFAdminUser") -> None:
+    def publish(self, user: "FFAdminUser") -> None:
         # TODO:
         #  - handle API keys
         from features.versioning.tasks import publish_version_change_set
 
-        kwargs = {"version_change_set_id": self.id, "user_id": created_by.id}
+        kwargs = {"version_change_set_id": self.id, "user_id": user.id}
         if not self.live_from or self.live_from < timezone.now():
             publish_version_change_set(**kwargs)
         else:

@@ -177,7 +177,7 @@ class ChangeRequest(
 
     def _publish_change_sets(self, published_by: "FFAdminUser") -> None:
         for change_set in self.change_sets.all():
-            change_set.publish(created_by=published_by)
+            change_set.publish(user=published_by)
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title
