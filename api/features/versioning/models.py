@@ -13,12 +13,10 @@ from django.db import models
 from django.db.models import Index
 from django.utils import timezone
 from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook
-from pydantic import BaseModel, computed_field
-from rest_framework import status
-from rest_framework.exceptions import APIException
 from softdelete.models import SoftDeleteObject
 
 from api_keys.models import MasterAPIKey
+from features.versioning.dataclasses import Conflict
 from features.versioning.exceptions import FeatureVersioningError
 from features.versioning.managers import EnvironmentFeatureVersionManager
 from features.versioning.signals import environment_feature_version_published
@@ -169,41 +167,6 @@ class EnvironmentFeatureVersion(
 
         _clone.save()
         return _clone
-
-
-# TODO: move this elsewhere
-class Conflict(BaseModel):
-    segment_id: int | None = None
-    original_cr_id: int | None = None
-
-    @computed_field
-    @property
-    def is_environment_default(self) -> bool:
-        return self.segment_id is None
-
-
-# TODO: move this elsewhere
-class ConflictError(APIException):
-    status_code = status.HTTP_400_BAD_REQUEST
-
-    def __init__(
-        self, detail: str = None, code: int = None, conflicts: list[Conflict] = None
-    ):
-        self.conflicts = conflicts or []
-        _num_conflicts = len(self.conflicts)
-
-        # TODO: this is a bit of a hack to prevent DRF from coercing the
-        #  values in the conflicts dictionaries to strings.
-        #  - we should probably instead set the EXCEPTION_HANDLER in the REST_FRAMEWORK settings
-        self.detail = {
-            "detail": detail
-            or (
-                "1 conflict exists."
-                if _num_conflicts == 1
-                else f"{_num_conflicts} conflicts exist."
-            ),
-            "conflicts": [conflict.model_dump() for conflict in self.conflicts],
-        }
 
 
 class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
