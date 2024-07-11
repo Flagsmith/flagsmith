@@ -1,5 +1,46 @@
 # Changelog
 
+## [2.128.0](https://github.com/Flagsmith/flagsmith/compare/v2.127.1...v2.128.0) (2024-07-10)
+
+
+### Features
+
+* Selected options ([#4311](https://github.com/Flagsmith/flagsmith/issues/4311)) ([d32a320](https://github.com/Flagsmith/flagsmith/commit/d32a3203036fa6fde820c1867862ff909c269b52))
+
+
+### Bug Fixes
+
+* **get_permitted_projects:** get rid of distinct ([#4320](https://github.com/Flagsmith/flagsmith/issues/4320)) ([e7252cb](https://github.com/Flagsmith/flagsmith/commit/e7252cb056645ff6982772759ca8551cd1855811))
+* version diff overflow ([#4313](https://github.com/Flagsmith/flagsmith/issues/4313)) ([2525636](https://github.com/Flagsmith/flagsmith/commit/25256367e706b611ed6e6c399b0b2fb8c672710c))
+
+## [2.127.1](https://github.com/Flagsmith/flagsmith/compare/v2.127.0...v2.127.1) (2024-07-09)
+
+
+### Bug Fixes
+
+* **segments:** add migration to set version on existing segments ([#4315](https://github.com/Flagsmith/flagsmith/issues/4315)) ([288a47e](https://github.com/Flagsmith/flagsmith/commit/288a47efc6bec12374a05a48191380b645bb99b3))
+
+## [2.127.0](https://github.com/Flagsmith/flagsmith/compare/v2.126.0...v2.127.0) (2024-07-09)
+
+
+### Features
+
+* Add timestamps to segments models ([#4236](https://github.com/Flagsmith/flagsmith/issues/4236)) ([a5b2421](https://github.com/Flagsmith/flagsmith/commit/a5b24210419e6f33935b4f06d8627bcac4a039bb))
+* Announcement feature flag per page ([#4218](https://github.com/Flagsmith/flagsmith/issues/4218)) ([3bfad05](https://github.com/Flagsmith/flagsmith/commit/3bfad055a203f65af84b158daabddc2e3a776556))
+* Announcement per page accept an id list on the params key ([#4280](https://github.com/Flagsmith/flagsmith/issues/4280)) ([e2685e9](https://github.com/Flagsmith/flagsmith/commit/e2685e91abcdc78457dc0ecf56f134de877cb609))
+* Announcement per page FF accept params ([#4275](https://github.com/Flagsmith/flagsmith/issues/4275)) ([078bf1e](https://github.com/Flagsmith/flagsmith/commit/078bf1e1a8002b9c5142c866804c89df006ffaef))
+* **build:** Debian Bookworm base images ([#4263](https://github.com/Flagsmith/flagsmith/issues/4263)) ([0230b9a](https://github.com/Flagsmith/flagsmith/commit/0230b9a479cd8e513e883ae19cd694da088bbc59))
+* **build:** Docker build improvements ([#4272](https://github.com/Flagsmith/flagsmith/issues/4272)) ([627370f](https://github.com/Flagsmith/flagsmith/commit/627370f3fb7b92f911db7eba15720e96878b3cd4))
+* Create versioning for segments ([#4138](https://github.com/Flagsmith/flagsmith/issues/4138)) ([bc9b340](https://github.com/Flagsmith/flagsmith/commit/bc9b340b2a44c46e93326e9602c48dda55e8a6f8))
+* Group versions by date ([#4246](https://github.com/Flagsmith/flagsmith/issues/4246)) ([540d320](https://github.com/Flagsmith/flagsmith/commit/540d320d4fafa686f8d61aed734bafb1c4e82f20))
+* Update API usage notifications thresholds ([#4255](https://github.com/Flagsmith/flagsmith/issues/4255)) ([5162687](https://github.com/Flagsmith/flagsmith/commit/516268775ee0581a791fb4fd6244126792f579ba))
+
+
+### Bug Fixes
+
+* **build:** Avoid Docker Hub pull throttling by using public ECR registry ([#4292](https://github.com/Flagsmith/flagsmith/issues/4292)) ([30bed4e](https://github.com/Flagsmith/flagsmith/commit/30bed4efc3aff4e947d2d3aeb8589481730dbbfb))
+* Set early return when influxdb range is empty ([#4274](https://github.com/Flagsmith/flagsmith/issues/4274)) ([007351c](https://github.com/Flagsmith/flagsmith/commit/007351c2338e85cacc051102780778e457f1568a))
+
 ## [2.126.0](https://github.com/Flagsmith/flagsmith/compare/v2.125.0...v2.126.0) (2024-06-26)
 
 

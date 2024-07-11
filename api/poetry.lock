@@ -250,13 +250,13 @@ files = [
 
 [[package]]
 name = "certifi"
-version = "2023.7.22"
+version = "2024.7.4"
 description = "Python package for providing Mozilla's CA Bundle."
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "certifi-2023.7.22-py3-none-any.whl", hash = "sha256:92d6037539857d8206b8f6ae472e8b77db8058fec5937a1ef3f54304089edbb9"},
-    {file = "certifi-2023.7.22.tar.gz", hash = "sha256:539cc1d13202e33ca466e88b2807e29f4c13049d6d87031a3c110744495cb082"},
+    {file = "certifi-2024.7.4-py3-none-any.whl", hash = "sha256:c198e21b1289c2ab85ee4e67bb4b4ef3ead0892059901a8d5b622f24a1101e90"},
+    {file = "certifi-2024.7.4.tar.gz", hash = "sha256:5a1e7645bc0ec61a09e26c36f6106dd4cf40c6db3a1fb6352b0244e7fb057c7b"},
 ]
 
 [[package]]
@@ -1366,8 +1366,8 @@ django-multiselectfield = "0.1.12"
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-auth-controller"
-reference = "v0.1.1"
-resolved_reference = "24217c74a33cfa7635301fb752f1675a5009c7b4"
+reference = "v0.1.2"
+resolved_reference = "d0f73840b4d5a078077c2bb108458356476d0ee5"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -4421,4 +4421,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "a658838cafdf0d2adab426ff0e447dd725ff62cfa7386b8b61031eac7cd03e2c"
+content-hash = "3cb8219438e546b8e00622b4f70762f9b0bc4d0f134727721b6d84a341a7a9fa"
