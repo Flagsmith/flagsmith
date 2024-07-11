@@ -210,9 +210,6 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
     )
     live_from = models.DateTimeField(null=True)
 
-    # TODO: should this be a JSON blob or actual feature states?
-    #  Essentially it's the difference between approaches 1 & 2 here:
-    #  https://www.notion.so/flagsmith/Versioned-Change-Requests-improvements-d6ecf07ff3274fe586141525dbc5203f
     feature_states_to_create = models.TextField(
         null=True,
         help_text="JSON blob describing the feature states that should be "
