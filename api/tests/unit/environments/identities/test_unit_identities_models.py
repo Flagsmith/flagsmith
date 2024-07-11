@@ -662,19 +662,33 @@ def test_update_traits(environment: Environment) -> None:
     new_trait_1_value = 5
     trait_3_key = "trait_3"
     trait_3_value = 3
+
+    # and one transient trait that is evaluated against but not persisted
+    transient_trait_key = "transient"
+    transient_trait_value = "not persisted"
+
     trait_data_items = [
         generate_trait_data_item(
             trait_key=trait_1.trait_key, trait_value=new_trait_1_value
         ),
         generate_trait_data_item(trait_key=trait_3_key, trait_value=trait_3_value),
+        generate_trait_data_item(trait_key=trait_3_key, trait_value=trait_3_value),
+        generate_trait_data_item(
+            trait_key=transient_trait_key,
+            trait_value=transient_trait_value,
+            transient=True,
+        ),
     ]
 
     # When
     updated_traits = identity.update_traits(trait_data_items)
 
     # Then
-    # 3 traits are returned
-    assert len(updated_traits) == 3
+    # 3 traits are persisted
+    assert identity.identity_traits.count() == 3
+
+    # 4 traits are returned
+    assert len(updated_traits) == 4
 
     # and the first trait has it's value updated correctly
     updated_trait_1 = get_trait_from_list_by_key(trait_1_key, updated_traits)
@@ -687,6 +701,10 @@ def test_update_traits(environment: Environment) -> None:
     # and the third trait is created correctly
     updated_trait_3 = get_trait_from_list_by_key(trait_3_key, updated_traits)
     assert updated_trait_3.trait_value == trait_3_value
+
+    # and the transient trait is returned among others
+    transient_trait = get_trait_from_list_by_key(transient_trait_key, updated_traits)
+    assert transient_trait.trait_value == transient_trait_value
 
 
 def test_update_traits_deletes_when_nulled_out(environment: Environment) -> None:
