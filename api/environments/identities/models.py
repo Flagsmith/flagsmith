@@ -4,6 +4,7 @@ from itertools import chain
 from django.db import models
 from django.db.models import Prefetch, Q
 from django.utils import timezone
+from flag_engine.identities.traits.types import TraitValue
 from flag_engine.segments.evaluator import evaluate_identity_in_segment
 
 from environments.identities.managers import IdentityManager
@@ -226,7 +227,10 @@ class Identity(models.Model):
 
         return trait_models
 
-    def update_traits(self, trait_data_items):
+    def update_traits(
+        self,
+        trait_data_items: list[dict[str, TraitValue]],
+    ) -> list[Trait]:
         """
         Given a list of traits, update any that already exist and create any new ones.
         Return the full list of traits for the given identity after these changes.
@@ -236,7 +240,7 @@ class Identity(models.Model):
         """
         current_traits = {t.trait_key: t for t in self.identity_traits.all()}
 
-        keys_to_delete = []
+        keys_to_delete = set()
         new_traits = []
         updated_traits = []
         transient_traits = []
@@ -249,31 +253,26 @@ class Identity(models.Model):
             if trait_value is None:
                 # build a list of trait keys to delete having been nulled by the
                 # input data
-                keys_to_delete.append(trait_key)
+                keys_to_delete.add(trait_key)
                 continue
 
             trait_value_data = Trait.generate_trait_value_data(trait_value)
 
-            if trait_key in current_traits:
+            if transient:
+                transient_traits.append(
+                    Trait(**trait_value_data, trait_key=trait_key, identity=self)
+                )
+
+            elif trait_key in current_traits:
                 current_trait = current_traits[trait_key]
                 # Don't update the trait if the value hasn't changed
                 if current_trait.trait_value == trait_value:
-                    continue
-
-                if transient:
-                    transient_traits.append(
-                        Trait(**trait_value_data, trait_key=trait_key, identity=self)
-                    )
                     continue
 
                 for attr, value in trait_value_data.items():
                     setattr(current_trait, attr, value)
                 updated_traits.append(current_trait)
 
-            elif transient:
-                transient_traits.append(
-                    Trait(**trait_value_data, trait_key=trait_key, identity=self)
-                )
             else:
                 new_traits.append(
                     Trait(**trait_value_data, trait_key=trait_key, identity=self)
@@ -281,6 +280,11 @@ class Identity(models.Model):
 
         # delete the traits that had their keys set to None
         if keys_to_delete:
+            current_traits = {
+                trait_key: trait
+                for trait_key, trait in current_traits.items()
+                if trait_key not in keys_to_delete
+            }
             self.identity_traits.filter(trait_key__in=keys_to_delete).delete()
 
         Trait.objects.bulk_update(updated_traits, fields=Trait.BULK_UPDATE_FIELDS)
@@ -293,10 +297,14 @@ class Identity(models.Model):
 
         # return the full list of traits for this identity by refreshing from the db
         # override persisted traits by transient traits in case of key collisions
-        # TODO: handle this in the above logic to avoid a second hit to the DB
         return [
             *{
                 trait.trait_key: trait
-                for trait in chain(self.identity_traits.all(), transient_traits)
+                for trait in chain(
+                    current_traits.values(),
+                    updated_traits,
+                    new_traits,
+                    transient_traits,
+                )
             }.values()
         ]
