@@ -26,7 +26,7 @@ class TraitSerializerBasic(serializers.ModelSerializer):
 
     class Meta:
         model = Trait
-        fields = ("id", "trait_key", "trait_value")
+        fields = ("id", "trait_key", "trait_value", "transient")
         read_only_fields = ("id",)
 
 
