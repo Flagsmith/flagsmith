@@ -215,6 +215,7 @@ def publish_version_change_set(
 
     version_change_set.published_at = version_change_set.live_from = timezone.now()
     version_change_set.published_by = user
+    version_change_set.environment_feature_version = version
     version_change_set.save()
 
 
