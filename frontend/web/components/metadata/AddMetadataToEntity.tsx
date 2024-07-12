@@ -217,7 +217,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
           className='mt-1 no-pad'
           header={
             <Row className='table-header'>
-              <Row className='table-column flex-1'>Metadata </Row>
+              <Row className='table-column flex-1'>Field </Row>
               <Flex className='table-column'>Value</Flex>
             </Row>
           }
@@ -247,7 +247,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
           }}
           renderNoResults={
             <FormGroup>
-              No metadata configured for {entity} entity. Add metadata field in
+              No custom fields configured for {entity} entity. Add custom fields in
               your{' '}
               <a
                 href={`/project/${projectId}/settings?tab=metadata`}
@@ -286,12 +286,12 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
                   if (res?.error) {
                     toast(res?.error?.data.metadata[0], 'danger')
                   } else {
-                    toast('Environment Metadata Updated')
+                    toast('Environment Field Updated')
                   }
                 })
               }}
             >
-              Save Metadata
+              Save Custom Field
             </Button>
           </div>
         )}
@@ -347,7 +347,7 @@ const MetadataRow: FC<MetadataRowType> = ({
                 }}
                 className='mr-2'
                 style={{ width: '250px' }}
-                placeholder='Metadata Value'
+                placeholder='Field Value'
                 isValid={Utils.validateMetadataType(
                   metadata?.type,
                   metadataValue,

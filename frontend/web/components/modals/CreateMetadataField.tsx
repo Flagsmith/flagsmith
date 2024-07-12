@@ -275,7 +275,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
         component={
           <Select
             value={typeValue}
-            placeholder='Select a metadata type'
+            placeholder='Select a field type'
             options={metadataTypes}
             onChange={(m: MetadataType) => {
               setTypeValue(m)
@@ -344,7 +344,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
         onClick={save}
         className='float-right'
       >
-        {isEdit ? 'Update Metadata Field' : 'Create Metadata Field'}
+        {isEdit ? 'Update Custom Field' : 'Create Custom Field'}
       </Button>
     </div>
   )
