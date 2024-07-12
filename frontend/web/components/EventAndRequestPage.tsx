@@ -1,6 +1,7 @@
 import React, { FC } from 'react';
 import PageTitle from './PageTitle';
-import { Bar } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
+import '../App.css';  // Adjust the path if necessary
 
 type SDKEventType = {
   match: {
@@ -11,30 +12,49 @@ type SDKEventType = {
   };
 };
 
-const SDKEventsPage: FC<SDKEventType> = ({
+const EventAndRequestPage: FC<SDKEventType> = ({
   match: {
     params: { environmentId, projectId },
   },
 }) => {
-  const data = {
-    labels: ['Jul 1', 'Jul 2', 'Jul 3', 'Jul 4', 'Jul 5', 'jul 6', 'jul 7'],
+  const successfulRequestsData = {
+    labels: ['Jul 1', 'Jul 2', 'Jul 3', 'Jul 4', 'Jul 5', 'Jul 6', 'Jul 7'],
     datasets: [
       {
-        label: 'Number of Requests',
-        data: [12, 19, 3, 5],
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.2)',
-          'rgba(54, 162, 235, 0.2)',
-          'rgba(255, 206, 86, 0.2)',
-          'rgba(75, 192, 192, 0.2)',
-        ],
-        borderColor: [
-          'rgba(255, 99, 132, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-        ],
+        label: 'Successful Requests',
+        data: [12, 19, 3, 5, 2, 3, 7],
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderColor: 'rgba(255, 99, 132, 1)',
         borderWidth: 1,
+        fill: false,
+      },
+    ],
+  };
+
+  const eventAndIdentifyCountsData = {
+    labels: ['Jul 1', 'Jul 2', 'Jul 3', 'Jul 4', 'Jul 5', 'Jul 6', 'Jul 7'],
+    datasets: [
+      {
+        label: 'Event and Identify Counts',
+        data: [22, 29, 15, 20, 30, 25, 18],
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1,
+        fill: false,
+      },
+    ],
+  };
+
+  const errorRequestsData = {
+    labels: ['Jul 1', 'Jul 2', 'Jul 3', 'Jul 4', 'Jul 5', 'Jul 6', 'Jul 7'],
+    datasets: [
+      {
+        label: 'Error Requests',
+        data: [2, 3, 1, 4, 6, 2, 3],
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+        fill: false,
       },
     ],
   };
@@ -48,15 +68,23 @@ const SDKEventsPage: FC<SDKEventType> = ({
   };
 
   return (
-    <div className='app-container container'>
+    <div className='app-container'>
       <PageTitle title='SDK Request'>
         View the number of requests from the SDK.
       </PageTitle>
-      <div className='chart-container'>
-        <Bar data={data} options={options} />
+      <div className='charts-container'>
+        <div className='chart-container'>
+          <Line data={successfulRequestsData} options={options} />
+        </div>
+        <div className='chart-container'>
+          <Line data={eventAndIdentifyCountsData} options={options} />
+        </div>
+        <div className='chart-container'>
+          <Line data={errorRequestsData} options={options} />
+        </div>
       </div>
     </div>
   );
 };
 
-export default SDKEventsPage;
+export default EventAndRequestPage;
