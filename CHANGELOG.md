@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.129.0](https://github.com/Flagsmith/flagsmith/compare/v2.128.0...v2.129.0) (2024-07-12)
+
+
+### Features
+
+* **docker:** Update entrypoint ([#4262](https://github.com/Flagsmith/flagsmith/issues/4262)) ([759e745](https://github.com/Flagsmith/flagsmith/commit/759e745098d2e7cb582c0097c18c042e32533012))
+* Open payment modal if a plan was preselected, add annual plans ([#4110](https://github.com/Flagsmith/flagsmith/issues/4110)) ([103a94f](https://github.com/Flagsmith/flagsmith/commit/103a94fe45c6e9ec677dd2aa14ab2009f5f0b44b))
+
+
+### Bug Fixes
+
+* annual plan ids and refreshing ([#4323](https://github.com/Flagsmith/flagsmith/issues/4323)) ([f5a7eed](https://github.com/Flagsmith/flagsmith/commit/f5a7eed20a24f5ef0c642e48030ed74b168dd41f))
+* **build:** Avoid E2E rate limiting by swithing to Postgres image hosted on GHCR ([#4328](https://github.com/Flagsmith/flagsmith/issues/4328)) ([249db14](https://github.com/Flagsmith/flagsmith/commit/249db141a9e3679d28cacbe40e35b67d82d245c3))
+* **e2e:** Pass `GITHUB_ACTION_URL` to Docker E2E test runs ([#4322](https://github.com/Flagsmith/flagsmith/issues/4322)) ([f8babe8](https://github.com/Flagsmith/flagsmith/commit/f8babe892a3a066b3dcb80d47fe994e78d4e8ef0))
+* Fix "Create Project" button in the project selector not opening the project creation modal ([#4294](https://github.com/Flagsmith/flagsmith/issues/4294)) ([1f9aecc](https://github.com/Flagsmith/flagsmith/commit/1f9aeccff49ab5da37006924b5df1a0f307106d2))
+* frontend fails to load when announcement flag isn't set ([#4329](https://github.com/Flagsmith/flagsmith/issues/4329)) ([c047233](https://github.com/Flagsmith/flagsmith/commit/c04723373e4a5bfe236beae9a4c827fa819f6509))
+* Prevent "Create Segment" button from disappearing when deleting the last segment ([#4314](https://github.com/Flagsmith/flagsmith/issues/4314)) ([cd121e8](https://github.com/Flagsmith/flagsmith/commit/cd121e8e01bce3ac036587d9741773cbd145b3e3))
+
 ## [2.128.0](https://github.com/Flagsmith/flagsmith/compare/v2.127.1...v2.128.0) (2024-07-10)
 
 
