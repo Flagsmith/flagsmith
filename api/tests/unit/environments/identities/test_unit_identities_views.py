@@ -1155,7 +1155,7 @@ def test_post_identities__transient__no_persistence(
     url = reverse("api-v1:sdk-identities")
     data = {
         "identifier": identifier,
-        "traits": [{"trait_key": "foo", "trait_value": "bar"}],
+        "traits": [{"trait_key": trait_key, "trait_value": "bar"}],
         "transient": True,
     }
 
@@ -1166,8 +1166,8 @@ def test_post_identities__transient__no_persistence(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert not Identity.objects.filter(identifier=identifier).count()
-    assert not Trait.objects.filter(trait_key=trait_key).count()
+    assert not Identity.objects.filter(identifier=identifier).exists()
+    assert not Trait.objects.filter(trait_key=trait_key).exists()
 
 
 def test_post_identities__transient_traits__no_persistence(
@@ -1182,7 +1182,7 @@ def test_post_identities__transient_traits__no_persistence(
     url = reverse("api-v1:sdk-identities")
     data = {
         "identifier": identifier,
-        "traits": [{"trait_key": "foo", "trait_value": "bar", "transient": True}],
+        "traits": [{"trait_key": trait_key, "trait_value": "bar", "transient": True}],
     }
 
     # When
@@ -1192,8 +1192,8 @@ def test_post_identities__transient_traits__no_persistence(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert Identity.objects.filter(identifier=identifier).count()
-    assert not Trait.objects.filter(trait_key=trait_key).count()
+    assert Identity.objects.filter(identifier=identifier).exists()
+    assert not Trait.objects.filter(trait_key=trait_key).exists()
 
 
 def test_user_with_view_identities_permission_can_retrieve_identity(

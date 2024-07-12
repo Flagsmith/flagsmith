@@ -250,35 +250,43 @@ class Identity(models.Model):
             trait_value = trait_data_item["trait_value"]
             transient = trait_data_item.get("transient")
 
+            if transient:
+                transient_traits.append(
+                    Trait(
+                        **Trait.generate_trait_value_data(trait_value),
+                        trait_key=trait_key,
+                        identity=self,
+                    )
+                )
+                continue
+
             if trait_value is None:
                 # build a list of trait keys to delete having been nulled by the
                 # input data
                 keys_to_delete.add(trait_key)
                 continue
 
-            trait_value_data = Trait.generate_trait_value_data(trait_value)
-
-            if transient:
-                transient_traits.append(
-                    Trait(**trait_value_data, trait_key=trait_key, identity=self)
-                )
-
-            elif trait_key in current_traits:
+            if trait_key in current_traits:
                 current_trait = current_traits[trait_key]
                 # Don't update the trait if the value hasn't changed
                 if current_trait.trait_value == trait_value:
                     continue
 
-                for attr, value in trait_value_data.items():
+                for attr, value in Trait.generate_trait_value_data(trait_value).items():
                     setattr(current_trait, attr, value)
                 updated_traits.append(current_trait)
+                continue
 
-            else:
-                new_traits.append(
-                    Trait(**trait_value_data, trait_key=trait_key, identity=self)
+            new_traits.append(
+                Trait(
+                    **Trait.generate_trait_value_data(trait_value),
+                    trait_key=trait_key,
+                    identity=self,
                 )
+            )
 
         # delete the traits that had their keys set to None
+        # (except the transient ones)
         if keys_to_delete:
             current_traits = {
                 trait_key: trait

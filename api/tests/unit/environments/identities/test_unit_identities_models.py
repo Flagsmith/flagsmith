@@ -672,7 +672,6 @@ def test_update_traits(environment: Environment) -> None:
             trait_key=trait_1.trait_key, trait_value=new_trait_1_value
         ),
         generate_trait_data_item(trait_key=trait_3_key, trait_value=trait_3_value),
-        generate_trait_data_item(trait_key=trait_3_key, trait_value=trait_3_value),
         generate_trait_data_item(
             trait_key=transient_trait_key,
             trait_value=transient_trait_value,
