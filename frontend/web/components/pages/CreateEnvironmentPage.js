@@ -201,9 +201,9 @@ const CreateEnvironmentPage = class extends Component {
                                 <CondensedRow>
                                   <FormGroup className='mt-5 setting'>
                                     <InputGroup
-                                      title={'Metadata'}
+                                      title={'Custom fields'}
                                       tooltip={
-                                        'You need to add a value to the metadata if it is required to successfully clone the environment'
+                                        'You need to add a value to the custom field if it is required to successfully clone the environment'
                                       }
                                       tooltipPlace='right'
                                       component={
