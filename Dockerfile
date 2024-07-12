@@ -37,6 +37,9 @@
 # * api-runtime [python:slim]
 # * api-runtime-private [api-runtime]
 
+# - Internal stages
+# * api-test [build-python]
+
 # - Target (shippable) stages
 # * private-cloud-api [api-runtime-private, build-python-private]
 # * private-cloud-unified [api-runtime-private, build-python-private, build-node-django]
@@ -51,10 +54,10 @@ ARG CI_COMMIT_SHA=dev
 ARG NODE_VERSION=16
 ARG PYTHON_VERSION=3.11
 
-FROM node:${NODE_VERSION}-bookworm as node
-FROM node:${NODE_VERSION}-bookworm-slim as node-slim
-FROM python:${PYTHON_VERSION}-bookworm as python
-FROM python:${PYTHON_VERSION}-slim-bookworm as python-slim
+FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm as node
+FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm-slim as node-slim
+FROM public.ecr.aws/docker/library/python:${PYTHON_VERSION}-bookworm as python
+FROM public.ecr.aws/docker/library/python:${PYTHON_VERSION}-slim-bookworm as python-slim
 
 # - Intermediary stages
 # * build-node
@@ -137,6 +140,18 @@ FROM api-runtime as api-runtime-private
 
 # Install SAML binary dependency
 RUN apt-get update && apt-get install -y xmlsec1 && rm -rf /var/lib/apt/lists/*
+
+# - Internal stages
+# * api-test [build-python]
+FROM build-python AS api-test
+
+RUN make install-packages opts='--with dev'
+
+WORKDIR /app
+
+COPY api /app/
+
+CMD ["make test"]
 
 # - Target (shippable) stages
 # * private-cloud-api [api-runtime-private, build-python-private]

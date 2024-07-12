@@ -1,5 +1,6 @@
-from segments.models import Segment
 from task_processor.decorators import register_task_handler
+
+from segments.models import Segment
 
 
 @register_task_handler()

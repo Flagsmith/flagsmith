@@ -20,7 +20,7 @@ const MetadataContainer: FC<MetadataContainerType> = ({
       }}
     >
       <Row>
-        <label className='mt-1'>Metadata</label>
+        <label className='mt-1'>Custom Fields</label>
         {!hasRequiredMetadata && (
           <Icon name={visible ? 'chevron-down' : 'chevron-right'} />
         )}
