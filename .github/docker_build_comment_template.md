@@ -1,5 +1,4 @@
-{{ .message }}
+#### Docker builds report
 
-| Image           | Build Status       | Security report             |
-| --------------- | ------------------ | --------------------------- |
-| {{ .imageTag }} | {{ .buildStatus }} | {{ .securityReportStatus }} |
+| Image | Build Status | Security report |
+| ----- | ------------ | --------------- |
