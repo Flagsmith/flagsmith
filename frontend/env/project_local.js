@@ -17,8 +17,8 @@ module.exports = global.Project = {
   // This is used for Sentry tracking
   maintenance: false,
   plans: {
-    scaleUp: { annual: 'scale-up-12-months-v2', monthly: 'scale-up-v2' },
-    startup: { annual: 'start-up-12-months-v2', monthly: 'startup-v2' },
+    scaleUp: { annual: 'scale-up-annual-v2', monthly: 'scale-up-v2' },
+    startup: { annual: 'startup-annual-v2', monthly: 'startup-v2' },
   },
   useSecureCookies: false,
   ...(globalThis.projectOverrides || {}),
