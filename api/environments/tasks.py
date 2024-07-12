@@ -1,3 +1,6 @@
+from task_processor.decorators import register_task_handler
+from task_processor.models import TaskPriority
+
 from audit.models import AuditLog
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.models import (
@@ -9,8 +12,6 @@ from sse import (
     send_environment_update_message_for_environment,
     send_environment_update_message_for_project,
 )
-from task_processor.decorators import register_task_handler
-from task_processor.models import TaskPriority
 
 
 @register_task_handler(priority=TaskPriority.HIGH)

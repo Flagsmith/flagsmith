@@ -44,6 +44,7 @@ You can run our Enterprise version either on-premise, or we can provide private 
 organisation.
 
 - [Role Based Access Control](/system-administration/rbac).
+- [Custom fields](/advanced-use/custom-fields.md) for features, segments and environments.
 - [Okta](/system-administration/authentication/Okta), [LDAP](/system-administration/authentication/LDAP),
   [SAML](/system-administration/authentication/SAML) and [ADFS](/system-administration/authentication/ADFS)
   authentication, as well as the ability to lock authentication to a single provider.

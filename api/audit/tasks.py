@@ -4,14 +4,14 @@ from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from task_processor.decorators import register_task_handler
+from task_processor.models import TaskPriority
 
 from audit.constants import (
     FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE,
     FEATURE_STATE_WENT_LIVE_MESSAGE,
 )
 from audit.models import AuditLog, RelatedObjectType
-from task_processor.decorators import register_task_handler
-from task_processor.models import TaskPriority
 
 logger = logging.getLogger(__name__)
 
