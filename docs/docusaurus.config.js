@@ -118,6 +118,10 @@ const config = {
                                 label: 'Podcast',
                                 href: 'https://flagsmith.com/podcast/',
                             },
+                            {
+                                label: 'Status and Uptime',
+                                href: 'https://status.flagsmith.com/',
+                            },
                         ],
                     },
                     {
