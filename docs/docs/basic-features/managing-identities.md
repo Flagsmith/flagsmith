@@ -85,8 +85,8 @@ This can be useful if, at runtime, your application does not have all the releva
 particular Identity; any Traits provided will be combined with the Traits stored within Flagsmith before the evaluation
 engine runs.
 
-There are some [exceptions to this rule](/clients/overview#server-side-sdks) with Server Side SDKs running in local
-evaluation mode.
+There are some [exceptions to this rule](/clients#server-side-sdks) with Server Side SDKs running in local evaluation
+mode.
 
 ### Using Traits as a data-store
 

@@ -17,15 +17,15 @@ If you're new to Flagsmith or Feature Flags in general we would recommend:
 
 - [Signing up for a free account on our SaaS platform](https://app.flagsmith.com/signup)
 - [Go through our 5 minute Quickstart Guide](quickstart.md)
-- [Set up an SDK for your Project](clients/overview.md)
-- [Dive into the Docs](basic-features/overview.md)
+- [Set up an SDK for your Project](clients)
+- [Dive into the Docs](basic-features)
 
 ## Digging Deeper
 
 - [View our SaaS Features and how SaaS compares to Self Hosted](version-comparison.md)
 - [Learn about our globally distributed Edge API](advanced-use/edge-api.md)
 - [Use Flagsmith to run A/B and Multivariate Tests](advanced-use/ab-testing.md)
-- [Integrate with 3rd party applications](integrations/overview.md)
+- [Integrate with 3rd party applications](integrations)
 - [Use Change Requests and Scheduled Flags to manage your workflows](advanced-use/change-requests.md)
 
 ## Check out our SDKs
@@ -41,7 +41,7 @@ If you're new to Flagsmith or Feature Flags in general we would recommend:
 
 ### Server Side SDKs
 
-Check out our [Server Side SDK architecture first!](clients/overview.md)
+Check out our [Server Side SDK architecture first!](/clients)
 
 - [Node.js](/clients/server-side?language=nodejs)
 - [Java](/clients/server-side?language=java)

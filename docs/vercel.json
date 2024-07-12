@@ -311,6 +311,18 @@
         {
             "source": "/system-administration/metadata",
             "destination": "/system-administration/custom-fields"
+        },
+        {
+            "source": "/clients/overview",
+            "destination": "/clients"
+        },
+        {
+            "source": "/basic-features/overview",
+            "destination": "/basic-features"
+        },
+        {
+            "source": "/basic-features/integrations",
+            "destination": "/integrations"
         }
     ]
 }

@@ -168,4 +168,4 @@ From here, some areas of the documentation you might want to check out are:
 - A deeper overview of the application - [Features](basic-features/managing-features.md),
   [Identities](basic-features/managing-identities.md) and [Segments](basic-features/segments.md).
 - More details about our [API and SDKs](clients/rest.md).
-- How you can [run Flagsmith yourself](deployment/overview.md) or use our [Hosted API](https://flagsmith.com/).
+- How you can [run Flagsmith yourself](/deployment) or use our [Hosted API](https://flagsmith.com/).

@@ -65,7 +65,7 @@ Current variables used between 'frontend/environment.js' and 'frontend/common/pr
 
 - `FLAGSMITH_API_URL`: The API to hit for requests. E.g. `https://edge.api.flagsmith.com/api/v1/`
 - `FLAGSMITH_ON_FLAGSMITH_API_KEY`: The flagsmith environment key we use to manage features -
-  [Flagsmith runs on Flagsmith](/deployment/overview#running-flagsmith-on-flagsmith).
+  [Flagsmith runs on Flagsmith](/deployment#running-flagsmith-on-flagsmith).
 - `FLAGSMITH_ON_FLAGSMITH_API_URL`: The API URL which the flagsmith client should communicate with. Flagsmith runs on
   flagsmith. E.g. `https://edge.api.flagsmith.com/api/v1/`. If you are self hosting and using your own Flagsmith
   instance to manage its own features, you would generally point this to the same domain name as your own Flagsmith
@@ -124,4 +124,4 @@ We use Flagsmith to manage features we rollout, if you are using your own Flagsm
 project_x.js-> flagsmith) then you will need to have a replica of our flags.
 
 A list of the flags and remote config we're currently using in production can be
-[found here](/deployment/overview#current-flagsmith-feature-flags).
+[found here](/deployment#current-flagsmith-feature-flags).

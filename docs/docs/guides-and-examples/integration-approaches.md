@@ -73,7 +73,7 @@ The official [Javascript Client](/clients/javascript/) offers optional caching b
 
 :::tip
 
-Note that you can also [evaluate flags locally](../clients/overview.md) in our Server Side SDKs.
+Note that you can also [evaluate flags locally](/clients) in our Server Side SDKs.
 
 :::
 

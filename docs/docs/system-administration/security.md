@@ -10,7 +10,7 @@ a client-side SDK, update their trait to `plan=gold` and unlock features they ha
 
 You can prevent this by disabling the "Allow client SDKs to set user traits" option. This option defaults to "On".
 Turning it "Off" will not allow client-side SDKs to write Traits to Flagsmith. In order to write traits, you will need
-to use a [server-side SDK and server-side Key](../clients/overview.md).
+to use a [server-side SDK and server-side Key](/clients).
 
 This is a per-Environment setting.
 

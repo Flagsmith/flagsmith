@@ -22,8 +22,7 @@ For example, you might want to:
 
 You can define **custom fields** that are shown when creating or modifying
 [**flags**](/basic-features/managing-features.md), [**segments**](/basic-features/segments.md) or
-[**environments**](/basic-features/overview.md#environments). Custom fields are defined per
-[project](/basic-features/overview.md#projects).
+[**environments**](/basic-features#environments). Custom fields are defined per [project](/basic-features#projects).
 
 ## Permissions
 

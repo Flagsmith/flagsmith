@@ -1,6 +1,5 @@
 ---
-title: Deployment Overview
-sidebar_label: Overview
+title: Deployment
 sidebar_position: 1
 ---
 
@@ -556,7 +555,7 @@ Then use this rule to override the `dark_mode` Feature Flag.
 
 ## Integrations
 
-Some [Integrations](/integrations/overview) require additional configuration
+Some [Integrations](/integrations) require additional configuration
 
 ### Slack Integration
 
