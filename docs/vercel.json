@@ -307,6 +307,10 @@
         {
             "source": "/system-administration/importing-and-exporting/data-migration",
             "destination": "/system-administration/importing-and-exporting/organisations"
+        },
+        {
+            "source": "/system-administration/metadata",
+            "destination": "/system-administration/custom-fields"
         }
     ]
 }
