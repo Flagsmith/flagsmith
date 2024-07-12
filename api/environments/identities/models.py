@@ -206,24 +206,25 @@ class Identity(models.Model):
         :return: list of TraitModels
         """
         trait_models = []
+        trait_models_to_persist = []
 
-        # Remove traits having Null(None) values
-        trait_data_items = filter(
-            lambda trait: trait["trait_value"] is not None, trait_data_items
-        )
         for trait_data_item in trait_data_items:
+            # exclude traits with null values
+            if (trait_value := trait_data_item["trait_value"]) is None:
+                continue
+
             trait_key = trait_data_item["trait_key"]
-            trait_value = trait_data_item["trait_value"]
-            trait_models.append(
-                Trait(
-                    trait_key=trait_key,
-                    identity=self,
-                    **Trait.generate_trait_value_data(trait_value),
-                )
+            trait = Trait(
+                trait_key=trait_key,
+                identity=self,
+                **Trait.generate_trait_value_data(trait_value),
             )
+            trait_models.append(trait)
+            if not trait_data_item.get("transient"):
+                trait_models_to_persist.append(trait)
 
         if persist:
-            Trait.objects.bulk_create(trait_models)
+            Trait.objects.bulk_create(trait_models_to_persist)
 
         return trait_models
 

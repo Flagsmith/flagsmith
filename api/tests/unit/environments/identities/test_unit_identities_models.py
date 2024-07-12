@@ -604,17 +604,21 @@ def test_generate_traits_with_persistence(environment: Environment) -> None:
         generate_trait_data_item("string_trait", "string_value"),
         generate_trait_data_item("integer_trait", 1),
         generate_trait_data_item("boolean_value", True),
+        generate_trait_data_item("transient_trait", "string_value", transient=True),
     ]
 
     # When
     trait_models = identity.generate_traits(trait_data_items, persist=True)
 
     # Then
-    # the response from the method has 3 traits
-    assert len(trait_models) == 3
+    # the response from the method has 4 traits
+    assert len(trait_models) == 4
 
-    # and the database matches it
+    # and 3 were persisted
     assert Trait.objects.filter(identity=identity).count() == 3
+    assert not Trait.objects.filter(
+        identity=identity, trait_key="transient_trait"
+    ).exists()
 
 
 def test_generate_traits_without_persistence(environment: Environment) -> None:
