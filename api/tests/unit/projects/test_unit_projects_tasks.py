@@ -3,6 +3,7 @@ from decimal import Decimal
 import pytest
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from task_processor.task_run_method import TaskRunMethod
 
 from environments.dynamodb.types import (
     EdgeV2MigrationResult,
@@ -16,7 +17,6 @@ from projects.tasks import (
     migrate_project_environments_to_v2,
 )
 from segments.models import Segment
-from task_processor.task_run_method import TaskRunMethod
 
 
 @pytest.fixture

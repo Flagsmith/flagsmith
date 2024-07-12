@@ -1,7 +1,8 @@
+from task_processor.task_run_method import TaskRunMethod
+
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.subscription_info_cache import update_caches
 from organisations.subscriptions.constants import SubscriptionCacheEntity
-from task_processor.task_run_method import TaskRunMethod
 
 
 def test_update_caches(mocker, organisation, chargebee_subscription, settings):

@@ -1,10 +1,10 @@
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from task_processor.decorators import register_task_handler
 
 from integrations.lead_tracking.pipedrive.lead_tracker import (
     PipedriveLeadTracker,
 )
-from task_processor.decorators import register_task_handler
 from users.models import FFAdminUser
 
 

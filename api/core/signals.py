@@ -5,9 +5,9 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
+from task_processor.task_run_method import TaskRunMethod
 
 from audit import tasks
-from task_processor.task_run_method import TaskRunMethod
 from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)

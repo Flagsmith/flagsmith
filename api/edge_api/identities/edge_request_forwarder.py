@@ -4,10 +4,10 @@ import requests
 from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from core.signing import sign_payload
 from django.conf import settings
-
-from environments.dynamodb.migrator import IdentityMigrator
 from task_processor.decorators import register_task_handler
 from task_processor.models import TaskPriority
+
+from environments.dynamodb.migrator import IdentityMigrator
 
 
 def _should_forward(project_id: int) -> bool:

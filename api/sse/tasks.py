@@ -5,14 +5,14 @@ import requests
 from app_analytics.influxdb_wrapper import influxdb_client
 from django.conf import settings
 from influxdb_client import Point, WriteOptions
-
-from environments.models import Environment
-from projects.models import Project
-from sse import sse_service
 from task_processor.decorators import (
     register_recurring_task,
     register_task_handler,
 )
+
+from environments.models import Environment
+from projects.models import Project
+from sse import sse_service
 
 from .exceptions import SSEAuthTokenNotSet
 
