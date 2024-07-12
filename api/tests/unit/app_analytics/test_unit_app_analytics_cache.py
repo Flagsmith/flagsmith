@@ -60,31 +60,43 @@ def test_api_usage_cache(mocker: MockerFixture):
         mocked_track_request_task.delay.assert_has_calls(expected_calls)
 
 
-def test_api_usage_cache__track_request_calls_flush_only_after_cache_flush_interval(
+def test_api_usage_cache__flush_resets_cache_and_interval(
     mocker: MockerFixture,
 ):
     # Given
-    mocked_flush = mocker.patch("app_analytics.cache.APIUsageCache.flush")
+    mocked_track_request_task = mocker.patch("app_analytics.cache.track_request")
     cache = APIUsageCache()
     now = timezone.now()
 
     with freeze_time(now) as frozen_time:
-        # When
-        for _ in range(10):
-            cache.track_request(Resource.FLAGS, "host", "environment_key")
+        # Add some data
+        cache.track_request(Resource.FLAGS, "host", "environment_key")
 
-        # Then - flush was not called
-        assert not mocked_flush.called
-
-        # Now, let's move the time forward
+        # move the time forward
         frozen_time.tick(CACHE_FLUSH_INTERVAL + 1)
 
-        # call track_request again
+        # Next, let's call flush
+        cache.flush()
+
+        # Then
+        assert mocked_track_request_task.delay.called
+
+        # Now, reset the mock
+        mocked_track_request_task.reset_mock()
+
+        # call flush again
+        cache.flush()
+
+        # Then - track request lambda was not called
+        assert not mocked_track_request_task.called
+
+        # Call track_request again to ensure
+        # it did not trigger a flush because
+        # the timer was reset.
         cache.track_request(
             Resource.FLAGS,
             "host",
             "environment_key",
         )
-
-        # Then - flush was called
-        assert mocked_flush.called
+        # Then - track request was not called
+        assert not mocked_track_request_task.delay.called
