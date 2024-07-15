@@ -105,6 +105,25 @@ def finish_subscription_cancellation() -> None:
         subscription.save_as_free_subscription()
 
 
+def send_api_flags_blocked_notification(organisation: Organisation) -> None:
+    recipient_list = FFAdminUser.objects.filter(
+        userorganisation__organisation=organisation,
+    )
+
+    context = {"organisation": organisation}
+    message = "organisations/api_flags_blocked_notification.txt"
+    html_message = "organisations/api_flags_blocked_notification.html"
+
+    send_mail(
+        subject="Flagsmith API use has been blocked due to overuse",
+        message=render_to_string(message, context),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=list(recipient_list.values_list("email", flat=True)),
+        html_message=render_to_string(html_message, context),
+        fail_silently=True,
+    )
+
+
 def send_api_usage_notification(
     organisation: Organisation, matched_threshold: int
 ) -> None:
@@ -389,6 +408,9 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
 
         organisation.stop_serving_flags = stop_serving
         organisation.block_access_to_admin = block_access
+
+        if stop_serving:
+            send_api_flags_blocked_notification(organisation)
 
         api_limit_access_blocks.append(APILimitAccessBlock(organisation=organisation))
         update_organisations.append(organisation)
