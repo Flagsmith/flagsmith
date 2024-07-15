@@ -11,8 +11,7 @@ import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
 :::tip
 
 Server Side SDKs can run in 2 different modes: `Local Evaluation` and `Remote Evaluation`. We recommend
-[reading up about the differences](/clients/overview#server-side-sdks) first before integrating the SDKS into your
-applications.
+[reading up about the differences](/clients#server-side-sdks) first before integrating the SDKS into your applications.
 
 :::
 
@@ -554,7 +553,7 @@ secret_button_feature_value = Flagsmith.Client.get_feature_value(flags, "secret_
 </TabItem>
 </Tabs>
 
-### When running in [Remote Evaluation mode](/clients/overview#remote-evaluation)
+### When running in [Remote Evaluation mode](/clients#remote-evaluation)
 
 - When requesting Flags for an Identity, all the Traits defined in the SDK will automatically be persisted against the
   Identity within the Flagsmith API.
@@ -562,13 +561,13 @@ secret_button_feature_value = Flagsmith.Client.get_feature_value(flags, "secret_
 - This full set of Traits are then used to evaluate the Flag values for the Identity.
 - This all happens in a single request/response.
 
-### When running in [Local Evaluation mode](/clients/overview#local-evaluation)
+### When running in [Local Evaluation mode](/clients#local-evaluation)
 
 - _Only_ the Traits provided to the SDK at runtime will be used. Local Evaluation mode, by design, does not make any
   network requests to the Flagsmith API when evaluating Flags for an Identity.
   - When running in Local Evaluation Mode, the SDK requests the
-    [Environment Document](/clients/overview#the-environment-document) from the Flagsmith API. This contains all the
-    information required to make Flag Evaluations, but it does _not_ contain any Trait data.
+    [Environment Document](/clients#the-environment-document) from the Flagsmith API. This contains all the information
+    required to make Flag Evaluations, but it does _not_ contain any Trait data.
 
 ## Managing Default Flags
 
@@ -775,8 +774,8 @@ Flagsmith SDKs can be configured to include an offline handler which has 2 funct
    offline mode.
 
 To use it as a default handler, we recommend using the [flagsmith CLI](https://github.com/Flagsmith/flagsmith-cli) to
-generate the [Environment Document](/clients/overview#the-environment-document) and use our LocalFileHandler class, but
-you can also create your own offline handlers, by extending the base class.
+generate the [Environment Document](/clients#the-environment-document) and use our LocalFileHandler class, but you can
+also create your own offline handlers, by extending the base class.
 
 <Tabs groupId="language" queryString>
 <TabItem value="python" label="Python">
@@ -896,8 +895,7 @@ The Server Side SDKS share the same network behaviour across the different langu
 
 :::info
 
-When using Local Evaluation, it's important to read up on the
-[Pros, Cons and Caveats](overview.md#pros-cons-and-caveats).
+When using Local Evaluation, it's important to read up on the [Pros, Cons and Caveats](/clients/#pros-cons-and-caveats).
 
 To use Local Evaluation mode, you must use a Server Side key.
 

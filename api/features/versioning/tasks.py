@@ -5,6 +5,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils import timezone
+from task_processor.decorators import register_task_handler
 
 from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
@@ -21,7 +22,6 @@ from features.versioning.schemas import (
 from features.versioning.versioning_service import (
     get_environment_flags_queryset,
 )
-from task_processor.decorators import register_task_handler
 from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType, call_environment_webhooks
 

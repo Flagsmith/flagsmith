@@ -6,7 +6,7 @@
 version: '3'
 services:
   db:
-    image: public.ecr.aws/docker/library/postgres:15.5-alpine
+    image: ghcr.io/cloudnative-pg/postgresql:15
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: flagsmith
@@ -48,6 +48,7 @@ services:
       DISABLE_ANALYTICS_FEATURES: 'true'
       FLAGSMITH_API: flagsmith-api:8000/api/v1/
       SLACK_TOKEN: ${SLACK_TOKEN}
+      GITHUB_ACTION_URL: ${GITHUB_ACTION_URL}
     ports:
       - 8080:8080
     depends_on:
