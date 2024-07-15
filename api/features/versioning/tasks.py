@@ -1,4 +1,3 @@
-import json
 import logging
 import typing
 
@@ -11,6 +10,7 @@ from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from features.models import FeatureState
+from features.versioning.exceptions import FeatureVersioningError
 from features.versioning.models import (
     EnvironmentFeatureVersion,
     VersionChangeSet,
@@ -176,10 +176,16 @@ def publish_version_change_set(
         _send_failed_due_to_conflict_alert_to_change_request_author(version_change_set)
         return
 
-    # TODO:
-    #  - using the serializer here is kinda hacky, is there another abstraction layer we can add
-    #  (and reuse in the serializer as well perhaps?)
+    # Since the serializer is already able to handle this functionality, we re-use
+    # it in this task.
+    # TODO: in a separate PR, I'd like to refactor the version create endpoint to
+    #  use change sets. At which point, we can revisit whether the serializer
+    #  actually does the 'save'.
 
+    # Note that, since the import path here eventually imports the
+    # djoser user serializer (which imports settings), we have to use
+    # a local import, since the tasks module gets loaded on app start,
+    # to avoid AppRegistryNotReady error.
     from features.versioning.serializers import (
         EnvironmentFeatureVersionCreateSerializer,
     )
@@ -187,23 +193,23 @@ def publish_version_change_set(
     serializer = EnvironmentFeatureVersionCreateSerializer(
         data={
             "feature_states_to_create": (
-                json.loads(version_change_set.feature_states_to_create)
-                if version_change_set.feature_states_to_create
-                else []
+                version_change_set.get_parsed_feature_states_to_create()
             ),
             "feature_states_to_update": (
-                json.loads(version_change_set.feature_states_to_update)
-                if version_change_set.feature_states_to_update
-                else []
+                version_change_set.get_parsed_feature_states_to_update()
             ),
             "segment_ids_to_delete_overrides": (
-                json.loads(version_change_set.segment_ids_to_delete_overrides)
-                if version_change_set.segment_ids_to_delete_overrides
-                else []
+                version_change_set.get_parsed_segment_ids_to_delete_overrides()
             ),
         }
     )
-    serializer.is_valid(raise_exception=True)
+    if not serializer.is_valid():
+        logger.error(
+            "Unable to publish version change set. Serializer errors are: %s",
+            str(serializer.errors),
+        )
+        raise FeatureVersioningError("Unable to publish version change set")
+
     version: EnvironmentFeatureVersion = serializer.save(
         feature=version_change_set.feature,
         environment=version_change_set.environment,
