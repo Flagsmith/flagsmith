@@ -87,6 +87,7 @@ known_third_party = [
   'shortuuid',
   'simple_history',
   'six',
+  'task_processor',
   'telemetry',
   'tests',
   'trench',
@@ -168,6 +169,7 @@ pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
+flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.0.0" }
 
 [tool.poetry.group.auth-controller]
 optional = true
@@ -191,7 +193,7 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.3.6" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.3.7" }
 
 [tool.poetry.group.dev.dependencies]
 django-test-migrations = "~1.2.0"
@@ -210,7 +212,7 @@ pytest = "~7.2.1"
 pytest-django = "^4.5.2"
 black = "~24.3.0"
 pytest-cov = "~4.1.0"
-datamodel-code-generator = "~0.22"
+datamodel-code-generator = "~0.25"
 requests-mock = "^1.11.0"
 django-extensions = "^3.2.3"
 pdbpp = "^0.10.3"
