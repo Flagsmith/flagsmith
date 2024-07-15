@@ -1,0 +1,7 @@
+Hi there,
+
+As per previous warnings, we have blocked organisation {{ organisation.name }}. Please visit app.flagsmith.com to upgrade your account and re-enable service.
+
+Thank you!
+
+The Flagsmith Team
