@@ -31,7 +31,8 @@ Superuser "admin@example.com" created successfully.
 Please go to the following page and choose a password: http://localhost:8000/password-reset/confirm/.../...
 ```
 
-Note: This setup uses http:// for local development. If you've configured SSL for your local environment, you may use https:// instead. For any production deployment, always use https://.
+Note: This setup uses http:// for local development. If you've configured SSL for your local environment, you may use
+https:// instead. For any production deployment, always use https://.
 
 ![Flagsmith Screenshot](static-files/screenshot.png)
 
