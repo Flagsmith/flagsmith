@@ -346,15 +346,19 @@ const MetadataRow: FC<MetadataRowType> = ({
             }}
           />
         </Flex>
-      ) : metadata?.type === 'multiline_str' ? (
+      ) : (
         <Flex className='flex-row' style={{ minWidth: '300px' }}>
           <InputGroup
-            textarea
+            textarea={metadata?.type === 'multiline_str'}
             onBlur={saveMetadata}
             value={metadataValue}
             inputProps={{
-              style: { height: '65px', width: '250px' },
+              style: {
+                height: metadata?.type === 'multiline_str' ? '65px' : '44px',
+                width: '250px',
+              },
             }}
+            isValid={Utils.validateMetadataType(metadata?.type, metadataValue)}
             onChange={(e: InputEvent) => {
               setMetadataValue(Utils.safeParseEventValue(e))
               setMetadataValueChanged(true)
@@ -362,31 +366,6 @@ const MetadataRow: FC<MetadataRowType> = ({
             type='text'
             placeholder='Metadata Value'
           />
-        </Flex>
-      ) : (
-        <Flex className='flex-row' style={{ minWidth: '300px' }}>
-          <Tooltip
-            title={
-              <Input
-                value={metadataValue}
-                onBlur={saveMetadata}
-                onChange={(e: InputEvent) => {
-                  setMetadataValue(Utils.safeParseEventValue(e))
-                  setMetadataValueChanged(true)
-                }}
-                className='mr-2'
-                style={{ width: '250px' }}
-                placeholder='Metadata Value'
-                isValid={Utils.validateMetadataType(
-                  metadata?.type,
-                  metadataValue,
-                )}
-              />
-            }
-            place='top'
-          >
-            {`This value has to be of type ${metadata?.type}`}
-          </Tooltip>
         </Flex>
       )}
     </Row>

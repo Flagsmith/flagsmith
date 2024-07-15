@@ -96,9 +96,17 @@ const controller = {
         AppActions.refreshOrganisation()
       })
       .catch((e) => {
-        e.json().then((result) => {
-          toast(result.metadata[0], 'danger')
-        })
+        e.json()
+          .then((result) => {
+            if (result.metadata && result.metadata[0]) {
+              toast(result.metadata[0], 'danger')
+            } else {
+              toast('Error updating the environment', 'danger')
+            }
+          })
+          .catch((e) => {
+            API.ajaxHandler(store, e)
+          })
       })
   },
   editProject: (project) => {

@@ -1968,6 +1968,9 @@ const FeatureProvider = (WrappedComponent) => {
                 toast(m.non_field_errors[0], 'danger')
               }
             })
+          } else if (error?.data) {
+            toast('Error updating the Flag', 'danger')
+            return
           } else {
             toast(
               `${createdFlag || isCreate ? 'Created' : 'Updated'} ${

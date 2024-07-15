@@ -97,6 +97,7 @@ const InputGroup = class extends Component {
                   onChange={props.onChange}
                   type={props.type || 'text'}
                   id={id}
+                  onBlur={props.onBlur}
                   placeholder={props.placeholder}
                   size={size}
                 />
