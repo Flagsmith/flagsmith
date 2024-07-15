@@ -263,7 +263,7 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
             return json.loads(self.feature_states_to_update)
         return []
 
-    def get_parsed_segment_ids_to_delete_overrides(self) -> list[dict[str, typing.Any]]:
+    def get_parsed_segment_ids_to_delete_overrides(self) -> list[int]:
         if self.segment_ids_to_delete_overrides:
             return json.loads(self.segment_ids_to_delete_overrides)
         return []
