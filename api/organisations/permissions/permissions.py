@@ -8,6 +8,7 @@ from django.views import View
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.request import Request
+from rest_framework.viewsets import GenericViewSet
 
 from organisations.models import Organisation
 from users.models import FFAdminUser
@@ -189,7 +190,7 @@ class NestedIsOrganisationAdminPermission(BasePermission):
 
 
 class GithubIsAdminOrganisation(NestedIsOrganisationAdminPermission):
-    def has_permission(self, request, view) -> bool:
+    def has_permission(self, request: Request, view: GenericViewSet) -> bool:
         organisation_pk = view.kwargs.get("organisation_pk")
 
         with suppress(ObjectDoesNotExist):
@@ -202,7 +203,9 @@ class GithubIsAdminOrganisation(NestedIsOrganisationAdminPermission):
             else:
                 return request.user.is_master_api_key_user
 
-    def has_object_permission(self, request, view, obj) -> bool:
+    def has_object_permission(
+        self, request: Request, view: GenericViewSet, obj
+    ) -> bool:
         organisation_pk = view.kwargs.get("organisation_pk")
         if isinstance(request.user, FFAdminUser):
             return request.user.is_organisation_admin(

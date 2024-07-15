@@ -57,6 +57,7 @@ def test_get_github_configuration(
 def test_non_admin_user_get_github_configuration(
     staff_client: APIClient,
     organisation: Organisation,
+    github_configuration: GithubConfiguration,
 ) -> None:
     # Given
     url = reverse(
@@ -66,7 +67,10 @@ def test_non_admin_user_get_github_configuration(
     # When
     response = staff_client.get(url)
     # Then
+    github_configuration_res = response.json()["results"][0]
     assert response.status_code == status.HTTP_200_OK
+    assert github_configuration_res["installation_id"] == "1234567"
+    assert github_configuration_res["id"] == 1
 
 
 def test_create_github_configuration(
