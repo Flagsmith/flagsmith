@@ -364,7 +364,7 @@ const MetadataRow: FC<MetadataRowType> = ({
               setMetadataValueChanged(true)
             }}
             type='text'
-            placeholder='Metadata Value'
+            placeholder='Custom Field Value'
           />
         </Flex>
       )}
