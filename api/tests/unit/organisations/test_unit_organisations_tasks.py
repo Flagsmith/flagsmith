@@ -1131,6 +1131,9 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     mocker: MockerFixture,
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
+    mailoutbox: list[EmailMultiAlternatives],
+    admin_user: FFAdminUser,
+    staff_user: FFAdminUser,
 ) -> None:
     # Given
     get_client_mock = mocker.patch("organisations.tasks.get_client")
@@ -1143,6 +1146,11 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     organisation3 = Organisation.objects.create(name="Org #3")
     organisation4 = Organisation.objects.create(name="Org #4")
     organisation5 = Organisation.objects.create(name="Org #5")
+
+    # Add users to test email delivery
+    for org in [organisation2, organisation3, organisation4, organisation5]:
+        admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
+        staff_user.add_organisation(org, role=OrganisationRole.USER)
 
     organisation5.subscription.plan = "scale-up-v2"
     organisation5.subscription.payment_method = CHARGEBEE
@@ -1238,6 +1246,49 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
             },
         ),
     ]
+
+    assert len(mailoutbox) == 2
+    email1 = mailoutbox[0]
+    assert email1.subject == "Flagsmith API use has been blocked due to overuse"
+    assert email1.body == (
+        "Hi there,\n\n"
+        "As per previous warnings, we have blocked organisation Test Org. "
+        "Please visit app.flagsmith.com to upgrade your "
+        "account and re-enable service.\n\n"
+        "Thank you!\n\n"
+        "The Flagsmith Team\n"
+    )
+
+    email2 = mailoutbox[1]
+    assert email2.subject == "Flagsmith API use has been blocked due to overuse"
+    assert email2.body == (
+        "Hi there,\n\n"
+        "As per previous warnings, we have blocked organisation Org #2. "
+        "Please visit app.flagsmith.com to upgrade your "
+        "account and re-enable service.\n\n"
+        "Thank you!\n\n"
+        "The Flagsmith Team\n"
+    )
+
+    assert len(email2.alternatives) == 1
+    assert len(email2.alternatives[0]) == 2
+    assert email2.alternatives[0][1] == "text/html"
+
+    assert email2.alternatives[0][0] == (
+        "<table>\n\n        <tr>\n\n               <td>Hi there,"
+        "</td>\n\n        </tr>\n\n        <tr>\n\n             "
+        "  <td>\n                 As per previous warnings, we have"
+        " blocked organisation Org #2.\n                 Please "
+        "visit app.flagsmith.com to upgrade your account and "
+        "re-enable service.\n               "
+        "</td>\n\n\n        </tr>\n\n        <tr>\n\n          "
+        "     <td>Thank you!</td>\n\n        </tr>\n\n        "
+        "<tr>\n\n               <td>The Flagsmith Team</td>"
+        "\n\n        </tr>\n\n</table>\n"
+    )
+
+    assert email2.from_email == "noreply@flagsmith.com"
+    assert email2.to == ["admin@example.com", "staff@example.com"]
 
     # Organisations that change their subscription are unblocked.
     organisation.subscription.plan = "scale-up-v2"
