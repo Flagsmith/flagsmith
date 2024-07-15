@@ -189,10 +189,12 @@ class NestedIsOrganisationAdminPermission(BasePermission):
 
 
 class GithubIsAdminOrganisation(NestedIsOrganisationAdminPermission):
-    def has_permission(self, request, view):
+    def has_permission(self, request, view) -> bool:
         organisation_pk = view.kwargs.get("organisation_pk")
 
         with suppress(ObjectDoesNotExist):
+            if hasattr(view, "action") and view.action == "list":
+                return True
             if isinstance(request.user, FFAdminUser):
                 return request.user.is_organisation_admin(
                     Organisation.objects.get(pk=organisation_pk)
@@ -200,7 +202,7 @@ class GithubIsAdminOrganisation(NestedIsOrganisationAdminPermission):
             else:
                 return request.user.is_master_api_key_user
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, obj) -> bool:
         organisation_pk = view.kwargs.get("organisation_pk")
         if isinstance(request.user, FFAdminUser):
             return request.user.is_organisation_admin(
