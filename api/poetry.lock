@@ -4295,14 +4295,16 @@ description = "Workflows logic plugin for Flagsmith application."
 optional = false
 python-versions = ">=3.10,<4.0"
 files = []
-develop = true
+develop = false
 
 [package.dependencies]
 flagsmith-task-processor = {git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.0.0"}
 
 [package.source]
-type = "directory"
-url = "../../flagsmith-workflows"
+type = "git"
+url = "https://github.com/flagsmith/flagsmith-workflows"
+reference = "feature(versioning)/handle-multiple-change-requests-for-single-feature"
+resolved_reference = "101f861ad0c8018fb8a46d25e1efeae1c8fa2b2a"
 
 [[package]]
 name = "wrapt"
@@ -4421,4 +4423,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "3cb8219438e546b8e00622b4f70762f9b0bc4d0f134727721b6d84a341a7a9fa"
+content-hash = "3b411db23b5559582d837c0ea36bd368516becec0f6b3c848c870b7e3ce4f7e8"

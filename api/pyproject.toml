@@ -191,7 +191,7 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { path = "/Users/matthewelwell/projects/flagsmith/flagsmith-workflows", develop = true }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", branch = "feature(versioning)/handle-multiple-change-requests-for-single-feature" }
 
 [tool.poetry.group.dev.dependencies]
 django-test-migrations = "~1.2.0"
