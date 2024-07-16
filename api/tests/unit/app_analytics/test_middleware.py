@@ -21,7 +21,7 @@ def test_APIUsageMiddleware_calls_track_request_correctly_with_cache(
     path: str,
     enum_resource_value: int,
     settings: SettingsWrapper,
-):
+) -> None:
     # Given
     environment_key = "test"
     headers = {"HTTP_X-Environment-Key": environment_key}
@@ -59,7 +59,7 @@ def test_APIUsageMiddleware_calls_track_request_correctly_without_cache(
     path: str,
     enum_resource_value: int,
     settings: SettingsWrapper,
-):
+) -> None:
     # Given
     environment_key = "test"
     headers = {"HTTP_X-Environment-Key": environment_key}
@@ -86,7 +86,7 @@ def test_APIUsageMiddleware_calls_track_request_correctly_without_cache(
 
 def test_APIUsageMiddleware_avoids_calling_track_request_if_resoure_is_not_tracked(
     rf: RequestFactory, mocker: MockerFixture, settings: SettingsWrapper
-):
+) -> None:
     # Given
     environment_key = "test"
     headers = {"HTTP_X-Environment-Key": environment_key}

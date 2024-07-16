@@ -9,7 +9,7 @@ class APIUsageCache:
         self._cache = {}
         self._last_flushed_at = timezone.now()
 
-    def flush(self):
+    def _flush(self):
         for key, value in self._cache.items():
             track_request.delay(
                 kwargs={
@@ -30,4 +30,4 @@ class APIUsageCache:
         else:
             self._cache[key] += 1
         if (timezone.now() - self._last_flushed_at).seconds > CACHE_FLUSH_INTERVAL:
-            self.flush()
+            self._flush()
