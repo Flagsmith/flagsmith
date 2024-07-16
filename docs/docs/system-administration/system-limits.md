@@ -35,14 +35,17 @@ The easiest way to modify them is with the [Django admin](/deployment/configurat
 
 ### SDK Limits
 
-Requests made by our SDKs are _not_ rate limited, by design; we can't predict what sort of profile your traffic will
-look like.
+Requests made by our SDKs are _not_ rate limited, in the short time, by design; we can't predict what sort of profile
+your traffic will look like. There are exceptions/considerations to this based on the plan you are on which are detailed
+below; you will be notified and given warning in the event that we are going to stop serving your flags.
 
 #### Free Plan Limits
 
 If you are on our Free Plan, we will stop answering requests from our API if you go over your
 [Free Plan limit](https://www.flagsmith.com/pricing). We will send you a warning email 7 days before we block your
 requests, to give you time to upgrade your account.
+
+This block is cleared 30 days after the warning email was first sent, or when you upgrade to a paid plan.
 
 #### Paid Plan Limits
 
