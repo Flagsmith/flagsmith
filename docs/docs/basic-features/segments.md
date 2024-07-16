@@ -43,11 +43,11 @@ to read traits and flags derived from segments in this case.
 
 Segment names and definitions might include sensitive or proprietary information that you do not want to expose to your
 users. Because of this, segments are transparent to applications and are not included in API responses when using
-[remote evaluation mode](/clients/overview#remote-evaluation).
+[remote evaluation mode](/clients#remote-evaluation).
 
-Segment definitions _are_ served to clients running in [local evaluation mode](/clients/overview#local-evaluation), as
-this allows them to calculate segments without making requests to the Flagsmith API. This is only an implementation
-detail and no segment information is exposed when retrieving flags using any SDK method.
+Segment definitions _are_ served to clients running in [local evaluation mode](/clients#local-evaluation), as this
+allows them to calculate segments without making requests to the Flagsmith API. This is only an implementation detail
+and no segment information is exposed when retrieving flags using any SDK method.
 
 ## Creating project or feature-specific segments
 

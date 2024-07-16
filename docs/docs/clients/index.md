@@ -1,6 +1,5 @@
 ---
 description: Manage your Feature Flags and Remote Config in your REST APIs.
-sidebar_label: Overview
 sidebar_position: 1
 ---
 
@@ -350,7 +349,7 @@ are all computed locally.
   instances. We're rolling them out gradually for the SaaS version. If you are a SaaS customer,
   <a class="open-chat" data-crisp-chat-message="Hi! I'm interested to try out identity overrides in Local Evaluation mode with Flagsmith SaaS!" href="#local-evaluation-1">contact
   us</a> to try them out!
-- [Analytics-based Integrations](/integrations/overview#analytics-platforms) do not run.
+- [Analytics-based Integrations](/integrations#analytics-platforms) do not run.
   [Flag Analytics](/advanced-use/flag-analytics) do still work, if enabled within the
   [SDK setup](/clients/server-side#configuring-the-sdk).
 - In circumstances where you need to target a specific identity, you can do this by creating a segment to target that

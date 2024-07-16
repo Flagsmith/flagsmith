@@ -1,7 +1,6 @@
 ---
 title: Flagsmith Integrations
 description: Flagsmith Integrations
-sidebar_label: Overview
 hide_title: true
 sidebar_position: 1
 ---
