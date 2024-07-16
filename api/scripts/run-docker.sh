@@ -10,6 +10,8 @@ function serve() {
     export STATSD_PORT=${STATSD_PORT:-8125}
     export STATSD_PREFIX=${STATSD_PREFIX:-flagsmith.api}
 
+    python manage.py waitfordb
+
     exec gunicorn --bind 0.0.0.0:8000 \
              --worker-tmp-dir /dev/shm \
              --timeout ${GUNICORN_TIMEOUT:-30} \
