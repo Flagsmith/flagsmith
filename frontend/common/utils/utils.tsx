@@ -400,8 +400,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         : null
       : AccountStore.getPlans()
 
-    console.log('DEBUG: plans:', plans)
-
     if (!plans || !plans.length) {
       return false
     }

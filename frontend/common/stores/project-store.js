@@ -98,7 +98,7 @@ const controller = {
       .catch((e) => {
         e.json()
           .then((result) => {
-            if (result.metadata && result.metadata[0]) {
+            if (result?.metadata?.[0]) {
               toast(result.metadata[0], 'danger')
             } else {
               toast('Error updating the environment', 'danger')
