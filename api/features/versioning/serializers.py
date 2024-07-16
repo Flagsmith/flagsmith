@@ -1,24 +1,20 @@
 import typing
 
+from common.features.versioning.serializers import (
+    EnvironmentFeatureVersionFeatureStateSerializer,
+)
 from rest_framework import serializers
 
 from api_keys.user import APIKeyUser
-from features.serializers import CreateSegmentOverrideFeatureStateSerializer
 from features.versioning.models import EnvironmentFeatureVersion
 from integrations.github.github import call_github_task
 from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType
 
 
-class EnvironmentFeatureVersionFeatureStateSerializer(
-    CreateSegmentOverrideFeatureStateSerializer
+class CustomEnvironmentFeatureVersionFeatureStateSerializer(
+    EnvironmentFeatureVersionFeatureStateSerializer
 ):
-    class Meta(CreateSegmentOverrideFeatureStateSerializer.Meta):
-        read_only_fields = (
-            CreateSegmentOverrideFeatureStateSerializer.Meta.read_only_fields
-            + ("feature",)
-        )
-
     def save(self, **kwargs):
         response = super().save(**kwargs)
 
@@ -91,7 +87,7 @@ class EnvironmentFeatureVersionRetrieveSerializer(EnvironmentFeatureVersionSeria
 
 
 class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSerializer):
-    feature_states_to_create = EnvironmentFeatureVersionFeatureStateSerializer(
+    feature_states_to_create = CustomEnvironmentFeatureVersionFeatureStateSerializer(
         many=True,
         allow_null=True,
         required=False,
@@ -101,7 +97,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
         ),
         write_only=True,
     )
-    feature_states_to_update = EnvironmentFeatureVersionFeatureStateSerializer(
+    feature_states_to_update = CustomEnvironmentFeatureVersionFeatureStateSerializer(
         many=True,
         allow_null=True,
         required=False,
@@ -202,7 +198,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             "environment": version.environment,
             "environment_feature_version": version,
         }
-        fs_serializer = EnvironmentFeatureVersionFeatureStateSerializer(
+        fs_serializer = CustomEnvironmentFeatureVersionFeatureStateSerializer(
             data=feature_state,
             context=save_kwargs,
         )
@@ -238,7 +234,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             if updated_mvfsv_dict:
                 updated_mvfsv_dict["id"] = existing_mvfsv.id
 
-        fs_serializer = EnvironmentFeatureVersionFeatureStateSerializer(
+        fs_serializer = CustomEnvironmentFeatureVersionFeatureStateSerializer(
             instance=instance,
             data=feature_state,
             context={

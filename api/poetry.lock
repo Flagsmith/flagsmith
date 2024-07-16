@@ -963,6 +963,19 @@ redis = ">=3,<4.0.0 || >4.0.0,<4.0.1 || >4.0.1"
 hiredis = ["redis[hiredis] (>=3,!=4.0.0,!=4.0.1)"]
 
 [[package]]
+name = "django-rest-framework"
+version = "0.1.0"
+description = "alias."
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-rest-framework-0.1.0.tar.gz", hash = "sha256:47a8f496fa69e3b6bd79f68dd7a1527d907d6b77f009e9db7cf9bb21cc565e4a"},
+]
+
+[package.dependencies]
+djangorestframework = "*"
+
+[[package]]
 name = "django-ses"
 version = "3.5.0"
 description = "A Django email backend for Amazon's Simple Email Service"
@@ -1360,6 +1373,26 @@ type = "git"
 url = "https://github.com/flagsmith/flagsmith-auth-controller"
 reference = "v0.1.2"
 resolved_reference = "d0f73840b4d5a078077c2bb108458356476d0ee5"
+
+[[package]]
+name = "flagsmith-common"
+version = "0.1.0"
+description = "A repository for including code that is required in multiple flagsmith repositories"
+optional = false
+python-versions = "^3.10"
+files = []
+develop = false
+
+[package.dependencies]
+django = "*"
+django-rest-framework = "*"
+drf-writable-nested = "*"
+
+[package.source]
+type = "git"
+url = "https://github.com/Flagsmith/flagsmith-common"
+reference = "feat/add-serializers-for-versioning-change-requests"
+resolved_reference = "3689ba8414af71109d3289e3e5a741e5fc330ebc"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -4166,4 +4199,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "58b59973f4fbc0454f553d6e495a1509da23daafb2271d34f56ca79588243564"
+content-hash = "8fd78ac72d5eed2ed08775840725fa988452a859de56989dc33f183ab94b6595"
