@@ -1,5 +1,4 @@
 import logging
-import os
 import time
 from argparse import ArgumentParser
 from typing import Any
@@ -46,12 +45,6 @@ class Command(BaseCommand):
         database: str,
         **options: Any,
     ) -> None:
-
-        if os.getenv("SKIP_WAIT_FOR_DATABASE"):
-            logger.info(
-                "Running with SKIP_WAIT_FOR_DATABASE set - will not wait for database to be available"
-            )
-            return
 
         start = time.monotonic()
         wait_between_checks = 0.25

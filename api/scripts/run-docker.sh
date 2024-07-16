@@ -1,8 +1,12 @@
 #!/bin/bash
 set -e
 
+function waitfordb() {
+    [[ -z "${SKIP_WAIT_FOR_DB}"]] && python manage.py waitfordb "$@"
+}
+
 function migrate () {
-    python manage.py waitfordb && python manage.py migrate && python manage.py createcachetable
+    waitfordb && python manage.py migrate && python manage.py createcachetable
 }
 function serve() {
     # configuration parameters for statsd. Docs can be found here:
@@ -26,9 +30,9 @@ function serve() {
              app.wsgi
 }
 function run_task_processor() {
-    python manage.py waitfordb --waitfor 30 --migrations
+    waitfordb --waitfor 30 --migrations
     if [[ -n "$ANALYTICS_DATABASE_URL" || -n "$DJANGO_DB_NAME_ANALYTICS" ]]; then
-        python manage.py waitfordb --waitfor 30 --migrations --database analytics
+        waitfordb --waitfor 30 --migrations --database analytics
     fi
     RUN_BY_PROCESSOR=1 exec python manage.py runprocessor \
       --sleepintervalms ${TASK_PROCESSOR_SLEEP_INTERVAL:-500} \
