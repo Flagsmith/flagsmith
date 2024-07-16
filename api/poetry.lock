@@ -963,19 +963,6 @@ redis = ">=3,<4.0.0 || >4.0.0,<4.0.1 || >4.0.1"
 hiredis = ["redis[hiredis] (>=3,!=4.0.0,!=4.0.1)"]
 
 [[package]]
-name = "django-rest-framework"
-version = "0.1.0"
-description = "alias."
-optional = false
-python-versions = "*"
-files = [
-    {file = "django-rest-framework-0.1.0.tar.gz", hash = "sha256:47a8f496fa69e3b6bd79f68dd7a1527d907d6b77f009e9db7cf9bb21cc565e4a"},
-]
-
-[package.dependencies]
-djangorestframework = "*"
-
-[[package]]
 name = "django-ses"
 version = "3.5.0"
 description = "A Django email backend for Amazon's Simple Email Service"
@@ -1385,14 +1372,14 @@ develop = false
 
 [package.dependencies]
 django = "*"
-django-rest-framework = "*"
+djangorestframework = "*"
 drf-writable-nested = "*"
 
 [package.source]
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-common"
 reference = "feat/add-serializers-for-versioning-change-requests"
-resolved_reference = "3689ba8414af71109d3289e3e5a741e5fc330ebc"
+resolved_reference = "80587cc40e18575d922b61dbd74a009a876e0e26"
 
 [[package]]
 name = "flagsmith-flag-engine"
