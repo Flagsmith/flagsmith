@@ -382,6 +382,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         valid = isEnterprise
         break
       }
+      case 'METADATA': {
+        valid = isEnterprise
+        break
+      }
       default:
         valid = true
         break
@@ -395,6 +399,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         ? [AccountStore.getActiveOrgPlan()]
         : null
       : AccountStore.getPlans()
+
+    console.log('DEBUG: plans:', plans)
 
     if (!plans || !plans.length) {
       return false
