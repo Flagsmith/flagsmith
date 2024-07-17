@@ -332,16 +332,23 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
     ) -> list[Conflict]:
         _conflicts = []
         for fs_to_update in self.get_parsed_feature_states_to_update():
+            feature_segment = fs_to_update["feature_segment"]
+            is_change_to_environment_default = feature_segment is None
+            is_change_to_segment_override = feature_segment is not None
+
             for change_set in change_sets_since_creation:
                 if (
-                    fs_to_update["feature_segment"] is None
+                    is_change_to_environment_default
                     and change_set.includes_change_to_environment_default()
                 ):
                     _conflicts.append(
                         Conflict(original_cr_id=change_set.change_request_id)
                     )
-                elif change_set.includes_change_to_segment(
-                    fs_to_update["feature_segment"]["segment"]
+                elif (
+                    is_change_to_segment_override
+                    and change_set.includes_change_to_segment(
+                        feature_segment["segment"]
+                    )
                 ):
                     _conflicts.append(
                         Conflict(
