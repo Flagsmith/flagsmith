@@ -281,6 +281,9 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
             publish_version_change_set.delay(kwargs=kwargs, delay_until=self.live_from)
 
     def get_conflicts(self) -> list[Conflict]:
+        if self.published_at:
+            return []
+
         change_sets_since_creation = list(
             self.__class__.objects.filter(
                 published_at__gte=self.created_at,
