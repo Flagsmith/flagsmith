@@ -5,6 +5,7 @@ from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.db.models import Q
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg.utils import swagger_auto_schema
@@ -173,11 +174,18 @@ class SDKIdentities(SDKAPIView):
                 {"detail": "Missing identifier"}
             )  # TODO: add 400 status - will this break the clients?
 
-        identity, _ = Identity.objects.get_or_create_for_sdk(
-            identifier=identifier,
-            environment=request.environment,
-            integrations=IDENTITY_INTEGRATIONS,
-        )
+        if request.query_params.get("transient"):
+            identity = Identity(
+                created_date=timezone.now(),
+                identifier=identifier,
+                environment=request.environment,
+            )
+        else:
+            identity, _ = Identity.objects.get_or_create_for_sdk(
+                identifier=identifier,
+                environment=request.environment,
+                integrations=IDENTITY_INTEGRATIONS,
+            )
         self.identity = identity
 
         if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:

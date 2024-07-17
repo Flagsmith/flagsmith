@@ -342,6 +342,8 @@ def segment_featurestate(
     feature_segment: int,
 ) -> int:
     data = {
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "segment override"},
         "feature": feature,
         "environment": environment,
         "feature_segment": feature_segment,

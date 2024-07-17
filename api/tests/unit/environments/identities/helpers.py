@@ -5,9 +5,15 @@ from environments.identities.traits.models import Trait
 
 
 def generate_trait_data_item(
-    trait_key: str = "trait_key", trait_value: typing.Any = "trait_value"
+    trait_key: str = "trait_key",
+    trait_value: typing.Any = "trait_value",
+    transient: bool = False,
 ):
-    return {"trait_key": trait_key, "trait_value": trait_value}
+    return {
+        "trait_key": trait_key,
+        "trait_value": trait_value,
+        "transient": transient,
+    }
 
 
 def create_trait_for_identity(

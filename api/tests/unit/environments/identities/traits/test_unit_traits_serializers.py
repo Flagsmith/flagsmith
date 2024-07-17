@@ -48,7 +48,7 @@ def test_bulk_create_update_serializer_save_many(
     mocked_request = mocker.MagicMock(environment=identity.environment)
 
     # When
-    with django_assert_num_queries(6):
+    with django_assert_num_queries(5):
         serializer = SDKBulkCreateUpdateTraitSerializer(
             data=data,
             many=True,
