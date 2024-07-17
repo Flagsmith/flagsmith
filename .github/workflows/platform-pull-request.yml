@@ -32,6 +32,7 @@ jobs:
             refactor
             test
             chore
+          headerPattern: '^(\w*)(?:\(([\w$.\-*/ ]*)\))?: ([A-Z].*)$'
       - name: Auto-label PR with Conventional Commit title
         uses: bcoe/conventional-release-labels@v1
         with:
