@@ -37,10 +37,6 @@ import Button from 'components/base/forms/Button'
 import SettingsButton from 'components/SettingsButton'
 import PermissionsTabs from 'components/PermissionsTabs'
 import AccountStore from 'common/stores/account-store'
-import AddEditTags from 'components/tags/AddEditTags'
-import ProjectFilter from 'components/ProjectFilter'
-import { getStore } from 'common/store'
-import { getTags } from 'common/services/useTag'
 
 type TabRef = {
   onClosing: () => Promise<void>
@@ -260,8 +256,6 @@ const CreateRole: FC<CreateRoleType> = ({
       },
       { skip: !role || !organisationId },
     )
-    const [project, setProject] = useState<string>('')
-    const [tags, setTags] = useState<number[]>(roleData?.tags || [])
     const [roleName, setRoleName] = useState<string>('')
     const [roleDesc, setRoleDesc] = useState<string>('')
     const [isSaving, setIsSaving] = useState<boolean>(false)
@@ -321,7 +315,7 @@ const CreateRole: FC<CreateRoleType> = ({
       if (!organisationId) return
       if (isEdit && role) {
         editRole({
-          body: { description: roleDesc, name: roleName, tags: tags },
+          body: { description: roleDesc, name: roleName },
           organisation_id: role.organisation,
           role_id: role.id,
         })
@@ -330,7 +324,6 @@ const CreateRole: FC<CreateRoleType> = ({
           description: roleDesc,
           name: roleName,
           organisation_id: organisationId,
-          tags: tags,
         })
       }
     }
@@ -371,47 +364,6 @@ const CreateRole: FC<CreateRoleType> = ({
           id='description'
           placeholder='E.g. Some role description'
         />
-        <FormGroup className='mb-5 setting'>
-          <InputGroup
-            title={'Tags'}
-            unsaved={isEdit && roleTagsChanged}
-            component={
-              <>
-                <p className='fs-small lh-sm'>
-                  Select the project where you want to manage your tags.{' '}
-                  <Button
-                    theme='text'
-                    target='_blank'
-                    href='https://docs.flagsmith.com/system-administration/rbac#add-tags-to-a-role'
-                    className='fw-normal'
-                  >
-                    Learn more.
-                  </Button>
-                </p>
-                <div className='mb-2' style={{ width: 250 }}>
-                  <ProjectFilter
-                    organisationId={organisationId!}
-                    onChange={(p) => {
-                      setProject(p)
-                    }}
-                    value={project}
-                  />
-                </div>
-                {project && (
-                  <AddEditTags
-                    readOnly={false}
-                    projectId={`${project}`}
-                    value={tags}
-                    onChange={(tags) => {
-                      setRoleTagsChanged(true)
-                      setTags(tags)
-                    }}
-                  />
-                )}
-              </>
-            }
-          />
-        </FormGroup>
         <div className='text-right mb-2'>
           <Button
             onClick={() => save()}

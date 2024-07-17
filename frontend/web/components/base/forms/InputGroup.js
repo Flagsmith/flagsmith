@@ -20,6 +20,20 @@ const InputGroup = class extends Component {
     const { props } = this
     const id = this.props.id || Utils.GUID()
     const { inputProps, size } = this.props
+
+    const isComponent = React.isValidElement(props.title)
+
+    const titleContent = (
+      <>
+        {props.title}{' '}
+        {props.unsaved && (
+          <div className={`unread ${isComponent ? 'ml-1 mb-2' : ''}`}>
+            Unsaved
+          </div>
+        )}
+      </>
+    )
+
     return (
       <div
         className={`${
@@ -31,9 +45,8 @@ const InputGroup = class extends Component {
             title={
               <label htmlFor={id} className='cols-sm-2 control-label'>
                 <div>
-                  {props.title}{' '}
-                  {!props.hideTooltipIcon && <Icon name='info-outlined' />}{' '}
-                  {props.unsaved && <div className='unread'>Unsaved</div>}
+                  {titleContent}
+                  {!props.hideTooltipIcon && <Icon name='info-outlined' />}
                 </div>
               </label>
             }
@@ -47,18 +60,13 @@ const InputGroup = class extends Component {
               <Flex>
                 <label htmlFor={id} className='cols-sm-2 control-label'>
                   <div>
-                    {props.title}{' '}
-                    {props.unsaved && <div className='unread'>Unsaved</div>}
+                    {isComponent ? <Row>{titleContent}</Row> : titleContent}
                   </div>
                 </label>
               </Flex>
             )}
             {!!this.props.rightComponent && (
-              <div
-                style={{
-                  marginBottom: '0.5rem',
-                }}
-              >
+              <div style={{ marginBottom: '0.5rem' }}>
                 {this.props.rightComponent}
               </div>
             )}

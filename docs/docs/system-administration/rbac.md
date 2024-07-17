@@ -42,12 +42,6 @@ will also be able to assign API keys to a Role in future versions.
 
 You can create a Role in the Organisation Settings page.
 
-#### Add Tags to a Role
-
-You can add tags to roles to achieve more granular permissions, specifically for updating and deleting flags. This
-functionality works such that if a feature has a tag and a role does not, then the role lacks permissions for updating
-and deleting the flag.
-
 #### Add Permissions to a Role
 
 Once the role is created you can assign the corresponding permissions.
@@ -104,3 +98,10 @@ Permissions can be assigned at 3 levels: Organisation, Project, and Environment.
 | Create Change Request    | Creating a new Change Request                                   |
 | Approve Change Request   | Approving or denying existing Change Requests                   |
 | View Identities          | Viewing Identities                                              |
+
+### Tags
+
+When tags are applied to a role, the permissions, Delete Feature and Update Feature States, are restricted to
+the features that share the same tag. This allows for greater granularity in permission management, enabling organizations to
+have better control over sets of features. By implementing a tagging system, users can only modify features relevant to
+their work, thereby reducing the risk of unauthorized changes in other areas of the system.
