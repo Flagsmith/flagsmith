@@ -3,14 +3,18 @@ from datetime import timedelta
 from unittest import mock
 
 import freezegun
+import pytest
 import responses
+from core.constants import STRING
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
 from environments.models import Environment, Webhook
 from features.models import Feature, FeatureSegment, FeatureState
+from features.versioning.exceptions import FeatureVersioningError
 from features.versioning.models import (
     EnvironmentFeatureVersion,
     VersionChangeSet,
@@ -357,3 +361,64 @@ def test_publish_version_change_set_sends_email_to_change_request_owner_if_confl
         latest_flags[(feature.id, None, None)].get_feature_state_value()
         == conflict_feature_value
     )
+
+
+def test_publish_version_change_set_raises_error_when_segment_override_does_not_exist(
+    change_request: ChangeRequest,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    # We create a change set that attempts to update a segment override that
+    # doesn't currently exist.
+    change_set = VersionChangeSet.objects.create(
+        change_request=change_request,
+        feature=feature,
+        feature_states_to_update=json.dumps(
+            [
+                {
+                    "feature_segment": {"segment": segment.id},
+                    "enabled": True,
+                    "feature_state_value": {"type": STRING, "string_value": "override"},
+                }
+            ]
+        ),
+    )
+
+    # When
+    with pytest.raises(ValidationError) as e:
+        publish_version_change_set(
+            version_change_set_id=change_set.id, user_id=admin_user.id
+        )
+
+    # Then
+    assert e.value.detail == {
+        "message": f"Segment override does not exist for Segment {segment.id}."
+    }
+
+
+def test_publish_version_change_set_raises_error_when_serializer_not_valid(
+    change_request: ChangeRequest,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+    admin_user: FFAdminUser,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    # Given
+    # We create a change set for which the JSON data is invalid.
+    # Note that this should never happen since the data is validated on create.
+    change_set = VersionChangeSet.objects.create(
+        change_request=change_request, feature=feature, feature_states_to_update="[{}]"
+    )
+
+    # When
+    with pytest.raises(FeatureVersioningError) as e:
+        publish_version_change_set(
+            version_change_set_id=change_set.id, user_id=admin_user.id
+        )
+
+    # Then
+    assert str(e.value) == "Unable to publish version change set"

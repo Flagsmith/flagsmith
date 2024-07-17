@@ -9,16 +9,10 @@ from core.models import (
     abstract_base_auditable_model_factory,
 )
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Index
 from django.utils import timezone
-from django_lifecycle import (
-    BEFORE_CREATE,
-    BEFORE_SAVE,
-    LifecycleModelMixin,
-    hook,
-)
+from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook
 from softdelete.models import SoftDeleteObject
 
 from api_keys.models import MasterAPIKey
@@ -241,17 +235,6 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
                 raise RuntimeError(
                     "Version change set should belong to either a change request, or a version."
                 )
-
-    @hook(BEFORE_SAVE)
-    def validate_change_request_or_version(self):
-        if (
-            self.change_request_id is None
-            and self.environment_feature_version_id is None
-        ):
-            raise ValidationError(
-                "VersionChangeSet must have at least one related ChangeRequest "
-                "or EnvironmentFeatureVersion"
-            )
 
     def get_parsed_feature_states_to_create(self) -> list[dict[str, typing.Any]]:
         if self.feature_states_to_create:
