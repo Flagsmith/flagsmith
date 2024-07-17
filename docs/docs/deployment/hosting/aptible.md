@@ -4,8 +4,7 @@ title: Aptible
 
 ## Prerequisites
 
-Aptible health checks must be available on the `/healthcheck` route and cannot return a redirect. This additional route
-is available from Flagsmith 2.X.
+The options and health check routes described in this document are available from Flagsmith 2.130.0.
 
 ## Configuration
 
