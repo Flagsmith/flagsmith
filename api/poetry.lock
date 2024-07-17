@@ -4067,7 +4067,7 @@ flagsmith-task-processor = {git = "https://github.com/Flagsmith/flagsmith-task-p
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
 reference = "feature(versioning)/handle-multiple-change-requests-for-single-feature"
-resolved_reference = "93f25642cfd7af4cdf6525fca06907148a0c77cb"
+resolved_reference = "8256ed15fa4c897e85dfd1b285d4e583a339791d"
 
 [[package]]
 name = "wrapt"
