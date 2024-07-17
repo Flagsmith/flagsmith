@@ -440,3 +440,14 @@ def test_get_top_organisations_value_error(
     # The wrongly typed data does not stop the remaining data
     # from being returned.
     assert dataset == {456: 43}
+
+
+def test_early_return_for_empty_range_for_influx_query_manager() -> None:
+    # When
+    results = InfluxDBWrapper.influx_query_manager(
+        date_start="-0d",
+        date_stop="now()",
+    )
+
+    # Then
+    assert results == []

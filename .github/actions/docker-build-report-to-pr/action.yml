@@ -1,0 +1,46 @@
+name: Report Docker Build status to PR
+description: Create or update PR comment related to Docker build
+
+inputs:
+  image-tag:
+    description: Full image tag
+    required: false
+  build-status:
+    description: Build status in short format
+    required: false
+  security-report-status:
+    description: Security report status in short format
+    required: false
+
+runs:
+  using: composite
+
+  steps:
+    - uses: peter-evans/find-comment@v3
+      id: find-comment
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        body-includes: 'Docker builds report'
+
+    - uses: chuhlomin/render-template@v1.4
+      if: ${{ !inputs.image-tag }}
+      id: render-header
+      with:
+        template: .github/docker_build_comment_template.md
+
+    - uses: peter-evans/create-or-update-comment@v4
+      if: ${{ !inputs.image-tag }}
+      with:
+        comment-id: ${{ steps.find-comment.outputs.comment-id }}
+        edit-mode: replace
+        issue-number: ${{ github.event.pull_request.number }}
+        body: ${{ steps.render-header.outputs.result }}
+
+    - uses: peter-evans/create-or-update-comment@v4
+      if: ${{ inputs.image-tag }}
+      with:
+        comment-id: ${{ steps.find-comment.outputs.comment-id }}
+        edit-mode: append
+        issue-number: ${{ github.event.pull_request.number }}
+        body: >
+          | `${{ inputs.image-tag }}` | ${{ inputs.build-status }} | ${{ inputs.security-report-status }} |
