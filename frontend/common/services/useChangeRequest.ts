@@ -1,7 +1,14 @@
-import { ChangeSet, FeatureState, Res } from 'common/types/responses'
+import {
+  ChangeRequest,
+  ChangeSet,
+  FeatureState,
+  Res,
+} from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
+import sortBy from 'lodash/sortBy'
+import moment from 'moment'
 
 export const changeRequestService = service
   .enhanceEndpoints({ addTagTypes: ['ChangeRequest'] })
@@ -51,25 +58,10 @@ export function parseChangeSet(changeSet: ChangeSet) {
     feature_states_to_create: FeatureState[]
     segment_ids_to_delete_overrides: number[]
   } = {
-    feature_states_to_create: [],
-    feature_states_to_update: [],
-    segment_ids_to_delete_overrides: [],
+    feature_states_to_create: changeSet.feature_states_to_create,
+    feature_states_to_update: changeSet.feature_states_to_update,
+    segment_ids_to_delete_overrides: changeSet.segment_ids_to_delete_overrides,
   }
-  try {
-    parsedChangeSet.feature_states_to_create = JSON.parse(
-      changeSet.feature_states_to_create,
-    )
-  } catch (e) {}
-  try {
-    parsedChangeSet.feature_states_to_update = JSON.parse(
-      changeSet.feature_states_to_update,
-    )
-  } catch (e) {}
-  try {
-    parsedChangeSet.segment_ids_to_delete_overrides = JSON.parse(
-      changeSet.segment_ids_to_delete_overrides,
-    )
-  } catch (e) {}
 
   return {
     ...parsedChangeSet,
@@ -94,6 +86,7 @@ export function parseChangeSet(changeSet: ChangeSet) {
 export function mergeChangeSets(
   changeSets: ChangeSet[] | undefined,
   featureStates: FeatureState[] | undefined,
+  conflicts: ChangeRequest['conflicts'] | undefined,
 ) {
   let mergedFeatureStates = (featureStates || []).concat([])
 
@@ -127,5 +120,19 @@ export function mergeChangeSets(
     )
   })
 
-  return mergedFeatureStates
+  return mergedFeatureStates.map((featureState) => {
+    const conflict = sortBy(
+      conflicts,
+      //prioritise newly published conflicts as we show those when diffing change requests
+      (conflict) => -moment(conflict.published_at).valueOf(),
+    )?.find(
+      (conflict) =>
+        (conflict.segment_id || null) ===
+        (featureState.feature_segment?.segment || null),
+    )
+    return {
+      ...featureState,
+      conflict: conflict,
+    }
+  })
 }

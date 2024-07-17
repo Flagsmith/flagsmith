@@ -94,6 +94,17 @@ const ChangeRequestsPage = class extends Component {
       title: changeRequest.title,
     })
   }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (prevProps.match.params.id !== this.props.match.params.id) {
+      AppActions.getChangeRequest(
+        this.props.match.params.id,
+        this.props.match.params.projectId,
+        this.props.match.params.environmentId,
+      )
+    }
+  }
+
   componentDidMount = () => {}
 
   deleteChangeRequest = () => {
@@ -513,6 +524,7 @@ const ChangeRequestsPage = class extends Component {
                     date={changeRequest?.created_at}
                   />
                   <DiffChangeRequest
+                    environmentId={this.props.match.params.environmentId}
                     isVersioned={isVersioned}
                     changeRequest={changeRequest}
                     feature={projectFlag.id}

@@ -64,6 +64,7 @@ const FeatureVersion: FC<VersionDiffType> = ({
               </InfoMessage>
 
               <DiffFeature
+                environmentId={environmentId}
                 projectId={projectId}
                 featureId={featureId}
                 oldState={oldData}

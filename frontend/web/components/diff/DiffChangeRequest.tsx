@@ -8,10 +8,12 @@ type DiffChangeRequestType = {
   changeRequest: ChangeRequest | null
   feature: number
   projectId: string
+  environmentId: string
   isVersioned: boolean
 }
 const DiffChangeRequest: FC<DiffChangeRequestType> = ({
   changeRequest,
+  environmentId,
   feature,
   isVersioned,
   projectId,
@@ -31,7 +33,7 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
     if (!changeSets?.length) {
       return changeRequest?.feature_states
     }
-    return mergeChangeSets(changeSets, data?.results)
+    return mergeChangeSets(changeSets, data?.results, changeRequest?.conflicts)
   }, [changeRequest, feature, data])
 
   if (!changeRequest) {
@@ -47,6 +49,7 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
   }
   return (
     <DiffFeature
+      environmentId={environmentId}
       featureId={feature}
       disableSegments={!isVersioned}
       projectId={projectId}

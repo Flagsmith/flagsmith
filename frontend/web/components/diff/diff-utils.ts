@@ -1,9 +1,15 @@
-import { FeatureState, ProjectFlag, Segment } from 'common/types/responses'
+import {
+  FeatureConflict,
+  FeatureState,
+  FeatureStateWithConflict,
+  ProjectFlag,
+  Segment,
+} from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import { sortBy } from 'lodash'
 export function getFeatureStateDiff(
   oldFeatureState: FeatureState | undefined,
-  newFeatureState: FeatureState | undefined,
+  newFeatureState: FeatureStateWithConflict | undefined,
 ) {
   const oldValue = Utils.getTypedValue(
     Utils.featureStateToValue(oldFeatureState?.feature_state_value),
@@ -16,6 +22,7 @@ export function getFeatureStateDiff(
   const enabledChanged = oldEnabled !== newEnabled
   const valueChanged = oldValue !== newValue
   const diff = {
+    conflict: newFeatureState?.conflict,
     enabledChanged,
     newEnabled,
     newValue,
@@ -35,6 +42,7 @@ export type TDiffSegment = {
   oldEnabled: boolean
   oldPriority: number
   oldValue: string
+  conflict?: FeatureConflict
   totalChanges: number
   created: boolean
   deleted: boolean
@@ -53,7 +61,7 @@ export type TDiffVariations = {
 
 export const getSegmentDiff = (
   oldFeatureStates: FeatureState[] | undefined,
-  newFeatureStates: FeatureState[] | undefined,
+  newFeatureStates: FeatureStateWithConflict[] | undefined,
   segments: Segment[] | undefined,
 ) => {
   if (!oldFeatureStates || !newFeatureStates || !segments) {
@@ -108,6 +116,7 @@ export const getSegmentDiff = (
       totalChanges += 1
     }
     return {
+      conflict: newFeatureState?.conflict,
       created: !oldFeatureState,
       deleted: !newFeatureState,
       enabledChanged,
@@ -124,6 +133,7 @@ export const getSegmentDiff = (
   return {
     diffs,
     totalChanges,
+    totalConflicts: newFeatureStates?.filter((v) => !!v.conflict).length,
   }
 }
 
