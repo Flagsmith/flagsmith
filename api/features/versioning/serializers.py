@@ -1,11 +1,11 @@
 import typing
 
-from common.features.versioning.serializers import (
-    EnvironmentFeatureVersionFeatureStateSerializer,
-)
 from rest_framework import serializers
 
 from api_keys.user import APIKeyUser
+from features.serializers import (
+    CustomCreateSegmentOverrideFeatureStateSerializer,
+)
 from features.versioning.models import EnvironmentFeatureVersion
 from integrations.github.github import call_github_task
 from users.models import FFAdminUser
@@ -13,8 +13,14 @@ from webhooks.webhooks import WebhookEventType
 
 
 class CustomEnvironmentFeatureVersionFeatureStateSerializer(
-    EnvironmentFeatureVersionFeatureStateSerializer
+    CustomCreateSegmentOverrideFeatureStateSerializer
 ):
+    class Meta(CustomCreateSegmentOverrideFeatureStateSerializer.Meta):
+        read_only_fields = (
+            CustomCreateSegmentOverrideFeatureStateSerializer.Meta.read_only_fields
+            + ("feature",)
+        )
+
     def save(self, **kwargs):
         response = super().save(**kwargs)
 
