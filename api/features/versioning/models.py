@@ -342,13 +342,17 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
                 if is_change_to_environment_default:
                     if change_set.includes_change_to_environment_default():
                         _conflicts.append(
-                            Conflict(original_cr_id=change_set.change_request_id)
+                            Conflict(
+                                original_cr_id=change_set.change_request_id,
+                                published_at=change_set.published_at,
+                            )
                         )
                 elif change_set.includes_change_to_segment(feature_segment["segment"]):
                     _conflicts.append(
                         Conflict(
                             original_cr_id=change_set.change_request_id,
                             segment_id=fs_to_update["feature_segment"]["segment"],
+                            published_at=change_set.published_at,
                         )
                     )
 
