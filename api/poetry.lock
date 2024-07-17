@@ -1379,7 +1379,7 @@ drf-writable-nested = "*"
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-common"
 reference = "feat/add-serializers-for-versioning-change-requests"
-resolved_reference = "80587cc40e18575d922b61dbd74a009a876e0e26"
+resolved_reference = "840d6b930593003777b34bec598e3199384130ea"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -4067,7 +4067,7 @@ flagsmith-task-processor = {git = "https://github.com/Flagsmith/flagsmith-task-p
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
 reference = "feature(versioning)/handle-multiple-change-requests-for-single-feature"
-resolved_reference = "b40560d170b55d257fa59f1884df8a6bdc852279"
+resolved_reference = "93f25642cfd7af4cdf6525fca06907148a0c77cb"
 
 [[package]]
 name = "wrapt"
