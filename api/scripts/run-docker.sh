@@ -2,7 +2,7 @@
 set -e
 
 function waitfordb() {
-    [[ -z "${SKIP_WAIT_FOR_DB}"]] && python manage.py waitfordb "$@"
+    [[ -z "${SKIP_WAIT_FOR_DB}" ]] && python manage.py waitfordb "$@"
 }
 
 function migrate () {
