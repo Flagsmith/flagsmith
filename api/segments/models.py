@@ -167,6 +167,7 @@ class Segment(
         cloned_segment.name = name
         cloned_segment.description = description
         cloned_segment.change_request = change_request
+        cloned_segment.version = None
         cloned_segment.save()
         return cloned_segment
 
