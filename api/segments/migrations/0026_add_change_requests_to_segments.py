@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("workflows_core", "0009_prevent_cascade_delete_from_user_delete"),
-        ("segments", "0024_add_timestamps_to_segments"),
+        ("segments", "0025_set_default_version_on_segment"),
     ]
 
     operations = [
