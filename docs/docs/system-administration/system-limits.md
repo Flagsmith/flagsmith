@@ -33,11 +33,22 @@ The easiest way to modify them is with the [Django admin](/deployment/configurat
 
 ## Traffic Limits
 
+:::info
+
+When we say _rate limit_ in this document we mean to-the-second limits on API usage.
+
+When we say _plan limit_ in this document we mean the month to month usage limit defined as part of your plan.
+
+:::
+
 ### SDK Limits
 
-Requests made by our SDKs are _not_ rate limited, in the short time, by design; we can't predict what sort of profile
-your traffic will look like. There are exceptions/considerations to this based on the plan you are on which are detailed
-below; you will be notified and given warning in the event that we are going to stop serving your flags.
+Requests made by our SDKs are _not_ rate limited, by design; we can't predict what sort of profile your traffic will
+look like.
+
+There are scenarios where we will block your API calls, based on the _plan limit_ you are signed up to, which are
+detailed below. You will be notified and given warning in the event that we are going to stop serving your flags on
+account of you going over these _plan limits_.
 
 #### Free Plan Limits
 
@@ -49,8 +60,16 @@ This block is cleared 30 days after the warning email was first sent, or when yo
 
 #### Paid Plan Limits
 
-For paid plans, we'll give you a 30 day grace period and then charge you at $50 per million API calls for a calendar
-month (or the contracted overage rate if specified in your Enterprise agreement).
+##### If you go over your plan limit by a factor of 2 or less
+
+If you go over your paid plan limit we will email you and give you a 30 day grace period. We will then charge you an
+overage for that calendar month (or the contracted overage rate if specified in your Enterprise agreement). Please refer
+to our [Pricing Page](https://www.flagsmith.com/pricing) for overage pricing.
+
+##### If you go over your plan limit by a factor of more than 2
+
+We will bill you for all overage above your plan in the current calendar month. You will be charged for the overage at
+the end of your billing period.
 
 ### Admin API Rate Limit
 
