@@ -25,11 +25,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
   ...rest
 }) => {
   const { data } = useGetEnvironmentsQuery({ projectId: `${projectId}` })
-  const foundValue = useMemo(
-    () =>
-      data?.results?.find((environment) => `${environment[idField]}` === value),
-    [value, data, idField],
-  )
+
   const environments = useMemo(() => {
     return (data?.results || [])
       ?.map((v) => ({
@@ -43,8 +39,15 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
         return true
       })
   }, [data?.results, ignore, idField])
+
+  const foundValue = useMemo(
+    () =>
+      environments.find((environment) => `${environment.value}` === `${value}`),
+    [value, environments],
+  )
+
   if (readOnly) {
-    return <div className='mb-2'>{foundValue?.name}</div>
+    return <div className='mb-2'>{foundValue?.label}</div>
   }
   return (
     <div>
@@ -52,7 +55,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
         {...rest}
         value={
           foundValue
-            ? { label: foundValue.name, value: `${foundValue.id}` }
+            ? foundValue
             : {
                 label:
                   label ||

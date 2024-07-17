@@ -20,7 +20,7 @@ We **will not** export the following data:
 
 - Feature-based Segments
 - Segment overrides
-- Flag [Metadata](/system-administration/metadata/)
+- Flag [custom fields](/advanced-use/custom-fields.md)
 - Flag Schedules
 - Tags associated with Flags
 - Individual and group owners associated with Flags

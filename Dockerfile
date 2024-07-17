@@ -19,11 +19,11 @@
 # Build a SaaS API image:
 # $ GH_TOKEN=$(gh auth token) docker build -t flagsmith-saas-api:dev --target saas-api \
 #     --secret="id=sse_pgp_pkey,src=./sse_pgp_pkey.key"\
-#     --secret="id=github_private_cloud_token,env=GH_TOKEN" . 
+#     --secret="id=github_private_cloud_token,env=GH_TOKEN" .
 
 # Build a Private Cloud Unified image:
 # $ GH_TOKEN=$(gh auth token) docker build -t flagsmith-private-cloud:dev --target private-cloud-unified \
-#     --secret="id=github_private_cloud_token,env=GH_TOKEN" . 
+#     --secret="id=github_private_cloud_token,env=GH_TOKEN" .
 
 # Table of Contents
 # Stages are described as stage-name [dependencies]
@@ -53,19 +53,18 @@ ARG CI_COMMIT_SHA=dev
 # Pin runtimes versions
 ARG NODE_VERSION=16
 ARG PYTHON_VERSION=3.11
-ARG PYTHON_SITE_DIR=/usr/local/lib/python${PYTHON_VERSION}/site-packages
 
-FROM node:${NODE_VERSION} as node
-FROM node:${NODE_VERSION}-slim as node-slim
-FROM python:${PYTHON_VERSION} as python
-FROM python:${PYTHON_VERSION}-slim as python-slim
+FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm as node
+FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm-slim as node-slim
+FROM public.ecr.aws/docker/library/python:${PYTHON_VERSION}-bookworm as python
+FROM public.ecr.aws/docker/library/python:${PYTHON_VERSION}-slim-bookworm as python-slim
 
 # - Intermediary stages
 # * build-node
 FROM node AS build-node
 
 # Copy the files required to install npm packages
-WORKDIR /app
+WORKDIR /build
 COPY frontend/package.json frontend/package-lock.json frontend/.npmrc ./frontend/.nvmrc ./frontend/
 COPY frontend/bin/ ./frontend/bin/
 COPY frontend/env/ ./frontend/env/
@@ -73,12 +72,12 @@ COPY frontend/env/ ./frontend/env/
 ARG ENV=selfhosted
 RUN cd frontend && ENV=${ENV} npm ci --quiet --production
 
-COPY frontend /app/frontend
+COPY frontend /build/frontend
 
 # * build-node-django [build-node]
 FROM build-node as build-node-django
 
-RUN mkdir /app/api && cd frontend && npm run bundledjango
+RUN mkdir /build/api && cd frontend && npm run bundledjango
 
 # * build-node-selfhosted [build-node]
 FROM build-node as build-node-selfhosted
@@ -87,17 +86,22 @@ RUN cd frontend && npm run bundle
 
 # * build-python
 FROM python as build-python
-WORKDIR /app
+WORKDIR /build
 
 COPY api/pyproject.toml api/poetry.lock api/Makefile ./
-ENV POETRY_VIRTUALENVS_CREATE=false POETRY_HOME=/usr/local
+ENV POETRY_VIRTUALENVS_IN_PROJECT=true \
+  POETRY_VIRTUALENVS_OPTIONS_ALWAYS_COPY=true \
+  POETRY_VIRTUALENVS_OPTIONS_NO_PIP=true \
+  POETRY_VIRTUALENVS_OPTIONS_NO_SETUPTOOLS=true \
+  POETRY_HOME=/opt/poetry \
+  PATH="/opt/poetry/bin:$PATH"
 RUN make install opts='--without dev'
 
 # * build-python-private [build-python]
 FROM build-python AS build-python-private
 
-# Authenticate git with token, install SAML binary dependency,
-# private Python dependencies, and integrate private modules
+# Authenticate git with token, install private Python dependencies,
+# and integrate private modules
 ARG SAML_REVISION
 ARG RBAC_REVISION
 RUN --mount=type=secret,id=github_private_cloud_token \
@@ -109,9 +113,10 @@ RUN --mount=type=secret,id=github_private_cloud_token \
 # * api-runtime
 FROM python-slim as api-runtime
 
-ARG TARGETARCH
-RUN if [ "${TARGETARCH}" != "amd64" ]; then \
-  apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
+# Uninstall pip to reduce CVE-2018-20225 noise
+# and make system Python available to venv entrypoints
+RUN pip uninstall -y pip && mkdir -p /build/.venv/bin && \
+  ln -s /usr/local/bin/python /build/.venv/bin/python
 
 WORKDIR /app
 
@@ -154,9 +159,7 @@ CMD ["-c 'make test'"]
 # * private-cloud-api [api-runtime-private, build-python-private]
 FROM api-runtime-private as private-cloud-api
 
-ARG PYTHON_SITE_DIR
-COPY --from=build-python-private ${PYTHON_SITE_DIR} ${PYTHON_SITE_DIR}
-COPY --from=build-python-private /usr/local/bin /usr/local/bin
+COPY --from=build-python-private /build/.venv/ /usr/local/
 
 RUN python manage.py collectstatic --no-input
 RUN touch ./ENTERPRISE_VERSION
@@ -166,11 +169,8 @@ USER nobody
 # * private-cloud-unified [api-runtime-private, build-python-private, build-node-django]
 FROM api-runtime-private as private-cloud-unified
 
-ARG PYTHON_SITE_DIR
-COPY --from=build-python-private ${PYTHON_SITE_DIR} ${PYTHON_SITE_DIR}
-COPY --from=build-python-private /usr/local/bin /usr/local/bin
-COPY --from=build-node-django /app/api/static /app/static
-COPY --from=build-node-django /app/api/app/templates/webpack /app/app/templates/webpack
+COPY --from=build-python-private /build/.venv/ /usr/local/
+COPY --from=build-node-django /build/api/ /app/
 
 RUN python manage.py collectstatic --no-input
 RUN touch ./ENTERPRISE_VERSION
@@ -187,9 +187,7 @@ RUN --mount=type=secret,id=sse_pgp_pkey \
   mv /root/.gnupg/ /app/ && \
   chown -R nobody /app/.gnupg/
 
-ARG PYTHON_SITE_DIR
-COPY --from=build-python-private ${PYTHON_SITE_DIR} ${PYTHON_SITE_DIR}
-COPY --from=build-python-private /usr/local/bin /usr/local/bin
+COPY --from=build-python-private /build/.venv/ /usr/local/
 
 RUN python manage.py collectstatic --no-input
 RUN touch ./SAAS_DEPLOYMENT
@@ -199,9 +197,7 @@ USER nobody
 # * oss-api [api-runtime, build-python]
 FROM api-runtime as oss-api
 
-ARG PYTHON_SITE_DIR
-COPY --from=build-python ${PYTHON_SITE_DIR} ${PYTHON_SITE_DIR}
-COPY --from=build-python /usr/local/bin /usr/local/bin
+COPY --from=build-python /build/.venv/ /usr/local/
 
 RUN python manage.py collectstatic --no-input
 
@@ -213,7 +209,7 @@ FROM node-slim AS oss-frontend
 USER node
 WORKDIR /srv/bt
 
-COPY --from=build-node-selfhosted --chown=node:node /app/frontend .
+COPY --from=build-node-selfhosted --chown=node:node /build/frontend .
 
 ENV NODE_ENV=production
 
@@ -227,11 +223,8 @@ CMD ["node",  "./api/index.js"]
 # * oss-unified [api-runtime, build-python, build-node-django]
 FROM api-runtime as oss-unified
 
-ARG PYTHON_SITE_DIR
-COPY --from=build-python ${PYTHON_SITE_DIR} ${PYTHON_SITE_DIR}
-COPY --from=build-python /usr/local/bin /usr/local/bin
-COPY --from=build-node-django /app/api/static /app/static/
-COPY --from=build-node-django /app/api/app/templates/webpack /app/app/templates/webpack
+COPY --from=build-python /build/.venv/ /usr/local/
+COPY --from=build-node-django /build/api/ /app/
 
 RUN python manage.py collectstatic --no-input
 

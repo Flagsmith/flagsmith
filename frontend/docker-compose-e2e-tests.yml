@@ -6,7 +6,7 @@
 version: '3'
 services:
   db:
-    image: postgres:15.5-alpine
+    image: ghcr.io/cloudnative-pg/postgresql:15
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: flagsmith
@@ -43,12 +43,12 @@ services:
     build:
       context: ../
       dockerfile: frontend/Dockerfile.e2e
-    platform: linux/amd64
     environment:
       E2E_TEST_TOKEN_DEV: some-token
       DISABLE_ANALYTICS_FEATURES: 'true'
       FLAGSMITH_API: flagsmith-api:8000/api/v1/
       SLACK_TOKEN: ${SLACK_TOKEN}
+      GITHUB_ACTION_URL: ${GITHUB_ACTION_URL}
     ports:
       - 8080:8080
     depends_on:

@@ -613,7 +613,7 @@ const ProjectSettingsPage = class extends Component {
                       />
                     </TabItem>
                     {metadataEnable && (
-                      <TabItem tabLabel='Metadata'>
+                      <TabItem tabLabel='Custom Fields'>
                         <MetadataPage
                           organisationId={AccountStore.getOrganisation().id}
                           projectId={this.props.match.params.projectId}

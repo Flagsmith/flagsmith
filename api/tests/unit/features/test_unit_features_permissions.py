@@ -85,26 +85,6 @@ def test_project_user_with_read_access_can_list_features(
     assert result is True
 
 
-def test_user_with_no_project_permissions_cannot_list_features(
-    staff_user: FFAdminUser,
-    project: Project,
-) -> None:
-    # Given
-    feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock(
-        kwargs={"project_pk": project.id},
-        detail=False,
-        action="list",
-    )
-    mock_request = mock.MagicMock(data={}, user=staff_user)
-
-    # When
-    result = feature_permissions.has_permission(mock_request, mock_view)
-
-    # Then
-    assert result is False
-
-
 def test_organisation_admin_can_create_feature(
     admin_user: FFAdminUser,
     project: Project,

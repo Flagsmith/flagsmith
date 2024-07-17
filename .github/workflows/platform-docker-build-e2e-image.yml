@@ -7,22 +7,9 @@ on:
 
 jobs:
   build-e2e-docker-image:
-    runs-on: ubuntu-latest
-    name: Publish E2E Frontend Image
-
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v4
-
-      - name: Login to Github Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{github.actor}}
-          password: ${{secrets.GITHUB_TOKEN}}
-
-      - name: Build E2E Frontend Image
-        run: |
-          cd frontend
-          docker build -f Dockerfile-base.e2e --tag ghcr.io/flagsmith/e2e-frontend-base:latest .
-          docker push ghcr.io/flagsmith/e2e-frontend-base:latest
+    name: Build E2E Frontend Base Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      file: frontend/Dockerfile-base.e2e
+      image-name: e2e-frontend-base
+      tags: latest

@@ -4,6 +4,7 @@ from django.db.models import Q
 from pytest_mock import MockerFixture
 
 from environments.identities.models import Identity
+from environments.identities.traits.models import Trait
 from environments.models import Environment
 from environments.sdk.serializers import IdentifyWithTraitsSerializer
 from features.models import Feature
@@ -84,3 +85,33 @@ def test_identify_with_traits_serializer__additional_filters_in_context__filters
 
     # Then
     assert "flags" not in serializer.data
+
+
+def test_identify_with_traits_serializer__transient__identity_and_traits_not_persisted(
+    mocker: MockerFixture,
+    environment: Environment,
+) -> None:
+    # Given
+    identity_identifier = "completely_new_identity"
+    data = {
+        "identifier": identity_identifier,
+        "traits": [{"trait_key": "trait_key", "trait_value": "trait_value"}],
+        "transient": True,
+    }
+    request_mock = mocker.MagicMock()
+
+    serializer = IdentifyWithTraitsSerializer(
+        data=data,
+        context={
+            "environment": environment,
+            "request": request_mock,
+        },
+    )
+
+    # When
+    assert serializer.is_valid()
+    serializer.save()
+
+    # Then
+    assert not Identity.objects.filter(identifier=identity_identifier).exists()
+    assert not Trait.objects.filter(identity__identifier=identity_identifier).exists()

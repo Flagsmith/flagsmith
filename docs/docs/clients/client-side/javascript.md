@@ -99,16 +99,20 @@ the event that it [cannot receive a response from our API](/guides-and-examples/
 ```javascript
 import flagsmith from 'flagsmith or react-native-flagsmith'; //Add this line if you're using flagsmith via npm
 
-flagsmith.init({
-    environmentID: '<YOUR_CLIENT_SIDE_ENVIRONMENT_KEY>',
-    defaultFlags: {
-        feature_a: { enabled: false},
-        font_size: { enabled: true, value: 12 },
-    }
-    onChange: (oldFlags, params) => {
-        ...
-    },
-});
+try {
+    flagsmith.init({
+        environmentID: '<YOUR_CLIENT_SIDE_ENVIRONMENT_KEY>',
+        defaultFlags: {
+            feature_a: { enabled: false},
+            font_size: { enabled: true, value: 12 },
+        }
+        onChange: (oldFlags, params) => {
+            ...
+        },
+    });
+} catch (e) {
+    // if an exception is thrown the default values will be used
+}
 ```
 
 ### Providing Default Flags as part of CI/CD
