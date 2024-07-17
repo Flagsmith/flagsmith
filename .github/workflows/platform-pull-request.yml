@@ -32,7 +32,11 @@ jobs:
             refactor
             test
             chore
-          headerPattern: '^(\w*)(?:\(([\w$.\-*/ ]*)\))?: ([A-Z].*)$'
+          subjectPattern: ^([A-Z].*).+$
+          subjectPatternError: |
+            The subject "{subject}" found in the pull request title "{title}"
+            didn't match the configured pattern. Please ensure that the subject
+            starts with an uppercase character.
       - name: Auto-label PR with Conventional Commit title
         uses: bcoe/conventional-release-labels@v1
         with:
