@@ -24,23 +24,25 @@ const DiffSegment: FC<DiffSegment> = ({ diff, environmentId, projectId }) => {
         <div>
           <Tooltip
             title={
-              <div className='d-flex fw-semibold gap-2 align-items-center'>
-                {!!diff.conflict && <Icon name='warning' width={16} />}
-                {diff.segment?.name}
-              </div>
+              <>
+                <div className='d-flex fw-semibold gap-2 align-items-center'>
+                  {!!diff.conflict && <Icon name='warning' width={16} />}
+                  {diff.segment?.name}
+                </div>
+                {!!diff.conflict && (
+                  <Link
+                    to={`/project/${projectId}/environment/${environmentId}/change-requests/${diff.conflict.original_cr_id}`}
+                  >
+                    View Change Request
+                  </Link>
+                )}
+              </>
             }
           >
             {diff.conflict
               ? 'A change request was published since the creation of this one that also modified the value for this segment.'
               : null}
           </Tooltip>
-          {!!diff.conflict && (
-            <Link
-              to={`/project/${projectId}/environment/${environmentId}/change-requests/${diff.conflict.original_cr_id}`}
-            >
-              View Change Request
-            </Link>
-          )}
         </div>
       </div>
       <div style={{ width: widths[1] }} className='table-column text-center'>
