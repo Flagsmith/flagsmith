@@ -164,6 +164,9 @@ class Segment(
         change_request: typing.Optional["ChangeRequest"],  # noqa: F821
     ) -> "Segment":
         cloned_segment = deepcopy(self)
+        cloned_segment.id = None
+        cloned_segment.version_of = self
+        cloned_segment.uuid = uuid.uuid4()
         cloned_segment.name = name
         cloned_segment.description = description
         cloned_segment.change_request = change_request
