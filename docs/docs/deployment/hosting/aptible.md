@@ -26,12 +26,12 @@ aptible config:set --app flagsmith\
 
 Once Flagsmith is running in Aptible, make sure to create the first admin user by visiting `/api/v1/users/config/init/`.
 
-## Optional: using a `Procfile` or `.aptible.yml`
+## Optional: using a Procfile or `.aptible.yml`
 
 If your Aptible deployment requires a
 [configuration file](https://www.aptible.com/docs/core-concepts/apps/deploying-apps/image/deploying-with-docker-image/procfile-aptible-yml-direct-docker-deploy)),
 you can build it into a new container image starting from a Flagsmith base image. For example, if you wanted to add a
-`Procfile` to the Flagsmith image:
+Procfile to the Flagsmith image, you could build it using the following Dockerfile:
 
 ```dockerfile
 # Use flagsmith/flagsmith-private-cloud for the Enterprise image
@@ -41,7 +41,7 @@ RUN mkdir /.aptible/
 ADD Procfile /.aptible/Procfile
 ```
 
-After your image is deployed and pushed to a container registry that Aptible can access, you can deploy it using the
+After your image is built and pushed to a container registry that Aptible can access, you can deploy it using the
 Aptible CLI as you would any other application:
 
 ```shell
