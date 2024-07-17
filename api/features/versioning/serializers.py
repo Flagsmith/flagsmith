@@ -1,5 +1,6 @@
 import typing
 
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
 from api_keys.user import APIKeyUser
@@ -215,9 +216,18 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
         self, feature_state: dict[str, typing.Any], version: EnvironmentFeatureVersion
     ) -> None:
         if self._is_segment_override(feature_state):
-            instance = version.feature_states.get(
-                feature_segment__segment_id=feature_state["feature_segment"]["segment"]
-            )
+            segment_id = feature_state["feature_segment"]["segment"]
+            try:
+                instance = version.feature_states.get(
+                    feature_segment__segment_id=segment_id
+                )
+            except ObjectDoesNotExist:
+                raise serializers.ValidationError(
+                    {
+                        "feature_states_to_update": "Segment override does not exist for Segment %d."
+                        % segment_id
+                    }
+                )
             # Patch the id of the feature segment onto the feature state data so that
             # the serializer knows to update rather than try and create a new one.
             feature_state["feature_segment"]["id"] = instance.feature_segment_id
