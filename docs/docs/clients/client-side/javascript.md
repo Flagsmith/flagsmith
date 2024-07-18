@@ -118,11 +118,11 @@ try {
 ### Default Flag Offline Handler
 
 You can automatically set default flags for your frontend application as part of your CI/CD process by using our
-[CLI](/clients/cli) and offline hander in your build pipelines.
+[CLI](/clients/CLI) and offline hander in your build pipelines.
 
 The main steps to achieving this are as follows:
 
-1. Install the [CLI](/clients/cli) `npm i flagsmith-cli --save-dev`
+1. Install the [CLI](/clients/CLI) `npm i flagsmith-cli --save-dev`
 2. Call the CLI as part of npm postinstall to create a `flagsmith.json` file each time you run `npm install`. This can
    be done by either:
 
