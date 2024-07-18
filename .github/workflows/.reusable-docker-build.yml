@@ -153,6 +153,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         if: inputs.scan && (success() || failure())
         with:
+          category: ${{ inputs.image-name }}
           sarif_file: trivy-results.sarif
 
       - name: Render scan results URL
