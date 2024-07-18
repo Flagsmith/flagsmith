@@ -252,8 +252,6 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
         return []
 
     def publish(self, user: "FFAdminUser") -> None:
-        # TODO:
-        #  - handle API keys
         from features.versioning.tasks import publish_version_change_set
 
         kwargs = {"version_change_set_id": self.id, "user_id": user.id}
