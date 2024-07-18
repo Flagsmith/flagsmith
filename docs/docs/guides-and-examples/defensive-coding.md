@@ -15,9 +15,8 @@ Flagsmith provides a reliable, dependable solution.
 
 ### Don't expect a 200 response from the Flagsmith API
 
-First up - we care deeply about our [SaaS uptime and stability](https://flagsmith.statuspage.io/). Whilst no one has
-100% uptime, in our experience there are numerous situations where your application is unable to get a response from our
-API:
+First up - we care deeply about our [SaaS uptime and stability](http://status.flagsmith.com/). Whilst no one has 100%
+uptime, in our experience there are numerous situations where your application is unable to get a response from our API:
 
 - They are using a mobile device, open your app, and step into a lift.
 - They are using a web application in a hotel that has the craziest DNS setup you have ever seen.
