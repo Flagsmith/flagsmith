@@ -28,6 +28,7 @@ from features.workflows.core.models import (
     ChangeRequestApproval,
     ChangeRequestGroupAssignment,
 )
+from segments.models import Segment
 from users.models import FFAdminUser
 
 now = timezone.now()
@@ -731,3 +732,23 @@ def test_committing_change_request_with_environment_feature_versions_creates_pub
         related_object_type=RelatedObjectType.EF_VERSION.name,
         log=ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE % feature.name,
     ).exists()
+
+
+def test_retrieving_segments(
+    change_request: ChangeRequest,
+) -> None:
+    # Given
+    base_segment = Segment.objects.create(
+        name="Base Segment",
+        description="Segment description",
+        project=change_request.environment.project,
+    )
+
+    # When
+    segment = base_segment.shallow_clone(
+        name="New Name", description="New description", change_request=change_request
+    )
+
+    # Then
+    assert change_request.segments.count() == 1
+    assert change_request.segments.first() == segment
