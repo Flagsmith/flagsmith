@@ -49,6 +49,7 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
   }
   return (
     <DiffFeature
+      conflicts={changeRequest.conflicts}
       environmentId={environmentId}
       featureId={feature}
       disableSegments={!isVersioned}

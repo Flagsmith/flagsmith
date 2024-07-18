@@ -60,9 +60,10 @@ export type TDiffVariations = {
 }
 
 export const getSegmentDiff = (
-  oldFeatureStates: FeatureState[] | undefined,
+  oldFeatureStates: FeatureStateWithConflict[] | undefined,
   newFeatureStates: FeatureStateWithConflict[] | undefined,
   segments: Segment[] | undefined,
+  conflicts?: FeatureConflict[] | undefined,
 ) => {
   if (!oldFeatureStates || !newFeatureStates || !segments) {
     return null
@@ -77,6 +78,7 @@ export const getSegmentDiff = (
     (s) => s.name,
   )
   let totalChanges = 0
+  let totalConflicts = 0
   const diffs = relatedSegments?.map((segment) => {
     const oldFeatureState = oldFeatureStates?.find(
       (v) => v.feature_segment?.segment === segment.id,
@@ -84,6 +86,16 @@ export const getSegmentDiff = (
     const newFeatureState = newFeatureStates?.find(
       (v) => v.feature_segment?.segment === segment.id,
     )
+    let foundConflict = null
+    if (!newFeatureState && !!oldFeatureState) {
+      //detect conflicts where the new change request attempts to delete a segment overrides
+      foundConflict = conflicts?.find(
+        (v) => v.segment_id === oldFeatureState.feature_segment?.segment,
+      )
+      if (foundConflict) {
+        totalConflicts++
+      }
+    }
 
     const oldEnabled = !!oldFeatureState?.enabled
     const oldPriority = oldFeatureState?.feature_segment
@@ -108,6 +120,9 @@ export const getSegmentDiff = (
     const enabledChanged = oldEnabled !== newEnabled
     const valueChanged = oldValue !== newValue
     const priorityChanged = oldPriority !== newPriority
+    if (newFeatureState?.conflict) {
+      totalConflicts++
+    }
     const segmentChanges =
       (enabledChanged ? 1 : 0) +
       (valueChanged ? 1 : 0) +
@@ -116,7 +131,7 @@ export const getSegmentDiff = (
       totalChanges += 1
     }
     return {
-      conflict: newFeatureState?.conflict,
+      conflict: foundConflict || newFeatureState?.conflict,
       created: !oldFeatureState,
       deleted: !newFeatureState,
       enabledChanged,
@@ -133,7 +148,7 @@ export const getSegmentDiff = (
   return {
     diffs,
     totalChanges,
-    totalConflicts: newFeatureStates?.filter((v) => !!v.conflict).length,
+    totalConflicts,
   }
 }
 

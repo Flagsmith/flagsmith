@@ -1,5 +1,9 @@
 import React, { FC, useEffect, useState } from 'react'
-import { FeatureState, FeatureStateWithConflict } from 'common/types/responses'
+import {
+  FeatureConflict,
+  FeatureState,
+  FeatureStateWithConflict,
+} from 'common/types/responses'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
@@ -19,17 +23,19 @@ import WarningMessage from 'components/WarningMessage'
 import { Link } from 'react-router-dom'
 
 type FeatureDiffType = {
-  oldState: FeatureState[]
+  oldState: FeatureStateWithConflict[]
   newState: FeatureStateWithConflict[]
   noChangesMessage?: string
   featureId: number
   projectId: string
   environmentId: string
   tabTheme?: string
+  conflicts?: FeatureConflict[] | undefined
   disableSegments?: boolean
 }
 
 const DiffFeature: FC<FeatureDiffType> = ({
+  conflicts,
   disableSegments,
   environmentId,
   featureId,
@@ -56,7 +62,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
 
   const segmentDiffs = disableSegments
     ? { diffs: [], totalChanges: 0 }
-    : getSegmentDiff(oldState, newState, segments?.results)
+    : getSegmentDiff(oldState, newState, segments?.results, conflicts)
   const variationDiffs = getVariationDiff(oldEnv, newEnv, feature)
   const totalSegmentChanges = segmentDiffs?.totalChanges
   const totalVariationChanges = variationDiffs?.totalChanges
