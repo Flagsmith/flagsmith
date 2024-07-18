@@ -215,7 +215,7 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
 
     def perform_create(
         self, serializer: CustomCreateSegmentOverrideFeatureStateSerializer
-    ):
+    ) -> None:
         serializer.save(
             feature=self.feature,
             environment=self.environment,
@@ -224,14 +224,14 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
 
     def perform_update(
         self, serializer: CustomCreateSegmentOverrideFeatureStateSerializer
-    ):
+    ) -> None:
         serializer.save(
             feature=self.feature,
             environment=self.environment,
             environment_feature_version=self.environment_feature_version,
         )
 
-    def perform_destroy(self, instance):
+    def perform_destroy(self, instance) -> None:
         if instance.feature_segment is None and instance.identity is None:
             raise FeatureVersionDeleteError(
                 "Cannot delete environment default feature state."

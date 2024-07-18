@@ -595,7 +595,7 @@ def segment_featurestate(feature_segment, feature, environment):
 @pytest.fixture()
 def another_segment_featurestate(
     feature: Feature, environment: Environment, another_segment: Segment
-):
+) -> FeatureState:
     return FeatureState.objects.create(
         feature_segment=FeatureSegment.objects.create(
             feature=feature, segment=another_segment, environment=environment
