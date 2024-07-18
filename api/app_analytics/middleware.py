@@ -1,11 +1,16 @@
+from app_analytics.cache import APIUsageCache
+from app_analytics.tasks import track_request
+from django.conf import settings
+
 from .models import Resource
-from .tasks import track_request
 from .track import (
     TRACKED_RESOURCE_ACTIONS,
     get_resource_from_uri,
     track_request_googleanalytics_async,
     track_request_influxdb_async,
 )
+
+api_usage_cache = APIUsageCache()
 
 
 class GoogleAnalyticsMiddleware:
@@ -41,13 +46,15 @@ class APIUsageMiddleware:
     def __call__(self, request):
         resource = get_resource_from_uri(request.path)
         if resource in TRACKED_RESOURCE_ACTIONS:
-            track_request.delay(
-                kwargs={
-                    "resource": Resource.get_from_resource_name(resource),
-                    "host": request.get_host(),
-                    "environment_key": request.headers.get("X-Environment-Key"),
-                }
-            )
+            kwargs = {
+                "resource": Resource.get_from_resource_name(resource),
+                "host": request.get_host(),
+                "environment_key": request.headers.get("X-Environment-Key"),
+            }
+            if settings.USE_CACHE_FOR_USAGE_DATA:
+                api_usage_cache.track_request(**kwargs)
+            else:
+                track_request.delay(kwargs=kwargs)
 
         response = self.get_response(request)
 
