@@ -49,9 +49,8 @@ class ProjectPermissions(IsAuthenticated):
             )
 
             # Allow project creation based on the active subscription
-            if (
-                request.META.get("E2E_TEST_AUTH_TOKEN")
-                == os.environ["E2E_TEST_AUTH_TOKEN"]
+            if request.META.get("E2E_TEST_AUTH_TOKEN") == os.getenv(
+                "E2E_TEST_AUTH_TOKEN", ""
             ):
                 subscription_metadata = PLAN_SUBSCRIPTION_METADATA_FOR_TEST
             else:
