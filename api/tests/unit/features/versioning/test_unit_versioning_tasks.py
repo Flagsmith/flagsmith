@@ -460,8 +460,7 @@ def test_publish_version_change_set_uses_current_time_for_version_live_from(
         EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(
             environment_v2_versioning.id
         )
-        .filter(feature=feature)
-        .first()
+        .get(feature=feature)
         .live_from
         == now
     )
