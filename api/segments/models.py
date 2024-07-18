@@ -73,7 +73,7 @@ class Segment(
         "workflows_core.ChangeRequest",
         on_delete=models.CASCADE,
         null=True,
-        related_name="segments",
+        related_name="+",  # Use the "segments" property for change request lookups.
     )
 
     metadata = GenericRelation(Metadata)
