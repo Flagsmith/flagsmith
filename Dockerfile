@@ -184,7 +184,7 @@ FROM api-runtime-private as saas-api
 
 # Install GnuPG and import private key
 RUN --mount=type=secret,id=sse_pgp_pkey \
-  apk add gpg && \
+  apk add gpg gpg-agent && \
   gpg --import /run/secrets/sse_pgp_pkey && \
   mv /root/.gnupg/ /app/ && \
   chown -R nobody /app/.gnupg/
