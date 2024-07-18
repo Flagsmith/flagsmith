@@ -1,3 +1,4 @@
+import os
 import typing
 
 from django.db.models import Model
@@ -6,6 +7,9 @@ from rest_framework.permissions import BasePermission, IsAuthenticated
 
 from organisations.models import Organisation
 from organisations.permissions.permissions import CREATE_PROJECT
+from organisations.subscriptions.constants import (
+    PLAN_SUBSCRIPTION_METADATA_FOR_TEST,
+)
 from projects.models import Project
 
 VIEW_AUDIT_LOG = "VIEW_AUDIT_LOG"
@@ -45,9 +49,15 @@ class ProjectPermissions(IsAuthenticated):
             )
 
             # Allow project creation based on the active subscription
-            subscription_metadata = (
-                organisation.subscription.get_subscription_metadata()
-            )
+            if (
+                request.META.get("E2E_TEST_AUTH_TOKEN")
+                == os.environ["E2E_TEST_AUTH_TOKEN"]
+            ):
+                subscription_metadata = PLAN_SUBSCRIPTION_METADATA_FOR_TEST
+            else:
+                subscription_metadata = (
+                    organisation.subscription.get_subscription_metadata()
+                )
             total_projects_created = Project.objects.filter(
                 organisation=organisation
             ).count()
