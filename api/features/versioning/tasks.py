@@ -215,11 +215,22 @@ def publish_version_change_set(
         environment=version_change_set.environment,
         created_by=user,
     )
-    version.publish(
-        published_by=user, live_from=version_change_set.live_from or timezone.now()
-    )
 
-    version_change_set.published_at = version_change_set.live_from = timezone.now()
+    now = timezone.now()
+
+    # Note that we always set the live_from to `now` since we're publishing
+    # _now_. The VersionChangeSet might have been scheduled for the future
+    # which might mean that actually version_change_set.live_from is slightly
+    # in the past since the task processor won't have picked it up and handled
+    # it immediately, but we always care about the _actual_ time it's published.
+    version.publish(published_by=user, live_from=now)
+
+    # if live_from was set on the version_change set, then leave it alone for
+    # auditing purposes.
+    if not version_change_set.live_from:
+        version_change_set.live_from = now
+
+    version_change_set.published_at = now
     version_change_set.published_by = user
     version_change_set.environment_feature_version = version
     version_change_set.save()

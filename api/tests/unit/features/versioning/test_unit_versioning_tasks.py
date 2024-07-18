@@ -9,6 +9,7 @@ from core.constants import STRING
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.utils import timezone
+from freezegun import freeze_time
 from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
@@ -422,3 +423,45 @@ def test_publish_version_change_set_raises_error_when_serializer_not_valid(
 
     # Then
     assert str(e.value) == "Unable to publish version change set"
+
+
+def test_publish_version_change_set_uses_current_time_for_version_live_from(
+    change_request: ChangeRequest,
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    now = timezone.now()
+    five_minutes_ago = now - timezone.timedelta(minutes=5)
+
+    # a version change_set that sets a live_from a short time in the past
+    VersionChangeSet.objects.create(
+        change_request=change_request,
+        feature=feature,
+        feature_states_to_update=json.dumps(
+            [
+                {
+                    "feature_segment": None,
+                    "enabled": True,
+                    "feature_state_value": {"type": STRING, "string_value": "foo"},
+                }
+            ]
+        ),
+        live_from=five_minutes_ago,
+    )
+
+    # When
+    with freeze_time(now):
+        change_request.commit(admin_user)
+
+    # Then
+    assert (
+        EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(
+            environment_v2_versioning.id
+        )
+        .filter(feature=feature)
+        .first()
+        .live_from
+        == now
+    )
