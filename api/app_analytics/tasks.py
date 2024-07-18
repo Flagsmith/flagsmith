@@ -3,7 +3,7 @@ from typing import List, Tuple
 
 from app_analytics.constants import ANALYTICS_READ_BUCKET_SIZE
 from django.conf import settings
-from django.db.models import Count, Q, Sum
+from django.db.models import Q, Sum
 from django.utils import timezone
 from task_processor.decorators import (
     register_recurring_task,
@@ -97,7 +97,7 @@ def track_feature_evaluation(
 
 
 @register_task_handler()
-def track_request(resource: int, host: str, environment_key: str):
+def track_request(resource: int, host: str, environment_key: str, count: int = 1):
     environment = Environment.get_from_cache(environment_key)
     if environment is None:
         return
@@ -105,6 +105,7 @@ def track_request(resource: int, host: str, environment_key: str):
         environment_id=environment.id,
         resource=resource,
         host=host,
+        count=count,
     )
 
 
@@ -187,7 +188,7 @@ def _get_api_usage_source_data(
     return (
         APIUsageRaw.objects.filter(filters)
         .values("environment_id", "resource")
-        .annotate(count=Count("id"))
+        .annotate(count=Sum("count"))
     )
 
 

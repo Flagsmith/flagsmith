@@ -33,7 +33,7 @@ jobs:
             test
             chore
       - name: Auto-label PR with Conventional Commit title
-        uses: bcoe/conventional-release-labels@v1
+        uses: kramen22/conventional-release-labels@v1
         with:
           type_labels: |
             {
