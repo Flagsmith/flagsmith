@@ -21,8 +21,6 @@ from organisations.subscriptions.constants import (
     FREE_PLAN_SUBSCRIPTION_METADATA,
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
-    PLAN_SUBSCRIPTION_METADATA_FOR_TEST,
-    SCALE_UP,
     TRIAL_SUBSCRIPTION_ID,
     XERO,
 )
@@ -339,23 +337,6 @@ def test_organisation_subscription_get_subscription_metadata_returns_free_plan_m
 
     # Then
     assert subscription_metadata == FREE_PLAN_SUBSCRIPTION_METADATA
-
-
-def test_organisation_subscription_get_subscription_metadata_returns_subscription_for_e2e_test(
-    organisation: Organisation,
-) -> None:
-
-    # Given
-    Subscription.objects.filter(organisation=organisation).update(
-        max_seats=8, plan=SCALE_UP, subscription_id="test_subscription_id"
-    )
-    organisation.refresh_from_db()
-
-    # When
-    subscription_metadata = organisation.subscription.get_subscription_metadata()
-
-    # Then
-    assert subscription_metadata == PLAN_SUBSCRIPTION_METADATA_FOR_TEST
 
 
 @pytest.mark.parametrize(
