@@ -64,6 +64,11 @@ class APIKeyUser(UserABC):
     def is_environment_admin(self, environment: "Environment") -> bool:
         return is_master_api_key_environment_admin(self.key, environment)
 
+    def is_group_admin(self, group_id: int) -> bool:
+        # This is added to match the interface of the FFAdminUser model,
+        # but a MasterAPIKey cannot be a group admin.
+        return False
+
     def has_project_permission(
         self, permission: str, project: "Project", tag_ids: typing.List[int] = None
     ) -> bool:
