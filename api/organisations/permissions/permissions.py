@@ -151,7 +151,9 @@ class UserPermissionGroupPermission(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         organisation_id = view.kwargs.get("organisation_pk")
-        if request.user.is_group_admin(obj.id):
+        if isinstance(request.user, FFAdminUser) and request.user.is_group_admin(
+            obj.id
+        ):
             return True
 
         organisation = Organisation.objects.get(id=organisation_id)

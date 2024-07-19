@@ -384,6 +384,32 @@ def test_can_add_multiple_users_including_current_user(
     assert all(user in group.users.all() for user in [admin_user, staff_user])
 
 
+def test_can_add_users_with_master_api_key(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+    admin_master_api_key_client: APIClient,
+) -> None:
+    # Given
+    group = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    url = reverse(
+        "api-v1:organisations:organisation-groups-add-users",
+        args=[organisation.id, group.id],
+    )
+    data = {"user_ids": [admin_user.id, staff_user.id]}
+
+    # When
+    response = admin_master_api_key_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert all(user in group.users.all() for user in [admin_user, staff_user])
+
+
 def test_cannot_add_user_from_another_organisation(
     admin_client: APIClient,
     organisation: Organisation,
