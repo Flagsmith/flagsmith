@@ -1,12 +1,17 @@
 Hi there,
 
-The API usage for {{ organisation.name }} has reached {{ matched_threshold }}% within the current subscription period. Please consider upgrading your organisation's account limits.
+This is a system generated notification related to your Flagsmith API Usage. Your company, {{ organisation.name }}, has
+reached {{ matched_threshold }}% of your API usage within the current subscription period.
 
 {% if organisation.is_paid %}
-Please note that once the 100% use has been breached automated charges for your account may apply.
+If this is expected, no action is required. If you are expecting to go over, you can upgrade your organisation’s account
+limits by reaching out to support@flagsmith.com. We will automatically charge for overages after our first grace period
+of 30 days.
 {% else %}
-Please note that once the 100% use has been breached the serving of feature flags and admin access may be disabled after a grace period.
+Please note that once 100% use has been breached, the serving of feature flags and admin access may be disabled after a
+7-day grace period. Please reach out to support@flagsmith.com in order to upgrade your account.
 {% endif %}
+
 Thank you!
 
 The Flagsmith Team
