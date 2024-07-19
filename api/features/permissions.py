@@ -67,7 +67,7 @@ class FeaturePermissions(IsAuthenticated):
     def has_object_permission(self, request, view, obj):
         # map of actions and their required permission
         if view.action in ACTION_PERMISSIONS_MAP:
-            tag_ids = []
+            tag_ids = None
             required_permission = ACTION_PERMISSIONS_MAP.get(view.action)
             if required_permission in TAG_SUPPORTED_PROJECT_PERMISSIONS:
                 tag_ids = list(obj.tags.values_list("id", flat=True))

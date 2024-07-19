@@ -36,7 +36,7 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({
     totalApiCalls?.totals.total,
   )}/${Format.shortenNumber(maxApiCalls?.max_api_calls)}`
 
-  const alertMaxApiCallsText = `You have used ${apiUsageMessageText} of your allowed requests.`
+  const alertMaxApiCallsText = `You have used ${apiUsageMessageText} of your allowed requests`
 
   const QuotaExceededMessage = () => {
     return (
@@ -44,26 +44,33 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({
         className={'alert alert-danger announcement'}
         style={{ display: 'initial' }}
       >
-        <span className='icon-alert'>
-          <Icon name='close-circle' />
-        </span>
-        <>
-          Your organisation has exceeded its API usage quota{' '}
-          {`(${alertMaxApiCallsText}).`}{' '}
-          {Utils.getPlanName(organisationPlan) === 'Free' ? (
-            <b>Please upgrade your plan to continue receiving service.</b>
-          ) : (
-            <b>Automated billing for the overages may apply.</b>
-          )}
-        </>
-        <Button
-          className='btn ml-3'
-          onClick={() => {
-            document.location.replace(Constants.upgradeURL)
-          }}
-        >
-          Upgrade plan
-        </Button>
+        <Row>
+          <span className='icon-alert'>
+            <Icon name='close-circle' />
+          </span>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            Your organisation has exceeded its API usage quota{' '}
+            {`(${alertMaxApiCallsText}).`}{' '}
+            {Utils.getPlanName(organisationPlan) === 'Free' ? (
+              <b>Please upgrade your plan to continue receiving service.</b>
+            ) : (
+              <b>Automated billing for the overages may apply.</b>
+            )}
+          </div>
+          <Button
+            className='btn ml-3'
+            onClick={() => {
+              document.location.replace(Constants.upgradeURL)
+            }}
+          >
+            Upgrade plan
+          </Button>
+        </Row>
       </div>
     )
   }
