@@ -57,6 +57,8 @@ const DiffFeature: FC<FeatureDiffType> = ({
   const [value, setValue] = useState(0)
 
   const { data: segments } = useGetSegmentsQuery({
+    include_feature_specific: true,
+    page_size: 1000,
     projectId,
   })
 
