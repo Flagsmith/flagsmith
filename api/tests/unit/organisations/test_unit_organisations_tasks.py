@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, call
 
 import pytest
 from django.core.mail.message import EmailMultiAlternatives
+from django.template.loader import render_to_string
 from django.utils import timezone
 from freezegun.api import FrozenDateTimeFactory
 from pytest_django.fixtures import SettingsWrapper
@@ -330,33 +331,18 @@ def test_handle_api_usage_notifications_below_100(
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
     assert email.subject == "Flagsmith API use has reached 90%"
-    assert email.body == (
-        "Hi there,\n\nThe API usage for Test Org has reached "
-        "90% within the current subscription period. Please "
-        "consider upgrading your organisation's account limits.\n\n\n"
-        "Please note that once the 100% use has been breached "
-        "automated charges for your account may apply.\n\n"
-        "Thank you!\n\nThe Flagsmith Team\n"
+    assert email.body == render_to_string(
+        "organisations/api_usage_notification.txt",
+        context={"organisation": organisation, "matched_threshold": 90},
     )
 
     assert len(email.alternatives) == 1
     assert len(email.alternatives[0]) == 2
     assert email.alternatives[0][1] == "text/html"
 
-    assert email.alternatives[0][0] == (
-        "<table>\n\n        <tr>\n\n               <td>Hi "
-        "there,</td>\n\n        </tr>\n\n        <tr>\n\n       "
-        "        <td>\n                 The API usage for Test "
-        "Org has reached\n                 90% within the current "
-        "subscription period.\n                 Please consider "
-        "upgrading your organisation's account limits.\n         "
-        "        \n                 Please note that once the 100%"
-        " use has been breached automated charges for your account "
-        "may apply.\n                 \n\n               </td>\n\n"
-        "\n        </tr>\n\n        <tr>\n\n               <td>"
-        "Thank you!</td>\n\n        </tr>\n\n        <tr>\n\n    "
-        "           <td>The Flagsmith Team</td>\n\n        "
-        "</tr>\n\n</table>\n"
+    assert email.alternatives[0][0] == render_to_string(
+        "organisations/api_usage_notification.html",
+        context={"organisation": organisation, "matched_threshold": 90},
     )
 
     assert email.from_email == "noreply@flagsmith.com"
@@ -430,28 +416,18 @@ def test_handle_api_usage_notifications_above_100(
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
     assert email.subject == "Flagsmith API use has reached 100%"
-    assert email.body == (
-        "Hi there,\n\nThe API usage for Test Org has breached 100% "
-        "within the current subscription period.\n\n\nPlease note "
-        "that automated charges for your account may apply.\n\n\n"
-        "Thank you!\n\nThe Flagsmith Team\n"
+    assert email.body == render_to_string(
+        "organisations/api_usage_notification_limit.txt",
+        context={"organisation": organisation, "matched_threshold": 100},
     )
 
     assert len(email.alternatives) == 1
     assert len(email.alternatives[0]) == 2
     assert email.alternatives[0][1] == "text/html"
 
-    assert email.alternatives[0][0] == (
-        "<table>\n\n        <tr>\n\n               <td>Hi there,"
-        "</td>\n\n        </tr>\n\n        <tr>\n\n               <td>"
-        "\n                 The API usage for Test Org has breached"
-        "\n                 100% within the current subscription period."
-        "\n                 \n                 Please note that "
-        "automated charges for your account may apply.\n                 "
-        "\n               </td>\n\n\n        </tr>\n\n        <tr>"
-        "\n\n               <td>Thank you!</td>\n\n        </tr>"
-        "\n\n        <tr>\n\n               <td>The Flagsmith "
-        "Team</td>\n\n        </tr>\n\n</table>\n"
+    assert email.alternatives[0][0] == render_to_string(
+        "organisations/api_usage_notification_limit.html",
+        context={"organisation": organisation, "matched_threshold": 100},
     )
 
     assert email.from_email == "noreply@flagsmith.com"
@@ -517,33 +493,18 @@ def test_handle_api_usage_notifications_for_free_accounts(
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
     assert email.subject == "Flagsmith API use has reached 100%"
-    assert email.body == (
-        "Hi there,\n\nThe API usage for Test Org has breached "
-        "100% within the current subscription period.\n\n\nPlease "
-        "note that the serving of feature flags and admin access "
-        "may be disabled after a grace period, so please upgrade "
-        "your organisation's account to ensure continued service."
-        "\n\n\nThank you!\n\nThe Flagsmith Team\n"
+    assert email.body == render_to_string(
+        "organisations/api_usage_notification_limit.txt",
+        context={"organisation": organisation, "matched_threshold": 100},
     )
 
     assert len(email.alternatives) == 1
     assert len(email.alternatives[0]) == 2
     assert email.alternatives[0][1] == "text/html"
 
-    assert email.alternatives[0][0] == (
-        "<table>\n\n        <tr>\n\n               <td>Hi there,"
-        "</td>\n\n        </tr>\n\n        <tr>\n\n             "
-        "  <td>\n                 The API usage for Test Org has"
-        " breached\n                 100% within the current "
-        "subscription period.\n                 \n             "
-        "    Please note that the serving of feature flags and "
-        "admin access may be disabled after a grace period, so "
-        "please upgrade your organisation's account to ensure "
-        "continued service.\n                 \n               "
-        "</td>\n\n\n        </tr>\n\n        <tr>\n\n          "
-        "     <td>Thank you!</td>\n\n        </tr>\n\n        "
-        "<tr>\n\n               <td>The Flagsmith Team</td>"
-        "\n\n        </tr>\n\n</table>\n"
+    assert email.alternatives[0][0] == render_to_string(
+        "organisations/api_usage_notification_limit.html",
+        context={"organisation": organisation, "matched_threshold": 100},
     )
 
     assert email.from_email == "noreply@flagsmith.com"
