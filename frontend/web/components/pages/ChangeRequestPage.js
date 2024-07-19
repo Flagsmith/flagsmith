@@ -208,7 +208,7 @@ const ChangeRequestsPage = class extends Component {
             featureId={featureId}
             date={changeRequest?.created_at}
           />
-          {!!changeRequest?.conflicts && (
+          {!!changeRequest?.conflicts?.length && (
             <div className='mt-2'>
               <WarningMessage
                 warningMessage={
