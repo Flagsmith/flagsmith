@@ -200,7 +200,7 @@ const ChangeRequestsPage = class extends Component {
           Are you sure you want to {isScheduled ? 'schedule' : 'publish'} this
           change request
           {isScheduled
-            ? ` for ${scheduledDate.format('Do MMM YYYY hh:mma')}`
+            ? ` for ${moment(scheduledDate).format('Do MMM YYYY hh:mma')}`
             : ''}
           ? This will adjust the feature for your environment.
           <NewVersionWarning
