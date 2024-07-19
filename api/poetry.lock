@@ -4060,13 +4060,14 @@ files = []
 develop = false
 
 [package.dependencies]
+flagsmith-common = {git = "https://github.com/Flagsmith/flagsmith-common", tag = "v1.0.0"}
 flagsmith-task-processor = {git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.0.0"}
 
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
-reference = "feature(versioning)/handle-multiple-change-requests-for-single-feature"
-resolved_reference = "8256ed15fa4c897e85dfd1b285d4e583a339791d"
+reference = "v2.4.0"
+resolved_reference = "d7549a451d551e8971c09782b6e2b7bb75a31fdc"
 
 [[package]]
 name = "wrapt"
@@ -4185,4 +4186,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "639f988da7dc90aaf2e4defd5f98cfecf8f3d572c002ab689d29297e4cf7fe70"
+content-hash = "58a183b8df1c648a77a26aa964be968c5cbf4df540b8250ef004781fc88c7a8b"
