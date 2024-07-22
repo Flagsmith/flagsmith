@@ -12,7 +12,6 @@ from core.models import (
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import QuerySet
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django_lifecycle import (
@@ -50,7 +49,6 @@ from features.workflows.core.exceptions import (
 if typing.TYPE_CHECKING:
     from environments.models import Environment
     from projects.models import Project
-    from segments.models import Segment
     from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
@@ -92,16 +90,6 @@ class ChangeRequest(
         related_name="committed_change_requests",
         null=True,
     )
-
-    @property
-    def segments(self) -> QuerySet["Segment"]:
-        """
-        This property simulates the reverse mapping to segments because
-        the Segment objects model filters out non-actual segments.
-        """
-        from segments.models import Segment
-
-        return Segment.all_objects.filter(change_request_id=self.id)
 
     def approve(self, user: "FFAdminUser"):
         if user.id == self.user_id:
