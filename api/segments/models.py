@@ -4,7 +4,6 @@ import uuid
 from copy import deepcopy
 
 from core.models import (
-    SoftDeleteExportableManager,
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
@@ -19,6 +18,7 @@ from django_lifecycle import (
     hook,
 )
 from flag_engine.segments import constants
+from polymorphic.models import PolymorphicModel
 
 from audit.constants import (
     SEGMENT_CREATED_MESSAGE,
@@ -31,7 +31,7 @@ from metadata.models import Metadata
 from projects.models import Project
 
 from .helpers import segment_audit_log_helper
-from .managers import SegmentManager
+from .managers import AllSegmentManager, SegmentManager
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +40,7 @@ class Segment(
     LifecycleModelMixin,
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
+    PolymorphicModel,
 ):
     history_record_class_path = "segments.models.HistoricalSegment"
     related_object_type = RelatedObjectType.SEGMENT
@@ -69,13 +70,6 @@ class Segment(
         blank=True,
     )
 
-    change_request = models.ForeignKey(
-        "workflows_core.ChangeRequest",
-        on_delete=models.CASCADE,
-        null=True,
-        related_name="+",  # Use the "segments" property for change request lookups.
-    )
-
     metadata = GenericRelation(Metadata)
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
@@ -85,7 +79,7 @@ class Segment(
     objects = SegmentManager()
 
     # Includes versioned segments.
-    all_objects = SoftDeleteExportableManager()
+    all_objects = AllSegmentManager()
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
@@ -140,8 +134,9 @@ class Segment(
     @hook(BEFORE_CREATE, when="version_of", is_now=None)
     def set_default_version_to_one_if_new_segment(self):
         # Change request segments default to None.
-        if self.change_request_id:
-            return
+        if hasattr(self, "change_request_id"):
+            if self.change_request_id:
+                return
 
         if self.version is None:
             self.version = 1
@@ -162,15 +157,18 @@ class Segment(
         name: str,
         description: str,
         change_request: typing.Optional["ChangeRequest"],  # noqa: F821
-    ) -> "Segment":
-        cloned_segment = deepcopy(self)
-        cloned_segment.id = None
-        cloned_segment.version_of = self
-        cloned_segment.uuid = uuid.uuid4()
-        cloned_segment.name = name
-        cloned_segment.description = description
-        cloned_segment.change_request = change_request
-        cloned_segment.version = None
+    ) -> "AllSegment":
+        cloned_segment = AllSegment(
+            version_of=self,
+            uuid=uuid.uuid4(),
+            name=name,
+            description=description,
+            change_request=change_request,
+            project=self.project,
+            feature=self.feature,
+            version=None,
+        )
+        cloned_segment.history.update()
         cloned_segment.save()
         return cloned_segment
 
@@ -212,6 +210,21 @@ class Segment(
 
     def _get_project(self):
         return self.project
+
+
+# TODO: Make docstring
+class AllSegment(Segment):
+    history_record_class_path = "segments.models.HistoricalAllSegment"
+    related_object_type = RelatedObjectType.ALL_SEGMENT
+
+    change_request = models.ForeignKey(
+        "workflows_core.ChangeRequest",
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="all_segments",
+    )
+
+    objects = AllSegmentManager()
 
 
 class SegmentRule(SoftDeleteExportableModel):
