@@ -201,7 +201,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             raise serializers.ValidationError(
                 {
                     "message": "An unresolvable conflict occurred: "
-                    "segment override already exists for Segment '%s'"
+                    "segment override already exists for segment '%s'"
                     % existing_segment_override.feature_segment.segment.name
                 }
             )
@@ -234,7 +234,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
                 raise serializers.ValidationError(
                     {
                         "message": "An unresolvable conflict occurred: "
-                        "segment override does not exist for Segment '%s'."
+                        "segment override does not exist for segment '%s'."
                         % segment.name
                     }
                 )

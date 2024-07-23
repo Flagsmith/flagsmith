@@ -1022,7 +1022,7 @@ def test_create_segment_override_for_existing_override_when_creating_new_version
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {
-        "message": "An unresolvable conflict occurred: segment override already exists for Segment '%s'"
+        "message": "An unresolvable conflict occurred: segment override already exists for segment '%s'"
         % segment.name
     }
 

@@ -395,9 +395,9 @@ def test_publish_version_change_set_raises_error_when_segment_override_does_not_
         )
 
     # Then
-    assert e.value.detail == {
-        "message": f"An unresolvable conflict occurred: segment override does not exist for segment '{segment.name}'."
-    }
+    assert e.value.detail["message"] == (
+        f"An unresolvable conflict occurred: segment override does not exist for segment '{segment.name}'."
+    )
 
 
 def test_publish_version_change_set_raises_error_when_serializer_not_valid(
