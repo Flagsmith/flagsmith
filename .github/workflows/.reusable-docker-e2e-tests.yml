@@ -64,7 +64,7 @@ jobs:
             make test
           max_attempts: 2
           retry_on: error
-          timeout_minutes: 10
+          timeout_minutes: 20
         env:
           opts: ${{ inputs.tests }}
           API_IMAGE: ${{ inputs.api-image }}

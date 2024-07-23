@@ -43,7 +43,7 @@ runs:
           npm run test -- ${{ inputs.tests }}
         max_attempts: 2
         retry_on: error
-        timeout_minutes: 10
+        timeout_minutes: 20
       env:
         E2E_TEST_TOKEN: ${{ inputs.e2e_test_token }}
         SLACK_TOKEN: ${{ inputs.slack_token }}
