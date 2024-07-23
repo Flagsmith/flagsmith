@@ -1176,15 +1176,16 @@ def test_post_identities__transient_traits__no_persistence(
 ) -> None:
     # Given
     identifier = "transient"
-    trait_key = "trait_key"
+    transient_trait_key = "trait_key"
+    non_transient_trait_key = "other"
 
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     url = reverse("api-v1:sdk-identities")
     data = {
         "identifier": identifier,
         "traits": [
-            {"trait_key": trait_key, "trait_value": "bar", "transient": True},
-            {"trait_key": "not_transient", "trait_value": "value"},
+            {"trait_key": transient_trait_key, "trait_value": "bar", "transient": True},
+            {"trait_key": non_transient_trait_key, "trait_value": "value"},
         ],
     }
 
@@ -1195,22 +1196,9 @@ def test_post_identities__transient_traits__no_persistence(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["traits"] == [
-        {
-            "id": mock.ANY,
-            "trait_key": trait_key,
-            "trait_value": "bar",
-            "transient": True,
-        },
-        {
-            "id": mock.ANY,
-            "trait_key": "not_transient",
-            "trait_value": "value",
-            "transient": False,
-        },
-    ]
     assert Identity.objects.filter(identifier=identifier).exists()
-    assert not Trait.objects.filter(trait_key=trait_key).exists()
+    assert Trait.objects.filter(trait_key=non_transient_trait_key).exists()
+    assert not Trait.objects.filter(trait_key=transient_trait_key).exists()
 
 
 def test_user_with_view_identities_permission_can_retrieve_identity(

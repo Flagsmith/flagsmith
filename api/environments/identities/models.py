@@ -278,13 +278,15 @@ class Identity(models.Model):
                 updated_traits.append(current_trait)
                 continue
 
-            new_traits.append(
-                Trait(
-                    **Trait.generate_trait_value_data(trait_value),
-                    trait_key=trait_key,
-                    identity=self,
-                )
+            trait = Trait(
+                **Trait.generate_trait_value_data(trait_value),
+                trait_key=trait_key,
+                identity=self,
             )
+            # We're persisting new traits via `bulk_create` with `ignore_conflicts=True`,
+            # and those don't get their pks or ModelState updated. Populate the private attribute for them.
+            trait._is_transient = False
+            new_traits.append(trait)
 
         # delete the traits that had their keys set to None
         # (except the transient ones)
@@ -304,7 +306,7 @@ class Identity(models.Model):
         # See: https://github.com/Flagsmith/flagsmith/issues/370
         Trait.objects.bulk_create(new_traits, ignore_conflicts=True)
 
-        # return the full list of traits for this identity by refreshing from the db
+        # return the full list of traits for this identity
         # override persisted traits by transient traits in case of key collisions
         return [
             *{

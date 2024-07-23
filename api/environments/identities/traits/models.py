@@ -58,8 +58,11 @@ class Trait(models.Model):
         return self.get_trait_value()
 
     @property
-    def transient(self):
-        return not self.pk
+    def transient(self) -> bool:
+        try:
+            return self._is_transient
+        except AttributeError:
+            return self.pk is None
 
     def get_trait_value(self):
         try:
