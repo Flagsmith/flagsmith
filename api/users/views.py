@@ -227,8 +227,12 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         group = self.get_object()
         user_ids = request.data["user_ids"]
 
-        if request.user.id in user_ids and not request.user.is_organisation_admin(
-            Organisation.objects.get(pk=organisation_pk)
+        if (
+            isinstance(request.user, FFAdminUser)
+            and request.user.id in user_ids
+            and not request.user.is_organisation_admin(
+                Organisation.objects.get(pk=organisation_pk)
+            )
         ):
             raise PermissionDenied("Non-admin users cannot add themselves to a group.")
 
@@ -248,8 +252,12 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         group = self.get_object()
         user_ids = request.data["user_ids"]
 
-        if request.user.id in user_ids and not request.user.is_organisation_admin(
-            Organisation.objects.get(pk=organisation_pk)
+        if (
+            isinstance(request.user, FFAdminUser)
+            and request.user.id in user_ids
+            and not request.user.is_organisation_admin(
+                Organisation.objects.get(pk=organisation_pk)
+            )
         ):
             raise PermissionDenied(
                 "Non-admin users cannot remove themselves from a group."

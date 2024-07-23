@@ -26,6 +26,10 @@ class UserABC(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def is_group_admin(self, group_id: int) -> bool:
+        raise NotImplementedError()
+
+    @abstractmethod
     def has_project_permission(self, permission: str, project: "Project") -> bool:
         raise NotImplementedError()
 
