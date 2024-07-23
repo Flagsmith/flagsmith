@@ -1,9 +1,9 @@
-from core.models import SoftDeleteExportableManager
+from core.models import PolymorphicSoftDeleteExportableManager
 from django.db.models import F
 from polymorphic.models import PolymorphicManager
 
 
-class AllSegmentManager(SoftDeleteExportableManager, PolymorphicManager):
+class AllSegmentManager(PolymorphicSoftDeleteExportableManager, PolymorphicManager):
     pass
 
 
