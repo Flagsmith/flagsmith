@@ -20,7 +20,9 @@ from rest_framework.viewsets import GenericViewSet
 from environments.models import Environment
 from environments.permissions.constants import VIEW_ENVIRONMENT
 from features.models import Feature, FeatureState
-from features.serializers import CreateSegmentOverrideFeatureStateSerializer
+from features.serializers import (
+    CustomCreateSegmentOverrideFeatureStateSerializer,
+)
 from features.versioning.exceptions import FeatureVersionDeleteError
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.permissions import (
@@ -29,8 +31,8 @@ from features.versioning.permissions import (
     EnvironmentFeatureVersionRetrievePermissions,
 )
 from features.versioning.serializers import (
+    CustomEnvironmentFeatureVersionFeatureStateSerializer,
     EnvironmentFeatureVersionCreateSerializer,
-    EnvironmentFeatureVersionFeatureStateSerializer,
     EnvironmentFeatureVersionPublishSerializer,
     EnvironmentFeatureVersionQuerySerializer,
     EnvironmentFeatureVersionRetrieveSerializer,
@@ -161,7 +163,7 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
     UpdateModelMixin,
     DestroyModelMixin,
 ):
-    serializer_class = EnvironmentFeatureVersionFeatureStateSerializer
+    serializer_class = CustomEnvironmentFeatureVersionFeatureStateSerializer
     permission_classes = [
         IsAuthenticated,
         EnvironmentFeatureVersionFeatureStatePermissions,
@@ -211,21 +213,25 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         context["environment_feature_version"] = self.environment_feature_version
         return context
 
-    def perform_create(self, serializer: CreateSegmentOverrideFeatureStateSerializer):
+    def perform_create(
+        self, serializer: CustomCreateSegmentOverrideFeatureStateSerializer
+    ) -> None:
         serializer.save(
             feature=self.feature,
             environment=self.environment,
             environment_feature_version=self.environment_feature_version,
         )
 
-    def perform_update(self, serializer: CreateSegmentOverrideFeatureStateSerializer):
+    def perform_update(
+        self, serializer: CustomCreateSegmentOverrideFeatureStateSerializer
+    ) -> None:
         serializer.save(
             feature=self.feature,
             environment=self.environment,
             environment_feature_version=self.environment_feature_version,
         )
 
-    def perform_destroy(self, instance):
+    def perform_destroy(self, instance) -> None:
         if instance.feature_segment is None and instance.identity is None:
             raise FeatureVersionDeleteError(
                 "Cannot delete environment default feature state."

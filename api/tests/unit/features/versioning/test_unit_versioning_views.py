@@ -984,7 +984,7 @@ def test_create_environment_default_when_creating_new_version_fails(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     assert response.json() == {
-        "feature_states_to_create": "Cannot create FeatureState objects that are not segment overrides."
+        "message": "Cannot create FeatureState objects that are not segment overrides."
     }
 
 
@@ -1022,8 +1022,8 @@ def test_create_segment_override_for_existing_override_when_creating_new_version
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {
-        "feature_states_to_create": "Segment override already exists for Segment %d"
-        % segment.id
+        "message": "An unresolvable conflict occurred: segment override already exists for segment '%s'"
+        % segment.name
     }
 
 
