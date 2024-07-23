@@ -1182,7 +1182,10 @@ def test_post_identities__transient_traits__no_persistence(
     url = reverse("api-v1:sdk-identities")
     data = {
         "identifier": identifier,
-        "traits": [{"trait_key": trait_key, "trait_value": "bar", "transient": True}],
+        "traits": [
+            {"trait_key": trait_key, "trait_value": "bar", "transient": True},
+            {"trait_key": "not_transient", "trait_value": "value"},
+        ],
     }
 
     # When
@@ -1192,6 +1195,20 @@ def test_post_identities__transient_traits__no_persistence(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+    assert response.json()["traits"] == [
+        {
+            "id": mock.ANY,
+            "trait_key": trait_key,
+            "trait_value": "bar",
+            "transient": True,
+        },
+        {
+            "id": mock.ANY,
+            "trait_key": "not_transient",
+            "trait_value": "value",
+            "transient": False,
+        },
+    ]
     assert Identity.objects.filter(identifier=identifier).exists()
     assert not Trait.objects.filter(trait_key=trait_key).exists()
 
