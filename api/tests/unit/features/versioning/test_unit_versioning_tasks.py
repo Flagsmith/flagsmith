@@ -396,7 +396,7 @@ def test_publish_version_change_set_raises_error_when_segment_override_does_not_
 
     # Then
     assert e.value.detail == {
-        "message": f"Segment override does not exist for Segment {segment.id}."
+        "message": f"Segment override does not exist for Segment '{segment.name}'."
     }
 
 

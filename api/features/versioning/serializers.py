@@ -9,6 +9,7 @@ from features.serializers import (
 )
 from features.versioning.models import EnvironmentFeatureVersion
 from integrations.github.github import call_github_task
+from segments.models import Segment
 from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType
 
@@ -190,13 +191,17 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             )
 
         segment_id = feature_state["feature_segment"]["segment"]
-        if version.feature_states.filter(
-            feature_segment__segment_id=segment_id
-        ).exists():
+        if (
+            existing_segment_override := version.feature_states.filter(
+                feature_segment__segment_id=segment_id
+            )
+            .select_related("feature_segment__segment")
+            .first()
+        ):
             raise serializers.ValidationError(
                 {
-                    "message": "Segment override already exists for Segment %d"
-                    % segment_id
+                    "message": "Segment override already exists for Segment '%s'"
+                    % existing_segment_override.feature_segment.segment.name
                 }
             )
 
@@ -222,10 +227,13 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
                     feature_segment__segment_id=segment_id
                 )
             except ObjectDoesNotExist:
+                # Note that the segment will always exist because, if it didn't,
+                # it would have been picked up in the serializer validation.
+                segment = Segment.objects.get(id=segment_id)
                 raise serializers.ValidationError(
                     {
-                        "message": "Segment override does not exist for Segment %d."
-                        % segment_id
+                        "message": "Segment override does not exist for Segment '%s'."
+                        % segment.name
                     }
                 )
             # Patch the id of the feature segment onto the feature state data so that
