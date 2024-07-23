@@ -37,3 +37,6 @@ repos:
     hooks:
       - id: poetry-check
         args: ['-C', 'api']
+
+ci:
+  autoupdate_commit_msg: 'ci: pre-commit autoupdate'
