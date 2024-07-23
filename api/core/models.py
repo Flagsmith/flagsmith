@@ -6,8 +6,13 @@ from django.db import models
 from django.db.models import Manager
 from django.forms import model_to_dict
 from django.http import HttpRequest
+from polymorphic.query import PolymorphicModelIterable, PolymorphicQuerySet
 from simple_history.models import HistoricalRecords, ModelChange
-from softdelete.models import SoftDeleteManager, SoftDeleteObject
+from softdelete.models import (
+    SoftDeleteManager,
+    SoftDeleteObject,
+    SoftDeleteQuerySet,
+)
 
 from audit.related_object_type import RelatedObjectType
 
@@ -18,6 +23,29 @@ if typing.TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
+
+
+class PolymorphicSoftDeleteQuerySet(SoftDeleteQuerySet, PolymorphicQuerySet):
+    polymorphic_disabled = False
+    polymorphic_deferred_loading = (set(), True)
+
+    def __init__(self, *args, **kwargs) -> None:
+        self._iterable_class = PolymorphicModelIterable
+        super().__init__(*args, **kwargs)
+
+
+class PolymorphicSoftDeleteManager(SoftDeleteManager):
+    def get_query_set(self):
+        qs = super().get_query_set().filter(deleted_at__isnull=True)
+        if not issubclass(qs.__class__, PolymorphicSoftDeleteQuerySet):
+            qs.__class__ = PolymorphicSoftDeleteQuerySet
+        return qs
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(deleted_at__isnull=True)
+        if not issubclass(qs.__class__, PolymorphicSoftDeleteQuerySet):
+            qs.__class__ = PolymorphicSoftDeleteQuerySet
+        return qs
 
 
 class UUIDNaturalKeyManagerMixin:
@@ -48,6 +76,21 @@ class SoftDeleteExportableManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager)
 
 class SoftDeleteExportableModel(SoftDeleteObject, AbstractBaseExportableModel):
     objects = SoftDeleteExportableManager()
+
+    class Meta:
+        abstract = True
+
+
+class PolymorphicSoftDeleteExportableManager(
+    UUIDNaturalKeyManagerMixin, PolymorphicSoftDeleteManager
+):
+    pass
+
+
+class PolymorphicSoftDeleteExportableModel(
+    SoftDeleteObject, AbstractBaseExportableModel
+):
+    objects = PolymorphicSoftDeleteExportableManager()
 
     class Meta:
         abstract = True
