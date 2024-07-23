@@ -26,11 +26,9 @@ import { getStore } from 'common/store'
 import { getEnvironments } from 'common/services/useEnvironment'
 import classNames from 'classnames'
 import Button from './base/forms/Button'
-import { Link } from 'react-router-dom'
 import CreateOrganisationModal from './modals/CreateOrganisation'
 import { useHasPermission } from 'common/providers/Permission'
 import Constants from 'common/constants'
-import CreateProjectModal from './modals/CreateProject'
 
 type BreadcrumbSeparatorType = {
   hideDropdown?: boolean
@@ -305,6 +303,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
           setOpen(false)
           setProjectSearch('')
           setOrganisationSearch('')
+          setHoveredOrganisation(AccountStore.getOrganisation())
         }}
         containerClassName={'p-0'}
         className={
