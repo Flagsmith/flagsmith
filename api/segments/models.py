@@ -212,8 +212,12 @@ class Segment(
         return self.project
 
 
-# TODO: Make docstring
 class AllSegment(Segment):
+    """
+    This model tracks the relationship to change requests for segments. It's a
+    polymorphic relation to the Segment class which it inherits from.
+    """
+
     history_record_class_path = "segments.models.HistoricalAllSegment"
     related_object_type = RelatedObjectType.ALL_SEGMENT
 
