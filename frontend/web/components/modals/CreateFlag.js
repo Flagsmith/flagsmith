@@ -2011,9 +2011,6 @@ const FeatureProvider = (WrappedComponent) => {
               projectFlag: newProjectFlag,
             })
           }
-          if (changeRequest) {
-            closeModal()
-          }
         },
       )
     }
