@@ -13,6 +13,8 @@ import SegmentOverrideLimit from 'components/SegmentOverrideLimit'
 import { getStore } from 'common/store'
 import { getEnvironment } from 'common/services/useEnvironment'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
+import Utils from 'common/utils/utils'
+import { Environment } from 'common/types/responses'
 
 class TheComponent extends Component {
   state = {
@@ -262,6 +264,7 @@ export default class SegmentOverridesInner extends Component {
     const overrides = originalSegmentOverrides
       .filter((v) => v.segment !== segmentOverrides[0].segment)
       .concat([segmentOverrides[0]])
+
     openModal2(
       'Edit Segment Override Priorities',
       <div>
@@ -299,11 +302,14 @@ export default class SegmentOverridesInner extends Component {
       originalSegmentOverrides,
       projectFlag,
       projectId,
-      readOnly,
       segmentOverrides,
       updateSegments,
     } = this.props
-
+    const environment = ProjectStore.getEnvironment(environmentId)
+    const changeRequest = Utils.changeRequestsEnabled(
+      environment?.minimum_change_request_approvals,
+    )
+    const readOnly = this.props.readOnly || !!changeRequest
     return (
       <FeatureListProvider>
         {({}, { editFeatureSegments, isSaving }) => {
