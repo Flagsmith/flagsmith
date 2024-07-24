@@ -309,7 +309,7 @@ def test_handle_api_usage_notifications_below_100(
         current_billing_term_ends_at=now + timedelta(days=320),
     )
     mock_api_usage = mocker.patch(
-        "organisations.tasks.get_current_api_usage",
+        "organisations.task_helpers.get_current_api_usage",
     )
     mock_api_usage.return_value = 91
     get_client_mock = mocker.patch("organisations.tasks.get_client")
@@ -408,7 +408,7 @@ def test_handle_api_usage_notifications_above_100(
         current_billing_term_ends_at=now + timedelta(days=320),
     )
     mock_api_usage = mocker.patch(
-        "organisations.tasks.get_current_api_usage",
+        "organisations.task_helpers.get_current_api_usage",
     )
     mock_api_usage.return_value = 105
 
@@ -495,7 +495,7 @@ def test_handle_api_usage_notifications_for_free_accounts(
     assert organisation.subscription.max_api_calls == MAX_API_CALLS_IN_FREE_PLAN
 
     mock_api_usage = mocker.patch(
-        "organisations.tasks.get_current_api_usage",
+        "organisations.task_helpers.get_current_api_usage",
     )
     mock_api_usage.return_value = MAX_API_CALLS_IN_FREE_PLAN + 5_000
 
@@ -585,14 +585,14 @@ def test_handle_api_usage_notifications_missing_info_cache(
     organisation.subscription.plan = SCALE_UP
     organisation.subscription.save()
 
-    from organisations.tasks import logger
+    from organisations.task_helpers import logger
 
     logger.addHandler(inspecting_handler)
 
     assert organisation.has_subscription_information_cache() is False
 
     mock_api_usage = mocker.patch(
-        "organisations.tasks.get_current_api_usage",
+        "organisations.task_helpers.get_current_api_usage",
     )
 
     get_client_mock = mocker.patch("organisations.tasks.get_client")
