@@ -17,12 +17,14 @@ from audit.constants import SEGMENT_DELETED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
-from features.models import Feature
+from features.models import Feature, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata, MetadataModelField
 from projects.models import Project
 from projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
 from tests.types import WithProjectPermissionsCallable
+from users.models import FFAdminUser
 from util.mappers import map_identity_to_identity_document
 
 User = get_user_model()
@@ -320,6 +322,53 @@ def test_associated_features_returns_all_the_associated_features(
     assert response.json()["results"][0]["id"] == segment_featurestate.id
     assert response.json()["results"][0]["feature"] == feature.id
     assert response.json()["results"][0]["environment"] == environment.id
+
+
+def test_associated_features_returns_all_the_live_associated_features_for_versioned_environment(
+    project: Project,
+    feature: Feature,
+    segment: Segment,
+    segment_featurestate: FeatureState,
+    environment_v2_versioning: Environment,
+    admin_user: FFAdminUser,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    # Firstly, let's create extra environment and feature to make sure we
+    # have some features that are not associated with the segment
+    Environment.objects.create(name="Another environment", project=project)
+    Feature.objects.create(name="another feature", project=project)
+
+    # and let's create a new version that we will publish, and we'll grab the
+    # feature state from the new version for the asserions later
+    new_published_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning,
+        feature=feature,
+    )
+    new_published_version.publish(admin_user)
+    expected_segment_feature_state = new_published_version.feature_states.filter(
+        feature_segment__segment=segment
+    )
+
+    # and another new version that we'll leave as draft
+    EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning,
+        feature=feature,
+    )
+
+    url = reverse(
+        "api-v1:projects:project-segments-associated-features",
+        args=[project.id, segment.id],
+    )
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.json().get("count") == 1
+    assert response.json()["results"][0]["id"] == expected_segment_feature_state.id
+    assert response.json()["results"][0]["feature"] == feature.id
+    assert response.json()["results"][0]["environment"] == environment_v2_versioning.id
 
 
 @pytest.mark.parametrize(

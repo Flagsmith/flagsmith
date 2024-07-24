@@ -85,7 +85,9 @@ class SegmentViewSet(viewsets.ModelViewSet):
     )
     def associated_features(self, request, *args, **kwargs):
         segment = self.get_object()
-        queryset = FeatureState.objects.filter(feature_segment__segment=segment)
+        queryset = FeatureState.objects.get_live_feature_states().filter(
+            feature_segment__segment=segment
+        )
 
         page = self.paginate_queryset(queryset)
         if page is not None:
