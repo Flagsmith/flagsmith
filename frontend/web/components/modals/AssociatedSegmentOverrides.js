@@ -14,7 +14,6 @@ import { getStore } from 'common/store'
 import { getEnvironment } from 'common/services/useEnvironment'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import Utils from 'common/utils/utils'
-import { Environment } from 'common/types/responses'
 
 class TheComponent extends Component {
   state = {
