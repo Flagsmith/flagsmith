@@ -337,6 +337,11 @@ def segment(project: Project):
 
 
 @pytest.fixture()
+def another_segment(project: Project) -> Segment:
+    return Segment.objects.create(name="another_segment", project=project)
+
+
+@pytest.fixture()
 def segment_rule(segment):
     return SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
 
@@ -584,6 +589,19 @@ def feature_segment(feature, segment, environment):
 def segment_featurestate(feature_segment, feature, environment):
     return FeatureState.objects.create(
         feature_segment=feature_segment, feature=feature, environment=environment
+    )
+
+
+@pytest.fixture()
+def another_segment_featurestate(
+    feature: Feature, environment: Environment, another_segment: Segment
+) -> FeatureState:
+    return FeatureState.objects.create(
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature, segment=another_segment, environment=environment
+        ),
+        feature=feature,
+        environment=environment,
     )
 
 

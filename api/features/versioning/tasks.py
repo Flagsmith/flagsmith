@@ -1,6 +1,9 @@
 import logging
 import typing
 
+from django.conf import settings
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from django.utils import timezone
 from task_processor.decorators import register_task_handler
 
@@ -8,13 +11,18 @@ from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from features.models import FeatureState
-from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.exceptions import FeatureVersioningError
+from features.versioning.models import (
+    EnvironmentFeatureVersion,
+    VersionChangeSet,
+)
 from features.versioning.schemas import (
     EnvironmentFeatureVersionWebhookDataSerializer,
 )
 from features.versioning.versioning_service import (
     get_environment_flags_queryset,
 )
+from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType, call_environment_webhooks
 
 if typing.TYPE_CHECKING:
@@ -152,4 +160,95 @@ def create_environment_feature_version_published_audit_log_task(
         % environment_feature_version.feature.name,
         author_id=environment_feature_version.published_by_id,
         master_api_key_id=environment_feature_version.published_by_api_key_id,
+    )
+
+
+@register_task_handler()
+def publish_version_change_set(
+    version_change_set_id: int, user_id: int, is_scheduled: bool = False
+) -> None:
+    version_change_set = VersionChangeSet.objects.select_related(
+        "change_request", "change_request__user"
+    ).get(id=version_change_set_id)
+    user = FFAdminUser.objects.get(id=user_id)
+
+    if is_scheduled and version_change_set.get_conflicts():
+        _send_failed_due_to_conflict_alert_to_change_request_author(version_change_set)
+        return
+
+    # Since the serializer is already able to handle this functionality, we re-use
+    # it in this task.
+    # TODO: in a separate PR, I'd like to refactor the version create endpoint to
+    #  use change sets. At which point, we can revisit whether the serializer
+    #  actually does the 'save'.
+
+    # Note that, since the import path here eventually imports the
+    # djoser user serializer (which imports settings), we have to use
+    # a local import, since the tasks module gets loaded on app start,
+    # to avoid AppRegistryNotReady error.
+    from features.versioning.serializers import (
+        EnvironmentFeatureVersionCreateSerializer,
+    )
+
+    serializer = EnvironmentFeatureVersionCreateSerializer(
+        data={
+            "feature_states_to_create": (
+                version_change_set.get_parsed_feature_states_to_create()
+            ),
+            "feature_states_to_update": (
+                version_change_set.get_parsed_feature_states_to_update()
+            ),
+            "segment_ids_to_delete_overrides": (
+                version_change_set.get_parsed_segment_ids_to_delete_overrides()
+            ),
+        }
+    )
+    if not serializer.is_valid():
+        logger.error(
+            "Unable to publish version change set. Serializer errors are: %s",
+            str(serializer.errors),
+        )
+        raise FeatureVersioningError("Unable to publish version change set")
+
+    version: EnvironmentFeatureVersion = serializer.save(
+        feature=version_change_set.feature,
+        environment=version_change_set.environment,
+        created_by=user,
+    )
+
+    now = timezone.now()
+
+    # Note that we always set the live_from to `now` since we're publishing
+    # _now_. The VersionChangeSet might have been scheduled for the future
+    # which might mean that actually version_change_set.live_from is slightly
+    # in the past since the task processor won't have picked it up and handled
+    # it immediately, but we always care about the _actual_ time it's published.
+    version.publish(published_by=user, live_from=now)
+
+    # if live_from was set on the version_change set, then leave it alone for
+    # auditing purposes.
+    if not version_change_set.live_from:
+        version_change_set.live_from = now
+
+    version_change_set.published_at = now
+    version_change_set.published_by = user
+    version_change_set.environment_feature_version = version
+    version_change_set.save()
+
+
+def _send_failed_due_to_conflict_alert_to_change_request_author(
+    version_change_set: VersionChangeSet,
+) -> None:
+    context = {
+        "change_request": version_change_set.change_request,
+        "user": version_change_set.change_request.user,
+        "feature": version_change_set.feature,
+    }
+    send_mail(
+        subject=version_change_set.change_request.email_subject,
+        message=render_to_string(
+            "versioning/scheduled_change_failed_conflict_email.txt", context
+        ),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[version_change_set.change_request.user.email],
     )
