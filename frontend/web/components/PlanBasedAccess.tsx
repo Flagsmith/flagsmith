@@ -164,7 +164,7 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
       >
         <div className='d-flex gap-2 justify-content-between font-weight-medium align-items-center'>
           <div>
-            {renderWithTooltip(featureDescriptions[feature].description)}
+            {featureDescriptions[feature].description}
           </div>
           {ctas}
         </div>
