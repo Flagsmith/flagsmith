@@ -349,6 +349,12 @@ export default {
         'event': `Upgrade ${plan}`,
       }
     },
+    VIEW_LOCKED_FEATURE: (feature: string) => {
+      return {
+        'category': 'Locked Feature',
+        'event': `View Locked Feature ${feature}`,
+      }
+    },
     'VIEW_FEATURE': { 'category': 'Features', 'event': 'Feature viewed' },
     'VIEW_SEGMENT': { 'category': 'Segment', 'event': 'Segment viewed' },
     'VIEW_USER_FEATURE': {
@@ -439,7 +445,7 @@ export default {
   getUpgradeUrl: () => {
     return Utils.isSaas()
       ? '/organisation-settings?tab=billing'
-      : 'https://www.flagsmith.com/contact-us'
+      : 'https://www.flagsmith.com/pricing'
   },
   githubType: {
     githubIssue: 'GitHub Issue',

@@ -3,10 +3,9 @@ import Utils, { PaidFeature } from 'common/utils/utils'
 import Button from './base/forms/Button'
 import Constants from 'common/constants'
 import { IonIcon } from '@ionic/react'
-import { checkmarkCircle, documents, lockClosed } from 'ionicons/icons'
+import { documents, lockClosed } from 'ionicons/icons'
 import classNames from 'classnames'
-import Tooltip from './Tooltip'
-import GifComponent from './Gif'
+import API from 'project/api'
 
 type PlanBasedBannerType = {
   className?: string
@@ -22,18 +21,15 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     title: 'Two-Factor Authentication',
   },
   '4_EYES': {
-    description:
-      'Add a 4-eyes approval mechanism to your feature changes with change requests.',
+    description: 'Add a 4-eyes approval mechanism to your feature changes.',
     docs: 'https://docs.flagsmith.com/advanced-use/change-requests',
-    preview: 'change-requests.gif',
     title: 'Change Requests',
   },
 
   'AUDIT': {
     description:
-      'View all activity that occurred across the project and specific environments.',
+      'View and search through a history of all changes made in your Flagsmith organisation.',
     docs: 'https://docs.flagsmith.com/system-administration/audit-logs',
-    preview: 'audit-log.gif',
     title: 'Audit Log',
   },
   'AUTO_SEATS': {
@@ -41,43 +37,38 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     title: 'Invite additional members',
   },
   'CREATE_ADDITIONAL_PROJECT': {
-    description: 'View and manage multiple projects in your organisation',
+    description: 'Free organisations are limited to one Flagsmith project',
     title: 'Create additional projects',
   },
   'FLAG_OWNERS': {
     description:
       'Assign your team members and groups as owners of individual flags.',
-    preview: 'flag-owners.gif',
     title: 'Flag Owners',
   },
   'FORCE_2FA': {
-    description: 'Ensure your team are using 2-factor authentication.',
+    description: 'Improve security compliance across your organisation.',
     title: 'Enforce Two-Factor Authentication',
   },
   'RBAC': {
     description:
       'Configure fine-grained permissions and roles to manage access across organisations, projects and environments.',
     docs: 'https://docs.flagsmith.com/system-administration/rbac',
-    preview: 'rbac.gif',
     title: 'Role-based access control',
   },
   'REALTIME': {
     description: 'Add real time detection of feature flag changes in your SDK.',
     docs: 'https://docs.flagsmith.com/advanced-use/real-time-flags',
-    preview: 'realtime.gif',
     title: 'Realtime Updates',
   },
   'SCHEDULE_FLAGS': {
     description:
       'Manage feature state changes that have been scheduled to go live.',
     docs: 'https://docs.flagsmith.com/advanced-use/scheduled-flags',
-    preview: 'scheduled-flags.gif',
     title: 'Scheduled Flags',
   },
   'STALE_FLAGS': {
     description:
       'Add automatic stale flag detection, prompting your team to clean up old flags.',
-    preview: 'stale-flags.gif',
     title: 'Stale Flag Detection',
   },
 }
@@ -89,19 +80,18 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
   theme,
   withoutTooltip,
 }) => {
+  const trackFeature = () =>
+    API.trackEvent(Constants.events.VIEW_LOCKED_FEATURE(feature))
   const hasPlan = Utils.getPlansPermission(feature)
   const planUrl = Constants.getUpgradeUrl()
   const docs = featureDescriptions[feature]?.docs
-  const previewImage = withoutTooltip
-    ? null
-    : featureDescriptions[feature]?.preview
-    ? `/static/images/features/${featureDescriptions[feature]?.preview}`
-    : null
+
   const ctas = (
     <div className='d-flex gap-2 align-items-center text-nowrap'>
       {!Utils.isSaas() ||
         (docs && (
           <a
+            onClick={trackFeature}
             className='btn text-white d-flex align-items-center gap-1 btn-xsm btn-secondary'
             href={
               docs ||
@@ -115,33 +105,35 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
           </a>
         ))}
       {Utils.isSaas() ? (
-        <a href={Constants.getUpgradeUrl()}>
+        <a
+          onClick={trackFeature}
+          target='_blank'
+          href={Constants.getUpgradeUrl()}
+          rel='noreferrer'
+        >
           <Button theme='tertiary' size='xSmall'>
             Start Free Trial
           </Button>
         </a>
       ) : (
-        <Button theme='tertiary' size='xSmall' href={planUrl} target='_blank'>
+        <Button
+          onClick={trackFeature}
+          theme='tertiary'
+          size='xSmall'
+          href={planUrl}
+          target='_blank'
+        >
           Contact Us
         </Button>
       )}
     </div>
   )
 
-  const renderWithTooltip = (content) => {
-    return (
-      <Tooltip tooltipClassName='tooltip-lg p-0' title={content}>
-        {previewImage
-          ? `<img width='547px;' class='rounded' src='${previewImage}'/>`
-          : null}
-      </Tooltip>
-    )
-  }
   if (theme === 'badge') {
     if (hasPlan) {
       return null
     }
-    return renderWithTooltip(
+    return (
       <div>
         <a
           href={planUrl}
@@ -152,7 +144,7 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
           {<IonIcon className='me-1' icon={lockClosed} />}
           {Utils.getPlanName(Utils.getRequiredPlan(feature))}
         </a>
-      </div>,
+      </div>
     )
   } else if (theme === 'description') {
     if (hasPlan) {
@@ -189,9 +181,6 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
         <PlanBasedBanner withoutTooltip feature={feature} theme={'badge'} />
       </h4>
       <PlanBasedBanner withoutTooltip feature={feature} theme={'description'} />
-      {!!previewImage && (
-        <GifComponent className={'rounded img-fluid mt-4'} src={previewImage} />
-      )}
     </div>
   )
 }
