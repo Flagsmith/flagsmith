@@ -12,6 +12,7 @@ import useSearchThrottle from 'common/useSearchThrottle'
 import AccountStore from 'common/stores/account-store'
 import {
   EdgePagedResponse,
+  Environment,
   Identity,
   Metadata,
   Operator,
@@ -565,6 +566,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
       />
     </FormGroup>
   )
+  const versioningEnabled: Environment | undefined =
+    ProjectStore.getEnvs()?.find((env) => !!env.use_v2_feature_versioning)
 
   return (
     <>
@@ -581,30 +584,32 @@ const CreateSegment: FC<CreateSegmentType> = ({
           >
             <div className='my-4'>{Tab1}</div>
           </TabItem>
-          <TabItem tabLabel='Features'>
-            <div className='my-4'>
-              <Permission
-                level='environment'
-                permission={'MANAGE_SEGMENT_OVERRIDES'}
-                id={environmentId}
-              >
-                {({ permission: manageSegmentOverrides }) => {
-                  const isReadOnly = !manageSegmentOverrides
-                  return (
-                    <AssociatedSegmentOverrides
-                      onUnsavedChange={() => {
-                        setValueChanged(true)
-                      }}
-                      feature={segment.feature}
-                      projectId={projectId}
-                      id={segment.id}
-                      readOnly={isReadOnly}
-                    />
-                  )
-                }}
-              </Permission>
-            </div>
-          </TabItem>
+          {!versioningEnabled && (
+            <TabItem tabLabel='Features'>
+              <div className='my-4'>
+                <Permission
+                  level='environment'
+                  permission={'MANAGE_SEGMENT_OVERRIDES'}
+                  id={environmentId}
+                >
+                  {({ permission: manageSegmentOverrides }) => {
+                    const isReadOnly = !manageSegmentOverrides
+                    return (
+                      <AssociatedSegmentOverrides
+                        onUnsavedChange={() => {
+                          setValueChanged(true)
+                        }}
+                        feature={segment.feature}
+                        projectId={projectId}
+                        id={segment.id}
+                        readOnly={isReadOnly}
+                      />
+                    )
+                  }}
+                </Permission>
+              </div>
+            </TabItem>
+          )}
           <TabItem tabLabel='Users'>
             <div className='my-4'>
               <InfoMessage>
@@ -763,7 +768,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
           <TabItem
             tabLabelString='Custom Fields'
-            tabLabel={<Row className='justify-content-center'>Custom Fields</Row>}
+            tabLabel={
+              <Row className='justify-content-center'>Custom Fields</Row>
+            }
           >
             <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
           </TabItem>
