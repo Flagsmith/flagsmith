@@ -56,6 +56,8 @@ class CustomCreateSegmentOverrideFeatureSegmentSerializer(
 
         if priority:
             feature_segment.to(priority)
+        else:
+            feature_segment.bottom(priority)
 
         return feature_segment
 
