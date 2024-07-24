@@ -1,5 +1,6 @@
 import json
 
+import re2 as re
 from app_analytics.influxdb_wrapper import (
     get_event_list_for_organisation,
     get_events_for_organisation,
@@ -48,6 +49,8 @@ OBJECTS_PER_PAGE = 50
 DEFAULT_ORGANISATION_SORT = "subscription_information_cache__api_calls_30d"
 DEFAULT_ORGANISATION_SORT_DIRECTION = "DESC"
 
+email_regex = re.compile(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
+
 
 class OrganisationList(ListView):
     model = Organisation
@@ -67,7 +70,7 @@ class OrganisationList(ListView):
         ).select_related("subscription", "subscription_information_cache")
 
         if search_term := self.request.GET.get("search"):
-            queryset = queryset.filter(self._build_search_query(search_term))
+            queryset = queryset.filter(self._build_search_query(search_term.lower()))
 
         if self.request.GET.get("filter_plan"):
             filter_plan = self.request.GET["filter_plan"]
@@ -116,7 +119,7 @@ class OrganisationList(ListView):
         return data
 
     def _build_search_query(self, search_term: str) -> Q:
-        if "@" in search_term:
+        if email_regex.match(search_term):
             # Assume that the search is for the email of a given user
             user = FFAdminUser.objects.filter(email__iexact=search_term).first()
             return Q(id__in=user.organisations.values_list("id", flat=True))
