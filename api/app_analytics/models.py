@@ -32,6 +32,7 @@ class APIUsageRaw(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     host = models.CharField(max_length=255)
     resource = models.IntegerField(choices=Resource.choices)
+    count = models.PositiveIntegerField(default=1)
 
     class Meta:
         index_together = (("environment_id", "created_at"),)

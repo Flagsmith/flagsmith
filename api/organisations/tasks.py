@@ -272,7 +272,6 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
         )
     )
 
-    update_organisations = []
     api_limit_access_blocks = []
     flagsmith_client = get_client("local", local_eval=True)
 
@@ -297,14 +296,12 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
         if stop_serving:
             send_api_flags_blocked_notification(organisation)
 
+        # Save models individually to allow lifecycle hooks to fire.
+        organisation.save()
+
         api_limit_access_blocks.append(APILimitAccessBlock(organisation=organisation))
-        update_organisations.append(organisation)
 
     APILimitAccessBlock.objects.bulk_create(api_limit_access_blocks)
-
-    Organisation.objects.bulk_update(
-        update_organisations, ["stop_serving_flags", "block_access_to_admin"]
-    )
 
 
 # Task enqueued in register_recurring_tasks below.
@@ -340,7 +337,12 @@ def unrestrict_after_api_limit_grace_period_is_stale() -> None:
         id__in=(organisation_ids - still_restricted_organisation_ids),
     )
 
-    matching_organisations.update(stop_serving_flags=False, block_access_to_admin=False)
+    for organisation in matching_organisations:
+        organisation.stop_serving_flags = False
+        organisation.block_access_to_admin = False
+
+        # Save models individually to allow lifecycle hooks to fire.
+        organisation.save()
 
     for organisation in matching_organisations:
         organisation.api_limit_access_block.delete()
