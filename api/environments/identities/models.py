@@ -219,9 +219,11 @@ class Identity(models.Model):
                 identity=self,
                 **Trait.generate_trait_value_data(trait_value),
             )
-            trait_models.append(trait)
-            if not trait_data_item.get("transient"):
+            if trait_data_item.get("transient"):
+                trait.transient = True
+            else:
                 trait_models_to_persist.append(trait)
+            trait_models.append(trait)
 
         if persist:
             Trait.objects.bulk_create(trait_models_to_persist)
@@ -252,13 +254,13 @@ class Identity(models.Model):
             transient = trait_data_item.get("transient")
 
             if transient:
-                transient_traits.append(
-                    Trait(
-                        **Trait.generate_trait_value_data(trait_value),
-                        trait_key=trait_key,
-                        identity=self,
-                    )
+                trait = Trait(
+                    **Trait.generate_trait_value_data(trait_value),
+                    trait_key=trait_key,
+                    identity=self,
                 )
+                trait.transient = True
+                transient_traits.append(trait)
                 continue
 
             if trait_value is None:
@@ -304,7 +306,7 @@ class Identity(models.Model):
         # See: https://github.com/Flagsmith/flagsmith/issues/370
         Trait.objects.bulk_create(new_traits, ignore_conflicts=True)
 
-        # return the full list of traits for this identity by refreshing from the db
+        # return the full list of traits for this identity
         # override persisted traits by transient traits in case of key collisions
         return [
             *{

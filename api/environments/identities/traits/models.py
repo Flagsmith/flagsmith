@@ -57,6 +57,14 @@ class Trait(models.Model):
     def trait_value(self):
         return self.get_trait_value()
 
+    @property
+    def transient(self) -> bool:
+        return getattr(self, "_transient", False)
+
+    @transient.setter
+    def transient(self, transient: bool) -> None:
+        self._transient = transient
+
     def get_trait_value(self):
         try:
             value_type = self.value_type
