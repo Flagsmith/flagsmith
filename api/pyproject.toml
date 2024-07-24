@@ -96,7 +96,7 @@ known_third_party = [
 skip = ['migrations', '.venv', '.direnv']
 
 [tool.pytest.ini_options]
-addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings', '--dist=worksteal']
+addopts = ['--ds=app.settings.test', '--dist=worksteal', '-n=auto', '-vvvv', '-p', 'no:warnings']
 console_output_style = 'count'
 
 [tool.poetry]
