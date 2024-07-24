@@ -280,12 +280,13 @@ class Identity(models.Model):
                 updated_traits.append(current_trait)
                 continue
 
-            trait = Trait(
-                **Trait.generate_trait_value_data(trait_value),
-                trait_key=trait_key,
-                identity=self,
+            new_traits.append(
+                Trait(
+                    **Trait.generate_trait_value_data(trait_value),
+                    trait_key=trait_key,
+                    identity=self,
+                )
             )
-            new_traits.append(trait)
 
         # delete the traits that had their keys set to None
         # (except the transient ones)
