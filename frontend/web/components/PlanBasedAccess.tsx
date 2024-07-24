@@ -84,7 +84,7 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
     API.trackEvent(Constants.events.VIEW_LOCKED_FEATURE(feature))
   const hasPlan = Utils.getPlansPermission(feature)
   const planUrl = Constants.getUpgradeUrl(feature)
-  const docs = featureDescriptions[feature]?.docs
+  const docs = `${featureDescriptions[feature]?.docs}?utm_source=plan_based_access`
 
   const ctas = (
     <div className='d-flex gap-2 align-items-center text-nowrap'>
