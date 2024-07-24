@@ -1,5 +1,8 @@
 from unittest.mock import MagicMock
 
+import pytest
+from pytest_mock import MockerFixture
+
 from environments.models import Environment
 from features.feature_segments.serializers import (
     CustomCreateSegmentOverrideFeatureSegmentSerializer,
@@ -217,3 +220,35 @@ def test_feature_segment_serializer_save_existing_feature_segment_moves_others_i
     feature_segment.refresh_from_db()
     assert feature_segment.priority == 2
     assert updated_feature_segment.priority == 1
+
+
+def test_feature_segment_serializer_save_new_feature_segment_does_nothing_on_error(
+    feature: Feature,
+    segment_featurestate: FeatureState,
+    feature_segment: FeatureSegment,
+    another_segment: Segment,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_segment.to(1)
+    serializer = CustomCreateSegmentOverrideFeatureSegmentSerializer(
+        data={"segment": another_segment.id, "priority": 1},
+    )
+    serializer.is_valid(raise_exception=True)
+
+    class MockException(Exception):
+        pass
+
+    mocker.patch(
+        "features.feature_segments.serializers.CustomCreateSegmentOverrideFeatureSegmentSerializer.create",
+        side_effect=MockException,
+    )
+
+    # When
+    with pytest.raises(MockException):
+        serializer.save(feature=feature, environment=environment)
+
+    # Then
+    feature_segment.refresh_from_db()
+    assert feature_segment.priority == 1

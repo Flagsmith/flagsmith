@@ -1,8 +1,7 @@
-import typing
-
 from common.features.serializers import (
     CreateSegmentOverrideFeatureSegmentSerializer,
 )
+from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
@@ -46,18 +45,25 @@ class CustomCreateSegmentOverrideFeatureSegmentSerializer(
 ):
     # Since the `priority` field on the FeatureSegment model is set to editable=False
     # (to adhere to the django-ordered-model functionality), we redefine the priority
-    # field here, and use it manually in the create / update methods.
+    # field here, and use it manually in the save method.
     priority = serializers.IntegerField(min_value=0, required=False)
 
-    def create(self, validated_data: dict[str, typing.Any]) -> FeatureSegment:
-        priority: int | None = validated_data.get("priority", None)
+    @transaction.atomic()
+    def save(self, **kwargs) -> FeatureSegment:
+        """
+        Note that this method is marked as atomic since a lot of additional validation is
+        performed in the call to super. If that fails, we want to roll the changes made by
+        `collision.to` back.
+        """
+
+        priority: int | None = self.validated_data.get("priority", None)
 
         if (
             priority is not None
             and (
                 collision := FeatureSegment.objects.filter(
-                    environment=validated_data["environment"],
-                    feature=validated_data["feature"],
+                    environment_id=kwargs["environment"],
+                    feature=kwargs["feature"],
                     priority=priority,
                 ).first()
             )
@@ -65,27 +71,10 @@ class CustomCreateSegmentOverrideFeatureSegmentSerializer(
         ):
             # Since there is no unique clause on the priority field, if a priority
             # is set, it will just save the feature segment and not move others
-            # down. We can't just move the created feature segment like we do in
-            # update() because the to() method just reads that it's already at the
-            # given priority and early returns.
+            # down. This ensures that the incoming priority space is 'free'.
             collision.to(priority + 1)
 
-        return super().create(validated_data)
-
-    def update(
-        self, instance: FeatureSegment, validated_data: dict[str, typing.Any]
-    ) -> FeatureSegment:
-        priority: int | None = validated_data.pop("priority", None)
-
-        feature_segment = super().update(instance, validated_data)
-
-        if priority is not None:
-            # Note that 0 is a valid priority
-            feature_segment.to(priority)
-        else:
-            feature_segment.bottom()
-
-        return feature_segment
+        return super().save(**kwargs)
 
 
 class FeatureSegmentQuerySerializer(serializers.Serializer):
