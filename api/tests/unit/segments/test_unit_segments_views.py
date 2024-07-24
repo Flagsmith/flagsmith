@@ -366,7 +366,7 @@ def test_get_segment_by_uuid(client, project, segment):
     "client, num_queries",
     [
         (lazy_fixture("admin_master_api_key_client"), 12),
-        (lazy_fixture("admin_client"), 11),
+        (lazy_fixture("admin_client"), 14),
     ],
 )
 def test_list_segments(

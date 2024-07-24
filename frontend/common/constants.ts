@@ -525,7 +525,7 @@ export default {
     TAGS_DESCRIPTION:
       'Organise your flags with tags, tagging your features as "<strong>protected</strong>" will prevent them from accidentally being deleted.',
     TOOLTIP_METADATA_DESCRIPTION: (entity: string) =>
-      `Add Metadata in your <strong>${entity}</strong>, you can create the Metadata Fields in the project settings.`,
+      `Add Custom fields in your <strong>${entity}</strong>, you can define the custom fields in the project settings.`,
     USER_PROPERTY_DESCRIPTION:
       'The name of the user trait or custom property belonging to the user, e.g. firstName',
     WEBHOOKS_DESCRIPTION:

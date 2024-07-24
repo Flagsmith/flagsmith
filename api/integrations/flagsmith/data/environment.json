@@ -15,8 +15,8 @@
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 543716,
-      "enabled": true,
+      "django_id": 554945,
+      "enabled": false,
       "feature": {
         "id": 96656,
         "name": "api_limiting_stop_serving_flags",
@@ -24,7 +24,7 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "151b7878-c777-44ef-87ad-043cb5a130b3",
+      "featurestate_uuid": "e24072b4-3450-4c8e-8b9f-03d704acb5ac",
       "multivariate_feature_state_values": []
     },
     {

@@ -739,10 +739,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
           {metadataEnable && segmentContentType?.id && (
             <TabItem
-              tabLabelString='Metadata'
+              tabLabelString='Custom Fields'
               tabLabel={
                 <Row className='justify-content-center'>
-                  Metadata
+                  Custom Fields
                   {metadataValueChanged && (
                     <div className='unread ml-2 px-1'>{'*'}</div>
                   )}
@@ -762,8 +762,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
             <div className={className || 'my-3 mx-4'}>{Tab1}</div>
           </TabItem>
           <TabItem
-            tabLabelString='Metadata'
-            tabLabel={<Row className='justify-content-center'>Metadata</Row>}
+            tabLabelString='Custom Fields'
+            tabLabel={<Row className='justify-content-center'>Custom Fields</Row>}
           >
             <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
           </TabItem>

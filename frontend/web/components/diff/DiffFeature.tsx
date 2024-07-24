@@ -109,7 +109,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
                   </div>
                   <div className='flex-row pt-4 list-item list-item-sm'>
                     {!hideValue && (
-                      <div className='table-column flex flex-1'>
+                      <div className='table-column flex flex-1 overflow-hidden'>
                         <div>
                           <DiffString
                             data-test={'version-value'}

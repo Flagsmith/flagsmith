@@ -2,6 +2,8 @@ import logging
 import typing
 
 from django.utils import timezone
+from task_processor.decorators import register_task_handler
+from task_processor.models import TaskPriority
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
@@ -9,8 +11,6 @@ from edge_api.identities.types import IdentityChangeset
 from environments.dynamodb import DynamoEnvironmentV2Wrapper
 from environments.models import Environment, Webhook
 from features.models import Feature, FeatureState
-from task_processor.decorators import register_task_handler
-from task_processor.models import TaskPriority
 from users.models import FFAdminUser
 from util.mappers import map_identity_changeset_to_identity_override_changeset
 from webhooks.webhooks import WebhookEventType, call_environment_webhooks

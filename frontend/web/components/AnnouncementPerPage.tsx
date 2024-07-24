@@ -1,3 +1,4 @@
+import { get } from 'lodash'
 import React, { FC } from 'react'
 import InfoMessage from './InfoMessage'
 import flagsmith from 'flagsmith'
@@ -8,9 +9,13 @@ import { routes } from 'web/routes'
 
 type AnnouncementPerPageValueType = AnnouncementValueType & {
   pages: string[]
+  projectId: number
+  params: { [key: string]: string }
 }
 
-type AnnouncementPerPageType = { pathname: string }
+type AnnouncementPerPageType = {
+  pathname: string
+}
 
 const AnnouncementPerPage: FC<AnnouncementPerPageType> = ({ pathname }) => {
   const closeAnnouncement = (id: string) => {
@@ -33,14 +38,41 @@ const AnnouncementPerPage: FC<AnnouncementPerPageType> = ({ pathname }) => {
 
   const announcementInPage = announcementPerPageValue?.pages?.some((page) => {
     if (Object.keys(routes).includes(page)) {
-      return !!matchPath(pathname, {
+      const match = matchPath(pathname, {
         exact: false,
         path: routes[page],
         strict: false,
       })
+
+      if (match) {
+        const annParams = announcementPerPageValue?.params || {}
+        const matchParams = match?.params || {}
+        const objectsMatch = (
+          obj1: AnnouncementPerPageValueType['params'],
+          obj2: AnnouncementPerPageValueType['params'],
+        ) => {
+          return Object.keys(obj2).every((key) => {
+            if (Array.isArray(obj2[key])) {
+              return obj2[key].some((item) => {
+                return `${item}` === `${obj1[key]}`
+              })
+            } else {
+              return `${obj1[key]}` === `${obj2[key]}`
+            }
+          })
+        }
+        const matchParamsMatch = objectsMatch(matchParams, annParams)
+        if (matchParamsMatch) {
+          return true
+        }
+
+        return false
+      }
     }
+
     return false
   })
+
   return (
     <>
       {showAnnouncementPerPage && announcementInPage && (

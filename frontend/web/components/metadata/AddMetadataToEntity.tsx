@@ -212,88 +212,90 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
   ])
   return (
     <>
-      <PanelSearch
-        className='mt-1 no-pad'
-        header={
-          <Row className='table-header'>
-            <Row className='table-column flex-1'>Metadata </Row>
-            <Flex className='table-column'>Value</Flex>
-          </Row>
-        }
-        items={metadataFieldsAssociatedtoEntity}
-        renderRow={(m: CustomMetadata) => {
-          return (
-            <MetadataRow
-              metadata={m}
-              entity={entity}
-              getMetadataValue={(m: CustomMetadata) => {
-                setMetadataFieldsAssociatedtoEntity((prevState) =>
-                  prevState?.map((metadata) => {
-                    if (metadata.id === m?.id) {
-                      return {
-                        ...metadata,
-                        field_value: m?.field_value,
-                        metadataEntity: !!m?.field_value,
+      <FormGroup className='setting'>
+        <PanelSearch
+          className='mt-1 no-pad'
+          header={
+            <Row className='table-header'>
+              <Row className='table-column flex-1'>Field </Row>
+              <Flex className='table-column'>Value</Flex>
+            </Row>
+          }
+          items={metadataFieldsAssociatedtoEntity}
+          renderRow={(m: CustomMetadata) => {
+            return (
+              <MetadataRow
+                metadata={m}
+                entity={entity}
+                getMetadataValue={(m: CustomMetadata) => {
+                  setMetadataFieldsAssociatedtoEntity((prevState) =>
+                    prevState?.map((metadata) => {
+                      if (metadata.id === m?.id) {
+                        return {
+                          ...metadata,
+                          field_value: m?.field_value,
+                          metadataEntity: !!m?.field_value,
+                        }
                       }
-                    }
-                    return metadata
-                  }),
-                )
-                setMetadataChanged(true)
+                      return metadata
+                    }),
+                  )
+                  setMetadataChanged(true)
+                }}
+              />
+            )
+          }}
+          renderNoResults={
+            <FormGroup>
+              No custom fields configured for {entity} entity. Add custom fields in
+              your{' '}
+              <a
+                href={`/project/${projectId}/settings?tab=metadata`}
+                target='_blank'
+                rel='noreferrer'
+              >
+                Project Settings
+              </a>
+              .
+            </FormGroup>
+          }
+        />
+        {entity === 'environment' && !isCloningEnvironment && (
+          <div className='text-right'>
+            <Button
+              theme='primary'
+              className='mt-2'
+              onClick={() => {
+                updateEnvironment({
+                  body: {
+                    metadata: metadataFieldsAssociatedtoEntity
+                      ?.filter((m) => m.metadataEntity)
+                      .map((i) => {
+                        const { field_value, ...rest } = i
+                        return {
+                          field_value,
+                          model_field: i.metadataModelFieldId,
+                          ...rest,
+                        }
+                      }) as Metadata[],
+                    name: envName!,
+                    project: parseInt(`${projectId}`),
+                  },
+                  id: entityId,
+                }).then((res) => {
+                  if (res?.error) {
+                    toast(res?.error?.data.metadata[0], 'danger')
+                  } else {
+                    toast('Environment Field Updated')
+                  }
+                })
               }}
-            />
-          )
-        }}
-        renderNoResults={
-          <FormGroup>
-            No metadata configured for {entity} entity. Add metadata field in
-            your{' '}
-            <a
-              href={`/project/${projectId}/settings?tab=metadata`}
-              target='_blank'
-              rel='noreferrer'
             >
-              Project Settings
-            </a>
-            .
-          </FormGroup>
-        }
-      />
-      {entity === 'environment' && !isCloningEnvironment && (
-        <div className='text-right'>
-          <Button
-            theme='primary'
-            className='mt-2'
-            onClick={() => {
-              updateEnvironment({
-                body: {
-                  metadata: metadataFieldsAssociatedtoEntity
-                    ?.filter((m) => m.metadataEntity)
-                    .map((i) => {
-                      const { field_value, ...rest } = i
-                      return {
-                        field_value,
-                        model_field: i.metadataModelFieldId,
-                        ...rest,
-                      }
-                    }) as Metadata[],
-                  name: envName!,
-                  project: parseInt(`${projectId}`),
-                },
-                id: entityId,
-              }).then((res) => {
-                if (res?.error) {
-                  toast(res?.error?.data.metadata[0], 'danger')
-                } else {
-                  toast('Environment Metadata Updated')
-                }
-              })
-            }}
-          >
-            Save Metadata
-          </Button>
-        </div>
-      )}
+              Save Custom Field
+            </Button>
+          </div>
+        )}
+      </FormGroup>
     </>
   )
 }
@@ -345,7 +347,7 @@ const MetadataRow: FC<MetadataRowType> = ({
                 }}
                 className='mr-2'
                 style={{ width: '250px' }}
-                placeholder='Metadata Value'
+                placeholder='Field Value'
                 isValid={Utils.validateMetadataType(
                   metadata?.type,
                   metadataValue,

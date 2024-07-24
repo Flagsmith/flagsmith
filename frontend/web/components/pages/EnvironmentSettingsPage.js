@@ -852,10 +852,10 @@ const EnvironmentSettingsPage = class extends Component {
                     </TabItem>
                     {metadataEnable &&
                       this.state.environmentContentType?.id && (
-                        <TabItem tabLabel='Metadata'>
+                        <TabItem tabLabel='Custom Fields'>
                           <FormGroup className='mt-5 setting'>
                             <InputGroup
-                              title={'Metadata'}
+                              title={'Custom fields'}
                               tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
                                 'environments',
                               )}`}

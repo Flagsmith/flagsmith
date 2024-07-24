@@ -24,7 +24,7 @@ const DiffSegment: FC<DiffSegment> = ({ diff }) => {
           newValue={diff.deleted ? diff.oldPriority : diff.newPriority}
         />
       </div>
-      <div className='table-column flex-fill'>
+      <div className='table-column flex-1 overflow-hidden'>
         <DiffString
           oldValue={diff.created ? diff.newValue : diff.oldValue}
           newValue={diff.deleted ? diff.oldValue : diff.newValue}
