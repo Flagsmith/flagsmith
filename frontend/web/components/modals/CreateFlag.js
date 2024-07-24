@@ -611,11 +611,11 @@ const CreateFlag = class extends Component {
         {!identity && projectFlag && (
           <Permission
             level='project'
-            permission='ADMIN'
+            permission='CREATE_FEATURE'
             id={this.props.projectId}
           >
-            {({ permission: projectAdmin }) =>
-              projectAdmin && (
+            {({ permission }) =>
+              permission && (
                 <>
                   <FormGroup className='mb-5 setting'>
                     <FlagOwners

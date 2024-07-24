@@ -32,9 +32,9 @@
 # * build-node [node]
 # * build-node-django [build-node]
 # * build-node-selfhosted [build-node]
-# * build-python [python]
+# * build-python [wolfi-base]
 # * build-python-private [build-python]
-# * api-runtime [python:slim]
+# * api-runtime [wolfi-base]
 # * api-runtime-private [api-runtime]
 
 # - Internal stages
@@ -55,9 +55,7 @@ ARG NODE_VERSION=16
 ARG PYTHON_VERSION=3.11
 
 FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm as node
-FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm-slim as node-slim
-FROM public.ecr.aws/docker/library/python:${PYTHON_VERSION}-bookworm as python
-FROM public.ecr.aws/docker/library/python:${PYTHON_VERSION}-slim-bookworm as python-slim
+FROM cgr.dev/chainguard/wolfi-base:latest as wolfi-base
 
 # - Intermediary stages
 # * build-node
@@ -85,8 +83,14 @@ FROM build-node as build-node-selfhosted
 RUN cd frontend && npm run bundle
 
 # * build-python
-FROM python as build-python
+FROM wolfi-base as build-python
 WORKDIR /build
+
+ARG PYTHON_VERSION
+RUN apk add build-base linux-headers curl git \
+  python-${PYTHON_VERSION} \
+  python-${PYTHON_VERSION}-dev \
+  py${PYTHON_VERSION}-pip 
 
 COPY api/pyproject.toml api/poetry.lock api/Makefile ./
 ENV POETRY_VIRTUALENVS_IN_PROJECT=true \
@@ -111,12 +115,12 @@ RUN --mount=type=secret,id=github_private_cloud_token \
   make install-private-modules
 
 # * api-runtime
-FROM python-slim as api-runtime
+FROM wolfi-base as api-runtime
 
-# Uninstall pip to reduce CVE-2018-20225 noise
-# and make system Python available to venv entrypoints
-RUN pip uninstall -y pip && mkdir -p /build/.venv/bin && \
-  ln -s /usr/local/bin/python /build/.venv/bin/python
+# Install Python and make it available to venv entrypoints
+ARG PYTHON_VERSION
+RUN apk add python-${PYTHON_VERSION} && \
+  mkdir /build/ && ln -s /usr/local/ /build/.venv
 
 WORKDIR /app
 
@@ -139,7 +143,7 @@ CMD ["migrate-and-serve"]
 FROM api-runtime as api-runtime-private
 
 # Install SAML binary dependency
-RUN apt-get update && apt-get install -y xmlsec1 && rm -rf /var/lib/apt/lists/*
+RUN apk add xmlsec
 
 # - Internal stages
 # * api-test [build-python]
@@ -180,7 +184,7 @@ FROM api-runtime-private as saas-api
 
 # Install GnuPG and import private key
 RUN --mount=type=secret,id=sse_pgp_pkey \
-  apt-get update && apt-get install -y gnupg && \
+  apk add gpg gpg-agent && \
   gpg --import /run/secrets/sse_pgp_pkey && \
   mv /root/.gnupg/ /app/ && \
   chown -R nobody /app/.gnupg/
@@ -202,12 +206,14 @@ RUN python manage.py collectstatic --no-input
 USER nobody
 
 # * oss-frontend [build-node-selfhosted]
-FROM node-slim AS oss-frontend
+FROM wolfi-base AS oss-frontend
 
-USER node
+ARG NODE_VERSION
+RUN apk add nodejs-${NODE_VERSION}
+
 WORKDIR /srv/bt
 
-COPY --from=build-node-selfhosted --chown=node:node /build/frontend .
+COPY --from=build-node-selfhosted /build/frontend/ /srv/bt/
 
 ENV NODE_ENV=production
 
@@ -216,7 +222,10 @@ RUN echo ${CI_COMMIT_SHA} > /srv/bt/CI_COMMIT_SHA
 COPY .release-please-manifest.json /srv/bt/.versions.json
 
 EXPOSE 8080
+
 CMD ["node",  "./api/index.js"]
+
+USER node
 
 # * oss-unified [api-runtime, build-python, build-node-django]
 FROM api-runtime as oss-unified
