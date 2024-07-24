@@ -46,18 +46,49 @@ class CustomCreateSegmentOverrideFeatureSegmentSerializer(
 ):
     # Since the `priority` field on the FeatureSegment model is set to editable=False
     # (to adhere to the django-ordered-model functionality), we redefine the priority
-    # field here, and use it manually in the save method.
+    # field here, and use it manually in the create / update methods.
     priority = serializers.IntegerField(min_value=0, required=False)
 
-    def save(self, **kwargs: typing.Any) -> FeatureSegment:
-        priority: int | None = self.initial_data.pop("priority", None)
+    def create(self, validated_data: dict[str, typing.Any]) -> FeatureSegment:
+        priority: int | None = validated_data.get("priority", None)
 
-        feature_segment: FeatureSegment = super().save(**kwargs)
+        if (
+            priority is not None
+            and (
+                collision := FeatureSegment.objects.filter(
+                    environment=validated_data["environment"],
+                    feature=validated_data["feature"],
+                    priority=priority,
+                ).first()
+            )
+            is not None
+        ):
+            # Since there is no unique clause on the priority field, if a priority
+            # is set, it will just save the feature segment and not move others
+            # down. We can't just move the created feature segment like we do in
+            # update() because the to() method just reads that it's already at the
+            # given priority and early returns.
+            collision.to(priority + 1)
 
-        if priority:
+        feature_segment = super().create(validated_data)
+
+        if priority is None:
+            feature_segment.bottom()
+
+        return feature_segment
+
+    def update(
+        self, instance: FeatureSegment, validated_data: dict[str, typing.Any]
+    ) -> FeatureSegment:
+        priority: int | None = validated_data.pop("priority", None)
+
+        feature_segment = super().update(instance, validated_data)
+
+        if priority is not None:
+            # Note that 0 is a valid priority
             feature_segment.to(priority)
         else:
-            feature_segment.bottom(priority)
+            feature_segment.bottom()
 
         return feature_segment
 
