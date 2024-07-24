@@ -70,12 +70,7 @@ class CustomCreateSegmentOverrideFeatureSegmentSerializer(
             # given priority and early returns.
             collision.to(priority + 1)
 
-        feature_segment = super().create(validated_data)
-
-        if priority is None:
-            feature_segment.bottom()
-
-        return feature_segment
+        return super().create(validated_data)
 
     def update(
         self, instance: FeatureSegment, validated_data: dict[str, typing.Any]
