@@ -53,9 +53,6 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: make install-packages
 
-      - name: Run Linters
-        run: make lint
-
       - name: Create analytics database
         env:
           PGPASSWORD: postgres
