@@ -349,13 +349,13 @@ export default {
         'event': `Upgrade ${plan}`,
       }
     },
+    'VIEW_FEATURE': { 'category': 'Features', 'event': 'Feature viewed' },
     VIEW_LOCKED_FEATURE: (feature: string) => {
       return {
         'category': 'Locked Feature',
         'event': `View Locked Feature ${feature}`,
       }
     },
-    'VIEW_FEATURE': { 'category': 'Features', 'event': 'Feature viewed' },
     'VIEW_SEGMENT': { 'category': 'Segment', 'event': 'Segment viewed' },
     'VIEW_USER_FEATURE': {
       'category': 'User Features',
@@ -442,10 +442,12 @@ export default {
       'TRAITS_ID': 150,
     },
   },
-  getUpgradeUrl: () => {
+  getUpgradeUrl: (feature?: string) => {
     return Utils.isSaas()
       ? '/organisation-settings?tab=billing'
-      : 'https://www.flagsmith.com/pricing'
+      : `https://www.flagsmith.com/pricing${
+          feature ? `utm_source=${feature}` : ''
+        }`
   },
   githubType: {
     githubIssue: 'GitHub Issue',

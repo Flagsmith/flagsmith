@@ -83,7 +83,7 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
   const trackFeature = () =>
     API.trackEvent(Constants.events.VIEW_LOCKED_FEATURE(feature))
   const hasPlan = Utils.getPlansPermission(feature)
-  const planUrl = Constants.getUpgradeUrl()
+  const planUrl = Constants.getUpgradeUrl(feature)
   const docs = featureDescriptions[feature]?.docs
 
   const ctas = (
@@ -108,7 +108,7 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
         <a
           onClick={trackFeature}
           target='_blank'
-          href={Constants.getUpgradeUrl()}
+          href={Constants.getUpgradeUrl(feature)}
           rel='noreferrer'
         >
           <Button theme='tertiary' size='xSmall'>
