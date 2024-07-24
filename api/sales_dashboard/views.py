@@ -34,6 +34,7 @@ from organisations.tasks import (
     update_organisation_subscription_information_cache,
     update_organisation_subscription_information_influx_cache,
 )
+from users.models import FFAdminUser
 
 from .forms import (
     EmailUsageForm,
@@ -65,13 +66,8 @@ class OrganisationList(ListView):
             ),
         ).select_related("subscription", "subscription_information_cache")
 
-        if self.request.GET.get("search"):
-            search_term = self.request.GET["search"]
-            queryset = queryset.filter(
-                Q(name__icontains=search_term)
-                | Q(users__email__icontains=search_term)
-                | Q(subscription__subscription_id=search_term)
-            )
+        if search_term := self.request.GET.get("search"):
+            queryset = queryset.filter(self._build_search_query(search_term))
 
         if self.request.GET.get("filter_plan"):
             filter_plan = self.request.GET["filter_plan"]
@@ -118,6 +114,16 @@ class OrganisationList(ListView):
         )
 
         return data
+
+    def _build_search_query(self, search_term: str) -> Q:
+        if "@" in search_term:
+            # Assume that the search is for the email of a given user
+            user = FFAdminUser.objects.filter(email__iexact=search_term).first()
+            return Q(id__in=user.organisations.values_list("id", flat=True))
+
+        return Q(name__icontains=search_term) | Q(
+            subscription__subscription_id=search_term
+        )
 
 
 @staff_member_required
