@@ -139,12 +139,11 @@ export const testSegment2 = async () => {
 
   log('Create segments')
   await gotoSegments()
-
-  await createSegment(2, 'segment_3', [
+  await createSegment(0, 'segment_1', [
     {
-      name: 'trait3',
+      name: 'trait',
       operator: 'EQUAL',
-      value: '3',
+      value: '1',
     },
   ])
   await createSegment(1, 'segment_2', [
@@ -154,11 +153,11 @@ export const testSegment2 = async () => {
       value: '2',
     },
   ])
-  await createSegment(0, 'segment_1', [
+  await createSegment(2, 'segment_3', [
     {
-      name: 'trait',
+      name: 'trait3',
       operator: 'EQUAL',
-      value: '1',
+      value: '3',
     },
   ])
 
