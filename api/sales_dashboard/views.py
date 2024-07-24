@@ -70,7 +70,7 @@ class OrganisationList(ListView):
         ).select_related("subscription", "subscription_information_cache")
 
         if search_term := self.request.GET.get("search"):
-            queryset = queryset.filter(self._build_search_query(search_term.lower()))
+            queryset = queryset.filter(self._build_search_query(search_term))
 
         if self.request.GET.get("filter_plan"):
             filter_plan = self.request.GET["filter_plan"]
@@ -119,7 +119,7 @@ class OrganisationList(ListView):
         return data
 
     def _build_search_query(self, search_term: str) -> Q:
-        if email_regex.match(search_term):
+        if email_regex.match(search_term.lower()):
             # Assume that the search is for the email of a given user
             user = FFAdminUser.objects.filter(email__iexact=search_term).first()
             return Q(id__in=user.organisations.values_list("id", flat=True))
