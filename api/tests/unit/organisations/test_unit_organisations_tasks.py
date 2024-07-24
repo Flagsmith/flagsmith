@@ -1211,43 +1211,25 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     assert len(mailoutbox) == 2
     email1 = mailoutbox[0]
     assert email1.subject == "Flagsmith API use has been blocked due to overuse"
-    assert email1.body == (
-        "Hi there,\n\n"
-        "As per previous warnings, we have blocked organisation Test Org. "
-        "Please visit app.flagsmith.com to upgrade your "
-        "account and re-enable service.\n\n"
-        "Thank you!\n\n"
-        "The Flagsmith Team\n"
+    assert email1.body == render_to_string(
+        "organisations/api_flags_blocked_notification.txt",
+        context={"organisation": organisation},
     )
-
     email2 = mailoutbox[1]
     assert email2.subject == "Flagsmith API use has been blocked due to overuse"
-    assert email2.body == (
-        "Hi there,\n\n"
-        "As per previous warnings, we have blocked organisation Org #2. "
-        "Please visit app.flagsmith.com to upgrade your "
-        "account and re-enable service.\n\n"
-        "Thank you!\n\n"
-        "The Flagsmith Team\n"
+    assert email2.body == render_to_string(
+        "organisations/api_flags_blocked_notification.txt",
+        context={"organisation": organisation2},
     )
 
     assert len(email2.alternatives) == 1
     assert len(email2.alternatives[0]) == 2
     assert email2.alternatives[0][1] == "text/html"
 
-    assert email2.alternatives[0][0] == (
-        "<table>\n\n        <tr>\n\n               <td>Hi there,"
-        "</td>\n\n        </tr>\n\n        <tr>\n\n             "
-        "  <td>\n                 As per previous warnings, we have"
-        " blocked organisation Org #2.\n                 Please "
-        "visit app.flagsmith.com to upgrade your account and "
-        "re-enable service.\n               "
-        "</td>\n\n\n        </tr>\n\n        <tr>\n\n          "
-        "     <td>Thank you!</td>\n\n        </tr>\n\n        "
-        "<tr>\n\n               <td>The Flagsmith Team</td>"
-        "\n\n        </tr>\n\n</table>\n"
+    assert email2.alternatives[0][0] == render_to_string(
+        "organisations/api_flags_blocked_notification.html",
+        context={"organisation": organisation2},
     )
-
     assert email2.from_email == "noreply@flagsmith.com"
     assert email2.to == ["admin@example.com", "staff@example.com"]
 
