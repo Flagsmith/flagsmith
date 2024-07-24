@@ -12,7 +12,10 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from organisations.chargebee.metadata import ChargebeeObjMetadata
-from organisations.constants import API_USAGE_GRACE_PERIOD
+from organisations.constants import (
+    API_USAGE_ALERT_THRESHOLDS,
+    API_USAGE_GRACE_PERIOD,
+)
 from organisations.models import (
     APILimitAccessBlock,
     Organisation,
@@ -371,6 +374,57 @@ def test_handle_api_usage_notifications_below_100(
         == 1
     )
     assert OrganisationAPIUsageNotification.objects.first() == api_usage_notification
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_handle_api_usage_notifications_below_api_usage_alert_thresholds(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    mailoutbox: list[EmailMultiAlternatives],
+) -> None:
+    # Given
+    now = timezone.now()
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.save()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+    )
+    mock_api_usage = mocker.patch(
+        "organisations.task_helpers.get_current_api_usage",
+    )
+    usage = 21
+    assert usage < min(API_USAGE_ALERT_THRESHOLDS)
+    mock_api_usage.return_value = usage
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
+    assert not OrganisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+    ).exists()
+
+    # When
+    handle_api_usage_notifications()
+
+    # Then
+    mock_api_usage.assert_called_once_with(organisation.id, "-14d")
+
+    assert len(mailoutbox) == 0
+
+    assert (
+        OrganisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 0
+    )
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
