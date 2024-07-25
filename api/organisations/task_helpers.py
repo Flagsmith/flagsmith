@@ -39,7 +39,7 @@ def send_api_flags_blocked_notification(organisation: Organisation) -> None:
     )
 
 
-def send_api_usage_notification(
+def _send_api_usage_notification(
     organisation: Organisation, matched_threshold: int
 ) -> None:
     """
@@ -86,7 +86,7 @@ def send_api_usage_notification(
     )
 
 
-def _handle_api_usage_notifications(organisation: Organisation) -> None:
+def handle_api_usage_notification_for_organisation(organisation: Organisation) -> None:
     now = timezone.now()
 
     if organisation.subscription.is_free_plan:
@@ -134,4 +134,4 @@ def _handle_api_usage_notifications(organisation: Organisation) -> None:
         # Already sent the max notification level so don't resend.
         return
 
-    send_api_usage_notification(organisation, matched_threshold)
+    _send_api_usage_notification(organisation, matched_threshold)

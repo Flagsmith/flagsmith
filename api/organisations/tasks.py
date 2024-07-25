@@ -43,7 +43,7 @@ from .subscriptions.constants import (
     SubscriptionCacheEntity,
 )
 from .task_helpers import (
-    _handle_api_usage_notifications,
+    handle_api_usage_notification_for_organisation,
     send_api_flags_blocked_notification,
 )
 
@@ -122,7 +122,7 @@ def handle_api_usage_notifications() -> None:
             continue
 
         try:
-            _handle_api_usage_notifications(organisation)
+            handle_api_usage_notification_for_organisation(organisation)
         except RuntimeError:
             logger.error(
                 f"Error processing api usage for organisation {organisation.id}",
