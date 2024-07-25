@@ -435,7 +435,7 @@ const ProjectSettingsPage = class extends Component {
                           />
                         )}
                       </FormGroup>
-                      {!Utils.getIsEdge() && (
+                      {!Utils.getIsEdge() && !!Utils.isSaas() && (
                         <FormGroup className='mt-4 col-md-6'>
                           <Row className='mb-2'>
                             <h5 className='mb-0 mr-3'>

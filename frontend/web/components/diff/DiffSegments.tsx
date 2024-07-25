@@ -6,17 +6,44 @@ import { sortBy } from 'lodash'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import Utils from 'common/utils/utils'
+import Icon from 'components/Icon'
+import Tooltip from 'components/Tooltip'
+import { Link } from 'react-router-dom'
 
 type DiffSegment = {
   diff: TDiffSegment
+  projectId: string
+  environmentId: string
 }
 
 const widths = [200, 80, 105]
-const DiffSegment: FC<DiffSegment> = ({ diff }) => {
+const DiffSegment: FC<DiffSegment> = ({ diff, environmentId, projectId }) => {
   return (
     <div className={'flex-row list-item list-item-sm'}>
-      <div style={{ width: widths[0] }} className='fw-semibold table-column'>
-        {diff.segment?.name}
+      <div style={{ width: widths[0] }} className='table-column'>
+        <div>
+          <Tooltip
+            title={
+              <>
+                <div className='d-flex fw-semibold gap-2 align-items-center'>
+                  {!!diff.conflict && <Icon name='warning' width={16} />}
+                  {diff.segment?.name}
+                </div>
+                {!!diff.conflict && (
+                  <Link
+                    to={`/project/${projectId}/environment/${environmentId}/change-requests/${diff.conflict.original_cr_id}`}
+                  >
+                    View Change Request
+                  </Link>
+                )}
+              </>
+            }
+          >
+            {diff.conflict
+              ? 'A change request was published since the creation of this one that also modified the value for this segment.'
+              : null}
+          </Tooltip>
+        </div>
       </div>
       <div style={{ width: widths[1] }} className='table-column text-center'>
         <DiffString
@@ -42,8 +69,14 @@ const DiffSegment: FC<DiffSegment> = ({ diff }) => {
 
 type DiffSegmentsType = {
   diffs: TDiffSegment[] | undefined
+  projectId: string
+  environmentId: string
 }
-const DiffSegments: FC<DiffSegmentsType> = ({ diffs }) => {
+const DiffSegments: FC<DiffSegmentsType> = ({
+  diffs,
+  environmentId,
+  projectId,
+}) => {
   const { created, deleted, modified, unChanged } = useMemo(() => {
     const created: TDiffSegment[] = []
     const deleted: TDiffSegment[] = []
@@ -91,7 +124,12 @@ const DiffSegments: FC<DiffSegmentsType> = ({ diffs }) => {
         >
           {tableHeader}
           {created.map((diff, i) => (
-            <DiffSegment key={i} diff={diff} />
+            <DiffSegment
+              environmentId={environmentId}
+              projectId={projectId}
+              key={i}
+              diff={diff}
+            />
           ))}
         </TabItem>
       )}
@@ -105,7 +143,12 @@ const DiffSegments: FC<DiffSegmentsType> = ({ diffs }) => {
         >
           {tableHeader}
           {deleted.map((diff, i) => (
-            <DiffSegment key={i} diff={diff} />
+            <DiffSegment
+              environmentId={environmentId}
+              projectId={projectId}
+              key={i}
+              diff={diff}
+            />
           ))}
         </TabItem>
       )}
@@ -119,7 +162,12 @@ const DiffSegments: FC<DiffSegmentsType> = ({ diffs }) => {
         >
           {tableHeader}
           {modified.map((diff, i) => (
-            <DiffSegment key={i} diff={diff} />
+            <DiffSegment
+              environmentId={environmentId}
+              projectId={projectId}
+              key={i}
+              diff={diff}
+            />
           ))}
         </TabItem>
       )}
@@ -133,7 +181,12 @@ const DiffSegments: FC<DiffSegmentsType> = ({ diffs }) => {
         >
           {tableHeader}
           {unChanged.map((diff, i) => (
-            <DiffSegment key={i} diff={diff} />
+            <DiffSegment
+              environmentId={environmentId}
+              projectId={projectId}
+              key={i}
+              diff={diff}
+            />
           ))}
         </TabItem>
       )}
