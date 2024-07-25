@@ -163,7 +163,9 @@ class Identity(models.Model):
         :return: List of matching segments
         """
         matching_segments = []
-        traits = self.identity_traits.all() if traits is None else traits
+        traits = (
+            self.identity_traits.all() if (traits is None and self.id) else traits or []
+        )
 
         if overrides_only:
             all_segments = self.environment.get_segments_from_cache()
