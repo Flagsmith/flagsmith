@@ -2,6 +2,7 @@ import AccountStore from 'common/stores/account-store'
 import ProjectStore from 'common/stores/project-store'
 import Project from 'common/project'
 import {
+  ChangeSet,
   ContentType,
   FeatureState,
   FeatureStateValue,
@@ -519,7 +520,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
-
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (
@@ -530,8 +530,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
-
   isSaas: () => global.flagsmithVersion?.backend?.is_saas,
+
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },

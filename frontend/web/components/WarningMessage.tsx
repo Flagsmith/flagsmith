@@ -1,10 +1,10 @@
-import React, { FC } from 'react'
+import React, { FC, ReactNode } from 'react'
 import Icon from './Icon'
 import Button from './base/forms/Button'
 import Constants from 'common/constants'
 
 type WarningMessageType = {
-  warningMessage: string
+  warningMessage: ReactNode
   enabledButton?: boolean
   warningMessageClass?: string
 }

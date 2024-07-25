@@ -482,8 +482,14 @@ class TheComponent extends Component {
       segment_name: this.state.selectedSegment.label,
       value: `${this.props.controlValue || ''}`,
     }
-    this.props.onChange([newValue].concat(value))
+    this.props.onChange(value.concat([newValue]))
     this.setState({ selectedSegment: null })
+    setTimeout(() => {
+      const container = document.querySelector('.tabs-content .tab-active')
+      if (container) {
+        container.scrollTop = container.scrollHeight
+      }
+    }, 0)
   }
 
   confirmRemove = (i) => {
