@@ -3,11 +3,8 @@ import math
 from datetime import timedelta
 
 from app_analytics.influxdb_wrapper import get_current_api_usage
-from dateutil.relativedelta import relativedelta
 from django.conf import settings
-from django.core.mail import send_mail
 from django.db.models import F, Max
-from django.template.loader import render_to_string
 from django.utils import timezone
 from task_processor.decorators import (
     register_recurring_task,
@@ -25,7 +22,6 @@ from organisations.models import (
     Organisation,
     OrganisationAPIBilling,
     OrganisationAPIUsageNotification,
-    OrganisationRole,
     Subscription,
 )
 from organisations.subscriptions.constants import FREE_PLAN_ID
@@ -37,7 +33,6 @@ from users.models import FFAdminUser
 from .constants import (
     ALERT_EMAIL_MESSAGE,
     ALERT_EMAIL_SUBJECT,
-    API_USAGE_ALERT_THRESHOLDS,
     API_USAGE_GRACE_PERIOD,
 )
 from .subscriptions.constants import (
@@ -46,6 +41,10 @@ from .subscriptions.constants import (
     STARTUP,
     STARTUP_V2,
     SubscriptionCacheEntity,
+)
+from .task_helpers import (
+    handle_api_usage_notification_for_organisation,
+    send_api_flags_blocked_notification,
 )
 
 logger = logging.getLogger(__name__)
@@ -105,104 +104,7 @@ def finish_subscription_cancellation() -> None:
         subscription.save_as_free_subscription()
 
 
-def send_api_usage_notification(
-    organisation: Organisation, matched_threshold: int
-) -> None:
-    """
-    Send notification to users that the API has breached a threshold.
-
-    Only admins are included if the matched threshold is under
-    100% of the API usage limits.
-    """
-
-    recipient_list = FFAdminUser.objects.filter(
-        userorganisation__organisation=organisation,
-    )
-
-    if matched_threshold < 100:
-        message = "organisations/api_usage_notification.txt"
-        html_message = "organisations/api_usage_notification.html"
-
-        # Since threshold < 100 only include admins.
-        recipient_list = recipient_list.filter(
-            userorganisation__role=OrganisationRole.ADMIN,
-        )
-    else:
-        message = "organisations/api_usage_notification_limit.txt"
-        html_message = "organisations/api_usage_notification_limit.html"
-
-    context = {
-        "organisation": organisation,
-        "matched_threshold": matched_threshold,
-    }
-
-    send_mail(
-        subject=f"Flagsmith API use has reached {matched_threshold}%",
-        message=render_to_string(message, context),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=list(recipient_list.values_list("email", flat=True)),
-        html_message=render_to_string(html_message, context),
-        fail_silently=True,
-    )
-
-    OrganisationAPIUsageNotification.objects.create(
-        organisation=organisation,
-        percent_usage=matched_threshold,
-        notified_at=timezone.now(),
-    )
-
-
-def _handle_api_usage_notifications(organisation: Organisation) -> None:
-    now = timezone.now()
-
-    if organisation.subscription.is_free_plan:
-        allowed_api_calls = organisation.subscription.max_api_calls
-        # Default to a rolling month for free accounts
-        days = 30
-        period_starts_at = now - timedelta(days)
-    elif not organisation.has_subscription_information_cache():
-        # Since the calling code is a list of many organisations
-        # log the error and return without raising an exception.
-        logger.error(
-            f"Paid organisation {organisation.id} is missing subscription information cache"
-        )
-        return
-    else:
-        subscription_cache = organisation.subscription_information_cache
-        billing_starts_at = subscription_cache.current_billing_term_starts_at
-
-        # Truncate to the closest active month to get start of current period.
-        month_delta = relativedelta(now, billing_starts_at).months
-        period_starts_at = relativedelta(months=month_delta) + billing_starts_at
-
-        days = relativedelta(now, period_starts_at).days
-        allowed_api_calls = subscription_cache.allowed_30d_api_calls
-
-    api_usage = get_current_api_usage(organisation.id, f"-{days}d")
-
-    api_usage_percent = int(100 * api_usage / allowed_api_calls)
-
-    matched_threshold = None
-    for threshold in API_USAGE_ALERT_THRESHOLDS:
-        if threshold > api_usage_percent:
-            break
-
-        matched_threshold = threshold
-
-    # Didn't match even the lowest threshold, so no notification.
-    if matched_threshold is None:
-        return
-
-    if OrganisationAPIUsageNotification.objects.filter(
-        notified_at__gt=period_starts_at,
-        percent_usage__gte=matched_threshold,
-    ).exists():
-        # Already sent the max notification level so don't resend.
-        return
-
-    send_api_usage_notification(organisation, matched_threshold)
-
-
+# Task enqueued in register_recurring_tasks below.
 def handle_api_usage_notifications() -> None:
     flagsmith_client = get_client("local", local_eval=True)
 
@@ -220,7 +122,7 @@ def handle_api_usage_notifications() -> None:
             continue
 
         try:
-            _handle_api_usage_notifications(organisation)
+            handle_api_usage_notification_for_organisation(organisation)
         except RuntimeError:
             logger.error(
                 f"Error processing api usage for organisation {organisation.id}",
@@ -228,6 +130,7 @@ def handle_api_usage_notifications() -> None:
             )
 
 
+# Task enqueued in register_recurring_tasks below.
 def charge_for_api_call_count_overages():
     now = timezone.now()
 
@@ -332,6 +235,7 @@ def charge_for_api_call_count_overages():
         )
 
 
+# Task enqueued in register_recurring_tasks below.
 def restrict_use_due_to_api_limit_grace_period_over() -> None:
     """
     Restrict API use once a grace period has ended.
@@ -389,6 +293,9 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
         organisation.stop_serving_flags = stop_serving
         organisation.block_access_to_admin = block_access
 
+        if stop_serving:
+            send_api_flags_blocked_notification(organisation)
+
         # Save models individually to allow lifecycle hooks to fire.
         organisation.save()
 
@@ -397,6 +304,7 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
     APILimitAccessBlock.objects.bulk_create(api_limit_access_blocks)
 
 
+# Task enqueued in register_recurring_tasks below.
 def unrestrict_after_api_limit_grace_period_is_stale() -> None:
     """
     This task handles accounts that have breached the API limit
