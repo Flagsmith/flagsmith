@@ -12,7 +12,6 @@ export default class ErrorMessage extends PureComponent {
     const errorMessageClassName = `alert alert-danger ${
       this.props.errorMessageClass || 'flex-1 align-items-center'
     }`
-    console.log(this.props.error)
     const error =
       this.props.error?.data?.metadata?.find((item) =>
         // eslint-disable-next-line no-prototype-builtins
