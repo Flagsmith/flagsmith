@@ -1,5 +1,9 @@
 import React, { FC, useEffect, useState } from 'react'
-import { FeatureState } from 'common/types/responses'
+import {
+  FeatureConflict,
+  FeatureState,
+  FeatureStateWithConflict,
+} from 'common/types/responses'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
@@ -14,19 +18,26 @@ import DiffEnabled from './DiffEnabled'
 import DiffSegments from './DiffSegments'
 import DiffVariations from './DiffVariations'
 import InfoMessage from 'components/InfoMessage'
+import Icon from 'components/Icon'
+import WarningMessage from 'components/WarningMessage'
+import { Link } from 'react-router-dom'
 
 type FeatureDiffType = {
-  oldState: FeatureState[]
-  newState: FeatureState[]
+  oldState: FeatureStateWithConflict[]
+  newState: FeatureStateWithConflict[]
   noChangesMessage?: string
   featureId: number
   projectId: string
+  environmentId: string
   tabTheme?: string
+  conflicts?: FeatureConflict[] | undefined
   disableSegments?: boolean
 }
 
 const DiffFeature: FC<FeatureDiffType> = ({
+  conflicts,
   disableSegments,
+  environmentId,
   featureId,
   newState,
   noChangesMessage,
@@ -42,16 +53,18 @@ const DiffFeature: FC<FeatureDiffType> = ({
   })
 
   const diff = getFeatureStateDiff(oldEnv, newEnv)
-  const { totalChanges } = diff
+  const { conflict: valueConflict, totalChanges } = diff
   const [value, setValue] = useState(0)
 
   const { data: segments } = useGetSegmentsQuery({
+    include_feature_specific: true,
+    page_size: 1000,
     projectId,
   })
 
   const segmentDiffs = disableSegments
     ? { diffs: [], totalChanges: 0 }
-    : getSegmentDiff(oldState, newState, segments?.results)
+    : getSegmentDiff(oldState, newState, segments?.results, conflicts)
   const variationDiffs = getVariationDiff(oldEnv, newEnv, feature)
   const totalSegmentChanges = segmentDiffs?.totalChanges
   const totalVariationChanges = variationDiffs?.totalChanges
@@ -82,8 +95,9 @@ const DiffFeature: FC<FeatureDiffType> = ({
           >
             <TabItem
               tabLabel={
-                <div>
+                <div className='d-flex justify-content-center gap-1 align-items-center'>
                   Value
+                  {!!valueConflict && <Icon width={16} name='warning' />}
                   {totalChanges ? (
                     <span className='unread'>{totalChanges}</span>
                   ) : null}
@@ -93,6 +107,28 @@ const DiffFeature: FC<FeatureDiffType> = ({
               {!totalChanges && (
                 <div className='mt-4'>
                   <InfoMessage>No Changes Found</InfoMessage>
+                </div>
+              )}
+              {!!valueConflict && (
+                <div className='mt-4'>
+                  <WarningMessage
+                    warningMessage={
+                      <div>
+                        A change request was published since the creation of
+                        this one that also modified the value.
+                        <br />
+                        Please review the following changes to make sure they
+                        are correct.
+                        <div>
+                          <Link
+                            to={`/project/${projectId}/environment/${environmentId}/change-requests/${valueConflict.original_cr_id}`}
+                          >
+                            View published change request
+                          </Link>
+                        </div>
+                      </div>
+                    }
+                  />
                 </div>
               )}
               <div className='panel-content'>
@@ -150,8 +186,11 @@ const DiffFeature: FC<FeatureDiffType> = ({
             {!!segmentDiffs?.diffs.length && (
               <TabItem
                 tabLabel={
-                  <div>
+                  <div className='d-flex justify-content-center gap-1 align-items-center'>
                     Segment Overrides
+                    {!!segmentDiffs.totalConflicts && (
+                      <Icon width={16} name='warning' />
+                    )}
                     {!!segmentDiffs.totalChanges && (
                       <span className='unread'>
                         {segmentDiffs.totalChanges}
@@ -160,7 +199,28 @@ const DiffFeature: FC<FeatureDiffType> = ({
                   </div>
                 }
               >
-                <DiffSegments diffs={segmentDiffs.diffs} />
+                {!!segmentDiffs.totalConflicts && (
+                  <div className='mt-4'>
+                    <WarningMessage
+                      warningMessage={
+                        <div>
+                          A change request was published since the creation of
+                          this one that also modified{' '}
+                          {segmentDiffs.totalConflicts === 1 ? 'one' : 'some'}{' '}
+                          of the segment overrides.
+                          <br />
+                          Please review the following changes to make sure they
+                          are correct.
+                        </div>
+                      }
+                    />
+                  </div>
+                )}
+                <DiffSegments
+                  diffs={segmentDiffs.diffs}
+                  projectId={projectId}
+                  environmentId={environmentId}
+                />
               </TabItem>
             )}
           </Tabs>

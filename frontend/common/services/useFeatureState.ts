@@ -4,9 +4,8 @@ import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 import { getFeatureSegment } from './useFeatureSegment'
 import { getStore } from 'common/store'
-const _data = require('../data/base/_data')
 export const addFeatureSegmentsToFeatureStates = async (v) => {
-  if (!v.feature_segment) {
+  if (typeof v.feature_segment !== 'number') {
     return v
   }
   const featureSegmentData = await getFeatureSegment(getStore(), {

@@ -472,6 +472,14 @@ export type Role = {
   organisation: number
 }
 
+export type ChangeSet = {
+  feature: number
+  live_from: string | null
+  feature_states_to_update: FeatureState[]
+  feature_states_to_create: FeatureState[]
+  segment_ids_to_delete_overrides: number[]
+}
+
 export type RolePermissionUser = {
   user: number
   role: number
@@ -483,6 +491,15 @@ export type RolePermissionGroup = {
   role: number
   id: number
   role_name: string
+}
+export type FeatureConflict = {
+  segment_id: number | null
+  original_cr_id: number | null
+  published_at: string
+  is_environment_default: boolean
+}
+export type FeatureStateWithConflict = FeatureState & {
+  conflict?: FeatureConflict
 }
 export type ChangeRequest = {
   id: number
@@ -501,6 +518,7 @@ export type ChangeRequest = {
     user: number
     approved_at: null | string
   }[]
+  change_sets?: ChangeSet[]
   is_approved: boolean
   is_committed: boolean
   group_assignments: { group: number }[]
@@ -508,6 +526,8 @@ export type ChangeRequest = {
     uuid: string
     feature_states: FeatureState[]
   }[]
+
+  conflicts: FeatureConflict[]
 }
 export type FeatureVersion = {
   created_at: string

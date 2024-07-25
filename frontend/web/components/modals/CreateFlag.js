@@ -766,10 +766,9 @@ const CreateFlag = class extends Component {
               }
               placeholder='E.g. header_size'
             />
-            <ErrorMessage error={error?.name?.[0]} />
           </FormGroup>
         )}
-
+        <ErrorMessage error={error?.message || error?.name?.[0] || error} />
         {identity && description && (
           <FormGroup className='mb-4 mt-2 mx-3'>
             <InputGroup
@@ -1307,45 +1306,56 @@ const CreateFlag = class extends Component {
                                                 const isReadOnly =
                                                   !manageSegmentOverrides
                                                 return (
-                                                  <SegmentOverrides
-                                                    readOnly={isReadOnly}
-                                                    is4Eyes={is4Eyes}
-                                                    showEditSegment
-                                                    showCreateSegment={
-                                                      this.state
-                                                        .showCreateSegment
-                                                    }
-                                                    setShowCreateSegment={(
-                                                      showCreateSegment,
-                                                    ) =>
-                                                      this.setState({
+                                                  <>
+                                                    <ErrorMessage
+                                                      error={
+                                                        error?.message ||
+                                                        error?.name?.[0] ||
+                                                        error
+                                                      }
+                                                    />
+                                                    <SegmentOverrides
+                                                      readOnly={isReadOnly}
+                                                      is4Eyes={is4Eyes}
+                                                      showEditSegment
+                                                      showCreateSegment={
+                                                        this.state
+                                                          .showCreateSegment
+                                                      }
+                                                      setShowCreateSegment={(
                                                         showCreateSegment,
-                                                      })
-                                                    }
-                                                    feature={projectFlag.id}
-                                                    projectId={
-                                                      this.props.projectId
-                                                    }
-                                                    multivariateOptions={
-                                                      multivariate_options
-                                                    }
-                                                    environmentId={
-                                                      this.props.environmentId
-                                                    }
-                                                    value={
-                                                      this.props
-                                                        .segmentOverrides
-                                                    }
-                                                    controlValue={initial_value}
-                                                    onChange={(v) => {
-                                                      this.setState({
-                                                        segmentsChanged: true,
-                                                      })
-                                                      this.props.updateSegments(
-                                                        v,
-                                                      )
-                                                    }}
-                                                  />
+                                                      ) =>
+                                                        this.setState({
+                                                          showCreateSegment,
+                                                        })
+                                                      }
+                                                      feature={projectFlag.id}
+                                                      projectId={
+                                                        this.props.projectId
+                                                      }
+                                                      multivariateOptions={
+                                                        multivariate_options
+                                                      }
+                                                      environmentId={
+                                                        this.props.environmentId
+                                                      }
+                                                      value={
+                                                        this.props
+                                                          .segmentOverrides
+                                                      }
+                                                      controlValue={
+                                                        initial_value
+                                                      }
+                                                      onChange={(v) => {
+                                                        this.setState({
+                                                          segmentsChanged: true,
+                                                        })
+                                                        this.props.updateSegments(
+                                                          v,
+                                                        )
+                                                      }}
+                                                    />
+                                                  </>
                                                 )
                                               }}
                                             </Permission>
@@ -2000,9 +2010,6 @@ const FeatureProvider = (WrappedComponent) => {
               },
               projectFlag: newProjectFlag,
             })
-          }
-          if (changeRequest) {
-            closeModal()
           }
         },
       )
