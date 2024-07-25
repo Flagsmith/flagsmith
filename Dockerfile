@@ -225,7 +225,7 @@ EXPOSE 8080
 
 CMD ["node",  "./api/index.js"]
 
-USER node
+USER nobody
 
 # * oss-unified [api-runtime, build-python, build-node-django]
 FROM api-runtime as oss-unified
