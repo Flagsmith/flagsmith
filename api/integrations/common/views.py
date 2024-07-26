@@ -74,3 +74,28 @@ class ProjectIntegrationBaseViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer: BaseSerializer) -> None:
         serializer.save(project_id=self.kwargs["project_pk"])
+
+
+class OrganisationIntegrationBaseViewSet(viewsets.ModelViewSet):
+    serializer_class = None
+    pagination_class = None
+    model_class = None
+
+    def get_queryset(self) -> QuerySet:
+        if getattr(self, "swagger_fake_view", False):
+            return self.model_class.objects.none()
+
+        return self.model_class.objects.filter(
+            organisation_id=self.kwargs["organisation_pk"]
+        )
+
+    def perform_create(self, serializer: BaseSerializer) -> None:
+        organisation_id = self.kwargs["organisation_pk"]
+        if self.model_class.objects.filter(organisation_id=organisation_id).exists():
+            raise ValidationError(
+                "This integration already exists for this organisation."
+            )
+        serializer.save(organisation_id=organisation_id)
+
+    def perform_update(self, serializer: BaseSerializer) -> None:
+        serializer.save(organisation_id=self.kwargs["organisation_pk"])

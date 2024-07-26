@@ -17,6 +17,9 @@ from api_keys.models import MasterAPIKey
 from audit.related_object_type import RelatedObjectType
 from projects.models import Project
 
+if typing.TYPE_CHECKING:
+    from organisations.models import Organisation
+
 RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 
 
@@ -67,6 +70,21 @@ class AuditLog(LifecycleModel):
     class Meta:
         verbose_name_plural = "Audit Logs"
         ordering = ("-created_date",)
+
+    @property
+    def organisation(self) -> "Organisation | None":
+        # TODO properly implement organisation relation
+        # maybe the relation list should not be _that_ exhaustive...
+        for relation in (
+            "project",
+            "environment",
+            "author",
+            "master_api_key",
+            "history_record",
+        ):
+            if hasattr(related_instance := getattr(self, relation), "organisation"):
+                return related_instance.organisation
+        return None
 
     @property
     def environment_document_updated(self) -> bool:

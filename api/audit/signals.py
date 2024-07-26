@@ -6,6 +6,7 @@ from django.dispatch import receiver
 
 from audit.models import AuditLog, RelatedObjectType
 from audit.serializers import AuditLogListSerializer
+from integrations.common.models import IntegrationsModel
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
 from integrations.grafana.grafana import GrafanaWrapper
@@ -41,12 +42,16 @@ def call_webhooks(sender, instance, **kwargs):
         )
 
 
-def _get_integration_config(instance, integration_name):
-    if hasattr(instance.project, integration_name):
-        return getattr(instance.project, integration_name)
-    elif hasattr(instance.environment, integration_name):
-        return getattr(instance.environment, integration_name)
-
+def _get_integration_config(
+    instance: AuditLog, integration_name: str
+) -> IntegrationsModel | None:
+    match True:
+        case hasattr(instance.organisation as organisation, integration_name):
+            return getattr(organisation, integration_name)
+        case hasattr(instance.project as project, integration_name):
+            return getattr(project, integration_name)
+        case hasattr(instance.environment as environment, integration_name):
+            return getattr(environment, integration_name)
     return None
 
 
