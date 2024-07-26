@@ -291,6 +291,10 @@ const config: Config = {
     ],
 
     themes: ['docusaurus-theme-openapi-docs'],
+
+    scripts: ['/js/crisp-chat.js'],
+
+    clientModules: [require.resolve('./plugins/crisp-chat-links.js')],
 };
 
 export default async function createConfig() {
