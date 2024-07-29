@@ -259,7 +259,7 @@ app.get('/health', (req, res) => {
   res.send('OK')
 })
 
-app.get('/version', (req, res) => {
+app.get('/version/v2/', (req, res) => {
   let commitSha = 'Unknown'
   let imageTag = 'Unknown'
 
