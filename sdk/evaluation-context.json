@@ -109,7 +109,15 @@
     },
     "properties": {
         "environment": {
-            "$ref": "#/$defs/EnvironmentEvaluationContext"
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/EnvironmentEvaluationContext"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null
         },
         "identity": {
             "anyOf": [
@@ -134,9 +142,6 @@
             "default": null
         }
     },
-    "required": [
-        "environment"
-    ],
     "title": "FlagsmithEvaluationContext",
     "type": "object"
 }
