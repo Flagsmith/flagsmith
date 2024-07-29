@@ -33,6 +33,9 @@ def test_migrate_to_edge_v2__new_projects__dont_migrate(
     call_command("migrate_to_edge_v2")
 
     # Then
+    # unmigrated projects were migrated
     migrate_project_environments_to_v2_mock.assert_has_calls(
         [mocker.call(project.id) for project in unmigrated_projects]
     )
+    # the migrated `project` was not redundantly migrated
+    migrate_project_environments_to_v2_mock.call_count == len(unmigrated_projects)
