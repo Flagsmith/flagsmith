@@ -9,10 +9,8 @@ import {
   useUpdateEnvironmentMutation,
 } from 'common/services/useEnvironment'
 import { MetadataField, Metadata } from 'common/types/responses'
-import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
-import Tooltip from 'components/Tooltip'
 import { sortBy } from 'lodash'
 import Switch from 'components/Switch'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -347,7 +345,7 @@ const MetadataRow: FC<MetadataRowType> = ({
           />
         </Flex>
       ) : (
-        <Flex className='flex-row' style={{ minWidth: '300px' }}>
+        <Flex className='flex-row mt-1' style={{ minWidth: '300px' }}>
           <InputGroup
             textarea={metadata?.type === 'multiline_str'}
             onBlur={saveMetadata}
@@ -358,13 +356,13 @@ const MetadataRow: FC<MetadataRowType> = ({
                 width: '250px',
               },
             }}
+            noMargin
             isValid={Utils.validateMetadataType(metadata?.type, metadataValue)}
             onChange={(e: InputEvent) => {
               setMetadataValue(Utils.safeParseEventValue(e))
               setMetadataValueChanged(true)
             }}
             type='text'
-            placeholder='Custom Field Value'
           />
         </Flex>
       )}
