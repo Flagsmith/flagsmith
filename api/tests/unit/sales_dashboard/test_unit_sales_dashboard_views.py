@@ -128,6 +128,25 @@ def test_list_organisations_search_by_user_email(
     assert list(response.context_data["organisation_list"]) == [organisation]
 
 
+def test_list_organisations_search_by_user_email_returns_no_results_when_no_user_exists(
+    organisation: Organisation,
+    client: Client,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    search_term = "doesnotexist@madeupdomain.com"
+
+    url = "%s?search=%s" % (reverse("sales_dashboard:index"), search_term)
+    client.force_login(admin_user)
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == 200
+    assert list(response.context_data["organisation_list"]) == []
+
+
 def test_list_organisations_filter_plan(
     organisation: Organisation,
     chargebee_subscription: Subscription,
