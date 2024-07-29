@@ -21,6 +21,8 @@
 #     --secret="id=sse_pgp_pkey,src=./sse_pgp_pkey.key"\
 #     --secret="id=github_private_cloud_token,env=GH_TOKEN" . 
 
+# Adding docker command
+
 # Build a Private Cloud Unified image:
 # $ GH_TOKEN=$(gh auth token) docker build -t flagsmith-private-cloud:dev --target private-cloud-unified \
 #     --secret="id=github_private_cloud_token,env=GH_TOKEN" . 
