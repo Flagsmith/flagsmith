@@ -134,7 +134,7 @@ def process_subscription(request: Request) -> Response:  # noqa: C901
         )
         return Response(status=status.HTTP_200_OK)
 
-    if subscription["status"] != "active":
+    if subscription["status"] not in ("active", "in_trial"):
         # Nothing to do, so return early.
         return Response(status=status.HTTP_200_OK)
 
