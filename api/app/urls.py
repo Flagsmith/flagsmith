@@ -16,6 +16,7 @@ urlpatterns = [
     re_path(r"^admin/", admin.site.urls),
     re_path(r"^health", include("health_check.urls", namespace="health")),
     re_path(r"^version", views.version_info, name="version-info"),
+    re_path(r"^version/v2/", views.version_info, name="version-info"),
     re_path(
         r"^sales-dashboard/",
         include("sales_dashboard.urls", namespace="sales_dashboard"),
