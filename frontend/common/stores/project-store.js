@@ -84,15 +84,30 @@ const controller = {
 
   editEnv: (env) => {
     API.trackEvent(Constants.events.EDIT_ENVIRONMENT)
-    data.put(`${Project.api}environments/${env.api_key}/`, env).then((res) => {
-      const index = _.findIndex(store.model.environments, { id: env.id })
-      store.model.environments[index] = res
-      store.saved()
-      getStore().dispatch(
-        environmentService.util.invalidateTags(['Environment']),
-      )
-      AppActions.refreshOrganisation()
-    })
+    data
+      .put(`${Project.api}environments/${env.api_key}/`, env)
+      .then((res) => {
+        const index = _.findIndex(store.model.environments, { id: env.id })
+        store.model.environments[index] = res
+        store.saved()
+        getStore().dispatch(
+          environmentService.util.invalidateTags(['Environment']),
+        )
+        AppActions.refreshOrganisation()
+      })
+      .catch((e) => {
+        e.json()
+          .then((result) => {
+            if (result?.metadata?.[0]) {
+              toast(result.metadata[0], 'danger')
+            } else {
+              toast('Error updating the environment', 'danger')
+            }
+          })
+          .catch((e) => {
+            API.ajaxHandler(store, e)
+          })
+      })
   },
   editProject: (project) => {
     store.saving()

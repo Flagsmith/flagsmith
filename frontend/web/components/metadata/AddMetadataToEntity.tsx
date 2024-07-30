@@ -9,12 +9,11 @@ import {
   useUpdateEnvironmentMutation,
 } from 'common/services/useEnvironment'
 import { MetadataField, Metadata } from 'common/types/responses'
-import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
-import Tooltip from 'components/Tooltip'
 import { sortBy } from 'lodash'
 import Switch from 'components/Switch'
+import InputGroup from 'components/base/forms/InputGroup'
 
 export type CustomMetadataField = MetadataField & {
   metadataModelFieldId: number | string | null
@@ -247,8 +246,8 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
           }}
           renderNoResults={
             <FormGroup>
-              No custom fields configured for {entity} entity. Add custom fields in
-              your{' '}
+              No custom fields configured for {entity} entity. Add custom fields
+              in your{' '}
               <a
                 href={`/project/${projectId}/settings?tab=metadata`}
                 target='_blank'
@@ -334,32 +333,7 @@ const MetadataRow: FC<MetadataRowType> = ({
       <Flex className='table-column'>{`${metadata?.name} ${
         metadata?.isRequiredFor ? '*' : ''
       }`}</Flex>
-      {metadata?.type !== 'bool' ? (
-        <Flex className='flex-row' style={{ minWidth: '300px' }}>
-          <Tooltip
-            title={
-              <Input
-                value={metadataValue}
-                onBlur={saveMetadata}
-                onChange={(e: InputEvent) => {
-                  setMetadataValue(Utils.safeParseEventValue(e))
-                  setMetadataValueChanged(true)
-                }}
-                className='mr-2'
-                style={{ width: '250px' }}
-                placeholder='Field Value'
-                isValid={Utils.validateMetadataType(
-                  metadata?.type,
-                  metadataValue,
-                )}
-              />
-            }
-            place='top'
-          >
-            {`This value has to be of type ${metadata?.type}`}
-          </Tooltip>
-        </Flex>
-      ) : (
+      {metadata?.type === 'bool' ? (
         <Flex className='flex-row'>
           <Switch
             checked={!!metadataValue}
@@ -368,6 +342,27 @@ const MetadataRow: FC<MetadataRowType> = ({
               setMetadataValueChanged(true)
               saveMetadata()
             }}
+          />
+        </Flex>
+      ) : (
+        <Flex className='flex-row mt-1' style={{ minWidth: '300px' }}>
+          <InputGroup
+            textarea={metadata?.type === 'multiline_str'}
+            onBlur={saveMetadata}
+            value={metadataValue}
+            inputProps={{
+              style: {
+                height: metadata?.type === 'multiline_str' ? '65px' : '44px',
+                width: '250px',
+              },
+            }}
+            noMargin
+            isValid={Utils.validateMetadataType(metadata?.type, metadataValue)}
+            onChange={(e: InputEvent) => {
+              setMetadataValue(Utils.safeParseEventValue(e))
+              setMetadataValueChanged(true)
+            }}
+            type='text'
           />
         </Flex>
       )}

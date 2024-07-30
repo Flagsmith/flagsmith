@@ -154,7 +154,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [metadata, setMetadata] = useState<CustomMetadataField[]>(
     segment.metadata,
   )
-  const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
+  const metadataEnable =
+    Utils.getPlansPermission('METADATA') &&
+    Utils.getFlagsmithHasFeature('enable_metadata')
 
   const error = createError || updateError
   const totalSegments = ProjectStore.getTotalSegments() ?? 0
@@ -763,7 +765,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
           <TabItem
             tabLabelString='Custom Fields'
-            tabLabel={<Row className='justify-content-center'>Custom Fields</Row>}
+            tabLabel={
+              <Row className='justify-content-center'>Custom Fields</Row>
+            }
           >
             <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
           </TabItem>
