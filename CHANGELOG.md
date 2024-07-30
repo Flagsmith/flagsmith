@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.133.1](https://github.com/Flagsmith/flagsmith/compare/v2.133.0...v2.133.1) (2024-07-30)
+
+
+### Bug Fixes
+
+* add logic to handle subscriptions in trial ([#4404](https://github.com/Flagsmith/flagsmith/issues/4404)) ([c10e012](https://github.com/Flagsmith/flagsmith/commit/c10e012bf2a22d7d88d140177b37c3ef5f93a0ad))
+* **build:** Use a pre-created user for the frontend image ([#4394](https://github.com/Flagsmith/flagsmith/issues/4394)) ([45ce495](https://github.com/Flagsmith/flagsmith/commit/45ce4952cf64bd47baf8462e5b850c6993eb9b93))
+* casting issue in FE logic for `delete` attribute ([#4398](https://github.com/Flagsmith/flagsmith/issues/4398)) ([cbe0a0c](https://github.com/Flagsmith/flagsmith/commit/cbe0a0c8c25347f90766c1236c08898f8545a7e9))
+* **models/featureevaluationraw:** Add index on crated_at ([#4405](https://github.com/Flagsmith/flagsmith/issues/4405)) ([1f90900](https://github.com/Flagsmith/flagsmith/commit/1f90900505a7001fe24626c569bcf9cefd4c1be5))
+
 ## [2.133.0](https://github.com/Flagsmith/flagsmith/compare/v2.132.0...v2.133.0) (2024-07-25)
 
 
