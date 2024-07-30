@@ -40,7 +40,6 @@ import { getSupportedContentType } from 'common/services/useSupportedContentType
 import { getGithubIntegration } from 'common/services/useGithubIntegration'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
-import MetadataTitle from 'components/metadata/MetadataTitle'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 
 const CreateFlag = class extends Component {
@@ -182,7 +181,10 @@ const CreateFlag = class extends Component {
     ) {
       this.getFeatureUsage()
     }
-    if (Utils.getFlagsmithHasFeature('enable_metadata')) {
+    if (
+      Utils.getPlansPermission('METADATA') &&
+      Utils.getFlagsmithHasFeature('enable_metadata')
+    ) {
       getSupportedContentType(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,
       }).then((res) => {
@@ -550,7 +552,9 @@ const CreateFlag = class extends Component {
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
     let regexValid = true
-    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
+    const metadataEnable =
+      Utils.getPlansPermission('METADATA') &&
+      Utils.getFlagsmithHasFeature('enable_metadata')
     try {
       if (!isEdit && name && regex) {
         regexValid = name.match(new RegExp(regex))
@@ -580,32 +584,24 @@ const CreateFlag = class extends Component {
         )}
         {metadataEnable && featureContentType?.id && (
           <>
-            <MetadataTitle
-              visible={this.state.visible}
-              onVisibleChange={(v) => {
-                this.setState({ visible: v })
+            <label className='mt-1'>Custom Fields</label>
+            <AddMetadataToEntity
+              organisationId={AccountStore.getOrganisation().id}
+              projectId={this.props.projectId}
+              entityId={projectFlag?.id}
+              entityContentType={featureContentType?.id}
+              entity={featureContentType?.model}
+              setHasMetadataRequired={(b) => {
+                this.setState({
+                  hasMetadataRequired: b,
+                })
               }}
-              hasRequiredMetadata={this.state.hasMetadataRequired}
+              onChange={(m) => {
+                this.setState({
+                  metadata: m,
+                })
+              }}
             />
-            {(this.state.hasMetadataRequired || this.state.visible) && (
-              <AddMetadataToEntity
-                organisationId={AccountStore.getOrganisation().id}
-                projectId={this.props.projectId}
-                entityId={projectFlag?.id}
-                entityContentType={featureContentType?.id}
-                entity={featureContentType?.model}
-                setHasMetadataRequired={(b) => {
-                  this.setState({
-                    hasMetadataRequired: b,
-                  })
-                }}
-                onChange={(m) => {
-                  this.setState({
-                    metadata: m,
-                  })
-                }}
-              />
-            )}
           </>
         )}
         {!identity && projectFlag && (
@@ -1971,12 +1967,23 @@ const FeatureProvider = (WrappedComponent) => {
       this.listenTo(
         FeatureListStore,
         'saved',
-        ({ changeRequest, createdFlag, isCreate } = {}) => {
-          toast(
-            `${createdFlag || isCreate ? 'Created' : 'Updated'} ${
-              changeRequest ? 'Change Request' : 'Feature'
-            }`,
-          )
+        ({ changeRequest, createdFlag, error, isCreate } = {}) => {
+          if (error?.data?.metadata) {
+            error.data.metadata?.forEach((m) => {
+              if (Object.keys(m).length > 0) {
+                toast(m.non_field_errors[0], 'danger')
+              }
+            })
+          } else if (error?.data) {
+            toast('Error updating the Flag', 'danger')
+            return
+          } else {
+            toast(
+              `${createdFlag || isCreate ? 'Created' : 'Updated'} ${
+                changeRequest ? 'Change Request' : 'Feature'
+              }`,
+            )
+          }
           const envFlags = FeatureListStore.getEnvironmentFlags()
 
           if (createdFlag) {

@@ -24,7 +24,7 @@ import PageTitle from 'components/PageTitle'
 import Switch from 'components/Switch'
 import { setModalTitle } from 'components/modals/base/ModalDefault'
 import classNames from 'classnames'
-import InfoMessage from 'components/InfoMessage';
+import InfoMessage from 'components/InfoMessage'
 
 const CodeHelp = require('../../components/CodeHelp')
 type SegmentsPageType = {
