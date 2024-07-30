@@ -243,7 +243,6 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
     Since free plans don't have predefined subscription periods, we
     use a rolling thirty day period to filter them.
     """
-
     grace_period = timezone.now() - timedelta(days=API_USAGE_GRACE_PERIOD)
     month_start = timezone.now() - timedelta(30)
     queryset = (
@@ -270,6 +269,9 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
             stop_serving_flags=True,
             block_access_to_admin=True,
         )
+    ).select_related(
+        "subscription_information_cache",
+        "subscription",
     )
 
     api_limit_access_blocks = []
@@ -288,6 +290,17 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
         block_access = flags.is_feature_enabled("api_limiting_block_access_to_admin")
 
         if not stop_serving and not block_access:
+            continue
+
+        if not organisation.has_subscription_information_cache():
+            continue
+
+        subscription_cache = organisation.subscription_information_cache
+        api_usage = get_current_api_usage(organisation.id, "30d")
+        if api_usage / subscription_cache.allowed_30d_api_calls < 1.0:
+            logger.info(
+                f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."
+            )
             continue
 
         organisation.stop_serving_flags = stop_serving
