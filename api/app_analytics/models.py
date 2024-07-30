@@ -83,6 +83,14 @@ class FeatureEvaluationRaw(models.Model):
     identity_identifier = models.CharField(max_length=2000, null=True, default=None)
     enabled_when_evaluated = models.BooleanField(null=True, default=None)
 
+    class Meta:
+        indexes = [
+            models.Index(
+                fields=["created_at"],
+                name="f_evaluation_created_at_idx",
+            ),
+        ]
+
 
 class FeatureEvaluationBucket(AbstractBucket):
     feature_name = models.CharField(max_length=2000)
