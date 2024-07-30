@@ -1177,7 +1177,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
             chargebee_email="test@example.com",
         )
         org.subscription.subscription_id = "fancy_sub_id23"
-        org.subscription.plan = "scale-up-v2"
+        org.subscription.plan = FREE_PLAN_ID
         org.subscription.save()
 
     mock_api_usage = mocker.patch(
