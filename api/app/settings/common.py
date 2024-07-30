@@ -509,6 +509,10 @@ LOGIN_URL = "/admin/login/"
 LOGOUT_URL = "/admin/logout/"
 
 # Enable E2E tests
+E2E_TEST_AUTH_TOKEN = env.str("E2E_TEST_AUTH_TOKEN", default=None)
+if E2E_TEST_AUTH_TOKEN is not None:
+    MIDDLEWARE.append("e2etests.middleware.E2ETestMiddleware")
+
 ENABLE_FE_E2E = env.bool("ENABLE_FE_E2E", default=False)
 # Email associated with user that is used by front end for end to end testing purposes
 E2E_TEST_EMAIL_DOMAIN = "flagsmithe2etestdomain.io"

@@ -1,15 +1,12 @@
-import os
 import typing
 
 from django.db.models import Model
 from rest_framework.exceptions import APIException, PermissionDenied
 from rest_framework.permissions import BasePermission, IsAuthenticated
 
+from e2etests.permissions import E2ETestPermissionMixin
 from organisations.models import Organisation
 from organisations.permissions.permissions import CREATE_PROJECT
-from organisations.subscriptions.constants import (
-    PLAN_SUBSCRIPTION_METADATA_FOR_TEST,
-)
 from projects.models import Project
 
 VIEW_AUDIT_LOG = "VIEW_AUDIT_LOG"
@@ -35,7 +32,7 @@ PROJECT_PERMISSIONS = [
 ]
 
 
-class ProjectPermissions(IsAuthenticated):
+class ProjectPermissions(E2ETestPermissionMixin, IsAuthenticated):
     def has_permission(self, request, view):
         """Check if user has permission to list / create project"""
         if not super().has_permission(request, view):
@@ -49,14 +46,10 @@ class ProjectPermissions(IsAuthenticated):
             )
 
             # Allow project creation based on the active subscription
-            if request.META.get("E2E_TEST_AUTH_TOKEN") == os.getenv(
-                "E2E_TEST_AUTH_TOKEN", ""
-            ):
-                subscription_metadata = PLAN_SUBSCRIPTION_METADATA_FOR_TEST
-            else:
-                subscription_metadata = (
-                    organisation.subscription.get_subscription_metadata()
-                )
+            subscription_metadata = (
+                organisation.subscription.get_subscription_metadata()
+            )
+
             total_projects_created = Project.objects.filter(
                 organisation=organisation
             ).count()

@@ -15,8 +15,8 @@ def test_e2e_teardown(settings, db) -> None:
     token = "test-token"
     register_url = "/api/v1/auth/users/"
     settings.ENABLE_FE_E2E = True
-
-    os.environ["E2E_TEST_AUTH_TOKEN"] = token
+    settings.E2E_TEST_AUTH_TOKEN = token
+    settings.MIDDLEWARE.append("e2etests.middleware.E2ETestMiddleware")
 
     client = APIClient(HTTP_X_E2E_TEST_AUTH_TOKEN=token)
 
