@@ -13,6 +13,7 @@ from organisations.models import (
     OrganisationAPIUsageNotification,
     OrganisationRole,
 )
+from organisations.subscriptions.constants import MAX_API_CALLS_IN_FREE_PLAN
 from users.models import FFAdminUser
 
 from .constants import API_USAGE_ALERT_THRESHOLDS
@@ -113,6 +114,9 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         allowed_api_calls = subscription_cache.allowed_30d_api_calls
 
     api_usage = get_current_api_usage(organisation.id, f"-{days}d")
+
+    # For some reason the allowed API calls is set to 0 so default to the max free plan.
+    allowed_api_calls = allowed_api_calls or MAX_API_CALLS_IN_FREE_PLAN
 
     api_usage_percent = int(100 * api_usage / allowed_api_calls)
 
