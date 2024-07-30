@@ -123,7 +123,7 @@ def handle_api_usage_notifications() -> None:
 
         try:
             handle_api_usage_notification_for_organisation(organisation)
-        except RuntimeError:
+        except Exception:
             logger.error(
                 f"Error processing api usage for organisation {organisation.id}",
                 exc_info=True,
