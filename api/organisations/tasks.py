@@ -258,20 +258,18 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
     organisation_ids = []
     for result in queryset:
         organisation_ids.append(result["organisation"])
+
     organisations = (
         Organisation.objects.filter(
             id__in=organisation_ids,
             subscription__plan=FREE_PLAN_ID,
             api_limit_access_block__isnull=True,
         )
-        .select_related("subscription")
+        .select_related("subscription", "subscription_information_cache")
         .exclude(
             stop_serving_flags=True,
             block_access_to_admin=True,
         )
-    ).select_related(
-        "subscription_information_cache",
-        "subscription",
     )
 
     api_limit_access_blocks = []
