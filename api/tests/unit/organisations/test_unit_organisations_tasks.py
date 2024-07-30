@@ -1162,6 +1162,29 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     organisation4 = Organisation.objects.create(name="Org #4")
     organisation5 = Organisation.objects.create(name="Org #5")
 
+    for org in [
+        organisation,
+        organisation2,
+        organisation3,
+        organisation4,
+        organisation5,
+    ]:
+        OrganisationSubscriptionInformationCache.objects.create(
+            organisation=org,
+            allowed_seats=10,
+            allowed_projects=3,
+            allowed_30d_api_calls=10_000,
+            chargebee_email="test@example.com",
+        )
+        org.subscription.subscription_id = "fancy_sub_id23"
+        org.subscription.plan = "scale-up-v2"
+        org.subscription.save()
+
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 12_005
+
     # Add users to test email delivery
     for org in [organisation2, organisation3, organisation4, organisation5]:
         admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
