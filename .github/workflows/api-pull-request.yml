@@ -19,7 +19,7 @@ defaults:
 
 jobs:
   test:
-    runs-on: General-Purpose-8c-Runner
+    runs-on: General-Purpose-4c-Runner
     name: API Unit Tests
 
     services:
