@@ -22,6 +22,8 @@ from environments.permissions.constants import (
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.models import EnvironmentFeatureVersion
+from organisations.models import Subscription
+from organisations.subscriptions.constants import ENTERPRISE, STARTUP
 from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
 from tests.types import (
@@ -1124,3 +1126,54 @@ def test_create_new_version_delete_segment_override_updates_overrides_immediatel
     get_feature_segments_response = admin_client.get(get_feature_segments_url)
     assert get_feature_segments_response.status_code == status.HTTP_200_OK
     assert get_feature_segments_response.json()["count"] == 0
+
+
+@pytest.mark.parametrize(
+    "plan, versions_to_create, expected_versions_to_return",
+    (
+        (STARTUP, 10, 4),
+        (
+            ENTERPRISE,
+            10,
+            11,
+        ),  # expect 11 because of initial version created automatically
+    ),
+)
+def test_list_versions_only_returns_allowed_amount_for_plan(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+    subscription: Subscription,
+    plan: str,
+    versions_to_create: int,
+    expected_versions_to_return: int,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_project_permissions([VIEW_PROJECT])
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # Let's set the subscription plan as start up
+    subscription.plan = plan
+    subscription.save()
+
+    # and now let's create a lot more versions for the feature
+    for _ in range(versions_to_create):
+        version = EnvironmentFeatureVersion.objects.create(
+            environment=environment_v2_versioning, feature=feature
+        )
+        version.publish(staff_user)
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["count"] == expected_versions_to_return
