@@ -439,8 +439,8 @@ export default {
     githubIssue: 'GitHub Issue',
     githubPR: 'Github PR',
   },
-  isCustomFlagsmithUrl: true,
-  // Project.flagsmithClientAPI !== 'https://edge.api.flagsmith.com/api/v1/',
+  isCustomFlagsmithUrl:
+    Project.flagsmithClientAPI !== 'https://edge.api.flagsmith.com/api/v1/',
   modals: {
     'PAYMENT': 'Payment Modal',
   },
