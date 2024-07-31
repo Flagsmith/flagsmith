@@ -83,7 +83,10 @@ const EnvironmentSettingsPage = class extends Component {
       })
     })
 
-    if (Utils.getFlagsmithHasFeature('enable_metadata')) {
+    if (
+      Utils.getPlansPermission('METADATA') &&
+      Utils.getFlagsmithHasFeature('enable_metadata')
+    ) {
       getSupportedContentType(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,
       }).then((res) => {
@@ -261,7 +264,9 @@ const EnvironmentSettingsPage = class extends Component {
       },
     } = this
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
-    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
+    const metadataEnable =
+      Utils.getPlansPermission('METADATA') &&
+      Utils.getFlagsmithHasFeature('enable_metadata')
 
     return (
       <div className='app-container container'>

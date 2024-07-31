@@ -1,8 +1,7 @@
-import typing
-
 from common.features.serializers import (
     CreateSegmentOverrideFeatureSegmentSerializer,
 )
+from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
@@ -49,15 +48,41 @@ class CustomCreateSegmentOverrideFeatureSegmentSerializer(
     # field here, and use it manually in the save method.
     priority = serializers.IntegerField(min_value=0, required=False)
 
-    def save(self, **kwargs: typing.Any) -> FeatureSegment:
-        priority: int | None = self.initial_data.pop("priority", None)
+    @transaction.atomic()
+    def save(self, **kwargs) -> FeatureSegment:
+        """
+        Note that this method is marked as atomic since a lot of additional validation is
+        performed in the call to super. If that fails, we want to roll the changes made by
+        `collision.to` back.
+        """
 
-        feature_segment: FeatureSegment = super().save(**kwargs)
+        priority: int | None = self.validated_data.get("priority", None)
 
-        if priority:
-            feature_segment.to(priority)
+        if kwargs["environment"].use_v2_feature_versioning:  # pragma: no cover
+            assert (
+                kwargs["environment_feature_version"] is not None
+            ), "Must provide environment_feature_version for environment using v2 versioning"
 
-        return feature_segment
+        if (
+            priority is not None
+            and (
+                collision := FeatureSegment.objects.filter(
+                    environment=kwargs["environment"],
+                    feature=kwargs["feature"],
+                    environment_feature_version=kwargs.get(
+                        "environment_feature_version"
+                    ),
+                    priority=priority,
+                ).first()
+            )
+            is not None
+        ):
+            # Since there is no unique clause on the priority field, if a priority
+            # is set, it will just save the feature segment and not move others
+            # down. This ensures that the incoming priority space is 'free'.
+            collision.to(priority + 1)
+
+        return super().save(**kwargs)
 
 
 class FeatureSegmentQuerySerializer(serializers.Serializer):

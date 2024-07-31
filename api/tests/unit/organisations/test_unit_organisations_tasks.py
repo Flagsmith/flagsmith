@@ -12,7 +12,10 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from organisations.chargebee.metadata import ChargebeeObjMetadata
-from organisations.constants import API_USAGE_GRACE_PERIOD
+from organisations.constants import (
+    API_USAGE_ALERT_THRESHOLDS,
+    API_USAGE_GRACE_PERIOD,
+)
 from organisations.models import (
     APILimitAccessBlock,
     Organisation,
@@ -310,7 +313,7 @@ def test_handle_api_usage_notifications_below_100(
         current_billing_term_ends_at=now + timedelta(days=320),
     )
     mock_api_usage = mocker.patch(
-        "organisations.tasks.get_current_api_usage",
+        "organisations.task_helpers.get_current_api_usage",
     )
     mock_api_usage.return_value = 91
     get_client_mock = mocker.patch("organisations.tasks.get_client")
@@ -374,6 +377,57 @@ def test_handle_api_usage_notifications_below_100(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_handle_api_usage_notifications_below_api_usage_alert_thresholds(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    mailoutbox: list[EmailMultiAlternatives],
+) -> None:
+    # Given
+    now = timezone.now()
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.save()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+    )
+    mock_api_usage = mocker.patch(
+        "organisations.task_helpers.get_current_api_usage",
+    )
+    usage = 21
+    assert usage < min(API_USAGE_ALERT_THRESHOLDS)
+    mock_api_usage.return_value = usage
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
+    assert not OrganisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+    ).exists()
+
+    # When
+    handle_api_usage_notifications()
+
+    # Then
+    mock_api_usage.assert_called_once_with(organisation.id, "-14d")
+
+    assert len(mailoutbox) == 0
+
+    assert (
+        OrganisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 0
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_handle_api_usage_notifications_above_100(
     mocker: MockerFixture,
     organisation: Organisation,
@@ -394,7 +448,7 @@ def test_handle_api_usage_notifications_above_100(
         current_billing_term_ends_at=now + timedelta(days=320),
     )
     mock_api_usage = mocker.patch(
-        "organisations.tasks.get_current_api_usage",
+        "organisations.task_helpers.get_current_api_usage",
     )
     mock_api_usage.return_value = 105
 
@@ -471,7 +525,7 @@ def test_handle_api_usage_notifications_for_free_accounts(
     assert organisation.subscription.max_api_calls == MAX_API_CALLS_IN_FREE_PLAN
 
     mock_api_usage = mocker.patch(
-        "organisations.tasks.get_current_api_usage",
+        "organisations.task_helpers.get_current_api_usage",
     )
     mock_api_usage.return_value = MAX_API_CALLS_IN_FREE_PLAN + 5_000
 
@@ -546,14 +600,14 @@ def test_handle_api_usage_notifications_missing_info_cache(
     organisation.subscription.plan = SCALE_UP
     organisation.subscription.save()
 
-    from organisations.tasks import logger
+    from organisations.task_helpers import logger
 
     logger.addHandler(inspecting_handler)
 
     assert organisation.has_subscription_information_cache() is False
 
     mock_api_usage = mocker.patch(
-        "organisations.tasks.get_current_api_usage",
+        "organisations.task_helpers.get_current_api_usage",
     )
 
     get_client_mock = mocker.patch("organisations.tasks.get_client")
@@ -1092,6 +1146,9 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     mocker: MockerFixture,
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
+    mailoutbox: list[EmailMultiAlternatives],
+    admin_user: FFAdminUser,
+    staff_user: FFAdminUser,
 ) -> None:
     # Given
     get_client_mock = mocker.patch("organisations.tasks.get_client")
@@ -1104,6 +1161,34 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     organisation3 = Organisation.objects.create(name="Org #3")
     organisation4 = Organisation.objects.create(name="Org #4")
     organisation5 = Organisation.objects.create(name="Org #5")
+
+    for org in [
+        organisation,
+        organisation2,
+        organisation3,
+        organisation4,
+        organisation5,
+    ]:
+        OrganisationSubscriptionInformationCache.objects.create(
+            organisation=org,
+            allowed_seats=10,
+            allowed_projects=3,
+            allowed_30d_api_calls=10_000,
+            chargebee_email="test@example.com",
+        )
+        org.subscription.subscription_id = "fancy_sub_id23"
+        org.subscription.plan = FREE_PLAN_ID
+        org.subscription.save()
+
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 12_005
+
+    # Add users to test email delivery
+    for org in [organisation2, organisation3, organisation4, organisation5]:
+        admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
+        staff_user.add_organisation(org, role=OrganisationRole.USER)
 
     organisation5.subscription.plan = "scale-up-v2"
     organisation5.subscription.payment_method = CHARGEBEE
@@ -1200,6 +1285,31 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
         ),
     ]
 
+    assert len(mailoutbox) == 2
+    email1 = mailoutbox[0]
+    assert email1.subject == "Flagsmith API use has been blocked due to overuse"
+    assert email1.body == render_to_string(
+        "organisations/api_flags_blocked_notification.txt",
+        context={"organisation": organisation},
+    )
+    email2 = mailoutbox[1]
+    assert email2.subject == "Flagsmith API use has been blocked due to overuse"
+    assert email2.body == render_to_string(
+        "organisations/api_flags_blocked_notification.txt",
+        context={"organisation": organisation2},
+    )
+
+    assert len(email2.alternatives) == 1
+    assert len(email2.alternatives[0]) == 2
+    assert email2.alternatives[0][1] == "text/html"
+
+    assert email2.alternatives[0][0] == render_to_string(
+        "organisations/api_flags_blocked_notification.html",
+        context={"organisation": organisation2},
+    )
+    assert email2.from_email == "noreply@flagsmith.com"
+    assert email2.to == ["admin@example.com", "staff@example.com"]
+
     # Organisations that change their subscription are unblocked.
     organisation.subscription.plan = "scale-up-v2"
     organisation.subscription.save()
@@ -1207,6 +1317,111 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     assert organisation.stop_serving_flags is False
     assert organisation.block_access_to_admin is False
     assert getattr(organisation, "api_limit_access_block", None) is None
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_restrict_use_due_to_api_limit_grace_period_over_missing_subscription_information_cache(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    freezer: FrozenDateTimeFactory,
+    mailoutbox: list[EmailMultiAlternatives],
+) -> None:
+    # Given
+    assert not organisation.has_subscription_information_cache()
+
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
+    now = timezone.now()
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = FREE_PLAN_ID
+    organisation.subscription.save()
+
+    OrganisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation,
+        percent_usage=120,
+    )
+
+    now = now + timedelta(days=API_USAGE_GRACE_PERIOD + 1)
+    freezer.move_to(now)
+
+    # When
+    restrict_use_due_to_api_limit_grace_period_over()
+
+    # Then
+    organisation.refresh_from_db()
+
+    # Organisations that missing the cache don't get blocked
+    assert organisation.stop_serving_flags is False
+    assert organisation.block_access_to_admin is False
+    assert not hasattr(organisation, "api_limit_access_block")
+    assert len(mailoutbox) == 0
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_restrict_use_due_to_api_limit_grace_period_over_with_reduced_api_usage(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    freezer: FrozenDateTimeFactory,
+    mailoutbox: list[EmailMultiAlternatives],
+    inspecting_handler: logging.Handler,
+) -> None:
+    # Given
+    assert not organisation.has_subscription_information_cache()
+
+    from organisations.tasks import logger
+
+    logger.addHandler(inspecting_handler)
+
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
+    now = timezone.now()
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=10_000,
+        chargebee_email="test@example.com",
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = FREE_PLAN_ID
+    organisation.subscription.save()
+
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 8000
+
+    OrganisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation,
+        percent_usage=120,
+    )
+
+    now = now + timedelta(days=API_USAGE_GRACE_PERIOD + 1)
+    freezer.move_to(now)
+
+    # When
+    restrict_use_due_to_api_limit_grace_period_over()
+
+    # Then
+    organisation.refresh_from_db()
+
+    # Organisations that missing the cache don't get blocked
+    assert organisation.stop_serving_flags is False
+    assert organisation.block_access_to_admin is False
+    assert not hasattr(organisation, "api_limit_access_block")
+    assert len(mailoutbox) == 0
+    assert inspecting_handler.messages == [
+        f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."
+    ]
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")

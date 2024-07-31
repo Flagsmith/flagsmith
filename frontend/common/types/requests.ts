@@ -306,22 +306,17 @@ export type Req = {
     environmentId: number
     featureId: number
     skipPublish?: boolean
-    featureStates: Pick<
-      FeatureState,
-      | 'enabled'
-      | 'feature_segment'
-      | 'uuid'
-      | 'feature_state_value'
-      | 'id'
-      | 'toRemove'
-      | 'multivariate_feature_state_values'
-    >[]
+    featureStates: FeatureState[]
     liveFrom?: string
   }
   createFeatureVersion: {
     environmentId: number
     featureId: number
-    liveFrom?: string
+    live_from?: string
+    feature_states_to_create: Omit<FeatureState, 'id'>[]
+    feature_states_to_update: Omit<FeatureState, 'id'>[]
+    publish_immediately: boolean
+    segment_ids_to_delete_overrides: number[]
   }
   publishFeatureVersion: {
     sha: string
