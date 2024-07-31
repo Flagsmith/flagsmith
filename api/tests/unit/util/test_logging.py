@@ -7,19 +7,6 @@ import pytest
 from util.logging import JsonFormatter
 
 
-@pytest.fixture
-def inspecting_handler() -> logging.Handler:
-    class InspectingHandler(logging.Handler):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.messages = []
-
-        def handle(self, record):
-            self.messages.append(self.format(record))
-
-    return InspectingHandler()
-
-
 @pytest.mark.freeze_time("2023-12-08T06:05:47.320000+00:00")
 def test_json_formatter__outputs_expected(
     inspecting_handler: logging.Handler,
@@ -38,7 +25,7 @@ def test_json_formatter__outputs_expected(
     expected_tb_string = (
         "Traceback (most recent call last):\n"
         f'  File "{expected_module_path}",'
-        " line 47, in _log_traceback\n"
+        " line 34, in _log_traceback\n"
         "    raise Exception()\nException"
     )
 

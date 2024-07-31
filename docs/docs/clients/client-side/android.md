@@ -91,6 +91,38 @@ flagsmith.getFeatureFlags { result ->
 }
 ```
 
+### Get Flags for an identity
+
+To get feature flags for a specific identity:
+
+```kotlin
+flagsmith.getFeatureFlags(identity = "test-user@gmail.com") { result ->
+    result.fold(
+        onSuccess = { flagList ->
+            Log.i("Flagsmith", "Current flags:")
+            flagList.forEach { Log.i("Flagsmith", "- ${it.feature.name} - enabled: ${it.enabled} value: ${it.featureStateValue ?: "not set"}") }
+        },
+        onFailure = { err ->
+            Log.e("Flagsmith", "Error getting feature flags", err)
+        })
+}
+```
+
+You can also get flags for an identity and set the traits at the same time:
+
+```kotlin
+flagsmith.getFeatureFlags(identity = "test-user@gmail.com", traits = listOf(Trait(key = "set-from-client", value = "12345"))) { result ->
+    result.fold(
+        onSuccess = { flagList ->
+            Log.i("Flagsmith", "Current flags:")
+            flagList.forEach { Log.i("Flagsmith", "- ${it.feature.name} - enabled: ${it.enabled} value: ${it.featureStateValue ?: "not set"}") }
+        },
+        onFailure = { err ->
+            Log.e("Flagsmith", "Error getting feature flags", err)
+        })
+}
+```
+
 ### Get Flag Object by `featureId`
 
 To retrieve a feature flag boolean value by its name:

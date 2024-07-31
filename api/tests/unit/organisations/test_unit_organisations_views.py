@@ -559,12 +559,14 @@ def test_get_my_permissions_for_admin(
     assert response.data["admin"] is True
 
 
+@pytest.mark.parametrize("subscription_status", ("active", "in_trial"))
 @mock.patch("organisations.chargebee.webhook_handlers.extract_subscription_metadata")
 def test_chargebee_webhook(
     mock_extract_subscription_metadata: MagicMock,
     staff_user: FFAdminUser,
     staff_client: APIClient,
     subscription: Subscription,
+    subscription_status: str,
 ) -> None:
     # Given
     seats = 3
@@ -580,7 +582,7 @@ def test_chargebee_webhook(
     data = {
         "content": {
             "subscription": {
-                "status": "active",
+                "status": subscription_status,
                 "id": subscription.subscription_id,
                 "current_term_start": 1699630389,
                 "current_term_end": 1702222389,

@@ -12,9 +12,8 @@ application.
 
 ## Prerequisites (self-hosted)
 
-Create a SAML configuration by following the
-[instructions to set up SAML](/system-administration/authentication/01-SAML/index.md#setup-self-hosted). Leave the
-identity provider metadata blank for now.
+Create a SAML configuration by following the [instructions to set up SAML](/system-administration/authentication/SAML).
+Leave the identity provider metadata blank for now.
 
 ## Procedure
 
@@ -25,7 +24,7 @@ open it in the Okta dashboard and:
 - Scroll down to "Advanced Sign-on Settings", fill out the two fields and then click Save:
   - **API Base URL** should be `https://api.flagsmith.com` on SaaS, or your API root URL otherwise
   - **SAML Organisation** will be provided by Flagsmith support on SaaS. Otherwise, this refers to the "Organisation
-    name" field [when creating a SAML Configuration](/system-administration/authentication/SAML/#setup-self-hosted)
+    name" field [when creating a SAML Configuration](/system-administration/authentication/SAML)
 - Staying on the "Sign On" tab, find the "Metadata URL" in the "Sign on methods" section. Save this metadata to a file
   and send it to [Flagsmith support](mailto:support@flagsmith.com), or add it to the "IdP Metadata XML" field of your
   Flagsmith SAML Configuration if self-hosting

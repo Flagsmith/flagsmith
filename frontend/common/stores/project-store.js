@@ -13,7 +13,7 @@ const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
 
 const controller = {
-  createEnv: (name, projectId, cloneId, description) => {
+  createEnv: (name, projectId, cloneId, description, metadata) => {
     API.trackEvent(Constants.events.CREATE_ENVIRONMENT)
     store.saving()
     const req = cloneId
@@ -26,12 +26,12 @@ const controller = {
           name,
           project: projectId,
         })
-
     req
       .then((res) =>
         data
           .put(`${Project.api}environments/${res.api_key}/`, {
             description,
+            metadata: metadata || [],
             name,
             project: projectId,
           })
@@ -76,7 +76,7 @@ const controller = {
       getStore().dispatch(
         environmentService.util.invalidateTags(['Environment']),
       )
-      store.trigger('removed')
+      store.trigger('removed', env)
       store.saved()
       AppActions.refreshOrganisation()
     })
@@ -84,15 +84,30 @@ const controller = {
 
   editEnv: (env) => {
     API.trackEvent(Constants.events.EDIT_ENVIRONMENT)
-    data.put(`${Project.api}environments/${env.api_key}/`, env).then((res) => {
-      const index = _.findIndex(store.model.environments, { id: env.id })
-      store.model.environments[index] = res
-      store.saved()
-      getStore().dispatch(
-        environmentService.util.invalidateTags(['Environment']),
-      )
-      AppActions.refreshOrganisation()
-    })
+    data
+      .put(`${Project.api}environments/${env.api_key}/`, env)
+      .then((res) => {
+        const index = _.findIndex(store.model.environments, { id: env.id })
+        store.model.environments[index] = res
+        store.saved()
+        getStore().dispatch(
+          environmentService.util.invalidateTags(['Environment']),
+        )
+        AppActions.refreshOrganisation()
+      })
+      .catch((e) => {
+        e.json()
+          .then((result) => {
+            if (result?.metadata?.[0]) {
+              toast(result.metadata[0], 'danger')
+            } else {
+              toast('Error updating the environment', 'danger')
+            }
+          })
+          .catch((e) => {
+            API.ajaxHandler(store, e)
+          })
+      })
   },
   editProject: (project) => {
     store.saving()
@@ -247,6 +262,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
         action.projectId,
         action.cloneId,
         action.description,
+        action.metadata,
       )
       break
     case Actions.EDIT_ENVIRONMENT:

@@ -12,6 +12,7 @@ import {
   ProjectFlag,
   Environment,
   UserGroup,
+  AttributeName,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -305,22 +306,17 @@ export type Req = {
     environmentId: number
     featureId: number
     skipPublish?: boolean
-    featureStates: Pick<
-      FeatureState,
-      | 'enabled'
-      | 'feature_segment'
-      | 'uuid'
-      | 'feature_state_value'
-      | 'id'
-      | 'toRemove'
-      | 'multivariate_feature_state_values'
-    >[]
+    featureStates: FeatureState[]
     liveFrom?: string
   }
   createFeatureVersion: {
     environmentId: number
     featureId: number
-    liveFrom?: string
+    live_from?: string
+    feature_states_to_create: Omit<FeatureState, 'id'>[]
+    feature_states_to_update: Omit<FeatureState, 'id'>[]
+    publish_immediately: boolean
+    segment_ids_to_delete_overrides: number[]
   }
   publishFeatureVersion: {
     sha: string
@@ -486,5 +482,22 @@ export type Req = {
   updateSamlConfiguration: { name: string; body: SAMLConfiguration }
   deleteSamlConfiguration: { name: string }
   createSamlConfiguration: SAMLConfiguration
+  getSamlAttributeMapping: { saml_configuration_id: number }
+  updateSamlAttributeMapping: {
+    attribute_id: number
+    body: {
+      saml_configuration: number
+      django_attribute_name: AttributeName
+      idp_attribute_name: string
+    }
+  }
+  deleteSamlAttributeMapping: { attribute_id: number }
+  createSamlAttributeMapping: {
+    body: {
+      saml_configuration: number
+      django_attribute_name: AttributeName
+      idp_attribute_name: string
+    }
+  }
   // END OF TYPES
 }

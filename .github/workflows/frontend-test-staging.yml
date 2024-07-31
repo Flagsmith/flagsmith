@@ -4,25 +4,20 @@ on: workflow_dispatch
 
 jobs:
   run-staging-e2e-tests:
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    name: Full Staging E2E tests
+    name: Run E2E Tests
     environment: staging
+    concurrency:
+      group: e2e-tests-staging
+      cancel-in-progress: true
 
     steps:
       - name: Cloning repo
         uses: actions/checkout@v4
 
-      - name: Run Staging E2E Tests
-        working-directory: frontend
-        env:
-          ENV: staging
-          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-          STATIC_ASSET_CDN_URL: /
-        run: |-
-          wget -q ${{ secrets.CHROME_URL }}
-          sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
-          google-chrome --version
-          node -v
-          npm ci
-          npm run test:staging
+      - name: Run E2E tests against staging
+        uses: ./.github/actions/e2e-tests
+        with:
+          e2e_test_token: ${{ secrets.E2E_TEST_TOKEN }}
+          slack_token: ${{ secrets.SLACK_TOKEN }}
+          environment: staging

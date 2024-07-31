@@ -53,12 +53,12 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
   }, [metadataFieldList, MetadataModelFieldList])
 
   const metadataCreatedToast = () => {
-    toast('Metadata Field Created')
+    toast('Custom Field Created')
     closeModal()
   }
   const createMetadataField = () => {
     openModal(
-      `Create Metadata Field`,
+      `Create Custom Field`,
       <CreateMetadataField
         onComplete={metadataCreatedToast}
         organisationId={organisationId}
@@ -71,13 +71,13 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
 
   const editMetadata = (id: string, contentTypeList: MetadataModelField[]) => {
     openModal(
-      `Edit Metadata Field`,
+      `Edit Custom Field`,
       <CreateMetadataField
         isEdit={true}
         metadataModelFieldList={contentTypeList}
         id={id}
         onComplete={() => {
-          toast('Metadata Field Updated')
+          toast('Custom Field Updated')
         }}
         projectId={projectId}
         organisationId={organisationId}
@@ -92,12 +92,13 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         <div>
           {'Are you sure you want to delete '}
           <strong>{name}</strong>
-          {' metadata field?'}
+          {' custom field?'}
         </div>
       ),
       destructive: true,
-      onYes: () => deleteMetadata({ id }),
-      title: 'Delete Metadata Field',
+      onYes: () =>
+        deleteMetadata({ id }).then(() => toast('Custom Field Deleted')),
+      title: 'Delete Custom Field',
       yesText: 'Confirm',
     })
   }
@@ -105,28 +106,19 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
   return (
     <div>
       <Row space className='mb-2'>
-        <Tooltip
-          title={
-            <Row>
-              <h5 className='mt-2'>Metadata Fields</h5>
-              <div>
-                <Icon name='info-outlined' />
-              </div>
-            </Row>
-          }
-        >
-          {'Create or Update the Metadata Fields Project'}
-        </Tooltip>
+        <Row>
+          <h5 className='mt-2'>Custom Fields</h5>
+        </Row>
         <Button className='mt-2' onClick={() => createMetadataField()}>
-          {'Create Metadata Field'}
+          {'Create Custom Field'}
         </Button>
       </Row>
       <p className='fs-small lh-sm'>
-        Manage metadata fields for selected core identities in your project{' '}
+        Manage custom fields for selected core identities in your project{' '}
         <Button
           theme='text'
           target='_blank'
-          href='http://localhost:3000/system-administration/metadata/#metadata-fields'
+          href='https://docs.flagsmith.com/system-administration/custom-fields/'
           className='fw-normal'
         >
           Learn more.
@@ -176,10 +168,10 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
             </Row>
           )}
           renderNoResults={
-            <Panel className='no-pad' title={'Metadata'}>
+            <Panel className='no-pad' title={'Custom Fields'}>
               <div className='search-list'>
                 <Row className='list-item p-3 text-muted'>
-                  You currently have no metadata configured.
+                  You currently have no custom fields configured.
                 </Row>
               </div>
             </Panel>

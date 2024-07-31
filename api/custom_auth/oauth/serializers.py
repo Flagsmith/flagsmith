@@ -1,11 +1,15 @@
+from abc import abstractmethod
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.signals import user_logged_in
+from django.db.models import F
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
 
 from organisations.invites.models import Invite
+from users.auth_type import AuthType
 from users.models import SignUpType
 
 from ..constants import USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
@@ -30,6 +34,9 @@ class OAuthLoginSerializer(serializers.Serializer):
         write_only=True,
     )
 
+    auth_type: AuthType | None = None
+    user_model_id_attribute: str = "id"
+
     class Meta:
         abstract = True
 
@@ -53,8 +60,28 @@ class OAuthLoginSerializer(serializers.Serializer):
         return Token.objects.get_or_create(user=user)[0]
 
     def _get_user(self, user_data: dict):
-        email = user_data.get("email")
-        existing_user = UserModel.objects.filter(email=email).first()
+        email: str = user_data.pop("email")
+
+        # There are a number of scenarios that we're catering for in this
+        # query:
+        #  1. A new user arriving, and immediately authenticating with
+        #     the given social auth method.
+        #  2. A user that has previously authenticated with method A is now
+        #     authenticating with method B. Using the `email__iexact` means
+        #     that we'll always retrieve the user that already authenticated
+        #     with A.
+        #  3. A user that (prior to the case sensitivity fix) authenticated
+        #     with multiple methods and ended up with duplicate user accounts.
+        #     Since it's difficult for us to know which user account they are
+        #     using as their primary, we order by the method they are currently
+        #     authenticating with and grab the first one in the list.
+        existing_user = (
+            UserModel.objects.filter(email__iexact=email)
+            .order_by(
+                F(self.user_model_id_attribute).desc(nulls_last=True),
+            )
+            .first()
+        )
 
         if not existing_user:
             sign_up_type = self.validated_data.get("sign_up_type")
@@ -65,20 +92,46 @@ class OAuthLoginSerializer(serializers.Serializer):
             ):
                 raise PermissionDenied(USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE)
 
-            return UserModel.objects.create(**user_data, sign_up_type=sign_up_type)
+            return UserModel.objects.create(
+                **user_data, email=email.lower(), sign_up_type=sign_up_type
+            )
+        elif existing_user.auth_type != self.get_auth_type().value:
+            # In this scenario, we're seeing a user that had previously
+            # authenticated with another authentication method and is now
+            # authenticating with a new OAuth provider.
+            setattr(
+                existing_user,
+                self.user_model_id_attribute,
+                user_data[self.user_model_id_attribute],
+            )
+            existing_user.save()
 
         return existing_user
 
+    @abstractmethod
     def get_user_info(self):
         raise NotImplementedError("`get_user_info()` must be implemented.")
 
+    def get_auth_type(self) -> AuthType:
+        if not self.auth_type:  # pragma: no cover
+            raise NotImplementedError(
+                "`auth_type` must be set, or `get_auth_type()` must be implemented."
+            )
+        return self.auth_type
+
 
 class GoogleLoginSerializer(OAuthLoginSerializer):
+    auth_type = AuthType.GOOGLE
+    user_model_id_attribute = "google_user_id"
+
     def get_user_info(self):
         return get_user_info(self.validated_data["access_token"])
 
 
 class GithubLoginSerializer(OAuthLoginSerializer):
+    auth_type = AuthType.GITHUB
+    user_model_id_attribute = "github_user_id"
+
     def get_user_info(self):
         github_user = GithubUser(code=self.validated_data["access_token"])
         return github_user.get_user_info()

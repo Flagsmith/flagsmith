@@ -9,12 +9,11 @@ import {
   useUpdateEnvironmentMutation,
 } from 'common/services/useEnvironment'
 import { MetadataField, Metadata } from 'common/types/responses'
-import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
-import Tooltip from 'components/Tooltip'
 import { sortBy } from 'lodash'
 import Switch from 'components/Switch'
+import InputGroup from 'components/base/forms/InputGroup'
 
 export type CustomMetadataField = MetadataField & {
   metadataModelFieldId: number | string | null
@@ -27,11 +26,12 @@ export type CustomMetadataField = MetadataField & {
 type CustomMetadata = (Metadata & CustomMetadataField) | null
 
 type AddMetadataToEntityType = {
+  isCloningEnvironment?: boolean
   organisationId: string
   projectId: string | number
   entityContentType: number
   entityId: string
-  entity: number | string
+  entity: string
   envName?: string
   onChange?: (m: CustomMetadataField[]) => void
   setHasMetadataRequired?: (b: boolean) => void
@@ -42,6 +42,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
   entityContentType,
   entityId,
   envName,
+  isCloningEnvironment,
   onChange,
   organisationId,
   projectId,
@@ -102,9 +103,6 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
   }, [metadataFieldsAssociatedtoEntity])
 
   const [metadataChanged, setMetadataChanged] = useState<boolean>(false)
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [metadataFieldsAssociatedtoEntity])
 
   const mergeMetadataEntityWithMetadataField = (
     metadata: Metadata[], // Metadata array
@@ -160,9 +158,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
           })
           // Determine if isRequiredFor should be true or false based on is_required_for array
           const isRequiredFor = !!matchingItem?.is_required_for.length
-          if (isRequiredFor) {
-            setHasMetadataRequired?.()
-          }
+          setHasMetadataRequired?.(isRequiredFor)
           // Return the metadata field with additional metadata model field information including isRequiredFor
           return {
             ...meta,
@@ -215,12 +211,12 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
   ])
   return (
     <>
-      <FormGroup className='mt-4 setting'>
+      <FormGroup className='setting'>
         <PanelSearch
           className='mt-1 no-pad'
           header={
             <Row className='table-header'>
-              <Row className='table-column flex-1'>Metadata </Row>
+              <Row className='table-column flex-1'>Field </Row>
               <Flex className='table-column'>Value</Flex>
             </Row>
           }
@@ -229,6 +225,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
             return (
               <MetadataRow
                 metadata={m}
+                entity={entity}
                 getMetadataValue={(m: CustomMetadata) => {
                   setMetadataFieldsAssociatedtoEntity((prevState) =>
                     prevState?.map((metadata) => {
@@ -247,8 +244,22 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
               />
             )
           }}
+          renderNoResults={
+            <FormGroup>
+              No custom fields configured for {entity} entity. Add custom fields
+              in your{' '}
+              <a
+                href={`/project/${projectId}/settings?tab=metadata`}
+                target='_blank'
+                rel='noreferrer'
+              >
+                Project Settings
+              </a>
+              .
+            </FormGroup>
+          }
         />
-        {entity === 'environment' && (
+        {entity === 'environment' && !isCloningEnvironment && (
           <div className='text-right'>
             <Button
               theme='primary'
@@ -270,12 +281,16 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
                     project: parseInt(`${projectId}`),
                   },
                   id: entityId,
-                }).then(() => {
-                  toast('Environment Metadata Updated')
+                }).then((res) => {
+                  if (res?.error) {
+                    toast(res?.error?.data.metadata[0], 'danger')
+                  } else {
+                    toast('Environment Field Updated')
+                  }
                 })
               }}
             >
-              Save Metadata
+              Save Custom Field
             </Button>
           </div>
         )}
@@ -287,8 +302,13 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
 type MetadataRowType = {
   metadata: CustomMetadata
   getMetadataValue?: (metadata: CustomMetadata) => void
+  entity: string
 }
-const MetadataRow: FC<MetadataRowType> = ({ getMetadataValue, metadata }) => {
+const MetadataRow: FC<MetadataRowType> = ({
+  entity,
+  getMetadataValue,
+  metadata,
+}) => {
   const [metadataValue, setMetadataValue] = useState<string | boolean>(() => {
     if (metadata?.type === 'bool') {
       return metadata?.field_value === 'true' ? true : false
@@ -307,36 +327,13 @@ const MetadataRow: FC<MetadataRowType> = ({ getMetadataValue, metadata }) => {
     useState<boolean>(false)
   return (
     <Row className='space list-item clickable py-2'>
-      {metadataValueChanged && <div className='unread ml-2 px-1'>{'*'}</div>}
+      {metadataValueChanged && entity !== 'segment' && (
+        <div className='unread ml-2 px-1'>{'*'}</div>
+      )}
       <Flex className='table-column'>{`${metadata?.name} ${
         metadata?.isRequiredFor ? '*' : ''
       }`}</Flex>
-      {metadata?.type !== 'bool' ? (
-        <Flex className='flex-row' style={{ minWidth: '300px' }}>
-          <Tooltip
-            title={
-              <Input
-                value={metadataValue}
-                onBlur={saveMetadata}
-                onChange={(e: InputEvent) => {
-                  setMetadataValue(Utils.safeParseEventValue(e))
-                  setMetadataValueChanged(true)
-                }}
-                className='mr-2'
-                style={{ width: '250px' }}
-                placeholder='Metadata Value'
-                isValid={Utils.validateMetadataType(
-                  metadata?.type,
-                  metadataValue,
-                )}
-              />
-            }
-            place='top'
-          >
-            {`This value has to be of type ${metadata?.type}`}
-          </Tooltip>
-        </Flex>
-      ) : (
+      {metadata?.type === 'bool' ? (
         <Flex className='flex-row'>
           <Switch
             checked={!!metadataValue}
@@ -345,6 +342,27 @@ const MetadataRow: FC<MetadataRowType> = ({ getMetadataValue, metadata }) => {
               setMetadataValueChanged(true)
               saveMetadata()
             }}
+          />
+        </Flex>
+      ) : (
+        <Flex className='flex-row mt-1' style={{ minWidth: '300px' }}>
+          <InputGroup
+            textarea={metadata?.type === 'multiline_str'}
+            onBlur={saveMetadata}
+            value={metadataValue}
+            inputProps={{
+              style: {
+                height: metadata?.type === 'multiline_str' ? '65px' : '44px',
+                width: '250px',
+              },
+            }}
+            noMargin
+            isValid={Utils.validateMetadataType(metadata?.type, metadataValue)}
+            onChange={(e: InputEvent) => {
+              setMetadataValue(Utils.safeParseEventValue(e))
+              setMetadataValueChanged(true)
+            }}
+            type='text'
           />
         </Flex>
       )}

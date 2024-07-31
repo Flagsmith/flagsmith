@@ -2,6 +2,7 @@ import AccountStore from 'common/stores/account-store'
 import ProjectStore from 'common/stores/project-store'
 import Project from 'common/project'
 import {
+  ChangeSet,
   ContentType,
   FeatureState,
   FeatureStateValue,
@@ -382,6 +383,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         valid = isEnterprise
         break
       }
+      case 'METADATA': {
+        valid = isEnterprise
+        break
+      }
       default:
         valid = true
         break
@@ -519,7 +524,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
-
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (
@@ -530,22 +534,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
-
   isSaas: () => global.flagsmithVersion?.backend?.is_saas,
+
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },
   isValidURL(value: any) {
-    const pattern = new RegExp(
-      '^(https?:\\/\\/)?' + // protocol
-        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
-        '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
-        '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-        '(\\#[-a-z\\d_]*)?$',
-      'i',
-    )
-    return !!pattern.test(value)
+    const regex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i
+    return regex.test(value)
   },
   loadScriptPromise(url: string) {
     return new Promise((resolve) => {

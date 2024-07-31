@@ -111,6 +111,7 @@ class ChangeRequest(
 
         self._publish_feature_states()
         self._publish_environment_feature_versions(committed_by)
+        self._publish_change_sets(committed_by)
 
         self.committed_at = timezone.now()
         self.committed_by = committed_by
@@ -173,6 +174,10 @@ class ChangeRequest(
                 environment_feature_version_published.send(
                     EnvironmentFeatureVersion, instance=environment_feature_version
                 )
+
+    def _publish_change_sets(self, published_by: "FFAdminUser") -> None:
+        for change_set in self.change_sets.all():
+            change_set.publish(user=published_by)
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title

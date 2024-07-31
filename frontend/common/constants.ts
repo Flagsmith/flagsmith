@@ -518,7 +518,8 @@ export default {
       'Set different values for your feature based on what segments users are in. Identity overrides will take priority over any segment override.',
     TAGS_DESCRIPTION:
       'Organise your flags with tags, tagging your features as "<strong>protected</strong>" will prevent them from accidentally being deleted.',
-    TOOLTIP_METADATA_DESCRIPTION: 'Add metadata in your',
+    TOOLTIP_METADATA_DESCRIPTION: (entity: string) =>
+      `Add Custom fields in your <strong>${entity}</strong>, you can define the custom fields in the project settings.`,
     USER_PROPERTY_DESCRIPTION:
       'The name of the user trait or custom property belonging to the user, e.g. firstName',
     WEBHOOKS_DESCRIPTION:

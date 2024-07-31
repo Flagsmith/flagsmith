@@ -65,7 +65,7 @@ Current variables used between 'frontend/environment.js' and 'frontend/common/pr
 
 - `FLAGSMITH_API_URL`: The API to hit for requests. E.g. `https://edge.api.flagsmith.com/api/v1/`
 - `FLAGSMITH_ON_FLAGSMITH_API_KEY`: The flagsmith environment key we use to manage features -
-  [Flagsmith runs on Flagsmith](/deployment/overview#running-flagsmith-on-flagsmith).
+  [Flagsmith runs on Flagsmith](/deployment#running-flagsmith-on-flagsmith).
 - `FLAGSMITH_ON_FLAGSMITH_API_URL`: The API URL which the flagsmith client should communicate with. Flagsmith runs on
   flagsmith. E.g. `https://edge.api.flagsmith.com/api/v1/`. If you are self hosting and using your own Flagsmith
   instance to manage its own features, you would generally point this to the same domain name as your own Flagsmith
@@ -92,8 +92,6 @@ Current variables used between 'frontend/environment.js' and 'frontend/common/pr
 - `MIXPANEL_API_KEY`: Mixpanel analytics key to use for behaviour tracking.
 - `SENTRY_API_KEY`: Sentry key for error reporting.
 - `ALBACROSS_CLIENT_ID`: Albacross client ID key for behaviour tracking.
-- `STATIC_ASSET_CDN_URL`: Used for replacing local static paths with a cdn, .e.g https://cdn.flagsmith.com. Defaults to
-  `/`, i.e. no CDN.
 - `BASE_URL`: Used for specifying a base url path that's ignored during routing if serving from a subdirectory.
 - `USE_SECURE_COOKIES`: Enable / disable the use of secure cookies. If deploying the FE in a private network without a
   domain / SSL cert, disable secure cookies to ensure that session token is persisted. Default: true.
@@ -126,4 +124,4 @@ We use Flagsmith to manage features we rollout, if you are using your own Flagsm
 project_x.js-> flagsmith) then you will need to have a replica of our flags.
 
 A list of the flags and remote config we're currently using in production can be
-[found here](/deployment/overview#current-flagsmith-feature-flags).
+[found here](/deployment#current-flagsmith-feature-flags).

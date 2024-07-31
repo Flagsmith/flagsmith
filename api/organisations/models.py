@@ -452,7 +452,7 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
     api_calls_30d = models.IntegerField(default=0)
 
     allowed_seats = models.IntegerField(default=1)
-    allowed_30d_api_calls = models.IntegerField(default=50000)
+    allowed_30d_api_calls = models.IntegerField(default=MAX_API_CALLS_IN_FREE_PLAN)
     allowed_projects = models.IntegerField(default=1, blank=True, null=True)
 
     chargebee_email = models.EmailField(blank=True, max_length=254, null=True)
@@ -468,7 +468,7 @@ class OrganisationAPIUsageNotification(models.Model):
     )
     percent_usage = models.IntegerField(
         null=False,
-        validators=[MinValueValidator(75), MaxValueValidator(120)],
+        validators=[MinValueValidator(75), MaxValueValidator(500)],
     )
     notified_at = models.DateTimeField(null=True)
 
