@@ -33,6 +33,7 @@ export type PaidFeature =
   | '4_EYES'
   | 'STALE_FLAGS'
   | 'AUTO_SEATS'
+  | 'METADATA'
   | 'REALTIME'
   | 'SAML'
   | 'SCHEDULE_FLAGS'
@@ -355,7 +356,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return isScaleupOrGreater && !isEnterprise
     }
 
-    const requiredPlan = Utils.getRequiredPlan()
+    const requiredPlan = Utils.getRequiredPlan(feature)
     if (requiredPlan === 'enterprise') {
       return isEnterprise
     } else if (requiredPlan === 'scale-up') {
@@ -397,6 +398,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       }
       case 'STALE_FLAGS':
       case 'REALTIME':
+      case 'METADATA':
       case 'SAML': {
         plan = 'enterprise'
         break

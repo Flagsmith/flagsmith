@@ -170,9 +170,7 @@ const ProjectSettingsPage = class extends Component {
     const { name, stale_flags_limit_days } = this.state
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
 
-    const metadataEnable =
-      Utils.getPlansPermission('METADATA') &&
-      Utils.getFlagsmithHasFeature('enable_metadata')
+    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
 
     return (
       <div className='app-container container'>

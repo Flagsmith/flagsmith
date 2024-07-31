@@ -49,6 +49,12 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     description: 'Improve security compliance across your organisation.',
     title: 'Enforce Two-Factor Authentication',
   },
+  'METADATA': {
+    description:
+      'Define custom fields that are shown when creating or modifying flags, segments or environments.',
+    docs: 'https://docs.flagsmith.com/advanced-use/custom-fields',
+    title: 'Custom Fields',
+  },
   'RBAC': {
     description:
       'Configure fine-grained permissions and roles to manage access across organisations, projects and environments.',
@@ -163,9 +169,7 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
         )}
       >
         <div className='d-flex gap-2 justify-content-between font-weight-medium align-items-center'>
-          <div>
-            {featureDescriptions[feature].description}
-          </div>
+          <div>{featureDescriptions[feature].description}</div>
           {ctas}
         </div>
       </div>
