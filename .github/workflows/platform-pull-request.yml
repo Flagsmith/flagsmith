@@ -43,9 +43,9 @@ jobs:
     name: Build Unified Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       target: oss-unified
       image-name: flagsmith
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       comment: ${{ needs.permissions-check.outputs.can-write == 'true' }}
 
   docker-build-api:
@@ -56,9 +56,9 @@ jobs:
     name: Build API Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       target: oss-api
       image-name: flagsmith-api
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       comment: ${{ needs.permissions-check.outputs.can-write == 'true' }}
 
   docker-build-frontend:
@@ -69,9 +69,9 @@ jobs:
     name: Build Frontend Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       target: oss-frontend
       image-name: flagsmith-frontend
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       comment: ${{ needs.permissions-check.outputs.can-write == 'true' }}
 
   docker-build-api-test:
@@ -84,8 +84,9 @@ jobs:
     with:
       target: api-test
       image-name: flagsmith-api-test
-      scan: false
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       comment: ${{ needs.permissions-check.outputs.can-write == 'true' }}
+      scan: false
 
   docker-build-e2e:
     if: |
@@ -95,11 +96,11 @@ jobs:
     name: Build E2E Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       file: frontend/Dockerfile.e2e
       image-name: flagsmith-e2e
-      scan: false
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       comment: ${{ needs.permissions-check.outputs.can-write == 'true' }}
+      scan: false
 
   docker-build-private-cloud:
     if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
