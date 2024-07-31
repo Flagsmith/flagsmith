@@ -9,7 +9,7 @@ from projects.models import Project
 from users.models import FFAdminUser
 
 # Password used by all the test users
-PASSWORD = "str0ngp4ssw0rd!"
+PASSWORD = "Str0ngp4ssw0rd!"
 
 
 def delete_user_and_its_organisations(user_email: str) -> None:
