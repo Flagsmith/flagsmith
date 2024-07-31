@@ -514,6 +514,61 @@ def test_handle_api_usage_notifications_above_100(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_handle_api_usage_notifications_with_error(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    inspecting_handler: logging.Handler,
+) -> None:
+    # Given
+    from organisations.tasks import logger
+
+    logger.addHandler(inspecting_handler)
+
+    now = timezone.now()
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.save()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+    )
+
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
+    api_usage_patch = mocker.patch(
+        "organisations.tasks.handle_api_usage_notification_for_organisation",
+        side_effect=ValueError("An error occurred"),
+    )
+
+    # When
+    handle_api_usage_notifications()
+
+    # Then
+    api_usage_patch.assert_called_once_with(organisation)
+    assert (
+        OrganisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 0
+    )
+    assert len(inspecting_handler.messages) == 1
+    error_message = inspecting_handler.messages[0].split("\n")[0]
+
+    assert (
+        error_message
+        == f"Error processing api usage for organisation {organisation.id}"
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_handle_api_usage_notifications_for_free_accounts(
     mocker: MockerFixture,
     organisation: Organisation,
