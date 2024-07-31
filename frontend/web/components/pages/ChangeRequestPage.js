@@ -24,7 +24,7 @@ import DiffChangeRequest from 'components/diff/DiffChangeRequest'
 import NewVersionWarning from 'components/NewVersionWarning'
 import { mergeChangeSets } from 'common/services/useChangeRequest'
 import WarningMessage from 'components/WarningMessage'
-import ErrorMessage from 'components/ErrorMessage';
+import ErrorMessage from 'components/ErrorMessage'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -177,8 +177,8 @@ const ChangeRequestsPage = class extends Component {
   getScheduledDate = (changeRequest) => {
     return changeRequest.environment_feature_versions.length > 0
       ? moment(changeRequest.environment_feature_versions[0].live_from)
-      : changeRequest?.change_sets
-      ? changeRequest?.change_sets?.[0]?.live_from
+      : changeRequest?.change_sets?.[0]?.live_from
+      ? moment(changeRequest?.change_sets?.[0]?.live_from)
       : moment(changeRequest.feature_states[0].live_from)
   }
 
@@ -363,8 +363,7 @@ const ChangeRequestsPage = class extends Component {
                 />
                 <PageTitle
                   cta={
-                    (!changeRequest?.committed_at ||
-                      this.getScheduledDate(changeRequest) > moment()) && (
+                    (!changeRequest?.committed_at || isScheduled) && (
                       <Row>
                         <Button
                           theme='secondary'
@@ -372,7 +371,7 @@ const ChangeRequestsPage = class extends Component {
                         >
                           Delete
                         </Button>
-                        {!isVersioned && (
+                        {!isVersioned && !changeRequest?.committedAt && (
                           <Button
                             onClick={() =>
                               this.editChangeRequest(
@@ -567,7 +566,7 @@ const ChangeRequestsPage = class extends Component {
                         </div>
                       )
                     )}
-                    <ErrorMessage error={ChangeRequestStore.error}/>
+                    <ErrorMessage error={ChangeRequestStore.error} />
                     {changeRequest.committed_at ? (
                       <div className='mr-2 font-weight-medium'>
                         Committed at{' '}
