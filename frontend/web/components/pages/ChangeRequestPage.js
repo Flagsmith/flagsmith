@@ -24,7 +24,7 @@ import DiffChangeRequest from 'components/diff/DiffChangeRequest'
 import NewVersionWarning from 'components/NewVersionWarning'
 import { mergeChangeSets } from 'common/services/useChangeRequest'
 import WarningMessage from 'components/WarningMessage'
-import ErrorMessage from 'components/ErrorMessage';
+import ErrorMessage from 'components/ErrorMessage'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -363,8 +363,7 @@ const ChangeRequestsPage = class extends Component {
                 />
                 <PageTitle
                   cta={
-                    (!changeRequest?.committed_at ||
-                      this.getScheduledDate(changeRequest) > moment()) && (
+                    (!changeRequest?.committed_at || isScheduled) && (
                       <Row>
                         <Button
                           theme='secondary'
@@ -567,7 +566,7 @@ const ChangeRequestsPage = class extends Component {
                         </div>
                       )
                     )}
-                    <ErrorMessage error={ChangeRequestStore.error}/>
+                    <ErrorMessage error={ChangeRequestStore.error} />
                     {changeRequest.committed_at ? (
                       <div className='mr-2 font-weight-medium'>
                         Committed at{' '}
