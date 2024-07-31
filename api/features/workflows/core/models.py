@@ -263,14 +263,20 @@ class ChangeRequest(
 
     @property
     def live_from(self) -> datetime | None:
+        # Note: a change request can only have one of either
+        # feature_states, change_sets or environment_feature_versions
+
         # First we check if there are feature states associated with the change request
         # and, if so, we return the live_from of the feature state with the earliest
         # live_from.
         if first_feature_state := self.feature_states.order_by("live_from").first():
             return first_feature_state.live_from
 
-        # Then we do the same for environment feature versions. Note that a change request
-        # can not have feature states and environment feature versions.
+        # Then we check the change sets.
+        elif first_change_set := self.change_sets.order_by("live_from").first():
+            return first_change_set.live_from
+
+        # Finally, we do the same for environment feature versions.
         elif first_environment_feature_version := self.environment_feature_versions.order_by(
             "live_from"
         ).first():
