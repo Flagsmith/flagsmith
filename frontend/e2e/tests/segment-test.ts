@@ -168,13 +168,13 @@ export const testSegment2 = async () => {
 
   log('Set segment overrides features')
   await viewFeature(0)
-  await addSegmentOverrideConfig(0, 3, 2)
-  await addSegmentOverrideConfig(1, 2, 1)
-  await addSegmentOverrideConfig(2, 1, 0)
+  await addSegmentOverrideConfig(0, 1, 0)
+  await addSegmentOverrideConfig(1, 2, 0)
+  await addSegmentOverrideConfig(2, 3, 0)
   await saveFeatureSegments()
   await viewFeature(1)
-  await addSegmentOverride(0, true, 2)
-  await addSegmentOverride(1, false, 1)
+  await addSegmentOverride(0, true, 0)
+  await addSegmentOverride(1, false, 0)
   await addSegmentOverride(2, true, 0)
   await saveFeatureSegments()
 

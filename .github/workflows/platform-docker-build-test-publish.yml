@@ -50,6 +50,14 @@ jobs:
       secrets: |
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
 
+  docker-build-api-test:
+    name: Build API Test Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: api-test
+      image-name: flagsmith-api-test
+      scan: false
+
   docker-build-e2e:
     name: Build E2E Image
     uses: ./.github/workflows/.reusable-docker-build.yml

@@ -10,9 +10,11 @@ on:
       - release-please-*
 
 jobs:
-  validate-pr-title:
-    name: Validate Conventional Commit title
+  conventional-commit:
+    name: Conventional Commit
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: Check PR Conventional Commit title
         uses: amannn/action-semantic-pull-request@v5
@@ -30,15 +32,8 @@ jobs:
             refactor
             test
             chore
-
-  add-labels:
-    name: Add labels based on Conventional Commit title
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    steps:
       - name: Auto-label PR with Conventional Commit title
-        uses: bcoe/conventional-release-labels@v1
+        uses: kramen22/conventional-release-labels@v1
         with:
           type_labels: |
             {
@@ -66,9 +61,23 @@ jobs:
         with:
           require: write
 
+  docker-prepare-report-comment:
+    if: needs.check-permissions.outputs.can-write == 'true'
+    name: Prepare Docker report comment
+    needs: check-permissions
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/
+          sparse-checkout-cone-mode: false
+      - uses: ./.github/actions/docker-build-report-to-pr
+
   docker-build-unified:
     if: github.event.pull_request.draft == false
-    needs: check-permissions
+    needs: [check-permissions, docker-prepare-report-comment]
     name: Build Unified Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
@@ -79,7 +88,7 @@ jobs:
 
   docker-build-api:
     if: github.event.pull_request.draft == false
-    needs: check-permissions
+    needs: [check-permissions, docker-prepare-report-comment]
     name: Build API Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
@@ -90,7 +99,7 @@ jobs:
 
   docker-build-frontend:
     if: github.event.pull_request.draft == false
-    needs: check-permissions
+    needs: [check-permissions, docker-prepare-report-comment]
     name: Build Frontend Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
@@ -99,9 +108,20 @@ jobs:
       image-name: flagsmith-frontend
       comment: ${{ needs.check-permissions.outputs.can-write == 'true' }}
 
+  docker-build-api-test:
+    if: github.event.pull_request.draft == false
+    needs: [check-permissions, docker-prepare-report-comment]
+    name: Build API Test Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: api-test
+      image-name: flagsmith-api-test
+      scan: false
+      comment: ${{ needs.check-permissions.outputs.can-write == 'true' }}
+
   docker-build-e2e:
     if: github.event.pull_request.draft == false
-    needs: check-permissions
+    needs: [check-permissions, docker-prepare-report-comment]
     name: Build E2E Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
@@ -113,7 +133,7 @@ jobs:
 
   docker-build-private-cloud:
     if: github.event.pull_request.draft == false && needs.check-permissions.outputs.can-write == 'true'
-    needs: check-permissions
+    needs: [check-permissions, docker-prepare-report-comment]
     name: Build Private Cloud Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:

@@ -167,7 +167,9 @@ const ProjectSettingsPage = class extends Component {
     const { name, stale_flags_limit_days } = this.state
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
 
-    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
+    const metadataEnable =
+      Utils.getPlansPermission('METADATA') &&
+      Utils.getFlagsmithHasFeature('enable_metadata')
 
     return (
       <div className='app-container container'>
@@ -435,7 +437,7 @@ const ProjectSettingsPage = class extends Component {
                           />
                         )}
                       </FormGroup>
-                      {!Utils.getIsEdge() && (
+                      {!Utils.getIsEdge() && !!Utils.isSaas() && (
                         <FormGroup className='mt-4 col-md-6'>
                           <Row className='mb-2'>
                             <h5 className='mb-0 mr-3'>
@@ -613,7 +615,7 @@ const ProjectSettingsPage = class extends Component {
                       />
                     </TabItem>
                     {metadataEnable && (
-                      <TabItem tabLabel='Metadata'>
+                      <TabItem tabLabel='Custom Fields'>
                         <MetadataPage
                           organisationId={AccountStore.getOrganisation().id}
                           projectId={this.props.match.params.projectId}

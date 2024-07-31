@@ -15,9 +15,8 @@ Flagsmith provides a reliable, dependable solution.
 
 ### Don't expect a 200 response from the Flagsmith API
 
-First up - we care deeply about our [SaaS uptime and stability](https://flagsmith.statuspage.io/). Whilst no one has
-100% uptime, in our experience there are numerous situations where your application is unable to get a response from our
-API:
+First up - we care deeply about our [SaaS uptime and stability](http://status.flagsmith.com/). Whilst no one has 100%
+uptime, in our experience there are numerous situations where your application is unable to get a response from our API:
 
 - They are using a mobile device, open your app, and step into a lift.
 - They are using a web application in a hotel that has the craziest DNS setup you have ever seen.
@@ -35,9 +34,9 @@ The solution here really depends on which of our SDKs you are using. By default 
 application thread, and are designed to work around an asynchronous callback model.
 
 Where our Server Side SDKs are being used, it really depends on if you are using them in
-[local or remote evaluation mode](/clients/overview#networking-model). When running in local evaluation mode, once the
-SDKs have received a response from the API with the Environment related data, they will keep that data in memory. In the
-event of the SDKs then not receiving an update, they will continue to function.
+[local or remote evaluation mode](/clients#networking-model). When running in local evaluation mode, once the SDKs have
+received a response from the API with the Environment related data, they will keep that data in memory. In the event of
+the SDKs then not receiving an update, they will continue to function.
 
 In the event that the SDKs aren't able to contact the API at all, they will time out and resort to
 [Default flags](#progressively-enhance-your-application-with-default-flags). When running in remote evaluation mode, you
@@ -82,9 +81,9 @@ requests for flag evaluation will happen locally in memory in fractions of a mil
 
 If you need sub-millisecond latency for end-to-end flag evaluation, for example in the event that you are running a
 multi-variate test on a landing page of your website, you can employ one of our Server Side SDKs running in
-[local evaluation mode](/clients/overview#local-evaluation) mode. This will provide sub-millisecond latency of the
-entire flag evaluation rules engine, running locally within your server infrastructure, allowing you to run multivariate
-tests with zero latency impact.
+[local evaluation mode](/clients#local-evaluation) mode. This will provide sub-millisecond latency of the entire flag
+evaluation rules engine, running locally within your server infrastructure, allowing you to run multivariate tests with
+zero latency impact.
 
 ### No proxy-server required
 
