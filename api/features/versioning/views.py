@@ -17,11 +17,16 @@ from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 from rest_framework.viewsets import GenericViewSet
 
+from app.pagination import CustomPagination
 from environments.models import Environment
 from environments.permissions.constants import VIEW_ENVIRONMENT
 from features.models import Feature, FeatureState
 from features.serializers import (
     CustomCreateSegmentOverrideFeatureStateSerializer,
+)
+from features.versioning.constants import (
+    DEFAULT_VERSION_LIMIT,
+    VERSION_LIMIT_BY_PLAN,
 )
 from features.versioning.exceptions import FeatureVersionDeleteError
 from features.versioning.models import EnvironmentFeatureVersion
@@ -55,6 +60,7 @@ class EnvironmentFeatureVersionViewSet(
     DestroyModelMixin,
 ):
     permission_classes = [IsAuthenticated, EnvironmentFeatureVersionPermissions]
+    pagination_class = CustomPagination
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -114,6 +120,14 @@ class EnvironmentFeatureVersionViewSet(
                 )
             )
             queryset = queryset.filter(_is_live=is_live)
+
+        subscription = self.environment.project.organisation.subscription
+        version_limit = VERSION_LIMIT_BY_PLAN.get(
+            subscription.subscription_plan_family, DEFAULT_VERSION_LIMIT
+        )
+
+        if self.action == "list" and version_limit is not None:
+            return queryset[:version_limit]
 
         return queryset
 
