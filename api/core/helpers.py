@@ -36,5 +36,6 @@ def get_ip_address_from_request(request):
         else request.META.get("REMOTE_ADDR")
     )
 
+
 def test_ci():
     print("Test CI")
