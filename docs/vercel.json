@@ -34,7 +34,7 @@
         },
         {
             "source": "/deployment-overview/",
-            "destination": "/deployment/overview"
+            "destination": "/deployment"
         },
         {
             "source": "/hosted-service/",
@@ -323,6 +323,10 @@
         {
             "source": "/basic-features/integrations",
             "destination": "/integrations"
+        },
+        {
+            "source": "/deployment/overview",
+            "destination": "/deployment"
         }
     ]
 }
