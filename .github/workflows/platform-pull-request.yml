@@ -10,7 +10,7 @@ on:
       - release-please-*
 
 jobs:
-  check-permissions:
+  permissions-check:
     name: Check actor permissions
     runs-on: ubuntu-latest
     outputs:
@@ -22,9 +22,9 @@ jobs:
           require: write
 
   docker-prepare-report-comment:
-    if: needs.check-permissions.outputs.can-write == 'true'
+    if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
     name: Prepare Docker report comment
-    needs: check-permissions
+    needs: permissions-check
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -36,64 +36,74 @@ jobs:
       - uses: ./.github/actions/docker-build-report-to-pr
 
   docker-build-unified:
-    if: github.event.pull_request.draft == false
-    needs: [check-permissions, docker-prepare-report-comment]
+    if: |
+      github.event.pull_request.draft == false &&
+      (needs.permissions-check.outputs.can-write == 'true' || needs.docker-prepare-report-comment.result == 'skipped')
+    needs: [permissions-check, docker-prepare-report-comment]
     name: Build Unified Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      ephemeral: ${{ needs.check-permissions.outputs.can-write == 'false' }}
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       target: oss-unified
       image-name: flagsmith
-      comment: ${{ needs.check-permissions.outputs.can-write == 'true' }}
+      comment: ${{ needs.permissions-check.outputs.can-write == 'true' }}
 
   docker-build-api:
-    if: github.event.pull_request.draft == false
-    needs: [check-permissions, docker-prepare-report-comment]
+    if: |
+      github.event.pull_request.draft == false &&
+      (always() && needs.docker-prepare-report-comment.result == 'skipped' || needs.permissions-check.outputs.can-write == 'true')
+    needs: [permissions-check, docker-prepare-report-comment]
     name: Build API Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      ephemeral: ${{ needs.check-permissions.outputs.can-write == 'false' }}
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       target: oss-api
       image-name: flagsmith-api
-      comment: ${{ needs.check-permissions.outputs.can-write == 'true' }}
+      comment: ${{ needs.permissions-check.outputs.can-write == 'true' }}
 
   docker-build-frontend:
-    if: github.event.pull_request.draft == false
-    needs: [check-permissions, docker-prepare-report-comment]
+    if: |
+      github.event.pull_request.draft == false &&
+      (always() && needs.docker-prepare-report-comment.result == 'skipped' || needs.permissions-check.outputs.can-write == 'true')
+    needs: [permissions-check, docker-prepare-report-comment]
     name: Build Frontend Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      ephemeral: ${{ needs.check-permissions.outputs.can-write == 'false' }}
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       target: oss-frontend
       image-name: flagsmith-frontend
-      comment: ${{ needs.check-permissions.outputs.can-write == 'true' }}
+      comment: ${{ needs.permissions-check.outputs.can-write == 'true' }}
 
   docker-build-api-test:
-    if: github.event.pull_request.draft == false
-    needs: [check-permissions, docker-prepare-report-comment]
+    if: |
+      github.event.pull_request.draft == false &&
+      (always() && needs.docker-prepare-report-comment.result == 'skipped' || needs.permissions-check.outputs.can-write == 'true')
+    needs: [permissions-check, docker-prepare-report-comment]
     name: Build API Test Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
       target: api-test
       image-name: flagsmith-api-test
       scan: false
-      comment: ${{ needs.check-permissions.outputs.can-write == 'true' }}
+      comment: ${{ needs.permissions-check.outputs.can-write == 'true' }}
 
   docker-build-e2e:
-    if: github.event.pull_request.draft == false
-    needs: [check-permissions, docker-prepare-report-comment]
+    if: |
+      github.event.pull_request.draft == false &&
+      (always() && needs.docker-prepare-report-comment.result == 'skipped' || needs.permissions-check.outputs.can-write == 'true')
+    needs: [permissions-check, docker-prepare-report-comment]
     name: Build E2E Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      ephemeral: ${{ needs.check-permissions.outputs.can-write == 'false' }}
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       file: frontend/Dockerfile.e2e
       image-name: flagsmith-e2e
       scan: false
-      comment: ${{ needs.check-permissions.outputs.can-write == 'true' }}
+      comment: ${{ needs.permissions-check.outputs.can-write == 'true' }}
 
   docker-build-private-cloud:
-    if: github.event.pull_request.draft == false && needs.check-permissions.outputs.can-write == 'true'
-    needs: [check-permissions, docker-prepare-report-comment]
+    if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
+    needs: [permissions-check, docker-prepare-report-comment]
     name: Build Private Cloud Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
