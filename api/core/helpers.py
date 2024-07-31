@@ -35,3 +35,6 @@ def get_ip_address_from_request(request):
         if x_forwarded_for
         else request.META.get("REMOTE_ADDR")
     )
+
+def test_ci():
+    print("Test CI")
