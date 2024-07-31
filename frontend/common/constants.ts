@@ -113,7 +113,7 @@ export default {
       'PHP': require('./code-help/init/init-php')(envId, keywords),
       'Python': require('./code-help/init/init-python')(envId, keywords),
       'React': require('./code-help/init/init-react')(envId, keywords),
-      'React Native': require('./code-help/init/init-js')(
+      'React Native': require('./code-help/init/init-react')(
         envId,
         keywordsReactNative,
       ),

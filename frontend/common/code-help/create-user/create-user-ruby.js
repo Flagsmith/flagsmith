@@ -1,3 +1,5 @@
+import Constants from 'common/constants'
+
 module.exports = (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT, USER_ID },
@@ -5,8 +7,10 @@ module.exports = (
 ) => `require "flagsmith"
 
 $flagsmith = Flagsmith::Client.new(
-    environment_key: '${envId}'
-)
+    environment_key="${envId}"${
+  Constants.isCustomFlagsmithUrl &&
+  `,\n    api_url="${Project.flagsmithClientAPI}"\n`
+})
 
 // Identify the user
 $flags = $flagsmith.get_identity_flags('${userId || USER_ID}')
