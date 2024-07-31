@@ -111,7 +111,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
 
   const editSegment = (id: number, readOnly?: boolean) => {
     API.trackEvent(Constants.events.VIEW_SEGMENT)
-    history.replaceState({}, '', `${document.location.pathname}?id=${id}`)
 
     openModal(
       `Edit Segment`,
