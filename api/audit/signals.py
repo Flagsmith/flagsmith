@@ -45,12 +45,12 @@ def call_webhooks(sender, instance, **kwargs):
 def _get_integration_config(
     instance: AuditLog, integration_name: str
 ) -> IntegrationsModel | None:
-    if hasattr(organisation := instance.organisation, integration_name):
-        return getattr(organisation, integration_name)
     if hasattr(project := instance.project, integration_name):
         return getattr(project, integration_name)
     if hasattr(environment := instance.environment, integration_name):
         return getattr(environment, integration_name)
+    if hasattr(organisation := instance.organisation, integration_name):
+        return getattr(organisation, integration_name)
     return None
 
 
