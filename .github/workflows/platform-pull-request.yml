@@ -60,9 +60,7 @@ jobs:
       - uses: ./.github/actions/docker-build-report-to-pr
 
   docker-build-unified:
-    if: |
-      github.event.pull_request.draft == false &&
-      (always() && needs.docker-prepare-report-comment.result == 'skipped')
+    if: github.event.pull_request.draft == false && !cancelled()
     needs: [permissions-check, docker-prepare-report-comment]
     name: Build Unified Image
     uses: ./.github/workflows/.reusable-docker-build.yml
@@ -70,12 +68,10 @@ jobs:
       target: oss-unified
       image-name: flagsmith
       ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
-      comment: ${{ needs.permissions-check.outputs.can-write == 'true' }}
+      comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
 
   docker-build-api:
-    if: |
-      github.event.pull_request.draft == false &&
-      (always() && needs.docker-prepare-report-comment.result == 'skipped')
+    if: github.event.pull_request.draft == false && !cancelled()
     needs: [permissions-check, docker-prepare-report-comment]
     name: Build API Image
     uses: ./.github/workflows/.reusable-docker-build.yml
@@ -83,12 +79,10 @@ jobs:
       target: oss-api
       image-name: flagsmith-api
       ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
-      comment: ${{ needs.permissions-check.outputs.can-write == 'true' }}
+      comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
 
   docker-build-frontend:
-    if: |
-      github.event.pull_request.draft == false &&
-      (always() && needs.docker-prepare-report-comment.result == 'skipped')
+    if: github.event.pull_request.draft == false && !cancelled()
     needs: [permissions-check, docker-prepare-report-comment]
     name: Build Frontend Image
     uses: ./.github/workflows/.reusable-docker-build.yml
@@ -96,12 +90,10 @@ jobs:
       target: oss-frontend
       image-name: flagsmith-frontend
       ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
-      comment: ${{ needs.permissions-check.outputs.can-write == 'true' }}
+      comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
 
   docker-build-api-test:
-    if: |
-      github.event.pull_request.draft == false &&
-      (always() && needs.docker-prepare-report-comment.result == 'skipped')
+    if: github.event.pull_request.draft == false && !cancelled()
     needs: [permissions-check, docker-prepare-report-comment]
     name: Build API Test Image
     uses: ./.github/workflows/.reusable-docker-build.yml
@@ -109,13 +101,11 @@ jobs:
       target: api-test
       image-name: flagsmith-api-test
       ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
-      comment: ${{ needs.permissions-check.outputs.can-write == 'true' }}
+      comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
       scan: false
 
   docker-build-e2e:
-    if: |
-      github.event.pull_request.draft == false &&
-      (always() && needs.docker-prepare-report-comment.result == 'skipped')
+    if: github.event.pull_request.draft == false && !cancelled()
     needs: [permissions-check, docker-prepare-report-comment]
     name: Build E2E Image
     uses: ./.github/workflows/.reusable-docker-build.yml
@@ -123,7 +113,7 @@ jobs:
       file: frontend/Dockerfile.e2e
       image-name: flagsmith-e2e
       ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
-      comment: ${{ needs.permissions-check.outputs.can-write == 'true' }}
+      comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
       scan: false
 
   docker-build-private-cloud:
