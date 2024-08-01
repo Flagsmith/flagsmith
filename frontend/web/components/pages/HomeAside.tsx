@@ -253,12 +253,12 @@ const HomeAside: FC<HomeAsideType> = ({
                                         SDK Keys
                                       </NavLink>
                                       <NavLink
-                                        id='event-link'
+                                        id='identity-link'
                                         exact
-                                        to={`/project/${project.id}/environment/${environment.api_key}/event-sdk`}
+                                        to={`/project/${project.id}/environment/${environment.api_key}/sdk-identities`}
                                       >
                                         <IonIcon className='mr-2' icon={statsChart} />
-                                        Event and Request Counts
+                                        Identities Analytics
                                       </NavLink>
                                       {environmentAdmin && (
                                         <NavLink
