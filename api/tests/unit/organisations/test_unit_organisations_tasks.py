@@ -33,6 +33,9 @@ from organisations.subscriptions.constants import (
     SCALE_UP,
 )
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
+from organisations.task_helpers import (
+    handle_api_usage_notification_for_organisation,
+)
 from organisations.tasks import (
     ALERT_EMAIL_MESSAGE,
     ALERT_EMAIL_SUBJECT,
@@ -242,6 +245,39 @@ def test_send_org_subscription_cancelled_alert(db: None, mocker: MockerFixture) 
         recipient_list=[],
         fail_silently=True,
     )
+
+
+def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_is_none(
+    organisation: Organisation,
+    inspecting_handler: logging.Handler,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    api_usage_mock = mocker.patch("organisations.task_helpers.get_current_api_usage")
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.save()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=None,
+        current_billing_term_ends_at=None,
+    )
+    from organisations.task_helpers import logger
+
+    logger.addHandler(inspecting_handler)
+
+    # When
+    handle_api_usage_notification_for_organisation(organisation)
+
+    # Then
+    api_usage_mock.assert_not_called()
+    assert inspecting_handler.messages == [
+        f"Paid organisation {organisation.id} is missing billing_starts_at datetime"
+    ]
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")

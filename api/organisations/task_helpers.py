@@ -106,6 +106,14 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         subscription_cache = organisation.subscription_information_cache
         billing_starts_at = subscription_cache.current_billing_term_starts_at
 
+        if billing_starts_at is None:
+            # Since the calling code is a list of many organisations
+            # log the error and return without raising an exception.
+            logger.error(
+                f"Paid organisation {organisation.id} is missing billing_starts_at datetime"
+            )
+            return
+
         # Truncate to the closest active month to get start of current period.
         month_delta = relativedelta(now, billing_starts_at).months
         period_starts_at = relativedelta(months=month_delta) + billing_starts_at
