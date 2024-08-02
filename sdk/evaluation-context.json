@@ -77,10 +77,7 @@
                             "type": "string"
                         },
                         {
-                            "type": "integer"
-                        },
-                        {
-                            "type": "float"
+                            "type": "number"
                         }
                     ],
                     "title": "Value"
