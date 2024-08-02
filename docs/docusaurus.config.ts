@@ -66,7 +66,7 @@ const config: Config = {
                     label: 'Docs',
                 },
                 {
-                    label: 'API Specification',
+                    label: 'Edge API Specification',
                     position: 'left',
                     to: '/edge-api/',
                 },

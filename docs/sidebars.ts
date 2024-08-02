@@ -21,8 +21,7 @@ const sidebars: SidebarsConfig = {
             label: 'Flagsmith API',
             link: {
                 type: 'generated-index',
-                title: 'Flagsmith API',
-                description: 'The Flagsmith API',
+                title: 'Edge API Specification',
                 slug: '/edge-api',
             },
             // @ts-ignore
