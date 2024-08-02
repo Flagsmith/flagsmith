@@ -69,42 +69,19 @@
         "TraitEvaluationContext": {
             "properties": {
                 "value": {
-                    "title": "Value",
-                    "type": "string"
-                },
-                "type": {
-                    "$ref": "#/$defs/TraitValueType"
+                    "title": "Value"
                 },
                 "transient": {
-                    "anyOf": [
-                        {
-                            "type": "boolean"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
+                    "type": "boolean",
+                    "default": false,
                     "title": "Transient"
                 }
             },
             "required": [
-                "value",
-                "type"
+                "value"
             ],
             "title": "TraitEvaluationContext",
             "type": "object"
-        },
-        "TraitValueType": {
-            "enum": [
-                "String",
-                "SemverString",
-                "Integer",
-                "Float",
-                "Boolean"
-            ],
-            "title": "TraitValueType",
-            "type": "string"
         }
     },
     "properties": {
