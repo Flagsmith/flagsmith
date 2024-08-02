@@ -1,8 +1,10 @@
 import json
+from typing import Any
 from unittest import mock
 
 import pytest
 from django.urls import reverse
+from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -224,13 +226,43 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
     assert len(second_identity_response_json["flags"]) == 3
 
 
-def test_get_feature_states_for_identity__transient_identity__segment_match_expected(
+@pytest.fixture
+def existing_identity_identifier_data(
+    identity_identifier: str,
+    identity: int,
+) -> dict[str, Any]:
+    return {"identifier": identity_identifier}
+
+
+@pytest.mark.parametrize(
+    "transient_data",
+    [
+        pytest.param({"transient": True}, id="with-transient-true"),
+        pytest.param({"transient": False}, id="with-transient-false"),
+        pytest.param({}, id="missing-transient"),
+    ],
+)
+@pytest.mark.parametrize(
+    "identifier_data",
+    [
+        pytest.param(
+            lazy_fixture("existing_identity_identifier_data"),
+            id="existing-identifier",
+        ),
+        pytest.param({"identifier": "unseen"}, id="new-identifier"),
+        pytest.param({"identifier": None}, id="null-identifier"),
+        pytest.param({}, id="missing-identifier"),
+    ],
+)
+def test_get_feature_states_for_identity__segment_match_expected(
     sdk_client: APIClient,
     feature: int,
     segment: int,
     segment_condition_property: str,
     segment_condition_value: str,
     segment_featurestate: int,
+    identifier_data: dict[str, Any],
+    transient_data: dict[str, Any],
 ) -> None:
     # Given
     url = reverse("api-v1:sdk-identities")
@@ -242,14 +274,14 @@ def test_get_feature_states_for_identity__transient_identity__segment_match_expe
         url,
         data=json.dumps(
             {
-                "identifier": "unseen",
+                **identifier_data,
+                **transient_data,
                 "traits": [
                     {
                         "trait_key": segment_condition_property,
                         "trait_value": segment_condition_value,
                     }
                 ],
-                "transient": True,
             }
         ),
         content_type="application/json",

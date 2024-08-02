@@ -1,7 +1,9 @@
 import json
 import urllib
+from typing import Any
 from unittest import mock
 
+import pytest
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER, STRING
 from django.test import override_settings
 from django.urls import reverse
@@ -1143,20 +1145,31 @@ def test_post_identities__server_key_only_feature__server_key_auth__return_expec
     assert response.json()["flags"]
 
 
+@pytest.mark.parametrize(
+    "identity_data",
+    [
+        pytest.param(
+            {"identifier": "transient", "transient": True},
+            id="new-identifier-transient-true",
+        ),
+        pytest.param({"identifier": ""}, id="blank-identifier"),
+        pytest.param({"identifier": None}, id="null-identifier"),
+        pytest.param({}, id="missing_identifier"),
+    ],
+)
 def test_post_identities__transient__no_persistence(
     environment: Environment,
     api_client: APIClient,
+    identity_data: dict[str, Any],
 ) -> None:
     # Given
-    identifier = "transient"
     trait_key = "trait_key"
 
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     url = reverse("api-v1:sdk-identities")
     data = {
-        "identifier": identifier,
+        **identity_data,
         "traits": [{"trait_key": trait_key, "trait_value": "bar"}],
-        "transient": True,
     }
 
     # When
@@ -1166,7 +1179,7 @@ def test_post_identities__transient__no_persistence(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert not Identity.objects.filter(identifier=identifier).exists()
+    assert not Identity.objects.exists()
     assert not Trait.objects.filter(trait_key=trait_key).exists()
 
 

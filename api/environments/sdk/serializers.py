@@ -125,7 +125,12 @@ class IdentitySerializerWithTraitsAndSegments(serializers.Serializer):
 class IdentifyWithTraitsSerializer(
     HideSensitiveFieldsSerializerMixin, serializers.Serializer
 ):
-    identifier = serializers.CharField(write_only=True, required=True)
+    identifier = serializers.CharField(
+        write_only=True,
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+    )
     transient = serializers.BooleanField(write_only=True, default=False)
     traits = TraitSerializerBasic(required=False, many=True)
     flags = SDKFeatureStateSerializer(read_only=True, many=True)
@@ -137,22 +142,23 @@ class IdentifyWithTraitsSerializer(
         Create the identity with the associated traits
         (optionally store traits if flag set on org)
         """
+        identifier = self.validated_data.get("identifier") or ""
         environment = self.context["environment"]
 
         transient = self.validated_data["transient"]
         trait_data_items = self.validated_data.get("traits", [])
 
-        if transient:
+        if transient or not identifier:
             identity = Identity(
                 created_date=timezone.now(),
-                identifier=self.validated_data["identifier"],
+                identifier=identifier,
                 environment=environment,
             )
             trait_models = identity.generate_traits(trait_data_items, persist=False)
 
         else:
             identity, created = Identity.objects.get_or_create(
-                identifier=self.validated_data["identifier"], environment=environment
+                identifier=identifier, environment=environment
             )
 
             if not created and environment.project.organisation.persist_trait_data:
