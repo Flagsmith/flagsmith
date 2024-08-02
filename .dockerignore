@@ -12,3 +12,4 @@ Dockerfile
 .ebignore
 .ebextensions
 .direnv
+.github
