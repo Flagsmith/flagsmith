@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Generator, Type
 from unittest import mock
 from unittest.mock import MagicMock
@@ -84,10 +84,12 @@ def test_write_handles_errors(
     # but the exception was not raised
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):
     expected_query = (
         (
-            f'from(bucket:"{read_bucket}") |> range(start: -30d, stop: now()) '
+            f'from(bucket:"{read_bucket}") |> range(start: 2022-12-20T09:09:47.325132+00:00, '
+            "stop: 2023-01-19T09:09:47.325132+00:00) "
             f'|> filter(fn:(r) => r._measurement == "api_call")         '
             f'|> filter(fn: (r) => r["_field"] == "request_count")         '
             f'|> filter(fn: (r) => r["organisation_id"] == "{org_id}") '
@@ -117,10 +119,11 @@ def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):
     assert call[2]["query"].replace(" ", "").replace("\n", "") == expected_query
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_influx_db_query_when_get_events_list_then_query_api_called(monkeypatch):
     query = (
         f'from(bucket:"{read_bucket}") '
-        f"|> range(start: -30d, stop: now()) "
+        f"|> range(start: 2022-12-20T09:09:47.325132+00:00, stop: 2023-01-19T09:09:47.325132+00:00) "
         f'|> filter(fn:(r) => r._measurement == "api_call")                   '
         f'|> filter(fn: (r) => r["organisation_id"] == "{org_id}") '
         f'|> drop(columns: ["organisation", "organisation_id", "type", "project", '
@@ -180,6 +183,7 @@ def test_influx_db_query_when_get_events_list_then_query_api_called(monkeypatch)
         ),
     ),
 )
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_influx_db_query_when_get_multiple_events_for_organisation_then_query_api_called(
     monkeypatch, project_id, environment_id, expected_filters
 ):
@@ -187,7 +191,7 @@ def test_influx_db_query_when_get_multiple_events_for_organisation_then_query_ap
     expected_query = (
         (
             f'from(bucket:"{read_bucket}") '
-            "|> range(start: -30d, stop: now()) "
+            "|> range(start: 2022-12-20T09:09:47.325132+00:00, stop: 2023-01-19T09:09:47.325132+00:00) "
             f"{build_filter_string(expected_filters)}"
             '|> drop(columns: ["organisation", "organisation_id", "type", "project", '
             '"project_id", "environment", "environment_id", "host"]) '
@@ -217,12 +221,13 @@ def test_influx_db_query_when_get_multiple_events_for_organisation_then_query_ap
     assert call[2]["query"].replace(" ", "").replace("\n", "") == expected_query
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_influx_db_query_when_get_multiple_events_for_feature_then_query_api_called(
     monkeypatch,
 ):
     query = (
         f'from(bucket:"{read_bucket}") '
-        "|> range(start: -30d, stop: now()) "
+        "|> range(start: 2022-12-20T09:09:47.325132+00:00, stop: 2023-01-19T09:09:47.325132+00:00) "
         '|> filter(fn:(r) => r._measurement == "feature_evaluation")                   '
         '|> filter(fn: (r) => r["_field"] == "request_count")                   '
         f'|> filter(fn: (r) => r["environment_id"] == "{env_id}")                   '
@@ -248,6 +253,7 @@ def test_influx_db_query_when_get_multiple_events_for_feature_then_query_api_cal
     mock_query_api.query.assert_called_once_with(org=influx_org, query=query)
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_usage_data(mocker):
     # Given
     influx_data = [
@@ -276,12 +282,14 @@ def test_get_usage_data(mocker):
     usage_data = get_usage_data(org_id)
 
     # Then
+    date_start = datetime.fromisoformat("2022-12-20T09:09:47.325132+00:00")
+    date_stop = datetime.fromisoformat("2023-01-19T09:09:47.325132+00:00")
     mocked_get_multiple_event_list_for_organisation.assert_called_once_with(
         organisation_id=org_id,
         environment_id=None,
         project_id=None,
-        date_start="-30d",
-        date_stop="now()",
+        date_start=date_start,
+        date_stop=date_stop,
     )
 
     assert len(usage_data) == 2
@@ -299,6 +307,7 @@ def test_get_usage_data(mocker):
     assert usage_data[1].environment_document == 10
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_feature_evaluation_data(mocker):
     # Given
     influx_data = [
@@ -318,8 +327,9 @@ def test_get_feature_evaluation_data(mocker):
     )
 
     # Then
+    date_start = datetime.fromisoformat("2022-12-20T09:09:47.325132+00:00")
     mocked_get_multiple_event_list_for_feature.assert_called_once_with(
-        feature_name=feature_name, environment_id=env_id, date_start="-30d"
+        feature_name=feature_name, environment_id=env_id, date_start=date_start
     )
 
     assert len(feature_evaluation_data) == 2
@@ -331,17 +341,17 @@ def test_get_feature_evaluation_data(mocker):
     assert feature_evaluation_data[1].count == 200
 
 
-@pytest.mark.parametrize("date_stop", ["now()", "-5d"])
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_event_list_for_organisation_with_date_stop_set_to_now_and_previously(
-    date_stop: str,
     mocker: MockerFixture,
     organisation: Organisation,
 ) -> None:
     # Given
+
     now = timezone.now()
     one_day_ago = now - timedelta(days=1)
     two_days_ago = now - timedelta(days=2)
+    date_stop = now
 
     record_mock1 = mock.MagicMock()
     record_mock1.__getitem__.side_effect = lambda key: {
@@ -444,9 +454,10 @@ def test_get_top_organisations_value_error(
 
 def test_early_return_for_empty_range_for_influx_query_manager() -> None:
     # When
+    now = timezone.now()
     results = InfluxDBWrapper.influx_query_manager(
-        date_start="-0d",
-        date_stop="now()",
+        date_start=now,
+        date_stop=now,
     )
 
     # Then

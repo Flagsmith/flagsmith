@@ -365,7 +365,7 @@ def test_handle_api_usage_notifications_below_100(
     handle_api_usage_notifications()
 
     # Then
-    mock_api_usage.assert_called_once_with(organisation.id, "-14d")
+    mock_api_usage.assert_called_once_with(organisation.id, now - timedelta(days=14))
 
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
@@ -451,7 +451,7 @@ def test_handle_api_usage_notifications_below_api_usage_alert_thresholds(
     handle_api_usage_notifications()
 
     # Then
-    mock_api_usage.assert_called_once_with(organisation.id, "-14d")
+    mock_api_usage.assert_called_once_with(organisation.id, now - timedelta(days=14))
 
     assert len(mailoutbox) == 0
 
@@ -501,7 +501,7 @@ def test_handle_api_usage_notifications_above_100(
     handle_api_usage_notifications()
 
     # Then
-    mock_api_usage.assert_called_once_with(organisation.id, "-14d")
+    mock_api_usage.assert_called_once_with(organisation.id, now - timedelta(days=14))
 
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
@@ -611,6 +611,7 @@ def test_handle_api_usage_notifications_for_free_accounts(
     mailoutbox: list[EmailMultiAlternatives],
 ) -> None:
     # Given
+    now = timezone.now()
     assert organisation.is_paid is False
     assert organisation.subscription.is_free_plan is True
     assert organisation.subscription.max_api_calls == MAX_API_CALLS_IN_FREE_PLAN
@@ -633,7 +634,7 @@ def test_handle_api_usage_notifications_for_free_accounts(
     handle_api_usage_notifications()
 
     # Then
-    mock_api_usage.assert_called_once_with(organisation.id, "-30d")
+    mock_api_usage.assert_called_once_with(organisation.id, now - timedelta(days=30))
 
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
