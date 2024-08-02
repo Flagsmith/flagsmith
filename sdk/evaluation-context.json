@@ -69,6 +69,20 @@
         "TraitEvaluationContext": {
             "properties": {
                 "value": {
+                    "anyOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "integer"
+                        },
+                        {
+                            "type": "float"
+                        }
+                    ],
                     "title": "Value"
                 },
                 "transient": {
