@@ -2,7 +2,6 @@ import typing
 from collections import defaultdict
 
 from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
-from django.utils import timezone
 from rest_framework import serializers
 
 from environments.identities.models import Identity
@@ -12,6 +11,12 @@ from environments.identities.serializers import (
 from environments.identities.traits.fields import TraitValueField
 from environments.identities.traits.models import Trait
 from environments.identities.traits.serializers import TraitSerializerBasic
+from environments.sdk.services import (
+    get_identified_transient_identity_and_traits,
+    get_persisted_identity_and_traits,
+    get_transient_identity_and_traits,
+)
+from environments.sdk.types import SDKTraitData
 from features.serializers import (
     FeatureStateSerializerFull,
     SDKFeatureStateSerializer,
@@ -142,45 +147,45 @@ class IdentifyWithTraitsSerializer(
         Create the identity with the associated traits
         (optionally store traits if flag set on org)
         """
-        identifier = self.validated_data.get("identifier") or ""
+        identifier = self.validated_data.get("identifier")
         environment = self.context["environment"]
-
         transient = self.validated_data["transient"]
-        trait_data_items = self.validated_data.get("traits", [])
+        sdk_trait_data: list[SDKTraitData] = self.validated_data.get("traits", [])
 
-        if transient or not identifier:
-            identity = Identity(
-                created_date=timezone.now(),
-                identifier=identifier,
+        if not identifier:
+            # We have a fully transient identity that should never be persisted.
+            identity, traits = get_transient_identity_and_traits(
                 environment=environment,
+                sdk_trait_data=sdk_trait_data,
             )
-            trait_models = identity.generate_traits(trait_data_items, persist=False)
+
+        elif transient:
+            # Get presently stored traits and identity overrides
+            # but don't persist incoming data.
+            identity, traits = get_identified_transient_identity_and_traits(
+                environment=environment,
+                identifier=identifier,
+                sdk_trait_data=sdk_trait_data,
+            )
 
         else:
-            identity, created = Identity.objects.get_or_create(
-                identifier=identifier, environment=environment
+            # Persist the identity in accordance with non-local settings
+            # and individual trait transiency.
+            identity, traits = get_persisted_identity_and_traits(
+                environment=environment,
+                identifier=identifier,
+                sdk_trait_data=sdk_trait_data,
             )
 
-            if not created and environment.project.organisation.persist_trait_data:
-                # if this is an update and we're persisting traits, then we need to
-                # partially update any traits and return the full list
-                trait_models = identity.update_traits(trait_data_items)
-            else:
-                # generate traits for the identity and store them if configured to do so
-                trait_models = identity.generate_traits(
-                    trait_data_items,
-                    persist=environment.project.organisation.persist_trait_data,
-                )
-
         all_feature_states = identity.get_all_feature_states(
-            traits=trait_models,
+            traits=traits,
             additional_filters=self.context.get("feature_states_additional_filters"),
         )
-        identify_integrations(identity, all_feature_states, trait_models)
+        identify_integrations(identity, all_feature_states, traits)
 
         return {
             "identity": identity,
-            "traits": trait_models,
+            "traits": traits,
             "flags": all_feature_states,
         }
 

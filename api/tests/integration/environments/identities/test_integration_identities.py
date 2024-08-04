@@ -250,6 +250,7 @@ def existing_identity_identifier_data(
             id="existing-identifier",
         ),
         pytest.param({"identifier": "unseen"}, id="new-identifier"),
+        pytest.param({"identifier": ""}, id="blank-identifier"),
         pytest.param({"identifier": None}, id="null-identifier"),
         pytest.param({}, id="missing-identifier"),
     ],
