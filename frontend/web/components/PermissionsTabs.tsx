@@ -78,19 +78,21 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
       theme='pill m-0'
       isRoles={true}
     >
-      <TabItem
-        tabLabel={<Row className='justify-content-center'>Organisation</Row>}
-      >
-        <EditPermissionsModal
-          id={orgId}
-          group={group}
-          isGroup={!!group}
-          user={user}
-          className='mt-2'
-          level={'organisation'}
-          role={role}
-        />
-      </TabItem>
+      {tags && (
+        <TabItem
+          tabLabel={<Row className='justify-content-center'>Organisation</Row>}
+        >
+          <EditPermissionsModal
+            id={orgId}
+            group={group}
+            isGroup={!!group}
+            user={user}
+            className='mt-2'
+            level={'organisation'}
+            role={role}
+          />
+        </TabItem>
+      )}
       <TabItem tabLabel={<Row className='justify-content-center'>Project</Row>}>
         <Row className='justify-content-between'>
           <h5 className='my-3'>Permissions</h5>
@@ -113,6 +115,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
           filter={searchProject}
           mainItems={projectData}
           role={role}
+          hasTags={!!tags}
           level={'project'}
           ref={tabRef}
         />

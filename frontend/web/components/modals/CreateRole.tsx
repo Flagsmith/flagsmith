@@ -516,9 +516,16 @@ const CreateRole: FC<CreateRoleType> = ({
         </TabItem>
       </Tabs>
     ) : (
-      <div className='my-3 mx-4'>
-        <Tab1 />
-      </div>
+      <Tabs uncontrolled onChange={changeTab} buttonTheme='text'>
+        <TabItem
+          tabLabel={<Row className='justify-content-center'>General</Row>}
+        >
+          <Tab1 />
+        </TabItem>
+        <TabItem tabLabel={<Row className='justify-content-center'>Tags</Row>}>
+          <div></div>
+        </TabItem>
+      </Tabs>
     )
   }
 

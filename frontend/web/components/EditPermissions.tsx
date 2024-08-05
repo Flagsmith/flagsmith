@@ -84,6 +84,7 @@ type EditPermissionModalType = {
   permissionChanged: () => void
   isEditUserPermission?: boolean
   isEditGroupPermission?: boolean
+  hasTags?: boolean
 }
 
 type EditPermissionsType = Omit<EditPermissionModalType, 'onSave'> & {
@@ -151,6 +152,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       className,
       envId,
       group,
+      hasTags,
       id,
       isEditGroupPermission,
       isEditUserPermission,
@@ -416,6 +418,18 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
 
     const admin = () => entityPermissions && entityPermissions.admin
 
+    const checkTBACPermissions = (permission: string) => {
+      switch (permission) {
+        case 'VIEW_PROJECT':
+        case 'DELETE_FEATURE':
+        case 'UPDATE_FEATURE_STATE':
+        case 'VIEW_ENVIRONMENT':
+          return false
+        default:
+          return true
+      }
+    }
+
     const hasPermission = (key: string) => {
       if (admin()) return true
       return entityPermissions.permissions.includes(key)
@@ -669,8 +683,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
     const isAdmin = admin()
     const hasRbacPermission = Utils.getPlansPermission('RBAC')
 
-    const [search, setSearch] = useState()
-
     return !permissions || !entityPermissions ? (
       <div className='modal-body text-center'>
         <Loader />
@@ -706,7 +718,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                   </div>
                 </Flex>
                 <Switch
-                  disabled={!hasRbacPermission || saving}
+                  disabled={!hasRbacPermission || saving || hasTags}
                   onChange={() => {
                     toggleAdmin()
                     setValueChanged(true)
@@ -726,7 +738,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             </span>
           )}
           <PanelSearch
-            filterRow={(item: AvailablePermission, search) => {
+            filterRow={(item: AvailablePermission, search: string) => {
               const name = Format.enumeration.get(item.key).toLowerCase()
               return name.includes(search?.toLowerCase() || '')
             }}
@@ -735,6 +747,17 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             items={permissions}
             renderRow={(p: AvailablePermission) => {
               const levelUpperCase = level.toUpperCase()
+              const enableOnlyTBAC = hasTags && checkTBACPermissions(p.key)
+              console.log(
+                'DEBUG: enableOnlyTBAC:',
+                enableOnlyTBAC,
+                'p.key:',
+                p.key,
+                'hasTags:',
+                hasTags,
+                'checkTBACPermissions(p.key):',
+                checkTBACPermissions(p.key),
+              )
               const disabled =
                 level !== 'organisation' &&
                 p.key !== `VIEW_${levelUpperCase}` &&
@@ -756,7 +779,11 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                         togglePermission(p.key)
                       }}
                       disabled={
-                        disabled || admin() || !hasRbacPermission || saving
+                        disabled ||
+                        admin() ||
+                        !hasRbacPermission ||
+                        saving ||
+                        enableOnlyTBAC
                       }
                       checked={!disabled && hasPermission(p.key)}
                     />
@@ -877,6 +904,7 @@ const rolesWidths = [250, 600, 100]
 const EditPermissions: FC<EditPermissionsType> = (props) => {
   const {
     envId,
+    hasTags,
     id,
     level,
     onSaveGroup,
@@ -891,6 +919,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
     tabClassName,
   } = props
   const [tab, setTab] = useState()
+  console.log('DEBUG: hasTags: editPermissions:', hasTags)
   const editUserPermissions = (user: User) => {
     openModal(
       `Edit ${Format.camelCase(level)} Permissions`,
@@ -904,6 +933,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         parentSettingsLink={parentSettingsLink}
         user={user}
         push={router.history.push}
+        hasTags={hasTags}
       />,
       'p-0 side-modal',
     )
@@ -923,6 +953,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         parentSettingsLink={parentSettingsLink}
         group={group}
         push={router.history.push}
+        hasTags={hasTags}
       />,
       'p-0 side-modal',
     )
