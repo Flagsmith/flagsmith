@@ -245,39 +245,65 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
             if not request.environment.trait_persistence_allowed(request):
                 raise BadRequest("Unable to set traits with client key.")
 
-            # endpoint allows users to delete existing traits by sending null values
-            # for the trait value so we need to filter those out here
+            identities = {trait["identity"]["identifier"] for trait in request.data}
+
+            existing_traits = Trait.objects.filter(
+                identity__identifier__in=identities,
+                identity__environment=request.environment,
+            )
+
+            # Map to easily access existing traits
+            existing_traits_map = {
+                (trait.identity.identifier, trait.trait_key): trait
+                for trait in existing_traits
+            }
+
             traits = []
             delete_filter_query = Q()
 
             for trait in request.data:
+                trait_key = trait.get("trait_key")
+                identifier = trait["identity"]["identifier"]
+
                 if trait.get("trait_value") is None:
                     delete_filter_query = delete_filter_query | Q(
-                        trait_key=trait.get("trait_key"),
-                        identity__identifier=trait["identity"]["identifier"],
+                        trait_key=trait_key,
+                        identity__identifier=identifier,
                         identity__environment=request.environment,
                     )
-                else:
+                    continue
+
+                existing_trait = existing_traits_map.get((identifier, trait_key))
+                if (
+                    not existing_trait
+                    or existing_trait.trait_value != trait["trait_value"]
+                ):
                     traits.append(trait)
 
             if delete_filter_query:
                 Trait.objects.filter(delete_filter_query).delete()
 
-            serializer = self.get_serializer(data=traits, many=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+            if len(traits) > 0:
+                serializer = self.get_serializer(data=traits, many=True)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
 
-            if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
-                forward_trait_requests.delay(
-                    args=(
-                        request.method,
-                        dict(request.headers),
-                        request.environment.project.id,
-                        request.data,
+                if (
+                    settings.EDGE_API_URL
+                    and request.environment.project.enable_dynamo_db
+                ):
+                    forward_trait_requests.delay(
+                        args=(
+                            request.method,
+                            dict(request.headers),
+                            request.environment.project.id,
+                            traits,
+                        )
                     )
-                )
 
-            return Response(serializer.data, status=200)
+                return Response(serializer.data if traits else [], status=200)
+
+            return Response(traits, status=200)
 
         except (TypeError, AttributeError) as excinfo:
             logger.error("Invalid request data: %s" % str(excinfo))
