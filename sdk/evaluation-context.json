@@ -29,8 +29,15 @@
         "IdentityEvaluationContext": {
             "properties": {
                 "identifier": {
-                    "title": "Identifier",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "title": "Identifier"
                 },
                 "traits": {
                     "additionalProperties": {
@@ -60,7 +67,6 @@
                 }
             },
             "required": [
-                "identifier",
                 "traits"
             ],
             "title": "IdentityEvaluationContext",
