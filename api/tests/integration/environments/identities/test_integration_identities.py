@@ -1,10 +1,11 @@
 import json
-from typing import Any
+from typing import Any, Generator
 from unittest import mock
 
 import pytest
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -234,6 +235,15 @@ def existing_identity_identifier_data(
     return {"identifier": identity_identifier}
 
 
+@pytest.fixture
+def transient_random_identifier(
+    mocker: MockerFixture,
+) -> Generator[str, None, None]:
+    uuid_mock = mocker.patch("environments.sdk.services.uuid", autospec=True)
+    uuid_mock.uuid4.return_value = identifier = "1199c22c-4dcb-4505-9857-5db5f258469c"
+    yield identifier
+
+
 @pytest.mark.parametrize(
     "transient_data",
     [
@@ -243,16 +253,27 @@ def existing_identity_identifier_data(
     ],
 )
 @pytest.mark.parametrize(
-    "identifier_data",
+    "identifier_data,expected_identifier",
     [
         pytest.param(
             lazy_fixture("existing_identity_identifier_data"),
+            lazy_fixture("identity_identifier"),
             id="existing-identifier",
         ),
-        pytest.param({"identifier": "unseen"}, id="new-identifier"),
-        pytest.param({"identifier": ""}, id="blank-identifier"),
-        pytest.param({"identifier": None}, id="null-identifier"),
-        pytest.param({}, id="missing-identifier"),
+        pytest.param({"identifier": "unseen"}, "unseen", id="new-identifier"),
+        pytest.param(
+            {"identifier": ""},
+            lazy_fixture("transient_random_identifier"),
+            id="blank-identifier",
+        ),
+        pytest.param(
+            {"identifier": None},
+            lazy_fixture("transient_random_identifier"),
+            id="null-identifier",
+        ),
+        pytest.param(
+            {}, lazy_fixture("transient_random_identifier"), id="missing-identifier"
+        ),
     ],
 )
 def test_get_feature_states_for_identity__segment_match_expected(
@@ -264,6 +285,7 @@ def test_get_feature_states_for_identity__segment_match_expected(
     segment_featurestate: int,
     identifier_data: dict[str, Any],
     transient_data: dict[str, Any],
+    expected_identifier: str,
 ) -> None:
     # Given
     url = reverse("api-v1:sdk-identities")
@@ -291,6 +313,7 @@ def test_get_feature_states_for_identity__segment_match_expected(
     # Then
     assert response.status_code == status.HTTP_200_OK
     response_json = response.json()
+    assert response_json["identifier"] == expected_identifier
     assert (
         flag_data := next(
             (

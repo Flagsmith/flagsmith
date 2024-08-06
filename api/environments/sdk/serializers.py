@@ -131,7 +131,6 @@ class IdentifyWithTraitsSerializer(
     HideSensitiveFieldsSerializerMixin, serializers.Serializer
 ):
     identifier = serializers.CharField(
-        write_only=True,
         required=False,
         allow_blank=True,
         allow_null=True,
@@ -185,6 +184,7 @@ class IdentifyWithTraitsSerializer(
 
         return {
             "identity": identity,
+            "identifier": identity.identifier,
             "traits": traits,
             "flags": all_feature_states,
         }
