@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.conf import settings
 from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
@@ -5,7 +7,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.validators import UniqueValidator
 
-from organisations.invites.models import Invite
+from organisations.invites.models import Invite, InviteLink
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.models import FFAdminUser, SignUpType
@@ -23,7 +25,35 @@ class CustomTokenSerializer(serializers.ModelSerializer):
         fields = ("key",)
 
 
-class CustomUserCreateSerializer(UserCreateSerializer):
+class InviteLinkValidationMixin:
+    invite_hash = serializers.CharField(required=False, write_only=True)
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        attrs = super().validate(attrs)
+
+        if not settings.ALLOW_REGISTRATION_WITHOUT_INVITE:
+            self._validate_registration_invite(attrs)
+
+        return attrs
+
+    def _validate_registration_invite(self, attrs: dict[str, Any]) -> None:
+        valid = False
+
+        match attrs.get("sign_up_type"):
+            case SignUpType.INVITE_LINK.value:
+                valid = InviteLink.objects.filter(
+                    hash=self.initial_data.get("invite_hash")
+                ).exists()
+            case SignUpType.INVITE_EMAIL.value:
+                valid = Invite.objects.filter(
+                    email__iexact=attrs.get("email", "").lower()
+                ).exists()
+
+        if not valid:
+            raise PermissionDenied(USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE)
+
+
+class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin):
     key = serializers.SerializerMethodField()
 
     class Meta(UserCreateSerializer.Meta):
@@ -65,16 +95,6 @@ class CustomUserCreateSerializer(UserCreateSerializer):
     def get_key(instance):
         token, _ = Token.objects.get_or_create(user=instance)
         return token.key
-
-    def save(self, **kwargs):
-        if not (
-            settings.ALLOW_REGISTRATION_WITHOUT_INVITE
-            or self.validated_data.get("sign_up_type") == SignUpType.INVITE_LINK.value
-            or Invite.objects.filter(email=self.validated_data.get("email"))
-        ):
-            raise PermissionDenied(USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE)
-
-        return super(CustomUserCreateSerializer, self).save(**kwargs)
 
 
 class CustomUserDelete(serializers.Serializer):

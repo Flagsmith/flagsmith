@@ -13,6 +13,7 @@ from users.auth_type import AuthType
 from users.models import SignUpType
 
 from ..constants import USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
+from ..serializers import InviteLinkValidationMixin
 from .github import GithubUser
 from .google import get_user_info
 
@@ -20,7 +21,7 @@ GOOGLE_URL = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&"
 UserModel = get_user_model()
 
 
-class OAuthLoginSerializer(serializers.Serializer):
+class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):
     access_token = serializers.CharField(
         required=True,
         help_text="Code or access token returned from the FE interaction with the third party login provider.",
