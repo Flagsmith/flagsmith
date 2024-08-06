@@ -81,7 +81,7 @@ def _update_caches_with_influx_data(
         elif _date_start.endswith("h"):
             date_start = now - timedelta(hours=int(_date_start[1:-1]))
         else:
-            assert False, "Expecting either days (d) or hours (h)"
+            assert False, "Expecting either days (d) or hours (h)"  # pragma: no cover
 
         org_calls = get_top_organisations(date_start, limit)
 
