@@ -748,16 +748,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             renderRow={(p: AvailablePermission) => {
               const levelUpperCase = level.toUpperCase()
               const enableOnlyTBAC = hasTags && checkTBACPermissions(p.key)
-              console.log(
-                'DEBUG: enableOnlyTBAC:',
-                enableOnlyTBAC,
-                'p.key:',
-                p.key,
-                'hasTags:',
-                hasTags,
-                'checkTBACPermissions(p.key):',
-                checkTBACPermissions(p.key),
-              )
               const disabled =
                 level !== 'organisation' &&
                 p.key !== `VIEW_${levelUpperCase}` &&
@@ -919,7 +909,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
     tabClassName,
   } = props
   const [tab, setTab] = useState()
-  console.log('DEBUG: hasTags: editPermissions:', hasTags)
   const editUserPermissions = (user: User) => {
     openModal(
       `Edit ${Format.camelCase(level)} Permissions`,

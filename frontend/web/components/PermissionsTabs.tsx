@@ -55,6 +55,9 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
   const [environments, setEnvironments] = useState<Environment[]>([])
   const [tags, setTags] = useState<number[]>(roleData?.tags || [])
   const [roleTagsChanged, setRoleTagsChanged] = useState<boolean>(false)
+  const [hasTags, setHasTags] = useState<boolean>(
+    !!roleData?.tags.length || false,
+  )
   const [editRole] = useUpdateRoleMutation()
 
   useEffect(() => {
@@ -78,90 +81,6 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
       theme='pill m-0'
       isRoles={true}
     >
-      {tags && (
-        <TabItem
-          tabLabel={<Row className='justify-content-center'>Organisation</Row>}
-        >
-          <EditPermissionsModal
-            id={orgId}
-            group={group}
-            isGroup={!!group}
-            user={user}
-            className='mt-2'
-            level={'organisation'}
-            role={role}
-          />
-        </TabItem>
-      )}
-      <TabItem tabLabel={<Row className='justify-content-center'>Project</Row>}>
-        <Row className='justify-content-between'>
-          <h5 className='my-3'>Permissions</h5>
-          <Input
-            type='text'
-            className='ml-3'
-            value={searchProject}
-            onChange={(e: InputEvent) =>
-              setSearchProject(Utils.safeParseEventValue(e))
-            }
-            size='small'
-            placeholder='Search'
-            search
-          />
-        </Row>
-        <RolePermissionsList
-          user={user}
-          group={group}
-          orgId={orgId}
-          filter={searchProject}
-          mainItems={projectData}
-          role={role}
-          hasTags={!!tags}
-          level={'project'}
-          ref={tabRef}
-        />
-      </TabItem>
-      <TabItem
-        tabLabel={<Row className='justify-content-center'>Environment</Row>}
-      >
-        <Row className='justify-content-between'>
-          <h5 className='my-3'>Permissions</h5>
-          <Input
-            type='text'
-            className='ml-3'
-            value={searchEnv}
-            onChange={(e: InputEvent) =>
-              setSearchEnv(Utils.safeParseEventValue(e))
-            }
-            size='small'
-            placeholder='Search'
-            search
-          />
-        </Row>
-        <div className='mb-2' style={{ width: 250 }}>
-          <ProjectFilter
-            organisationId={orgId}
-            onChange={setProject}
-            value={project}
-          />
-        </div>
-        {environments.length > 0 && (
-          <RolePermissionsList
-            user={user}
-            orgId={orgId}
-            group={group}
-            filter={searchEnv}
-            mainItems={(environments || [])?.map((v) => {
-              return {
-                id: role ? v.id : v.api_key,
-                name: v.name,
-              }
-            })}
-            role={role}
-            level={'environment'}
-            ref={tabRef}
-          />
-        )}
-      </TabItem>
       <TabItem tabLabel={<Row className='justify-content-center'>Tags</Row>}>
         <FormGroup className='mt-3 setting'>
           <InputGroup
@@ -217,7 +136,12 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
               },
               organisation_id: orgId,
               role_id: roleData!.id!,
-            }).then(() => {
+            }).then((res) => {
+              if (res.data?.tags?.length === 0) {
+                setHasTags(false)
+              } else {
+                setHasTags(true)
+              }
               setRoleTagsChanged(false)
               toast('Tags added successfully')
             })
@@ -225,6 +149,91 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
         >
           Save Tags
         </Button>
+      </TabItem>
+      {!hasTags && (
+        <TabItem
+          tabLabel={<Row className='justify-content-center'>Organisation</Row>}
+        >
+          <EditPermissionsModal
+            id={orgId}
+            group={group}
+            isGroup={!!group}
+            user={user}
+            className='mt-2'
+            level={'organisation'}
+            role={role}
+          />
+        </TabItem>
+      )}
+      <TabItem tabLabel={<Row className='justify-content-center'>Project</Row>}>
+        <Row className='justify-content-between'>
+          <h5 className='my-3'>Permissions</h5>
+          <Input
+            type='text'
+            className='ml-3'
+            value={searchProject}
+            onChange={(e: InputEvent) =>
+              setSearchProject(Utils.safeParseEventValue(e))
+            }
+            size='small'
+            placeholder='Search'
+            search
+          />
+        </Row>
+        <RolePermissionsList
+          user={user}
+          group={group}
+          orgId={orgId}
+          filter={searchProject}
+          mainItems={projectData}
+          role={role}
+          hasTags={tags.length !== 0}
+          level={'project'}
+          ref={tabRef}
+        />
+      </TabItem>
+      <TabItem
+        tabLabel={<Row className='justify-content-center'>Environment</Row>}
+      >
+        <Row className='justify-content-between'>
+          <h5 className='my-3'>Permissions</h5>
+          <Input
+            type='text'
+            className='ml-3'
+            value={searchEnv}
+            onChange={(e: InputEvent) =>
+              setSearchEnv(Utils.safeParseEventValue(e))
+            }
+            size='small'
+            placeholder='Search'
+            search
+          />
+        </Row>
+        <div className='mb-2' style={{ width: 250 }}>
+          <ProjectFilter
+            organisationId={orgId}
+            onChange={setProject}
+            value={project}
+          />
+        </div>
+        {environments.length > 0 && (
+          <RolePermissionsList
+            user={user}
+            orgId={orgId}
+            group={group}
+            filter={searchEnv}
+            mainItems={(environments || [])?.map((v) => {
+              return {
+                id: role ? v.id : v.api_key,
+                name: v.name,
+              }
+            })}
+            role={role}
+            hasTags={tags.length !== 0}
+            level={'environment'}
+            ref={tabRef}
+          />
+        )}
       </TabItem>
     </Tabs>
   )
