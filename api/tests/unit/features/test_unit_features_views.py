@@ -425,6 +425,7 @@ def test_put_feature_does_not_update_feature_states(
     assert all(fs.enabled is False for fs in feature.feature_states.all())
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @mock.patch("features.views.get_multiple_event_list_for_feature")
 def test_get_project_features_influx_data(
     mock_get_event_list: mock.MagicMock,
@@ -446,6 +447,7 @@ def test_get_project_features_influx_data(
             "datetime": datetime(2021, 2, 26, 12, 0, 0, tzinfo=pytz.UTC),
         }
     ]
+    one_day_ago = timezone.now() - timedelta(days=1)
 
     # When
     response = admin_client_new.get(url)
@@ -455,7 +457,7 @@ def test_get_project_features_influx_data(
     mock_get_event_list.assert_called_once_with(
         feature_name=feature.name,
         environment_id=str(environment.id),  # provided as a GET param
-        date_start="-24h",  # this is the default but can be provided as a GET param
+        date_start=one_day_ago,  # this is the default but can be provided as a GET param
         aggregate_every="24h",  # this is the default but can be provided as a GET param
     )
 

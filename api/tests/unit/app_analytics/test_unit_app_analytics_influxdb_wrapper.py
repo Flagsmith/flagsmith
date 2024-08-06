@@ -387,6 +387,7 @@ def test_get_event_list_for_organisation_with_date_stop_set_to_now_and_previousl
     assert labels == ["2023-01-18", "2023-01-17"]
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.parametrize("limit", ["10", ""])
 def test_get_top_organisations(
     limit: str,
@@ -409,9 +410,11 @@ def test_get_top_organisations(
     )
 
     influx_mock.return_value = [result]
+    now = timezone.now()
+    date_start = now - timedelta(days=30)
 
     # When
-    dataset = get_top_organisations(date_start="-30d", limit=limit)
+    dataset = get_top_organisations(date_start=date_start, limit=limit)
 
     # Then
     assert dataset == {123: 23, 456: 43}
@@ -419,9 +422,10 @@ def test_get_top_organisations(
     influx_mock.assert_called_once()
     influx_query_call = influx_mock.call_args
     assert influx_query_call.kwargs["bucket"] == "test_bucket_downsampled_1h"
-    assert influx_query_call.kwargs["date_start"] == "-30d"
+    assert influx_query_call.kwargs["date_start"] == date_start
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_top_organisations_value_error(
     mocker: MockerFixture,
 ) -> None:
@@ -442,9 +446,11 @@ def test_get_top_organisations_value_error(
     )
 
     influx_mock.return_value = [result]
+    now = timezone.now()
+    date_start = now - timedelta(days=30)
 
     # When
-    dataset = get_top_organisations(date_start="-30d")
+    dataset = get_top_organisations(date_start=date_start)
 
     # Then
     # The wrongly typed data does not stop the remaining data
