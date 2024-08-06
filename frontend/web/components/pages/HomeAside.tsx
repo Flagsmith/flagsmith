@@ -1,4 +1,4 @@
-import React, { FC, useEffect } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import ProjectStore from 'common/stores/project-store'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import Utils from 'common/utils/utils'
@@ -20,7 +20,6 @@ import { RouterChildContext } from 'react-router'
 import Constants from 'common/constants'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import { components } from 'react-select'
-import Button from 'components/base/forms/Button'
 import SettingsIcon from 'components/svg/SettingsIcon'
 import BuildVersion from 'components/BuildVersion'
 
@@ -40,6 +39,17 @@ const HomeAside: FC<HomeAsideType> = ({
       AppActions.getChangeRequests(environmentId, {})
     }
   }, [environmentId])
+  const [_, setChangeRequestsUpdated] = useState(Date.now())
+
+  useEffect(() => {
+    const onChangeRequestsUpdated = () => setChangeRequestsUpdated(Date.now())
+    ChangeRequestStore.on('change', onChangeRequestsUpdated)
+    return () => {
+      ChangeRequestStore.off('change', onChangeRequestsUpdated)
+    }
+    //eslint-disable-next-line
+  }, [])
+
   const environment: Environment | null =
     environmentId === 'create'
       ? null
@@ -115,20 +125,20 @@ const HomeAside: FC<HomeAsideType> = ({
                             }}
                             onChange={(newEnvironmentId) => {
                               if (newEnvironmentId !== environmentId) {
-                              AsyncStorage.setItem(
-                                'lastEnv',
-                                JSON.stringify({
-                                  environmentId: newEnvironmentId,
-                                  orgId: AccountStore.getOrganisation().id,
-                                  projectId: projectId,
-                                }),
-                              ).finally(() => {
-                                history.push(
-                                  `${document.location.pathname}${
-                                    document.location.search || ''
-                                  }`.replace(environmentId, newEnvironmentId),
-                                )
-                              })
+                                AsyncStorage.setItem(
+                                  'lastEnv',
+                                  JSON.stringify({
+                                    environmentId: newEnvironmentId,
+                                    orgId: AccountStore.getOrganisation().id,
+                                    projectId: projectId,
+                                  }),
+                                ).finally(() => {
+                                  history.push(
+                                    `${document.location.pathname}${
+                                      document.location.search || ''
+                                    }`.replace(environmentId, newEnvironmentId),
+                                  )
+                                })
                               }
                             }}
                           />
