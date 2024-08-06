@@ -46,7 +46,6 @@ def test_update_caches(mocker, organisation, chargebee_subscription, settings):
     update_caches(subscription_cache_entities)
 
     # Then
-    breakpoint()
     assert (
         organisation.subscription_information_cache.api_calls_24h
         == organisation_usage[day_1]
