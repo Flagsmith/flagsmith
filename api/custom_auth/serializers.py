@@ -28,14 +28,6 @@ class CustomTokenSerializer(serializers.ModelSerializer):
 class InviteLinkValidationMixin:
     invite_hash = serializers.CharField(required=False, write_only=True)
 
-    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
-        attrs = super().validate(attrs)
-
-        if not settings.ALLOW_REGISTRATION_WITHOUT_INVITE:
-            self._validate_registration_invite(attrs)
-
-        return attrs
-
     def _validate_registration_invite(self, attrs: dict[str, Any]) -> None:
         valid = False
 
@@ -87,6 +79,9 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
             is_authentication_method_valid(
                 self.context.get("request"), email=email, raise_exception=True
             )
+
+        if not settings.ALLOW_REGISTRATION_WITHOUT_INVITE:
+            self._validate_registration_invite(attrs)
 
         attrs["email"] = email.lower()
         return attrs

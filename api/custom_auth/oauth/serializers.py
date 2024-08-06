@@ -6,13 +6,10 @@ from django.contrib.auth.signals import user_logged_in
 from django.db.models import F
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
-from rest_framework.exceptions import PermissionDenied
 
-from organisations.invites.models import Invite
 from users.auth_type import AuthType
 from users.models import SignUpType
 
-from ..constants import USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
 from ..serializers import InviteLinkValidationMixin
 from .github import GithubUser
 from .google import get_user_info
@@ -86,12 +83,10 @@ class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):
 
         if not existing_user:
             sign_up_type = self.validated_data.get("sign_up_type")
-            if not (
-                settings.ALLOW_REGISTRATION_WITHOUT_INVITE
-                or sign_up_type == SignUpType.INVITE_LINK.value
-                or Invite.objects.filter(email=email).exists()
-            ):
-                raise PermissionDenied(USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE)
+            if not settings.ALLOW_REGISTRATION_WITHOUT_INVITE:
+                self._validate_registration_invite(
+                    {"email": email, **self.validated_data}
+                )
 
             return UserModel.objects.create(
                 **user_data, email=email.lower(), sign_up_type=sign_up_type

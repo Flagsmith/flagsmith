@@ -2,15 +2,11 @@ import pytest
 from django.test import RequestFactory
 from pytest_django.fixtures import SettingsWrapper
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.serializers import ModelSerializer
 
 from custom_auth.constants import (
     USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE,
 )
-from custom_auth.serializers import (
-    CustomUserCreateSerializer,
-    InviteLinkValidationMixin,
-)
+from custom_auth.serializers import CustomUserCreateSerializer
 from organisations.invites.models import InviteLink
 from users.models import FFAdminUser, SignUpType
 
@@ -113,12 +109,12 @@ def test_invite_link_validation_mixin_validate_fails_if_invite_link_hash_not_pro
     # Given
     settings.ALLOW_REGISTRATION_WITHOUT_INVITE = False
 
-    class TestSerializer(InviteLinkValidationMixin, ModelSerializer):
-        class Meta:
-            model = FFAdminUser
-            fields = ("sign_up_type",)
-
-    serializer = TestSerializer(data={"sign_up_type": SignUpType.INVITE_LINK.value})
+    serializer = CustomUserCreateSerializer(
+        data={
+            **user_dict,
+            "sign_up_type": SignUpType.INVITE_LINK.value,
+        }
+    )
 
     # When
     with pytest.raises(PermissionDenied) as exc_info:
@@ -135,13 +131,9 @@ def test_invite_link_validation_mixin_validate_fails_if_invite_link_hash_not_val
     # Given
     settings.ALLOW_REGISTRATION_WITHOUT_INVITE = False
 
-    class TestSerializer(InviteLinkValidationMixin, ModelSerializer):
-        class Meta:
-            model = FFAdminUser
-            fields = ("sign_up_type",)
-
-    serializer = TestSerializer(
+    serializer = CustomUserCreateSerializer(
         data={
+            **user_dict,
             "sign_up_type": SignUpType.INVITE_LINK.value,
             "invite_hash": "invalid-hash",
         }
