@@ -462,6 +462,65 @@ def test_get_project_features_influx_data(
     )
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+@mock.patch("features.views.get_multiple_event_list_for_feature")
+def test_get_project_features_influx_data_with_two_weeks_period(
+    mock_get_event_list: mock.MagicMock,
+    feature: Feature,
+    project: Project,
+    environment: Environment,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    base_url = reverse(
+        "api-v1:projects:project-features-get-influx-data",
+        args=[project.id, feature.id],
+    )
+    url = f"{base_url}?environment_id={environment.id}&period=14d"
+    date_start = timezone.now() - timedelta(days=14)
+
+    mock_get_event_list.return_value = [
+        {
+            feature.name: 1,
+            "datetime": datetime(2021, 2, 26, 12, 0, 0, tzinfo=pytz.UTC),
+        }
+    ]
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mock_get_event_list.assert_called_once_with(
+        feature_name=feature.name,
+        environment_id=str(environment.id),
+        date_start=date_start,
+        aggregate_every="24h",
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_project_features_influx_data_with_malformed_period(
+    feature: Feature,
+    project: Project,
+    environment: Environment,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    base_url = reverse(
+        "api-v1:projects:project-features-get-influx-data",
+        args=[project.id, feature.id],
+    )
+    url = f"{base_url}?environment_id={environment.id}&period=baddata"
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.data[0] == "Malformed period supplied"
+
+
 def test_regular_user_cannot_create_mv_options_when_creating_feature(
     staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
