@@ -361,7 +361,8 @@ class FeatureViewSet(viewsets.ModelViewSet):
         elif period.endswith("d"):
             date_start = now - timedelta(days=int(period[:-1]))
         else:
-            assert False, "Expecting hours or days as period input"
+            raise ValidationError("Malformed period supplied")
+
         events_list = get_multiple_event_list_for_feature(
             feature_name=feature.name,
             date_start=date_start,
