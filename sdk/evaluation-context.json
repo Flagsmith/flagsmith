@@ -66,9 +66,7 @@
                     "title": "Transient"
                 }
             },
-            "required": [
-                "traits"
-            ],
+            "required": [],
             "title": "IdentityEvaluationContext",
             "type": "object"
         },
