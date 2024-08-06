@@ -476,6 +476,14 @@ class OrganisationAPIUsageNotification(models.Model):
     updated_at = models.DateTimeField(null=True, auto_now=True)
 
 
+class OrganisationBreachedGracePeriod(models.Model):
+    organisation = models.OneToOneField(
+        Organisation, on_delete=models.CASCADE, related_name="breached_grace_period"
+    )
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)
+
+
 class APILimitAccessBlock(models.Model):
     organisation = models.OneToOneField(
         Organisation, on_delete=models.CASCADE, related_name="api_limit_access_block"
