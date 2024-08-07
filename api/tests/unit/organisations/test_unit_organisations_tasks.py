@@ -21,6 +21,7 @@ from organisations.models import (
     Organisation,
     OrganisationAPIBilling,
     OrganisationAPIUsageNotification,
+    OrganisationBreachedGracePeriod,
     OrganisationRole,
     OrganisationSubscriptionInformationCache,
     UserOrganisation,
@@ -33,6 +34,9 @@ from organisations.subscriptions.constants import (
     SCALE_UP,
 )
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
+from organisations.task_helpers import (
+    handle_api_usage_notification_for_organisation,
+)
 from organisations.tasks import (
     ALERT_EMAIL_MESSAGE,
     ALERT_EMAIL_SUBJECT,
@@ -242,6 +246,39 @@ def test_send_org_subscription_cancelled_alert(db: None, mocker: MockerFixture) 
         recipient_list=[],
         fail_silently=True,
     )
+
+
+def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_is_none(
+    organisation: Organisation,
+    inspecting_handler: logging.Handler,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    api_usage_mock = mocker.patch("organisations.task_helpers.get_current_api_usage")
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.save()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=None,
+        current_billing_term_ends_at=None,
+    )
+    from organisations.task_helpers import logger
+
+    logger.addHandler(inspecting_handler)
+
+    # When
+    handle_api_usage_notification_for_organisation(organisation)
+
+    # Then
+    api_usage_mock.assert_not_called()
+    assert inspecting_handler.messages == [
+        f"Paid organisation {organisation.id} is missing billing_starts_at datetime"
+    ]
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -511,6 +548,61 @@ def test_handle_api_usage_notifications_above_100(
     )
 
     assert OrganisationAPIUsageNotification.objects.first() == api_usage_notification
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_handle_api_usage_notifications_with_error(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    inspecting_handler: logging.Handler,
+) -> None:
+    # Given
+    from organisations.tasks import logger
+
+    logger.addHandler(inspecting_handler)
+
+    now = timezone.now()
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.save()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+    )
+
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
+    api_usage_patch = mocker.patch(
+        "organisations.tasks.handle_api_usage_notification_for_organisation",
+        side_effect=ValueError("An error occurred"),
+    )
+
+    # When
+    handle_api_usage_notifications()
+
+    # Then
+    api_usage_patch.assert_called_once_with(organisation)
+    assert (
+        OrganisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 0
+    )
+    assert len(inspecting_handler.messages) == 1
+    error_message = inspecting_handler.messages[0].split("\n")[0]
+
+    assert (
+        error_message
+        == f"Error processing api usage for organisation {organisation.id}"
+    )
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -1317,6 +1409,64 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     assert organisation.stop_serving_flags is False
     assert organisation.block_access_to_admin is False
     assert getattr(organisation, "api_limit_access_block", None) is None
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_restrict_use_due_to_api_limit_grace_period_breached(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    freezer: FrozenDateTimeFactory,
+    mailoutbox: list[EmailMultiAlternatives],
+    admin_user: FFAdminUser,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
+    now = timezone.now()
+
+    OrganisationBreachedGracePeriod.objects.create(organisation=organisation)
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=10_000,
+        chargebee_email="test@example.com",
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = FREE_PLAN_ID
+    organisation.subscription.save()
+
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 12_005
+
+    OrganisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation,
+        percent_usage=100,
+    )
+    OrganisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation,
+        percent_usage=120,
+    )
+    now = now + timedelta(days=API_USAGE_GRACE_PERIOD - 1)
+    freezer.move_to(now)
+
+    # When
+    restrict_use_due_to_api_limit_grace_period_over()
+
+    # Then
+    organisation.refresh_from_db()
+
+    assert organisation.stop_serving_flags is True
+    assert organisation.block_access_to_admin is True
+    assert organisation.api_limit_access_block
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
