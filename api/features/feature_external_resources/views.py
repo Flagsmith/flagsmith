@@ -10,6 +10,7 @@ from integrations.github.client import (
     get_github_issue_pr_title_and_state,
     label_github_issue_pr,
 )
+from integrations.github.models import GithubRepository
 from organisations.models import Organisation
 
 from .models import FeatureExternalResource
@@ -84,13 +85,17 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
         match = re.search(pattern, url)
         if match:
             owner, repo, issue = match.groups()
-
-            label_github_issue_pr(
-                installation_id=github_configuration.installation_id,
-                owner=owner,
-                repo=repo,
-                issue=issue,
-            )
+            if GithubRepository.objects.get(
+                github_configuration=github_configuration,
+                repository_owner=owner,
+                repository_name=repo,
+            ).tagging_enabled:
+                label_github_issue_pr(
+                    installation_id=github_configuration.installation_id,
+                    owner=owner,
+                    repo=repo,
+                    issue=issue,
+                )
             response = super().create(request, *args, **kwargs)
             return response
         else:
