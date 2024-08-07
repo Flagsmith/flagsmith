@@ -13,6 +13,7 @@ type PlanBasedBannerType = {
   theme: 'page' | 'badge' | 'description'
   children?: ReactNode
   withoutTooltip?: boolean
+  force?: boolean
 }
 
 export const featureDescriptions: Record<PaidFeature, any> = {
@@ -25,13 +26,13 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     docs: 'https://docs.flagsmith.com/advanced-use/change-requests',
     title: 'Change Requests',
   },
-
   'AUDIT': {
     description:
       'View and search through a history of all changes made in your Flagsmith organisation.',
     docs: 'https://docs.flagsmith.com/system-administration/audit-logs',
     title: 'Audit Log',
   },
+
   'AUTO_SEATS': {
     description: 'Invite additional members.',
     title: 'Invite additional members',
@@ -77,18 +78,23 @@ export const featureDescriptions: Record<PaidFeature, any> = {
       'Add automatic stale flag detection, prompting your team to clean up old flags.',
     title: 'Stale Flag Detection',
   },
+  'VERSIONING': {
+    description: 'Access all of your feature versions.',
+    title: 'Version History',
+  },
 }
 
 const PlanBasedBanner: FC<PlanBasedBannerType> = ({
   children,
   className,
   feature,
+  force,
   theme,
   withoutTooltip,
 }) => {
   const trackFeature = () =>
     API.trackEvent(Constants.events.VIEW_LOCKED_FEATURE(feature))
-  const hasPlan = Utils.getPlansPermission(feature)
+  const hasPlan = !force && Utils.getPlansPermission(feature)
   const planUrl = Constants.getUpgradeUrl(feature)
   const docs = `${featureDescriptions[feature]?.docs}?utm_source=plan_based_access`
 
@@ -148,7 +154,9 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
           rel='noreferrer'
         >
           {<IonIcon className='me-1' icon={lockClosed} />}
-          {Utils.getPlanName(Utils.getRequiredPlan(feature))}
+          {force
+            ? Utils.getNextPlan()
+            : Utils.getPlanName(Utils.getRequiredPlan(feature))}
         </a>
       </div>
     )
@@ -182,9 +190,19 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
     <div className={className}>
       <h4 className='d-flex align-items-center gap-2'>
         <span>{featureDescriptions[feature].title}</span>
-        <PlanBasedBanner withoutTooltip feature={feature} theme={'badge'} />
+        <PlanBasedBanner
+          force={force}
+          withoutTooltip
+          feature={feature}
+          theme={'badge'}
+        />
       </h4>
-      <PlanBasedBanner withoutTooltip feature={feature} theme={'description'} />
+      <PlanBasedBanner
+        force={force}
+        withoutTooltip
+        feature={feature}
+        theme={'description'}
+      />
     </div>
   )
 }

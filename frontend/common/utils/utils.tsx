@@ -32,6 +32,7 @@ export type PaidFeature =
   | 'FORCE_2FA'
   | '4_EYES'
   | 'STALE_FLAGS'
+  | 'VERSIONING'
   | 'AUTO_SEATS'
   | 'METADATA'
   | 'REALTIME'
@@ -286,6 +287,20 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getManageUserPermissionDescription() {
     return 'Manage Identities'
   },
+  getNextPlan: (skipFree?: boolean) => {
+    const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
+    switch (currentPlan) {
+      case planNames.free: {
+        return skipFree ? planNames.startup : planNames.scaleUp
+      }
+      case planNames.startup: {
+        return planNames.startup
+      }
+      default: {
+        return planNames.enterprise
+      }
+    }
+  },
   getOrganisationHomePage(id?: string) {
     const orgId = id || AccountStore.getOrganisation()?.id
     if (!orgId) {
@@ -293,6 +308,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return `/organisation/${orgId}/projects`
   },
+
   getPermissionList(
     isAdmin: boolean,
     permissions: string[] | undefined | null,
@@ -323,7 +339,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         .map((item) => `${Format.enumeration.get(item)}`),
     }
   },
-
   getPlanName: (plan: string) => {
     if (plan && plan.includes('free')) {
       return planNames.free
