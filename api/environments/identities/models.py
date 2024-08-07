@@ -199,7 +199,7 @@ class Identity(models.Model):
     def generate_traits(
         self,
         trait_data_items: list[SDKTraitData],
-        persist=False,
+        persist: bool = False,
     ) -> list[Trait]:
         """
         Given a list of trait data items, validated by TraitSerializerFull, generate
