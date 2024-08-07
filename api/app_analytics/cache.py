@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from app_analytics.tasks import track_feature_evaluation, track_request
 from app_analytics.track import track_feature_evaluation_influxdb
 from django.conf import settings
@@ -41,12 +43,9 @@ class FeatureEvaluationCache:
         self._last_flushed_at = timezone.now()
 
     def _flush(self):
-        evaluation_data = {}
+        evaluation_data = defaultdict(dict)
         for (environment_id, feature_name), eval_count in self._cache.items():
-            if environment_id in evaluation_data:
-                evaluation_data[environment_id][feature_name] = eval_count
-            else:
-                evaluation_data[environment_id] = {feature_name: eval_count}
+            evaluation_data[environment_id][feature_name] = eval_count
 
         for environment_id, feature_evaluations in evaluation_data.items():
             if settings.USE_POSTGRES_FOR_ANALYTICS:
