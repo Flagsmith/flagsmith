@@ -202,6 +202,7 @@ const controller = {
           : `${Project.api}auth/oauth/${type}/`,
         {
           ...(_data || {}),
+          invite_hash: API.getInvite() || undefined,
           sign_up_type: API.getInviteType(),
         },
       )
@@ -245,6 +246,7 @@ const controller = {
         password,
         referrer: API.getReferrer() || '',
         sign_up_type: API.getInviteType(),
+        invite_hash: API.getInvite() || undefined,
       })
       .then((res) => {
         data.setToken(res.key)
