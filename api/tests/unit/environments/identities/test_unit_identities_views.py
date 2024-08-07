@@ -1225,10 +1225,16 @@ def test_post_identities__existing__transient__no_persistence(
     assert response.status_code == status.HTTP_200_OK
     response_json = response.json()
 
+    # identity overrides are correctly loaded
     assert response_json["flags"][0]["feature_state_value"] == feature_state_value
+
+    # previously persisted traits not provided in the request
+    # are not marked as transient in the response
     assert response_json["traits"][0]["trait_key"] == trait.trait_key
     assert not response_json["traits"][0].get("transient")
 
+    # every trait provided in the request for a transient identity
+    # is marked as transient
     assert response_json["traits"][1]["trait_key"] == trait_key
     assert response_json["traits"][1]["transient"]
 
