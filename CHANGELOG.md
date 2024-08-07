@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.134.1](https://github.com/Flagsmith/flagsmith/compare/v2.134.0...v2.134.1) (2024-08-07)
+
+
+### Bug Fixes
+
+* don't allow bypassing `ALLOW_REGISTRATION_WITHOUT_INVITE` behaviour ([#4454](https://github.com/Flagsmith/flagsmith/issues/4454)) ([0e6deec](https://github.com/Flagsmith/flagsmith/commit/0e6deec6404c3e78edf5f36b36ea0f2dcef3dd06))
+* protect get environment document endpoint ([#4459](https://github.com/Flagsmith/flagsmith/issues/4459)) ([bee01c7](https://github.com/Flagsmith/flagsmith/commit/bee01c7f21cae19e7665ede3284f96989d33940f))
+* Set grace period to a singular event ([#4455](https://github.com/Flagsmith/flagsmith/issues/4455)) ([3225c47](https://github.com/Flagsmith/flagsmith/commit/3225c47043f9647a7426b7f05890bde29b681acc))
+
 ## [2.134.0](https://github.com/Flagsmith/flagsmith/compare/v2.133.1...v2.134.0) (2024-08-02)
 
 
