@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.134.0](https://github.com/Flagsmith/flagsmith/compare/v2.133.1...v2.134.0) (2024-08-02)
+
+
+### Features
+
+* Add command for Edge V2 migration ([#4415](https://github.com/Flagsmith/flagsmith/issues/4415)) ([035fe77](https://github.com/Flagsmith/flagsmith/commit/035fe77881c7ae73206979f420f9dd0ff8bc318e))
+* Surface password requirements on signup / dynamic validation ([#4282](https://github.com/Flagsmith/flagsmith/issues/4282)) ([104d66d](https://github.com/Flagsmith/flagsmith/commit/104d66de60f29ff9b3d672fbb4b8bf36596c2833))
+
+
+### Bug Fixes
+
+* Catch full exception instead of runtime error in API usage task ([#4426](https://github.com/Flagsmith/flagsmith/issues/4426)) ([f03b479](https://github.com/Flagsmith/flagsmith/commit/f03b47986218e1c0a90f38200bb5f254ef4dc3a3))
+* Check API usage before restricting serving flags and admin ([#4422](https://github.com/Flagsmith/flagsmith/issues/4422)) ([02f7df7](https://github.com/Flagsmith/flagsmith/commit/02f7df7a245ec6fb4fb9122840315ccfb1a3fa15))
+* Create a check for billing started at in API usage task helper ([#4440](https://github.com/Flagsmith/flagsmith/issues/4440)) ([e2853d7](https://github.com/Flagsmith/flagsmith/commit/e2853d7494b6fdab513e5ad5abf232585d97a078))
+* Delete scheduled change request ([#4437](https://github.com/Flagsmith/flagsmith/issues/4437)) ([233ce50](https://github.com/Flagsmith/flagsmith/commit/233ce509dea479a12f62feca8000400d86c16ecb))
+* deleting change requests with change sets throws 500 error ([#4439](https://github.com/Flagsmith/flagsmith/issues/4439)) ([670ede9](https://github.com/Flagsmith/flagsmith/commit/670ede96e496554f9fe6ff71d57da4c9fccb082c))
+* Handle zero case for API usage limit ([#4428](https://github.com/Flagsmith/flagsmith/issues/4428)) ([04e8bc2](https://github.com/Flagsmith/flagsmith/commit/04e8bc2657d8b3657e9f12b54803911b74508123))
+* Metadata UI improvements ([#4327](https://github.com/Flagsmith/flagsmith/issues/4327)) ([d4006c0](https://github.com/Flagsmith/flagsmith/commit/d4006c031436778227f64fd16cbc36f897769def))
+* **tests:** Strong password for E2E ([#4435](https://github.com/Flagsmith/flagsmith/issues/4435)) ([1afb3e5](https://github.com/Flagsmith/flagsmith/commit/1afb3e5f5ee6c1e924c934db4f37d4874d46cb9d))
+
 ## [2.133.1](https://github.com/Flagsmith/flagsmith/compare/v2.133.0...v2.133.1) (2024-07-30)
 
 

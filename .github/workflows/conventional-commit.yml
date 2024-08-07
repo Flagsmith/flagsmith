@@ -1,0 +1,27 @@
+name: Conventional Commit
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  conventional-commit:
+    name: Conventional Commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR Conventional Commit title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: | # mirrors changelog-sections in the /release-please-config.json
+            feat
+            fix
+            infra
+            ci
+            docs
+            deps
+            perf
+            refactor
+            test
+            chore
