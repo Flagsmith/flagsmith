@@ -8,7 +8,7 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 # Bring in firefox into debian sources
 RUN echo "deb http://deb.debian.org/debian/ unstable main contrib non-free" >> /etc/apt/sources.list.d/debian.list
-RUN apt-get update && apt-get install -y g++ make libssl-dev python3 gnupg2 firefox curl && apt-get -y autoclean
+RUN apt-get update && apt-get install -y g++ make libssl-dev python3 python3-setuptools gnupg2 firefox curl && apt-get -y autoclean
 
 # nvm environment variables
 ENV NVM_DIR /usr/local/nvm

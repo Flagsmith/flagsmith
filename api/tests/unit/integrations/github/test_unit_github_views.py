@@ -69,6 +69,25 @@ def test_get_github_configuration(
     assert response.status_code == status.HTTP_200_OK
 
 
+def test_non_admin_user_get_github_configuration(
+    staff_client: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:integrations-github-list",
+        kwargs={"organisation_pk": organisation.id},
+    )
+    # When
+    response = staff_client.get(url)
+    # Then
+    github_configuration_res = response.json()["results"][0]
+    assert response.status_code == status.HTTP_200_OK
+    assert github_configuration_res["installation_id"] == "1234567"
+    assert github_configuration_res["id"] == github_configuration.id
+
+
 def test_create_github_configuration(
     admin_client_new: APIClient,
     organisation: Organisation,

@@ -11,7 +11,7 @@ POETRY_VERSION ?= 1.8.3
 
 GUNICORN_LOGGER_CLASS ?= util.logging.GunicornJsonCapableLogger
 
-SAML_REVISION ?= v1.6.2
+SAML_REVISION ?= v1.6.3
 RBAC_REVISION ?= v0.7.0
 
 -include .env-local
@@ -39,20 +39,9 @@ install-private-modules:
 .PHONY: install
 install: install-pip install-poetry install-packages
 
-.PHONY: lint-black
-lint-black:
-	poetry run black --check .
-
-.PHONY: lint-isort
-lint-isort:
-	poetry run isort  --check-only --diff .
-
-.PHONY: lint-flake8
-lint-flake8:
-	poetry run flake8
-
 .PHONY: lint
-lint: lint-black lint-isort lint-flake8
+lint:
+	poetry run pre-commit run -a
 
 .PHONY: docker-up
 docker-up:

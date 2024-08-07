@@ -22,10 +22,11 @@ class TraitSerializerFull(serializers.ModelSerializer):
 
 class TraitSerializerBasic(serializers.ModelSerializer):
     trait_value = TraitValueField(allow_null=True)
+    transient = serializers.BooleanField(default=False)
 
     class Meta:
         model = Trait
-        fields = ("id", "trait_key", "trait_value")
+        fields = ("id", "trait_key", "trait_value", "transient")
         read_only_fields = ("id",)
 
 

@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component, useMemo } from 'react'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import OrganisationStore from 'common/stores/organisation-store'
 import FeatureListStore from 'common/stores/feature-list-store'
@@ -22,6 +22,9 @@ import Breadcrumb from 'components/Breadcrumb'
 import SettingsButton from 'components/SettingsButton'
 import DiffChangeRequest from 'components/diff/DiffChangeRequest'
 import NewVersionWarning from 'components/NewVersionWarning'
+import { mergeChangeSets } from 'common/services/useChangeRequest'
+import WarningMessage from 'components/WarningMessage'
+import ErrorMessage from 'components/ErrorMessage'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -94,6 +97,17 @@ const ChangeRequestsPage = class extends Component {
       title: changeRequest.title,
     })
   }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (prevProps.match.params.id !== this.props.match.params.id) {
+      AppActions.getChangeRequest(
+        this.props.match.params.id,
+        this.props.match.params.projectId,
+        this.props.match.params.environmentId,
+      )
+    }
+  }
+
   componentDidMount = () => {}
 
   deleteChangeRequest = () => {
@@ -144,14 +158,27 @@ const ChangeRequestsPage = class extends Component {
       'side-modal create-feature-modal',
     )
   }
-
+  refreshChangeRequests = () => {
+    const environmentId = this.props.match.params.environmentId
+    AppActions.getChangeRequests(environmentId, {})
+    AppActions.getChangeRequests(environmentId, { committed: true })
+    AppActions.getChangeRequests(environmentId, {
+      live_from_after: new Date().toISOString(),
+    })
+  }
   approveChangeRequest = () => {
-    AppActions.actionChangeRequest(this.props.match.params.id, 'approve')
+    AppActions.actionChangeRequest(
+      this.props.match.params.id,
+      'approve',
+      this.refreshChangeRequests,
+    )
   }
 
   getScheduledDate = (changeRequest) => {
     return changeRequest.environment_feature_versions.length > 0
       ? moment(changeRequest.environment_feature_versions[0].live_from)
+      : changeRequest?.change_sets?.[0]?.live_from
+      ? moment(changeRequest?.change_sets?.[0]?.live_from)
       : moment(changeRequest.feature_states[0].live_from)
   }
 
@@ -159,7 +186,7 @@ const ChangeRequestsPage = class extends Component {
     const id = this.props.match.params.id
     const changeRequest = ChangeRequestStore.model[id]
     const scheduledDate = this.getScheduledDate(changeRequest)
-    const isScheduled = scheduledDate > moment()
+    const isScheduled = moment(scheduledDate).valueOf() > moment().valueOf()
     const featureId =
       changeRequest &&
       changeRequest.feature_states[0] &&
@@ -173,7 +200,7 @@ const ChangeRequestsPage = class extends Component {
           Are you sure you want to {isScheduled ? 'schedule' : 'publish'} this
           change request
           {isScheduled
-            ? ` for ${scheduledDate.format('Do MMM YYYY hh:mma')}`
+            ? ` for ${moment(scheduledDate).format('Do MMM YYYY hh:mma')}`
             : ''}
           ? This will adjust the feature for your environment.
           <NewVersionWarning
@@ -181,6 +208,19 @@ const ChangeRequestsPage = class extends Component {
             featureId={featureId}
             date={changeRequest?.created_at}
           />
+          {!!changeRequest?.conflicts?.length && (
+            <div className='mt-2'>
+              <WarningMessage
+                warningMessage={
+                  <div>
+                    A change request was published since the creation of this
+                    one that also modified this feature. Please review the
+                    changes on this page to make sure they are correct.
+                  </div>
+                }
+              />
+            </div>
+          )}
         </div>
       ),
       onYes: () => {
@@ -193,6 +233,7 @@ const ChangeRequestsPage = class extends Component {
               this.props.match.params.environmentId,
               true,
             )
+            this.refreshChangeRequests()
           },
         )
       },
@@ -270,7 +311,7 @@ const ChangeRequestsPage = class extends Component {
       {}
 
     const scheduledDate = this.getScheduledDate(changeRequest)
-    const isScheduled = scheduledDate > moment()
+    const isScheduled = moment(scheduledDate).valueOf() > moment().valueOf()
 
     const approval =
       changeRequest &&
@@ -288,7 +329,6 @@ const ChangeRequestsPage = class extends Component {
     const isVersioned = environment?.use_v2_feature_versioning
     const minApprovals = environment.minimum_change_request_approvals || 0
     const isYourChangeRequest = changeRequest.user === AccountStore.getUser().id
-
     return (
       <Permission
         level='environment'
@@ -323,9 +363,7 @@ const ChangeRequestsPage = class extends Component {
                 />
                 <PageTitle
                   cta={
-                    (!changeRequest?.committed_at ||
-                      moment(changeRequest?.feature_states[0].live_from) >
-                        moment()) && (
+                    (!changeRequest?.committed_at || isScheduled) && (
                       <Row>
                         <Button
                           theme='secondary'
@@ -333,7 +371,7 @@ const ChangeRequestsPage = class extends Component {
                         >
                           Delete
                         </Button>
-                        {!isVersioned && (
+                        {!isVersioned && !changeRequest?.committedAt && (
                           <Button
                             onClick={() =>
                               this.editChangeRequest(
@@ -366,7 +404,8 @@ const ChangeRequestsPage = class extends Component {
                     <InfoMessage icon='calendar' title='Scheduled Change'>
                       This feature change{' '}
                       {changeRequest?.committedAt ? 'is scheduled to' : 'will'}{' '}
-                      go live at {scheduledDate.format('Do MMM YYYY hh:mma')}
+                      go live at{' '}
+                      {moment(scheduledDate).format('Do MMM YYYY hh:mma')}
                       {changeRequest?.committed_at
                         ? ' unless it is edited or deleted'
                         : ' if it is approved and published'}
@@ -500,6 +539,7 @@ const ChangeRequestsPage = class extends Component {
                     date={changeRequest?.created_at}
                   />
                   <DiffChangeRequest
+                    environmentId={this.props.match.params.environmentId}
                     isVersioned={isVersioned}
                     changeRequest={changeRequest}
                     feature={projectFlag.id}
@@ -526,7 +566,7 @@ const ChangeRequestsPage = class extends Component {
                         </div>
                       )
                     )}
-
+                    <ErrorMessage error={ChangeRequestStore.error} />
                     {changeRequest.committed_at ? (
                       <div className='mr-2 font-weight-medium'>
                         Committed at{' '}

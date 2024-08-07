@@ -65,6 +65,7 @@ class SDKIdentitiesResponseSerializer(serializers.Serializer):
 
 class SDKIdentitiesQuerySerializer(serializers.Serializer):
     identifier = serializers.CharField(required=True)
+    transient = serializers.BooleanField(default=False)
 
 
 class IdentityAllFeatureStatesFeatureSerializer(serializers.Serializer):

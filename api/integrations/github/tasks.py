@@ -2,11 +2,12 @@ import logging
 from typing import Any, List
 from urllib.parse import urlparse
 
+from task_processor.decorators import register_task_handler
+
 from features.models import Feature
 from integrations.github.client import post_comment_to_github
 from integrations.github.constants import GitHubEventType
 from integrations.github.dataclasses import CallGithubData
-from task_processor.decorators import register_task_handler
 
 logger = logging.getLogger(__name__)
 

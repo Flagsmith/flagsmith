@@ -4,6 +4,7 @@ from unittest import mock
 import pytest
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from features.feature_types import MULTIVARIATE
 from tests.integration.helpers import (
@@ -221,3 +222,169 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
 
     second_identity_response_json = second_identity_response.json()
     assert len(second_identity_response_json["flags"]) == 3
+
+
+def test_get_feature_states_for_identity__transient_identity__segment_match_expected(
+    sdk_client: APIClient,
+    feature: int,
+    segment: int,
+    segment_condition_property: str,
+    segment_condition_value: str,
+    segment_featurestate: int,
+) -> None:
+    # Given
+    url = reverse("api-v1:sdk-identities")
+
+    # When
+    # flags are requested for a new transient identity
+    # that matches the segment
+    response = sdk_client.post(
+        url,
+        data=json.dumps(
+            {
+                "identifier": "unseen",
+                "traits": [
+                    {
+                        "trait_key": segment_condition_property,
+                        "trait_value": segment_condition_value,
+                    }
+                ],
+                "transient": True,
+            }
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    assert (
+        flag_data := next(
+            (
+                flag
+                for flag in response_json["flags"]
+                if flag["feature"]["id"] == feature
+            ),
+            None,
+        )
+    )
+    assert flag_data["enabled"] is True
+    assert flag_data["feature_state_value"] == "segment override"
+
+
+def test_get_feature_states_for_identity__transient_trait__segment_match_expected(
+    sdk_client: APIClient,
+    feature: int,
+    segment: int,
+    segment_condition_property: str,
+    segment_condition_value: str,
+    segment_featurestate: int,
+) -> None:
+    # Given
+    url = reverse("api-v1:sdk-identities")
+
+    # When
+    # flags are requested for a new identity
+    # that matches the segment
+    # with a transient trait
+    response = sdk_client.post(
+        url,
+        data=json.dumps(
+            {
+                "identifier": "unseen",
+                "traits": [
+                    {
+                        "trait_key": segment_condition_property,
+                        "trait_value": segment_condition_value,
+                        "transient": True,
+                    },
+                    {
+                        "trait_key": "persistent",
+                        "trait_value": "trait value",
+                    },
+                ],
+            }
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    assert response_json["traits"] == [
+        {
+            "id": mock.ANY,
+            "trait_key": segment_condition_property,
+            "trait_value": segment_condition_value,
+            "transient": True,
+        },
+        {
+            "id": mock.ANY,
+            "trait_key": "persistent",
+            "trait_value": "trait value",
+            "transient": False,
+        },
+    ]
+    assert (
+        flag_data := next(
+            (
+                flag
+                for flag in response_json["flags"]
+                if flag["feature"]["id"] == feature
+            ),
+            None,
+        )
+    )
+    assert flag_data["enabled"] is True
+    assert flag_data["feature_state_value"] == "segment override"
+
+
+def test_get_feature_states_for_identity__transient_trait__existing_identity__return_expected(
+    sdk_client: APIClient,
+    identity_identifier: str,
+    identity: int,
+) -> None:
+    # Given
+    url = reverse("api-v1:sdk-identities")
+
+    # When
+    # flags are requested for an existing identity
+    # with a transient trait
+    response = sdk_client.post(
+        url,
+        data=json.dumps(
+            {
+                "identifier": identity_identifier,
+                "traits": [
+                    {
+                        "trait_key": "transient",
+                        "trait_value": "trait value",
+                        "transient": True,
+                    },
+                    {
+                        "trait_key": "persistent",
+                        "trait_value": "trait value",
+                    },
+                ],
+            }
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    assert response_json["traits"] == [
+        {
+            "id": mock.ANY,
+            "trait_key": "persistent",
+            "trait_value": "trait value",
+            "transient": False,
+        },
+        {
+            "id": mock.ANY,
+            "trait_key": "transient",
+            "trait_value": "trait value",
+            "transient": True,
+        },
+    ]

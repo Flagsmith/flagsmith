@@ -51,13 +51,18 @@ const AnnouncementPerPage: FC<AnnouncementPerPageType> = ({ pathname }) => {
           obj1: AnnouncementPerPageValueType['params'],
           obj2: AnnouncementPerPageValueType['params'],
         ) => {
-          return Object.keys(obj1).every((key) => {
-            return `${obj1[key]}` === `${obj2[key]}`
+          return Object.keys(obj2).every((key) => {
+            if (Array.isArray(obj2[key])) {
+              return obj2[key].some((item) => {
+                return `${item}` === `${obj1[key]}`
+              })
+            } else {
+              return `${obj1[key]}` === `${obj2[key]}`
+            }
           })
         }
-        const annParamsMatch = objectsMatch(annParams, matchParams)
         const matchParamsMatch = objectsMatch(matchParams, annParams)
-        if (annParamsMatch || matchParamsMatch) {
+        if (matchParamsMatch) {
           return true
         }
 

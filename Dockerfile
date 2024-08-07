@@ -32,10 +32,13 @@
 # * build-node [node]
 # * build-node-django [build-node]
 # * build-node-selfhosted [build-node]
-# * build-python [python]
+# * build-python [wolfi-base]
 # * build-python-private [build-python]
-# * api-runtime [python:slim]
+# * api-runtime [wolfi-base]
 # * api-runtime-private [api-runtime]
+
+# - Internal stages
+# * api-test [build-python]
 
 # - Target (shippable) stages
 # * private-cloud-api [api-runtime-private, build-python-private]
@@ -50,19 +53,16 @@ ARG CI_COMMIT_SHA=dev
 # Pin runtimes versions
 ARG NODE_VERSION=16
 ARG PYTHON_VERSION=3.11
-ARG PYTHON_SITE_DIR=/usr/local/lib/python${PYTHON_VERSION}/site-packages
 
-FROM node:${NODE_VERSION}-bookworm as node
-FROM node:${NODE_VERSION}-bookworm-slim as node-slim
-FROM python:${PYTHON_VERSION}-bookworm as python
-FROM python:${PYTHON_VERSION}-slim-bookworm as python-slim
+FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm as node
+FROM cgr.dev/chainguard/wolfi-base:latest as wolfi-base
 
 # - Intermediary stages
 # * build-node
 FROM node AS build-node
 
 # Copy the files required to install npm packages
-WORKDIR /app
+WORKDIR /build
 COPY frontend/package.json frontend/package-lock.json frontend/.npmrc ./frontend/.nvmrc ./frontend/
 COPY frontend/bin/ ./frontend/bin/
 COPY frontend/env/ ./frontend/env/
@@ -70,12 +70,12 @@ COPY frontend/env/ ./frontend/env/
 ARG ENV=selfhosted
 RUN cd frontend && ENV=${ENV} npm ci --quiet --production
 
-COPY frontend /app/frontend
+COPY frontend /build/frontend
 
 # * build-node-django [build-node]
 FROM build-node as build-node-django
 
-RUN mkdir /app/api && cd frontend && npm run bundledjango
+RUN mkdir /build/api && cd frontend && npm run bundledjango
 
 # * build-node-selfhosted [build-node]
 FROM build-node as build-node-selfhosted
@@ -83,11 +83,22 @@ FROM build-node as build-node-selfhosted
 RUN cd frontend && npm run bundle
 
 # * build-python
-FROM python as build-python
-WORKDIR /app
+FROM wolfi-base as build-python
+WORKDIR /build
+
+ARG PYTHON_VERSION
+RUN apk add build-base linux-headers curl git \
+  python-${PYTHON_VERSION} \
+  python-${PYTHON_VERSION}-dev \
+  py${PYTHON_VERSION}-pip 
 
 COPY api/pyproject.toml api/poetry.lock api/Makefile ./
-ENV POETRY_VIRTUALENVS_CREATE=false POETRY_HOME=/usr/local
+ENV POETRY_VIRTUALENVS_IN_PROJECT=true \
+  POETRY_VIRTUALENVS_OPTIONS_ALWAYS_COPY=true \
+  POETRY_VIRTUALENVS_OPTIONS_NO_PIP=true \
+  POETRY_VIRTUALENVS_OPTIONS_NO_SETUPTOOLS=true \
+  POETRY_HOME=/opt/poetry \
+  PATH="/opt/poetry/bin:$PATH"
 RUN make install opts='--without dev'
 
 # * build-python-private [build-python]
@@ -104,11 +115,12 @@ RUN --mount=type=secret,id=github_private_cloud_token \
   make install-private-modules
 
 # * api-runtime
-FROM python-slim as api-runtime
+FROM wolfi-base as api-runtime
 
-ARG TARGETARCH
-RUN if [ "${TARGETARCH}" != "amd64" ]; then \
-  apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
+# Install Python and make it available to venv entrypoints
+ARG PYTHON_VERSION
+RUN apk add python-${PYTHON_VERSION} && \
+  mkdir /build/ && ln -s /usr/local/ /build/.venv
 
 WORKDIR /app
 
@@ -131,15 +143,25 @@ CMD ["migrate-and-serve"]
 FROM api-runtime as api-runtime-private
 
 # Install SAML binary dependency
-RUN apt-get update && apt-get install -y xmlsec1 && rm -rf /var/lib/apt/lists/*
+RUN apk add xmlsec
+
+# - Internal stages
+# * api-test [build-python]
+FROM build-python AS api-test
+
+RUN make install-packages opts='--with dev'
+
+WORKDIR /app
+
+COPY api /app/
+
+CMD ["make test"]
 
 # - Target (shippable) stages
 # * private-cloud-api [api-runtime-private, build-python-private]
 FROM api-runtime-private as private-cloud-api
 
-ARG PYTHON_SITE_DIR
-COPY --from=build-python-private ${PYTHON_SITE_DIR} ${PYTHON_SITE_DIR}
-COPY --from=build-python-private /usr/local/bin /usr/local/bin
+COPY --from=build-python-private /build/.venv/ /usr/local/
 
 RUN python manage.py collectstatic --no-input
 RUN touch ./ENTERPRISE_VERSION
@@ -149,11 +171,8 @@ USER nobody
 # * private-cloud-unified [api-runtime-private, build-python-private, build-node-django]
 FROM api-runtime-private as private-cloud-unified
 
-ARG PYTHON_SITE_DIR
-COPY --from=build-python-private ${PYTHON_SITE_DIR} ${PYTHON_SITE_DIR}
-COPY --from=build-python-private /usr/local/bin /usr/local/bin
-COPY --from=build-node-django /app/api/static /app/static
-COPY --from=build-node-django /app/api/app/templates/webpack /app/app/templates/webpack
+COPY --from=build-python-private /build/.venv/ /usr/local/
+COPY --from=build-node-django /build/api/ /app/
 
 RUN python manage.py collectstatic --no-input
 RUN touch ./ENTERPRISE_VERSION
@@ -165,14 +184,12 @@ FROM api-runtime-private as saas-api
 
 # Install GnuPG and import private key
 RUN --mount=type=secret,id=sse_pgp_pkey \
-  apt-get update && apt-get install -y gnupg && \
+  apk add gpg gpg-agent && \
   gpg --import /run/secrets/sse_pgp_pkey && \
   mv /root/.gnupg/ /app/ && \
   chown -R nobody /app/.gnupg/
 
-ARG PYTHON_SITE_DIR
-COPY --from=build-python-private ${PYTHON_SITE_DIR} ${PYTHON_SITE_DIR}
-COPY --from=build-python-private /usr/local/bin /usr/local/bin
+COPY --from=build-python-private /build/.venv/ /usr/local/
 
 RUN python manage.py collectstatic --no-input
 RUN touch ./SAAS_DEPLOYMENT
@@ -182,21 +199,21 @@ USER nobody
 # * oss-api [api-runtime, build-python]
 FROM api-runtime as oss-api
 
-ARG PYTHON_SITE_DIR
-COPY --from=build-python ${PYTHON_SITE_DIR} ${PYTHON_SITE_DIR}
-COPY --from=build-python /usr/local/bin /usr/local/bin
+COPY --from=build-python /build/.venv/ /usr/local/
 
 RUN python manage.py collectstatic --no-input
 
 USER nobody
 
 # * oss-frontend [build-node-selfhosted]
-FROM node-slim AS oss-frontend
+FROM wolfi-base AS oss-frontend
 
-USER node
+ARG NODE_VERSION
+RUN apk add nodejs-${NODE_VERSION}
+
 WORKDIR /srv/bt
 
-COPY --from=build-node-selfhosted --chown=node:node /app/frontend .
+COPY --from=build-node-selfhosted /build/frontend/ /srv/bt/
 
 ENV NODE_ENV=production
 
@@ -205,16 +222,16 @@ RUN echo ${CI_COMMIT_SHA} > /srv/bt/CI_COMMIT_SHA
 COPY .release-please-manifest.json /srv/bt/.versions.json
 
 EXPOSE 8080
+
 CMD ["node",  "./api/index.js"]
+
+USER nobody
 
 # * oss-unified [api-runtime, build-python, build-node-django]
 FROM api-runtime as oss-unified
 
-ARG PYTHON_SITE_DIR
-COPY --from=build-python ${PYTHON_SITE_DIR} ${PYTHON_SITE_DIR}
-COPY --from=build-python /usr/local/bin /usr/local/bin
-COPY --from=build-node-django /app/api/static /app/static/
-COPY --from=build-node-django /app/api/app/templates/webpack /app/app/templates/webpack
+COPY --from=build-python /build/.venv/ /usr/local/
+COPY --from=build-node-django /build/api/ /app/
 
 RUN python manage.py collectstatic --no-input
 
