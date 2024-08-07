@@ -9,6 +9,7 @@ from rest_framework.test import APIClient
 
 from organisations.invites.models import Invite
 from organisations.models import Organisation
+from users.models import SignUpType
 
 
 @mock.patch("custom_auth.oauth.serializers.get_user_info")
@@ -66,7 +67,13 @@ def test_can_register_with_google_with_invite_if_registration_disabled(
     Invite.objects.create(organisation=organisation, email=email)
 
     # When
-    response = client.post(url, data={"access_token": "some-token"})
+    response = client.post(
+        url,
+        data={
+            "access_token": "some-token",
+            "sign_up_type": SignUpType.INVITE_EMAIL.value,
+        },
+    )
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -89,7 +96,13 @@ def test_can_register_with_github_with_invite_if_registration_disabled(
     Invite.objects.create(organisation=organisation, email=email)
 
     # When
-    response = client.post(url, data={"access_token": "some-token"})
+    response = client.post(
+        url,
+        data={
+            "access_token": "some-token",
+            "sign_up_type": SignUpType.INVITE_EMAIL.value,
+        },
+    )
 
     # Then
     assert response.status_code == status.HTTP_200_OK

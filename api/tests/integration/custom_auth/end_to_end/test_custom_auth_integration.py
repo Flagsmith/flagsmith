@@ -12,7 +12,7 @@ from rest_framework.test import APIClient, override_settings
 
 from organisations.invites.models import Invite
 from organisations.models import Organisation
-from users.models import FFAdminUser
+from users.models import FFAdminUser, SignUpType
 
 
 def test_register_and_login_workflows(db: None, api_client: APIClient) -> None:
@@ -124,6 +124,7 @@ def test_can_register_with_invite_if_registration_disabled_without_invite(
         "password": password,
         "first_name": "test",
         "last_name": "register",
+        "sign_up_type": SignUpType.INVITE_EMAIL.value,
     }
     Invite.objects.create(email=email, organisation=organisation)
 
