@@ -109,7 +109,7 @@ const controller = {
     })
       .then((res) => {
         if (res.error) {
-          throw new Error(res.error?.error || res.error)
+          throw res.error?.error || res.error
         }
         return Promise.all(
           (flag.multivariate_options || []).map((v) =>

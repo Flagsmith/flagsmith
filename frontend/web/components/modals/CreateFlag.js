@@ -785,11 +785,6 @@ const CreateFlag = class extends Component {
             />
           </FormGroup>
         )}
-        {!!error && (
-          <ErrorMessage
-            error={typeof error?.name === 'array' ? error?.name?.[0] : error}
-          />
-        )}
         {!hideValue && (
           <div
             className={`${identity && !description ? 'mt-4 mx-3' : ''} ${
