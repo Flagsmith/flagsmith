@@ -140,18 +140,19 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
         except ValueError:
             raise ValidationError({"github_pk": ["Must be an integer"]})
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs) -> Response | None:
 
         try:
-            response = super().create(request, *args, **kwargs)
-            github_configuration = GithubConfiguration.objects.get(
+            response: Response = super().create(request, *args, **kwargs)
+            github_configuration: GithubConfiguration = GithubConfiguration.objects.get(
                 id=self.kwargs["github_pk"]
             )
-            create_flagsmith_flag_label(
-                installation_id=github_configuration.installation_id,
-                owner=request.data.get("repository_owner"),
-                repo=request.data.get("repository_name"),
-            )
+            if request.data.get("tagging_enabled", False):
+                create_flagsmith_flag_label(
+                    installation_id=github_configuration.installation_id,
+                    owner=request.data.get("repository_owner"),
+                    repo=request.data.get("repository_name"),
+                )
             return response
 
         except IntegrityError as e:
@@ -162,6 +163,19 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
                 raise ValidationError(
                     detail="Duplication error. The GitHub repository already linked"
                 )
+
+    def update(self, request, *args, **kwargs) -> Response | None:
+        response: Response = super().update(request, *args, **kwargs)
+        github_configuration: GithubConfiguration = GithubConfiguration.objects.get(
+            id=self.kwargs["github_pk"]
+        )
+        if request.data.get("tagging_enabled", False):
+            create_flagsmith_flag_label(
+                installation_id=github_configuration.installation_id,
+                owner=request.data.get("repository_owner"),
+                repo=request.data.get("repository_name"),
+            )
+        return response
 
 
 @api_view(["GET"])

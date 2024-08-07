@@ -1,3 +1,4 @@
+import json
 import logging
 from enum import Enum
 from typing import Any
@@ -5,6 +6,7 @@ from typing import Any
 import requests
 from django.conf import settings
 from github import Auth, Github
+from requests.exceptions import HTTPError
 
 from integrations.github.constants import (
     GITHUB_API_CALLS_TIMEOUT,
@@ -263,11 +265,25 @@ def create_flagsmith_flag_label(
         "color": GITHUB_FLAGSMITH_LABEL_COLOR,
         "description": GITHUB_FLAGSMITH_LABEL_DESCRIPTION,
     }
-    response = requests.post(
-        url, json=payload, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT
-    )
-    response.raise_for_status()
-    return response.json()
+    try:
+        response = requests.post(
+            url, json=payload, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT
+        )
+        response.raise_for_status()
+        return response.json()
+
+    except HTTPError:
+        response_content = response.content.decode("utf-8")
+        error_data = json.loads(response_content)
+        if any(
+            error["code"] == "already_exists" for error in error_data.get("errors", [])
+        ):
+            logger.warning("Label already exists")
+            return {"message": "Label already exists"}, 200
+        raise
+    except Exception as err:
+        logger.error(f"DEBUG: Other error occurred: {err}")
+        raise
 
 
 def label_github_issue_pr(
