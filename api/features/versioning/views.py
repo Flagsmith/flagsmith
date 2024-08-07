@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import BooleanField, ExpressionWrapper, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -37,6 +38,9 @@ from features.versioning.serializers import (
     EnvironmentFeatureVersionQuerySerializer,
     EnvironmentFeatureVersionRetrieveSerializer,
     EnvironmentFeatureVersionSerializer,
+)
+from features.versioning.versioning_service import (
+    get_current_live_environment_feature_version,
 )
 from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser
@@ -141,9 +145,21 @@ class EnvironmentFeatureVersionViewSet(
 
     @action(detail=True, methods=["POST"])
     def rollback_to(self, request: Request, **kwargs) -> Response:
-        ef_version = self.get_object()
-        ef_version.rollback_to()
-        ef_version.save()
+        version_to_rollback_to: EnvironmentFeatureVersion = self.get_object()
+        current_version: EnvironmentFeatureVersion = (
+            get_current_live_environment_feature_version(
+                feature_id=version_to_rollback_to.feature_id,
+                environment_id=version_to_rollback_to.environment_id,
+            )
+        )
+
+        version_to_rollback_to.rollback_to()
+        current_version.rollback_from()
+
+        with transaction.atomic():
+            version_to_rollback_to.save()
+            current_version.save()
+
         return Response()
 
 

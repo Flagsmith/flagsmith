@@ -1153,8 +1153,11 @@ def test_rollback_to(
         args=[environment_v2_versioning.id, feature.id, version_1.uuid],
     )
 
+    now = timezone.now()
+
     # When
-    response = staff_client.post(url)
+    with freeze_time(now):
+        response = staff_client.post(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -1163,4 +1166,8 @@ def test_rollback_to(
         environment_id=environment_v2_versioning.id
     )
     assert queryset.count() == 1
-    assert queryset.first() == version_1
+    current_live_version = queryset.first()
+    assert current_live_version == version_1
+
+    version_2.refresh_from_db()
+    assert version_2.rolled_back_at == now

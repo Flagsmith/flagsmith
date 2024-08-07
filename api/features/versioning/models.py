@@ -83,6 +83,9 @@ class EnvironmentFeatureVersion(
         blank=True,
     )
 
+    # TODO: audit?
+    rolled_back_at = models.DateTimeField(blank=True, null=True)
+
     objects = EnvironmentFeatureVersionManager()
 
     class Meta:
@@ -170,6 +173,9 @@ class EnvironmentFeatureVersion(
 
     def rollback_to(self) -> None:
         self.live_from = timezone.now()
+
+    def rollback_from(self) -> None:
+        self.rolled_back_at = timezone.now()
 
 
 class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
