@@ -3,6 +3,10 @@ import logging
 from django.conf import settings
 from rest_framework import serializers
 
+from features.versioning.constants import (
+    DEFAULT_VERSION_LIMIT,
+    VERSION_LIMIT_BY_PLAN,
+)
 from organisations.chargebee import (
     get_hosted_page_url_for_subscription_upgrade,
     get_subscription_data_from_hosted_page,
@@ -18,6 +22,7 @@ from .models import (
     UserOrganisation,
 )
 from .subscriptions.constants import CHARGEBEE
+from .subscriptions.metadata import BaseSubscriptionMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -246,6 +251,16 @@ class SubscriptionDetailsSerializer(serializers.Serializer):
     payment_source = serializers.ChoiceField(choices=[None, CHARGEBEE], allow_null=True)
 
     chargebee_email = serializers.EmailField()
+
+    version_limit = serializers.SerializerMethodField()
+
+    def get_version_limit(self, instance: BaseSubscriptionMetadata) -> int:
+        if not (subscription := self.context.get("subscription")):
+            return DEFAULT_VERSION_LIMIT
+
+        return VERSION_LIMIT_BY_PLAN.get(
+            subscription.subscription_plan_family, DEFAULT_VERSION_LIMIT
+        )
 
 
 class OrganisationAPIUsageNotificationSerializer(serializers.Serializer):

@@ -26,6 +26,7 @@ from features.serializers import (
 )
 from features.versioning.constants import (
     DEFAULT_VERSION_LIMIT,
+    EXTRA_VERSIONS_FOR_LIST,
     VERSION_LIMIT_BY_PLAN,
 )
 from features.versioning.exceptions import FeatureVersionDeleteError
@@ -122,8 +123,11 @@ class EnvironmentFeatureVersionViewSet(
             queryset = queryset.filter(_is_live=is_live)
 
         subscription = self.environment.project.organisation.subscription
-        version_limit = VERSION_LIMIT_BY_PLAN.get(
-            subscription.subscription_plan_family, DEFAULT_VERSION_LIMIT
+        version_limit = (
+            VERSION_LIMIT_BY_PLAN.get(
+                subscription.subscription_plan_family, DEFAULT_VERSION_LIMIT
+            )
+            + EXTRA_VERSIONS_FOR_LIST
         )
 
         if self.action == "list" and version_limit is not None:
