@@ -45,6 +45,8 @@ class EnvironmentPermissions(IsAuthenticated):
     def has_object_permission(self, request, view, obj):
         if view.action == "clone":
             return request.user.has_project_permission(CREATE_ENVIRONMENT, obj.project)
+        elif view.action == "get_document":
+            return request.user.has_environment_permission(VIEW_ENVIRONMENT, obj)
 
         return request.user.is_environment_admin(obj) or view.action in [
             "user_permissions"
