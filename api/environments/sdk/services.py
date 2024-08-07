@@ -12,17 +12,6 @@ from environments.sdk.types import SDKTraitData
 IdentityAndTraits: TypeAlias = tuple[Identity, list[Trait]]
 
 
-def _get_transient_identity(
-    environment: Environment,
-    identifier: str,
-) -> Identity:
-    return Identity(
-        created_date=timezone.now(),
-        environment=environment,
-        identifier=identifier,
-    )
-
-
 def get_transient_identity_and_traits(
     environment: Environment,
     sdk_trait_data: list[SDKTraitData],
@@ -97,4 +86,15 @@ def get_persisted_identity_and_traits(
                 identity.generate_traits(sdk_trait_data, persist=False),
             )
         }.values()
+    )
+
+
+def _get_transient_identity(
+    environment: Environment,
+    identifier: str,
+) -> Identity:
+    return Identity(
+        created_date=timezone.now(),
+        environment=environment,
+        identifier=identifier,
     )
