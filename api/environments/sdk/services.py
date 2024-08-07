@@ -63,8 +63,8 @@ def get_persisted_identity_and_traits(
 ) -> IdentityAndTraits:
     """
     Retrieve a previously persisted `Identity` instance or persist a new one.
-    Traits are persisted based on the `"transient"` attribute
-    provided with each individual trait.
+    Traits are persisted based on the organisation-level setting or a
+    `"transient"` attribute provided with each individual trait.
     """
     identity, created = Identity.objects.get_or_create(
         environment=environment,
