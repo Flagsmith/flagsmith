@@ -1,10 +1,14 @@
 import Constants from 'common/constants'
 import { getIsWidget } from 'components/pages/WidgetPage'
 import ProjectStore from './project-store'
-import { createAndSetFeatureVersion } from 'common/services/useFeatureVersion'
+import {
+  createAndSetFeatureVersion,
+  getFeatureStateCrud,
+} from 'common/services/useFeatureVersion'
 import { updateSegmentPriorities } from 'common/services/useSegmentPriority'
 import {
   createProjectFlag,
+  getProjectFlag,
   updateProjectFlag,
 } from 'common/services/useProjectFlag'
 import OrganisationStore from './organisation-store'
@@ -13,6 +17,7 @@ import {
   Environment,
   FeatureState,
   MultivariateOption,
+  PagedResponse,
   ProjectFlag,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
@@ -25,9 +30,10 @@ const { createSegmentOverride } = require('../services/useSegmentOverride')
 const { getStore } = require('../store')
 import flagsmith from 'flagsmith'
 import API from 'project/api'
-import segmentOverrides from 'components/SegmentOverrides'
 import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
+import { getFeatureStates } from 'common/services/useFeatureState'
+import { getSegments } from 'common/services/useSegment'
 let createdFirstFeature = false
 const PAGE_SIZE = 50
 function recursivePageGet(url, parentRes) {
@@ -55,6 +61,7 @@ const convertSegmentOverrideToFeatureState = (
 ) => {
   return {
     enabled: override.enabled,
+    feature: override.feature,
     feature_segment: {
       id: override.id,
       priority: i,
@@ -154,6 +161,10 @@ const controller = {
     })
       .then((res) => {
         // onComplete calls back preserving the order of multivariate_options with their updated ids
+        if (res.error) {
+          store.saved({ error: res.error })
+          return
+        }
         if (onComplete) {
           onComplete(res)
         }
@@ -458,135 +469,216 @@ const controller = {
     mode: 'VALUE' | 'SEGMENT',
   ) => {
     store.saving()
-    API.trackEvent(Constants.events.EDIT_FEATURE)
-    const env: Environment = ProjectStore.getEnvironment(environmentId) as any
-    let environment_feature_versions = []
-    if (env.use_v2_feature_versioning) {
-      let featureStates
-      if (mode === 'SEGMENT') {
-        featureStates = segmentOverrides?.map((override: any, i: number) =>
-          convertSegmentOverrideToFeatureState(override, i, changeRequest),
-        )
-      } else {
-        featureStates = [
-          Object.assign({}, environmentFlag, {
-            enabled: flag.default_enabled,
-            feature_state_value: flag.initial_value,
-            live_from: flag.live_from,
-          }),
-        ]
-      }
-
-      const { data: version } = await createAndSetFeatureVersion(getStore(), {
-        environmentId: env.id,
-        featureId: projectFlag.id,
-        featureStates,
-        liveFrom: changeRequest.live_from,
-        skipPublish: true,
-      })
-      environment_feature_versions = [version.version_sha]
-    }
-    const prom = data
-      .get(
-        `${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`,
+    try {
+      API.trackEvent(Constants.events.EDIT_FEATURE)
+      const env: Environment = ProjectStore.getEnvironment(environmentId) as any
+      // Detect differences between change request and existing feature states
+      const res: { data: PagedResponse<FeatureState> } = await getFeatureStates(
+        getStore(),
+        {
+          environment: environmentFlag.environment,
+          feature: projectFlag.id,
+        },
       )
-      .then(() => {
-        const {
-          approvals,
-          featureStateId,
-          multivariate_options,
-          ...changeRequestData
-        } = changeRequest
-
-        const userApprovals = approvals.filter((u) => {
-          const keys = Object.keys(u)
-          return keys.includes('user')
+      let segments = null
+      if (mode === 'SEGMENT') {
+        const res = await getSegments(getStore(), {
+          include_feature_specific: true,
+          page_size: 1000,
+          projectId,
         })
+        segments = res.data.results
+      }
+      const oldFeatureStates = res.data.results.filter((v) => {
+        return mode === 'VALUE' ? !v.feature_segment : !!v.feature_segment
+      })
 
-        const group_assignments = approvals.filter((g) => {
-          const keys = Object.keys(g)
-          return keys.includes('group')
-        })
-
-        const req = {
-          approvals: userApprovals,
-          environment_feature_versions,
-          feature_states: !env.use_v2_feature_versioning
-            ? [
-                {
-                  enabled: flag.default_enabled,
-                  feature: projectFlag.id,
-                  feature_state_value: Utils.valueToFeatureState(
-                    flag.initial_value,
-                  ),
-                  id: featureStateId,
-                  live_from:
-                    changeRequest.live_from || new Date().toISOString(),
-                },
-              ]
-            : [],
-          group_assignments,
-          ...changeRequestData,
+      let feature_states_to_create:
+          | Req['createFeatureVersion']['feature_states_to_create']
+          | undefined = undefined,
+        feature_states_to_update:
+          | Req['createFeatureVersion']['feature_states_to_update']
+          | undefined = undefined,
+        segment_ids_to_delete_overrides:
+          | Req['createFeatureVersion']['segment_ids_to_delete_overrides']
+          | undefined = undefined
+      if (env.use_v2_feature_versioning) {
+        let featureStates
+        if (mode === 'SEGMENT') {
+          featureStates = segmentOverrides?.map((override: any, i: number) =>
+            convertSegmentOverrideToFeatureState(override, i, changeRequest),
+          )
+        } else {
+          featureStates = [
+            Object.assign({}, environmentFlag, {
+              enabled: flag.default_enabled,
+              feature_state_value: flag.initial_value,
+              live_from: flag.live_from,
+            }),
+          ]
         }
-        const reqType = req.id ? 'put' : 'post'
-        const url = req.id
-          ? `${Project.api}features/workflows/change-requests/${req.id}/`
-          : `${Project.api}environments/${environmentId}/create-change-request/`
-        return data[reqType](url, req).then((v) => {
-          let prom = Promise.resolve()
-          if (multivariate_options && v.feature_states?.[0]) {
-            v.feature_states[0].multivariate_feature_state_values =
-              v.feature_states[0].multivariate_feature_state_values.map((v) => {
-                const matching = multivariate_options.find(
-                  (m) =>
-                    (v.multivariate_feature_option || v.id) ===
-                    (m.multivariate_feature_option || m.id),
+
+        const version = getFeatureStateCrud(
+          featureStates.map((v) => ({
+            ...v,
+            // endpoint returns object for feature_state_value rather than the value
+            feature_state_value: Utils.valueToFeatureState(
+              v.feature_state_value,
+            ),
+          })),
+          oldFeatureStates,
+          segments,
+        )
+        const convertFeatureStateToValue = (v: any) => ({
+          ...v,
+          feature_state_value: Utils.featureStateToValue(v.feature_state_value),
+        })
+        feature_states_to_create = version.feature_states_to_create?.map(
+          convertFeatureStateToValue,
+        )
+        feature_states_to_update = version.feature_states_to_update?.map(
+          convertFeatureStateToValue,
+        )
+        segment_ids_to_delete_overrides =
+          version.segment_ids_to_delete_overrides
+
+        if (
+          !feature_states_to_create.length &&
+          !feature_states_to_update.length &&
+          !segment_ids_to_delete_overrides.length
+        ) {
+          throw new Error('Change request contains no changes')
+        }
+      }
+      const prom = data
+        .get(
+          `${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`,
+        )
+        .then(() => {
+          const {
+            approvals,
+            featureStateId,
+            multivariate_options,
+            ...changeRequestData
+          } = changeRequest
+
+          const userApprovals = approvals.filter((u) => {
+            const keys = Object.keys(u)
+            return keys.includes('user')
+          })
+
+          const group_assignments = approvals.filter((g) => {
+            const keys = Object.keys(g)
+            return keys.includes('group')
+          })
+
+          const changeSets =
+            feature_states_to_create ||
+            feature_states_to_update ||
+            segment_ids_to_delete_overrides
+              ? [
+                  {
+                    feature: projectFlag.id,
+                    feature_states_to_create:
+                      feature_states_to_create || undefined,
+                    feature_states_to_update:
+                      feature_states_to_update || undefined,
+                    live_from:
+                      changeRequest.live_from || new Date().toISOString(),
+                    segment_ids_to_delete_overrides:
+                      segment_ids_to_delete_overrides || undefined,
+                  },
+                ]
+              : undefined
+          const req = {
+            approvals: userApprovals,
+            change_sets: changeSets,
+            feature_states: !env.use_v2_feature_versioning
+              ? [
+                  {
+                    enabled: flag.default_enabled,
+                    feature: projectFlag.id,
+                    feature_state_value: Utils.valueToFeatureState(
+                      flag.initial_value,
+                    ),
+                    id: featureStateId,
+                    live_from:
+                      changeRequest.live_from || new Date().toISOString(),
+                  },
+                ]
+              : [],
+            group_assignments,
+
+            ...changeRequestData,
+          }
+          const reqType = req.id ? 'put' : 'post'
+          const url = req.id
+            ? `${Project.api}features/workflows/change-requests/${req.id}/`
+            : `${Project.api}environments/${environmentId}/create-change-request/`
+          return data[reqType](url, req).then((v) => {
+            let prom = Promise.resolve()
+            if (multivariate_options && v.feature_states?.[0]) {
+              v.feature_states[0].multivariate_feature_state_values =
+                v.feature_states[0].multivariate_feature_state_values.map(
+                  (v) => {
+                    const matching = multivariate_options.find(
+                      (m) =>
+                        (v.multivariate_feature_option || v.id) ===
+                        (m.multivariate_feature_option || m.id),
+                    )
+                    return {
+                      ...v,
+                      percentage_allocation: matching
+                        ? typeof matching.percentage_allocation === 'number'
+                          ? matching.percentage_allocation
+                          : matching.default_percentage_allocation
+                        : v.percentage_allocation,
+                    }
+                  },
                 )
-                return {
+            }
+
+            prom = data
+              .put(
+                `${Project.api}features/workflows/change-requests/${v.id}/`,
+                {
                   ...v,
-                  percentage_allocation: matching
-                    ? typeof matching.percentage_allocation === 'number'
-                      ? matching.percentage_allocation
-                      : matching.default_percentage_allocation
-                    : v.percentage_allocation,
+                  change_sets: changeSets,
+                },
+              )
+              .then((v) => {
+                if (commit) {
+                  AppActions.actionChangeRequest(v.id, 'commit', () => {
+                    AppActions.refreshFeatures(projectId, environmentId)
+                  })
+                } else {
+                  AppActions.getChangeRequest(v.id, projectId, environmentId)
                 }
               })
-          }
+            prom.then(() => {
+              AppActions.getChangeRequests(environmentId, {})
+              AppActions.getChangeRequests(environmentId, { committed: true })
+              AppActions.getChangeRequests(environmentId, {
+                live_from_after: new Date().toISOString(),
+              })
 
-          prom = data
-            .put(`${Project.api}features/workflows/change-requests/${v.id}/`, {
-              ...v,
-            })
-            .then((v) => {
-              if (commit) {
-                AppActions.actionChangeRequest(v.id, 'commit', () => {
-                  AppActions.refreshFeatures(projectId, environmentId)
-                })
-              } else {
-                AppActions.getChangeRequest(v.id, projectId, environmentId)
+              if (featureStateId) {
+                AppActions.getChangeRequest(
+                  changeRequestData.id,
+                  projectId,
+                  environmentId,
+                )
               }
             })
-          prom.then(() => {
-            AppActions.getChangeRequests(environmentId, {})
-            AppActions.getChangeRequests(environmentId, { committed: true })
-            AppActions.getChangeRequests(environmentId, {
-              live_from_after: new Date().toISOString(),
-            })
-
-            if (featureStateId) {
-              AppActions.getChangeRequest(
-                changeRequestData.id,
-                projectId,
-                environmentId,
-              )
-            }
           })
         })
-      })
 
-    Promise.all([prom]).then(() => {
-      store.saved({ changeRequest: true, isCreate: true })
-    })
+      Promise.all([prom]).then(() => {
+        store.saved({ changeRequest: true, isCreate: true })
+      })
+    } catch (e) {
+      API.ajaxHandler(store, e)
+    }
   },
   editVersionedFeatureState: (
     projectId,

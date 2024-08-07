@@ -20,6 +20,11 @@ const Announcement: FC<AnnouncementType> = () => {
   }
 
   const announcementValue = Utils.getFlagsmithJSONValue('announcement', null)
+
+  if (!announcementValue) {
+    return null
+  }
+
   const { buttonText, description, id, isClosable, title, url } =
     announcementValue as AnnouncementValueType
   const dismissed = flagsmith.getTrait('dismissed_announcement')

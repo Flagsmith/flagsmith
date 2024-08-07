@@ -13,12 +13,12 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
 from django.utils import timezone
+from task_processor.decorators import register_task_handler
+from task_processor.task_run_method import TaskRunMethod
 
 from environments.models import Environment, Webhook
 from organisations.models import OrganisationWebhook
 from projects.models import Organisation
-from task_processor.decorators import register_task_handler
-from task_processor.task_run_method import TaskRunMethod
 from webhooks.sample_webhook_data import (
     environment_webhook_data,
     organisation_webhook_data,

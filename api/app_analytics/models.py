@@ -32,6 +32,7 @@ class APIUsageRaw(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     host = models.CharField(max_length=255)
     resource = models.IntegerField(choices=Resource.choices)
+    count = models.PositiveIntegerField(default=1)
 
     class Meta:
         index_together = (("environment_id", "created_at"),)
@@ -81,6 +82,14 @@ class FeatureEvaluationRaw(models.Model):
     # Both stored for tracking multivariate split testing.
     identity_identifier = models.CharField(max_length=2000, null=True, default=None)
     enabled_when_evaluated = models.BooleanField(null=True, default=None)
+
+    class Meta:
+        indexes = [
+            models.Index(
+                fields=["created_at"],
+                name="f_evaluation_created_at_idx",
+            ),
+        ]
 
 
 class FeatureEvaluationBucket(AbstractBucket):

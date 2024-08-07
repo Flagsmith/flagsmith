@@ -6,20 +6,18 @@ on:
       - main
 
 permissions:
-  contents: write # for google-github-actions/release-please-action to create release commit
-  pull-requests: write # for google-github-actions/release-please-action to create release PR
+  contents: write # for googleapis/release-please-action to create release commit
+  pull-requests: write # for googleapis/release-please-action to create release PR
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: google-github-actions/release-please-action@v4
+      - uses: googleapis/release-please-action@v4
         id: release
         with:
-          command: manifest
           token: ${{secrets.RELEASE_PLEASE_GITHUB_TOKEN}}
-          default-branch: main
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       release_tag_name: ${{ steps.release.outputs.tag_name }}

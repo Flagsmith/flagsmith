@@ -16,6 +16,7 @@ from pytest_django.plugin import blocking_manager_key
 from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
+from task_processor.task_run_method import TaskRunMethod
 from urllib3.connectionpool import HTTPConnectionPool
 from xdist import get_xdist_worker_id
 
@@ -65,7 +66,6 @@ from projects.models import (
 from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
-from task_processor.task_run_method import TaskRunMethod
 from tests.test_helpers import fix_issue_3869
 from tests.types import (
     WithEnvironmentPermissionsCallable,
@@ -337,6 +337,11 @@ def segment(project: Project):
 
 
 @pytest.fixture()
+def another_segment(project: Project) -> Segment:
+    return Segment.objects.create(name="another_segment", project=project)
+
+
+@pytest.fixture()
 def segment_rule(segment):
     return SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
 
@@ -584,6 +589,19 @@ def feature_segment(feature, segment, environment):
 def segment_featurestate(feature_segment, feature, environment):
     return FeatureState.objects.create(
         feature_segment=feature_segment, feature=feature, environment=environment
+    )
+
+
+@pytest.fixture()
+def another_segment_featurestate(
+    feature: Feature, environment: Environment, another_segment: Segment
+) -> FeatureState:
+    return FeatureState.objects.create(
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature, segment=another_segment, environment=environment
+        ),
+        feature=feature,
+        environment=environment,
     )
 
 

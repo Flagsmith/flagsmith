@@ -52,7 +52,7 @@ from .permissions import (
 )
 from .serializers import (
     CreateFeatureSerializer,
-    CreateSegmentOverrideFeatureStateSerializer,
+    CustomCreateSegmentOverrideFeatureStateSerializer,
     FeatureEvaluationDataSerializer,
     FeatureGroupOwnerInputSerializer,
     FeatureInfluxDataSerializer,
@@ -897,8 +897,8 @@ def organisation_has_got_feature(request, organisation):
 
 @swagger_auto_schema(
     method="POST",
-    request_body=CreateSegmentOverrideFeatureStateSerializer(),
-    responses={201: CreateSegmentOverrideFeatureStateSerializer()},
+    request_body=CustomCreateSegmentOverrideFeatureStateSerializer(),
+    responses={201: CustomCreateSegmentOverrideFeatureStateSerializer()},
 )
 @api_view(["POST"])
 @permission_classes([CreateSegmentOverridePermissions])
@@ -908,7 +908,7 @@ def create_segment_override(
     environment = get_object_or_404(Environment, api_key=environment_api_key)
     feature = get_object_or_404(Feature, project=environment.project, pk=feature_pk)
 
-    serializer = CreateSegmentOverrideFeatureStateSerializer(
+    serializer = CustomCreateSegmentOverrideFeatureStateSerializer(
         data=request.data, context={"environment": environment, "feature": feature}
     )
     serializer.is_valid(raise_exception=True)

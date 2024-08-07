@@ -1,8 +1,9 @@
 import logging
 
+from task_processor.decorators import register_task_handler
+
 from environments.models import Webhook
 from features.models import Feature, FeatureState
-from task_processor.decorators import register_task_handler
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 from webhooks.webhooks import (
     WebhookEventType,

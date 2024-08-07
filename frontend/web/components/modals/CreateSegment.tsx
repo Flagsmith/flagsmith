@@ -52,7 +52,6 @@ import AddMetadataToEntity, {
   CustomMetadataField,
 } from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
-import MetadataTitle from 'components/metadata/MetadataTitle'
 import { setInterceptClose } from './base/ModalDefault'
 
 type PageType = {
@@ -155,7 +154,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [metadata, setMetadata] = useState<CustomMetadataField[]>(
     segment.metadata,
   )
-  const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
+  const metadataEnable =
+    Utils.getPlansPermission('METADATA') &&
+    Utils.getFlagsmithHasFeature('enable_metadata')
 
   const error = createError || updateError
   const totalSegments = ProjectStore.getTotalSegments() ?? 0
@@ -740,10 +741,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
           {metadataEnable && segmentContentType?.id && (
             <TabItem
-              tabLabelString='Metadata'
+              tabLabelString='Custom Fields'
               tabLabel={
                 <Row className='justify-content-center'>
-                  Metadata
+                  Custom Fields
                   {metadataValueChanged && (
                     <div className='unread ml-2 px-1'>{'*'}</div>
                   )}
@@ -763,8 +764,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
             <div className={className || 'my-3 mx-4'}>{Tab1}</div>
           </TabItem>
           <TabItem
-            tabLabelString='Metadata'
-            tabLabel={<Row className='justify-content-center'>Metadata</Row>}
+            tabLabelString='Custom Fields'
+            tabLabel={
+              <Row className='justify-content-center'>Custom Fields</Row>
+            }
           >
             <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
           </TabItem>
