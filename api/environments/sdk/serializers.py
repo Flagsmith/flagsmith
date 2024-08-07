@@ -159,8 +159,8 @@ class IdentifyWithTraitsSerializer(
             )
 
         elif transient:
-            # Get presently stored traits and identity overrides
-            # but don't persist incoming data.
+            # Don't persist incoming data but load presently stored
+            # overrides and traits, if any.
             identity, traits = get_identified_transient_identity_and_traits(
                 environment=environment,
                 identifier=identifier,
@@ -168,8 +168,8 @@ class IdentifyWithTraitsSerializer(
             )
 
         else:
-            # Persist the identity in accordance with non-local settings
-            # and individual trait transiency.
+            # Persist the identity in accordance with individual trait transiency
+            # and persistence settings outside of request context.
             identity, traits = get_persisted_identity_and_traits(
                 environment=environment,
                 identifier=identifier,

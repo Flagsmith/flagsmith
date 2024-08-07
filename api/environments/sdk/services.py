@@ -27,6 +27,9 @@ def get_transient_identity_and_traits(
     environment: Environment,
     sdk_trait_data: list[SDKTraitData],
 ) -> IdentityAndTraits:
+    """
+    Get a transient `Identity` instance with a randomly generated identifier.
+    """
     return (
         (
             identity := _get_transient_identity(
@@ -43,12 +46,18 @@ def get_identified_transient_identity_and_traits(
     identifier: str,
     sdk_trait_data: list[SDKTraitData],
 ) -> IdentityAndTraits:
+    """
+    Get a transient `Identity` instance.
+    If present in storage, it's a previously persisted identity with its traits,
+    combined with incoming traits provided to `sdk_trait_data` argument.
+    All traits constructed from `sdk_trait_data` are marked as transient.
+    """
+    for sdk_trait_data_item in sdk_trait_data:
+        sdk_trait_data_item["transient"] = True
     if identity := Identity.objects.filter(
         environment=environment,
         identifier=identifier,
     ).first():
-        for sdk_trait_data_item in sdk_trait_data:
-            sdk_trait_data_item["transient"] = True
         return identity, identity.update_traits(sdk_trait_data)
     return (
         identity := _get_transient_identity(
@@ -63,6 +72,11 @@ def get_persisted_identity_and_traits(
     identifier: str,
     sdk_trait_data: list[SDKTraitData],
 ) -> IdentityAndTraits:
+    """
+    Retrieve a previously persisted `Identity` instance or persist a new one.
+    Traits are persisted based on the `"transient"` attribute
+    provided with each individual trait.
+    """
     identity, created = Identity.objects.get_or_create(
         environment=environment,
         identifier=identifier,
