@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 
 import re2 as re
 from app_analytics.influxdb_wrapper import (
@@ -19,6 +20,7 @@ from django.http import (
 from django.shortcuts import get_object_or_404
 from django.template import loader
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
@@ -163,10 +165,11 @@ def organisation_info(request: HttpRequest, organisation_id: int) -> HttpRespons
         date_range = request.GET.get("date_range", "180d")
         context["date_range"] = date_range
 
-        date_start = f"-{date_range}"
-        date_stop = "now()"
+        assert date_range.endswith("d")
+        now = timezone.now()
+        date_start = now - timedelta(days=int(date_range[:-1]))
         event_list, labels = get_event_list_for_organisation(
-            organisation_id, date_start, date_stop
+            organisation_id, date_start
         )
         context["event_list"] = event_list
         context["traits"] = mark_safe(json.dumps(event_list["traits"]))
@@ -176,13 +179,16 @@ def organisation_info(request: HttpRequest, organisation_id: int) -> HttpRespons
             json.dumps(event_list["environment-document"])
         )
         context["labels"] = mark_safe(json.dumps(labels))
+
+        date_starts = {}
+        date_starts["24h"] = now - timedelta(days=1)
+        date_starts["7d"] = now - timedelta(days=7)
+        date_starts["30d"] = now - timedelta(days=30)
         context["api_calls"] = {
             # TODO: this could probably be reduced to a single influx request
             #  rather than 3
-            range_: get_events_for_organisation(
-                organisation_id, date_start=f"-{range_}"
-            )
-            for range_ in ("24h", "7d", "30d")
+            period: get_events_for_organisation(organisation_id, date_start=_date_start)
+            for period, _date_start in date_starts.items()
         }
 
     return HttpResponse(template.render(context, request))

@@ -1,6 +1,9 @@
+from datetime import timedelta
+
 import pytest
 from django.test import Client, RequestFactory
 from django.urls import reverse
+from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework.test import APIClient
@@ -39,6 +42,7 @@ def test_organisation_subscription_get_api_call_overage(
     assert result.overage == expected_overage
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_organisation_info__get_event_list_for_organisation(
     organisation: Organisation,
     superuser_client: APIClient,
@@ -65,7 +69,8 @@ def test_get_organisation_info__get_event_list_for_organisation(
     # Then
     assert "label1" in str(response.content)
     assert "label2" in str(response.content)
-    event_list_mock.assert_called_once_with(organisation.id, "-180d", "now()")
+    date_start = timezone.now() - timedelta(days=180)
+    event_list_mock.assert_called_once_with(organisation.id, date_start)
 
 
 def test_list_organisations_search_by_name(

@@ -118,10 +118,9 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         month_delta = relativedelta(now, billing_starts_at).months
         period_starts_at = relativedelta(months=month_delta) + billing_starts_at
 
-        days = relativedelta(now, period_starts_at).days
         allowed_api_calls = subscription_cache.allowed_30d_api_calls
 
-    api_usage = get_current_api_usage(organisation.id, f"-{days}d")
+    api_usage = get_current_api_usage(organisation.id, period_starts_at)
 
     # For some reason the allowed API calls is set to 0 so default to the max free plan.
     allowed_api_calls = allowed_api_calls or MAX_API_CALLS_IN_FREE_PLAN
