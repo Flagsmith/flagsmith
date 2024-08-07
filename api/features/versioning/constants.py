@@ -2,9 +2,9 @@ from organisations.subscriptions.constants import SubscriptionPlanFamily
 
 # Constants to define how many versions should be returned in the list endpoint
 # based on the plan of the requesting organisation.
-DEFAULT_VERSION_LIMIT = 3
+DEFAULT_VERSION_LIMIT = 2
 START_UP_VERSION_LIMIT = DEFAULT_VERSION_LIMIT
-SCALE_UP_VERSION_LIMIT = 5
+SCALE_UP_VERSION_LIMIT = DEFAULT_VERSION_LIMIT
 
 # extra is used to return extra values that the FE can blur out
 EXTRA_VERSIONS_FOR_LIST = 1
