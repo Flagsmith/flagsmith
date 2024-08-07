@@ -1,5 +1,3 @@
-from typing import Any
-
 from django.conf import settings
 from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
@@ -28,18 +26,19 @@ class CustomTokenSerializer(serializers.ModelSerializer):
 class InviteLinkValidationMixin:
     invite_hash = serializers.CharField(required=False, write_only=True)
 
-    def _validate_registration_invite(self, attrs: dict[str, Any]) -> None:
+    def _validate_registration_invite(self, email: str, sign_up_type: str) -> None:
+        if settings.ALLOW_REGISTRATION_WITHOUT_INVITE:
+            return
+
         valid = False
 
-        match attrs.get("sign_up_type"):
+        match sign_up_type:
             case SignUpType.INVITE_LINK.value:
                 valid = InviteLink.objects.filter(
                     hash=self.initial_data.get("invite_hash")
                 ).exists()
             case SignUpType.INVITE_EMAIL.value:
-                valid = Invite.objects.filter(
-                    email__iexact=attrs.get("email", "").lower()
-                ).exists()
+                valid = Invite.objects.filter(email__iexact=email.lower()).exists()
 
         if not valid:
             raise PermissionDenied(USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE)
@@ -80,8 +79,9 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
                 self.context.get("request"), email=email, raise_exception=True
             )
 
-        if not settings.ALLOW_REGISTRATION_WITHOUT_INVITE:
-            self._validate_registration_invite(attrs)
+        self._validate_registration_invite(
+            email=email, sign_up_type=attrs.get("sign_up_type")
+        )
 
         attrs["email"] = email.lower()
         return attrs

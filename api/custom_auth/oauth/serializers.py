@@ -83,10 +83,9 @@ class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):
 
         if not existing_user:
             sign_up_type = self.validated_data.get("sign_up_type")
-            if not settings.ALLOW_REGISTRATION_WITHOUT_INVITE:
-                self._validate_registration_invite(
-                    {"email": email, **self.validated_data}
-                )
+            self._validate_registration_invite(
+                email=email, sign_up_type=self.validated_data.get("sign_up_type")
+            )
 
             return UserModel.objects.create(
                 **user_data, email=email.lower(), sign_up_type=sign_up_type
