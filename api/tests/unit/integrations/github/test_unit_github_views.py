@@ -1088,10 +1088,13 @@ def test_label_and_tags_no_added_when_tagging_is_disabled(
     # Given
     github_repository.tagging_enabled = False
     github_repository.save()
+    repository_owner_name = (
+        f"{github_repository.repository_owner}/{github_repository.repository_name}"
+    )
 
     feature_external_resource_data = {
         "type": "GITHUB_ISSUE",
-        "url": "https://github.com/repoowner/repo-name/issues/35",
+        "url": f"https://github.com/{repository_owner_name}/issues/35",
         "feature": feature_with_value.id,
         "metadata": {"state": "open"},
     }

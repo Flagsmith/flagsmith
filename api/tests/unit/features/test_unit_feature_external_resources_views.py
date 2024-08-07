@@ -78,9 +78,12 @@ def test_create_feature_external_resource(
     mock_github_client_generate_token: MagicMock,
 ) -> None:
     # Given
+    repository_owner_name = (
+        f"{github_repository.repository_owner}/{github_repository.repository_name}"
+    )
     feature_external_resource_data = {
         "type": "GITHUB_ISSUE",
-        "url": "https://github.com/repoowner/repo-name/issues/35",
+        "url": f"https://github.com/{repository_owner_name}/issues/35",
         "feature": feature_with_value.id,
         "metadata": {"state": "open"},
     }
@@ -125,7 +128,7 @@ def test_create_feature_external_resource(
         )
     )
     post_request_mock.assert_called_with(
-        "https://api.github.com/repos/repoowner/repo-name/issues/35/comments",
+        f"https://api.github.com/repos/{repository_owner_name}/issues/35/comments",
         json={"body": f"{expected_comment_body}"},
         headers={
             "Accept": "application/vnd.github.v3+json",
@@ -152,7 +155,7 @@ def test_create_feature_external_resource(
     # And When
     responses.add(
         method="GET",
-        url=f"{GITHUB_API_URL}repos/repoowner/repo-name/issues/35",
+        url=f"{GITHUB_API_URL}repos/{repository_owner_name}/issues/35",
         status=200,
         json={"title": "resource name", "state": "open"},
     )
@@ -786,10 +789,13 @@ def test_create_feature_external_resource_on_environment_with_v2(
 ) -> None:
     # Given
     feature_id = segment_override_for_feature_with_value.feature_id
+    repository_owner_name = (
+        f"{github_repository.repository_owner}/{github_repository.repository_name}"
+    )
 
     feature_external_resource_data = {
         "type": "GITHUB_ISSUE",
-        "url": "https://github.com/repoowner/repo-name/issues/35",
+        "url": f"https://github.com/{repository_owner_name}/issues/35",
         "feature": feature_id,
         "metadata": {"state": "open"},
     }
@@ -836,7 +842,7 @@ def test_create_feature_external_resource_on_environment_with_v2(
     assert response.status_code == status.HTTP_201_CREATED
 
     post_request_mock.assert_called_with(
-        "https://api.github.com/repos/repoowner/repo-name/issues/35/comments",
+        f"https://api.github.com/repos/{repository_owner_name}/issues/35/comments",
         json={"body": f"{expected_comment_body}"},
         headers={
             "Accept": "application/vnd.github.v3+json",
