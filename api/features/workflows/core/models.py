@@ -111,6 +111,7 @@ class ChangeRequest(
 
         self._publish_feature_states()
         self._publish_environment_feature_versions(committed_by)
+        self._publish_change_sets(committed_by)
 
         self.committed_at = timezone.now()
         self.committed_by = committed_by
@@ -173,6 +174,10 @@ class ChangeRequest(
                 environment_feature_version_published.send(
                     EnvironmentFeatureVersion, instance=environment_feature_version
                 )
+
+    def _publish_change_sets(self, published_by: "FFAdminUser") -> None:
+        for change_set in self.change_sets.all():
+            change_set.publish(user=published_by)
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title
@@ -250,22 +255,28 @@ class ChangeRequest(
         # feature states, we also want to prevent it at the ORM level.
         if self.committed_at and not (
             self.environment.deleted_at
-            or (self._live_from and self._live_from > timezone.now())
+            or (self.live_from and self.live_from > timezone.now())
         ):
             raise ChangeRequestDeletionError(
                 "Cannot delete a Change Request that has been committed."
             )
 
     @property
-    def _live_from(self) -> datetime | None:
+    def live_from(self) -> datetime | None:
+        # Note: a change request can only have one of either
+        # feature_states, change_sets or environment_feature_versions
+
         # First we check if there are feature states associated with the change request
         # and, if so, we return the live_from of the feature state with the earliest
         # live_from.
         if first_feature_state := self.feature_states.order_by("live_from").first():
             return first_feature_state.live_from
 
-        # Then we do the same for environment feature versions. Note that a change request
-        # can not have feature states and environment feature versions.
+        # Then we check the change sets.
+        elif first_change_set := self.change_sets.order_by("live_from").first():
+            return first_change_set.live_from
+
+        # Finally, we do the same for environment feature versions.
         elif first_environment_feature_version := self.environment_feature_versions.order_by(
             "live_from"
         ).first():

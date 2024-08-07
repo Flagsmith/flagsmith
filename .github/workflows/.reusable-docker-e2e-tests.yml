@@ -1,0 +1,82 @@
+# reusable workflow
+name: Run Docker E2E tests
+
+on:
+  workflow_call:
+    inputs:
+      api-image:
+        type: string
+        description: Core API Docker image to use, e.g., `ghcr.io/flagsmith/flagsmith-api:main`
+        required: true
+      e2e-image:
+        type: string
+        description: Frontend Docker with E2E capabilities image to use, e.g., `ghcr.io/flagsmith/flagsmith-e2e:main`
+        required: true
+      tests:
+        type: string
+        description: Space-delimited list of E2E tests to be executed
+        required: false
+        default: ''
+      concurrency:
+        type: number
+        description: The concurrent number of browsers to be used on testing
+        required: false
+        default: 3
+      runs-on:
+        type: string
+        description: The runner label to use. Defaults to `ubuntu-latest`
+        required: false
+        default: ubuntu-latest
+    secrets:
+      gcr-token:
+        description: A token to use for logging into Github Container Registry. If not provided, login does not occur.
+        required: false
+
+jobs:
+  run-e2e:
+    name: "E2E${{ inputs.tests && format(': {0}', inputs.tests) || '' }}"
+    runs-on: ${{ inputs.runs-on }}
+
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+
+    env:
+      GCR_TOKEN: ${{ secrets.gcr-token }}
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v4
+
+      - name: Login to Github Container Registry
+        if: ${{ env.GCR_TOKEN }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ env.GCR_TOKEN }}
+
+      - name: Set up Depot CLI
+        uses: depot/setup-action@v1
+
+      - name: Login to Depot Registry
+        run: depot pull-token | docker login -u x-token --password-stdin registry.depot.dev
+
+      - name: Run tests on dockerised frontend
+        uses: nick-fields/retry@v3
+        with:
+          shell: bash
+          command: |
+            cd frontend
+            make test
+          max_attempts: 2
+          retry_on: error
+          timeout_minutes: 20
+        env:
+          opts: ${{ inputs.tests }}
+          API_IMAGE: ${{ inputs.api-image }}
+          E2E_IMAGE: ${{ inputs.e2e-image }}
+          E2E_CONCURRENCY: ${{ inputs.concurrency }}
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

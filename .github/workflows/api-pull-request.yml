@@ -32,6 +32,11 @@ jobs:
         ports: ['5432:5432']
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
+    strategy:
+      max-parallel: 2
+      matrix:
+        python-version: ['3.11', '3.12']
+
     steps:
       - name: Cloning repo
         uses: actions/checkout@v4
@@ -41,15 +46,12 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: 3.12
+          python-version: ${{ matrix.python-version }}
           cache: 'poetry'
 
       - name: Install Dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: make install-packages
-
-      - name: Run Linters
-        run: make lint
 
       - name: Create analytics database
         env:
@@ -70,7 +72,7 @@ jobs:
       - name: Upload Coverage
         uses: codecov/codecov-action@v4
         env:
-          PYTHON: 3.12
+          PYTHON: ${{ matrix.python-version }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           env_vars: PYTHON

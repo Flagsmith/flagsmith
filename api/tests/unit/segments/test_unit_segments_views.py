@@ -9,6 +9,7 @@ from flag_engine.segments.constants import EQUAL
 from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
 from pytest_lazyfixture import lazy_fixture
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -157,7 +158,7 @@ def test_create_segments_reaching_max_limit(project, client, settings):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_audit_log_created_when_segment_updated(project, segment, client):
+def test_audit_log_created_when_segment_updated(project, client):
     # Given
     segment = Segment.objects.create(name="Test segment", project=project)
     url = reverse(
@@ -171,10 +172,11 @@ def test_audit_log_created_when_segment_updated(project, segment, client):
     }
 
     # When
-    res = client.put(url, data=json.dumps(data), content_type="application/json")
+    response = client.put(url, data=json.dumps(data), content_type="application/json")
 
     # Then
-    assert res.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_200_OK
+
     assert (
         AuditLog.objects.filter(
             related_object_type=RelatedObjectType.SEGMENT.name
@@ -250,6 +252,7 @@ def test_audit_log_created_when_segment_created(project, client):
 
     # Then
     assert res.status_code == status.HTTP_201_CREATED
+
     assert (
         AuditLog.objects.filter(
             related_object_type=RelatedObjectType.SEGMENT.name
@@ -363,7 +366,7 @@ def test_get_segment_by_uuid(client, project, segment):
     "client, num_queries",
     [
         (lazy_fixture("admin_master_api_key_client"), 12),
-        (lazy_fixture("admin_client"), 11),
+        (lazy_fixture("admin_client"), 14),
     ],
 )
 def test_list_segments(
@@ -482,11 +485,12 @@ def test_create_segments_with_description_condition(project, client):
     assert segment_condition_description_value == "test-description"
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
-)
-def test_update_segment_add_new_condition(project, client, segment, segment_rule):
+def test_update_segment_add_new_condition(
+    project: Project,
+    admin_client_new: APIClient,
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
     # Given
     url = reverse(
         "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
@@ -535,7 +539,9 @@ def test_update_segment_add_new_condition(project, client, segment, segment_rule
     }
 
     # When
-    response = client.put(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -546,6 +552,167 @@ def test_update_segment_add_new_condition(project, client, segment, segment_rule
         == new_condition_property
     )
     assert nested_rule.conditions.order_by("-id").first().value == new_condition_value
+
+
+def test_update_segment_versioned_segment(
+    project: Project,
+    admin_client_new: APIClient,
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    nested_rule = SegmentRule.objects.create(
+        rule=segment_rule, type=SegmentRule.ANY_RULE
+    )
+    existing_condition = Condition.objects.create(
+        rule=nested_rule, property="foo", operator=EQUAL, value="bar"
+    )
+
+    # Before updating the segment confirm pre-existing version count which is
+    # automatically set by the fixture.
+    assert Segment.all_objects.filter(version_of=segment).count() == 2
+
+    new_condition_property = "foo2"
+    new_condition_value = "bar"
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "id": segment_rule.id,
+                "type": segment_rule.type,
+                "rules": [
+                    {
+                        "id": nested_rule.id,
+                        "type": nested_rule.type,
+                        "rules": [],
+                        "conditions": [
+                            # existing condition
+                            {
+                                "id": existing_condition.id,
+                                "property": existing_condition.property,
+                                "operator": existing_condition.operator,
+                                "value": existing_condition.value,
+                            },
+                            # new condition
+                            {
+                                "property": new_condition_property,
+                                "operator": EQUAL,
+                                "value": new_condition_value,
+                            },
+                        ],
+                    }
+                ],
+                "conditions": [],
+            }
+        ],
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    # Now verify that a new versioned segment has been set.
+    assert Segment.all_objects.filter(version_of=segment).count() == 3
+
+    # Now check the previously versioned segment to match former count of conditions.
+
+    versioned_segment = Segment.all_objects.filter(
+        version_of=segment, version=2
+    ).first()
+    assert versioned_segment != segment
+    assert versioned_segment.rules.count() == 1
+    versioned_rule = versioned_segment.rules.first()
+    assert versioned_rule.rules.count() == 1
+
+    nested_versioned_rule = versioned_rule.rules.first()
+    assert nested_versioned_rule.conditions.count() == 1
+    versioned_condition = nested_versioned_rule.conditions.first()
+    assert versioned_condition != existing_condition
+    assert versioned_condition.property == existing_condition.property
+
+
+def test_update_segment_versioned_segment_with_thrown_exception(
+    project: Project,
+    admin_client_new: APIClient,
+    segment: Segment,
+    segment_rule: SegmentRule,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    nested_rule = SegmentRule.objects.create(
+        rule=segment_rule, type=SegmentRule.ANY_RULE
+    )
+    existing_condition = Condition.objects.create(
+        rule=nested_rule, property="foo", operator=EQUAL, value="bar"
+    )
+
+    assert (
+        segment.version == 2 == Segment.all_objects.filter(version_of=segment).count()
+    )
+
+    new_condition_property = "foo2"
+    new_condition_value = "bar"
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "id": segment_rule.id,
+                "type": segment_rule.type,
+                "rules": [
+                    {
+                        "id": nested_rule.id,
+                        "type": nested_rule.type,
+                        "rules": [],
+                        "conditions": [
+                            {
+                                "id": existing_condition.id,
+                                "property": existing_condition.property,
+                                "operator": existing_condition.operator,
+                                "value": existing_condition.value,
+                            },
+                            {
+                                "property": new_condition_property,
+                                "operator": EQUAL,
+                                "value": new_condition_value,
+                            },
+                        ],
+                    }
+                ],
+                "conditions": [],
+            }
+        ],
+    }
+
+    update_super_patch = mocker.patch(
+        "rest_framework.serializers.ModelSerializer.update"
+    )
+    update_super_patch.side_effect = Exception("Mocked exception")
+
+    # When
+    with pytest.raises(Exception):
+        admin_client_new.put(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+    # Then
+    segment.refresh_from_db()
+
+    # Now verify that the version of the segment has not been changed.
+    assert (
+        segment.version == 2 == Segment.all_objects.filter(version_of=segment).count()
+    )
 
 
 @pytest.mark.parametrize(

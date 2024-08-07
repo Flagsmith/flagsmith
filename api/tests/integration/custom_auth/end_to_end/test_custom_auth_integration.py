@@ -6,6 +6,7 @@ import pyotp
 from django.conf import settings
 from django.core import mail
 from django.urls import reverse
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient, override_settings
 
@@ -245,7 +246,8 @@ def test_login_workflow_with_mfa_enabled(
     confirm_mfa_method_response = api_client.post(
         confirm_mfa_method_url, data=confirm_mfa_data
     )
-    assert confirm_mfa_method_response
+    assert confirm_mfa_method_response.status_code == status.HTTP_200_OK
+    backup_codes = confirm_mfa_method_response.json()["backup_codes"]
 
     # now login should return an ephemeral token rather than a token
     login_data = {"email": email, "password": password}
@@ -262,6 +264,19 @@ def test_login_workflow_with_mfa_enabled(
     assert login_confirm_response.status_code == status.HTTP_200_OK
     key = login_confirm_response.json()["key"]
 
+    # Login with backup code should also work
+    api_client.logout()
+    login_response = api_client.post(login_url, data=login_data)
+    assert login_response.status_code == status.HTTP_200_OK
+    ephemeral_token = login_response.json()["ephemeral_token"]
+    confirm_login_data = {
+        "ephemeral_token": ephemeral_token,
+        "code": backup_codes[0],
+    }
+    login_confirm_response = api_client.post(login_confirm_url, data=confirm_login_data)
+    assert login_confirm_response.status_code == status.HTTP_200_OK
+    key = login_confirm_response.json()["key"]
+
     # and verify that we can use the token to access the API
     api_client.credentials(HTTP_AUTHORIZATION=f"Token {key}")
     current_user_url = reverse("api-v1:custom_auth:ffadminuser-me")
@@ -274,12 +289,14 @@ def test_throttle_login_workflows(
     api_client: APIClient,
     db: None,
     reset_cache: None,
+    mocker: MockerFixture,
 ) -> None:
     # verify that a throttle rate exists already then set it
     # to something easier to reliably test
     assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"]
-    settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"] = "1/sec"
-
+    mocker.patch(
+        "rest_framework.throttling.ScopedRateThrottle.get_rate", return_value="1/minute"
+    )
     email = "test@example.com"
     password = FFAdminUser.objects.make_random_password()
     register_data = {
@@ -309,11 +326,19 @@ def test_throttle_login_workflows(
     assert login_response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
 
-def test_throttle_signup(api_client, settings, user_password, db, reset_cache):
+def test_throttle_signup(
+    api_client: APIClient,
+    user_password: str,
+    db: None,
+    reset_cache: None,
+    mocker: MockerFixture,
+) -> None:
     # verify that a throttle rate exists already then set it
     # to something easier to reliably test
     assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"]
-    settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"] = "1/min"
+    mocker.patch(
+        "rest_framework.throttling.ScopedRateThrottle.get_rate", return_value="1/minute"
+    )
     # Next, let's hit signup for the first time
     register_data = {
         "email": "user_1_email@mail.com",
@@ -337,9 +362,13 @@ def test_throttle_signup(api_client, settings, user_password, db, reset_cache):
     assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
 
-def test_get_user_is_not_throttled(admin_client, settings, reset_cache):
+def test_get_user_is_not_throttled(
+    admin_client: APIClient, reset_cache: None, mocker: MockerFixture
+):
     # Given
-    settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"] = "1/min"
+    mocker.patch(
+        "rest_framework.throttling.ScopedRateThrottle.get_rate", return_value="1/minute"
+    )
     url = reverse("api-v1:custom_auth:ffadminuser-me")
     # When
     for _ in range(2):

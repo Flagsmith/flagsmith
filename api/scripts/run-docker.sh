@@ -1,9 +1,5 @@
-#!/bin/bash
+#!/bin/sh
 set -e
-
-# The script can take 2 optional arguments:
-# 1. The django target to run
-# 2. For migrate, serve and migrate-and-serve, the number of seconds to sleep before running
 
 function migrate () {
     python manage.py waitfordb && python manage.py migrate && python manage.py createcachetable
@@ -40,9 +36,6 @@ function run_task_processor() {
       --numthreads ${TASK_PROCESSOR_NUM_THREADS:-5} \
       --queuepopsize ${TASK_PROCESSOR_QUEUE_POP_SIZE:-10}
 }
-function migrate_identities(){
-    python manage.py migrate_to_edge "$1"
-}
 function migrate_analytics_db(){
     # if `$ANALYTICS_DATABASE_URL` or DJANGO_DB_NAME_ANALYTICS is set
     # run the migration command
@@ -51,47 +44,25 @@ function migrate_analytics_db(){
     fi
     python manage.py migrate --database analytics
 }
-function import_organisation_from_s3(){
-    python manage.py importorganisationfroms3 "$1" "$2"
-}
-function dump_organisation_to_s3(){
-    python manage.py dumporganisationtos3 "$1" "$2" "$3"
-}
-function dump_organisation_to_local_fs(){
-    python manage.py dumporganisationtolocalfs "$1" "$2"
-}
 function bootstrap(){
     python manage.py bootstrap
 }
-# Note: `go_to_sleep` is deprecated and will be removed in a future release.
-function go_to_sleep(){
-    echo "Sleeping for ${1} seconds before startup"
-    sleep ${1}
+function default(){
+    python manage.py "$@"
 }
 
 if [ "$1" == "migrate" ]; then
-    if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     migrate
     migrate_analytics_db
 elif [ "$1" == "serve" ]; then
-    if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     serve
 elif [ "$1" == "run-task-processor" ]; then
     run_task_processor
 elif [ "$1" == "migrate-and-serve" ]; then
-    if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     migrate
     migrate_analytics_db
     bootstrap
     serve
-elif [ "$1" == "migrate-identities" ]; then
-    migrate_identities "$2"
-elif [ "$1" == "import-organisation-from-s3" ]; then
-    import_organisation_from_s3 "$2" "$3"
-elif [ "$1" == "dump-organisation-to-s3" ]; then
-    dump_organisation_to_s3 "$2" "$3" "$4"
-elif [ "$1" == "dump-organisation-to-local-fs" ]; then
-    dump_organisation_to_local_fs "$2" "$3"
 else
-   echo "ERROR: unrecognised command '$1'"
+   default "$@"
 fi

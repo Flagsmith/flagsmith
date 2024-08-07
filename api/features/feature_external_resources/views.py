@@ -1,9 +1,5 @@
-import re
-
-from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from features.models import Feature
@@ -60,7 +56,6 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
             )
             or not hasattr(feature.project, "github_project")
         ):
-
             return Response(
                 data={
                     "detail": "This Project doesn't have a valid GitHub integration configuration"
@@ -68,18 +63,8 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
                 content_type="application/json",
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        try:
-            return super().create(request, *args, **kwargs)
-
-        except IntegrityError as e:
-            if re.search(r"Key \(feature_id, url\)", str(e)) and re.search(
-                r"already exists.$", str(e)
-            ):
-                raise ValidationError(
-                    detail="Duplication error. The feature already has this resource URI"
-                )
+        return super().create(request, *args, **kwargs)
 
     def perform_update(self, serializer):
-        external_resource_id = int(self.kwargs["id"])
+        external_resource_id = int(self.kwargs["pk"])
         serializer.save(id=external_resource_id)

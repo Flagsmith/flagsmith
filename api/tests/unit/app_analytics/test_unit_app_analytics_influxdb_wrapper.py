@@ -383,8 +383,6 @@ def test_get_top_organisations(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mocker.patch("app_analytics.influxdb_wrapper.range_bucket_mappings")
-
     record_mock1 = mock.MagicMock()
     record_mock1.values = {"organisation": "123-TestOrg"}
     record_mock1.get_value.return_value = 23
@@ -408,13 +406,16 @@ def test_get_top_organisations(
     # Then
     assert dataset == {123: 23, 456: 43}
 
+    influx_mock.assert_called_once()
+    influx_query_call = influx_mock.call_args
+    assert influx_query_call.kwargs["bucket"] == "test_bucket_downsampled_1h"
+    assert influx_query_call.kwargs["date_start"] == "-30d"
+
 
 def test_get_top_organisations_value_error(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mocker.patch("app_analytics.influxdb_wrapper.range_bucket_mappings")
-
     record_mock1 = mock.MagicMock()
     record_mock1.values = {"organisation": "BadData-TestOrg"}
     record_mock1.get_value.return_value = 23
@@ -439,3 +440,14 @@ def test_get_top_organisations_value_error(
     # The wrongly typed data does not stop the remaining data
     # from being returned.
     assert dataset == {456: 43}
+
+
+def test_early_return_for_empty_range_for_influx_query_manager() -> None:
+    # When
+    results = InfluxDBWrapper.influx_query_manager(
+        date_start="-0d",
+        date_stop="now()",
+    )
+
+    # Then
+    assert results == []

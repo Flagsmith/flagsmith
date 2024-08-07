@@ -1033,6 +1033,23 @@ def test_get_identities_with_hide_sensitive_data(
     assert response.json()["traits"] == []
 
 
+def test_get_identities__transient__no_persistence(
+    environment: Environment,
+    api_client: APIClient,
+) -> None:
+    # Given
+    identifier = "transient"
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    url = reverse("api-v1:sdk-identities") + f"?identifier={identifier}&transient=true"
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert not Identity.objects.filter(identifier=identifier).count()
+
+
 def test_post_identities_with_hide_sensitive_data(
     environment, feature, identity, api_client
 ):
@@ -1124,6 +1141,64 @@ def test_post_identities__server_key_only_feature__server_key_auth__return_expec
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["flags"]
+
+
+def test_post_identities__transient__no_persistence(
+    environment: Environment,
+    api_client: APIClient,
+) -> None:
+    # Given
+    identifier = "transient"
+    trait_key = "trait_key"
+
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    url = reverse("api-v1:sdk-identities")
+    data = {
+        "identifier": identifier,
+        "traits": [{"trait_key": trait_key, "trait_value": "bar"}],
+        "transient": True,
+    }
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert not Identity.objects.filter(identifier=identifier).exists()
+    assert not Trait.objects.filter(trait_key=trait_key).exists()
+
+
+def test_post_identities__transient_traits__no_persistence(
+    environment: Environment,
+    api_client: APIClient,
+) -> None:
+    # Given
+    identifier = "transient"
+    transient_trait_key = "trait_key"
+    non_transient_trait_key = "other"
+
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    url = reverse("api-v1:sdk-identities")
+    data = {
+        "identifier": identifier,
+        "traits": [
+            {"trait_key": transient_trait_key, "trait_value": "bar", "transient": True},
+            {"trait_key": non_transient_trait_key, "trait_value": "value"},
+        ],
+    }
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert Identity.objects.filter(identifier=identifier).exists()
+    assert Trait.objects.filter(trait_key=non_transient_trait_key).exists()
+    assert not Trait.objects.filter(trait_key=transient_trait_key).exists()
 
 
 def test_user_with_view_identities_permission_can_retrieve_identity(

@@ -195,7 +195,8 @@ export default class Rule extends PureComponent<{
 
     // remove append if one was added
 
-    const formattedValue = value === null ? null : `${value}`
+    const formattedValue =
+      prop === 'value' && value !== null ? `${value}` : value
     const invalidPercentageSplit =
       prop === 'value' &&
       rules[i].operator === 'PERCENTAGE_SPLIT' &&

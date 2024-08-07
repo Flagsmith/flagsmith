@@ -18,6 +18,7 @@ export const organisationUsageService = service
               query.organisationId
             }/usage-data/?${Utils.toParam({
               environment_id: query.environmentId,
+              period: query.billing_period,
               project_id: query.projectId,
             })}`,
           }

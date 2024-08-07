@@ -79,7 +79,8 @@ services:
 #    https://docs.flagsmith.com/advanced-use/task-processor
 #    flagsmith_processor:
 #        build:
-#            dockerfile: api/Dockerfile
+#            dockerfile: Dockerfile
+#            target: oss-api
 #            context: .
 #        environment:
 #            DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith

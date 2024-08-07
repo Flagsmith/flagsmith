@@ -28,8 +28,11 @@ in your Compose logs:
 
 ```txt
 Superuser "admin@example.com" created successfully.
-Please go to the following page and choose a password: https://localhost:8000/password-reset/confirm/.../...
+Please go to the following page and choose a password: http://localhost:8000/password-reset/confirm/.../...
 ```
+
+Note: This setup uses http:// for local development. If you've configured SSL for your local environment, you may use
+https:// instead. For any production deployment, always use https://.
 
 ![Flagsmith Screenshot](static-files/screenshot.png)
 
@@ -79,3 +82,5 @@ REST calls to the API.
 ## Acknowledgements
 
 Thank you to [Uffizzi](https://www.uffizzi.com) for providing ephemeral environments to preview pull requests.
+
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=e9b19423-eb7d-4b03-b325-481d10d1a9a4" />

@@ -150,7 +150,11 @@ class SDKAnalyticsFlags(GenericAPIView):
                 )
             )
         elif settings.INFLUXDB_TOKEN:
-            track_feature_evaluation_influxdb.delay(
+            # Due to load issues on the task processor, we
+            # explicitly run this task in a separate thread.
+            # TODO: batch influx data to prevent large amounts
+            #  of tasks.
+            track_feature_evaluation_influxdb.run_in_thread(
                 args=(
                     request.environment.id,
                     request.data,

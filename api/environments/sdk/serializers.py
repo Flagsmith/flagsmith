@@ -2,6 +2,7 @@ import typing
 from collections import defaultdict
 
 from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
+from django.utils import timezone
 from rest_framework import serializers
 
 from environments.identities.models import Identity
@@ -125,6 +126,7 @@ class IdentifyWithTraitsSerializer(
     HideSensitiveFieldsSerializerMixin, serializers.Serializer
 ):
     identifier = serializers.CharField(write_only=True, required=True)
+    transient = serializers.BooleanField(write_only=True, default=False)
     traits = TraitSerializerBasic(required=False, many=True)
     flags = SDKFeatureStateSerializer(read_only=True, many=True)
 
@@ -136,22 +138,33 @@ class IdentifyWithTraitsSerializer(
         (optionally store traits if flag set on org)
         """
         environment = self.context["environment"]
-        identity, created = Identity.objects.get_or_create(
-            identifier=self.validated_data["identifier"], environment=environment
-        )
 
+        transient = self.validated_data["transient"]
         trait_data_items = self.validated_data.get("traits", [])
 
-        if not created and environment.project.organisation.persist_trait_data:
-            # if this is an update and we're persisting traits, then we need to
-            # partially update any traits and return the full list
-            trait_models = identity.update_traits(trait_data_items)
-        else:
-            # generate traits for the identity and store them if configured to do so
-            trait_models = identity.generate_traits(
-                trait_data_items,
-                persist=environment.project.organisation.persist_trait_data,
+        if transient:
+            identity = Identity(
+                created_date=timezone.now(),
+                identifier=self.validated_data["identifier"],
+                environment=environment,
             )
+            trait_models = identity.generate_traits(trait_data_items, persist=False)
+
+        else:
+            identity, created = Identity.objects.get_or_create(
+                identifier=self.validated_data["identifier"], environment=environment
+            )
+
+            if not created and environment.project.organisation.persist_trait_data:
+                # if this is an update and we're persisting traits, then we need to
+                # partially update any traits and return the full list
+                trait_models = identity.update_traits(trait_data_items)
+            else:
+                # generate traits for the identity and store them if configured to do so
+                trait_models = identity.generate_traits(
+                    trait_data_items,
+                    persist=environment.project.organisation.persist_trait_data,
+                )
 
         all_feature_states = identity.get_all_feature_states(
             traits=trait_models,

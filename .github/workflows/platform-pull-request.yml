@@ -8,314 +8,149 @@ on:
       - infrastructure/**
 
 jobs:
-  validate-pr-title:
-    name: Validate Conventional Commit title
+  permissions-check:
+    name: Check actor permissions
     runs-on: ubuntu-latest
+    outputs:
+      can-write: ${{ steps.check.outputs.require-result }}
     steps:
-      - uses: amannn/action-semantic-pull-request@v5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions-cool/check-user-permission@main
+        id: check
         with:
-          types: | # mirrors changelog-sections in the /release-please-config.json
-            fix
-            feat
-            infra
-            docs
-            chore
-            build
-            deps
-            ci
-            refactor
-            style
-            test
+          require: write
 
-  run-e2e-tests-1:
+  conventional-commit-label:
+    if: needs.permissions-check.outputs.can-write == 'true'
+    name: Add Conventional Commit labels
+    needs: permissions-check
     runs-on: ubuntu-latest
-    name: E2E Local - Segments-1, Environment
-
     permissions:
-      id-token: write
-      contents: read
-
-    services:
-      postgres:
-        image: postgres:11.12-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: flagsmith
-        ports: ['5432:5432']
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
+      pull-requests: write
     steps:
-      - name: Cloning repo
-        uses: actions/checkout@v4
-
-      - name: Run E2E tests against local
-        uses: ./.github/actions/local-e2e-tests
+      - name: Auto-label PR with Conventional Commit title
+        uses: kramen22/conventional-release-labels@v1
         with:
-          slack_token: ${{ secrets.SLACK_TOKEN }}
-          tests: segment-part-1 environment
-          concurrency: 1
+          type_labels: |
+            {
+              "feat": "feature",
+              "fix": "fix",
+              "infra": "infrastructure",
+              "ci": "ci-cd",
+              "docs": "docs",
+              "deps": "dependencies",
+              "perf": "performance",
+              "refactor": "refactor",
+              "test": "testing",
+              "chore": "chore"
+            }
+          ignored_types: '[]'
 
-  run-e2e-tests-2:
+  docker-prepare-report-comment:
+    if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
+    name: Prepare Docker report comment
+    needs: permissions-check
     runs-on: ubuntu-latest
-    name: E2E Local - Segments-2
-
     permissions:
-      id-token: write
-      contents: read
-
-    services:
-      postgres:
-        image: postgres:11.12-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: flagsmith
-        ports: ['5432:5432']
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
+      pull-requests: write
     steps:
-      - name: Cloning repo
-        uses: actions/checkout@v4
-
-      - name: Run E2E tests against local
-        uses: ./.github/actions/local-e2e-tests
+      - uses: actions/checkout@v4
         with:
-          slack_token: ${{ secrets.SLACK_TOKEN }}
-          tests: segment-part-2
-          concurrency: 1
-
-  run-e2e-tests-3:
-    runs-on: ubuntu-latest
-    name: E2E Local - Segments-3, Signup, Flag, Invite, Project
-
-    permissions:
-      id-token: write
-      contents: read
-
-    services:
-      postgres:
-        image: postgres:11.12-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: flagsmith
-        ports: ['5432:5432']
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v4
-
-      - name: Run E2E tests against local
-        uses: ./.github/actions/local-e2e-tests
-        with:
-          slack_token: ${{ secrets.SLACK_TOKEN }}
-          tests: segment-part-3 signup flag invite project
-          concurrency: 2
-
-  run-e2e-tests-4:
-    runs-on: ubuntu-latest
-    name: E2E Local - Versioning
-
-    permissions:
-      id-token: write
-      contents: read
-
-    services:
-      postgres:
-        image: postgres:11.12-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: flagsmith
-        ports: ['5432:5432']
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v4
-
-      - name: Run E2E tests against local
-        uses: ./.github/actions/local-e2e-tests
-        with:
-          slack_token: ${{ secrets.SLACK_TOKEN }}
-          tests: versioning
-          concurrency: 1
-
-  run-e2e-versioning-tests-docker-unified:
-    runs-on: ubuntu-latest
-    name: E2E Unified - Versioning
-
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v4
-
-      - name: Bake Compose
-        uses: ./.github/actions/e2e-bake-compose
-        with:
-          github_actor: ${{github.actor}}
-          github_token: ${{secrets.GITHUB_TOKEN}}
-
-      - name: Run tests on unified docker image
-        working-directory: frontend
-        env:
-          SLACK_TOKEN: ${{ inputs.slack_token }}
-          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=1 npm run test -- versioning
-
-  run-e2e-segments-1-tests-docker-unified:
-    runs-on: ubuntu-latest
-    name: E2E Unified - Segments-1, Environment
-
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v4
-
-      - name: Bake Compose
-        uses: ./.github/actions/e2e-bake-compose
-        with:
-          github_actor: ${{github.actor}}
-          github_token: ${{secrets.GITHUB_TOKEN}}
-
-      - name: Run tests on unified docker image
-        working-directory: frontend
-        env:
-          SLACK_TOKEN: ${{ inputs.slack_token }}
-          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=1 npm run test -- segment-part-1 environment
-
-  run-e2e-segments-2-tests-docker-unified:
-    runs-on: ubuntu-latest
-    name: E2E Unified - Segments-2
-
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v4
-
-      - name: Bake Compose
-        uses: ./.github/actions/e2e-bake-compose
-        with:
-          github_actor: ${{github.actor}}
-          github_token: ${{secrets.GITHUB_TOKEN}}
-
-      - name: Run tests on unified docker image
-        working-directory: frontend
-        env:
-          SLACK_TOKEN: ${{ inputs.slack_token }}
-          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=1 npm run test -- segment-part-2
-
-  run-e2e-other-tests-docker-unified:
-    runs-on: ubuntu-latest
-    name: E2E Unified - Segments-3, Signup, Flag, Invite, Project
-
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v4
-
-      - name: Bake Compose
-        uses: ./.github/actions/e2e-bake-compose
-        with:
-          github_actor: ${{github.actor}}
-          github_token: ${{secrets.GITHUB_TOKEN}}
-
-      - name: Run tests on unified docker image
-        working-directory: frontend
-        env:
-          SLACK_TOKEN: ${{ inputs.slack_token }}
-          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=2 npm run test -- segment-part-3 signup flag invite project
+          sparse-checkout: .github/
+          sparse-checkout-cone-mode: false
+      - uses: ./.github/actions/docker-build-report-to-pr
 
   docker-build-unified:
-    if: github.event.pull_request.draft == false
-    name: Test unified docker image build
-    runs-on: ubuntu-latest
-
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Checkout PR branch
-        uses: actions/checkout@v4
-
-      - name: Set up Depot CLI
-        uses: depot/setup-action@v1
-
-      - name: Build
-        id: docker_build
-        uses: depot/build-push-action@v1
-        with:
-          push: false
-          tags: flagsmith/flagsmith:testing
+    if: github.event.pull_request.draft == false && !cancelled()
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build Unified Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: oss-unified
+      image-name: flagsmith
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
+      comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
 
   docker-build-api:
-    if: github.event.pull_request.draft == false
-    name: Test api docker image build
-    runs-on: ubuntu-latest
-
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Checkout PR branch
-        uses: actions/checkout@v4
-
-      - name: Set up Depot CLI
-        uses: depot/setup-action@v1
-
-      - name: Build
-        id: docker_build
-        uses: depot/build-push-action@v1
-        with:
-          file: api/Dockerfile
-          push: false
-          tags: flagsmith/flagsmith-api:testing
+    if: github.event.pull_request.draft == false && !cancelled()
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build API Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: oss-api
+      image-name: flagsmith-api
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
+      comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
 
   docker-build-frontend:
-    if: github.event.pull_request.draft == false
-    name: Test frontend docker image build
-    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false && !cancelled()
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build Frontend Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: oss-frontend
+      image-name: flagsmith-frontend
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
+      comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
 
-    permissions:
-      id-token: write
-      contents: read
+  docker-build-api-test:
+    if: github.event.pull_request.draft == false && !cancelled()
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build API Test Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: api-test
+      image-name: flagsmith-api-test
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
+      comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
+      scan: false
 
-    steps:
-      - name: Checkout PR branch
-        uses: actions/checkout@v4
+  docker-build-e2e:
+    if: github.event.pull_request.draft == false && !cancelled()
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build E2E Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      file: frontend/Dockerfile.e2e
+      image-name: flagsmith-e2e
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
+      comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
+      scan: false
 
-      - name: Set up Depot CLI
-        uses: depot/setup-action@v1
+  docker-build-private-cloud:
+    if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build Private Cloud Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: private-cloud-unified
+      image-name: flagsmith-private-cloud
+      comment: true
+    secrets:
+      secrets: |
+        github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
 
-      - name: Build
-        id: docker_build
-        uses: depot/build-push-action@v1
-        with:
-          file: frontend/Dockerfile
-          push: false
-          tags: flagsmith/flagsmith-frontend:testing
+  run-e2e-tests:
+    if: '!cancelled()'
+    needs: [permissions-check, docker-build-api, docker-build-e2e]
+    uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
+    with:
+      runs-on: ${{ matrix.runs-on }}
+      e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
+      api-image: ${{ needs.docker-build-api.outputs.image }}
+      concurrency: ${{ matrix.args.concurrency }}
+      tests: ${{ matrix.args.tests }}
+    secrets:
+      gcr-token: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
+
+    strategy:
+      matrix:
+        runs-on: [ubuntu-latest, ARM64-2c]
+        args:
+          - tests: segment-part-1 environment
+            concurrency: 1
+          - tests: segment-part-2
+            concurrency: 1
+          - tests: segment-part-3 signup flag invite project
+            concurrency: 2
+          - tests: versioning
+            concurrency: 1

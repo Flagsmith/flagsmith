@@ -1,0 +1,123 @@
+# reusable workflow
+name: Deploy to ECS and Test
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        description: The environment to deploy to
+        required: true
+      saas-image-name:
+        type: string
+        description: SaaS image name
+        required: false
+        default: flagsmith-saas-api
+
+jobs:
+  docker-build-saas-api:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    outputs:
+      image-url: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.saas-image-name }}:${{ steps.meta.outputs.version }}
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v4
+
+      - name: Set up Depot CLI
+        uses: depot/setup-action@v1
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-2
+          mask-aws-account-id: 'no'
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ inputs.saas-image-name }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+
+      - name: Build saas-api image
+        uses: depot/build-push-action@v1
+        with:
+          target: saas-api
+          context: .
+          build-args: CI_COMMIT_SHA=${{ github.sha }}
+          secrets: |
+            github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+            "sse_pgp_pkey=${{ secrets.SSE_PGP_PRIVATE_KEY }}"
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    needs: docker-build-saas-api
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v4
+
+      - name: Deploy API to ${{ inputs.environment }}
+        id: deploy-api
+        uses: ./.github/actions/api-deploy-ecs
+        with:
+          aws_access_key_id: ${{ vars.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_ecs_cluster_name: ${{ vars.AWS_ECS_CLUSTER_NAME }}
+          aws_ecs_cluster_arn: ${{ vars.AWS_ECS_CLUSTER_ARN }}
+          aws_ecs_service_name: ${{ vars.AWS_ECS_SERVICE_NAME }}
+          aws_vpc_subnet_id: ${{ vars.AWS_VPC_SUBNET_ID }}
+          aws_ecs_security_group_id: ${{ vars.AWS_ECS_SECURITY_GROUP_ID }}
+          aws_identity_migration_event_bus_name: ${{ vars.AWS_IDENTITY_MIGRATION_EVENT_BUS_NAME }}
+          aws_identity_migration_event_bus_rule_id: ${{ vars.AWS_IDENTITY_MIGRATION_EVENT_BUS_RULE_ID }}
+          aws_identity_migration_task_role_arn: ${{ vars.AWS_IDENTITY_MIGRATION_TASK_ROLE_ARN }}
+          aws_task_definitions_directory_path: infrastructure/aws/${{ inputs.environment }}
+          api_ecr_image_url: ${{ needs.docker-build-saas-api.outputs.image-url }}
+
+      - name: Deploy Task processor to ${{ inputs.environment }}
+        uses: ./.github/actions/task-processor-deploy-ecs
+        with:
+          aws_access_key_id: ${{ vars.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_ecs_cluster_name: ${{ vars.AWS_ECS_CLUSTER_NAME }}
+          aws_ecs_service_name: ${{ vars.AWS_ECS_TASK_PROCESSOR_SERVICE_NAME }}
+          aws_task_definitions_directory_path: infrastructure/aws/${{ inputs.environment }}
+          api_ecr_image_url: ${{ needs.docker-build-saas-api.outputs.image-url }}
+
+  run-tests:
+    needs: deploy
+    runs-on: ubuntu-latest
+    name: Run E2E Tests
+    environment: ${{ inputs.environment }}
+    concurrency:
+      group: e2e-tests-${{ inputs.environment }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v4
+
+      - name: Run E2E tests against ${{ inputs.environment }}
+        uses: ./.github/actions/e2e-tests
+        with:
+          e2e_test_token: ${{ secrets.E2E_TEST_TOKEN }}
+          slack_token: ${{ secrets.SLACK_TOKEN }}
+          environment: ${{ inputs.environment }}

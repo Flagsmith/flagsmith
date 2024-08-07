@@ -53,7 +53,6 @@ const CreateFlag = class extends Component {
       feature_state_value,
       is_archived,
       is_server_key_only,
-      metadata,
       multivariate_options,
       name,
       tags,
@@ -182,7 +181,10 @@ const CreateFlag = class extends Component {
     ) {
       this.getFeatureUsage()
     }
-    if (Utils.getFlagsmithHasFeature('enable_metadata')) {
+    if (
+      Utils.getPlansPermission('METADATA') &&
+      Utils.getFlagsmithHasFeature('enable_metadata')
+    ) {
       getSupportedContentType(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,
       }).then((res) => {
@@ -272,11 +274,11 @@ const CreateFlag = class extends Component {
   }
   save = (func, isSaving) => {
     const {
+      environmentFlag,
       environmentId,
       identity,
       identityFlag,
       projectFlag: _projectFlag,
-      environmentFlag,
       segmentOverrides,
     } = this.props
     const {
@@ -446,8 +448,7 @@ const CreateFlag = class extends Component {
   }
 
   addItem = () => {
-    const { environmentId, identity, projectFlag } = this.props
-    const { environmentFlag } = this.state
+    const { environmentFlag, environmentId, identity, projectFlag } = this.props
     this.setState({ isLoading: true })
     const selectedIdentity = this.state.selectedIdentity.value
     const identities = identity ? identity.identifier : []
@@ -551,7 +552,9 @@ const CreateFlag = class extends Component {
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
     let regexValid = true
-    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
+    const metadataEnable =
+      Utils.getPlansPermission('METADATA') &&
+      Utils.getFlagsmithHasFeature('enable_metadata')
     try {
       if (!isEdit && name && regex) {
         regexValid = name.match(new RegExp(regex))
@@ -580,41 +583,35 @@ const CreateFlag = class extends Component {
           </FormGroup>
         )}
         {metadataEnable && featureContentType?.id && (
-          <FormGroup className='mb-5 setting'>
-            <InputGroup
-              title={'Metadata'}
-              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} feature`}
-              tooltipPlace='right'
-              component={
-                <AddMetadataToEntity
-                  organisationId={AccountStore.getOrganisation().id}
-                  projectId={this.props.projectId}
-                  entityId={projectFlag?.id}
-                  entityContentType={featureContentType?.id}
-                  entity={featureContentType?.model}
-                  setHasMetadataRequired={(b) => {
-                    this.setState({
-                      hasMetadataRequired: true,
-                    })
-                  }}
-                  onChange={(m) => {
-                    this.setState({
-                      metadata: m,
-                    })
-                  }}
-                />
-              }
+          <>
+            <label className='mt-1'>Custom Fields</label>
+            <AddMetadataToEntity
+              organisationId={AccountStore.getOrganisation().id}
+              projectId={this.props.projectId}
+              entityId={projectFlag?.id}
+              entityContentType={featureContentType?.id}
+              entity={featureContentType?.model}
+              setHasMetadataRequired={(b) => {
+                this.setState({
+                  hasMetadataRequired: b,
+                })
+              }}
+              onChange={(m) => {
+                this.setState({
+                  metadata: m,
+                })
+              }}
             />
-          </FormGroup>
+          </>
         )}
         {!identity && projectFlag && (
           <Permission
             level='project'
-            permission='ADMIN'
+            permission='CREATE_FEATURE'
             id={this.props.projectId}
           >
-            {({ permission: projectAdmin }) =>
-              projectAdmin && (
+            {({ permission }) =>
+              permission && (
                 <>
                   <FormGroup className='mb-5 setting'>
                     <FlagOwners
@@ -649,7 +646,7 @@ const CreateFlag = class extends Component {
             }
             ds
             type='text'
-            title={identity ? 'Description' : 'Description'}
+            title={identity ? 'Description' : 'Description (optional)'}
             placeholder="e.g. 'This determines what size the header is' "
           />
         </FormGroup>
@@ -767,7 +764,7 @@ const CreateFlag = class extends Component {
             />
           </FormGroup>
         )}
-
+        <ErrorMessage error={error?.message || error?.name?.[0] || error} />
         {identity && description && (
           <FormGroup className='mb-4 mt-2 mx-3'>
             <InputGroup
@@ -783,7 +780,7 @@ const CreateFlag = class extends Component {
                 this.setState({ description: Utils.safeParseEventValue(e) })
               }
               type='text'
-              title={identity ? 'Description' : 'Description'}
+              title={identity ? 'Description' : 'Description (optional)'}
               placeholder='No description'
             />
           </FormGroup>
@@ -1310,44 +1307,56 @@ const CreateFlag = class extends Component {
                                                 const isReadOnly =
                                                   !manageSegmentOverrides
                                                 return (
-                                                  <SegmentOverrides
-                                                    readOnly={isReadOnly}
-                                                    showEditSegment
-                                                    showCreateSegment={
-                                                      this.state
-                                                        .showCreateSegment
-                                                    }
-                                                    setShowCreateSegment={(
-                                                      showCreateSegment,
-                                                    ) =>
-                                                      this.setState({
+                                                  <>
+                                                    <ErrorMessage
+                                                      error={
+                                                        error?.message ||
+                                                        error?.name?.[0] ||
+                                                        error
+                                                      }
+                                                    />
+                                                    <SegmentOverrides
+                                                      readOnly={isReadOnly}
+                                                      is4Eyes={is4Eyes}
+                                                      showEditSegment
+                                                      showCreateSegment={
+                                                        this.state
+                                                          .showCreateSegment
+                                                      }
+                                                      setShowCreateSegment={(
                                                         showCreateSegment,
-                                                      })
-                                                    }
-                                                    feature={projectFlag.id}
-                                                    projectId={
-                                                      this.props.projectId
-                                                    }
-                                                    multivariateOptions={
-                                                      multivariate_options
-                                                    }
-                                                    environmentId={
-                                                      this.props.environmentId
-                                                    }
-                                                    value={
-                                                      this.props
-                                                        .segmentOverrides
-                                                    }
-                                                    controlValue={initial_value}
-                                                    onChange={(v) => {
-                                                      this.setState({
-                                                        segmentsChanged: true,
-                                                      })
-                                                      this.props.updateSegments(
-                                                        v,
-                                                      )
-                                                    }}
-                                                  />
+                                                      ) =>
+                                                        this.setState({
+                                                          showCreateSegment,
+                                                        })
+                                                      }
+                                                      feature={projectFlag.id}
+                                                      projectId={
+                                                        this.props.projectId
+                                                      }
+                                                      multivariateOptions={
+                                                        multivariate_options
+                                                      }
+                                                      environmentId={
+                                                        this.props.environmentId
+                                                      }
+                                                      value={
+                                                        this.props
+                                                          .segmentOverrides
+                                                      }
+                                                      controlValue={
+                                                        initial_value
+                                                      }
+                                                      onChange={(v) => {
+                                                        this.setState({
+                                                          segmentsChanged: true,
+                                                        })
+                                                        this.props.updateSegments(
+                                                          v,
+                                                        )
+                                                      }}
+                                                    />
+                                                  </>
                                                 )
                                               }}
                                             </Permission>
@@ -1963,16 +1972,26 @@ const FeatureProvider = (WrappedComponent) => {
       this.listenTo(
         FeatureListStore,
         'saved',
-        ({ changeRequest, createdFlag, isCreate } = {}) => {
-          toast(
-            `${createdFlag || isCreate ? 'Created' : 'Updated'} ${
-              changeRequest ? 'Change Request' : 'Feature'
-            }`,
-          )
+        ({ changeRequest, createdFlag, error, isCreate } = {}) => {
+          if (error?.data?.metadata) {
+            error.data.metadata?.forEach((m) => {
+              if (Object.keys(m).length > 0) {
+                toast(m.non_field_errors[0], 'danger')
+              }
+            })
+          } else if (error?.data) {
+            toast('Error updating the Flag', 'danger')
+            return
+          } else {
+            toast(
+              `${createdFlag || isCreate ? 'Created' : 'Updated'} ${
+                changeRequest ? 'Change Request' : 'Feature'
+              }`,
+            )
+          }
           const envFlags = FeatureListStore.getEnvironmentFlags()
 
           if (createdFlag) {
-            //update the create flag modal to edit view
             const projectFlag = FeatureListStore.getProjectFlags()?.find?.(
               (flag) => flag.name === createdFlag,
             )
@@ -2003,9 +2022,6 @@ const FeatureProvider = (WrappedComponent) => {
               },
               projectFlag: newProjectFlag,
             })
-          }
-          if (changeRequest) {
-            closeModal()
           }
         },
       )

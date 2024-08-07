@@ -327,7 +327,7 @@ export type FeatureStateValue = {
   float_value?: number | null
   integer_value?: boolean | null
   string_value: string
-  type: string
+  type: 'int' | 'unicode' | 'bool' | 'float'
 }
 
 export type MultivariateOption = {
@@ -429,6 +429,8 @@ export type AuthType = 'EMAIL' | 'GITHUB' | 'GOOGLE'
 
 export type SignupType = 'NO_INVITE' | 'INVITE_EMAIL' | 'INVITE_LINK'
 
+export type AttributeName = 'email' | 'first_name' | 'last_name' | 'groups'
+
 export type Invite = {
   id: number
   email: string
@@ -470,6 +472,14 @@ export type Role = {
   organisation: number
 }
 
+export type ChangeSet = {
+  feature: number
+  live_from: string | null
+  feature_states_to_update: FeatureState[]
+  feature_states_to_create: FeatureState[]
+  segment_ids_to_delete_overrides: number[]
+}
+
 export type RolePermissionUser = {
   user: number
   role: number
@@ -481,6 +491,15 @@ export type RolePermissionGroup = {
   role: number
   id: number
   role_name: string
+}
+export type FeatureConflict = {
+  segment_id: number | null
+  original_cr_id: number | null
+  published_at: string
+  is_environment_default: boolean
+}
+export type FeatureStateWithConflict = FeatureState & {
+  conflict?: FeatureConflict
 }
 export type ChangeRequest = {
   id: number
@@ -499,6 +518,7 @@ export type ChangeRequest = {
     user: number
     approved_at: null | string
   }[]
+  change_sets?: ChangeSet[]
   is_approved: boolean
   is_committed: boolean
   group_assignments: { group: number }[]
@@ -506,6 +526,8 @@ export type ChangeRequest = {
     uuid: string
     feature_states: FeatureState[]
   }[]
+
+  conflicts: FeatureConflict[]
 }
 export type FeatureVersion = {
   created_at: string
@@ -551,6 +573,22 @@ export type MetadataModelField = {
   field: number
   content_type: number | string
   is_required_for: isRequiredFor[]
+}
+
+export type SAMLConfiguration = {
+  id: number
+  organisation: number
+  name: string
+  frontend_url: string
+  idp_metadata_xml?: string
+  allow_idp_initiated?: boolean
+}
+
+export type SAMLAttributeMapping = {
+  id: number
+  saml_configuration: number
+  django_attribute_name: AttributeName
+  idp_attribute_name: string
 }
 
 export type Res = {
@@ -625,7 +663,7 @@ export type Res = {
   rolesPermissionUsers: PagedResponse<RolePermissionUser>
   createRolePermissionGroup: RolePermissionGroup
   rolePermissionGroup: PagedResponse<RolePermissionGroup>
-  getSubscriptionMetadata: { id: string }
+  getSubscriptionMetadata: { id: string; max_api_calls: number }
   environment: Environment
   metadataModelFieldList: PagedResponse<MetadataModelField>
   metadataModelField: MetadataModelField
@@ -664,5 +702,13 @@ export type Res = {
   identityFeatureStates: PagedResponse<FeatureState>
   cloneidentityFeatureStates: IdentityFeatureState
   featureStates: PagedResponse<FeatureState>
+  samlConfiguration: SAMLConfiguration
+  samlConfigurations: PagedResponse<SAMLConfiguration>
+  samlMetadata: {
+    entity_id: string
+    response_url: string
+    metadata_xml: string
+  }
+  samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
   // END OF TYPES
 }

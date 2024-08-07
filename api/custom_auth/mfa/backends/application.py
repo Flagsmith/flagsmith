@@ -1,8 +1,28 @@
-from trench.backends.application import ApplicationBackend
+from typing import Any, Dict
+
+from django.conf import settings
+from pyotp import TOTP
+from rest_framework.response import Response
+
+from custom_auth.mfa.trench.models import MFAMethod
 
 
-class CustomApplicationBackend(ApplicationBackend):
+class CustomApplicationBackend:
+    def __init__(self, mfa_method: MFAMethod, config: Dict[str, Any]) -> None:
+        self._mfa_method = mfa_method
+        self._config = config
+        self._totp = TOTP(self._mfa_method.secret)
+
     def dispatch_message(self):
-        original_message = super(CustomApplicationBackend, self).dispatch_message()
-        data = {**original_message, "secret": self.obj.secret}
-        return data
+        qr_link = self._totp.provisioning_uri(
+            self._mfa_method.user.email, settings.TRENCH_AUTH["APPLICATION_ISSUER_NAME"]
+        )
+        data = {
+            "qr_link": qr_link,
+            "secret": self._mfa_method.secret,
+        }
+        return Response(data)
+
+    def validate_code(self, code: str) -> bool:
+        validity_period = settings.TRENCH_AUTH["MFA_METHODS"]["app"]["VALIDITY_PERIOD"]
+        return self._totp.verify(otp=code, valid_window=int(validity_period / 20))

@@ -399,7 +399,7 @@ class TheComponent extends Component {
             onShowAudit={() => {
               if (disableControls) return
               this.context.router.history.push(
-                `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
+                `/project/${projectId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
               )
             }}
             onRemove={() => {

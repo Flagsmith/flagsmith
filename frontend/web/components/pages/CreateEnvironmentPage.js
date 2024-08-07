@@ -5,13 +5,19 @@ import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import PageTitle from 'components/PageTitle'
 import CondensedRow from 'components/CondensedRow'
+import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
+import { getSupportedContentType } from 'common/services/useSupportedContentType'
+import { getStore } from 'common/store'
 
 const CreateEnvironmentPage = class extends Component {
   static displayName = 'CreateEnvironmentPage'
 
   constructor(props, context) {
     super(props, context)
-    this.state = {}
+    this.state = {
+      envContentType: {},
+      metadata: [],
+    }
   }
 
   static contextTypes = {
@@ -27,6 +33,22 @@ const CreateEnvironmentPage = class extends Component {
   componentDidMount = () => {
     API.trackPage(Constants.pages.CREATE_ENVIRONMENT)
 
+    if (
+      Utils.getPlansPermission('METADATA') &&
+      Utils.getFlagsmithHasFeature('enable_metadata')
+    ) {
+      getSupportedContentType(getStore(), {
+        organisation_id: AccountStore.getOrganisation().id,
+      }).then((res) => {
+        const envContentType = Utils.getContentType(
+          res.data,
+          'model',
+          'environment',
+        )
+        this.setState({ envContentType: envContentType })
+      })
+    }
+
     this.focusTimeout = setTimeout(() => {
       this.input.focus()
       this.focusTimeout = null
@@ -40,7 +62,7 @@ const CreateEnvironmentPage = class extends Component {
   }
 
   render() {
-    const { name } = this.state
+    const { envContentType, metadata, name } = this.state
     return (
       <div className='app-container container'>
         <PageTitle title={'Create Environment'}>
@@ -84,6 +106,7 @@ const CreateEnvironmentPage = class extends Component {
                                   this.state.selectedEnv &&
                                     this.state.selectedEnv.api_key,
                                   this.state.description,
+                                  metadata,
                                 )
                             }}
                           >
@@ -170,9 +193,50 @@ const CreateEnvironmentPage = class extends Component {
                                     />
                                   )}
                               </CondensedRow>
+                              {error && (
+                                <CondensedRow>
+                                  <ErrorMessage error={error} />
+                                </CondensedRow>
+                              )}
                             </div>
+                            {Utils.getPlansPermission('METADATA') &&
+                              Utils.getFlagsmithHasFeature('enable_metadata') &&
+                              envContentType?.id && (
+                                <CondensedRow>
+                                  <FormGroup className='mt-5 setting'>
+                                    <InputGroup
+                                      title={'Custom fields'}
+                                      tooltip={
+                                        'You need to add a value to the custom field if it is required to successfully clone the environment'
+                                      }
+                                      tooltipPlace='right'
+                                      component={
+                                        <AddMetadataToEntity
+                                          organisationId={
+                                            AccountStore.getOrganisation().id
+                                          }
+                                          projectId={
+                                            this.props.match.params.projectId
+                                          }
+                                          entityId={
+                                            this.state.selectedEnv.api_key
+                                          }
+                                          envName={name}
+                                          entityContentType={envContentType.id}
+                                          entity={envContentType.model}
+                                          isCloningEnvironment
+                                          onChange={(m) => {
+                                            this.setState({
+                                              metadata: m,
+                                            })
+                                          }}
+                                        />
+                                      }
+                                    />
+                                  </FormGroup>
+                                </CondensedRow>
+                              )}
 
-                            {error && <ErrorMessage error={error} />}
                             <CondensedRow>
                               <div className='text-right'>
                                 {permission ? (

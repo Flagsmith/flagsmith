@@ -30,6 +30,9 @@ const FeatureListProvider = class extends React.Component {
         usageData: FeatureListStore.getFeatureUsage(),
       })
     })
+    this.listenTo(FeatureListStore, 'removed', (data) => {
+      this.props.onRemove?.(data)
+    })
 
     this.listenTo(FeatureListStore, 'saved', (data) => {
       this.props.onSave && this.props.onSave(data)

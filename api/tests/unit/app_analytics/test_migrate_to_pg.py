@@ -55,13 +55,25 @@ def test_migrate_feature_evaluations(mocker: MockerFixture) -> None:
     mock_query_api.assert_has_calls(
         [
             mocker.call.query(
-                f"from (bucket: {read_bucket}) |> range(start: -1d, stop: -0d)"
+                (
+                    f'from (bucket: "{read_bucket}") '
+                    f"|> range(start: -1d, stop: -0d) "
+                    f'|> filter(fn: (r) => r._measurement == "feature_evaluation")'
+                )
             ),
             mocker.call.query(
-                f"from (bucket: {read_bucket}) |> range(start: -2d, stop: -1d)"
+                (
+                    f'from (bucket: "{read_bucket}") '
+                    f"|> range(start: -2d, stop: -1d) "
+                    f'|> filter(fn: (r) => r._measurement == "feature_evaluation")'
+                )
             ),
             mocker.call.query(
-                f"from (bucket: {read_bucket}) |> range(start: -3d, stop: -2d)"
+                (
+                    f'from (bucket: "{read_bucket}") '
+                    f"|> range(start: -3d, stop: -2d) "
+                    f'|> filter(fn: (r) => r._measurement == "feature_evaluation")'
+                )
             ),
         ]
     )
