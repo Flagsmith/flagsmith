@@ -67,6 +67,11 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     docs: 'https://docs.flagsmith.com/advanced-use/real-time-flags',
     title: 'Realtime Updates',
   },
+  'SAML': {
+    description: 'Configure 2FA, SAML, Okta, ADFS and LDAP.',
+    docs: 'https://docs.flagsmith.com/system-administration/authentication/',
+    title: 'Enterprise single sign-on',
+  },
   'SCHEDULE_FLAGS': {
     description:
       'Manage feature state changes that have been scheduled to go live.',

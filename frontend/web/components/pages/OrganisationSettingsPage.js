@@ -234,10 +234,7 @@ const OrganisationSettingsPage = class extends Component {
                     AccountStore.getOrganisationRole() === 'ADMIN'
                   ) {
                     const showSaml =
-                      Utils.getPlanPermission(
-                        organisation.subscription?.plan,
-                        'SAML',
-                      ) && Utils.getFlagsmithHasFeature('saml_configuration')
+                      Utils.getFlagsmithHasFeature('saml_configuration')
                     displayedTabs.push(
                       ...[
                         SettingsTab.General,
