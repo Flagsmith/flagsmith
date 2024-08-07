@@ -1124,3 +1124,43 @@ def test_create_new_version_delete_segment_override_updates_overrides_immediatel
     get_feature_segments_response = admin_client.get(get_feature_segments_url)
     assert get_feature_segments_response.status_code == status.HTTP_200_OK
     assert get_feature_segments_response.json()["count"] == 0
+
+
+def test_rollback_to(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
+
+    version_1 = EnvironmentFeatureVersion.objects.get(
+        feature=feature, environment=environment_v2_versioning
+    )
+
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+    )
+    version_2.publish(staff_user)
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-rollback-to",
+        args=[environment_v2_versioning.id, feature.id, version_1.uuid],
+    )
+
+    # When
+    response = staff_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    queryset = EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(
+        environment_id=environment_v2_versioning.id
+    )
+    assert queryset.count() == 1
+    assert queryset.first() == version_1

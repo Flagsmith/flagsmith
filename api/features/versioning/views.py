@@ -139,6 +139,13 @@ class EnvironmentFeatureVersionViewSet(
         serializer.save(published_by=request.user)
         return Response(serializer.data)
 
+    @action(detail=True, methods=["POST"])
+    def rollback_to(self, request: Request, **kwargs) -> Response:
+        ef_version = self.get_object()
+        ef_version.rollback_to()
+        ef_version.save()
+        return Response()
+
 
 class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):
     """

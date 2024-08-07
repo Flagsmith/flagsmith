@@ -168,6 +168,9 @@ class EnvironmentFeatureVersion(
         _clone.save()
         return _clone
 
+    def rollback_to(self) -> None:
+        self.live_from = timezone.now()
+
 
 class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
     created_at = models.DateTimeField(auto_now_add=True)
