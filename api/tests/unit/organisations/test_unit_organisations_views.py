@@ -355,6 +355,7 @@ def test_user_can_get_projects_for_an_organisation(
     assert response.data[0]["name"] == project.name
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @mock.patch("app_analytics.influxdb_wrapper.influxdb_client")
 def test_should_get_usage_for_organisation(
     mock_influxdb_client: MagicMock,
@@ -369,7 +370,7 @@ def test_should_get_usage_for_organisation(
     expected_query = (
         (
             f'from(bucket:"{read_bucket}") '
-            "|> range(start: -30d, stop: now()) "
+            "|> range(start: 2022-12-20T09:09:47.325132+00:00, stop: 2023-01-19T09:09:47.325132+00:00) "
             '|> filter(fn:(r) => r._measurement == "api_call")         '
             '|> filter(fn: (r) => r["_field"] == "request_count")         '
             f'|> filter(fn: (r) => r["organisation_id"] == "{organisation.id}") '

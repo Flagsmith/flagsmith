@@ -6,13 +6,11 @@ from django.contrib.auth.signals import user_logged_in
 from django.db.models import F
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
-from rest_framework.exceptions import PermissionDenied
 
-from organisations.invites.models import Invite
 from users.auth_type import AuthType
 from users.models import SignUpType
 
-from ..constants import USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
+from ..serializers import InviteLinkValidationMixin
 from .github import GithubUser
 from .google import get_user_info
 
@@ -20,7 +18,7 @@ GOOGLE_URL = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&"
 UserModel = get_user_model()
 
 
-class OAuthLoginSerializer(serializers.Serializer):
+class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):
     access_token = serializers.CharField(
         required=True,
         help_text="Code or access token returned from the FE interaction with the third party login provider.",
@@ -85,12 +83,9 @@ class OAuthLoginSerializer(serializers.Serializer):
 
         if not existing_user:
             sign_up_type = self.validated_data.get("sign_up_type")
-            if not (
-                settings.ALLOW_REGISTRATION_WITHOUT_INVITE
-                or sign_up_type == SignUpType.INVITE_LINK.value
-                or Invite.objects.filter(email=email).exists()
-            ):
-                raise PermissionDenied(USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE)
+            self._validate_registration_invite(
+                email=email, sign_up_type=self.validated_data.get("sign_up_type")
+            )
 
             return UserModel.objects.create(
                 **user_data, email=email.lower(), sign_up_type=sign_up_type

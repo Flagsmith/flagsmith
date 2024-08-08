@@ -69,7 +69,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
     return regularExpresion.test(name)
   }
 
-  const convetToXmlFile = (fileName: string, data: string) => {
+  const convertToXmlFile = (fileName: string, data: string) => {
     const blob = new Blob([data], { type: 'application/xml' })
     const link = document.createElement('a')
     link.download = `${fileName}.xml`
@@ -82,7 +82,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
     getSamlConfigurationMetadata(getStore(), { name: previousName })
       .then((res) => {
         if (res.error) {
-          convetToXmlFile(previousName, res.error.data)
+          convertToXmlFile(previousName, res.error.data)
         }
       })
       .finally(() => {
@@ -92,7 +92,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
 
   const downloadIDPMetadata = () => {
     const name = data?.name || samlName
-    convetToXmlFile(`IDP metadata ${name!}`, data?.idp_metadata_xml || '')
+    convertToXmlFile(`IDP metadata ${name!}`, data?.idp_metadata_xml || '')
   }
 
   const Tab1 = (
@@ -123,7 +123,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
         data-test='frontend-url'
         tooltip='The base URL of the Flagsmith dashboard'
         tooltipPlace='right'
-        value={frontendUrl}
+        value={data?.frontend_url || frontendUrl}
         onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
           setFrontendUrl(Utils.safeParseEventValue(event))
         }}
