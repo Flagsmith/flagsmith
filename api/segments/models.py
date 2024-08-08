@@ -59,7 +59,6 @@ class Segment(
     # This defaults to 1 for newly created segments.
     version = models.IntegerField(null=True)
 
-    # The related_name is not useful without specifying all_objects as a manager.
     version_of = models.ForeignKey(
         "self",
         on_delete=models.CASCADE,
