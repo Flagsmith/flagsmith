@@ -123,15 +123,12 @@ class EnvironmentFeatureVersionViewSet(
             queryset = queryset.filter(_is_live=is_live)
 
         subscription = self.environment.project.organisation.subscription
-        version_limit = (
-            VERSION_LIMIT_BY_PLAN.get(
-                subscription.subscription_plan_family, DEFAULT_VERSION_LIMIT
-            )
-            + EXTRA_VERSIONS_FOR_LIST
+        version_limit = VERSION_LIMIT_BY_PLAN.get(
+            subscription.subscription_plan_family, DEFAULT_VERSION_LIMIT
         )
 
         if self.action == "list" and version_limit is not None:
-            return queryset[:version_limit]
+            return queryset[: version_limit + EXTRA_VERSIONS_FOR_LIST]
 
         return queryset
 

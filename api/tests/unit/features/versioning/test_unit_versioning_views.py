@@ -1131,7 +1131,7 @@ def test_create_new_version_delete_segment_override_updates_overrides_immediatel
 @pytest.mark.parametrize(
     "plan, versions_to_create, expected_versions_to_return",
     (
-        (STARTUP, 10, 4),
+        (STARTUP, 10, 3),
         (
             ENTERPRISE,
             10,
