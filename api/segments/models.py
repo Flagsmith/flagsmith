@@ -18,7 +18,6 @@ from django_lifecycle import (
     hook,
 )
 from flag_engine.segments import constants
-from polymorphic.models import PolymorphicModel
 
 from audit.constants import (
     SEGMENT_CREATED_MESSAGE,
@@ -31,7 +30,7 @@ from metadata.models import Metadata
 from projects.models import Project
 
 from .helpers import segment_audit_log_helper
-from .managers import AllSegmentManager, SegmentManager
+from .managers import LiveSegmentManager, SegmentManager
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,6 @@ class Segment(
     LifecycleModelMixin,
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
-    PolymorphicModel,
 ):
     history_record_class_path = "segments.models.HistoricalSegment"
     related_object_type = RelatedObjectType.SEGMENT
@@ -70,16 +68,22 @@ class Segment(
         blank=True,
     )
 
+    change_request = models.ForeignKey(
+        "workflows_core.ChangeRequest",
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="segments",
+    )
+
     metadata = GenericRelation(Metadata)
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
 
-    # Only serves segments that are the canonical version.
     objects = SegmentManager()
 
-    # Includes versioned segments.
-    all_objects = AllSegmentManager()
+    # Only serves segments that are the canonical version.
+    live_objects = LiveSegmentManager()
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
@@ -157,8 +161,8 @@ class Segment(
         name: str,
         description: str,
         change_request: typing.Optional["ChangeRequest"],  # noqa: F821
-    ) -> "AllSegment":
-        cloned_segment = AllSegment(
+    ) -> "Segment":
+        cloned_segment = Segment(
             version_of=self,
             uuid=uuid.uuid4(),
             name=name,
@@ -210,25 +214,6 @@ class Segment(
 
     def _get_project(self):
         return self.project
-
-
-class AllSegment(Segment):
-    """
-    This model tracks the relationship to change requests for segments. It's a
-    polymorphic relation to the Segment class which it inherits from.
-    """
-
-    history_record_class_path = "segments.models.HistoricalAllSegment"
-    related_object_type = RelatedObjectType.ALL_SEGMENT
-
-    change_request = models.ForeignKey(
-        "workflows_core.ChangeRequest",
-        on_delete=models.CASCADE,
-        null=True,
-        related_name="all_segments",
-    )
-
-    objects = AllSegmentManager()
 
 
 class SegmentRule(SoftDeleteExportableModel):
