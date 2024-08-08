@@ -1,7 +1,9 @@
 import json
 
 import pytest
+from django.conf import settings
 from django.urls import reverse
+from pytest_django import DjangoAssertNumQueries
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -28,29 +30,37 @@ from users.models import FFAdminUser
 
 
 @pytest.mark.parametrize(
-    "client, num_queries",
+    "client,is_admin_master_api_key_client, num_queries",
     [
         (
             lazy_fixture("admin_client"),
+            False,
             6,
         ),  # 1 for paging, 3 for permissions, 1 for result, 1 for getting the current live version
         (
             lazy_fixture("admin_master_api_key_client"),
+            True,
             4,
         ),  # an extra one for master_api_key
     ],
 )
 def test_list_feature_segments(
-    segment,
-    feature,
-    environment,
-    project,
-    django_assert_num_queries,
-    client,
-    feature_segment,
-    num_queries,
+    segment: Segment,
+    feature: Feature,
+    environment: Environment,
+    project: Project,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    client: APIClient,
+    feature_segment: FeatureSegment,
+    num_queries: int,
+    is_admin_master_api_key_client: bool,
 ):
     # Given
+    if (
+        settings.IS_RBAC_INSTALLED and not is_admin_master_api_key_client
+    ):  # pragma: no cover
+        num_queries += 1
+
     base_url = reverse("api-v1:features:feature-segment-list")
     url = f"{base_url}?environment={environment.id}&feature={feature.id}"
     environment_2 = Environment.objects.create(

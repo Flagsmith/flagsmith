@@ -21,7 +21,9 @@ class LaunchDarklyImportStatus(TypedDict):
 class LaunchDarklyImportRequest(
     abstract_base_auditable_model_factory(),
 ):
-    history_record_class_path = "features.models.HistoricalLaunchDarklyImportRequest"
+    history_record_class_path = (
+        "integrations.launch_darkly.models.HistoricalLaunchDarklyImportRequest"
+    )
     related_object_type = RelatedObjectType.IMPORT_REQUEST
 
     created_by = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
@@ -51,7 +53,7 @@ class LaunchDarklyImportRequest(
                 )
         return "LaunchDarkly import failed"
 
-    def get_audit_log_author(self) -> "FFAdminUser":
+    def get_audit_log_author(self, history_instance) -> "FFAdminUser":
         return self.created_by
 
     def _get_project(self) -> Project:
