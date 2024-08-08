@@ -328,6 +328,29 @@ def test_get_feature_states_for_identity__segment_match_expected(
     assert flag_data["feature_state_value"] == "segment override"
 
 
+def test_get_feature_states_for_identity__empty_traits__random_identifier_expected(
+    sdk_client: APIClient,
+    environment: int,
+) -> None:
+    # Given
+    url = reverse("api-v1:sdk-identities")
+
+    # When
+    response_1 = sdk_client.post(
+        url,
+        data=json.dumps({"traits": []}),
+        content_type="application/json",
+    )
+    response_2 = sdk_client.post(
+        url,
+        data=json.dumps({"traits": []}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response_1.json()["identifier"] != response_2.json()["identifier"]
+
+
 def test_get_feature_states_for_identity__transient_trait__segment_match_expected(
     sdk_client: APIClient,
     feature: int,

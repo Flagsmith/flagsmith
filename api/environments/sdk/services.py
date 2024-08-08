@@ -1,4 +1,5 @@
 import hashlib
+import uuid
 from itertools import chain
 from operator import itemgetter
 from typing import TypeAlias
@@ -91,13 +92,15 @@ def get_persisted_identity_and_traits(
 
 
 def get_transient_identifier(sdk_trait_data: list[SDKTraitData]) -> str:
-    return hashlib.sha256(
-        "".join(
-            f'{trait["trait_key"]}{trait["trait_value"]["value"]}'
-            for trait in sorted(sdk_trait_data, key=itemgetter("trait_key"))
-        ).encode(),
-        usedforsecurity=False,
-    ).hexdigest()
+    if sdk_trait_data:
+        return hashlib.sha256(
+            "".join(
+                f'{trait["trait_key"]}{trait["trait_value"]["value"]}'
+                for trait in sorted(sdk_trait_data, key=itemgetter("trait_key"))
+            ).encode(),
+            usedforsecurity=False,
+        ).hexdigest()
+    return uuid.uuid4().hex
 
 
 def _get_transient_identity(
