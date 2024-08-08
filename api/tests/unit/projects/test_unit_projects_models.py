@@ -8,6 +8,7 @@ from pytest_django.fixtures import SettingsWrapper
 
 from organisations.models import Organisation
 from projects.models import EdgeV2MigrationStatus, Project
+from segments.models import Segment
 
 now = timezone.now()
 tomorrow = now + timedelta(days=1)
@@ -53,6 +54,35 @@ def test_get_segments_from_cache_set_not_called(project, segments, monkeypatch):
     # And correct calls to cache are made
     mock_project_segments_cache.get.assert_called_once_with(project.id)
     mock_project_segments_cache.set.assert_not_called()
+
+
+@pytest.mark.django_db()
+def test_get_segments_from_cache_set_to_empty_list(
+    project: Project,
+    segment: Segment,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Given
+    mock_project_segments_cache = mock.MagicMock()
+    mock_project_segments_cache.get.return_value = []
+
+    monkeypatch.setattr(
+        "projects.models.project_segments_cache", mock_project_segments_cache
+    )
+
+    # When
+    segments = project.get_segments_from_cache()
+
+    # Then
+    # Since we're calling the live_objects manager in the method,
+    # only one copy of the segment should be returned, not the
+    # other versioned copy of the segment.
+    assert segments.count() == 1
+    assert segments.first() == segment
+
+    # And correct calls to cache are made
+    mock_project_segments_cache.get.assert_called_once_with(project.id)
+    mock_project_segments_cache.set.assert_called_once()
 
 
 @pytest.mark.parametrize(
