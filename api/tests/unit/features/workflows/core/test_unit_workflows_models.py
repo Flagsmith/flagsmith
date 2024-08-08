@@ -750,5 +750,5 @@ def test_retrieving_segments(
     )
 
     # Then
-    assert change_request.all_segments.count() == 1
-    assert change_request.all_segments.first() == segment
+    assert change_request.segments.count() == 1
+    assert change_request.segments.first() == segment
