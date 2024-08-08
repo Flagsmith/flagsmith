@@ -1,3 +1,4 @@
+import hashlib
 import json
 from typing import Any, Generator
 from unittest import mock
@@ -5,7 +6,6 @@ from unittest import mock
 import pytest
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
-from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -236,12 +236,13 @@ def existing_identity_identifier_data(
 
 
 @pytest.fixture
-def transient_random_identifier(
-    mocker: MockerFixture,
+def transient_identifier(
+    segment_condition_property: str,
+    segment_condition_value: str,
 ) -> Generator[str, None, None]:
-    uuid_mock = mocker.patch("environments.sdk.services.uuid", autospec=True)
-    uuid_mock.uuid4.return_value = identifier = "1199c22c-4dcb-4505-9857-5db5f258469c"
-    yield identifier
+    return hashlib.sha256(
+        f"avalue_a{segment_condition_property}{segment_condition_value}".encode()
+    ).hexdigest()
 
 
 @pytest.mark.parametrize(
@@ -263,17 +264,15 @@ def transient_random_identifier(
         pytest.param({"identifier": "unseen"}, "unseen", id="new-identifier"),
         pytest.param(
             {"identifier": ""},
-            lazy_fixture("transient_random_identifier"),
+            lazy_fixture("transient_identifier"),
             id="blank-identifier",
         ),
         pytest.param(
             {"identifier": None},
-            lazy_fixture("transient_random_identifier"),
+            lazy_fixture("transient_identifier"),
             id="null-identifier",
         ),
-        pytest.param(
-            {}, lazy_fixture("transient_random_identifier"), id="missing-identifier"
-        ),
+        pytest.param({}, lazy_fixture("transient_identifier"), id="missing-identifier"),
     ],
 )
 def test_get_feature_states_for_identity__segment_match_expected(
@@ -303,7 +302,8 @@ def test_get_feature_states_for_identity__segment_match_expected(
                     {
                         "trait_key": segment_condition_property,
                         "trait_value": segment_condition_value,
-                    }
+                    },
+                    {"trait_key": "a", "trait_value": "value_a"},
                 ],
             }
         ),

@@ -1,5 +1,6 @@
-import uuid
+import hashlib
 from itertools import chain
+from operator import itemgetter
 from typing import TypeAlias
 
 from django.utils import timezone
@@ -18,15 +19,16 @@ def get_transient_identity_and_traits(
 ) -> IdentityAndTraits:
     """
     Get a transient `Identity` instance with a randomly generated identifier.
+    All traits are marked as transient.
     """
     return (
         (
             identity := _get_transient_identity(
                 environment=environment,
-                identifier=str(uuid.uuid4()),
+                identifier=get_transient_identifier(sdk_trait_data),
             )
         ),
-        identity.generate_traits(sdk_trait_data, persist=False),
+        identity.generate_traits(_ensure_transient(sdk_trait_data), persist=False),
     )
 
 
@@ -41,8 +43,7 @@ def get_identified_transient_identity_and_traits(
     combined with incoming traits provided to `sdk_trait_data` argument.
     All traits constructed from `sdk_trait_data` are marked as transient.
     """
-    for sdk_trait_data_item in sdk_trait_data:
-        sdk_trait_data_item["transient"] = True
+    sdk_trait_data = _ensure_transient(sdk_trait_data)
     if identity := Identity.objects.filter(
         environment=environment,
         identifier=identifier,
@@ -89,6 +90,16 @@ def get_persisted_identity_and_traits(
     )
 
 
+def get_transient_identifier(sdk_trait_data: list[SDKTraitData]) -> str:
+    return hashlib.sha256(
+        "".join(
+            f'{trait["trait_key"]}{trait["trait_value"]["value"]}'
+            for trait in sorted(sdk_trait_data, key=itemgetter("trait_key"))
+        ).encode(),
+        usedforsecurity=False,
+    ).hexdigest()
+
+
 def _get_transient_identity(
     environment: Environment,
     identifier: str,
@@ -98,3 +109,9 @@ def _get_transient_identity(
         environment=environment,
         identifier=identifier,
     )
+
+
+def _ensure_transient(sdk_trait_data: list[SDKTraitData]) -> list[SDKTraitData]:
+    for sdk_trait_data_item in sdk_trait_data:
+        sdk_trait_data_item["transient"] = True
+    return sdk_trait_data
