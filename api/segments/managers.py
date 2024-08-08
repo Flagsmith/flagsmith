@@ -1,13 +1,8 @@
-from core.models import PolymorphicSoftDeleteExportableManager
+from core.models import SoftDeleteManager, UUIDNaturalKeyManagerMixin
 from django.db.models import F
-from polymorphic.models import PolymorphicManager
 
 
-class AllSegmentManager(PolymorphicSoftDeleteExportableManager, PolymorphicManager):
-    pass
-
-
-class SegmentManager(AllSegmentManager):
+class LiveSegmentManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
     def get_queryset(self):
         """
         Returns only the canonical segments, which will always be
