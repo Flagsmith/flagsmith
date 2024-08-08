@@ -18,6 +18,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 from rest_framework.viewsets import GenericViewSet
 
+from audit.tasks import create_version_rolled_back_audit_log_records
 from environments.models import Environment
 from environments.permissions.constants import VIEW_ENVIRONMENT
 from features.models import Feature, FeatureState
@@ -159,6 +160,19 @@ class EnvironmentFeatureVersionViewSet(
         with transaction.atomic():
             version_to_rollback_to.save()
             current_version.save()
+
+        create_version_rolled_back_audit_log_records.delay(
+            kwargs={
+                "rolled_back_from_uuid": current_version.uuid,
+                "rolled_back_to_uuid": version_to_rollback_to.uuid,
+                "user_id": getattr(request.user, "id", None),
+                "api_key_id": (
+                    request.master_api_key.id
+                    if hasattr(request.user, "master_api_key")
+                    else None
+                ),
+            }
+        )
 
         return Response()
 

@@ -83,7 +83,6 @@ class EnvironmentFeatureVersion(
         blank=True,
     )
 
-    # TODO: audit?
     rolled_back_at = models.DateTimeField(blank=True, null=True)
 
     objects = EnvironmentFeatureVersionManager()

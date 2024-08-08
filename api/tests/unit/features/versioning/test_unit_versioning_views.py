@@ -1174,3 +1174,23 @@ def test_rollback_to(
 
     version_2.refresh_from_db()
     assert version_2.rolled_back_at == _now
+
+    audit_log_record_1 = (
+        AuditLog.objects.filter(related_object_uuid=version_1.uuid)
+        .order_by("-created_date")
+        .first()
+    )
+    assert (
+        audit_log_record_1.log
+        == f"Version '{version_1.uuid}' was reinstated for feature '{feature.name}' after a rollback."
+    )
+
+    audit_log_record_2 = (
+        AuditLog.objects.filter(related_object_uuid=version_2.uuid)
+        .order_by("-created_date")
+        .first()
+    )
+    assert (
+        audit_log_record_2.log
+        == f"Version '{version_2.uuid}' was rolled back for feature '{feature.name}'."
+    )

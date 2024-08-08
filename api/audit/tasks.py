@@ -12,6 +12,7 @@ from audit.constants import (
     FEATURE_STATE_WENT_LIVE_MESSAGE,
 )
 from audit.models import AuditLog, RelatedObjectType
+from features.versioning.models import EnvironmentFeatureVersion
 
 logger = logging.getLogger(__name__)
 
@@ -184,3 +185,46 @@ def create_segment_priorities_changed_audit_log(
             else timezone.now()
         ),
     )
+
+
+@register_task_handler()
+def create_version_rolled_back_audit_log_records(
+    rolled_back_to_uuid: str,
+    rolled_back_from_uuid: str,
+    user_id: int | None,
+    api_key_id: int | None,
+) -> None:
+    rolled_back_from = EnvironmentFeatureVersion.objects.select_related(
+        "feature", "feature"
+    ).get(uuid=rolled_back_from_uuid)
+    rolled_back_to = EnvironmentFeatureVersion.objects.select_related("feature").get(
+        uuid=rolled_back_to_uuid
+    )
+
+    feature = rolled_back_to.feature
+    now = timezone.now()
+
+    records = [
+        AuditLog(
+            log=f"Version '{rolled_back_from.uuid}' was rolled back for feature '{feature.name}'.",
+            environment_id=rolled_back_to.environment_id,
+            project_id=feature.project_id,
+            author_id=user_id,
+            related_object_uuid=rolled_back_from.uuid,
+            related_object_type=RelatedObjectType.EF_VERSION.name,
+            master_api_key_id=api_key_id,
+            created_date=now,
+        ),
+        AuditLog(
+            log=f"Version '{rolled_back_to.uuid}' was reinstated for feature '{feature.name}' after a rollback.",
+            environment_id=rolled_back_to.environment_id,
+            project_id=feature.project_id,
+            author_id=user_id,
+            related_object_uuid=rolled_back_to.uuid,
+            related_object_type=RelatedObjectType.EF_VERSION.name,
+            master_api_key_id=api_key_id,
+            created_date=now,
+        ),
+    ]
+
+    AuditLog.objects.bulk_create(records)
