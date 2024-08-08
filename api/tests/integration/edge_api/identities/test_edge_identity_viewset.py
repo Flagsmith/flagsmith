@@ -1,11 +1,20 @@
 import json
 import urllib
+from typing import Any
 
+from boto3.dynamodb.conditions import Key
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.exceptions import NotFound
+from rest_framework.test import APIClient
 
 from edge_api.identities.views import EdgeIdentityViewSet
+from environments.dynamodb.wrappers.environment_wrapper import (
+    DynamoEnvironmentV2Wrapper,
+)
+from environments.dynamodb.wrappers.identity_wrapper import (
+    DynamoIdentityWrapper,
+)
 
 
 def test_get_identities_returns_bad_request_if_dynamo_is_not_enabled(
@@ -125,12 +134,15 @@ def test_create_identity_returns_400_if_identity_already_exists(
 
 
 def test_delete_identity(
-    admin_client,
-    dynamo_enabled_environment,
-    environment_api_key,
-    identity_document,
-    edge_identity_dynamo_wrapper_mock,
-):
+    admin_client: APIClient,
+    dynamo_enabled_environment: int,
+    environment_api_key: str,
+    identity_document_without_fs: dict[str, Any],
+    identity_document: dict[str, Any],
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    identity_overrides_v2: list[str],
+) -> None:
     # Given
     identity_uuid = identity_document["identity_uuid"]
     url = reverse(
@@ -138,20 +150,22 @@ def test_delete_identity(
         args=[environment_api_key, identity_uuid],
     )
 
-    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
-        identity_document
-    )
     # When
     response = admin_client.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
-        identity_uuid
-    )
-    edge_identity_dynamo_wrapper_mock.delete_item.assert_called_with(
-        identity_document["composite_key"]
+    assert not dynamodb_identity_wrapper.query_items(
+        IndexName="identity_uuid-index",
+        KeyConditionExpression=Key("identity_uuid").eq(identity_uuid),
+    )["Count"]
+    assert not list(
+        dynamodb_wrapper_v2.query_get_all_items(
+            KeyConditionExpression=Key("environment_id").eq(
+                str(dynamo_enabled_environment)
+            )
+        )
     )
 
 
