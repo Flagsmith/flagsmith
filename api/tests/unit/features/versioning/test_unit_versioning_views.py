@@ -1153,10 +1153,13 @@ def test_rollback_to(
         args=[environment_v2_versioning.id, feature.id, version_1.uuid],
     )
 
-    now = timezone.now()
+    # use a local variable for 'now' instead of module attribute because
+    # we want to ensure that the time is _after_ the versions were
+    # created / published
+    _now = timezone.now()
 
     # When
-    with freeze_time(now):
+    with freeze_time(_now):
         response = staff_client.post(url)
 
     # Then
@@ -1170,4 +1173,4 @@ def test_rollback_to(
     assert current_live_version == version_1
 
     version_2.refresh_from_db()
-    assert version_2.rolled_back_at == now
+    assert version_2.rolled_back_at == _now
