@@ -424,6 +424,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         case 'DELETE_FEATURE':
         case 'UPDATE_FEATURE_STATE':
         case 'VIEW_ENVIRONMENT':
+        case 'CREATE_CHANGE_REQUEST':
+        case 'APPROVE_CHANGE_REQUEST':
+        case 'MANAGE_SEGMENT_OVERRIDES':
           return false
         default:
           return true
