@@ -142,19 +142,22 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         return self.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE
 
     def get_segments_from_cache(self):
+        from segments.models import Segment
+
         segments = project_segments_cache.get(self.id)
 
         if not segments:
             # This is optimised to account for rules nested one levels deep (since we
             # don't support anything above that from the UI at the moment). Anything
             # past that will require additional queries / thought on how to optimise.
-            segments = self.segments.all().prefetch_related(
+            segments = Segment.live_objects.filter(project=self).prefetch_related(
                 "rules",
                 "rules__conditions",
                 "rules__rules",
                 "rules__rules__conditions",
                 "rules__rules__rules",
             )
+
             project_segments_cache.set(
                 self.id, segments, timeout=settings.CACHE_PROJECT_SEGMENTS_SECONDS
             )

@@ -344,7 +344,7 @@ class Environment(
         segments = environment_segments_cache.get(self.id)
         if not segments:
             segments = list(
-                Segment.objects.filter(
+                Segment.live_objects.filter(
                     feature_segments__feature_states__environment=self
                 ).prefetch_related(
                     "rules",
