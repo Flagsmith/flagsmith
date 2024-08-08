@@ -1,5 +1,7 @@
+import json
 from datetime import timedelta
 
+import freezegun
 import pytest
 from django.contrib.sites.models import Site
 from django.utils import timezone
@@ -16,7 +18,10 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature, FeatureState
-from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.models import (
+    EnvironmentFeatureVersion,
+    VersionChangeSet,
+)
 from features.versioning.versioning_service import get_environment_flags_list
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
@@ -752,3 +757,40 @@ def test_retrieving_segments(
     # Then
     assert change_request.segments.count() == 1
     assert change_request.segments.first() == segment
+
+
+def test_change_request_live_from_for_change_request_with_change_set(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    change_request = ChangeRequest.objects.create(
+        title="Test CR",
+        environment=environment_v2_versioning,
+        user=admin_user,
+    )
+    VersionChangeSet.objects.create(
+        change_request=change_request,
+        feature=feature,
+        feature_states_to_update=json.dumps(
+            [
+                {
+                    "feature_segment": None,
+                    "enabled": True,
+                    "feature_state_value": {
+                        "type": "unicode",
+                        "string_value": "updated",
+                    },
+                }
+            ]
+        ),
+    )
+
+    # When
+    now = timezone.now()
+    with freezegun.freeze_time(now):
+        change_request.commit(admin_user)
+
+    # Then
+    assert change_request.live_from == now

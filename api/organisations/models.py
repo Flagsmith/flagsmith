@@ -452,7 +452,7 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
     api_calls_30d = models.IntegerField(default=0)
 
     allowed_seats = models.IntegerField(default=1)
-    allowed_30d_api_calls = models.IntegerField(default=50000)
+    allowed_30d_api_calls = models.IntegerField(default=MAX_API_CALLS_IN_FREE_PLAN)
     allowed_projects = models.IntegerField(default=1, blank=True, null=True)
 
     chargebee_email = models.EmailField(blank=True, max_length=254, null=True)
@@ -472,6 +472,14 @@ class OrganisationAPIUsageNotification(models.Model):
     )
     notified_at = models.DateTimeField(null=True)
 
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)
+
+
+class OrganisationBreachedGracePeriod(models.Model):
+    organisation = models.OneToOneField(
+        Organisation, on_delete=models.CASCADE, related_name="breached_grace_period"
+    )
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
 

@@ -3,10 +3,7 @@ from django.db.models import Sum
 from rest_framework import serializers
 
 from features.models import Feature
-from features.multivariate.models import (
-    MultivariateFeatureOption,
-    MultivariateFeatureStateValue,
-)
+from features.multivariate.models import MultivariateFeatureOption
 
 
 class NestedMultivariateFeatureOptionSerializer(serializers.ModelSerializer):
@@ -54,13 +51,3 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
             siblings = siblings.exclude(id=self.instance.id)
 
         return siblings
-
-
-class MultivariateFeatureStateValueSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MultivariateFeatureStateValue
-        fields = (
-            "id",
-            "multivariate_feature_option",
-            "percentage_allocation",
-        )

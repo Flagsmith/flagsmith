@@ -1,5 +1,7 @@
+from typing import Type
 from unittest import mock
 
+import pytest
 from django.test import RequestFactory
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
@@ -11,6 +13,7 @@ from custom_auth.oauth.serializers import (
     GoogleLoginSerializer,
     OAuthLoginSerializer,
 )
+from organisations.invites.models import InviteLink
 from users.models import FFAdminUser, SignUpType
 
 
@@ -128,7 +131,11 @@ def test_OAuthLoginSerializer_calls_is_authentication_method_valid_correctly_if_
 
 
 def test_OAuthLoginSerializer_allows_registration_if_sign_up_type_is_invite_link(
-    settings: SettingsWrapper, rf: RequestFactory, mocker: MockerFixture, db: None
+    settings: SettingsWrapper,
+    rf: RequestFactory,
+    mocker: MockerFixture,
+    db: None,
+    invite_link: InviteLink,
 ):
     # Given
     settings.ALLOW_REGISTRATION_WITHOUT_INVITE = False
@@ -140,11 +147,47 @@ def test_OAuthLoginSerializer_allows_registration_if_sign_up_type_is_invite_link
         data={
             "access_token": "some_token",
             "sign_up_type": SignUpType.INVITE_LINK.value,
+            "invite_hash": invite_link.hash,
         },
         context={"request": request},
     )
     # monkey patch the get_user_info method to return the mock user data
     serializer.get_user_info = lambda: {"email": user_email}
+
+    serializer.is_valid(raise_exception=True)
+
+    # When
+    user = serializer.save()
+
+    # Then
+    assert user
+
+
+@pytest.mark.parametrize(
+    "serializer_class", (GithubLoginSerializer, GithubLoginSerializer)
+)
+def test_OAuthLoginSerializer_allows_login_if_allow_registration_without_invite_is_false(
+    settings: SettingsWrapper,
+    rf: RequestFactory,
+    mocker: MockerFixture,
+    admin_user: FFAdminUser,
+    serializer_class: Type[OAuthLoginSerializer],
+):
+    # Given
+    settings.ALLOW_REGISTRATION_WITHOUT_INVITE = False
+
+    request = rf.post("/api/v1/auth/users/")
+
+    serializer = serializer_class(
+        data={"access_token": "some_token"},
+        context={"request": request},
+    )
+    # monkey patch the get_user_info method to return the mock user data
+    serializer.get_user_info = lambda: {
+        "email": admin_user.email,
+        "github_user_id": "abc123",
+        "google_user_id": "abc123",
+    }
 
     serializer.is_valid(raise_exception=True)
 
