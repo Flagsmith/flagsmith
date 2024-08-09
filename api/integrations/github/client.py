@@ -280,10 +280,6 @@ def create_flagsmith_flag_label(
         ):
             logger.warning("Label already exists")
             return {"message": "Label already exists"}, 200
-        raise
-    except Exception as err:
-        logger.error(f"DEBUG: Other error occurred: {err}")
-        raise
 
 
 def label_github_issue_pr(

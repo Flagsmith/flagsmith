@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 import pytest
 import requests
 import responses
-from django.conf import settings
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from pytest_mock import MockerFixture
@@ -276,6 +275,7 @@ def test_create_github_repository(
         "repository_owner": "repositoryowner",
         "repository_name": "repositoryname",
         "project": project.id,
+        "tagging_enabled": True,
     }
 
     responses.add(
@@ -293,6 +293,53 @@ def test_create_github_repository(
     response = admin_client_new.post(url, data)
 
     # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert GithubRepository.objects.filter(repository_owner="repositoryowner").exists()
+
+
+@responses.activate
+def test_create_github_repository_and_label_already_Existe(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    project: Project,
+    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
+) -> None:
+    # Given
+    mocker_logger = mocker.patch("integrations.github.client.logger")
+
+    data = {
+        "github_configuration": github_configuration.id,
+        "repository_owner": "repositoryowner",
+        "repository_name": "repositoryname",
+        "project": project.id,
+        "tagging_enabled": True,
+    }
+
+    mock_response = {
+        "message": "Validation Failed",
+        "errors": [{"resource": "Label", "code": "already_exists", "field": "name"}],
+        "documentation_url": "https://docs.github.com/rest/issues/labels#create-a-label",
+        "status": "422",
+    }
+
+    responses.add(
+        method="POST",
+        url=f"{GITHUB_API_URL}repos/repositoryowner/repositoryname/labels",
+        status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        json=mock_response,
+    )
+
+    url = reverse(
+        "api-v1:organisations:repositories-list",
+        args=[organisation.id, github_configuration.id],
+    )
+    # When
+    response = admin_client_new.post(url, data)
+
+    # Then
+    mocker_logger.warning.assert_called_once_with("Label already exists")
     assert response.status_code == status.HTTP_201_CREATED
     assert GithubRepository.objects.filter(repository_owner="repositoryowner").exists()
 
@@ -655,9 +702,9 @@ def test_verify_github_webhook_payload_returns_false_on_no_signature_header() ->
 def test_github_webhook_delete_installation(
     api_client: APIClient,
     github_configuration: GithubConfiguration,
+    set_github_webhook_secret,
 ) -> None:
     # Given
-    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
     url = reverse("api-v1:github-webhook")
 
     # When
@@ -680,9 +727,9 @@ def test_github_webhook_merged_a_pull_request(
     github_configuration: GithubConfiguration,
     github_repository: GithubRepository,
     feature_external_resource: FeatureExternalResource,
+    set_github_webhook_secret,
 ) -> None:
     # Given
-    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
     url = reverse("api-v1:github-webhook")
 
     # When
@@ -703,9 +750,9 @@ def test_github_webhook_merged_a_pull_request(
 def test_github_webhook_without_installation_id(
     api_client: APIClient,
     mocker: MockerFixture,
+    set_github_webhook_secret,
 ) -> None:
     # Given
-    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
     url = reverse("api-v1:github-webhook")
     mocker_logger = mocker.patch("integrations.github.github.logger")
 
@@ -729,9 +776,9 @@ def test_github_webhook_with_non_existing_installation(
     api_client: APIClient,
     github_configuration: GithubConfiguration,
     mocker: MockerFixture,
+    set_github_webhook_secret,
 ) -> None:
     # Given
-    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
     url = reverse("api-v1:github-webhook")
     mocker_logger = mocker.patch("integrations.github.github.logger")
 
@@ -753,9 +800,9 @@ def test_github_webhook_with_non_existing_installation(
 
 def test_github_webhook_fails_on_signature_header_missing(
     github_configuration: GithubConfiguration,
+    set_github_webhook_secret,
 ) -> None:
     # Given
-    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
     url = reverse("api-v1:github-webhook")
 
     # When
@@ -775,9 +822,9 @@ def test_github_webhook_fails_on_signature_header_missing(
 
 def test_github_webhook_fails_on_bad_signature_header_missing(
     github_configuration: GithubConfiguration,
+    set_github_webhook_secret,
 ) -> None:
     # Given
-    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
     url = reverse("api-v1:github-webhook")
 
     # When
@@ -798,9 +845,9 @@ def test_github_webhook_fails_on_bad_signature_header_missing(
 
 def test_github_webhook_bypass_event(
     github_configuration: GithubConfiguration,
+    set_github_webhook_secret,
 ) -> None:
     # Given
-    settings.GITHUB_WEBHOOK_SECRET = WEBHOOK_SECRET
     url = reverse("api-v1:github-webhook")
 
     # When
