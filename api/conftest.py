@@ -1137,3 +1137,10 @@ def inspecting_handler() -> logging.Handler:
             self.messages.append(self.format(record))
 
     return InspectingHandler()
+
+
+@pytest.fixture
+def set_github_webhook_secret() -> None:
+    from django.conf import settings
+
+    settings.GITHUB_WEBHOOK_SECRET = "secret-key"
