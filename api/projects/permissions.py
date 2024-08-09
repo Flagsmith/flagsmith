@@ -4,6 +4,7 @@ from django.db.models import Model
 from rest_framework.exceptions import APIException, PermissionDenied
 from rest_framework.permissions import BasePermission, IsAuthenticated
 
+from e2etests.permissions import E2ETestPermissionMixin
 from organisations.models import Organisation
 from organisations.permissions.permissions import CREATE_PROJECT
 from projects.models import Project
@@ -31,11 +32,16 @@ PROJECT_PERMISSIONS = [
 ]
 
 
-class ProjectPermissions(IsAuthenticated):
+class ProjectPermissions(E2ETestPermissionMixin, IsAuthenticated):
     def has_permission(self, request, view):
         """Check if user has permission to list / create project"""
         if not super().has_permission(request, view):
             return False
+        elif (
+            super().has_permission(request, view)
+            and getattr(request, "is_e2e", False) is True
+        ):
+            return True
 
         if view.action == "create" and request.user.belongs_to(
             int(request.data.get("organisation"))
@@ -48,6 +54,7 @@ class ProjectPermissions(IsAuthenticated):
             subscription_metadata = (
                 organisation.subscription.get_subscription_metadata()
             )
+
             total_projects_created = Project.objects.filter(
                 organisation=organisation
             ).count()
