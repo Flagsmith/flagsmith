@@ -35,8 +35,7 @@ def get_usage_data(
 ) -> list[UsageData]:
     now = timezone.now()
 
-    date_stop = date_start = None
-    period_starts_at = period_ends_at = None
+    date_start = date_stop = None
 
     match period:
         case constants.CURRENT_BILLING_PERIOD:
@@ -47,10 +46,8 @@ def get_usage_data(
                 days=30
             )
             month_delta = relativedelta(now, starts_at).months
-            period_starts_at = relativedelta(months=month_delta) + starts_at
-            period_ends_at = now
-            date_start = f"-{(now - period_starts_at).days}d"
-            date_stop = "now()"
+            date_start = relativedelta(months=month_delta) + starts_at
+            date_stop = now
 
         case constants.PREVIOUS_BILLING_PERIOD:
             if not getattr(organisation, "subscription_information_cache", None):
@@ -61,16 +58,12 @@ def get_usage_data(
             )
             month_delta = relativedelta(now, starts_at).months - 1
             month_delta += relativedelta(now, starts_at).years * 12
-            period_starts_at = relativedelta(months=month_delta) + starts_at
-            period_ends_at = relativedelta(months=month_delta + 1) + starts_at
-            date_start = f"-{(now - period_starts_at).days}d"
-            date_stop = f"-{(now - period_ends_at).days}d"
+            date_start = relativedelta(months=month_delta) + starts_at
+            date_stop = relativedelta(months=month_delta + 1) + starts_at
 
         case constants.NINETY_DAY_PERIOD:
-            period_starts_at = now - relativedelta(days=90)
-            period_ends_at = now
-            date_start = "-90d"
-            date_stop = "now()"
+            date_start = now - relativedelta(days=90)
+            date_stop = now
 
     if settings.USE_POSTGRES_FOR_ANALYTICS:
         kwargs = {
@@ -79,10 +72,10 @@ def get_usage_data(
             "project_id": project_id,
         }
 
-        if period_starts_at:
-            assert period_ends_at
-            kwargs["date_start"] = period_starts_at
-            kwargs["date_stop"] = period_ends_at
+        if date_start:
+            assert date_stop
+            kwargs["date_start"] = date_start
+            kwargs["date_stop"] = date_stop
 
         return get_usage_data_from_local_db(**kwargs)
 

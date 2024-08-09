@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from app_analytics.influxdb_wrapper import get_current_api_usage
 from django.conf import settings
-from django.db.models import F, Max
+from django.db.models import F, Max, Q
 from django.utils import timezone
 from task_processor.decorators import (
     register_recurring_task,
@@ -22,6 +22,7 @@ from organisations.models import (
     Organisation,
     OrganisationAPIBilling,
     OrganisationAPIUsageNotification,
+    OrganisationBreachedGracePeriod,
     Subscription,
 )
 from organisations.subscriptions.constants import FREE_PLAN_ID
@@ -191,7 +192,7 @@ def charge_for_api_call_count_overages():
             continue
 
         subscription_cache = organisation.subscription_information_cache
-        api_usage = get_current_api_usage(organisation.id, "30d")
+        api_usage = get_current_api_usage(organisation.id)
 
         # Grace period for organisations < 200% of usage.
         if api_usage / subscription_cache.allowed_30d_api_calls < 2.0:
@@ -243,13 +244,22 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
     Since free plans don't have predefined subscription periods, we
     use a rolling thirty day period to filter them.
     """
-    grace_period = timezone.now() - timedelta(days=API_USAGE_GRACE_PERIOD)
-    month_start = timezone.now() - timedelta(30)
+    now = timezone.now()
+    grace_period = now - timedelta(days=API_USAGE_GRACE_PERIOD)
+    month_start = now - timedelta(30)
     queryset = (
         OrganisationAPIUsageNotification.objects.filter(
-            notified_at__gt=month_start,
-            notified_at__lt=grace_period,
-            percent_usage__gte=100,
+            Q(
+                notified_at__gte=month_start,
+                notified_at__lte=grace_period,
+                percent_usage__gte=100,
+            )
+            | Q(
+                notified_at__gte=month_start,
+                notified_at__lte=now,
+                percent_usage__gte=100,
+                organisation__breached_grace_period__isnull=False,
+            )
         )
         .values("organisation")
         .annotate(max_value=Max("percent_usage"))
@@ -293,8 +303,10 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
         if not organisation.has_subscription_information_cache():
             continue
 
+        OrganisationBreachedGracePeriod.objects.get_or_create(organisation=organisation)
+
         subscription_cache = organisation.subscription_information_cache
-        api_usage = get_current_api_usage(organisation.id, "30d")
+        api_usage = get_current_api_usage(organisation.id)
         if api_usage / subscription_cache.allowed_30d_api_calls < 1.0:
             logger.info(
                 f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."
