@@ -38,7 +38,6 @@ import OrganisationsPage from './components/pages/OrganisationsPage'
 import UsersAndPermissionsPage from './components/pages/UsersAndPermissionsPage'
 import ProjectRedirectPage from './components/pages/ProjectRedirectPage'
 import SDKKeysPage from './components/SDKKeysPage'
-import IdentitiesPage from 'components/IdentitiesPage'
 import { ParameterizedRoute } from './components/base/higher-order/ParameterizedRoute'
 import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPage'
 
@@ -69,7 +68,6 @@ export const routes = {
   'environment-settings':
     '/project/:projectId/environment/:environmentId/settings',
   'sdk-keys': '/project/:projectId/environment/:environmentId/sdk-keys',
-  'identities': '/project/:projectId/environment/:environmentId/sdk-identities',
   'integrations': '/project/:projectId/integrations',
   'users': '/project/:projectId/environment/:environmentId/users',
   'user-id': '/project/:projectId/environment/:environmentId/users/:identity',
@@ -154,11 +152,6 @@ export default (
         path={routes['sdk-keys']}
         exact
         component={SDKKeysPage}
-      />
-      <ParameterizedRoute
-        path={routes['identities']}
-        exact
-        component={IdentitiesPage}
       />
       <ParameterizedRoute
         path={routes['integrations']}
