@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from rest_framework import serializers
 
@@ -6,6 +7,7 @@ from environments.identities.traits.constants import (
     ACCEPTED_TRAIT_VALUE_TYPES,
     TRAIT_STRING_VALUE_MAX_LENGTH,
 )
+from environments.sdk.types import SDKTraitValueData
 from features.value_types import STRING
 
 logger = logging.getLogger(__name__)
@@ -16,7 +18,7 @@ class TraitValueField(serializers.Field):
     Custom field to extract the type of the field on deserialization.
     """
 
-    def to_internal_value(self, data):
+    def to_internal_value(self, data: Any) -> SDKTraitValueData:
         data_type = type(data).__name__
 
         if data_type not in ACCEPTED_TRAIT_VALUE_TYPES:
@@ -28,7 +30,7 @@ class TraitValueField(serializers.Field):
             )
         return {"type": data_type, "value": data}
 
-    def to_representation(self, value):
+    def to_representation(self, value: Any) -> Any:
         return_value = value.get("value") if isinstance(value, dict) else value
 
         if return_value is None:

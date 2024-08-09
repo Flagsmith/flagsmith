@@ -309,6 +309,7 @@ class SDKIdentities(SDKAPIView):
         serializer = serializer_class(
             {
                 "flags": all_feature_states,
+                "identifier": identity.identifier,
                 "traits": identity.identity_traits.all(),
             },
             context=self.get_serializer_context(),
