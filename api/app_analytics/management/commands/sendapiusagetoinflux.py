@@ -101,3 +101,5 @@ class Command(BaseCommand):
 
         write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
         write_api.write(bucket=bucket_name, record=record)
+
+        self.stdout.write(self.style.SUCCESS("Successfully sent data to InfluxDB"))
