@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import BooleanField, ExpressionWrapper, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -17,6 +18,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 from rest_framework.viewsets import GenericViewSet
 
+from audit.tasks import create_version_rolled_back_audit_log_records
 from environments.models import Environment
 from environments.permissions.constants import VIEW_ENVIRONMENT
 from features.models import Feature, FeatureState
@@ -37,6 +39,9 @@ from features.versioning.serializers import (
     EnvironmentFeatureVersionQuerySerializer,
     EnvironmentFeatureVersionRetrieveSerializer,
     EnvironmentFeatureVersionSerializer,
+)
+from features.versioning.versioning_service import (
+    get_current_live_environment_feature_version,
 )
 from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser
@@ -138,6 +143,38 @@ class EnvironmentFeatureVersionViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save(published_by=request.user)
         return Response(serializer.data)
+
+    @action(detail=True, methods=["POST"])
+    def rollback_to(self, request: Request, **kwargs) -> Response:
+        version_to_rollback_to: EnvironmentFeatureVersion = self.get_object()
+        current_version: EnvironmentFeatureVersion = (
+            get_current_live_environment_feature_version(
+                feature_id=version_to_rollback_to.feature_id,
+                environment_id=version_to_rollback_to.environment_id,
+            )
+        )
+
+        version_to_rollback_to.rollback_to()
+        current_version.rollback_from()
+
+        with transaction.atomic():
+            version_to_rollback_to.save()
+            current_version.save()
+
+        create_version_rolled_back_audit_log_records.delay(
+            kwargs={
+                "rolled_back_from_uuid": current_version.uuid,
+                "rolled_back_to_uuid": version_to_rollback_to.uuid,
+                "user_id": getattr(request.user, "id", None),
+                "api_key_id": (
+                    request.master_api_key.id
+                    if hasattr(request.user, "master_api_key")
+                    else None
+                ),
+            }
+        )
+
+        return Response()
 
 
 class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):

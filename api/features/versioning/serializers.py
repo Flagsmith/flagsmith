@@ -59,6 +59,7 @@ class EnvironmentFeatureVersionSerializer(serializers.ModelSerializer):
             "published_by",
             "created_by",
             "description",
+            "rolled_back_at",
         )
         read_only_fields = (
             "updated_at",
@@ -70,6 +71,7 @@ class EnvironmentFeatureVersionSerializer(serializers.ModelSerializer):
             "created_by",
             "feature",
             "environment",
+            "rolled_back_at",
         )
 
 
