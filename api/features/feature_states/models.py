@@ -23,7 +23,7 @@ class AbstractBaseFeatureValueModel(models.Model):
     )
     boolean_value = models.BooleanField(null=True, blank=True)
     integer_value = models.IntegerField(null=True, blank=True)
-    string_value = models.CharField(null=True, max_length=20000, blank=True)
+    string_value = models.CharField(null=True, max_length=2_000_000, blank=True)
 
     @property
     def value(self) -> typing.Union[str, int, bool]:
