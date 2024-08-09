@@ -23,6 +23,7 @@ from organisations.subscriptions.constants import (
     MAX_SEATS_IN_FREE_PLAN,
     TRIAL_SUBSCRIPTION_ID,
     XERO,
+    SubscriptionPlanFamily,
 )
 from organisations.subscriptions.exceptions import (
     SubscriptionDoesNotSupportSeatUpgrade,
@@ -551,3 +552,25 @@ def test_reset_of_api_notifications(organisation: Organisation) -> None:
     # Then
     assert OrganisationAPIUsageNotification.objects.count() == 1
     assert OrganisationAPIUsageNotification.objects.first() == oapiun
+
+
+@pytest.mark.parametrize(
+    "plan_id, expected_plan_family",
+    (
+        ("free", SubscriptionPlanFamily.FREE),
+        ("enterprise", SubscriptionPlanFamily.ENTERPRISE),
+        ("enterprise-semiannual", SubscriptionPlanFamily.ENTERPRISE),
+        ("scale-up", SubscriptionPlanFamily.SCALE_UP),
+        ("scaleup", SubscriptionPlanFamily.SCALE_UP),
+        ("scale-up-v2", SubscriptionPlanFamily.SCALE_UP),
+        ("scale-up-v2-annual", SubscriptionPlanFamily.SCALE_UP),
+        ("startup", SubscriptionPlanFamily.START_UP),
+        ("start-up", SubscriptionPlanFamily.START_UP),
+        ("start-up-v2", SubscriptionPlanFamily.START_UP),
+        ("start-up-v2-annual", SubscriptionPlanFamily.START_UP),
+    ),
+)
+def test_subscription_plan_family(
+    plan_id: str, expected_plan_family: SubscriptionPlanFamily
+) -> None:
+    assert Subscription(plan=plan_id).subscription_plan_family == expected_plan_family

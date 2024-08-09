@@ -44,6 +44,7 @@ from organisations.subscriptions.constants import (
     SUBSCRIPTION_PAYMENT_METHODS,
     TRIAL_SUBSCRIPTION_ID,
     XERO,
+    SubscriptionPlanFamily,
 )
 from organisations.subscriptions.exceptions import (
     SubscriptionDoesNotSupportSeatUpgrade,
@@ -256,7 +257,11 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @property
     def is_free_plan(self) -> bool:
-        return self.plan == FREE_PLAN_ID
+        return self.subscription_plan_family == SubscriptionPlanFamily.FREE
+
+    @property
+    def subscription_plan_family(self) -> SubscriptionPlanFamily:
+        return SubscriptionPlanFamily.get_by_plan_id(self.plan)
 
     @hook(AFTER_SAVE, when="plan", has_changed=True)
     def update_api_limit_access_block(self):
