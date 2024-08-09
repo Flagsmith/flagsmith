@@ -3,23 +3,26 @@ import MyRepositoriesSelect from './MyRepositoriesSelect'
 import ExternalResourcesTable, {
   ExternalResourcesTableBase,
 } from './ExternalResourcesTable'
-import { ExternalResource } from 'common/types/responses'
+import { ExternalResource, GithubResource } from 'common/types/responses'
 import { GitHubResourceSelectProvider } from './GitHubResourceSelectProvider'
 import { useCreateExternalResourceMutation } from 'common/services/useExternalResource'
 import Constants from 'common/constants'
 import Button from './base/forms/Button'
 import GitHubResourcesSelect from './GitHubResourcesSelect'
 import _ from 'lodash'
+import AppActions from 'common/dispatcher/app-actions'
 
 type ExternalResourcesLinkTabType = {
   githubId: string
   organisationId: string
   featureId: string
   projectId: string
+  environmentId: string
 }
 
 type AddExternalResourceRowType = ExternalResourcesTableBase & {
   linkedExternalResources?: ExternalResource[]
+  environmentId: string
 }
 
 type GitHubStatusType = {
@@ -28,6 +31,7 @@ type GitHubStatusType = {
 }
 
 const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
+  environmentId,
   featureId,
   linkedExternalResources,
   organisationId,
@@ -36,8 +40,9 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
   repoOwner,
 }) => {
   const [externalResourceType, setExternalResourceType] = useState<string>('')
-  const [featureExternalResource, setFeatureExternalResource] =
-    useState<string>('')
+  const [featureExternalResource, setFeatureExternalResource] = useState<
+    GithubResource | undefined
+  >(undefined)
   const [lastSavedResource, setLastSavedResource] = useState<
     string | undefined
   >(undefined)
@@ -68,11 +73,13 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
               repoOwner={repoOwner}
               repoName={repoName}
               githubResource={
-                (
-                  _.find(_.values(Constants.resourceTypes), {
-                    label: externalResourceType!,
-                  }) as any
-                ).resourceType || ''
+                (externalResourceType &&
+                  (
+                    _.find(_.values(Constants.resourceTypes), {
+                      label: externalResourceType!,
+                    }) as any
+                  ).resourceType) ||
+                ''
               }
             >
               <GitHubResourcesSelect
@@ -94,19 +101,29 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
                     key as keyof typeof Constants.resourceTypes
                   ].label === externalResourceType,
               )
-              createExternalResource({
-                body: {
-                  feature: parseInt(featureId),
-                  metadata: {},
-                  type: type!,
-                  url: featureExternalResource,
-                },
-                feature_id: featureId,
-                project_id: projectId,
-              }).then(() => {
-                toast('External Resource Added')
-                setLastSavedResource(featureExternalResource)
-              })
+              if (type && featureExternalResource) {
+                createExternalResource({
+                  body: {
+                    feature: parseInt(featureId),
+                    metadata: {
+                      'draft': featureExternalResource.draft,
+                      'merged': featureExternalResource.merged,
+                      'state': featureExternalResource.state,
+                      'title': featureExternalResource.title,
+                    },
+                    type: type,
+                    url: featureExternalResource.html_url,
+                  },
+                  feature_id: featureId,
+                  project_id: projectId,
+                }).then(() => {
+                  toast('External Resource Added')
+                  setLastSavedResource(featureExternalResource.html_url)
+                  AppActions.refreshFeatures(parseInt(projectId), environmentId)
+                })
+              } else {
+                throw new Error('Invalid External Resource Data')
+              }
             }}
           >
             Save
@@ -118,6 +135,7 @@ const AddExternalResourceRow: FC<AddExternalResourceRowType> = ({
 }
 
 const ExternalResourcesLinkTab: FC<ExternalResourcesLinkTabType> = ({
+  environmentId,
   featureId,
   githubId,
   organisationId,
@@ -157,6 +175,7 @@ const ExternalResourcesLinkTab: FC<ExternalResourcesLinkTabType> = ({
         />
         {repoName && repoOwner && (
           <AddExternalResourceRow
+            environmentId={environmentId}
             featureId={featureId}
             projectId={projectId}
             organisationId={organisationId}

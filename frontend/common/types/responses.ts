@@ -115,7 +115,7 @@ export type ExternalResource = {
   url: string
   type: string
   project?: number
-  metadata?: { state?: string; title?: string }
+  metadata?: { [key: string]: string | number | boolean }
   feature: number
 }
 
@@ -160,12 +160,14 @@ export type LaunchDarklyProjectImport = {
   project: number
 }
 
-export type GithubResources = {
+export type GithubResource = {
   html_url: string
   id: number
   number: number
   title: string
   state: string
+  merged: boolean
+  draft: boolean
 }
 
 export type GithubPaginatedRepos<T> = {
@@ -187,6 +189,7 @@ export type GithubRepository = {
   project: number
   repository_owner: string
   repository_name: string
+  tagging_enabled: boolean
 }
 
 export type githubIntegration = {
@@ -685,7 +688,7 @@ export type Res = {
   externalResource: PagedResponse<ExternalResource>
   githubIntegrations: PagedResponse<githubIntegration>
   githubRepository: PagedResponse<GithubRepository>
-  githubResources: GitHubPagedResponse<GithubResources>
+  githubResources: GitHubPagedResponse<GithubResource>
   githubRepos: GithubPaginatedRepos<Repository>
   segmentPriorities: {}
   featureSegment: FeatureState['feature_segment']
