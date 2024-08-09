@@ -1,3 +1,5 @@
+from django.db.models import QuerySet
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.exceptions import (
@@ -82,3 +84,32 @@ class ProjectIntegrationBaseViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         project_id = self.kwargs["project_pk"]
         serializer.save(project_id=project_id)
+
+
+class OrganisationIntegrationBaseViewSet(viewsets.ModelViewSet):
+    serializer_class = None
+    pagination_class = None
+    model_class = None
+
+    def get_queryset(self) -> QuerySet:
+        if getattr(self, "swagger_fake_view", False):
+            return self.model_class.objects.none()
+
+        if self.request.user.is_organisation_admin(
+            organisation_id := self.kwargs["organisation_pk"]
+        ):
+            return self.model_class.filter(organisation_id=organisation_id)
+
+        raise Http404()
+
+    def perform_create(self, serializer) -> None:
+        organisation_id = self.kwargs["organisation_pk"]
+        if self.model_class.objects.filter(organisation_id=organisation_id).exists():
+            raise ValidationError(
+                f"{self.model_class.__name__} for this organisation already exists."
+            )
+        serializer.save(organisation_id=organisation_id)
+
+    def perform_update(self, serializer) -> None:
+        organisation_id = self.kwargs["organisation_pk"]
+        serializer.save(organisation_id=organisation_id)

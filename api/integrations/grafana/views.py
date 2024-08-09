@@ -1,9 +1,24 @@
-from integrations.common.views import ProjectIntegrationBaseViewSet
-from integrations.grafana.models import GrafanaConfiguration
-from integrations.grafana.serializers import GrafanaConfigurationSerializer
+from integrations.common.views import (
+    OrganisationIntegrationBaseViewSet,
+    ProjectIntegrationBaseViewSet,
+)
+from integrations.grafana.models import (
+    GrafanaOrganisationConfiguration,
+    GrafanaProjectConfiguration,
+)
+from integrations.grafana.serializers import (
+    GrafanaOrganisationConfigurationSerializer,
+    GrafanaProjectConfigurationSerializer,
+)
 
 
-class GrafanaConfigurationViewSet(ProjectIntegrationBaseViewSet):
-    serializer_class = GrafanaConfigurationSerializer
+class GrafanaProjectConfigurationViewSet(ProjectIntegrationBaseViewSet):
+    serializer_class = GrafanaProjectConfigurationSerializer
     pagination_class = None  # set here to ensure documentation is correct
-    model_class = GrafanaConfiguration
+    model_class = GrafanaProjectConfiguration
+
+
+class GrafanaOrganisationConfigurationViewSet(OrganisationIntegrationBaseViewSet):
+    serializer_class = GrafanaOrganisationConfigurationSerializer
+    pagination_class = None  # set here to ensure documentation is correct
+    model_class = GrafanaOrganisationConfiguration

@@ -16,6 +16,7 @@ from integrations.github.views import (
     fetch_repo_contributors,
     fetch_repositories,
 )
+from integrations.grafana.views import GrafanaProjectConfigurationViewSet
 from metadata.views import MetaDataModelFieldViewSet
 from organisations.views import (
     OrganisationAPIUsageNotificationView,
@@ -75,6 +76,12 @@ organisations_router.register(
 
 organisations_router.register(
     "audit", OrganisationAuditLogViewSet, basename="audit-log"
+)
+
+organisations_router.register(
+    r"integrations/grafana",
+    GrafanaProjectConfigurationViewSet,
+    basename="integrations-grafana",
 )
 
 organisations_router.register(

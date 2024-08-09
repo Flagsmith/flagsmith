@@ -34,3 +34,7 @@ class BaseEnvironmentIntegrationModelSerializer(_BaseIntegrationModelSerializer)
 
 class BaseProjectIntegrationModelSerializer(_BaseIntegrationModelSerializer):
     one_to_one_field_name = "project_id"
+
+
+class BaseOrganisationIntegrationModelSerializer(_BaseIntegrationModelSerializer):
+    one_to_one_field_name = "organisation_id"

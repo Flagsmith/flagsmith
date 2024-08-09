@@ -4,7 +4,7 @@ from pytest_mock import MockerFixture
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from audit.signals import call_webhooks, send_audit_log_event_to_grafana
-from integrations.grafana.models import GrafanaConfiguration
+from integrations.grafana.models import GrafanaProjectConfiguration
 from organisations.models import Organisation, OrganisationWebhook
 from projects.models import Project
 from webhooks.webhooks import WebhookEventType
@@ -90,7 +90,7 @@ def test_send_audit_log_event_to_grafana__project_grafana_config__calls_expected
     project: Project,
 ) -> None:
     # Given
-    grafana_config = GrafanaConfiguration(base_url="test.com", api_key="test")
+    grafana_config = GrafanaProjectConfiguration(base_url="test.com", api_key="test")
     project.grafana_config = grafana_config
     audit_log_record = AuditLog.objects.create(
         project=project,

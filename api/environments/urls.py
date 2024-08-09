@@ -14,7 +14,7 @@ from features.views import (
 )
 from integrations.amplitude.views import AmplitudeConfigurationViewSet
 from integrations.dynatrace.views import DynatraceConfigurationViewSet
-from integrations.grafana.views import GrafanaConfigurationViewSet
+from integrations.grafana.views import GrafanaProjectConfigurationViewSet
 from integrations.heap.views import HeapConfigurationViewSet
 from integrations.mixpanel.views import MixpanelConfigurationViewSet
 from integrations.rudderstack.views import RudderstackConfigurationViewSet
@@ -83,7 +83,7 @@ environments_router.register(
 )
 environments_router.register(
     r"integrations/grafana",
-    GrafanaConfigurationViewSet,
+    GrafanaProjectConfigurationViewSet,
     basename="integrations-grafana",
 )
 environments_router.register(
