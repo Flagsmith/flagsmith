@@ -238,32 +238,45 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         return Response(serializer.data, status=200)
 
-    @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer(many=True))
-    @action(detail=False, methods=["PUT"], url_path="bulk")
-    def bulk_create(self, request):
-        try:
-            if not request.environment.trait_persistence_allowed(request):
-                raise BadRequest("Unable to set traits with client key.")
+    def _update_traits(self, request):
 
-            # endpoint allows users to delete existing traits by sending null values
-            # for the trait value so we need to filter those out here
-            traits = []
-            delete_filter_query = Q()
+        identities = {trait["identity"]["identifier"] for trait in request.data}
 
-            for trait in request.data:
-                if trait.get("trait_value") is None:
-                    delete_filter_query = delete_filter_query | Q(
-                        trait_key=trait.get("trait_key"),
-                        identity__identifier=trait["identity"]["identifier"],
-                        identity__environment=request.environment,
-                    )
-                else:
-                    traits.append(trait)
+        existing_traits = Trait.objects.filter(
+            identity__identifier__in=identities,
+            identity__environment=request.environment,
+        )
 
-            if delete_filter_query:
-                Trait.objects.filter(delete_filter_query).delete()
+        # Map to easily access existing traits
+        existing_traits_map = {
+            (trait.identity.identifier, trait.trait_key): trait
+            for trait in existing_traits
+        }
 
-            serializer = self.get_serializer(data=traits, many=True)
+        updated_traits = []
+        delete_filter_query = Q()
+
+        for trait in request.data:
+            trait_key = trait.get("trait_key")
+            identifier = trait["identity"]["identifier"]
+
+            if trait.get("trait_value") is None:
+                delete_filter_query = delete_filter_query | Q(
+                    trait_key=trait_key,
+                    identity__identifier=identifier,
+                    identity__environment=request.environment,
+                )
+                continue
+
+            existing_trait = existing_traits_map.get((identifier, trait_key))
+            if not existing_trait or existing_trait.trait_value != trait["trait_value"]:
+                updated_traits.append(trait)
+
+        if delete_filter_query:
+            Trait.objects.filter(delete_filter_query).delete()
+
+        if len(updated_traits) > 0:
+            serializer = self.get_serializer(data=updated_traits, many=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
@@ -273,11 +286,37 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
                         request.method,
                         dict(request.headers),
                         request.environment.project.id,
-                        request.data,
+                        updated_traits,
                     )
                 )
 
-            return Response(serializer.data, status=200)
+    @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer(many=True))
+    @action(detail=False, methods=["PUT"], url_path="bulk")
+    def bulk_create(self, request):
+        try:
+            if not request.environment.trait_persistence_allowed(request):
+                raise BadRequest("Unable to set traits with client key.")
+
+            # endpoint allows users to delete existing traits by sending null values
+            # for the trait value so we need to filter those out here
+
+            self._update_traits(request)
+
+            identities = {trait["identity"]["identifier"] for trait in request.data}
+
+            all_traits = Trait.objects.filter(
+                identity__identifier__in=identities,
+                identity__environment=request.environment,
+            )
+
+            return Response(
+                [
+                    *SDKCreateUpdateTraitSerializer(
+                        instance=all_traits, many=True
+                    ).data,
+                ],
+                status=status.HTTP_200_OK,
+            )
 
         except (TypeError, AttributeError) as excinfo:
             logger.error("Invalid request data: %s" % str(excinfo))
