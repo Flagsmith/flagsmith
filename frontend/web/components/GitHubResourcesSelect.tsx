@@ -116,11 +116,11 @@ const CustomControl = ({
 }: {
   children: React.ReactNode
 }) => {
-  const { refetchData } = useGitHubResourceSelectProvider()
+  const { refresh } = useGitHubResourceSelectProvider()
   return (
     <components.Control {...props}>
       {children}
-      <Button style={{ marginLeft: 'auto' }} theme='icon' onClick={refetchData}>
+      <Button style={{ marginLeft: 'auto' }} theme='icon' onClick={refresh}>
         <Icon name='refresh' />
       </Button>
     </components.Control>

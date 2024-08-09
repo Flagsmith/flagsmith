@@ -24,7 +24,7 @@ type GitHubResourceSelectContextType = {
   loadingCombinedData: boolean
   nextPage?: string
   searchItems: (search: string) => void
-  refetchData: () => void
+  refresh: () => void
 }
 
 const GitHubResourceSelectContext = createContext<
@@ -45,7 +45,7 @@ export const GitHubResourceSelectProvider: FC<
     isLoading,
     loadMore,
     loadingCombinedData,
-    refetchData,
+    refresh,
     searchItems,
   } = useInfiniteScroll<Req['getGithubResources'], Res['githubResources']>(
     useGetGithubResourcesQuery,
@@ -86,7 +86,7 @@ export const GitHubResourceSelectProvider: FC<
         loadMore,
         loadingCombinedData,
         nextPage: next,
-        refetchData,
+        refresh,
         searchItems,
       }}
     >

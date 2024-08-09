@@ -55,12 +55,9 @@ const useInfiniteScroll = <
   }, throttle)
 
   const refresh = useCallback(() => {
-    setLocalPage(1)
-  }, [])
-
-  const refetchData = useCallback(() => {
     queryResponse.refetch().then((newData) => {
       setCombinedData(newData as unknown as RES)
+      setLocalPage(1)
     })
   }, [queryResponse])
 
@@ -76,7 +73,7 @@ const useInfiniteScroll = <
     isLoading: queryResponse.isLoading,
     loadMore,
     loadingCombinedData: loadingCombinedData && queryResponse.isFetching,
-    refetchData,
+    // refetchData,
     refresh,
     response: queryResponse,
     searchItems,
