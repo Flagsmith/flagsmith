@@ -194,9 +194,9 @@ def create_version_rolled_back_audit_log_records(
     user_id: int | None,
     api_key_id: int | None,
 ) -> None:
-    rolled_back_from = EnvironmentFeatureVersion.objects.select_related(
-        "feature", "feature"
-    ).get(uuid=rolled_back_from_uuid)
+    rolled_back_from = EnvironmentFeatureVersion.objects.select_related("feature").get(
+        uuid=rolled_back_from_uuid
+    )
     rolled_back_to = EnvironmentFeatureVersion.objects.select_related("feature").get(
         uuid=rolled_back_to_uuid
     )
