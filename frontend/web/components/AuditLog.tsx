@@ -10,6 +10,7 @@ import Tag from './tags/Tag'
 import PanelSearch from './PanelSearch'
 import JSONReference from './JSONReference'
 import moment from 'moment'
+import PlanBasedBanner from './PlanBasedAccess'
 
 type AuditLogType = {
   environmentId: string
@@ -159,18 +160,6 @@ const AuditLog: FC<AuditLogType> = (props) => {
 
   const { env: envFilter } = Utils.fromParam()
 
-  const hasRbacPermission = Utils.getPlansPermission('AUDIT')
-  if (!hasRbacPermission) {
-    return (
-      <div>
-        <div className='text-center'>
-          To access this feature please upgrade your account to scaleup or
-          higher.
-        </div>
-      </div>
-    )
-  }
-
   return (
     <PanelSearch
       id='messages-list'
@@ -230,4 +219,14 @@ const AuditLog: FC<AuditLogType> = (props) => {
   )
 }
 
-export default withRouter(AuditLog as any)
+type AuditLogWrapperType = AuditLogType
+
+const AuditLogWrapper: FC<AuditLogWrapperType> = (props) => {
+  return (
+    <PlanBasedBanner feature={'AUDIT'} theme={'page'}>
+      <AuditLog {...props} />
+    </PlanBasedBanner>
+  )
+}
+
+export default withRouter(AuditLogWrapper as any)

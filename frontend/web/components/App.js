@@ -578,15 +578,8 @@ const App = class extends Component {
                             id={projectId}
                           >
                             {({ permission }) =>
-                              permission &&
-                              Utils.getPlansPermission('RBAC') && (
+                              permission && (
                                 <NavSubLink
-                                  tooltip={
-                                    !Utils.getPlansPermission('RBAC')
-                                      ? 'This feature is available with our scaleup plan'
-                                      : ''
-                                  }
-                                  disabled={!Utils.getPlansPermission('RBAC')}
                                   icon={<AuditLogIcon />}
                                   id='audit-log-link'
                                   to={`/project/${projectId}/audit-log`}

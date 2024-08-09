@@ -11,6 +11,7 @@ import {
   useDeleteMetadataFieldMutation,
 } from 'common/services/useMetadataField'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
+import PlanBasedBanner from 'components/PlanBasedAccess'
 
 const metadataWidth = [200, 150, 150, 90]
 type MetadataPageType = {
@@ -104,10 +105,10 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
   }
 
   return (
-    <div>
+    <PlanBasedBanner className='mt-4' feature={'METADATA'} theme={'page'}>
       <Row space className='mb-2'>
         <Row>
-          <h5 className='mt-2'>Custom Fields</h5>
+          <h5>Custom Fields</h5>
         </Row>
         <Button className='mt-2' onClick={() => createMetadataField()}>
           {'Create Custom Field'}
@@ -178,7 +179,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
           }
         />
       </FormGroup>
-    </div>
+    </PlanBasedBanner>
   )
 }
 
