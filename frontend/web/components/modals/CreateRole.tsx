@@ -37,6 +37,9 @@ import Button from 'components/base/forms/Button'
 import SettingsButton from 'components/SettingsButton'
 import PermissionsTabs from 'components/PermissionsTabs'
 import AccountStore from 'common/stores/account-store'
+import AddEditTags from 'components/tags/AddEditTags'
+import ProjectFilter from 'components/ProjectFilter'
+import InfoMessage from 'components/InfoMessage'
 
 type TabRef = {
   onClosing: () => Promise<void>
@@ -262,6 +265,8 @@ const CreateRole: FC<CreateRoleType> = ({
     const [roleNameChanged, setRoleNameChanged] = useState<boolean>(false)
     const [roleDescChanged, setRoleDescChanged] = useState<boolean>(false)
     const [roleTagsChanged, setRoleTagsChanged] = useState<boolean>(false)
+    const [project, setProject] = useState<string>('')
+    const [tags, setTags] = useState<number[]>([])
 
     useImperativeHandle(
       ref,
@@ -324,6 +329,7 @@ const CreateRole: FC<CreateRoleType> = ({
           description: roleDesc,
           name: roleName,
           organisation_id: organisationId,
+          tags: tags,
         })
       }
     }
@@ -364,6 +370,50 @@ const CreateRole: FC<CreateRoleType> = ({
           id='description'
           placeholder='E.g. Some role description'
         />
+        {!isEdit && (
+          <InputGroup
+            title={<h5>Permission Tags</h5>}
+            unsaved={roleTagsChanged}
+            component={
+              <>
+                <InfoMessage>
+                  When applying tags to a role, the delete feature and update
+                  feature state permissions will only be valid for features
+                  sharing the same tag, providing more granularity.{' '}
+                  <Button
+                    theme='text'
+                    target='_blank'
+                    href='http://localhost:3000/system-administration/rbac#tags'
+                    className='fw-normal'
+                  >
+                    Learn more.
+                  </Button>
+                </InfoMessage>
+                <div className='my-4'>
+                  <div style={{ width: 250 }}>
+                    <ProjectFilter
+                      organisationId={organisationId!}
+                      onChange={(p) => {
+                        setProject(p)
+                      }}
+                      value={project}
+                    />
+                  </div>
+                  {project && (
+                    <AddEditTags
+                      readOnly={false}
+                      projectId={`${project}`}
+                      value={tags}
+                      onChange={(tags) => {
+                        setTags(tags)
+                      }}
+                    />
+                  )}
+                </div>
+              </>
+            }
+          />
+        )}
         <div className='text-right mb-2'>
           <Button
             onClick={() => save()}
@@ -516,16 +566,9 @@ const CreateRole: FC<CreateRoleType> = ({
         </TabItem>
       </Tabs>
     ) : (
-      <Tabs uncontrolled onChange={changeTab} buttonTheme='text'>
-        <TabItem
-          tabLabel={<Row className='justify-content-center'>General</Row>}
-        >
-          <Tab1 />
-        </TabItem>
-        <TabItem tabLabel={<Row className='justify-content-center'>Tags</Row>}>
-          <div></div>
-        </TabItem>
-      </Tabs>
+      <div className='m-4'>
+        <Tab1 />
+      </div>
     )
   }
 
