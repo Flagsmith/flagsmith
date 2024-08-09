@@ -86,8 +86,8 @@ to log in if they already have an account with the same email address.
 Users who have not yet accepted their invitations are listed in the "Pending invites" section at the bottom of this
 page. From here you can also resend or revoke any pending invitations.
 
-If you are self-hosting Flagsmith, you must [configure an email provider]
-(/deployment/hosting/locally-api#email-environment-variables) before using email invites.
+If you are self-hosting Flagsmith, you must
+[configure an email provider](/deployment/hosting/locally-api#email-environment-variables) before using email invites.
 
 ### Invitation links
 
