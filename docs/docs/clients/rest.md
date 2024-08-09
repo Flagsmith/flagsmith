@@ -53,6 +53,8 @@ administrative area.
 
 For SaaS customers, the URL to hit for this API is [`https://edge.api.flagsmith.com/`](/advanced-use/edge-api).
 
+Our Edge API specification is detailed [here](/edge-api/overview).
+
 ### Private Admin API Endpoints
 
 You can also do things like create new flags, environments, toggle flags or indeed anything that is possible from the
