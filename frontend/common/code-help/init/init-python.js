@@ -1,9 +1,14 @@
+import Constants from 'common/constants'
+
 module.exports = (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT },
 ) => `from flagsmith import Flagsmith
 
-flagsmith = Flagsmith(environment_key="${envId}")
+flagsmith = Flagsmith(environment_key="${envId}"${
+  Constants.isCustomFlagsmithUrl &&
+  `,\n api_url="${Project.flagsmithClientAPI}"\n`
+})
 
 # The method below triggers a network request
 flags = flagsmith.get_environment_flags()

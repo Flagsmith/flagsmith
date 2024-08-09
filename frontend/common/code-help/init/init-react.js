@@ -1,3 +1,5 @@
+import Constants from 'common/constants'
+
 module.exports = (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, NPM_CLIENT },
@@ -9,7 +11,11 @@ export default function App() {
   return (
     &lt;FlagsmithProvider
       options={{
-        environmentID: '${envId}',
+        environmentID: '${envId}',${
+  Constants.isCustomFlagsmithUrl
+    ? `\n        api: '${Project.flagsmithClientAPI}',`
+    : ''
+}
       }}
       flagsmith={flagsmith}&gt;
       {...Your app}
@@ -18,8 +24,8 @@ export default function App() {
 }
 
 // Home Page
-import flagsmith from 'flagsmith';
-import { useFlags, useFlagsmith } from 'flagsmith/react';
+import ${LIB_NAME} from '${NPM_CLIENT}';
+import { useFlags, useFlagsmith } from '${NPM_CLIENT}/react';
 
 export default function HomePage() {
   const flags = useFlags(['${FEATURE_NAME}','${FEATURE_NAME_ALT}']); // only causes re-render if specified flag values / traits change

@@ -1,10 +1,15 @@
+import Constants from 'common/constants'
+
 module.exports = (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT, USER_ID },
   userId,
 ) => `from flagsmith import Flagsmith
 
-flagsmith = Flagsmith(environment_key="${envId}")
+flagsmith = Flagsmith(environment_key="${envId}"${
+  Constants.isCustomFlagsmithUrl &&
+  `,\n api_url="${Project.flagsmithClientAPI}"\n`
+})
 
 # Identify the user
 identity_flags = flagsmith.get_identity_flags(identifier="${

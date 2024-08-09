@@ -1,10 +1,14 @@
+import Constants from 'common/constants'
+
 module.exports = (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT, USER_ID },
   userId,
 ) => `use Flagsmith\\Flagsmith;
 
-$flagsmith = new Flagsmith('${envId}');
+$flagsmith = new Flagsmith('${envId}'${
+  Constants.isCustomFlagsmithUrl && `,\n  '${Project.flagsmithClientAPI}'\n`
+});
 
 // Identify the user
 $flags = $flagsmith->getIdentityFlags('${userId}', $traits);

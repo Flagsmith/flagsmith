@@ -1,3 +1,5 @@
+import Constants from 'common/constants'
+
 module.exports = (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT, USER_ID },
@@ -8,7 +10,10 @@ func application(_ application: UIApplication,
  didFinishLaunchingWithOptions launchOptions:
   [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-  Flagsmith.shared.apiKey = "${envId}"
+  Flagsmith.shared.apiKey = "${envId}"${
+  Constants.isCustomFlagsmithUrl &&
+  `\n  Flagsmith.shared.baseURL = "${Project.flagsmithClientAPI}"\n`
+}
 
   // This will create a user in the dashboard if they don't already exist
   // Check for a feature
