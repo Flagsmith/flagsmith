@@ -1,10 +1,4 @@
-import React, {
-  FC,
-  forwardRef,
-  Ref,
-  useImperativeHandle,
-  useState,
-} from 'react'
+import React, { FC, forwardRef, Ref, useState } from 'react'
 import Icon from './Icon'
 import { EditPermissionsModal } from './EditPermissions'
 import {
@@ -12,7 +6,7 @@ import {
   useGetRoleProjectPermissionsQuery,
 } from 'common/services/useRolePermission'
 import { PermissionLevel } from 'common/types/requests'
-import { Role, User, UserGroup, UserGroupSummary } from 'common/types/responses'
+import { Role, User, UserGroupSummary } from 'common/types/responses'
 import PanelSearch from './PanelSearch'
 import PermissionsSummaryList from './PermissionsSummaryList'
 
@@ -31,6 +25,7 @@ type RolePermissionsListProps = {
   orgId?: string
   user?: User
   group?: UserGroupSummary
+  hasTags?: boolean
 }
 
 export type PermissionsSummaryType = {
@@ -81,9 +76,9 @@ const PermissionsSummary: FC<PermissionsSummaryType> = ({
 }
 
 const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
-  ({ filter, group, level, mainItems, orgId, role, user }, ref) => {
+  ({ filter, group, hasTags, level, mainItems, orgId, role, user }) => {
     const [expandedItems, setExpandedItems] = useState<(string | number)[]>([])
-
+    console.log('DEBUG: hasTags:', hasTags)
     const mainItemsFiltered =
       mainItems &&
       mainItems?.filter((v) => {
@@ -153,6 +148,7 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
                   isGroup={!!group}
                   group={group}
                   user={user}
+                  hasTags={hasTags}
                 />
               )}
             </div>

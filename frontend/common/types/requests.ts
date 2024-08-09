@@ -136,12 +136,13 @@ export type Req = {
     organisation_id: number
     description: string | null
     name: string
+    tags?: number[]
   }
   getRole: { organisation_id: string; role_id: number }
   updateRole: {
     organisation_id: number
     role_id: number
-    body: { description: string | null; name: string }
+    body: { description: string | null; name: string; tags?: number[] }
   }
   deleteRole: { organisation_id: number; role_id: number }
   getRolePermissionEnvironment: {

@@ -98,3 +98,10 @@ Permissions can be assigned at 3 levels: Organisation, Project, and Environment.
 | Create Change Request    | Creating a new Change Request                                   |
 | Approve Change Request   | Approving or denying existing Change Requests                   |
 | View Identities          | Viewing Identities                                              |
+
+### Tags
+
+When tags are applied to a role, the permissions, Delete Feature and Update Feature States, are restricted to the
+features that share the same tag. This allows for greater granularity in permission management, enabling organizations
+to have better control over sets of features. By implementing a tagging system, users can only modify features relevant
+to their work, thereby reducing the risk of unauthorized changes in other areas of the system.

@@ -14,6 +14,11 @@ import Utils from 'common/utils/utils'
 import RolePermissionsList from './RolePermissionsList'
 import ProjectFilter from './ProjectFilter'
 import OrganisationStore from 'common/stores/organisation-store'
+import AddEditTags from './tags/AddEditTags'
+import InputGroup from './base/forms/InputGroup'
+import Button from './base/forms/Button'
+import InfoMessage from './InfoMessage'
+import { useGetRoleQuery, useUpdateRoleMutation } from 'common/services/useRole'
 
 type PermissionsTabsType = {
   orgId?: number
@@ -36,11 +41,24 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
   user,
   value,
 }) => {
+  const { data: roleData } = useGetRoleQuery(
+    {
+      organisation_id: role?.organisation as any,
+      role_id: role?.id as any,
+    },
+    { skip: !role || !orgId },
+  )
   const [searchProject, setSearchProject] = useState<string>('')
   const [searchEnv, setSearchEnv] = useState<string>('')
   const projectData: Project[] = OrganisationStore.getProjects()
   const [project, setProject] = useState<string>('')
   const [environments, setEnvironments] = useState<Environment[]>([])
+  const [tags, setTags] = useState<number[]>(roleData?.tags || [])
+  const [roleTagsChanged, setRoleTagsChanged] = useState<boolean>(false)
+  const [hasTags, setHasTags] = useState<boolean>(
+    !!roleData?.tags.length || false,
+  )
+  const [editRole] = useUpdateRoleMutation()
 
   useEffect(() => {
     if (project && projectData) {
@@ -63,19 +81,90 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
       theme='pill m-0'
       isRoles={true}
     >
-      <TabItem
-        tabLabel={<Row className='justify-content-center'>Organisation</Row>}
-      >
-        <EditPermissionsModal
-          id={orgId}
-          group={group}
-          isGroup={!!group}
-          user={user}
-          className='mt-2'
-          level={'organisation'}
-          role={role}
-        />
+      <TabItem tabLabel={<Row className='justify-content-center'>Tags</Row>}>
+        <FormGroup className='mt-3 setting'>
+          <InputGroup
+            title={<h5>Permission Tags</h5>}
+            unsaved={roleTagsChanged}
+            component={
+              <>
+                <InfoMessage>
+                  When applying tags to a role, the delete feature and update
+                  feature state permissions will only be valid for features
+                  sharing the same tag, providing more granularity.{' '}
+                  <Button
+                    theme='text'
+                    target='_blank'
+                    href='http://localhost:3000/system-administration/rbac#tags'
+                    className='fw-normal'
+                  >
+                    Learn more.
+                  </Button>
+                </InfoMessage>
+
+                <div className='mb-2' style={{ width: 250 }}>
+                  <ProjectFilter
+                    organisationId={orgId}
+                    onChange={(p) => {
+                      setProject(p)
+                    }}
+                    value={project}
+                  />
+                </div>
+                {project && (
+                  <AddEditTags
+                    readOnly={false}
+                    projectId={`${project}`}
+                    value={tags}
+                    onChange={(tags) => {
+                      setRoleTagsChanged(true)
+                      setTags(tags)
+                    }}
+                  />
+                )}
+              </>
+            }
+          />
+        </FormGroup>
+        <Button
+          onClick={() => {
+            editRole({
+              body: {
+                description: roleData!.description!,
+                name: roleData!.name,
+                tags: tags,
+              },
+              organisation_id: orgId,
+              role_id: roleData!.id!,
+            }).then((res) => {
+              if (res.data?.tags?.length === 0) {
+                setHasTags(false)
+              } else {
+                setHasTags(true)
+              }
+              setRoleTagsChanged(false)
+              toast('Tags added successfully')
+            })
+          }}
+        >
+          Save Tags
+        </Button>
       </TabItem>
+      {!hasTags && (
+        <TabItem
+          tabLabel={<Row className='justify-content-center'>Organisation</Row>}
+        >
+          <EditPermissionsModal
+            id={orgId}
+            group={group}
+            isGroup={!!group}
+            user={user}
+            className='mt-2'
+            level={'organisation'}
+            role={role}
+          />
+        </TabItem>
+      )}
       <TabItem tabLabel={<Row className='justify-content-center'>Project</Row>}>
         <Row className='justify-content-between'>
           <h5 className='my-3'>Permissions</h5>
@@ -98,6 +187,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
           filter={searchProject}
           mainItems={projectData}
           role={role}
+          hasTags={tags.length !== 0}
           level={'project'}
           ref={tabRef}
         />
@@ -139,6 +229,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
               }
             })}
             role={role}
+            hasTags={tags.length !== 0}
             level={'environment'}
             ref={tabRef}
           />

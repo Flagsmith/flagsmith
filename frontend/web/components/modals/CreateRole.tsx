@@ -10,23 +10,13 @@ import React, {
 import InputGroup from 'components/base/forms/InputGroup'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
-import RolePermissionsList from 'components/RolePermissionsList'
 import {
   useCreateRoleMutation,
   useGetRoleQuery,
   useUpdateRoleMutation,
 } from 'common/services/useRole'
 
-import { EditPermissionsModal } from 'components/EditPermissions'
-import OrganisationStore from 'common/stores/organisation-store'
-import ProjectFilter from 'components/ProjectFilter'
-import {
-  Environment,
-  Project,
-  Role,
-  User,
-  UserGroup,
-} from 'common/types/responses'
+import { Role, User, UserGroup } from 'common/types/responses'
 import { setInterceptClose } from './base/ModalDefault'
 import UserSelect from 'components/UserSelect'
 import MyGroupsSelect from 'components/MyGroupsSelect'
@@ -44,7 +34,6 @@ import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
-import Input from 'components/base/forms/Input'
 import SettingsButton from 'components/SettingsButton'
 import PermissionsTabs from 'components/PermissionsTabs'
 import AccountStore from 'common/stores/account-store'
@@ -272,13 +261,14 @@ const CreateRole: FC<CreateRoleType> = ({
     const [isSaving, setIsSaving] = useState<boolean>(false)
     const [roleNameChanged, setRoleNameChanged] = useState<boolean>(false)
     const [roleDescChanged, setRoleDescChanged] = useState<boolean>(false)
+    const [roleTagsChanged, setRoleTagsChanged] = useState<boolean>(false)
 
     useImperativeHandle(
       ref,
       () => {
         return {
           onClosing() {
-            if (roleNameChanged || roleDescChanged) {
+            if (roleNameChanged || roleDescChanged || roleTagsChanged) {
               return new Promise((resolve) => {
                 openConfirm({
                   body: 'Closing this will discard your unsaved changes.',
@@ -298,7 +288,7 @@ const CreateRole: FC<CreateRoleType> = ({
           },
         }
       },
-      [roleNameChanged, roleDescChanged],
+      [roleNameChanged, roleDescChanged, roleTagsChanged],
     )
     useEffect(() => {
       if (!isLoading && isEdit && roleData) {
@@ -315,6 +305,7 @@ const CreateRole: FC<CreateRoleType> = ({
       if (createSuccess || updateSuccess) {
         setRoleNameChanged(false)
         setRoleDescChanged(false)
+        setRoleTagsChanged(false)
         setIsSaving(false)
         onComplete?.()
       }
@@ -393,7 +384,6 @@ const CreateRole: FC<CreateRoleType> = ({
 
   const TabValue = () => {
     const ref = useRef<TabRef>(null)
-    const ref2 = useRef<TabRef>(null)
     useEffect(() => {
       if (isEdit) {
         setInterceptClose(() => ref.current?.onClosing() || Promise.resolve())
@@ -526,9 +516,16 @@ const CreateRole: FC<CreateRoleType> = ({
         </TabItem>
       </Tabs>
     ) : (
-      <div className='my-3 mx-4'>
-        <Tab1 />
-      </div>
+      <Tabs uncontrolled onChange={changeTab} buttonTheme='text'>
+        <TabItem
+          tabLabel={<Row className='justify-content-center'>General</Row>}
+        >
+          <Tab1 />
+        </TabItem>
+        <TabItem tabLabel={<Row className='justify-content-center'>Tags</Row>}>
+          <div></div>
+        </TabItem>
+      </Tabs>
     )
   }
 

@@ -22,6 +22,7 @@ export const roleService = service
         }),
       }),
       getRole: builder.query<Res['role'], Req['getRole']>({
+        providesTags: (res) => [{ id: res?.id, type: 'Role' }],
         query: (query: Req['getRole']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/`,
         }),
@@ -32,8 +33,11 @@ export const roleService = service
           url: `organisations/${query.organisation_id}/roles/`,
         }),
       }),
-      updateRole: builder.mutation<Res['roles'], Req['updateRole']>({
-        invalidatesTags: (res) => [{ id: 'LIST', type: 'Role' }],
+      updateRole: builder.mutation<Res['role'], Req['updateRole']>({
+        invalidatesTags: (res) => [
+          { id: 'LIST', type: 'Role' },
+          { id: res?.id, type: 'Role' },
+        ],
         query: (query: Req['updateRole']) => ({
           body: query.body,
           method: 'PUT',
