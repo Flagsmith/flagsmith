@@ -1,78 +1,128 @@
 ---
-title: Role Based Access Control
+title: Role-based access control
 ---
-
-Flagsmith provides fine-grained permissions to help larger teams manage access and roles across organisations, projects
-and environments.
 
 :::info
 
-The Permissions/Role Based Access features of Flagsmith are _not_ part of the Open Source version. If you want to use
-these features as part of a self hosted/on premise solution, please [get in touch](https://flagsmith.com/contact-us/).
+Role-based access control requires an [Enterprise subscription](https://www.flagsmith.com/pricing).
 
 :::
 
-## Users, Groups, and Roles
+Role-based access control (RBAC) provides fine-grained access management of Flagsmith resources. Using RBAC, you can
+ensure users only have the access they need within your Flagsmith organisation.
 
-Permissions can be assigned to Flagsmith individual users, groups, or roles.
+For example, RBAC allows you to achieve the following scenarios:
 
-### Users
+- Only allow certain users to modify your production environments.
+- Grant a default set of permissions to all users that join your Flagsmith organisation.
+- Lock down an [Admin API](/clients/rest/#private-admin-api-endpoints) key to a specific set of permissions.
+- Provide Flagsmith permissions based on your enterprise identity provider's groups when using
+  [SAML single sign-on](/system-administration/authentication/SAML/).
 
-Flagsmith Users can be defined as Organisation Administrators or Users. Organisation Administrator is effectively a
-super-user role, and gives full read/write access to every Project, Environment, Flag, Remote Config and Segment within
-that Organisation.
+To add users to your Flagsmith organisation or to manage user permissions, click on your organisation name in the top
+left and open the **Users and Permissions** tab.
 
-Users that are not Organisation Administrators must have permissions assigned to them manually at the relevant levels.
+## Core concepts
 
-### Groups
+The diagram below shows an overview of how permissions are assigned within your Flagsmith organisation:
 
-Groups are a convenient way to manage permissions for multiple Flagsmith users. Groups can contain any number of
-Flagsmith users. You can create groups with the Organisation Settings page.
+<div style={{textAlign: 'center'}}>
+```mermaid
+graph LR;
+    R[Custom roles] -->|Assigned to| G[Groups];
+    B[Built-in role] -->|Assigned to| U[Users];
+    R -->|Assigned to| U;
+    R -->|Assigned to| A[Admin API keys];
+    G -->|Contains many| U;
+```
 
-Members of a group can be designated as an admin for that group. As a group admin, users can manage the membership for
-that group, but not the permissions the group has on other entities.
+</div>
 
 ### Roles
 
-A _Role_ is an entity to which you can attach a set of permissions. Permissions can allow privileges at Organization,
-Project, and Environment levels. You can assign a role, along with its associated permissions, to a User or Group. You
-will also be able to assign API keys to a Role in future versions.
+A role is a set of permissions that, when assigned, allows performing specific actions on your organisation, projects or
+project environments.
 
-#### Creating a Role
+**Built-in roles** are predefined by Flagsmith and cannot be modified. All users in your organisation have one of the
+following built-in roles:
 
-You can create a Role in the Organisation Settings page.
+- _Organisation Administrator_ grants full access to everything in your Flagsmith organisation.
+- _User_ grants no access and requires you to assign permissions using custom roles and/or groups.
 
-#### Add Permissions to a Role
+**Custom roles** can be assigned to users, groups or [Admin API](/clients/rest/#private-admin-api-endpoints) keys. Any
+number of custom roles can be created and assigned.
 
-Once the role is created you can assign the corresponding permissions.
+Creating, modifying or assigning roles requires organisation administrator permissions.
 
-**E.g. Add Project permission:**
+### Groups
 
-- Choose a Role.
-- Go to the Projects tab.
-- Select a Project and enable the relevant permissions.
+A group is a collection of users. If a custom role is assigned to a group, the role's permissions will be granted to all
+group members. Users can belong to any number of groups.
 
-### Assign Role to Users or Groups
+Creating or modifying existing groups requires organisation administrator permissions.
 
-After creating the Role, you can assign it to Users or Groups.
+Permissions to add or remove users from groups can be granted in two ways:
 
-**E.g. Assign role to a user:**
+- The _manage group membership_ permission allows modifying any group's membership
+- A _group admin_ can manage membership only for that group
 
-- Choose a role.
-- Go to the Members tab.
-- Select the Users tab.
-- Click assign role to user button and select a user.
+## Add users to your organisation
 
-## Permissions
+You can add users to your organisation by sending them an invitation email from Flagsmith, or by sharing an invitation
+link directly with them. Both options require organisation administrator permissions, and are available from **Users and
+Permissions > Members**.
+
+Users can also join your organisation directly by logging in to Flagsmith using
+[single sign-on](/system-administration/authentication/SAML/).
+
+### Email invites
+
+To send invitation emails to specific users, click on **Invite members**. Then, fill in the email address and built-in
+role of each user you want to invite.
+
+When a user accepts their email invitation, they will be prompted to sign up for a Flagsmith account, or they can choose
+to log in if they already have an account with the same email address.
+
+Users who have not yet accepted their invitations are listed in the "Pending invites" section at the bottom of this
+page. From here you can also resend or revoke any pending invitations.
+
+If you are self-hosting Flagsmith, you must [configure an email provider](/locally-api#email-environment-variables)
+before using email invites.
+
+### Invitation links
+
+:::warning
+
+Anyone with an invitation link can join your Flagsmith organisation at any time. Share these links with caution and
+regenerate them if they are compromised.
+
+:::
+
+Direct links to join your organisation can be found in the **Team Members** section of this page. One direct link is
+available for each built-in role that users will have when joining your organisation.
+
+## Provision permissions
+
+If a user joins your organisation with the built-in _User_ role, they will not have any permissions to view or change
+anything in your Flagsmith organisation. You can provide default fine-grained permissions to users with any of these
+options:
+
+- Add users by default to a group. When creating or editing a group, select the **Add new users by default** option.
+  When a user logs in for the first time to your organisation, they will automatically be added to all groups that have
+  this option enabled.
+- [Use existing groups from your enterprise identity provider](/system-administration/authentication/SAML/#using-groups-from-your-saml-idp).
+  Any time a user logs in using single sign-on, they will be made a member of any groups with matching external IDs.
+
+## Permissions reference
 
 Permissions can be assigned at 3 levels: Organisation, Project, and Environment.
 
 ### Organisation
 
-| **Permission**     | **Ability**                                                                 |
-| ------------------ | --------------------------------------------------------------------------- |
-| Create Project     | Allows the user to create Projects in the given Organisation                |
-| Manage User Groups | Allows the user to manage the Groups in the Organisation and their members. |
+| **Permission**     | **Ability**                                                  |
+| ------------------ | ------------------------------------------------------------ |
+| Create Project     | Allows the user to create Projects in the given Organisation |
+| Manage User Groups | Allows the user to manage group membership.                  |
 
 ### Project
 
