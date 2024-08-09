@@ -1112,3 +1112,46 @@ def test_label_and_tags_no_added_when_tagging_is_disabled(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert feature_with_value.tags.count() == 0
+
+
+@responses.activate
+def test_update_github_repository(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    project: Project,
+    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
+) -> None:
+    # Given
+    github_repository.tagging_enabled = False
+    github_repository.save()
+    data = {
+        "github_configuration": github_configuration.id,
+        "repository_owner": "repositoryowner",
+        "repository_name": "repositoryname",
+        "project": project.id,
+        "tagging_enabled": True,
+    }
+
+    responses.add(
+        method="POST",
+        url=f"{GITHUB_API_URL}repos/repositoryowner/repositoryname/labels",
+        status=status.HTTP_200_OK,
+        json={},
+    )
+
+    url = reverse(
+        "api-v1:organisations:repositories-detail",
+        args=[organisation.id, github_configuration.id, github_repository.id],
+    )
+    # When
+    response = admin_client_new.put(url, data)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert GithubRepository.objects.filter(repository_owner="repositoryowner").exists()
+    assert GithubRepository.objects.get(
+        repository_owner="repositoryowner"
+    ).tagging_enabled

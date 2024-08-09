@@ -1085,6 +1085,7 @@ def github_repository(
         repository_owner="repositoryownertest",
         repository_name="repositorynametest",
         project=project,
+        tagging_enabled=True,
     )
 
 
