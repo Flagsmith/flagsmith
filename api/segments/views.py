@@ -39,7 +39,7 @@ class SegmentViewSet(viewsets.ModelViewSet):
         )
         project = get_object_or_404(permitted_projects, pk=self.kwargs["project_pk"])
 
-        queryset = project.segments.all()
+        queryset = Segment.live_objects.filter(project=project)
 
         if self.action == "list":
             # TODO: at the moment, the UI only shows the name and description of the segment in the list view.
