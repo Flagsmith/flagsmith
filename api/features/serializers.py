@@ -2,6 +2,13 @@ import typing
 from datetime import datetime
 
 import django.core.exceptions
+from common.features.multivariate.serializers import (
+    MultivariateFeatureStateValueSerializer,
+)
+from common.features.serializers import (
+    CreateSegmentOverrideFeatureStateSerializer,
+    FeatureStateValueSerializer,
+)
 from drf_writable_nested import WritableNestedModelSerializer
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
@@ -27,13 +34,10 @@ from webhooks.webhooks import WebhookEventType
 
 from .constants import INTERSECTION, UNION
 from .feature_segments.serializers import (
-    CreateSegmentOverrideFeatureSegmentSerializer,
+    CustomCreateSegmentOverrideFeatureSegmentSerializer,
 )
-from .models import Feature, FeatureState, FeatureStateValue
-from .multivariate.serializers import (
-    MultivariateFeatureStateValueSerializer,
-    NestedMultivariateFeatureOptionSerializer,
-)
+from .models import Feature, FeatureState
+from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
 
 
 class FeatureStateSerializerSmall(serializers.ModelSerializer):
@@ -551,12 +555,6 @@ class FeatureStateSerializerCreate(serializers.ModelSerializer):
         fields = ("feature", "enabled")
 
 
-class FeatureStateValueSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FeatureStateValue
-        fields = ("type", "string_value", "integer_value", "boolean_value")
-
-
 class FeatureInfluxDataSerializer(serializers.Serializer):
     events_list = serializers.ListSerializer(child=serializers.DictField())
 
@@ -598,46 +596,12 @@ class SDKFeatureStatesQuerySerializer(serializers.Serializer):
     )
 
 
-class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer):
-    feature_state_value = FeatureStateValueSerializer()
-    feature_segment = CreateSegmentOverrideFeatureSegmentSerializer(
+class CustomCreateSegmentOverrideFeatureStateSerializer(
+    CreateSegmentOverrideFeatureStateSerializer
+):
+    feature_segment = CustomCreateSegmentOverrideFeatureSegmentSerializer(
         required=False, allow_null=True
     )
-    multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
-        many=True, required=False
-    )
-
-    class Meta:
-        model = FeatureState
-        fields = (
-            "id",
-            "feature",
-            "enabled",
-            "feature_state_value",
-            "feature_segment",
-            "deleted_at",
-            "uuid",
-            "created_at",
-            "updated_at",
-            "live_from",
-            "environment",
-            "identity",
-            "change_request",
-            "multivariate_feature_state_values",
-        )
-
-        read_only_fields = (
-            "id",
-            "deleted_at",
-            "uuid",
-            "created_at",
-            "updated_at",
-            "live_from",
-            "environment",
-            "identity",
-            "change_request",
-            "feature",
-        )
 
     def _get_save_kwargs(self, field_name):
         kwargs = super()._get_save_kwargs(field_name)

@@ -137,7 +137,7 @@ django-health-check = "~3.18.2"
 django-admin-sso = "~3.1.0"
 drf-yasg = "~1.21.6"
 django-debug-toolbar = "~3.2.1"
-sentry-sdk = "~1.17.0"
+sentry-sdk = "~2.8.0"
 environs = "~9.2.0"
 django-lifecycle = "~1.0.0"
 drf-writable-nested = "~0.6.2"
@@ -169,7 +169,8 @@ pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.0.0" }
+flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.0.1" }
+flagsmith-common = { git = "https://github.com/Flagsmith/flagsmith-common", tag = "v1.0.0" }
 
 [tool.poetry.group.auth-controller]
 optional = true
@@ -193,24 +194,19 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.3.7" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.4.2" }
 
 [tool.poetry.group.dev.dependencies]
 django-test-migrations = "~1.2.0"
 responses = "~0.22.0"
 pre-commit = "~3.0.4"
-flake8 = "~7.0.0"
 pytest-mock = "~3.10.0"
 pytest-lazy-fixture = "~0.6.3"
 moto = "~4.1.3"
 pytest-freezegun = "~0.4.2"
 pytest-xdist = "~3.2.1"
-pylint = "~2.16.2"
-pep8 = "~1.7.1"
-autopep8 = "~2.0.1"
 pytest = "~7.2.1"
 pytest-django = "^4.5.2"
-black = "~24.3.0"
 pytest-cov = "~4.1.0"
 datamodel-code-generator = "~0.25"
 requests-mock = "^1.11.0"
