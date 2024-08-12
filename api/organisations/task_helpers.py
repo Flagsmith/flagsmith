@@ -69,7 +69,7 @@ def _send_api_usage_notification(
     context = {
         "organisation": organisation,
         "matched_threshold": matched_threshold,
-        "grace_period": not bool(hasattr(organisation, "breached_grace_period")),
+        "grace_period": not hasattr(organisation, "breached_grace_period"),
     }
 
     send_mail(
