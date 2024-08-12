@@ -2,6 +2,7 @@ import AccountStore from 'common/stores/account-store'
 import ProjectStore from 'common/stores/project-store'
 import Project from 'common/project'
 import {
+  ChangeSet,
   ContentType,
   FeatureState,
   FeatureStateValue,
@@ -117,16 +118,17 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return null
     }
 
-    if (typeof featureState.integer_value === 'number') {
-      return Utils.getTypedValue(featureState.integer_value)
+    //@ts-ignore value_type is the type key on core traits
+    switch (featureState.value_type || featureState.type) {
+      case 'bool':
+        return featureState.boolean_value
+      case 'float':
+        return featureState.float_value
+      case 'int':
+        return featureState.integer_value
+      default:
+        return featureState.string_value
     }
-    if (typeof featureState.float_value === 'number') {
-      return Utils.getTypedValue(featureState.float_value)
-    }
-
-    return Utils.getTypedValue(
-      featureState.string_value || featureState.boolean_value,
-    )
   },
   findOperator(
     operator: SegmentCondition['operator'],
@@ -377,6 +379,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         valid = isEnterprise
         break
       }
+      case 'SAML': {
+        valid = isEnterprise
+        break
+      }
+      case 'METADATA': {
+        valid = isEnterprise
+        break
+      }
       default:
         valid = true
         break
@@ -514,7 +524,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
-
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (
@@ -525,22 +534,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
-
   isSaas: () => global.flagsmithVersion?.backend?.is_saas,
+
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },
   isValidURL(value: any) {
-    const pattern = new RegExp(
-      '^(https?:\\/\\/)?' + // protocol
-        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
-        '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
-        '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-        '(\\#[-a-z\\d_]*)?$',
-      'i',
-    )
-    return !!pattern.test(value)
+    const regex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i
+    return regex.test(value)
   },
   loadScriptPromise(url: string) {
     return new Promise((resolve) => {

@@ -378,23 +378,41 @@ assert delete_identity_response.status_code == 204
 
 ### Bulk Uploading Identities and Traits
 
-You can achieve this with a `POST` to the `identities` endpoint:
+You can achieve this with a `POST` to the `bulk-identities` endpoint:
 
 ```bash
-curl -X "POST" "https://edge.api.flagsmith.com/api/v1/identities/?identifier=<identity_id>" \
-     -H 'X-Environment-Key: <Your Environment Key>' \
-     -H 'Content-Type: application/json; charset=utf-8' \
+curl -i -X POST "https://edge.api.flagsmith.com/api/v1/bulk-identities" \
+     -H "X-Environment-Key: ${FLAGSMITH_ENVIRONMENT_KEY}" \
+     -H 'Content-Type: application/json' \
      -d $'{
-  "traits":   "traits": [
-    {
-      "trait_key": "this_key",
-      "trait_value": "this_value"
-    },
-    {
-      "trait_key": "this_key2",
-      "trait_value": "this_value2"
-    }
-  ],
-  "identifier": "<identity_id>"
-}'
+      "data": [
+        {
+          "identifier": "my_identifier_1",
+          "traits": [
+            {
+              "trait_key": "my_key_name",
+              "trait_value": "set from POST /bulk-identities"
+            }
+          ]
+        },
+        {
+            "identifier": "my_identifier_2",
+            "traits": [
+                {
+                    "trait_key": "some_other_key_name",
+                    "trait_value": "if this identity does not exist, it will be created by this request"
+                }
+            ]
+        },
+        {
+            "identifier": "my_identifier_3",
+            "traits": [
+                {
+                    "trait_key": "this_trait_will_be_deleted",
+                    "trait_value": null
+                }
+            ]
+        }
+      ]
+    }'
 ```

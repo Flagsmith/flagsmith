@@ -45,6 +45,7 @@ class Command(BaseCommand):
         database: str,
         **options: Any,
     ) -> None:
+
         start = time.monotonic()
         wait_between_checks = 0.25
 

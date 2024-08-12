@@ -27,6 +27,7 @@ class GithubRepositorySerializer(ModelSerializer):
             "project",
             "repository_owner",
             "repository_name",
+            "tagging_enabled",
         )
         read_only_fields = (
             "id",

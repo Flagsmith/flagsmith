@@ -1,0 +1,67 @@
+# reusable workflow
+name: Publish Docker Image
+
+on:
+  workflow_call:
+    inputs:
+      registry-url:
+        type: string
+        description: Github Container Registry base URL
+        required: false
+        default: ghcr.io
+      source-images:
+        type: string
+        description: Source image to publish
+        required: true
+      target-images:
+        type: string
+        description: Target image names
+        required: true
+
+jobs:
+  publish:
+    name: Publish ${{ inputs.source-images }} to ${{ inputs.target-images }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: depot.json
+          sparse-checkout-cone-mode: false
+
+      - name: Login to Github Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.registry-url }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ inputs.target-images }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      # Setup Docker buildx with Depot builder so imagetools have access to Depot cache
+      - uses: depot/use-action@v1
+
+      - name: Publish Image
+        uses: kphrx/docker-buildx-imagetools-action@v0.1.2
+        with:
+          sources: ${{ inputs.source-images }}
+          tags: ${{ steps.meta.outputs.tags }}

@@ -2,13 +2,13 @@ import datetime
 
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from task_processor.task_run_method import TaskRunMethod
 
 from organisations.models import (
     HubspotOrganisation,
     Organisation,
     OrganisationRole,
 )
-from task_processor.task_run_method import TaskRunMethod
 from users.models import FFAdminUser, HubspotLead
 
 

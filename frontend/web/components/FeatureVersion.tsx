@@ -3,9 +3,7 @@ import DiffFeature from './diff/DiffFeature'
 import { useGetVersionFeatureStateQuery } from 'common/services/useVersionFeatureState'
 import InfoMessage from './InfoMessage'
 import moment from 'moment'
-import {
-  useGetFeatureVersionQuery,
-} from 'common/services/useFeatureVersion'
+import { useGetFeatureVersionQuery } from 'common/services/useFeatureVersion'
 
 type VersionDiffType = {
   oldUUID: string
@@ -66,6 +64,7 @@ const FeatureVersion: FC<VersionDiffType> = ({
               </InfoMessage>
 
               <DiffFeature
+                environmentId={environmentId}
                 projectId={projectId}
                 featureId={featureId}
                 oldState={oldData}

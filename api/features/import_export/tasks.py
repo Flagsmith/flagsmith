@@ -5,6 +5,10 @@ from typing import Optional, Union
 from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
+from task_processor.decorators import (
+    register_recurring_task,
+    register_task_handler,
+)
 
 from environments.models import Environment
 from features.models import Feature, FeatureStateValue
@@ -12,10 +16,6 @@ from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import BOOLEAN, INTEGER, STRING
 from features.versioning.versioning_service import get_environment_flags_list
 from projects.models import Project
-from task_processor.decorators import (
-    register_recurring_task,
-    register_task_handler,
-)
 
 from .constants import FAILED, OVERWRITE_DESTRUCTIVE, PROCESSING, SKIP, SUCCESS
 from .models import (

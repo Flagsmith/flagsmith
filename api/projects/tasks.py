@@ -2,7 +2,6 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.db import transaction
-
 from task_processor.decorators import register_task_handler
 
 

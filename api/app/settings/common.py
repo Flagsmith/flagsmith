@@ -25,9 +25,9 @@ from corsheaders.defaults import default_headers
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
 from environs import Env
+from task_processor.task_run_method import TaskRunMethod
 
 from app.routers import ReplicaReadStrategy
-from task_processor.task_run_method import TaskRunMethod
 
 env = Env()
 
@@ -107,6 +107,7 @@ INSTALLED_APPS = [
     "organisations.permissions",
     "projects",
     "sales_dashboard",
+    "edge_api",
     "environments",
     "environments.permissions",
     "environments.identities",
@@ -149,6 +150,7 @@ INSTALLED_APPS = [
     "integrations.flagsmith",
     "integrations.launch_darkly",
     "integrations.github",
+    "integrations.grafana",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -327,6 +329,11 @@ INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
 INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
+USE_CACHE_FOR_USAGE_DATA = env.bool("USE_CACHE_FOR_USAGE_DATA", default=False)
+
+FEATURE_EVALUATION_CACHE_SECONDS = env.int(
+    "FEATURE_EVALUATION_CACHE_SECONDS", default=60
+)
 
 ENABLE_API_USAGE_TRACKING = env.bool("ENABLE_API_USAGE_TRACKING", default=True)
 

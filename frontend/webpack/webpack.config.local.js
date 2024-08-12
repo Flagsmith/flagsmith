@@ -31,11 +31,6 @@ module.exports = {
             whitelabel: JSON.stringify(process.env.WHITELABEL),
         }),
         new webpack.NoEmitOnErrorsPlugin(),
-        new webpack.ProvidePlugin({
-            $: 'jquery',
-            jQuery: 'jquery',
-            jquery: 'jquery',
-        }),
     ]).concat(require('./pages').map((page) => {
         // eslint-disable-next-line no-console
         console.log(page);

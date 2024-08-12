@@ -28,6 +28,7 @@ from organisations.models import (
     Organisation,
     OrganisationSubscriptionInformationCache,
 )
+from projects.models import Project
 
 
 @pytest.fixture
@@ -103,6 +104,57 @@ def test_get_usage_data_from_local_db(organisation, environment, settings):
         assert data.identities == 20
         assert data.traits == 20
         assert data.day == today - timedelta(days=29 - count)
+
+
+@pytest.mark.skipif(
+    "analytics" not in settings.DATABASES,
+    reason="Skip test if analytics database is configured",
+)
+@pytest.mark.django_db(databases=["analytics", "default"])
+def test_get_usage_data_from_local_db_project_id_filter(
+    organisation: Organisation,
+    project: Project,
+    project_two: Project,
+    environment: Environment,
+    environment_two: Environment,
+    project_two_environment: Environment,
+    settings: SettingsWrapper,
+):
+    # Given
+    environment_id = environment.id
+    now = timezone.now()
+    read_bucket_size = 15
+    settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
+    total_count = 10
+
+    # crate one bucket for every environment
+    for environment_id in [
+        environment.id,
+        environment_two.id,
+        project_two_environment.id,
+    ]:
+        APIUsageBucket.objects.create(
+            environment_id=environment_id,
+            resource=Resource.FLAGS,
+            total_count=total_count,
+            bucket_size=read_bucket_size,
+            created_at=now,
+        )
+    # When
+    usage_data_for_project_one = get_usage_data_from_local_db(
+        organisation, project_id=project.id
+    )
+    usage_data_for_project_two = get_usage_data_from_local_db(
+        organisation, project_id=project_two.id
+    )
+
+    # Then
+    assert len(usage_data_for_project_one) == 1
+    assert len(usage_data_for_project_two) == 1
+    assert (
+        list(usage_data_for_project_one)[0].flags == total_count * 2
+    )  # 2 environments
+    assert list(usage_data_for_project_two)[0].flags == total_count  # 1 environment
 
 
 @pytest.mark.skipif(

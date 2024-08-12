@@ -74,6 +74,7 @@ from features.value_types import (
     STRING,
 )
 from features.versioning.models import EnvironmentFeatureVersion
+from integrations.github.constants import GitHubEventType
 from metadata.models import Metadata
 from projects.models import Project
 from projects.tags.models import Tag
@@ -139,7 +140,6 @@ class Feature(
     @hook(AFTER_SAVE)
     def create_github_comment(self) -> None:
         from integrations.github.github import call_github_task
-        from webhooks.webhooks import WebhookEventType
 
         if (
             self.external_resources.exists()
@@ -150,7 +150,7 @@ class Feature(
 
             call_github_task(
                 organisation_id=self.project.organisation_id,
-                type=WebhookEventType.FLAG_DELETED.value,
+                type=GitHubEventType.FLAG_DELETED.value,
                 feature=self,
                 segment_name=None,
                 url=None,
@@ -406,7 +406,6 @@ class FeatureSegment(
     @hook(AFTER_DELETE)
     def create_github_comment(self) -> None:
         from integrations.github.github import call_github_task
-        from webhooks.webhooks import WebhookEventType
 
         if (
             self.feature.external_resources.exists()
@@ -416,7 +415,7 @@ class FeatureSegment(
 
             call_github_task(
                 self.feature.project.organisation_id,
-                WebhookEventType.SEGMENT_OVERRIDE_DELETED.value,
+                GitHubEventType.SEGMENT_OVERRIDE_DELETED.value,
                 self.feature,
                 self.segment.name,
                 None,

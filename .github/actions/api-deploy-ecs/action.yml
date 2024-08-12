@@ -2,9 +2,6 @@ name: API Deploy to ECS
 description: Deploy the Flagsmith API to ECS
 
 inputs:
-  github_access_token:
-    description: The Github access token to use to access external repositories (e.g. flagsmith-saml)
-    required: true
   aws_access_key_id:
     description: The AWS access key ID to use for deploying to ECS.
     required: true
@@ -36,30 +33,11 @@ inputs:
   aws_identity_migration_task_role_arn:
     description: The ARN of the role to run the identity migration task.
     required: true
-  aws_ecr_repository_arn:
-    description: The ARN of the ECR repository to deploy docker image to.
-    required: true
   aws_task_definitions_directory_path:
     description: The local path in the repository to the json file containing the task definition template
     required: true
-  image_tag:
-    description: The tag to use when registering the docker image in ECR
-    required: false
-    default: ${GITHUB_REF#refs/*/}
-  flagsmith_saml_revision:
-    description: The flagsmith-saml repo git revision to use when building deployment package.
-    required: false
-    default: main
-  flagsmith_auth_controller_revision:
-    description: The flagsmith-auth-controller git revision to use when building deployment package.
-    required: false
-    default: main
-  flagsmith_rbac_revision:
-    description: The flagsmith-rbac git revision to use when building deployment package.
-    required: false
-    default: main
-  sse_pgp_private_key:
-    description: Private PGP key used for encrypting/decrypting access logs
+  api_ecr_image_url:
+    description: The ECR URL of the latest API image.
     required: true
 
 outputs:
@@ -71,88 +49,12 @@ runs:
   using: composite
 
   steps:
-    - name: Checkout SAML package
-      uses: actions/checkout@v4
-      with:
-        repository: flagsmith/flagsmith-saml
-        token: ${{ inputs.github_access_token }}
-        ref: ${{ inputs.flagsmith_saml_revision }}
-        path: ./flagsmith-saml
-
-    - name: Integrate SAML module
-      run: mv ./flagsmith-saml/saml ./api
-      shell: bash
-
-    - name: Checkout Auth Controller package
-      uses: actions/checkout@v4
-      with:
-        repository: flagsmith/flagsmith-auth-controller
-        token: ${{ inputs.github_access_token }}
-        ref: ${{ inputs.flagsmith_auth_controller_revision }}
-        path: ./flagsmith-auth-controller
-
-    - name: Integrate Auth Controller module
-      run: mv ./flagsmith-auth-controller/auth_controller ./api
-      shell: bash
-
-    - name: Checkout RBAC module
-      uses: actions/checkout@v4
-      with:
-        repository: flagsmith/flagsmith-rbac
-        token: ${{ inputs.github_access_token }}
-        ref: ${{ inputs.flagsmith_rbac_revision }}
-        path: ./flagsmith-rbac
-
-    - name: Integrate RBAC module
-      run: mv ./flagsmith-rbac/rbac ./api
-      shell: bash
-
-    - name: Set ECR tag
-      id: ecr-tag-variable
-      run: echo "tag=${{ inputs.image_tag }}" >> $GITHUB_OUTPUT
-      shell: bash
-
-    - name: Write git info to Docker image
-      run: |
-        echo ${{ github.sha }} > api/CI_COMMIT_SHA
-      shell: bash
-
-    - name: Write file to indicate SaaS
-      run: |
-        echo '' > api/SAAS_DEPLOYMENT
-      shell: bash
-
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1-node16
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ inputs.aws_access_key_id }}
         aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
         aws-region: eu-west-2
-
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-
-    - name: Write PGP key to a file
-      run: |
-        cat << EOF > sse_pgp_pkey
-        ${{ inputs.sse_pgp_private_key }}
-        EOF
-      shell: bash
-
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-image
-      env:
-        IMAGE_TAG: ${{ steps.ecr-tag-variable.outputs.tag }}
-        ECR_REPOSITORY: ${{ inputs.aws_ecr_repository_arn }}
-        DOCKER_BUILDKIT: '1'
-      run: |
-        echo "Building docker image with URL: "
-        echo $ECR_REPOSITORY:$IMAGE_TAG
-        docker build --secret id=sse_pgp_pkey,src=./sse_pgp_pkey -t $ECR_REPOSITORY:$IMAGE_TAG -f api/Dockerfile --build-arg SAML_INSTALLED=1 --build-arg POETRY_OPTS="--with saml,auth-controller,workflows" --build-arg GH_TOKEN=${{ inputs.github_access_token }} .
-        docker push $ECR_REPOSITORY:$IMAGE_TAG
-        echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-      shell: bash
 
     - name: Fill in the new image ID in the Amazon ECS API task definition
       id: task-def-api
@@ -160,7 +62,7 @@ runs:
       with:
         task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-web.json
         container-name: flagsmith-api
-        image: ${{ steps.build-image.outputs.image }}
+        image: ${{ inputs.api_ecr_image_url }}
 
     # This is used in both the SQL migrations and the Dynamo Identity Migrations
     - name: Fill in the new image ID in the Amazon ECS migration task definition
@@ -169,7 +71,7 @@ runs:
       with:
         task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-migration.json
         container-name: flagsmith-api-migration
-        image: ${{ steps.build-image.outputs.image }}
+        image: ${{ inputs.api_ecr_image_url }}
 
     - name: Register and perform SQL schema migration
       id: register-migrate-task
@@ -228,7 +130,7 @@ runs:
               },
               "InputTransformer": {
                 "InputPathsMap":{"project_id":"$.detail.project_id"},
-                "InputTemplate": "{ \"containerOverrides\": [ { \"name\": \"flagsmith-api-migration\", \"command\": [\"migrate-identities\", <project_id>], \" environment \":[{\"PROJECT_METADATA_TABLE_NAME_DYNAMO\":\"flagsmith_project_metadata\"}]}]}"
+                "InputTemplate": "{ \"containerOverrides\": [ { \"name\": \"flagsmith-api-migration\", \"command\": [\"migrate_to_edge\", <project_id>], \" environment \":[{\"PROJECT_METADATA_TABLE_NAME_DYNAMO\":\"flagsmith_project_metadata\"}]}]}"
                 }
                 }
                 ]'

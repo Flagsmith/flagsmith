@@ -1,5 +1,4 @@
 from django.conf import settings
-
 from task_processor.decorators import register_task_handler
 
 
