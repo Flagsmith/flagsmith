@@ -77,6 +77,13 @@ Users can also join your organisation directly by logging in to Flagsmith using
 
 ### Email invites
 
+:::info
+
+If you are self-hosting Flagsmith, you must
+[configure an email provider](/deployment/hosting/locally-api#email-environment-variables) before using email invites.
+
+:::
+
 To send invitation emails to specific users, click on **Invite members**. Then, fill in the email address and built-in
 role of each user you want to invite.
 
@@ -85,9 +92,6 @@ to log in if they already have an account with the same email address.
 
 Users who have not yet accepted their invitations are listed in the "Pending invites" section at the bottom of this
 page. From here you can also resend or revoke any pending invitations.
-
-If you are self-hosting Flagsmith, you must
-[configure an email provider](/deployment/hosting/locally-api#email-environment-variables) before using email invites.
 
 ### Invitation links
 
@@ -115,36 +119,42 @@ options:
 
 ## Permissions reference
 
-Permissions can be assigned at 3 levels: Organisation, Project, and Environment.
+Permissions can be assigned at four levels: user group, organisation, project, and environment.
+
+### User group
+
+| Permission  | Ability                                          |
+| ----------- | ------------------------------------------------ |
+| Group Admin | Allows adding or removing users from this group. |
 
 ### Organisation
 
-| **Permission**     | **Ability**                                                  |
-| ------------------ | ------------------------------------------------------------ |
-| Create Project     | Allows the user to create Projects in the given Organisation |
-| Manage User Groups | Allows the user to manage group membership.                  |
+| Permission         | Ability                                                                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Create Project     | Allows creating projects in the organisation. Users are automatically granted Administrator permissions on any projects they create. |
+| Manage User Groups | Allows adding or removing users from any group.                                                                                      |
 
 ### Project
 
-| **Permission**     | **Ability**                                                                                |
-| ------------------ | ------------------------------------------------------------------------------------------ |
-| Administrator      | Full Read/Write over all Environments, Feature Flag, Remote Config, Segment and Tag values |
-| View Project       | Can view the Project within their account                                                  |
-| Create Environment | Can create new Environments within the Project                                             |
-| Create Feature     | Can create a new Feature / Remote Config                                                   |
-| Delete Feature     | Can remove an existing Feature / Remote Config entirely from the Project                   |
-| Manage Segments    | Can create, delete and edit Segments within the Project                                    |
-| View audit log     | Allows the user to view the audit logs for this Project.                                   |
+| Permission         | Ability                                                                                                                                      |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Administrator      | Grants full read and write access to all environments, features and segments.                                                                |
+| View Project       | Allows viewing this project. The project is hidden from users without this permission.                                                       |
+| Create Environment | Allows creating new environments in this project. Users are automatically granted Administrator permissions on any environments they create. |
+| Create Feature     | Allows creating new features in all environments.                                                                                            |
+| Delete Feature     | Allows deleting features from all environments.                                                                                              |
+| Manage Segments    | Grants write access to segments in this project.                                                                                             |
+| View audit log     | Allows viewing all audit log entries for this project.                                                                                       |
 
 ### Environment
 
-| **Permission**           | **Ability**                                                     |
-| ------------------------ | --------------------------------------------------------------- |
-| Administrator            | Can modify Feature Flag, Remote Config and Segment values       |
-| View Environment         | Can see the Environment within their account                    |
-| Update Feature State     | Update the state or value for a given feature                   |
-| Manage Identities        | View and update Identities                                      |
-| Manage Segment Overrides | Permission to manage segment overrides in the given environment |
-| Create Change Request    | Creating a new Change Request                                   |
-| Approve Change Request   | Approving or denying existing Change Requests                   |
-| View Identities          | Viewing Identities                                              |
+| Permission               | Ability                                                                                                                 |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Administrator            | Grants full read and write access to all feature states, overrides, identities and change requests in this environment. |
+| View Environment         | Allows viewing this environment. The environment is hidden from users without this permission.                          |
+| Update Feature State     | Allows updating updating any feature state or values in this environment.                                               |
+| Manage Identities        | Grants read and write access to identities in this environment.                                                         |
+| Manage Segment Overrides | Grants write access to segment overrides in this environment.                                                           |
+| Create Change Request    | Allows creating change requests for features in this environment.                                                       |
+| Approve Change Request   | Allows approving or denying change requests in this environment.                                                        |
+| View Identities          | Grants read-only access to identities in this environment.                                                              |
