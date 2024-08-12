@@ -139,6 +139,7 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         return
 
     if OrganisationAPIUsageNotification.objects.filter(
+        organisation_id=organisation.id,
         notified_at__gt=period_starts_at,
         percent_usage__gte=matched_threshold,
     ).exists():
