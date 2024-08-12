@@ -9,6 +9,7 @@ import { getTagColor } from './Tag'
 import OrganisationStore from 'common/stores/organisation-store'
 import Utils from 'common/utils/utils'
 import classNames from 'classnames'
+import Icon from 'components/Icon'
 type TagContent = {
   tag: Partial<TTag>
 }
@@ -17,6 +18,44 @@ function escapeHTML(unsafe: string) {
     /[\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u00FF]/g,
     (c) => `&#${`000${c.charCodeAt(0)}`.slice(-4)};`,
   )
+}
+
+const renderIcon = (tagType: string, tagColor: string, tagLabel: string) => {
+  switch (tagType) {
+    case 'STALE':
+      return (
+        <IonIcon
+          className='ms-1'
+          icon={alarmOutline}
+          color={color(tagColor).darken(0.1).string()}
+        />
+      )
+    case 'GITHUB':
+      switch (tagLabel) {
+        case 'PR Open':
+          return <Icon name='pr-linked' />
+        case 'PR Merged':
+          return <Icon name='pr-merged' />
+        case 'PR Closed':
+          return <Icon name='pr-closed' />
+        case 'PR Draft':
+          return <Icon name='pr-draft' />
+        case 'Issue Open':
+          return <Icon name='issue-linked' />
+        case 'Issue Closed':
+          return <Icon name='issue-closed' />
+        default:
+          return
+      }
+    default:
+      return (
+        <IonIcon
+          className='ms-1'
+          icon={lockClosed}
+          color={color(tagColor).darken(0.1).string()}
+        />
+      )
+  }
 }
 
 const getTooltip = (tag: TTag | undefined) => {
@@ -86,21 +125,7 @@ const TagContent: FC<TagContent> = ({ tag }) => {
           })}
         >
           {tagLabel}
-          {tag.type === 'STALE' ? (
-            <IonIcon
-              className='ms-1'
-              icon={alarmOutline}
-              color={color(tag.color).darken(0.1).string()}
-            />
-          ) : (
-            tag.is_permanent && (
-              <IonIcon
-                className='ms-1'
-                icon={lockClosed}
-                color={color(tag.color).darken(0.1).string()}
-              />
-            )
-          )}
+          {renderIcon(tag.type!, tag.color!, tag.label!)}
         </span>
       }
     >

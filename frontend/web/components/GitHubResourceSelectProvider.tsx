@@ -1,6 +1,6 @@
 import { createContext, useContext, FC, useEffect, useState } from 'react'
 import { useGetGithubResourcesQuery } from 'common/services/useGithub'
-import { ExternalResource, GithubResources, Res } from 'common/types/responses'
+import { ExternalResource, GithubResource, Res } from 'common/types/responses'
 import useInfiniteScroll from 'common/useInfiniteScroll'
 import { Req } from 'common/types/requests'
 
@@ -17,13 +17,14 @@ type GitHubResourceSelectProviderType = {
 
 type GitHubResourceSelectContextType = {
   count: number
-  githubResources?: GithubResources[]
+  githubResources?: GithubResource[]
   isFetching: boolean
   isLoading: boolean
   loadMore: () => void
   loadingCombinedData: boolean
   nextPage?: string
   searchItems: (search: string) => void
+  refresh: () => void
 }
 
 const GitHubResourceSelectContext = createContext<
@@ -34,7 +35,7 @@ export const GitHubResourceSelectProvider: FC<
   GitHubResourceSelectProviderType
 > = ({ children, ...props }) => {
   const [externalResourcesSelect, setExternalResourcesSelect] =
-    useState<GithubResources[]>()
+    useState<GithubResource[]>()
 
   const throttleDelay = 300
 
@@ -44,6 +45,7 @@ export const GitHubResourceSelectProvider: FC<
     isLoading,
     loadMore,
     loadingCombinedData,
+    refresh,
     searchItems,
   } = useInfiniteScroll<Req['getGithubResources'], Res['githubResources']>(
     useGetGithubResourcesQuery,
@@ -62,7 +64,7 @@ export const GitHubResourceSelectProvider: FC<
   useEffect(() => {
     if (results && props.linkedExternalResources) {
       setExternalResourcesSelect(
-        results.filter((i: GithubResources) => {
+        results.filter((i: GithubResource) => {
           const same = props.linkedExternalResources?.some(
             (r) => i.html_url === r.url,
           )
@@ -84,6 +86,7 @@ export const GitHubResourceSelectProvider: FC<
         loadMore,
         loadingCombinedData,
         nextPage: next,
+        refresh,
         searchItems,
       }}
     >
