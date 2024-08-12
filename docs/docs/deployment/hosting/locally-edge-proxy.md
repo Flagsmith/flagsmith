@@ -294,7 +294,7 @@ domain name and you're good to go. For example, lets say you had your proxy runn
 above:
 
 ```bash
-curl "http://localhost:8000/api/v1/flags" -H "x-environment-key: 95DybY5oJoRNhxPZYLrxk4" | jq
+curl "http://localhost:8000/api/v1/flags/" -H "x-environment-key: 95DybY5oJoRNhxPZYLrxk4" | jq
 
 [
     {
