@@ -181,6 +181,17 @@ const UsersPage: FC<UsersPageType> = (props) => {
           Learn more.
         </Button>
       </PageTitle>
+      <div className='chart-container' style={{ height: '600px', width: '100%' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={identitiesData}>
+              <XAxis dataKey="day" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="identities" fill="rgba(75, 192, 192, 0.6)" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       <div>
         <FormGroup>
           <PanelSearch
@@ -274,20 +285,30 @@ const UsersPage: FC<UsersPageType> = (props) => {
             }
           />
         </FormGroup>
-      </div>
-      <div className='chart-container' style={{ height: '600px', width: '100%' }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={identitiesData}>
-            <XAxis dataKey="day" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="identities" fill="rgba(75, 192, 192, 0.6)" />
-          </BarChart>
-        </ResponsiveContainer>
+        <FormGroup>
+          <p className='text-muted col-md-8 fs-small lh-sm mt-4'>
+            Identities are created for your environment automatically when
+            calling identify/get flags from any of the SDKs. We've created{' '}
+            <strong>user_123456</strong> for you so you always have an example
+            identity to test with on your environments.
+          </p>
+          <div className='row'>
+            <div className='col-md-12'>
+              <CodeHelp
+                showInitially
+                title='Creating identities and getting their feature settings'
+                snippets={Constants.codeHelp.CREATE_USER(
+                  props.match.params.environmentId,
+                  identities?.results?.[0]?.identifier,
+                )}
+              />
+            </div>
+          </div>
+        </FormGroup>
       </div>
     </div>
   );
 };
 
 export default UsersPage;
+
