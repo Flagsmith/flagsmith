@@ -664,7 +664,11 @@ def test_handle_api_usage_notifications_for_free_accounts(
     assert email.subject == "Flagsmith API use has reached 100%"
     assert email.body == render_to_string(
         "organisations/api_usage_notification_limit.txt",
-        context={"organisation": organisation, "matched_threshold": 100},
+        context={
+            "organisation": organisation,
+            "matched_threshold": 100,
+            "grace_period": True,
+        },
     )
 
     assert len(email.alternatives) == 1
@@ -673,7 +677,11 @@ def test_handle_api_usage_notifications_for_free_accounts(
 
     assert email.alternatives[0][0] == render_to_string(
         "organisations/api_usage_notification_limit.html",
-        context={"organisation": organisation, "matched_threshold": 100},
+        context={
+            "organisation": organisation,
+            "matched_threshold": 100,
+            "grace_period": True,
+        },
     )
 
     assert email.from_email == "noreply@flagsmith.com"
