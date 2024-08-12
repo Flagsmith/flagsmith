@@ -67,3 +67,9 @@ aptible deploy --app flagsmith --docker-image example/my-flagsmith-aptible-image
 ```
 
 Once Flagsmith is running in Aptible, make sure to create the first admin user by visiting `/api/v1/users/config/init/`.
+
+## Limitations
+
+The steps described in this document do not deploy the
+[asynchronous task processor](/deployment/configuration/task-processor), which may affect performance in production
+workloads.
