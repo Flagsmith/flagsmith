@@ -6,8 +6,8 @@ from task_processor.decorators import register_task_handler
 
 from features.models import Feature
 from integrations.github.client import post_comment_to_github
+from integrations.github.constants import GitHubEventType
 from integrations.github.dataclasses import CallGithubData
-from webhooks.webhooks import WebhookEventType
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +29,9 @@ def send_post_request(data: CallGithubData) -> None:
     )
 
     if (
-        event_type == WebhookEventType.FLAG_UPDATED.value
-        or event_type == WebhookEventType.FLAG_DELETED.value
+        event_type == GitHubEventType.FLAG_UPDATED.value
+        or event_type == GitHubEventType.FLAG_DELETED.value
+        or event_type == GitHubEventType.FLAG_UPDATED_FROM_GHA.value
     ):
         for resource in data.feature_external_resources:
             url = resource.get("url")
@@ -40,7 +41,7 @@ def send_post_request(data: CallGithubData) -> None:
                 installation_id, split_url[1], split_url[2], split_url[4], body
             )
 
-    elif event_type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
+    elif event_type == GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
         url = data.github_data.url
         pathname = urlparse(url).path
         split_url = pathname.split("/")
@@ -80,8 +81,8 @@ def call_github_app_webhook_for_feature_state(event_data: dict[str, Any]) -> Non
         ]
 
     if (
-        github_event_data.type == WebhookEventType.FLAG_DELETED.value
-        or github_event_data.type == WebhookEventType.SEGMENT_OVERRIDE_DELETED.value
+        github_event_data.type == GitHubEventType.FLAG_DELETED.value
+        or github_event_data.type == GitHubEventType.SEGMENT_OVERRIDE_DELETED.value
     ):
         feature_external_resources = generate_feature_external_resources(
             list(
@@ -100,7 +101,7 @@ def call_github_app_webhook_for_feature_state(event_data: dict[str, Any]) -> Non
 
     if (
         github_event_data.type
-        == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
+        == GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
     ):
         data = CallGithubData(
             event_type=github_event_data.type,
