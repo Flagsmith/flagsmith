@@ -37,11 +37,6 @@ class ProjectPermissions(E2ETestPermissionMixin, IsAuthenticated):
         """Check if user has permission to list / create project"""
         if not super().has_permission(request, view):
             return False
-        elif (
-            super().has_permission(request, view)
-            and getattr(request, "is_e2e", False) is True
-        ):
-            return True
 
         if view.action == "create" and request.user.belongs_to(
             int(request.data.get("organisation"))
@@ -61,6 +56,7 @@ class ProjectPermissions(E2ETestPermissionMixin, IsAuthenticated):
             if (
                 subscription_metadata.projects
                 and total_projects_created >= subscription_metadata.projects
+                and getattr(request, "is_e2e", False) is False
             ):
                 return False
             if organisation.restrict_project_create_to_admin:
