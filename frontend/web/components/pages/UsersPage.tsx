@@ -310,5 +310,5 @@ const UsersPage: FC<UsersPageType> = (props) => {
   );
 };
 
-export default UsersPage;
+export default ConfigProvider(UsersPage);
 
