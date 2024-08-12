@@ -17,7 +17,7 @@ urlpatterns = [
     re_path(r"^health", include("health_check.urls", namespace="health")),
     # Aptible health checks must be on /healthcheck and cannot redirect
     # see https://www.aptible.com/docs/core-concepts/apps/connecting-to-apps/app-endpoints/https-endpoints/health-checks
-    path("healthcheck", include("health_check.urls", namespace="health")),
+    path("healthcheck", include("health_check.urls", namespace="aptible")),
     re_path(r"^version", views.version_info, name="version-info"),
     re_path(
         r"^sales-dashboard/",
