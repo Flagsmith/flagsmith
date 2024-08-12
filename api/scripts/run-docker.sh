@@ -1,8 +1,14 @@
 #!/bin/sh
 set -e
 
+function waitfordb() {
+  if [ -z "${SKIP_WAIT_FOR_DB}" ]; then
+     python manage.py waitfordb "$@"
+  fi
+}
+
 function migrate () {
-    python manage.py waitfordb && python manage.py migrate && python manage.py createcachetable
+    waitfordb && python manage.py migrate && python manage.py createcachetable
 }
 function serve() {
     # configuration parameters for statsd. Docs can be found here:
@@ -10,7 +16,7 @@ function serve() {
     export STATSD_PORT=${STATSD_PORT:-8125}
     export STATSD_PREFIX=${STATSD_PREFIX:-flagsmith.api}
 
-    python manage.py waitfordb
+    waitfordb
 
     exec gunicorn --bind 0.0.0.0:8000 \
              --worker-tmp-dir /dev/shm \
@@ -26,9 +32,9 @@ function serve() {
              app.wsgi
 }
 function run_task_processor() {
-    python manage.py waitfordb --waitfor 30 --migrations
+    waitfordb --waitfor 30 --migrations
     if [[ -n "$ANALYTICS_DATABASE_URL" || -n "$DJANGO_DB_NAME_ANALYTICS" ]]; then
-        python manage.py waitfordb --waitfor 30 --migrations --database analytics
+        waitfordb --waitfor 30 --migrations --database analytics
     fi
     RUN_BY_PROCESSOR=1 exec python manage.py runprocessor \
       --sleepintervalms ${TASK_PROCESSOR_SLEEP_INTERVAL:-500} \
