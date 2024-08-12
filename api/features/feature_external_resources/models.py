@@ -91,6 +91,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
                     type=TagType.GITHUB.value,
                 )
                 self.feature.tags.add(github_tag)
+                self.feature.save()
 
             feature_states: list[FeatureState] = []
 

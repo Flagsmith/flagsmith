@@ -79,6 +79,7 @@ def tag_feature_per_github_event(
         )
 
         feature.tags.add(github_tag)
+        feature.save()
 
 
 def handle_installation_deleted(payload: dict[str, Any]) -> None:
