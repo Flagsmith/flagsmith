@@ -117,6 +117,19 @@ options:
 - [Use existing groups from your enterprise identity provider](/system-administration/authentication/SAML/#using-groups-from-your-saml-idp).
   Any time a user logs in using single sign-on, they will be made a member of any groups with matching external IDs.
 
+## Deprecated features
+
+Groups can grant permissions directly to their members in the same way that roles do. This functionality was deprecated
+in Flagsmith 2.135.2. To grant permissions to all members of a group, create a role with the desired permissions and
+assign it to the group instead.
+
+Assigning roles to groups has several benefits over assigning permissions directly to a group:
+
+- Roles can be assigned to Admin API keys, but Admin API keys cannot belong to groups.
+- If you need multiple groups or users with similar permissions, the common permissions can be defined in a role and
+  assigned to multiple groups or users instead of being duplicated.
+- Having roles as the single place where permissions are defined makes auditing permissions easier.
+
 ## Permissions reference
 
 Permissions can be assigned at four levels: user group, organisation, project, and environment.
