@@ -1,3 +1,4 @@
+import json
 import logging
 from enum import Enum
 from typing import Any
@@ -5,11 +6,15 @@ from typing import Any
 import requests
 from django.conf import settings
 from github import Auth, Github
+from requests.exceptions import HTTPError
 
 from integrations.github.constants import (
     GITHUB_API_CALLS_TIMEOUT,
     GITHUB_API_URL,
     GITHUB_API_VERSION,
+    GITHUB_FLAGSMITH_LABEL,
+    GITHUB_FLAGSMITH_LABEL_COLOR,
+    GITHUB_FLAGSMITH_LABEL_DESCRIPTION,
 )
 from integrations.github.dataclasses import (
     IssueQueryParams,
@@ -159,6 +164,9 @@ def fetch_search_github_resource(
             "id": i["id"],
             "title": i["title"],
             "number": i["number"],
+            "state": i["state"],
+            "merged": i.get("merged", False),
+            "draft": i.get("draft", False),
         }
         for i in json_response["items"]
     ]
@@ -244,3 +252,45 @@ def fetch_github_repo_contributors(
     ]
 
     return build_paginated_response(results, response)
+
+
+def create_flagsmith_flag_label(
+    installation_id: str, owner: str, repo: str
+) -> dict[str, Any]:
+    # Create "Flagsmith Flag" label in linked repo
+    url = f"{GITHUB_API_URL}repos/{owner}/{repo}/labels"
+    headers = build_request_headers(installation_id)
+    payload = {
+        "name": GITHUB_FLAGSMITH_LABEL,
+        "color": GITHUB_FLAGSMITH_LABEL_COLOR,
+        "description": GITHUB_FLAGSMITH_LABEL_DESCRIPTION,
+    }
+    try:
+        response = requests.post(
+            url, json=payload, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT
+        )
+        response.raise_for_status()
+        return response.json()
+
+    except HTTPError:
+        response_content = response.content.decode("utf-8")
+        error_data = json.loads(response_content)
+        if any(
+            error["code"] == "already_exists" for error in error_data.get("errors", [])
+        ):
+            logger.warning("Label already exists")
+            return {"message": "Label already exists"}, 200
+
+
+def label_github_issue_pr(
+    installation_id: str, owner: str, repo: str, issue: str
+) -> dict[str, Any]:
+    # Label linked GitHub Issue or PR with the "Flagsmith Flag" label
+    url = f"{GITHUB_API_URL}repos/{owner}/{repo}/issues/{issue}/labels"
+    headers = build_request_headers(installation_id)
+    payload = [GITHUB_FLAGSMITH_LABEL]
+    response = requests.post(
+        url, json=payload, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT
+    )
+    response.raise_for_status()
+    return response.json()

@@ -8,10 +8,10 @@ from features.serializers import (
     CustomCreateSegmentOverrideFeatureStateSerializer,
 )
 from features.versioning.models import EnvironmentFeatureVersion
+from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
 from segments.models import Segment
 from users.models import FFAdminUser
-from webhooks.webhooks import WebhookEventType
 
 
 class CustomEnvironmentFeatureVersionFeatureStateSerializer(
@@ -36,7 +36,7 @@ class CustomEnvironmentFeatureVersionFeatureStateSerializer(
 
             call_github_task(
                 organisation_id=feature_state.environment.project.organisation_id,
-                type=WebhookEventType.FLAG_UPDATED.value,
+                type=GitHubEventType.FLAG_UPDATED.value,
                 feature=feature_state.feature,
                 segment_name=None,
                 url=None,
