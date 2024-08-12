@@ -27,7 +27,7 @@ repos:
       - id: check-toml
 
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.1.0
+    rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
         exclude: ^(frontend/|CHANGELOG.md|.github/docker_build_comment_template.md)
