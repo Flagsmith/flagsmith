@@ -84,6 +84,9 @@ def update_organisation_subscription_information_influx_cache():
     subscription_info_cache.update_caches((SubscriptionCacheEntity.INFLUX,))
 
 
+@register_recurring_task(
+    run_every=timedelta(hours=1),
+)
 @register_task_handler()
 def update_organisation_subscription_information_cache() -> None:
     subscription_info_cache.update_caches(
