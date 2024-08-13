@@ -120,7 +120,7 @@ options:
 ## Deprecated features
 
 Groups can grant permissions directly to their members in the same way that roles do. This functionality was deprecated
-in Flagsmith 2.135.2. To grant permissions to all members of a group, create a role with the desired permissions and
+in Flagsmith 2.137.0. To grant permissions to all members of a group, create a role with the desired permissions and
 assign it to the group instead.
 
 Assigning roles to groups has several benefits over assigning permissions directly to a group:
