@@ -101,9 +101,10 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
         className='mt-2'
         title='Name*'
         data-test='saml-name'
-        tooltip='A short name for the organization, used as the input when clicking "Single Sign-on" at login, should only consist of alphanumeric characters, plus (+), underscore (_), and hyphen (-).'
+        tooltip='An URL-friendly name for this configuration, used as the input when selecting "Single Sign-On" at login. It determines the Assertion Consumer Service (ACS) URL that your identity provider must post SAML responses to. This cannot be changed after the SAML configuration is created.'
         tooltipPlace='right'
         value={name}
+        disabled={isEdit}
         onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
           const newName = Utils.safeParseEventValue(event).replace(/ /g, '_')
           if (validateName(newName)) {
@@ -121,7 +122,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
         className='mt-2 mb-4'
         title='Frontend URL*'
         data-test='frontend-url'
-        tooltip='The base URL of the Flagsmith dashboard'
+        tooltip='The base URL of the Flagsmith dashboard. Users will be redirected here after authenticating successfully.'
         tooltipPlace='right'
         value={data?.frontend_url || frontendUrl}
         onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,8 +137,8 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
       />
       <InputGroup
         className='mt-2 mb-4'
-        title='Allow IDP initiated'
-        tooltip='Determines whether logins can be initiated from the IDP'
+        title='Allow IdP-initiated logins'
+        tooltip="Enable this to allow logins initiated by your identity provider. If disabled, users can only log in from Flagsmith's login page."
         tooltipPlace='right'
         component={
           <Switch
@@ -151,7 +152,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
       <FormGroup className='mb-1'>
         <div className='mt-2 p-0'>
           <Row>
-            <label className='form-label'>IDP Metadata XML</label>
+            <label className='form-label'>IdP metadata XML</label>
             {data?.idp_metadata_xml && (
               <div className='ml-2 clickable' onClick={downloadIDPMetadata}>
                 <Tooltip
@@ -273,13 +274,11 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
     return (
       <div className='create-feature-tab mt-3'>
         <InputGroup
-          title={'SAML Attribute Name*'}
-          tooltip='This is the attribute name where you want to store the information received from the SAML identity provider'
-          tooltipPlace='right'
+          title={'Flagsmith user attribute'}
           component={
             <Select
               value={djangoAttributeName}
-              placeholder='Select a SAML attribute name'
+              placeholder='Select a Flagsmith user attribute'
               options={samlAttributes}
               onChange={(m: samlAttributeType) => {
                 setDjangoAttributeName(m)
@@ -290,9 +289,9 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
         />
         <InputGroup
           className='mt-2'
-          title='IDP Attribute Name*'
+          title='IdP attribute name*'
           data-test='attribute-name'
-          tooltip='This is the specific value of the attribute sent by the SAML identity provider'
+          tooltip='The value(s) of this SAML attribute from your identity provider will be saved to the selected Flagsmith user attribute.'
           tooltipPlace='right'
           value={ipdAttributeName}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {

@@ -36,7 +36,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
   return (
     <div className='mt-3'>
       <PageTitle
-        title={'SAML Configuration'}
+        title={'SAML Configurations'}
         cta={
           <Button
             className='text-right'
@@ -44,7 +44,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
               openCreateSAML('Create SAML configuration', organisationId)
             }}
           >
-            {'Create a SAML Configuration'}
+            {'Create a SAML configuration'}
           </Button>
         }
       />
@@ -62,10 +62,10 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
           header={
             <Row className='table-header'>
               <Flex className='table-column px-3'>
-                <div className='font-weight-medium'>SAML Name</div>
+                <div className='font-weight-medium'>Configuration name</div>
               </Flex>
               <div className='table-column' style={{ width: '205px' }}>
-                Allow IDP Initiated
+                Allow IdP-initiated
               </div>
             </Row>
           }
