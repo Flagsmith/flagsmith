@@ -5,6 +5,16 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
+def _get_sql_file_content(filename: str) -> str:
+    return open(
+        os.path.join(
+            os.path.dirname(__file__),
+            "sql",
+            filename,
+        )
+    ).read()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -46,13 +56,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.RunSQL(
-            sql=open(
-                os.path.join(
-                    os.path.dirname(__file__),
-                    "sql",
-                    "0023_add_versioning_to_segments.sql",
-                )
-            ).read(),
-            reverse_sql=migrations.RunSQL.noop,
+            sql=_get_sql_file_content("0023_add_versioning_to_segments.sql"),
+            reverse_sql=_get_sql_file_content("0023_add_versioning_to_segments_reverse.sql"),
         ),
     ]
