@@ -1,8 +1,4 @@
-from app_analytics.cache import (
-    CACHE_FLUSH_INTERVAL,
-    APIUsageCache,
-    FeatureEvaluationCache,
-)
+from app_analytics.cache import APIUsageCache, FeatureEvaluationCache
 from app_analytics.models import Resource
 from django.utils import timezone
 from freezegun import freeze_time
@@ -10,8 +6,13 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 
-def test_api_usage_cache(mocker: MockerFixture) -> None:
+def test_api_usage_cache(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
     # Given
+    settings.PG_API_USAGE_CACHE_SECONDS = 60
+
     cache = APIUsageCache()
     now = timezone.now()
     mocked_track_request_task = mocker.patch("app_analytics.cache.track_request")
@@ -30,7 +31,7 @@ def test_api_usage_cache(mocker: MockerFixture) -> None:
         assert not mocked_track_request_task.called
 
         # Now, let's move the time forward
-        frozen_time.tick(CACHE_FLUSH_INTERVAL + 1)
+        frozen_time.tick(settings.PG_API_USAGE_CACHE_SECONDS + 1)
 
         # let's track another request(to trigger flush)
         cache.track_request(
