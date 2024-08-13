@@ -82,9 +82,9 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        match = re.search(pattern, url)
-        if match:
-            owner, repo, issue = match.groups()
+        url_match = re.search(pattern, url)
+        if url_match:
+            owner, repo, issue = url_match.groups()
             if GithubRepository.objects.get(
                 github_configuration=github_configuration,
                 repository_owner=owner,
