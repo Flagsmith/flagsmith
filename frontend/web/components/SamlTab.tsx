@@ -16,6 +16,13 @@ import { SAMLConfiguration } from 'common/types/responses'
 export type SamlTabType = {
   organisationId: number
 }
+
+const copyAcsUrl = async (configurationName: string) => {
+  await navigator.clipboard.writeText(
+    `${Project.flagsmithClientAPI}auth/saml/${configurationName}/response/`,
+  )
+  toast('Copied to clipboard')
+}
 const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
   const { data } = useGetSamlConfigurationsQuery({
     organisation_id: organisationId,
@@ -64,6 +71,9 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
               <Flex className='table-column px-3'>
                 <div className='font-weight-medium'>Configuration name</div>
               </Flex>
+              <div className='table-column' style={{ width: '305px' }}>
+                Assertion Consumer Service (ACS) URL
+              </div>
               <div className='table-column' style={{ width: '205px' }}>
                 Allow IdP-initiated
               </div>
@@ -86,6 +96,20 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
               <Flex className='table-column px-3'>
                 <div className='font-weight-medium mb-1'>{samlConf.name}</div>
               </Flex>
+              <div className='table-column' style={{ width: '300px' }}>
+                <Button
+                  onClick={async (e) => {
+                    e.stopPropagation()
+                    await copyAcsUrl(samlConf.name)
+                  }}
+                  theme='text'
+                >
+                  <div className='flex flex-row space-4'>
+                    <div>Copy to clipboard</div>
+                    <Icon name='copy' />
+                  </div>
+                </Button>
+              </div>
               <div className='table-column' style={{ width: '95px' }}>
                 <Switch checked={samlConf.allow_idp_initiated} />
               </div>
