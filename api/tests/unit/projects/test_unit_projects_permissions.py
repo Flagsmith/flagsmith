@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 
 import pytest
@@ -48,6 +49,31 @@ def test_create_project_has_permission(
     mock_request = mock.MagicMock(
         user=staff_user, data={"name": "Test", "organisation": organisation.id}
     )
+    mock_view = mock.MagicMock(action="create", detail=False)
+    project_permissions = ProjectPermissions()
+
+    # When
+    response = project_permissions.has_permission(mock_request, mock_view)
+
+    # Then
+    assert response is True
+
+
+def test_create_project_has_permission_with_e2e_test_auth_token(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    with_organisation_permissions: WithOrganisationPermissionsCallable,
+) -> None:
+    # Given
+    with_organisation_permissions([CREATE_PROJECT])
+    mock_request = mock.MagicMock(
+        user=staff_user, data={"name": "Test", "organisation": organisation.id}
+    )
+    token = "test-token"
+    settings.ENABLE_FE_E2E = True
+    os.environ["E2E_TEST_AUTH_TOKEN"] = token
+
+    mock_request.META = {"E2E_TEST_AUTH_TOKEN": token}
     mock_view = mock.MagicMock(action="create", detail=False)
     project_permissions = ProjectPermissions()
 
