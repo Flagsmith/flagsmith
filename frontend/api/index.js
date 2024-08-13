@@ -123,6 +123,10 @@ app.get('/config/project-overrides', (req, res) => {
       name: 'githubAppURL',
       value: process.env.GITHUB_APP_URL,
     },
+    {
+      name: 'e2eToken',
+      value: process.env.E2E_TEST_TOKEN || '',
+    },
   ]
   let output = values.map(getVariable).join('')
   let dynatrace = ''
