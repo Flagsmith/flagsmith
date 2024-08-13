@@ -14,6 +14,7 @@ import Utils from 'common/utils/utils'
 import RolePermissionsList from './RolePermissionsList'
 import ProjectFilter from './ProjectFilter'
 import OrganisationStore from 'common/stores/organisation-store'
+import WarningMessage from './WarningMessage'
 
 type PermissionsTabsType = {
   orgId?: number
@@ -55,96 +56,119 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
     return
   }
 
+  const deprecationMessage = (
+    <div>
+      Group-level permissions are deprecated. Assign{' '}
+      <a href='?type=roles' target='_blank'>
+        roles
+      </a>{' '}
+      to this group instead.{' '}
+      <a
+        href='https://docs.flagsmith.com/system-administration/rbac#deprecated-features'
+        target='_blank'
+        rel='noreferrer'
+      >
+        Learn more
+      </a>
+      .
+    </div>
+  )
+
   return (
-    <Tabs
-      uncontrolled={uncontrolled}
-      value={value}
-      onChange={onChange}
-      theme='pill m-0'
-      isRoles={true}
-    >
-      <TabItem
-        tabLabel={<Row className='justify-content-center'>Organisation</Row>}
+    <>
+      {!!group && <WarningMessage warningMessage={deprecationMessage} />}
+      <Tabs
+        uncontrolled={uncontrolled}
+        value={value}
+        onChange={onChange}
+        theme='pill m-0'
+        isRoles={true}
       >
-        <EditPermissionsModal
-          id={orgId}
-          group={group}
-          isGroup={!!group}
-          user={user}
-          className='mt-2'
-          level={'organisation'}
-          role={role}
-        />
-      </TabItem>
-      <TabItem tabLabel={<Row className='justify-content-center'>Project</Row>}>
-        <Row className='justify-content-between'>
-          <h5 className='my-3'>Permissions</h5>
-          <Input
-            type='text'
-            className='ml-3'
-            value={searchProject}
-            onChange={(e: InputEvent) =>
-              setSearchProject(Utils.safeParseEventValue(e))
-            }
-            size='small'
-            placeholder='Search'
-            search
+        <TabItem
+          tabLabel={<Row className='justify-content-center'>Organisation</Row>}
+        >
+          <EditPermissionsModal
+            id={orgId}
+            group={group}
+            isGroup={!!group}
+            user={user}
+            className='mt-2'
+            level={'organisation'}
+            role={role}
           />
-        </Row>
-        <RolePermissionsList
-          user={user}
-          group={group}
-          orgId={orgId}
-          filter={searchProject}
-          mainItems={projectData}
-          role={role}
-          level={'project'}
-          ref={tabRef}
-        />
-      </TabItem>
-      <TabItem
-        tabLabel={<Row className='justify-content-center'>Environment</Row>}
-      >
-        <Row className='justify-content-between'>
-          <h5 className='my-3'>Permissions</h5>
-          <Input
-            type='text'
-            className='ml-3'
-            value={searchEnv}
-            onChange={(e: InputEvent) =>
-              setSearchEnv(Utils.safeParseEventValue(e))
-            }
-            size='small'
-            placeholder='Search'
-            search
-          />
-        </Row>
-        <div className='mb-2' style={{ width: 250 }}>
-          <ProjectFilter
-            organisationId={orgId}
-            onChange={setProject}
-            value={project}
-          />
-        </div>
-        {environments.length > 0 && (
+        </TabItem>
+        <TabItem
+          tabLabel={<Row className='justify-content-center'>Project</Row>}
+        >
+          <Row className='justify-content-between'>
+            <h5 className='my-3'>Permissions</h5>
+            <Input
+              type='text'
+              className='ml-3'
+              value={searchProject}
+              onChange={(e: InputEvent) =>
+                setSearchProject(Utils.safeParseEventValue(e))
+              }
+              size='small'
+              placeholder='Search'
+              search
+            />
+          </Row>
           <RolePermissionsList
             user={user}
-            orgId={orgId}
             group={group}
-            filter={searchEnv}
-            mainItems={(environments || [])?.map((v) => {
-              return {
-                id: role ? v.id : v.api_key,
-                name: v.name,
-              }
-            })}
+            orgId={orgId}
+            filter={searchProject}
+            mainItems={projectData}
             role={role}
-            level={'environment'}
+            level={'project'}
             ref={tabRef}
           />
-        )}
-      </TabItem>
-    </Tabs>
+        </TabItem>
+        <TabItem
+          tabLabel={<Row className='justify-content-center'>Environment</Row>}
+        >
+          <Row className='justify-content-between'>
+            <h5 className='my-3'>Permissions</h5>
+            <Input
+              type='text'
+              className='ml-3'
+              value={searchEnv}
+              onChange={(e: InputEvent) =>
+                setSearchEnv(Utils.safeParseEventValue(e))
+              }
+              size='small'
+              placeholder='Search'
+              search
+            />
+          </Row>
+          <div className='mb-2' style={{ width: 250 }}>
+            <ProjectFilter
+              organisationId={orgId}
+              onChange={setProject}
+              value={project}
+            />
+          </div>
+          {environments.length > 0 && (
+            <RolePermissionsList
+              user={user}
+              orgId={orgId}
+              group={group}
+              filter={searchEnv}
+              mainItems={(environments || [])?.map((v) => {
+                return {
+                  id: role ? v.id : v.api_key,
+                  name: v.name,
+                }
+              })}
+              role={role}
+              level={'environment'}
+              ref={tabRef}
+            />
+          )}
+        </TabItem>
+      </Tabs>
+    </>
   )
 }
 
