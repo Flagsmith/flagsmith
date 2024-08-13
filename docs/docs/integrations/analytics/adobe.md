@@ -6,11 +6,7 @@ hide_title: true
 
 ![Adobe](/img/integrations/adobe/adobe-logo.svg)
 
-You can integrate Flagsmith with Adobe Analytics. You can automate AB tests by connecting the Flagsmith platform with
-Adobe Analytics.
-
-:::tip
-
-The Adobe Analytics integration is in Alpha - please contact us to join the Alpha!
-
-:::
+Flagsmith does not currently support integrating with Adobe Analytics, but we are eager to build this integration based
+on your requirements.
+<a class="open-chat" data-crisp-chat-message="Hello, I'm interested in integrating with Adobe Analytics. ">Contact
+us</a> if you are interested in this or any other integrations.

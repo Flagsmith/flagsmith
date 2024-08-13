@@ -18,8 +18,10 @@ import FeatureVersion from 'components/FeatureVersion'
 import InlineModal from 'components/InlineModal'
 import TableFilterItem from 'components/tables/TableFilterItem'
 import moment from 'moment'
+import { Link } from 'react-router-dom'
+import DateList from 'components/DateList'
 
-const widths = [250, 100]
+const widths = [250, 150]
 type FeatureHistoryPageType = {
   router: RouterChildContext['router']
 
@@ -40,11 +42,12 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
   ) as any
   // @ts-ignore
   const environmentId = `${env?.id}`
+  const environmentApiKey = `${env?.api_key}`
   const { data: users } = useGetUsersQuery({
     organisationId: AccountStore.getOrganisation().id,
   })
   const [page, setPage] = useState(1)
-  const { data } = useGetFeatureVersionsQuery(
+  const { data, isLoading } = useGetFeatureVersionsQuery(
     {
       environmentId,
       featureId: feature,
@@ -85,22 +88,13 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
           </div>
         </div>
       </div>
-      <div>
-        <PanelSearch
-          className='no-pad overflow-visible'
-          items={data?.results}
+      <div className='mt-4'>
+        <DateList<TFeatureVersion>
+          items={data}
+          isLoading={isLoading}
+          nextPage={() => setPage(page + 1)}
+          prevPage={() => setPage(page + 1)}
           goToPage={setPage}
-          header={
-            <Row className='table-header'>
-              <div className='table-column' style={{ width: widths[0] }}>
-                Date
-              </div>
-              <div className='table-column text-left flex-fill'>User</div>
-              <div className='table-column' style={{ width: widths[1] }}>
-                View
-              </div>
-            </Row>
-          }
           renderRow={(v: TFeatureVersion, i: number) => {
             const user = users?.find((user) => v.published_by === user.id)
 
@@ -108,16 +102,35 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
               <Row className='list-item py-2 mh-auto'>
                 <div className='flex-fill'>
                   <div className='flex-row flex-fill'>
-                    <div className='table-column' style={{ width: widths[0] }}>
-                      {moment(v.live_from).format('Do MMM HH:mma')}
-                      {!i && <span className='chip ms-2'>Live</span>}
+                    <div
+                      className='table-column flex-fill'
+                      style={{ width: widths[0] }}
+                    >
+                      <div className='font-weight-medium d-flex gap-2 align-items-center mb-1'>
+                        {moment(v.live_from).format('HH:mma')}
+                        <div className='text-muted fw-normal text-small'>
+                          {user
+                            ? `${user.first_name || ''} ${
+                                user.last_name || ''
+                              } `
+                            : 'System '}
+                        </div>
+                        {!i && <span className='chip chip--xs px-2'>Live</span>}
+                      </div>
                     </div>
-                    <div className='table-column text-left flex-fill'>
-                      {user
-                        ? `${user.first_name || ''} ${user.last_name || ''} `
-                        : 'System '}
+                    <div className='table-column' style={{ width: widths[1] }}>
+                      <Link
+                        to={`/project/${match.params.projectId}/environment/${environmentApiKey}/history/${v.uuid}/`}
+                      >
+                        <Button
+                          theme='text'
+                          className='px-0 text-primary'
+                          size='xSmall'
+                        >
+                          View Details
+                        </Button>
+                      </Link>
                     </div>
-
                     <div className='table-column' style={{ width: widths[1] }}>
                       {i + 1 !== data!.results.length && (
                         <>
@@ -152,7 +165,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                                 theme='text'
                                 size='xSmall'
                               >
-                                Compare
+                                Quick compare
                               </Button>
                             </div>
                           )}

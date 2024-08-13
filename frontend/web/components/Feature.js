@@ -51,7 +51,7 @@ export default class Feature extends PureComponent {
       ? 'User override'
       : !!multivariate_options && multivariate_options.length
       ? `Control Value - ${controlPercentage}%`
-      : `Value (optional)`
+      : `Value`
 
     const showValue = !(
       !!identity &&

@@ -1,7 +1,7 @@
 // import propTypes from 'prop-types';
 import React, { PureComponent } from 'react'
 import Icon from './Icon'
-import { close } from 'ionicons/icons'
+import { close, checkmark } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 
 export default class InfoMessage extends PureComponent {
@@ -12,30 +12,27 @@ export default class InfoMessage extends PureComponent {
   }
 
   render() {
-    const infoMessageClass = `alert alert-info ${
-      this.props.infoMessageClass || 'flex-1'
-    }`
-    const titleDescClass = this.props.infoMessageClass
-      ? `${this.props.infoMessageClass} body mr-2`
-      : ''
-
     return (
-      <div className={infoMessageClass}>
-        <span className={`icon-alert ${this.props.infoMessageClass} info-icon`}>
+      <div className={'alert alert-info flex-1'}>
+        <span className={`icon-alert info-icon`}>
           <Icon fill={'#0AADDF'} name={this.props.icon || 'info'} />
         </span>
-        <div className={titleDescClass}>
+        <div className={'flex-fill'}>
           <div className='title'>{this.props.title || 'NOTE'}</div>
-          {this.props.children}
+          <div className='flex-fill'>{this.props.children}</div>
         </div>
-        {this.props.url && (
-          <Button className='btn my-2' onClick={this.handleOpenNewWindow}>
+        {this.props.url && this.props.buttonText && (
+          <Button
+            size='small'
+            className='btn my-2 ml-2'
+            onClick={this.handleOpenNewWindow}
+          >
             {this.props.buttonText}
           </Button>
         )}
         {this.props.isClosable && (
           <a onClick={this.props.close} className='mt-n2 mr-n2 pl-2'>
-            <span className={`icon ${this.props.infoMessageClass} close-btn`}>
+            <span className={`icon close-btn`}>
               <IonIcon icon={close} />
             </span>
           </a>

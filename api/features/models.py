@@ -74,6 +74,7 @@ from features.value_types import (
     STRING,
 )
 from features.versioning.models import EnvironmentFeatureVersion
+from integrations.github.constants import GitHubEventType
 from metadata.models import Metadata
 from projects.models import Project
 from projects.tags.models import Tag
@@ -139,7 +140,6 @@ class Feature(
     @hook(AFTER_SAVE)
     def create_github_comment(self) -> None:
         from integrations.github.github import call_github_task
-        from webhooks.webhooks import WebhookEventType
 
         if (
             self.external_resources.exists()
@@ -150,7 +150,7 @@ class Feature(
 
             call_github_task(
                 organisation_id=self.project.organisation_id,
-                type=WebhookEventType.FLAG_DELETED.value,
+                type=GitHubEventType.FLAG_DELETED.value,
                 feature=self,
                 segment_name=None,
                 url=None,
@@ -389,6 +389,11 @@ class FeatureSegment(
     def get_audit_log_related_object_id(self, history_instance) -> int:
         return self.feature_id
 
+    def get_skip_create_audit_log(self) -> bool:
+        # Don't create audit logs when deleting feature segments using versioning
+        # v2 as we rely on the version history instead.
+        return self.environment_feature_version_id is not None
+
     def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
         return SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
             self.feature.name,
@@ -401,7 +406,6 @@ class FeatureSegment(
     @hook(AFTER_DELETE)
     def create_github_comment(self) -> None:
         from integrations.github.github import call_github_task
-        from webhooks.webhooks import WebhookEventType
 
         if (
             self.feature.external_resources.exists()
@@ -411,7 +415,7 @@ class FeatureSegment(
 
             call_github_task(
                 self.feature.project.organisation_id,
-                WebhookEventType.SEGMENT_OVERRIDE_DELETED.value,
+                GitHubEventType.SEGMENT_OVERRIDE_DELETED.value,
                 self.feature,
                 self.segment.name,
                 None,
@@ -1079,6 +1083,9 @@ class FeatureStateValue(
         self.integer_value = source_feature_state_value.integer_value
         self.string_value = source_feature_state_value.string_value
         self.save()
+
+    def get_skip_create_audit_log(self) -> bool:
+        return self.feature_state.get_skip_create_audit_log()
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         fs = self.feature_state

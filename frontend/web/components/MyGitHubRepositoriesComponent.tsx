@@ -38,7 +38,7 @@ const MyGitHubRepositoriesComponent: FC<MyGitHubRepositoriesComponentType> = ({
   useEffect(() => {
     if (reposFromGithub && GithubReposFromFlagsmith) {
       setReposSelect(
-        reposFromGithub.repositories.filter((repo) => {
+        reposFromGithub.results?.filter((repo) => {
           const same = GithubReposFromFlagsmith.results.some(
             (res) => repo.name === res.repository_name,
           )

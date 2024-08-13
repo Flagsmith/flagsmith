@@ -1,5 +1,7 @@
+import json
 from datetime import timedelta
 
+import freezegun
 import pytest
 from django.contrib.sites.models import Site
 from django.utils import timezone
@@ -9,13 +11,17 @@ from audit.constants import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
     CHANGE_REQUEST_COMMITTED_MESSAGE,
     CHANGE_REQUEST_CREATED_MESSAGE,
+    ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE,
     FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE,
 )
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature, FeatureState
-from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.models import (
+    EnvironmentFeatureVersion,
+    VersionChangeSet,
+)
 from features.versioning.versioning_service import get_environment_flags_list
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
@@ -703,3 +709,67 @@ def test_can_delete_committed_change_request_scheduled_for_the_future_with_envir
 
     # Then
     assert not ChangeRequest.objects.filter(id=change_request.id).exists()
+
+
+def test_committing_change_request_with_environment_feature_versions_creates_publish_audit_log(
+    feature: Feature, environment_v2_versioning: Environment, admin_user: FFAdminUser
+) -> None:
+    # Given
+    change_request = ChangeRequest.objects.create(
+        title="Test CR",
+        environment=environment_v2_versioning,
+        user=admin_user,
+    )
+
+    environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning,
+        feature=feature,
+        change_request=change_request,
+    )
+
+    # When
+    change_request.commit(admin_user)
+
+    # Then
+    assert AuditLog.objects.filter(
+        related_object_uuid=environment_feature_version.uuid,
+        related_object_type=RelatedObjectType.EF_VERSION.name,
+        log=ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE % feature.name,
+    ).exists()
+
+
+def test_change_request_live_from_for_change_request_with_change_set(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    change_request = ChangeRequest.objects.create(
+        title="Test CR",
+        environment=environment_v2_versioning,
+        user=admin_user,
+    )
+    VersionChangeSet.objects.create(
+        change_request=change_request,
+        feature=feature,
+        feature_states_to_update=json.dumps(
+            [
+                {
+                    "feature_segment": None,
+                    "enabled": True,
+                    "feature_state_value": {
+                        "type": "unicode",
+                        "string_value": "updated",
+                    },
+                }
+            ]
+        ),
+    )
+
+    # When
+    now = timezone.now()
+    with freezegun.freeze_time(now):
+        change_request.commit(admin_user)
+
+    # Then
+    assert change_request.live_from == now

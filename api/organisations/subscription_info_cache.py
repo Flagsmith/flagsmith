@@ -1,7 +1,9 @@
 import typing
+from datetime import timedelta
 
 from app_analytics.influxdb_wrapper import get_top_organisations
 from django.conf import settings
+from django.utils import timezone
 
 from .chargebee import get_subscription_metadata_from_id
 from .models import Organisation, OrganisationSubscriptionInformationCache
@@ -70,9 +72,19 @@ def _update_caches_with_influx_data(
     if not settings.INFLUXDB_TOKEN:
         return
 
-    for date_range, limit in (("30d", ""), ("7d", ""), ("24h", "100")):
-        key = f"api_calls_{date_range}"
-        org_calls = get_top_organisations(date_range, limit)
+    for _date_start, limit in (("-30d", ""), ("-7d", ""), ("-24h", "100")):
+        key = f"api_calls_{_date_start[1:]}"
+
+        now = timezone.now()
+        if _date_start.endswith("d"):
+            date_start = now - timedelta(days=int(_date_start[1:-1]))
+        elif _date_start.endswith("h"):
+            date_start = now - timedelta(hours=int(_date_start[1:-1]))
+        else:
+            assert False, "Expecting either days (d) or hours (h)"  # pragma: no cover
+
+        org_calls = get_top_organisations(date_start, limit)
+
         for org_id, calls in org_calls.items():
             subscription_info_cache = organisation_info_cache_dict.get(org_id)
             if not subscription_info_cache:

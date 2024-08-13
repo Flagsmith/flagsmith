@@ -133,11 +133,11 @@
                 },
                 {
                     "name": "SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.00003"
+                    "value": "0.000003"
                 },
                 {
                     "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.01"
+                    "value": "0.002"
                 },
                 {
                     "name": "SLACK_CLIENT_ID",
@@ -154,6 +154,10 @@
                 {
                     "name": "CACHE_BAD_ENVIRONMENTS_SECONDS",
                     "value": "60"
+                },
+                {
+                    "name": "FEATURE_EVALUATION_CACHE_SECONDS",
+                    "value": "300"
                 },
                 {
                     "name": "EDGE_RELEASE_DATETIME",

@@ -196,13 +196,13 @@ def test_updating_feature_should_allow_case_insensitive_name(project: Project) -
 def test_when_create_feature_with_tags_then_success(project: Project) -> None:
     # Given
     tag1 = Tag.objects.create(
-        label="Test Tag",
+        label="Test Tag 1",
         color="#fffff",
         description="Test Tag description",
         project=project,
     )
     tag2 = Tag.objects.create(
-        label="Test Tag",
+        label="Test Tag 2",
         color="#fffff",
         description="Test Tag description",
         project=project,
@@ -210,8 +210,7 @@ def test_when_create_feature_with_tags_then_success(project: Project) -> None:
     feature = Feature.objects.create(project=project, name="test feature")
 
     # When
-    tags_for_feature = Tag.objects.all()
-    feature.tags.set(tags_for_feature)
+    feature.tags.set([tag1, tag2])
     feature.save()
 
     assert feature.tags.count() == 2
@@ -660,7 +659,7 @@ def test_feature_state_get_skip_create_audit_log_if_uncommitted_change_request(
 
 
 def test_feature_state_get_skip_create_audit_log_if_environment_feature_version(
-    environment_v2_versioning, feature
+    environment_v2_versioning: Environment, feature: Feature
 ):
     # Given
     environment_feature_version = EnvironmentFeatureVersion.objects.get(
@@ -674,6 +673,23 @@ def test_feature_state_get_skip_create_audit_log_if_environment_feature_version(
 
     # Then
     assert feature_state.get_skip_create_audit_log() is True
+
+
+def test_feature_state_value_get_skip_create_audit_log_if_environment_feature_version(
+    environment_v2_versioning: Environment, feature: Feature
+):
+    # Given
+    environment_feature_version = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+    feature_state = FeatureState.objects.get(
+        environment=environment_v2_versioning,
+        feature=feature,
+        environment_feature_version=environment_feature_version,
+    )
+
+    # Then
+    assert feature_state.feature_state_value.get_skip_create_audit_log() is True
 
 
 @pytest.mark.parametrize(

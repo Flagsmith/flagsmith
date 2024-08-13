@@ -1,8 +1,10 @@
 import logging
 import typing
 from dataclasses import asdict
+from typing import Any
 
 from core.helpers import get_current_site_url
+from django.db.models import Q
 from django.utils.formats import get_format
 
 from features.models import Feature, FeatureState, FeatureStateValue
@@ -16,13 +18,90 @@ from integrations.github.constants import (
     LINK_SEGMENT_TITLE,
     UNLINKED_FEATURE_TEXT,
     UPDATED_FEATURE_TEXT,
+    GitHubEventType,
+    GitHubTag,
 )
 from integrations.github.dataclasses import GithubData
 from integrations.github.models import GithubConfiguration
 from integrations.github.tasks import call_github_app_webhook_for_feature_state
-from webhooks.webhooks import WebhookEventType
+from projects.tags.models import Tag, TagType
 
 logger = logging.getLogger(__name__)
+
+tag_by_event_type = {
+    "pull_request": {
+        "closed": GitHubTag.PR_CLOSED.value,
+        "converted_to_draft": GitHubTag.PR_DRAFT.value,
+        "opened": GitHubTag.PR_OPEN.value,
+        "reopened": GitHubTag.PR_OPEN.value,
+        "ready_for_review": GitHubTag.PR_OPEN.value,
+        "merged": GitHubTag.PR_MERGED.value,
+    },
+    "issues": {
+        "closed": GitHubTag.ISSUE_CLOSED.value,
+        "opened": GitHubTag.ISSUE_OPEN.value,
+        "reopened": GitHubTag.ISSUE_OPEN.value,
+    },
+}
+
+
+def tag_feature_per_github_event(
+    event_type: str, action: str, metadata: dict[str, Any]
+) -> None:
+
+    # Get Feature with external resource of type GITHUB and url matching the resource URL
+    feature = Feature.objects.filter(
+        Q(external_resources__type="GITHUB_PR")
+        | Q(external_resources__type="GITHUB_ISSUE"),
+        external_resources__url=metadata.get("html_url"),
+    ).first()
+
+    if feature:
+        if (
+            event_type == "pull_request"
+            and action == "closed"
+            and metadata.get("merged")
+        ):
+            action = "merged"
+        # Get corresponding project Tag to tag the feature
+        github_tag = Tag.objects.get(
+            label=tag_by_event_type[event_type][action],
+            project=feature.project_id,
+            is_system_tag=True,
+            type=TagType.GITHUB.value,
+        )
+        tag_label_pattern = "Issue" if event_type == "issues" else "PR"
+        # Remove all GITHUB tags from the feature which label starts with issue or pr depending on event_type
+        feature.tags.remove(
+            *feature.tags.filter(
+                Q(type=TagType.GITHUB.value) & Q(label__startswith=tag_label_pattern)
+            )
+        )
+
+        feature.tags.add(github_tag)
+        feature.save()
+
+
+def handle_installation_deleted(payload: dict[str, Any]) -> None:
+    installation_id = payload.get("installation", {}).get("id")
+    if installation_id is not None:
+        try:
+            GithubConfiguration.objects.get(installation_id=installation_id).delete()
+        except GithubConfiguration.DoesNotExist:
+            logger.error(
+                f"GitHub Configuration with installation_id {installation_id} does not exist"
+            )
+    else:
+        logger.error(f"The installation_id is not present in the payload: {payload}")
+
+
+def handle_github_webhook_event(event_type: str, payload: dict[str, Any]) -> None:
+    if event_type == "installation" and payload.get("action") == "deleted":
+        handle_installation_deleted(payload)
+    elif event_type in tag_by_event_type:
+        action = str(payload.get("action"))
+        metadata = payload.get("issue", {}) or payload.get("pull_request", {})
+        tag_feature_per_github_event(event_type, action, metadata)
 
 
 def generate_body_comment(
@@ -34,13 +113,12 @@ def generate_body_comment(
     segment_name: str | None = None,
 ) -> str:
 
-    is_update = event_type == WebhookEventType.FLAG_UPDATED.value
-    is_removed = event_type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
+    is_removed = event_type == GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
     is_segment_override_deleted = (
-        event_type == WebhookEventType.SEGMENT_OVERRIDE_DELETED.value
+        event_type == GitHubEventType.SEGMENT_OVERRIDE_DELETED.value
     )
 
-    if event_type == WebhookEventType.FLAG_DELETED.value:
+    if event_type == GitHubEventType.FLAG_DELETED.value:
         return DELETED_FEATURE_TEXT % (name)
 
     if is_removed:
@@ -49,7 +127,12 @@ def generate_body_comment(
     if is_segment_override_deleted and segment_name is not None:
         return DELETED_SEGMENT_OVERRIDE_TEXT % (segment_name, name)
 
-    result = UPDATED_FEATURE_TEXT % (name) if is_update else LINK_FEATURE_TITLE % (name)
+    result = ""
+    if event_type == GitHubEventType.FLAG_UPDATED.value:
+        result = UPDATED_FEATURE_TEXT % (name)
+    else:
+        result = LINK_FEATURE_TITLE % (name)
+
     last_segment_name = ""
     if len(feature_states) > 0 and not feature_states[0].get("segment_name"):
         result += FEATURE_TABLE_HEADER
@@ -106,7 +189,7 @@ def generate_data(
             if check_not_none(feature_state_value):
                 feature_env_data["feature_state_value"] = feature_state_value
 
-            if type is not WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
+            if type is not GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
                 feature_env_data["environment_name"] = feature_state.environment.name
                 feature_env_data["enabled"] = feature_state.enabled
                 feature_env_data["last_updated"] = feature_state.updated_at.strftime(
@@ -131,7 +214,7 @@ def generate_data(
         type=type,
         url=(
             url
-            if type == WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
+            if type == GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
             else None
         ),
         feature_states=feature_states_list if feature_states else None,

@@ -15,11 +15,13 @@ import Icon from 'components/Icon'
 import _data from 'common/data/base/_data'
 import AccountStore from 'common/stores/account-store'
 import PageTitle from 'components/PageTitle'
+import SamlTab from 'components/SamlTab'
 
 const SettingsTab = {
   'Billing': 'billing',
   'General': 'general',
   'Keys': 'keys',
+  'SAML': 'saml',
   'Usage': 'usage',
   'Webhooks': 'webhooks',
 }
@@ -230,12 +232,18 @@ const OrganisationSettingsPage = class extends Component {
                     AccountStore.getUser() &&
                     AccountStore.getOrganisationRole() === 'ADMIN'
                   ) {
+                    const showSaml =
+                      Utils.getPlanPermission(
+                        organisation.subscription?.plan,
+                        'SAML',
+                      ) && Utils.getFlagsmithHasFeature('saml_configuration')
                     displayedTabs.push(
                       ...[
                         SettingsTab.General,
                         paymentsEnabled && !isAWS ? SettingsTab.Billing : null,
                         SettingsTab.Keys,
                         SettingsTab.Webhooks,
+                        showSaml ? SettingsTab.SAML : null,
                       ].filter((v) => !!v),
                     )
                   } else {
@@ -605,6 +613,11 @@ const OrganisationSettingsPage = class extends Component {
                                 />
                               )}
                             </FormGroup>
+                          </TabItem>
+                        )}
+                        {displayedTabs.includes(SettingsTab.SAML) && (
+                          <TabItem tabLabel='SAML'>
+                            <SamlTab organisationId={organisation.id} />
                           </TabItem>
                         )}
                       </Tabs>

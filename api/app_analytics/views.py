@@ -4,14 +4,9 @@ from app_analytics.analytics_db_service import (
     get_total_events_count,
     get_usage_data,
 )
-from app_analytics.tasks import (
-    track_feature_evaluation,
-    track_feature_evaluation_v2,
-)
-from app_analytics.track import (
-    track_feature_evaluation_influxdb,
-    track_feature_evaluation_influxdb_v2,
-)
+from app_analytics.cache import FeatureEvaluationCache
+from app_analytics.tasks import track_feature_evaluation_v2
+from app_analytics.track import track_feature_evaluation_influxdb_v2
 from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -38,6 +33,7 @@ from .serializers import (
 )
 
 logger = logging.getLogger(__name__)
+feature_evaluation_cache = FeatureEvaluationCache()
 
 
 class SDKAnalyticsFlagsV2(CreateAPIView):
@@ -141,22 +137,10 @@ class SDKAnalyticsFlags(GenericAPIView):
                 content_type="application/json",
                 status=status.HTTP_200_OK,
             )
-
-        if settings.USE_POSTGRES_FOR_ANALYTICS:
-            track_feature_evaluation.delay(
-                args=(
-                    request.environment.id,
-                    request.data,
-                )
+        for feature_name, eval_count in self.request.data.items():
+            feature_evaluation_cache.track_feature_evaluation(
+                request.environment.id, feature_name, eval_count
             )
-        elif settings.INFLUXDB_TOKEN:
-            track_feature_evaluation_influxdb.delay(
-                args=(
-                    request.environment.id,
-                    request.data,
-                )
-            )
-
         return Response(status=status.HTTP_200_OK)
 
     def _is_data_valid(self) -> bool:

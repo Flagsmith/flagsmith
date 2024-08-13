@@ -96,16 +96,3 @@ def dynamo_environment_wrapper(
     wrapper = DynamoEnvironmentWrapper()
     wrapper.table_name = flagsmith_environment_table.name
     return wrapper
-
-
-@pytest.fixture()
-def app_settings_for_dynamodb(
-    settings: SettingsWrapper,
-    flagsmith_environment_table: Table,
-    flagsmith_environments_v2_table: Table,
-    flagsmith_identities_table: Table,
-) -> None:
-    settings.ENVIRONMENTS_TABLE_NAME_DYNAMO = flagsmith_environment_table.name
-    settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = flagsmith_environments_v2_table.name
-    settings.IDENTITIES_TABLE_NAME_DYNAMO = flagsmith_identities_table.name
-    return

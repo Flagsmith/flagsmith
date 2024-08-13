@@ -1,5 +1,6 @@
 import logging
 import typing
+from datetime import timedelta
 from functools import reduce
 
 from app_analytics.analytics_db_service import get_feature_evaluation_data
@@ -9,6 +10,7 @@ from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
 from django.db.models import Max, Q, QuerySet
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg import openapi
@@ -52,7 +54,7 @@ from .permissions import (
 )
 from .serializers import (
     CreateFeatureSerializer,
-    CreateSegmentOverrideFeatureStateSerializer,
+    CustomCreateSegmentOverrideFeatureStateSerializer,
     FeatureEvaluationDataSerializer,
     FeatureGroupOwnerInputSerializer,
     FeatureInfluxDataSerializer,
@@ -352,9 +354,20 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         query_serializer = GetInfluxDataQuerySerializer(data=request.query_params)
         query_serializer.is_valid(raise_exception=True)
+        period = query_serializer.data["period"]
+        now = timezone.now()
+        if period.endswith("h"):
+            date_start = now - timedelta(hours=int(period[:-1]))
+        elif period.endswith("d"):
+            date_start = now - timedelta(days=int(period[:-1]))
+        else:
+            raise ValidationError("Malformed period supplied")
 
         events_list = get_multiple_event_list_for_feature(
-            feature_name=feature.name, **query_serializer.data
+            feature_name=feature.name,
+            date_start=date_start,
+            environment_id=query_serializer.data["environment_id"],
+            aggregate_every=query_serializer.data["aggregate_every"],
         )
         serializer = FeatureInfluxDataSerializer(instance={"events_list": events_list})
         return Response(serializer.data)
@@ -893,8 +906,8 @@ def organisation_has_got_feature(request, organisation):
 
 @swagger_auto_schema(
     method="POST",
-    request_body=CreateSegmentOverrideFeatureStateSerializer(),
-    responses={201: CreateSegmentOverrideFeatureStateSerializer()},
+    request_body=CustomCreateSegmentOverrideFeatureStateSerializer(),
+    responses={201: CustomCreateSegmentOverrideFeatureStateSerializer()},
 )
 @api_view(["POST"])
 @permission_classes([CreateSegmentOverridePermissions])
@@ -904,7 +917,7 @@ def create_segment_override(
     environment = get_object_or_404(Environment, api_key=environment_api_key)
     feature = get_object_or_404(Feature, project=environment.project, pk=feature_pk)
 
-    serializer = CreateSegmentOverrideFeatureStateSerializer(
+    serializer = CustomCreateSegmentOverrideFeatureStateSerializer(
         data=request.data, context={"environment": environment, "feature": feature}
     )
     serializer.is_valid(raise_exception=True)

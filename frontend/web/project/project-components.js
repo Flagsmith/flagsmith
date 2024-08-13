@@ -1,5 +1,5 @@
 import { PureComponent } from 'react'
-import Select from 'react-select'
+import Select, { components } from 'react-select'
 import Button from 'components/base/forms/Button'
 import Paging from 'components/Paging'
 import ToggleChip from 'components/ToggleChip'
@@ -12,6 +12,8 @@ import ProjectProvider from 'common/providers/ProjectProvider'
 import AccountProvider from 'common/providers/AccountProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Panel from 'components/base/grid/Panel'
+import { checkmark, checkmarkCircle } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 window.AppActions = require('../../common/dispatcher/app-actions')
 window.Actions = require('../../common/dispatcher/action-constants')
@@ -80,6 +82,21 @@ window.Loader = class extends PureComponent {
 window.Tooltip = Tooltip
 
 global.ToggleChip = ToggleChip
+
+// Custom Option component to show the tick mark next to selected option in the dropdown
+const Option = (props) => {
+  return (
+    <components.Option {...props}>
+      <div className={'d-flex justify-content-between align-items-center'}>
+        {props.data.label}
+        {props.isSelected && (
+          <IonIcon icon={checkmarkCircle} className='text-primary' />
+        )}
+      </div>
+    </components.Option>
+  )
+}
+
 global.Select = class extends PureComponent {
   static displayName = 'Select'
 
@@ -113,11 +130,18 @@ global.Select = class extends PureComponent {
           ))}
       </div>
     ) : (
-      <Select
-        className={`react-select ${props.size ? props.size : ''}`}
-        classNamePrefix='react-select'
-        {...props}
-      />
+      <div
+        onClick={(e) => {
+          e.stopPropagation()
+        }}
+      >
+        <Select
+          className={`react-select ${props.size ? props.size : ''}`}
+          classNamePrefix='react-select'
+          {...props}
+          components={{ ...(props.components || {}), Option }}
+        />
+      </div>
     )
   }
 }

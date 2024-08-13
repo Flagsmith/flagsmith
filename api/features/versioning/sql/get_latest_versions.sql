@@ -14,6 +14,7 @@ join (
 	where
 		efv2."deleted_at" is null
 		and efv2."published_at" is not null
+	    and efv2."live_from" <= %(live_from_before)s
 	group by
 		efv2."feature_id",
 		efv2."environment_id"

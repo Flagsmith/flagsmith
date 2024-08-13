@@ -7,7 +7,6 @@ import CreateWebhookModal from 'components/modals/CreateWebhook'
 import ConfirmRemoveWebhook from 'components/modals/ConfirmRemoveWebhook'
 import ConfirmToggleEnvFeature from 'components/modals/ConfirmToggleEnvFeature'
 import EditPermissions from 'components/EditPermissions'
-import ServerSideSDKKeys from 'components/ServerSideSDKKeys'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
@@ -25,6 +24,7 @@ import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersion
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
 import EnvironmentVersioningListener from 'components/EnvironmentVersioningListener'
+import Format from 'common/utils/format'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -82,7 +82,10 @@ const EnvironmentSettingsPage = class extends Component {
       })
     })
 
-    if (Utils.getFlagsmithHasFeature('enable_metadata')) {
+    if (
+      Utils.getPlansPermission('METADATA') &&
+      Utils.getFlagsmithHasFeature('enable_metadata')
+    ) {
       getSupportedContentType(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,
       }).then((res) => {
@@ -128,7 +131,7 @@ const EnvironmentSettingsPage = class extends Component {
     )
   }
 
-  onRemoveEnvironment = () => {
+  onRemoveEnvironment = (environment) => {
     const envs = ProjectStore.getEnvs()
     if (envs && envs.length) {
       this.context.router.history.replace(
@@ -140,6 +143,11 @@ const EnvironmentSettingsPage = class extends Component {
         `/project/${this.props.match.params.projectId}/environment/create`,
       )
     }
+    toast(
+      <div>
+        Removed Environment: <strong>{environment.name}</strong>
+      </div>,
+    )
   }
 
   saveEnv = (e) => {
@@ -224,15 +232,18 @@ const EnvironmentSettingsPage = class extends Component {
     )
   }
 
-  confirmToggle = (title, description, feature) => {
+  confirmToggle = (title, environmentProperty, environmentPropertyValue) => {
     openModal(
       title,
       <ConfirmToggleEnvFeature
-        description={`${description} Are you sure that you want to change this value?`}
-        feature={feature}
-        featureValue={this.state[feature]}
-        onToggleChange={(value) => {
-          this.setState({ [feature]: value }, this.saveEnv)
+        description={'Are you sure that you want to change this value?'}
+        feature={Format.enumeration.get(environmentProperty)}
+        featureValue={environmentPropertyValue}
+        onToggleChange={() => {
+          this.setState(
+            { [environmentProperty]: !environmentPropertyValue },
+            this.saveEnv,
+          )
           closeModal()
         }}
       />,
@@ -252,7 +263,9 @@ const EnvironmentSettingsPage = class extends Component {
       },
     } = this
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
-    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
+    const metadataEnable =
+      Utils.getPlansPermission('METADATA') &&
+      Utils.getFlagsmithHasFeature('enable_metadata')
 
     return (
       <div className='app-container container'>
@@ -480,7 +493,7 @@ const EnvironmentSettingsPage = class extends Component {
                               checked={hide_sensitive_data}
                               onChange={(v) => {
                                 this.confirmToggle(
-                                  'The data returned from the API will change and could break your existing code. Are you sure that you want to change this value?',
+                                  'Confirm Environment Setting',
                                   'hide_sensitive_data',
                                   hide_sensitive_data,
                                 )
@@ -893,11 +906,13 @@ const EnvironmentSettingsPage = class extends Component {
                     </TabItem>
                     {metadataEnable &&
                       this.state.environmentContentType?.id && (
-                        <TabItem tabLabel='Metadata'>
+                        <TabItem tabLabel='Custom Fields'>
                           <FormGroup className='mt-5 setting'>
                             <InputGroup
-                              title={'Metadata'}
-                              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} environments`}
+                              title={'Custom fields'}
+                              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
+                                'environments',
+                              )}`}
                               tooltipPlace='right'
                               component={
                                 <AddMetadataToEntity

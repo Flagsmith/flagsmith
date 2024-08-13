@@ -14,7 +14,7 @@ class JsonFormatter(logging.Formatter):
 
     def get_json_record(self, record: logging.LogRecord) -> dict[str, Any]:
         formatted_message = record.getMessage()
-        return {
+        json_record = {
             "levelname": record.levelname,
             "message": formatted_message,
             "timestamp": self.formatTime(record, self.datefmt),
@@ -22,6 +22,9 @@ class JsonFormatter(logging.Formatter):
             "process_id": record.process,
             "thread_name": record.threadName,
         }
+        if record.exc_info:
+            json_record["exc_info"] = self.formatException(record.exc_info)
+        return json_record
 
     def format(self, record: logging.LogRecord) -> str:
         try:

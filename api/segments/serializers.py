@@ -61,7 +61,9 @@ class SegmentSerializer(serializers.ModelSerializer, SerializerWithMetadata):
         return attrs
 
     def get_project(self, validated_data: dict = None) -> Project:
-        return validated_data.get("project")
+        return validated_data.get("project") or Project.objects.get(
+            id=self.context["view"].kwargs["project_pk"]
+        )
 
     def create(self, validated_data):
         project = validated_data["project"]
@@ -79,16 +81,31 @@ class SegmentSerializer(serializers.ModelSerializer, SerializerWithMetadata):
         self._update_or_create_metadata(metadata_data, segment=segment)
         return segment
 
-    def update(self, instance, validated_data):
+    def update(self, instance: Segment, validated_data: dict[str, typing.Any]) -> None:
         # use the initial data since we need the ids included to determine which to update & which to create
         rules_data = self.initial_data.pop("rules", [])
         metadata_data = validated_data.pop("metadata", [])
         self.validate_segment_rules_conditions_limit(rules_data)
-        self._update_segment_rules(rules_data, segment=instance)
-        self._update_or_create_metadata(metadata_data, segment=instance)
-        # remove rules from validated data to prevent error trying to create segment with nested rules
-        del validated_data["rules"]
-        return super().update(instance, validated_data)
+
+        # Create a version of the segment now that we're updating.
+        cloned_segment = instance.deep_clone()
+
+        try:
+            self._update_segment_rules(rules_data, segment=instance)
+            self._update_or_create_metadata(metadata_data, segment=instance)
+
+            # remove rules from validated data to prevent error trying to create segment with nested rules
+            del validated_data["rules"]
+            response = super().update(instance, validated_data)
+        except Exception:
+            # Since there was a problem during the update we now delete the cloned segment,
+            # since we no longer need a versioned segment.
+            instance.refresh_from_db()
+            instance.version = cloned_segment.version
+            instance.save()
+            cloned_segment.hard_delete()
+            raise
+        return response
 
     def validate_project_segment_limit(self, project: Project) -> None:
         if project.segments.count() >= project.max_segments_allowed:

@@ -69,7 +69,7 @@ const CreateEditIntegration = class extends Component {
     const isEdit = this.props.data && this.props.data.id
     Utils.preventDefault(e)
     if (this.props.integration.isExternalInstallation) {
-      closeModal()
+      this.onComplete()
     }
     if (this.state.isLoading) {
       return

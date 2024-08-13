@@ -425,6 +425,7 @@ def test_put_feature_does_not_update_feature_states(
     assert all(fs.enabled is False for fs in feature.feature_states.all())
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @mock.patch("features.views.get_multiple_event_list_for_feature")
 def test_get_project_features_influx_data(
     mock_get_event_list: mock.MagicMock,
@@ -446,6 +447,7 @@ def test_get_project_features_influx_data(
             "datetime": datetime(2021, 2, 26, 12, 0, 0, tzinfo=pytz.UTC),
         }
     ]
+    one_day_ago = timezone.now() - timedelta(days=1)
 
     # When
     response = admin_client_new.get(url)
@@ -455,9 +457,68 @@ def test_get_project_features_influx_data(
     mock_get_event_list.assert_called_once_with(
         feature_name=feature.name,
         environment_id=str(environment.id),  # provided as a GET param
-        period="24h",  # this is the default but can be provided as a GET param
+        date_start=one_day_ago,  # this is the default but can be provided as a GET param
         aggregate_every="24h",  # this is the default but can be provided as a GET param
     )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+@mock.patch("features.views.get_multiple_event_list_for_feature")
+def test_get_project_features_influx_data_with_two_weeks_period(
+    mock_get_event_list: mock.MagicMock,
+    feature: Feature,
+    project: Project,
+    environment: Environment,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    base_url = reverse(
+        "api-v1:projects:project-features-get-influx-data",
+        args=[project.id, feature.id],
+    )
+    url = f"{base_url}?environment_id={environment.id}&period=14d"
+    date_start = timezone.now() - timedelta(days=14)
+
+    mock_get_event_list.return_value = [
+        {
+            feature.name: 1,
+            "datetime": datetime(2021, 2, 26, 12, 0, 0, tzinfo=pytz.UTC),
+        }
+    ]
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mock_get_event_list.assert_called_once_with(
+        feature_name=feature.name,
+        environment_id=str(environment.id),
+        date_start=date_start,
+        aggregate_every="24h",
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_project_features_influx_data_with_malformed_period(
+    feature: Feature,
+    project: Project,
+    environment: Environment,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    base_url = reverse(
+        "api-v1:projects:project-features-get-influx-data",
+        args=[project.id, feature.id],
+    )
+    url = f"{base_url}?environment_id={environment.id}&period=baddata"
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.data[0] == "Malformed period supplied"
 
 
 def test_regular_user_cannot_create_mv_options_when_creating_feature(
@@ -2600,11 +2661,30 @@ def test_list_features_n_plus_1(
         v1_feature_state.clone(env=environment, version=i, live_from=timezone.now())
 
     # When
-    with django_assert_num_queries(17):
+    with django_assert_num_queries(16):
         response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+
+
+def test_list_features_from_different_project_returns_404(
+    staff_client: APIClient,
+    organisation_two_project_two: Project,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+
+    url = reverse(
+        "api-v1:projects:project-features-list", args=[organisation_two_project_two.id]
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_list_features_with_union_tag(
@@ -2808,7 +2888,7 @@ def test_list_features_with_feature_state(
     url = f"{base_url}?environment={environment.id}"
 
     # When
-    with django_assert_num_queries(17):
+    with django_assert_num_queries(16):
         response = staff_client.get(url)
 
     # Then
@@ -3102,7 +3182,7 @@ def test_feature_list_last_modified_values(
         Feature.objects.create(name=f"feature_{i}", project=project)
 
     # When
-    with django_assert_num_queries(19):  # TODO: reduce this number of queries!
+    with django_assert_num_queries(18):  # TODO: reduce this number of queries!
         response = staff_client.get(url)
 
     # Then

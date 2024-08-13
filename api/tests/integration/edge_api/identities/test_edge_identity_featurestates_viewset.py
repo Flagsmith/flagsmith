@@ -14,6 +14,7 @@ from flag_engine.features.models import (
 )
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_lazyfixture import lazy_fixture
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.test import APIClient
@@ -22,6 +23,11 @@ from edge_api.identities.models import (
     EdgeIdentity,
     IdentityFeaturesList,
     IdentityModel,
+)
+from environments.dynamodb import (
+    DynamoEnvironmentV2Wrapper,
+    DynamoEnvironmentWrapper,
+    DynamoIdentityWrapper,
 )
 from features.models import Feature
 from features.multivariate.models import MultivariateFeatureOption
@@ -1055,12 +1061,31 @@ def _create_segment_override(
 
 def test_edge_identity_clone_flag_states_from(
     admin_client: APIClient,
-    app_settings_for_dynamodb: None,
+    mocker: MockerFixture,
     dynamo_enabled_environment: int,
     dynamo_enabled_project: int,
     environment_api_key: str,
     flagsmith_identities_table: Table,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    dynamo_environment_wrapper: DynamoEnvironmentWrapper,
 ) -> None:
+    mocker.patch(
+        "environments.dynamodb.services.DynamoIdentityWrapper",
+        autospec=True,
+        return_value=dynamodb_identity_wrapper,
+    )
+    mocker.patch(
+        "environments.dynamodb.services.DynamoEnvironmentV2Wrapper",
+        autospec=True,
+        return_value=dynamodb_wrapper_v2,
+    )
+    mocker.patch(
+        "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper",
+        autospec=True,
+        return_value=dynamo_environment_wrapper,
+    )
+
     def create_identity(identifier: str) -> EdgeIdentity:
         identity_model = IdentityModel(
             identifier=identifier,

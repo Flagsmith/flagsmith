@@ -2,6 +2,7 @@ import React from 'react'
 import ValueEditor from 'components/ValueEditor' // we need this to make JSX compile
 import Constants from 'common/constants'
 import Icon from 'components/Icon'
+import shallowEqual from 'fbjs/lib/shallowEqual'
 
 const VariationValue = ({
   disabled,
@@ -22,10 +23,24 @@ const VariationValue = ({
             className='full-width code-medium'
             value={Utils.getTypedValue(Utils.featureStateToValue(value))}
             disabled={disabled || readOnlyValue}
+            onBlur={() => {
+              const newValue = {
+                ...value,
+                // Trim spaces and do conversion on blur
+                ...Utils.valueToFeatureState(Utils.featureStateToValue(value)),
+              }
+              if (!shallowEqual(newValue, value)) {
+                //occurs if we converted a trimmed value
+                onChange(newValue)
+              }
+            }}
             onChange={(e) => {
               onChange({
                 ...value,
-                ...Utils.valueToFeatureState(Utils.safeParseEventValue(e)),
+                ...Utils.valueToFeatureState(
+                  Utils.safeParseEventValue(e),
+                  false,
+                ),
               })
             }}
             placeholder="e.g. 'big' "

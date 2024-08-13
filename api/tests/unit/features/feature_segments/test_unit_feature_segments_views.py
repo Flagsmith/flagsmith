@@ -6,6 +6,9 @@ from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from audit.constants import SEGMENT_FEATURE_STATE_DELETED_MESSAGE
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from environments.permissions.constants import (
     MANAGE_SEGMENT_OVERRIDES,
@@ -29,8 +32,8 @@ from users.models import FFAdminUser
     [
         (
             lazy_fixture("admin_client"),
-            3,
-        ),  # 1 for paging, 1 for result, 1 for getting the current live version
+            6,
+        ),  # 1 for paging, 3 for permissions, 1 for result, 1 for getting the current live version
         (
             lazy_fixture("admin_master_api_key_client"),
             4,
@@ -596,3 +599,43 @@ def test_get_feature_segments_only_returns_latest_version(
     response_json = response.json()
     assert response_json["count"] == 1
     assert response_json["results"][0]["id"] == feature_segment_v2.id
+
+
+def test_delete_feature_segment_does_not_create_audit_log_for_versioning_v2(
+    feature: Feature,
+    segment: Segment,
+    feature_segment: FeatureSegment,
+    segment_featurestate: FeatureState,
+    environment_v2_versioning: Environment,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES, VIEW_ENVIRONMENT])
+
+    # we first need to create a new version so that we can modify the feature segment
+    # that is generated as part of the new version
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    version_2_feature_segment = FeatureSegment.objects.get(
+        feature=feature, segment=segment, environment_feature_version=version_2
+    )
+
+    url = reverse(
+        "api-v1:features:feature-segment-detail", args=[version_2_feature_segment.id]
+    )
+
+    # When
+    response = staff_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    assert not AuditLog.objects.filter(
+        related_object_type=RelatedObjectType.FEATURE.name,
+        related_object_id=feature.id,
+        log=SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (feature.name, segment.name),
+    ).exists()

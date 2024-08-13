@@ -2,6 +2,7 @@ import typing
 from pathlib import Path
 
 from django.db.models.query import QuerySet, RawQuerySet
+from django.utils import timezone
 from softdelete.models import SoftDeleteManager
 
 if typing.TYPE_CHECKING:
@@ -53,5 +54,14 @@ class EnvironmentFeatureVersionManager(SoftDeleteManager):
 
         return self.raw(
             get_latest_versions_sql,
-            params={"environment_id": environment_id, "api_key": environment_api_key},
+            params={
+                "environment_id": environment_id,
+                "api_key": environment_api_key,
+                # TODO:
+                #  It seems as though there is a timezone issue when using postgres's
+                #  built in now() function, so we pass in the current time from python.
+                #  Using <= now() in the SQL query returns incorrect results.
+                #  More investigation is needed here to understand the cause.
+                "live_from_before": timezone.now().isoformat(),
+            },
         )

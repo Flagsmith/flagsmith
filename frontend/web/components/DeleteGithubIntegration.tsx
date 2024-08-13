@@ -23,10 +23,6 @@ const DeleteGithubIntegration: FC<DeleteGithubIntegrationType> = ({
           'Delete Github Integration',
           <div>
             <div>Are you sure you want to remove your GitHub integration?</div>
-            <div>
-              If you proceed, you will need to uninstall the application from
-              your GitHub organization in order to integrate it again.
-            </div>
             <div className='text-right'>
               <Button
                 className='mr-2'

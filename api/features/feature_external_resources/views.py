@@ -1,14 +1,16 @@
 import re
 
-from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from features.models import Feature
 from features.permissions import FeatureExternalResourcePermissions
-from integrations.github.client import get_github_issue_pr_title_and_state
+from integrations.github.client import (
+    get_github_issue_pr_title_and_state,
+    label_github_issue_pr,
+)
+from integrations.github.models import GithubRepository
 from organisations.models import Organisation
 
 from .models import FeatureExternalResource
@@ -52,15 +54,13 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
             ),
         )
 
-        if not (
-            (
-                Organisation.objects.prefetch_related("github_config")
-                .get(id=feature.project.organisation_id)
-                .github_config.first()
-            )
-            or not hasattr(feature.project, "github_project")
-        ):
+        github_configuration = (
+            Organisation.objects.prefetch_related("github_config")
+            .get(id=feature.project.organisation_id)
+            .github_config.first()
+        )
 
+        if not github_configuration or not hasattr(feature.project, "github_project"):
             return Response(
                 data={
                     "detail": "This Project doesn't have a valid GitHub integration configuration"
@@ -69,17 +69,42 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        try:
-            return super().create(request, *args, **kwargs)
+        # Get repository owner and name, and issue/PR number from the external resource URL
+        url = request.data.get("url")
+        if request.data.get("type") == "GITHUB_PR":
+            pattern = r"github.com/([^/]+)/([^/]+)/pull/(\d+)$"
+        elif request.data.get("type") == "GITHUB_ISSUE":
+            pattern = r"github.com/([^/]+)/([^/]+)/issues/(\d+)$"
+        else:
+            return Response(
+                data={"detail": "Incorrect GitHub type"},
+                content_type="application/json",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        except IntegrityError as e:
-            if re.search(r"Key \(feature_id, url\)", str(e)) and re.search(
-                r"already exists.$", str(e)
-            ):
-                raise ValidationError(
-                    detail="Duplication error. The feature already has this resource URI"
+        match = re.search(pattern, url)
+        if match:
+            owner, repo, issue = match.groups()
+            if GithubRepository.objects.get(
+                github_configuration=github_configuration,
+                repository_owner=owner,
+                repository_name=repo,
+            ).tagging_enabled:
+                label_github_issue_pr(
+                    installation_id=github_configuration.installation_id,
+                    owner=owner,
+                    repo=repo,
+                    issue=issue,
                 )
+            response = super().create(request, *args, **kwargs)
+            return response
+        else:
+            return Response(
+                data={"detail": "Invalid GitHub Issue/PR URL"},
+                content_type="application/json",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     def perform_update(self, serializer):
-        external_resource_id = int(self.kwargs["id"])
+        external_resource_id = int(self.kwargs["pk"])
         serializer.save(id=external_resource_id)

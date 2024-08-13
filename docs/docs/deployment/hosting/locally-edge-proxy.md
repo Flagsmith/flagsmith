@@ -151,6 +151,84 @@ Set a name used for human-readable log entry field when logging events in JSON. 
 "logging": {"log_event_field_name": "event"}
 ```
 
+### `logging.colour`
+
+:::note
+
+- Added in [2.13.0](https://github.com/Flagsmith/edge-proxy/releases/tag/v2.13.0).
+- This setting is optional.
+
+:::
+
+Set to `false` to disable coloured output. Useful when outputting the log to a file.
+
+### `logging.override`
+
+:::note
+
+- Added in [2.13.0](https://github.com/Flagsmith/edge-proxy/releases/tag/v2.13.0).
+- This setting is optional.
+
+:::
+
+Accepts
+[Python-compatible logging settings](https://docs.python.org/3/library/logging.config.html#configuration-dictionary-schema)
+in JSON format. You're able to define custom formatters, handlers and logger configurations. For example, to log
+everything a file, one can set up own file handler and assign it to the root logger:
+
+```json
+"logging": {
+  "override": {
+      "handlers": {
+          "file": {
+              "level": "INFO",
+              "class": "logging.FileHandler",
+              "filename": "edge-proxy.log",
+              "formatter": "json"
+          }
+      },
+      "loggers": {
+          "": {
+              "handlers": ["file"],
+              "level": "INFO",
+              "propagate": true
+          }
+      }
+  }
+}
+```
+
+Or, log access logs to file in generic format while logging everything else to stdout in json:
+
+```json
+"logging": {
+  "override": {
+      "handlers": {
+          "file": {
+              "level": "INFO",
+              "class": "logging.FileHandler",
+              "filename": "edge-proxy.log",
+              "formatter": "generic"
+          }
+      },
+      "loggers": {
+          "": {
+              "handlers": ["default"],
+              "level": "INFO"
+          },
+          "uvicorn.access": {
+              "handlers": ["file"],
+              "level": "INFO",
+              "propagate": false
+          }
+      }
+  }
+}
+```
+
+When adding logger configurations, you can use the `"default"` handler which writes to stdout and uses formatter
+specified by the [`"logging.log_format"`](#logginglog_format) setting.
+
 ### `config.json` example
 
 Here's an example of a minimal working Edge Proxy configuration:
@@ -196,7 +274,6 @@ docker run \
 ### With docker compose
 
 ```yml
-version: '3.9'
 services:
  edge_proxy:
   image: flagsmith/edge-proxy:latest
@@ -205,8 +282,7 @@ services:
      source: ./config.json
      target: /app/config.json
   ports:
-   - target: 8000
-   - published: 8000
+   - '8000:8000'
 ```
 
 The Proxy is now running and available on port 8000.
@@ -218,7 +294,7 @@ domain name and you're good to go. For example, lets say you had your proxy runn
 above:
 
 ```bash
-curl "http://localhost:8000/api/v1/flags" -H "x-environment-key: 95DybY5oJoRNhxPZYLrxk4" | jq
+curl "http://localhost:8000/api/v1/flags/" -H "x-environment-key: 95DybY5oJoRNhxPZYLrxk4" | jq
 
 [
     {
@@ -250,8 +326,7 @@ There are 2 health check endpoints for the Edge Proxy.
 
 When making a request to `/proxy/health` the proxy will respond with a HTTP `200` and `{"status": "ok"}`. You can point
 your orchestration health checks to this endpoint. This endpoint checks that the
-[Environment Document](/clients/overview#the-environment-document) is not stale, and that the proxy is serving SDK
-requests.
+[Environment Document](/clients#the-environment-document) is not stale, and that the proxy is serving SDK requests.
 
 ### Realtime Flags/Server Sent Events Health Check
 

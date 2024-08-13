@@ -17,7 +17,13 @@ global.API = {
 
     // Catch coding errors that end up here
     if (res instanceof Error) {
-      console.log(res)
+      console.error(res)
+      store.error = res
+      store.goneABitWest()
+      return
+    } else if (res.data) {
+      store.error = res.data
+      store.goneABitWest()
       return
     }
 

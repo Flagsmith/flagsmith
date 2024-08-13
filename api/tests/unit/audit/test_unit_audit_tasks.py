@@ -14,6 +14,7 @@ from audit.tasks import (
 )
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
+from features.versioning.tasks import enable_v2_versioning
 from segments.models import Segment
 from users.models import FFAdminUser
 
@@ -245,6 +246,56 @@ def test_create_segment_priorities_changed_audit_log(
 
     # Then
     assert AuditLog.objects.filter(
+        environment=environment,
+        log=f"Segment overrides re-ordered for feature '{feature.name}'.",
+        created_date=now,
+    ).exists()
+
+
+def test_create_segment_priorities_changed_audit_log_does_not_create_audit_log_for_versioned_feature_segments(
+    admin_user: FFAdminUser,
+    feature_segment: FeatureSegment,
+    feature: Feature,
+    segment_featurestate: FeatureState,
+    environment: Environment,
+) -> None:
+    # Given
+    another_segment = Segment.objects.create(
+        project=environment.project, name="Another Segment"
+    )
+    another_feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        environment=environment,
+        segment=another_segment,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=another_feature_segment,
+    )
+
+    now = timezone.now()
+
+    enable_v2_versioning(environment.id)
+
+    feature_segment.refresh_from_db()
+    another_feature_segment.refresh_from_db()
+    assert feature_segment.environment_feature_version_id is not None
+    assert another_feature_segment.environment_feature_version_id is not None
+
+    # When
+    create_segment_priorities_changed_audit_log(
+        previous_id_priority_pairs=[
+            (feature_segment.id, 0),
+            (another_feature_segment.id, 1),
+        ],
+        feature_segment_ids=[feature_segment.id, another_feature_segment.id],
+        user_id=admin_user.id,
+        changed_at=now.isoformat(),
+    )
+
+    # Then
+    assert not AuditLog.objects.filter(
         environment=environment,
         log=f"Segment overrides re-ordered for feature '{feature.name}'.",
         created_date=now,

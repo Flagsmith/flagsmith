@@ -93,7 +93,7 @@ const ContentTypesMetadataFieldTable: FC<
             Entity
           </Flex>
           <div className='table-column text-center' style={{ width: '80px' }}>
-            Requeried
+            Required
           </div>
           <div className='table-column text-center' style={{ width: '80px' }}>
             Remove

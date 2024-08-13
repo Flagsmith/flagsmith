@@ -16,7 +16,7 @@ In your project path `app/build.gradle` add a new dependence
 
 ```groovy
 //flagsmith
-implementation 'com.github.Flagsmith:flagsmith-kotlin-android-client:1.5.0'
+implementation("com.github.Flagsmith:flagsmith-kotlin-android-client:v1.6.1")
 ```
 
 You should be able to find the latest version in the
@@ -31,7 +31,7 @@ repositories {
     google()
     mavenCentral()
 
-    maven { url "https://jitpack.io" }
+    maven("https://jitpack.io")
 }
 ```
 
@@ -80,6 +80,38 @@ Now you are all set to retrieve feature flags from your project. To list and pri
 
 ```kotlin
 flagsmith.getFeatureFlags { result ->
+    result.fold(
+        onSuccess = { flagList ->
+            Log.i("Flagsmith", "Current flags:")
+            flagList.forEach { Log.i("Flagsmith", "- ${it.feature.name} - enabled: ${it.enabled} value: ${it.featureStateValue ?: "not set"}") }
+        },
+        onFailure = { err ->
+            Log.e("Flagsmith", "Error getting feature flags", err)
+        })
+}
+```
+
+### Get Flags for an identity
+
+To get feature flags for a specific identity:
+
+```kotlin
+flagsmith.getFeatureFlags(identity = "test-user@gmail.com") { result ->
+    result.fold(
+        onSuccess = { flagList ->
+            Log.i("Flagsmith", "Current flags:")
+            flagList.forEach { Log.i("Flagsmith", "- ${it.feature.name} - enabled: ${it.enabled} value: ${it.featureStateValue ?: "not set"}") }
+        },
+        onFailure = { err ->
+            Log.e("Flagsmith", "Error getting feature flags", err)
+        })
+}
+```
+
+You can also get flags for an identity and set the traits at the same time:
+
+```kotlin
+flagsmith.getFeatureFlags(identity = "test-user@gmail.com", traits = listOf(Trait(key = "set-from-client", value = "12345"))) { result ->
     result.fold(
         onSuccess = { flagList ->
             Log.i("Flagsmith", "Current flags:")

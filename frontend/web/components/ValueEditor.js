@@ -4,6 +4,8 @@ import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { Clipboard } from 'polyfill-react-native'
 import Icon from './Icon'
+import { IonIcon } from '@ionic/react'
+import { checkmarkCircle, warning } from 'ionicons/icons'
 
 const toml = require('toml')
 const yaml = require('yaml')
@@ -91,24 +93,25 @@ class Validation extends Component {
   render() {
     const displayLanguage =
       this.props.language === 'ini' ? 'toml' : this.props.language
-    return (
+    return this.state.error ? (
       <Tooltip
         position='top'
         title={
-          !this.state.error ? (
-            <span className='language-icon ion-ios-checkmark-circle' />
-          ) : (
-            <span
-              id='language-validation-error'
-              className='language-icon ion-ios-warning'
-            />
-          )
+          <IonIcon
+            id='language-validation-error'
+            className='language-icon text-danger'
+            icon={warning}
+          />
         }
       >
-        {!this.state.error
-          ? `${displayLanguage} validation passed`
-          : `${displayLanguage} validation error, please check your value.<br/>Error: ${this.state.error}`}
+        {`${displayLanguage} validation error, please check your value.<br/>Error: ${this.state.error}`}
       </Tooltip>
+    ) : (
+      <IonIcon
+        id='language-validation-success'
+        className='language-icon text-success'
+        icon={checkmarkCircle}
+      />
     )
   }
 }
@@ -118,6 +121,10 @@ class ValueEditor extends Component {
   }
 
   componentDidMount() {
+    if (this.props.language) {
+      this.setState({ language: this.props.language })
+      this.renderValidation(this.props.language)
+    }
     if (!this.props.value) return
     try {
       const v = JSON.parse(this.props.value)
@@ -127,7 +134,11 @@ class ValueEditor extends Component {
   }
 
   renderValidation = () => (
-    <Validation language={this.state.language} value={this.props.value} />
+    <Validation
+      key={this.state.language}
+      language={this.state.language}
+      value={this.props.value}
+    />
   )
 
   render() {
@@ -143,72 +154,74 @@ class ValueEditor extends Component {
           this.props.className,
         )}
       >
-        <Row className='select-language gap-1'>
-          <span
-            onMouseDown={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              this.setState({ language: 'txt' })
-            }}
-            className={cx('txt', { active: this.state.language === 'txt' })}
-          >
-            .txt
-          </span>
-          <span
-            onMouseDown={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              this.setState({ language: 'json' })
-            }}
-            className={cx('json', { active: this.state.language === 'json' })}
-          >
-            .json {this.state.language === 'json' && this.renderValidation()}
-          </span>
-          <span
-            onMouseDown={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              this.setState({ language: 'xml' })
-            }}
-            className={cx('xml', { active: this.state.language === 'xml' })}
-          >
-            .xml {this.state.language === 'xml' && this.renderValidation()}
-          </span>
-          <span
-            onMouseDown={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
+        {!this.props.onlyOneLang && (
+          <Row className='select-language gap-1'>
+            <span
+              onMouseDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                this.setState({ language: 'txt' })
+              }}
+              className={cx('txt', { active: this.state.language === 'txt' })}
+            >
+              .txt
+            </span>
+            <span
+              onMouseDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                this.setState({ language: 'json' })
+              }}
+              className={cx('json', { active: this.state.language === 'json' })}
+            >
+              .json {this.state.language === 'json' && this.renderValidation()}
+            </span>
+            <span
+              onMouseDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                this.setState({ language: 'xml' })
+              }}
+              className={cx('xml', { active: this.state.language === 'xml' })}
+            >
+              .xml {this.state.language === 'xml' && this.renderValidation()}
+            </span>
+            <span
+              onMouseDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
 
-              this.setState({ language: 'ini' })
-            }}
-            className={cx('ini', { active: this.state.language === 'ini' })}
-          >
-            .toml {this.state.language === 'ini' && this.renderValidation()}
-          </span>
-          <span
-            onMouseDown={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              this.setState({ language: 'yaml' })
-            }}
-            className={cx('yaml', { active: this.state.language === 'yaml' })}
-          >
-            .yaml {this.state.language === 'yaml' && this.renderValidation()}
-          </span>
-          <span
-            onMouseDown={() => {
-              const res = Clipboard.setString(this.props.value)
-              toast(
-                res ? 'Clipboard set' : 'Could not set clipboard :(',
-                res ? '' : 'danger',
-              )
-            }}
-            className={cx('txt primary')}
-          >
-            <Icon name='copy-outlined' fill={'#6837fc'} />
-            copy
-          </span>
-        </Row>
+                this.setState({ language: 'ini' })
+              }}
+              className={cx('ini', { active: this.state.language === 'ini' })}
+            >
+              .toml {this.state.language === 'ini' && this.renderValidation()}
+            </span>
+            <span
+              onMouseDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                this.setState({ language: 'yaml' })
+              }}
+              className={cx('yaml', { active: this.state.language === 'yaml' })}
+            >
+              .yaml {this.state.language === 'yaml' && this.renderValidation()}
+            </span>
+            <span
+              onMouseDown={() => {
+                const res = Clipboard.setString(this.props.value)
+                toast(
+                  res ? 'Clipboard set' : 'Could not set clipboard :(',
+                  res ? '' : 'danger',
+                )
+              }}
+              className={cx('txt primary')}
+            >
+              <Icon name='copy-outlined' fill={'#6837fc'} />
+              copy
+            </span>
+          </Row>
+        )}
 
         {E2E ? (
           <textarea {...rest} />
@@ -217,6 +230,7 @@ class ValueEditor extends Component {
             data-test={rest['data-test']}
             disabled={rest.disabled}
             onChange={rest.disabled ? null : rest.onChange}
+            onBlur={rest.disabled ? null : rest.onBlur}
             className={this.state.language}
           >
             {typeof rest.value !== 'undefined' && rest.value != null

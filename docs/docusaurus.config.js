@@ -118,6 +118,10 @@ const config = {
                                 label: 'Podcast',
                                 href: 'https://flagsmith.com/podcast/',
                             },
+                            {
+                                label: 'Status and Uptime',
+                                href: 'https://status.flagsmith.com/',
+                            },
                         ],
                     },
                     {
@@ -219,6 +223,10 @@ const config = {
             }),
         ],
     ],
+
+    scripts: ['/js/crisp-chat.js'],
+
+    clientModules: [require.resolve('./plugins/crisp-chat-links.js')],
 };
 
 export default config;

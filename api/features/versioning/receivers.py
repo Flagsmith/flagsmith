@@ -5,7 +5,10 @@ from django.utils import timezone
 from environments.tasks import rebuild_environment_document
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
-from features.versioning.tasks import trigger_update_version_webhooks
+from features.versioning.tasks import (
+    create_environment_feature_version_published_audit_log_task,
+    trigger_update_version_webhooks,
+)
 
 
 @receiver(post_save, sender=EnvironmentFeatureVersion)
@@ -49,4 +52,13 @@ def trigger_webhooks(instance: EnvironmentFeatureVersion, **kwargs) -> None:
     trigger_update_version_webhooks.delay(
         kwargs={"environment_feature_version_uuid": str(instance.uuid)},
         delay_until=instance.live_from,
+    )
+
+
+@receiver(environment_feature_version_published, sender=EnvironmentFeatureVersion)
+def create_environment_feature_version_published_audit_log(
+    instance: EnvironmentFeatureVersion, **kwargs
+) -> None:
+    create_environment_feature_version_published_audit_log_task.delay(
+        kwargs={"environment_feature_version_uuid": str(instance.uuid)}
     )

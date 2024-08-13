@@ -1,28 +1,61 @@
 import json
 import logging
+import os
+
+import pytest
 
 from util.logging import JsonFormatter
 
 
-def test_json_formatter__outputs_expected():
+@pytest.mark.freeze_time("2023-12-08T06:05:47.320000+00:00")
+def test_json_formatter__outputs_expected(
+    inspecting_handler: logging.Handler,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given
     json_formatter = JsonFormatter()
 
-    log_record = logging.LogRecord(
-        name="test_logger",
-        level=logging.INFO,
-        pathname="test.py",
-        lineno=42,
-        msg="This is a test message with args: %s and %s",
-        args=("arg1", "arg2"),
-        exc_info=None,
-    )
-    formatted_message = json_formatter.format(log_record)
-    json_message = json.loads(formatted_message)
+    inspecting_handler.setFormatter(json_formatter)
+    logger = logging.getLogger("test_json_formatter__outputs_expected")
+    logger.addHandler(inspecting_handler)
+    logger.setLevel(logging.INFO)
 
-    assert "levelname" in json_message
-    assert "message" in json_message
-    assert "timestamp" in json_message
-    assert "logger_name" in json_message
-    assert "process_id" in json_message
-    assert "thread_name" in json_message
-    assert json_message["message"] == "This is a test message with args: arg1 and arg2"
+    expected_pid = os.getpid()
+    expected_module_path = os.path.abspath(request.path)
+    expected_tb_string = (
+        "Traceback (most recent call last):\n"
+        f'  File "{expected_module_path}",'
+        " line 34, in _log_traceback\n"
+        "    raise Exception()\nException"
+    )
+
+    def _log_traceback() -> None:
+        try:
+            raise Exception()
+        except Exception as exc:
+            logger.error("this is an error", exc_info=exc)
+
+    # When
+    logger.info("hello %s, %d", "arg1", 22.22)
+    _log_traceback()
+
+    # Then
+    assert [json.loads(message) for message in inspecting_handler.messages] == [
+        {
+            "levelname": "INFO",
+            "message": "hello arg1, 22",
+            "timestamp": "2023-12-08 06:05:47,319",
+            "logger_name": "test_json_formatter__outputs_expected",
+            "process_id": expected_pid,
+            "thread_name": "MainThread",
+        },
+        {
+            "levelname": "ERROR",
+            "message": "this is an error",
+            "timestamp": "2023-12-08 06:05:47,319",
+            "logger_name": "test_json_formatter__outputs_expected",
+            "process_id": expected_pid,
+            "thread_name": "MainThread",
+            "exc_info": expected_tb_string,
+        },
+    ]
