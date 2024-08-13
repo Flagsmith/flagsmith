@@ -108,6 +108,7 @@ INSTALLED_APPS = [
     "projects",
     "sales_dashboard",
     "edge_api",
+    "edge_api.identities",
     "environments",
     "environments.permissions",
     "environments.identities",

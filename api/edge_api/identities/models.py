@@ -2,9 +2,11 @@ import copy
 import typing
 from contextlib import suppress
 
+from django.db import models
 from django.db.models import Prefetch, Q
 from flag_engine.features.models import FeatureStateModel
 from flag_engine.identities.models import IdentityFeaturesList, IdentityModel
+from flag_engine.identities.traits.models import TraitModel
 
 from api_keys.models import MasterAPIKey
 from edge_api.identities.tasks import (
@@ -287,3 +289,36 @@ class EdgeIdentity:
                 multivariate_feature_state_values=feature_in_source.multivariate_feature_state_values,
             )
             self.add_feature_override(feature_state_target)
+
+
+class EdgeIdentityMeta(models.Model):
+    """
+    This model is designed to hold some meta information about an edge identity.
+
+    Specifically, we are storing a text field that holds a subset of the trait data
+    from the identity in the Edge API. This allows us to search across these meta
+    objects to find edge identities by their traits.
+    """
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    edge_identity_uuid = models.UUIDField(db_index=True)
+    identifier = models.CharField(max_length=2000)
+    searchable_traits = models.TextField()
+
+    environment = models.ForeignKey(Environment, on_delete=models.CASCADE)
+
+    # TODO: how can we define these separators so they don't (or are very
+    #  unlikely to) collide with trait values?
+    _SEPARATOR = "<separator>"
+    _EQUALITY_CHARS = "<equals>"
+
+    def update_searchable_traits(self, traits: typing.List[TraitModel]) -> None:
+        searchable_trait_keys = self.environment.trait_meta_items.filter(
+            is_searchable=True
+        ).values_list("trait_key", flat=True)
+        self.searchable_traits = self._SEPARATOR.join(
+            f"{trait.trait_key}{self._EQUALITY_CHARS}{trait.trait_value}"
+            for trait in filter(lambda t: t.trait_key in searchable_trait_keys, traits)
+        )

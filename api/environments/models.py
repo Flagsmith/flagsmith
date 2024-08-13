@@ -534,3 +534,32 @@ class EnvironmentAPIKey(LifecycleModel):
             self.environment.project.enable_dynamo_db
             and environment_api_key_wrapper.is_enabled
         )
+
+
+class EnvironmentTraitMeta(models.Model):
+    """
+    This class is the beginning of the work to start being able to manage traits
+    in an environment. For example, defining whether a trait is searchable, or
+    implementing drop-downs when creating segments.
+
+    TODO: what happens if a trait is added to this list, and marked as searchable
+     after it has already been added to a given identity. Would we need to rebuild
+     the search 'indexes'?
+    """
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    environment = models.ForeignKey(
+        Environment, on_delete=models.CASCADE, related_name="trait_meta_items"
+    )
+
+    trait_key = models.CharField(max_length=200)
+    is_searchable = models.BooleanField(default=False)
+
+    # TODO: more functionality
+    #  - for the environment itself, we could limit traits to only those that
+    #    are included in an EnvironmentTraitMeta object
+    #  - alternatively, we could automatically add objects here when a new
+    #    trait is added to an identity.
+    #  - what about self hosted / core, would we still use this model?
