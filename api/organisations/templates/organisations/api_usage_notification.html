@@ -19,8 +19,8 @@
                  for overages after our first grace period of 30 days.
                  {% else %}
                  Please note that once 100% use has been breached, the serving of feature flags and admin access may
-                 be disabled after a 7-day grace period. Please reach out to support@flagsmith.com in order to upgrade
-                 your account.
+                 be disabled{% if grace_period %} after a 7-day grace period{% endif %}. Please reach out to
+                 support@flagsmith.com in order to upgrade your account.
                  {% endif %}
 
                </td>
