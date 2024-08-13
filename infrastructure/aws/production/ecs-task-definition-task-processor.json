@@ -139,7 +139,7 @@
                 },
                 {
                     "name": "TASK_DELETE_RETENTION_DAYS",
-                    "value": "44"
+                    "value": "7"
                 },
                 {
                     "name": "TASK_DELETE_BATCH_SIZE",
