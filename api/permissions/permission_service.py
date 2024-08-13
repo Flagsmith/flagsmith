@@ -134,12 +134,15 @@ def get_permitted_environments_for_user(
             return queryset.prefetch_related("metadata")
         return queryset
 
-    base_filter = get_base_permission_filter(
+    environment_ids_from_base_filter = get_object_id_from_base_permission_filter(
         user, Environment, permission_key, tag_ids=tag_ids
     )
-    filter_ = base_filter & Q(project=project)
+    environment_ids = project.environments.filter(
+        id__in=environment_ids_from_base_filter
+    ).values_list("id", flat=True)
 
-    queryset = Environment.objects.filter(filter_)
+    queryset = Environment.objects.filter(id__in=environment_ids)
+
     if prefetch_metadata:
         queryset = queryset.prefetch_related("metadata")
 
@@ -148,7 +151,7 @@ def get_permitted_environments_for_user(
     # the select parameters. This leads to an N+1 query for
     # lists of environments when description is included, as
     # each environment object re-queries the DB seperately.
-    return queryset.distinct().defer("description")
+    return queryset.defer("description")
 
 
 def get_permitted_environments_for_master_api_key(
