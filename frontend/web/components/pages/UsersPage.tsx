@@ -1,59 +1,103 @@
-import React, { FC, useState, useEffect } from 'react';
-import { RouterChildContext } from 'react-router';
-import { Link } from 'react-router-dom';
-import { useHasPermission } from 'common/providers/Permission';
-import ConfigProvider from 'common/providers/ConfigProvider';
-import Constants from 'common/constants';
+import React, { FC, useState, useEffect } from 'react'
+import { RouterChildContext } from 'react-router'
+import { Link } from 'react-router-dom'
+import { useHasPermission } from 'common/providers/Permission'
+import ConfigProvider from 'common/providers/ConfigProvider'
+import Constants from 'common/constants'
 import {
   useDeleteIdentityMutation,
   useGetIdentitiesQuery,
-} from 'common/services/useIdentity';
-import useSearchThrottle from 'common/useSearchThrottle';
-import { Req } from 'common/types/requests';
-import { Identity } from 'common/types/responses';
-import CreateUserModal from 'components/modals/CreateUser';
-import PanelSearch from 'components/PanelSearch';
-import Button from 'components/base/forms/Button'; // we need this to make JSX compile
-import JSONReference from 'components/JSONReference'; // we need this to make JSX compile
-import Utils from 'common/utils/utils';
-import Icon from 'components/Icon';
-import PageTitle from 'components/PageTitle';
-import Format from 'common/utils/format';
-import IdentifierString from 'components/IdentifierString';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import '../../App.css'; // Adjust the path if necessary
+} from 'common/services/useIdentity'
+import useSearchThrottle from 'common/useSearchThrottle'
+import { Req } from 'common/types/requests'
+import { Identity } from 'common/types/responses'
+import CreateUserModal from 'components/modals/CreateUser'
+import PanelSearch from 'components/PanelSearch'
+import Button from 'components/base/forms/Button'
+import JSONReference from 'components/JSONReference'
+import Utils from 'common/utils/utils'
+import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
+import Format from 'common/utils/format'
+import IdentifierString from 'components/IdentifierString'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  CartesianGrid,
+} from 'recharts'
 
-const CodeHelp = require('../CodeHelp');
+const CodeHelp = require('../CodeHelp')
+
+// Import hooks
+import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
+import { useGetOrganisationsQuery } from 'common/services/useOrganisation'
 
 type UsersPageType = {
-  router: RouterChildContext['router'];
+  router: RouterChildContext['router']
   match: {
     params: {
-      environmentId: string;
-      projectId: string;
-    };
-  };
-};
+      environmentId: string
+      projectId: string
+      organisationId: string
+    }
+  }
+}
 
 const UsersPage: FC<UsersPageType> = (props) => {
-  const [page, setPage] = useState<{
-    number: number;
-    pageType: Req['getIdentities']['pageType'];
-    pages: Req['getIdentities']['pages'];
-  }>({ number: 1, pageType: undefined, pages: undefined });
+  // State for holding the project ID, initially undefined
+  const [project] = useState<string | undefined>()
+  // State for holding the environment ID, initially undefined
+  const [environment] = useState<string | undefined>()
+  // State for holding the organisation ID, initially empty
+  const [organisationId, setOrganisationId] = useState<string>('')
 
-  const { search, searchInput, setSearchInput } = useSearchThrottle(
-    Utils.fromParam().search,
-    () => {
-      setPage({
-        number: 1,
-        pageType: undefined,
-        pages: undefined,
-      });
+  // Fetching organisations data and handling errors
+  const { data: organisationsData, error: organisationsError } =
+    useGetOrganisationsQuery({})
+
+  // Effect to set organisation ID from the fetched organisations data
+  useEffect(() => {
+    if (organisationsData && organisationsData.results.length > 0) {
+      setOrganisationId(organisationsData.results[0].id.toString())
+    } else if (organisationsError) {
+      // Clear organisation ID if there's an error
+      setOrganisationId('')
+    }
+  }, [organisationsData, organisationsError])
+
+  // Extract environmentId and projectId from route parameters
+  const { environmentId, projectId } = props.match.params
+
+  // Fetch usage data for the organisation, skipping query if organisationId is not set
+  const { data: usageData } = useGetOrganisationUsageQuery(
+    {
+      environmentId: environment,
+      organisationId,
+      projectId: project,
     },
-  );
-  const [deleteIdentity] = useDeleteIdentityMutation({});
-  const isEdge = Utils.getIsEdge();
+    { skip: !organisationId },
+  )
+
+  const [page, setPage] = useState<{
+    number: number
+    pageType: Req['getIdentities']['pageType']
+    pages: Req['getIdentities']['pages']
+  }>({ number: 1, pageType: undefined, pages: undefined })
+
+  const { search } = useSearchThrottle(Utils.fromParam().search, () => {
+    setPage({
+      number: 1,
+      pageType: undefined,
+      pages: undefined,
+    })
+  })
+  const [deleteIdentity] = useDeleteIdentityMutation({})
+  const isEdge = Utils.getIsEdge()
 
   const { data: identities, isLoading } = useGetIdentitiesQuery({
     environmentId: props.match.params.environmentId,
@@ -63,15 +107,13 @@ const UsersPage: FC<UsersPageType> = (props) => {
     page_size: 10,
     pages: page.pages,
     search,
-  });
-
-  const { environmentId } = props.match.params;
+  })
 
   const { permission } = useHasPermission({
     id: environmentId,
     level: 'environment',
     permission: Utils.getViewIdentitiesPermission(),
-  });
+  })
 
   const removeIdentity = (id: string, identifier: string) => {
     openConfirm({
@@ -87,50 +129,32 @@ const UsersPage: FC<UsersPageType> = (props) => {
         deleteIdentity({ environmentId, id, isEdge: Utils.getIsEdge() }),
       title: 'Delete User',
       yesText: 'Confirm',
-    });
-  };
+    })
+  }
 
   const newUser = () => {
     openModal(
       'New Identities',
       <CreateUserModal environmentId={environmentId} />,
       'side-modal',
-    );
-  };
+    )
+  }
 
-  const [identitiesData, setIdentitiesData] = useState<{ identities: number; day: string }[]>([]);
+  // State to hold the data for the graph
+  const [identitiesData, setIdentitiesData] = useState<
+    { identities: number; day: string }[]
+  >([])
 
+  // Added effect to process usageData and format it for the graph
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(
-          `https://api.flagsmith.com/api/v1/organisations/16782/usage-data/`,
-          {
-            headers: {
-              'Authorization': 'Api-Key 8HO39EPu.yAygI95OgZDV6agJnG1EtSALN6QNfO6H',
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-        const filteredData = data.map((item: any) => ({
-          identities: item.identities,
-          day: item.day,
-        }));
-
-        setIdentitiesData(filteredData);
-      } catch (error) {
-        console.error('Error fetching identities data:', error);
-      }
-    };
-
-    fetchData();
-  }, [environmentId]);
+    if (usageData) {
+      const filteredData = usageData.events_list.map((item: any) => ({
+        day: item.name,
+        identities: item.identities || 0,
+      }))
+      setIdentitiesData(filteredData)
+    }
+  }, [usageData])
 
   return (
     <div className='app-container container'>
@@ -181,17 +205,6 @@ const UsersPage: FC<UsersPageType> = (props) => {
           Learn more.
         </Button>
       </PageTitle>
-      <div className='chart-container' style={{ height: '600px', width: '100%' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={identitiesData}>
-              <XAxis dataKey="day" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="identities" fill="rgba(75, 192, 192, 0.6)" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
       <div>
         <FormGroup>
           <PanelSearch
@@ -218,7 +231,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                 pages: identities?.last_evaluated_key
                   ? (page.pages || []).concat([identities?.last_evaluated_key])
                   : undefined,
-              });
+              })
             }}
             prevPage={() => {
               setPage({
@@ -230,14 +243,14 @@ const UsersPage: FC<UsersPageType> = (props) => {
                       page.pages.length - 1,
                     )
                   : undefined,
-              });
+              })
             }}
             goToPage={(newPage: number) => {
               setPage({
                 number: newPage,
                 pageType: undefined,
                 pages: undefined,
-              });
+              })
             }}
             renderRow={(
               { id, identifier, identity_uuid }: Identity,
@@ -285,6 +298,27 @@ const UsersPage: FC<UsersPageType> = (props) => {
             }
           />
         </FormGroup>
+        <div
+          className='py-4 fw-semibold text-centerner'
+          style={{ height: '600px', width: '100%' }}
+        >
+          {identitiesData.length === 0 ? (
+            <div style={{ padding: '20px', textAlign: 'center' }}>
+              <p>No data available for display.</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width='100%' height='100%'>
+              <BarChart data={identitiesData}>
+                <CartesianGrid strokeDasharray='3 3' />
+                <XAxis dataKey='day' />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey='identities' fill='rgba(75, 192, 192, 0.6)' />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
         <FormGroup>
           <p className='text-muted col-md-8 fs-small lh-sm mt-4'>
             Identities are created for your environment automatically when
@@ -307,8 +341,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
         </FormGroup>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ConfigProvider(UsersPage);
-
+export default ConfigProvider(UsersPage)
