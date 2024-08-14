@@ -72,10 +72,16 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
               <Flex className='table-column'>
                 <div className='font-weight-medium'>Configuration name</div>
               </Flex>
-              <div className='table-column' style={{ width: '400px' }}>
+              <div
+                className='table-column d-none d-md-block'
+                style={{ width: '400px' }}
+              >
                 Assertion Consumer Service (ACS) URL
               </div>
-              <div className='table-column' style={{ width: '150px' }}>
+              <div
+                className='table-column d-none d-md-block'
+                style={{ width: '150px' }}
+              >
                 Allow IdP-initiated
               </div>
               <div style={{ width: 90 }} className='table-column'>
@@ -94,7 +100,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
                 )
               }}
               space
-              className='list-item clickable cursor-pointer'
+              className='list-item py-2 py-md-0 clickable cursor-pointer'
               key={samlConf.name}
             >
               <Flex className='table-column px-3'>
@@ -122,7 +128,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
                 </Button>
               </div>
               <div
-                className='table-column d-flex gap-4 align-items-center'
+                className='table-column d-none d-md-flex gap-4 align-items-center'
                 style={{ width: '150px' }}
               >
                 <Switch checked={samlConf.allow_idp_initiated} />
