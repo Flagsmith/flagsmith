@@ -104,7 +104,7 @@ const GitHubResourcesSelect: FC<GitHubResourcesSelectType> = ({
             filterOption={(options: any[]) => {
               return options
             }}
-            value={selectedOption}
+            value={null}
             size='select-md'
             placeholder={'Select Your Resource'}
             onChange={(v: GitHubResourcesValueType) => {
