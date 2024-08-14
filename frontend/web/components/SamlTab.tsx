@@ -12,7 +12,8 @@ import {
 import CreateSAML from './modals/CreateSAML'
 import Switch from './Switch'
 import { SAMLConfiguration } from 'common/types/responses'
-
+import Input from './base/forms/Input'
+import Project from 'common/project'
 export type SamlTabType = {
   organisationId: number
 }
@@ -68,14 +69,17 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
           }
           header={
             <Row className='table-header'>
-              <Flex className='table-column px-3'>
+              <Flex className='table-column'>
                 <div className='font-weight-medium'>Configuration name</div>
               </Flex>
-              <div className='table-column' style={{ width: '305px' }}>
+              <div className='table-column' style={{ width: '400px' }}>
                 Assertion Consumer Service (ACS) URL
               </div>
-              <div className='table-column' style={{ width: '205px' }}>
+              <div className='table-column' style={{ width: '150px' }}>
                 Allow IdP-initiated
+              </div>
+              <div style={{ width: 90 }} className='table-column'>
+                Action
               </div>
             </Row>
           }
@@ -96,24 +100,34 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
               <Flex className='table-column px-3'>
                 <div className='font-weight-medium mb-1'>{samlConf.name}</div>
               </Flex>
-              <div className='table-column' style={{ width: '300px' }}>
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className='table-column flex flex-row gap-2'
+                style={{ width: '400px' }}
+              >
+                <div className='flex-1'>
+                  <Input
+                    className='full-width'
+                    value={`${Project.flagsmithClientAPI}auth/saml/${samlConf.name}/response/`}
+                    readOnly
+                  />
+                </div>
                 <Button
-                  onClick={async (e) => {
-                    e.stopPropagation()
-                    await copyAcsUrl(samlConf.name)
+                  onClick={() => {
+                    copyAcsUrl(samlConf.name)
                   }}
-                  theme='text'
+                  className='me-2 btn-with-icon'
                 >
-                  <div className='flex flex-row space-4'>
-                    <div>Copy to clipboard</div>
-                    <Icon name='copy' />
-                  </div>
+                  <Icon name='copy' width={20} fill='#656D7B' />
                 </Button>
               </div>
-              <div className='table-column' style={{ width: '95px' }}>
+              <div
+                className='table-column d-flex gap-4 align-items-center'
+                style={{ width: '150px' }}
+              >
                 <Switch checked={samlConf.allow_idp_initiated} />
               </div>
-              <div className='table-column'>
+              <div className='table-column' style={{ width: 90 }}>
                 <Button
                   id='delete-invite'
                   type='button'
