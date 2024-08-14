@@ -547,6 +547,7 @@ def test_fetch_issues(
     )
 
 
+@responses.activate
 def test_fetch_issues_returns_error_on_bad_response_from_github(
     admin_client_new: APIClient,
     organisation: Organisation,
@@ -556,7 +557,20 @@ def test_fetch_issues_returns_error_on_bad_response_from_github(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mocker.patch("requests.get", side_effect=mocked_requests_get_error)
+
+    mock_response = {
+        "message": "Validation Failed",
+        "errors": [{"message": "Error", "code": "not_found"}],
+        "documentation_url": "https://docs.github.com/v3/search/",
+        "status": "404",
+    }
+
+    responses.add(
+        method="GET",
+        url="https://api.github.com/search/issues?q=%20repo:repo/repo%20is:issue%20is:open%20in:title%20in:body&per_page=100&page=1",  # noqa: E501
+        status=status.HTTP_404_NOT_FOUND,
+        json=mock_response,
+    )
     url = reverse("api-v1:organisations:get-github-issues", args=[organisation.id])
     data = {"repo_owner": "owner", "repo_name": "repo"}
     # When
@@ -564,9 +578,40 @@ def test_fetch_issues_returns_error_on_bad_response_from_github(
 
     # Then
     assert response.status_code == status.HTTP_502_BAD_GATEWAY
+
+
+@responses.activate
+def test_search_issues_returns_error_on_bad_search_params(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    github_repository: GithubRepository,
+    mock_github_client_generate_token: MagicMock,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_response = {
+        "message": "Validation Failed",
+        "errors": [{"message": "Error", "code": "invalid"}],
+        "documentation_url": "https://docs.github.com/v3/search/",
+        "status": "422",
+    }
+    responses.add(
+        method="GET",
+        url="https://api.github.com/search/issues?q=%20repo:owner/repo%20is:issue%20is:open%20in:title%20in:body&per_page=100&page=1",  # noqa: E501
+        status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        json=mock_response,
+    )
+    url = reverse("api-v1:organisations:get-github-issues", args=[organisation.id])
+    data = {"repo_owner": "owner", "repo_name": "repo"}
+    # When
+    response = admin_client_new.get(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     response_json = response.json()
     assert (
-        "Failed to retrieve GitHub issues. Error: HTTP Error 404"
+        "Failed to retrieve GitHub issues. Error: The resources do not exist or you do not have permission to view them"
         in response_json["detail"]
     )
 

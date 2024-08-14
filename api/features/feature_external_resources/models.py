@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 
 from django.db import models
 from django.db.models import Q
@@ -79,9 +80,19 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
             .get(id=self.feature.project.organisation_id)
             .github_config.first()
         ):
+            if self.type == "GITHUB_PR":
+                pattern = r"github.com/([^/]+)/([^/]+)/pull/\d+$"
+            elif self.type == "GITHUB_ISSUE":
+                pattern = r"github.com/([^/]+)/([^/]+)/issues/\d+$"
+
+            url_match = re.search(pattern, self.url)
+            owner, repo = url_match.groups()
+
             github_repo = GithubRepository.objects.get(
                 github_configuration=github_configuration.id,
                 project=self.feature.project,
+                repository_owner=owner,
+                repository_name=repo,
             )
             if github_repo.tagging_enabled:
                 github_tag = Tag.objects.get(
