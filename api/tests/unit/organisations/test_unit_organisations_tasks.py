@@ -1311,7 +1311,13 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     mock_api_usage.return_value = 12_005
 
     # Add users to test email delivery
-    for org in [organisation2, organisation3, organisation4, organisation5]:
+    for org in [
+        organisation2,
+        organisation3,
+        organisation4,
+        organisation5,
+        organisation6,
+    ]:
         admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
         staff_user.add_organisation(org, role=OrganisationRole.USER)
 
@@ -1443,12 +1449,6 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
         "organisations/api_flags_blocked_notification.txt",
         context={"organisation": organisation2},
     )
-    email3 = mailoutbox[2]
-    assert email3.subject == "Flagsmith API use has been blocked due to overuse"
-    assert email3.body == render_to_string(
-        "organisations/api_flags_blocked_notification.txt",
-        context={"organisation": organisation6, "breached_grace_period": True},
-    )
 
     assert len(email2.alternatives) == 1
     assert len(email2.alternatives[0]) == 2
@@ -1456,18 +1456,20 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
 
     assert email2.alternatives[0][0] == render_to_string(
         "organisations/api_flags_blocked_notification.html",
-        context={"organisation": organisation2},
+        context={"organisation": organisation2, "grace_period": False},
     )
     assert email2.from_email == "noreply@flagsmith.com"
     assert email2.to == ["admin@example.com", "staff@example.com"]
 
+    email3 = mailoutbox[2]
+    assert email3.subject == "Flagsmith API use has been blocked due to overuse"
     assert len(email3.alternatives) == 1
     assert len(email3.alternatives[0]) == 2
     assert email3.alternatives[0][1] == "text/html"
 
     assert email3.alternatives[0][0] == render_to_string(
         "organisations/api_flags_blocked_notification.html",
-        context={"organisation": organisation6, "breached_grace_period": True},
+        context={"organisation": organisation6, "grace_period": False},
     )
     assert email3.from_email == "noreply@flagsmith.com"
     assert email3.to == ["admin@example.com", "staff@example.com"]
