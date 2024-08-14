@@ -42,7 +42,7 @@ export default class TheComponent extends Component {
       <div>
         {!hasEnabled && (
           <div>
-            <div className='text-right'>
+            <div className='text-center'>
               <Button disabled={isLoading} onClick={onEnable} theme='secondary'>
                 Enable Two-Factor Authentication
               </Button>

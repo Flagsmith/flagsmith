@@ -1,5 +1,7 @@
 import { OAuthType } from './types/requests'
 import { SegmentCondition } from './types/responses'
+import Utils from './utils/utils'
+
 import Project from './project'
 const keywords = {
   FEATURE_FUNCTION: 'myCoolFeature',
@@ -348,6 +350,12 @@ export default {
       }
     },
     'VIEW_FEATURE': { 'category': 'Features', 'event': 'Feature viewed' },
+    VIEW_LOCKED_FEATURE: (feature: string) => {
+      return {
+        'category': 'Locked Feature',
+        'event': `View Locked Feature ${feature}`,
+      }
+    },
     'VIEW_SEGMENT': { 'category': 'Segment', 'event': 'Segment viewed' },
     'VIEW_USER_FEATURE': {
       'category': 'User Features',
@@ -433,6 +441,13 @@ export default {
       'SEGMENT_ID': 150,
       'TRAITS_ID': 150,
     },
+  },
+  getUpgradeUrl: (feature?: string) => {
+    return Utils.isSaas()
+      ? '/organisation-settings?tab=billing'
+      : `https://www.flagsmith.com/pricing${
+          feature ? `utm_source=${feature}` : ''
+        }`
   },
   githubType: {
     githubIssue: 'GitHub Issue',
@@ -549,5 +564,4 @@ export default {
     '#DE3163',
   ],
   untaggedTag: { color: '#dedede', label: 'Untagged' },
-  upgradeURL: '/organisation-settings?tab=billing',
 }

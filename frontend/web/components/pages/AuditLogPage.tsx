@@ -1,6 +1,5 @@
 import React, { FC, useEffect, useState } from 'react' // we need this to make JSX compile
 import ConfigProvider from 'common/providers/ConfigProvider'
-import ToggleChip from 'components/ToggleChip'
 import Utils from 'common/utils/utils'
 import { Project } from 'common/types/responses'
 import { RouterChildContext } from 'react-router'
@@ -8,8 +7,7 @@ import AuditLog from 'components/AuditLog'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import PageTitle from 'components/PageTitle'
 import Tag from 'components/tags/Tag'
-import { Link } from 'react-router-dom'
-import Constants from 'common/constants'
+import { featureDescriptions } from 'components/PlanBasedAccess'
 
 type AuditLogType = {
   router: RouterChildContext['router']
@@ -36,26 +34,13 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
       )
     }
   }, [environment])
-  const hasRbacPermission = Utils.getPlansPermission('AUDIT')
-  if (!hasRbacPermission) {
-    return (
-      <div className='app-container container'>
-        <div className='text-center'>
-          To access this feature please{' '}
-          <Link className='text-primary' to={Constants.upgradeURL}>
-            upgrade your account to scaleup
-          </Link>{' '}
-          or higher.
-        </div>
-      </div>
-    )
-  }
   return (
     <div className='app-container container'>
-      <PageTitle title={'Audit Log'}>
-        View all activity that occured generically across the project and
-        specific to this environment.
-      </PageTitle>
+      {Utils.getPlansPermission('AUDIT') && (
+        <PageTitle title={featureDescriptions.AUDIT.title}>
+          {featureDescriptions.AUDIT.description}
+        </PageTitle>
+      )}
       <div>
         <div>
           <FormGroup>

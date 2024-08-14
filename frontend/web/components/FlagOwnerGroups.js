@@ -53,42 +53,34 @@ class TheComponent extends Component {
     users ? users.filter((v) => groupOwners.includes(v.id)) : []
 
   render() {
-    const hasPermission = Utils.getPlansPermission('FLAG_OWNERS')
-
     return (
       <OrganisationProvider>
         {({ groups }) => {
-          const res = (
+          return (
             <div>
               <SettingsButton
+                feature='FLAG_OWNERS'
+                content={
+                  <ConnectedGroupSelect
+                    orgId={AccountStore.getOrganisation()?.id}
+                    showValues
+                    groups={groups}
+                    value={this.state.groupOwners}
+                    isOpen={this.state.showUsers}
+                    size={null}
+                    onAdd={this.addOwner}
+                    onRemove={this.removeOwner}
+                    onToggle={() =>
+                      this.setState({ showUsers: !this.state.showUsers })
+                    }
+                  />
+                }
                 onClick={() => {
-                  if (hasPermission) this.setState({ showUsers: true })
+                  this.setState({ showUsers: true })
                 }}
               >
                 Assigned groups
               </SettingsButton>
-              <ConnectedGroupSelect
-                orgId={AccountStore.getOrganisation()?.id}
-                showValues={hasPermission}
-                groups={groups}
-                value={this.state.groupOwners}
-                isOpen={this.state.showUsers}
-                size={null}
-                onAdd={this.addOwner}
-                onRemove={this.removeOwner}
-                onToggle={() =>
-                  this.setState({ showUsers: !this.state.showUsers })
-                }
-              />
-            </div>
-          )
-          return hasPermission ? (
-            res
-          ) : (
-            <div>
-              {res}
-              The add flag assignees feature is available with our{' '}
-              <strong>Scale-up</strong> plan.
             </div>
           )
         }}

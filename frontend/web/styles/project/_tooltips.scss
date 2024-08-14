@@ -13,6 +13,9 @@ $shadow-dark: 0 4px 4px 0 #00000029;
     opacity: 1;
   }
 
+  &.tooltip-lg.show {
+    max-width: 900px;
+  }
   i {
     font-style: normal;
     color: $primary;
