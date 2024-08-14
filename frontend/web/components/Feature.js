@@ -7,9 +7,9 @@ import AddVariationButton from './mv/AddVariationButton'
 import ErrorMessage from './ErrorMessage'
 import Tooltip from './Tooltip'
 import Icon from './Icon'
-import Select from 'react-select'
 import InputGroup from './base/forms/InputGroup'
 import WarningMessage from './WarningMessage'
+
 function isNegativeNumberString(str) {
   if (typeof Utils.getTypedValue(str) !== 'number') {
     return false
