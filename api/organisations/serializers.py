@@ -4,8 +4,8 @@ from django.conf import settings
 from rest_framework import serializers
 
 from features.versioning.constants import (
-    DEFAULT_VERSION_LIMIT,
-    VERSION_LIMIT_BY_PLAN,
+    DEFAULT_VERSION_LIMIT_DAYS,
+    VERSION_LIMIT_DAYS_BY_PLAN,
 )
 from organisations.chargebee import (
     get_hosted_page_url_for_subscription_upgrade,
@@ -256,10 +256,10 @@ class SubscriptionDetailsSerializer(serializers.Serializer):
 
     def get_version_limit(self, instance: BaseSubscriptionMetadata) -> int:
         if not (subscription := self.context.get("subscription")):
-            return DEFAULT_VERSION_LIMIT
+            return DEFAULT_VERSION_LIMIT_DAYS
 
-        return VERSION_LIMIT_BY_PLAN.get(
-            subscription.subscription_plan_family, DEFAULT_VERSION_LIMIT
+        return VERSION_LIMIT_DAYS_BY_PLAN.get(
+            subscription.subscription_plan_family, DEFAULT_VERSION_LIMIT_DAYS
         )
 
 

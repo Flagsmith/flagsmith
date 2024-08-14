@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.db.models import BooleanField, ExpressionWrapper, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -25,9 +27,8 @@ from features.serializers import (
     CustomCreateSegmentOverrideFeatureStateSerializer,
 )
 from features.versioning.constants import (
-    DEFAULT_VERSION_LIMIT,
-    EXTRA_VERSIONS_FOR_LIST,
-    VERSION_LIMIT_BY_PLAN,
+    DEFAULT_VERSION_LIMIT_DAYS,
+    VERSION_LIMIT_DAYS_BY_PLAN,
 )
 from features.versioning.exceptions import FeatureVersionDeleteError
 from features.versioning.models import EnvironmentFeatureVersion
@@ -123,12 +124,15 @@ class EnvironmentFeatureVersionViewSet(
             queryset = queryset.filter(_is_live=is_live)
 
         subscription = self.environment.project.organisation.subscription
-        version_limit = VERSION_LIMIT_BY_PLAN.get(
-            subscription.subscription_plan_family, DEFAULT_VERSION_LIMIT
+        version_limit = VERSION_LIMIT_DAYS_BY_PLAN.get(
+            subscription.subscription_plan_family, DEFAULT_VERSION_LIMIT_DAYS
         )
 
         if self.action == "list" and version_limit is not None:
-            return queryset[: version_limit + EXTRA_VERSIONS_FOR_LIST]
+            limited_queryset = queryset.filter(
+                live_from__gte=timezone.now() - timedelta(days=version_limit)
+            )
+            return limited_queryset if limited_queryset.exists() else queryset[:1]
 
         return queryset
 

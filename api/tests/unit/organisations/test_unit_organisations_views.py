@@ -24,8 +24,8 @@ from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature
 from features.versioning.constants import (
-    DEFAULT_VERSION_LIMIT,
-    SCALE_UP_VERSION_LIMIT,
+    DEFAULT_VERSION_LIMIT_DAYS,
+    SCALE_UP_VERSION_LIMIT_DAYS,
 )
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.invites.models import Invite
@@ -874,7 +874,7 @@ def test_get_subscription_metadata_when_subscription_information_cache_exist(
         "max_api_calls": expected_api_calls,
         "payment_source": CHARGEBEE,
         "chargebee_email": expected_chargebee_email,
-        "version_limit": SCALE_UP_VERSION_LIMIT,
+        "version_limit": SCALE_UP_VERSION_LIMIT_DAYS,
     }
 
 
@@ -917,7 +917,7 @@ def test_get_subscription_metadata_when_subscription_information_cache_does_not_
         "max_api_calls": expected_api_calls,
         "payment_source": CHARGEBEE,
         "chargebee_email": expected_chargebee_email,
-        "version_limit": SCALE_UP_VERSION_LIMIT,
+        "version_limit": SCALE_UP_VERSION_LIMIT_DAYS,
     }
     get_subscription_metadata.assert_called_once_with(
         chargebee_subscription.subscription_id
@@ -950,7 +950,7 @@ def test_get_subscription_metadata_returns_200_if_the_organisation_have_no_paid_
         "max_projects": settings.MAX_PROJECTS_IN_FREE_PLAN,
         "max_seats": 1,
         "payment_source": None,
-        "version_limit": DEFAULT_VERSION_LIMIT,
+        "version_limit": DEFAULT_VERSION_LIMIT_DAYS,
     }
 
     get_subscription_metadata.assert_not_called()
@@ -977,7 +977,7 @@ def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
         "max_projects": settings.MAX_PROJECTS_IN_FREE_PLAN,
         "payment_source": None,
         "chargebee_email": None,
-        "version_limit": SCALE_UP_VERSION_LIMIT,
+        "version_limit": SCALE_UP_VERSION_LIMIT_DAYS,
     }
 
 

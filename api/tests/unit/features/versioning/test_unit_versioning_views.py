@@ -7,6 +7,7 @@ from core.constants import STRING
 from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -21,9 +22,9 @@ from environments.permissions.constants import (
 )
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
+from features.versioning.constants import SCALE_UP_VERSION_LIMIT_DAYS
 from features.versioning.models import EnvironmentFeatureVersion
 from organisations.models import Subscription
-from organisations.subscriptions.constants import ENTERPRISE, STARTUP
 from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
 from tests.types import (
@@ -1128,18 +1129,12 @@ def test_create_new_version_delete_segment_override_updates_overrides_immediatel
     assert get_feature_segments_response.json()["count"] == 0
 
 
-@pytest.mark.parametrize(
-    "plan, versions_to_create, expected_versions_to_return",
-    (
-        (STARTUP, 10, 3),
-        (
-            ENTERPRISE,
-            10,
-            11,
-        ),  # expect 11 because of initial version created automatically
-    ),
-)
-def test_list_versions_only_returns_allowed_amount_for_plan(
+# Note that we use the scale up version limit here as we know that it will
+# always be the largest of the limits (if different from the other non-enterprise
+# plans)
+@pytest.mark.freeze_time(now - timedelta(days=SCALE_UP_VERSION_LIMIT_DAYS + 1))
+@pytest.mark.parametrize("plan_id", ("free", "startup", "scale-up"))
+def test_list_versions_only_returns_allowed_amount_for_non_enterprise_plan(
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_user: FFAdminUser,
@@ -1147,9 +1142,111 @@ def test_list_versions_only_returns_allowed_amount_for_plan(
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     with_project_permissions: WithProjectPermissionsCallable,
     subscription: Subscription,
-    plan: str,
-    versions_to_create: int,
-    expected_versions_to_return: int,
+    freezer: FrozenDateTimeFactory,
+    plan_id: str,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_project_permissions([VIEW_PROJECT])
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    subscription.plan = plan_id
+    subscription.save()
+
+    # First, let's create some versions at the frozen time which is
+    # outside the limit allowed when using a non-enterprise plan
+    outside_limit_versions = []
+    for _ in range(3):
+        version = EnvironmentFeatureVersion.objects.create(
+            environment=environment_v2_versioning, feature=feature
+        )
+        version.publish(staff_user)
+        outside_limit_versions.append(version)
+
+    # Now let's jump to the current time and create some versions which
+    # are inside the limit when using a non-enterprise plan
+    freezer.move_to(now)
+
+    inside_limit_versions = []
+    for _ in range(3):
+        version = EnvironmentFeatureVersion.objects.create(
+            environment=environment_v2_versioning, feature=feature
+        )
+        version.publish(staff_user)
+        inside_limit_versions.append(version)
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 3
+    assert [v["uuid"] for v in response_json["results"]] == [
+        str(v.uuid) for v in inside_limit_versions
+    ]
+
+
+@pytest.mark.freeze_time(now - timedelta(days=SCALE_UP_VERSION_LIMIT_DAYS + 1))
+def test_list_versions_always_returns_current_version_even_if_outside_limit(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+    subscription: Subscription,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_project_permissions([VIEW_PROJECT])
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # Let's set the subscription plan as scale up
+    subscription.plan = "scale-up"
+    subscription.save()
+
+    # First, let's create a new version, after the initial version, but
+    # still outside the limit allowed when using a non-enterprise plan
+    freezer.move_to(timezone.now() + timedelta(minutes=5))
+    latest_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    latest_version.publish(staff_user)
+
+    # When
+    # we jump to the current time and retrieve the versions
+    freezer.move_to(now)
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["uuid"] == str(latest_version.uuid)
+
+
+@pytest.mark.freeze_time(now - timedelta(days=SCALE_UP_VERSION_LIMIT_DAYS + 1))
+def test_list_versions_returns_all_versions_for_enterprise_plan(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+    subscription: Subscription,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     # Given
     with_environment_permissions([VIEW_ENVIRONMENT])
@@ -1161,19 +1258,43 @@ def test_list_versions_only_returns_allowed_amount_for_plan(
     )
 
     # Let's set the subscription plan as start up
-    subscription.plan = plan
+    subscription.plan = "enterprise"
     subscription.save()
 
-    # and now let's create a lot more versions for the feature
-    for _ in range(versions_to_create):
+    initial_version = EnvironmentFeatureVersion.objects.get(
+        feature=feature, environment=environment_v2_versioning
+    )
+
+    # First, let's create some versions at the frozen time which is
+    # outside the limit allowed when using the scale up plan (but
+    # shouldn't matter to the enterprise plan.
+    all_versions = []
+    for _ in range(3):
         version = EnvironmentFeatureVersion.objects.create(
             environment=environment_v2_versioning, feature=feature
         )
         version.publish(staff_user)
+        all_versions.append(version)
+
+    # Now let's jump to the current time and create some versions which
+    # are inside the limit when using the startup plan
+    freezer.move_to(now)
+
+    for _ in range(3):
+        version = EnvironmentFeatureVersion.objects.create(
+            environment=environment_v2_versioning, feature=feature
+        )
+        version.publish(staff_user)
+        all_versions.append(version)
 
     # When
     response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["count"] == expected_versions_to_return
+
+    response_json = response.json()
+    assert response_json["count"] == 7  # we created 6, plus the original version
+    assert {v["uuid"] for v in response_json["results"]} == {
+        str(v.uuid) for v in [initial_version, *all_versions]
+    }
