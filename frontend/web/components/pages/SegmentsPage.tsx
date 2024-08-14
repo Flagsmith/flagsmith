@@ -42,12 +42,14 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   const { projectId } = props.match.params
   const environmentId =
     ProjectStore.getEnvironment()?.api_key || 'ENVIRONMENT_API_KEY'
-  const id = Utils.fromParam().id
-  const hasNoOperators = !Utils.getFlagsmithValue('segment_operators')
+  const params = Utils.fromParam()
+  const id = params.id
 
   const { search, searchInput, setSearchInput } = useSearchThrottle('')
   const [page, setPage] = useState(1)
-  const [showFeatureSpecific, setShowFeatureSpecific] = useState(false)
+  const [showFeatureSpecific, setShowFeatureSpecific] = useState(
+    params.featureSpecific === 'true',
+  )
 
   console.log('id is', id)
   useEffect(() => {
@@ -80,6 +82,16 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       props.router.history.replace(Utils.getOrganisationHomePage())
     }
   }, [error, props.router.history])
+
+  useEffect(() => {
+    props.router.history.replace(
+      `${document.location.pathname}?${Utils.toParam({
+        ...Utils.fromParam(),
+        featureSpecific: showFeatureSpecific,
+      })}`,
+    )
+  }, [showFeatureSpecific])
+
   const newSegment = () => {
     openModal(
       'New Segment',
@@ -130,7 +142,12 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       />,
       'side-modal create-segment-modal',
       () => {
-        props.router.history.push(`${document.location.pathname}`)
+        props.router.history.push(
+          `${document.location.pathname}?${Utils.toParam({
+            ...Utils.fromParam(),
+            id: undefined,
+          })}`,
+        )
       },
     )
   }
@@ -210,7 +227,10 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                   filterElement={
                     <div className='text-right me-2'>
                       <label className='me-2'>Include Feature-Specific</label>
-                      <Switch onChange={setShowFeatureSpecific} />
+                      <Switch
+                        checked={showFeatureSpecific}
+                        onChange={setShowFeatureSpecific}
+                      />
                     </div>
                   }
                   renderSearchWithNoResults
@@ -241,7 +261,12 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                             manageSegmentsPermission
                               ? () =>
                                   props.router.history.push(
-                                    `${document.location.pathname}?id=${id}`,
+                                    `${
+                                      document.location.pathname
+                                    }?${Utils.toParam({
+                                      ...Utils.fromParam(),
+                                      id,
+                                    })}`,
                                   )
                               : undefined
                           }
