@@ -1,9 +1,14 @@
+import Constants from 'common/constants'
+
 module.exports = (envId, { FEATURE_NAME, FEATURE_NAME_ALT }, customFeature) => `
 ctx, cancel := context.WithCancel(context.Background())
 defer cancel()
 
 // Initialise the Flagsmith client
-client := flagsmith.NewClient('${envId}', flagsmith.WithContext(ctx))
+client := flagsmith.NewClient('${envId}',${
+  Constants.isCustomFlagsmithUrl &&
+  `\nflagsmith.WithBaseURL("${Project.flagsmithClientAPI}"),\n`
+}flagsmith.WithContext(ctx))
 
 // The method below triggers a network request
 flags, _ := client.GetEnvironmentFlags()

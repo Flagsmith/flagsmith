@@ -1,16 +1,22 @@
+import Constants from 'common/constants'
+
 module.exports = (
   envId,
-  { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, TRAIT_NAME, USER_ID },
+  { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, NPM_CLIENT, TRAIT_NAME, USER_ID },
   userId,
 ) => `
 // Option 1: Initialise with an identity and traits
-import { FlagsmithProvider } from 'flagsmith/react';
+import { FlagsmithProvider } from '${NPM_CLIENT}/react';
 
 export default function App() {
   return (
     &lt;FlagsmithProvider
       options={{
-        environmentID: '${envId}',
+        environmentID: '${envId}',${
+  Constants.isCustomFlagsmithUrl
+    ? `\n        api: '${Project.flagsmithClientAPI}',`
+    : ''
+}
         identity: '${userId || USER_ID}',
         traits: {${TRAIT_NAME}: 21},
       }}
@@ -21,8 +27,8 @@ export default function App() {
 }
 
 // Option 2: Set traits / identify after initialising
-import flagsmith from '${LIB_NAME}';
-import { useFlags, useFlagsmith } from 'flagsmith/react';
+import flagsmith from '${NPM_CLIENT}';
+import { useFlags, useFlagsmith } from '${NPM_CLIENT}/react';
 
 export default function HomePage() {
   const flags = useFlags(['${FEATURE_NAME}','${FEATURE_NAME_ALT}']); // only causes re-render if specified flag values / traits change

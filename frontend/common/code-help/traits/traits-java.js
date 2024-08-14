@@ -1,10 +1,17 @@
+import Constants from 'common/constants'
+
 module.exports = (
   envId,
   { LIB_NAME, LIB_NAME_JAVA, TRAIT_NAME },
   userId,
 ) => `${LIB_NAME_JAVA} ${LIB_NAME} = ${LIB_NAME_JAVA}
 .newBuilder()
-.setApiKey("${envId}")
+.setApiKey("${envId}")${
+  Constants.isCustomFlagsmithUrl &&
+  `\n    .withConfiguration(FlagsmithConfig.builder()
+        .baseUri("${Project.flagsmithClientAPI}")
+        .build())`
+}
 .build();
 
 Map<String, Object> traits = new HashMap<String, Object>();
