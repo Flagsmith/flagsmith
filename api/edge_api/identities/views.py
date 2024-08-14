@@ -160,7 +160,11 @@ class EdgeIdentityViewSet(
         )
 
     def perform_destroy(self, instance):
-        EdgeIdentity.dynamo_wrapper.delete_item(instance["composite_key"])
+        edge_identity = EdgeIdentity.from_identity_document(instance)
+        edge_identity.delete(
+            user=self.request.user,
+            master_api_key=getattr(self.request, "master_api_key", None),
+        )
 
     @swagger_auto_schema(
         responses={200: EdgeIdentityTraitsSerializer(many=True)},
@@ -281,7 +285,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         self.identity.remove_feature_override(instance)
         self.identity.save(
-            user=self.request.user.id,
+            user=self.request.user,
             master_api_key=getattr(self.request, "master_api_key", None),
         )
 

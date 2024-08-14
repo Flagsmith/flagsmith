@@ -36,8 +36,8 @@ def test_sdk_analytics_does_not_allow_bad_data(mocker, settings, environment):
 
     view = SDKAnalyticsFlags(request=request)
 
-    mocked_track_feature_eval = mocker.patch(
-        "app_analytics.views.track_feature_evaluation_influxdb"
+    mocked_feature_eval_cache = mocker.patch(
+        "app_analytics.views.feature_evaluation_cache"
     )
 
     # When
@@ -45,34 +45,7 @@ def test_sdk_analytics_does_not_allow_bad_data(mocker, settings, environment):
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    mocked_track_feature_eval.assert_not_called()
-
-
-def test_sdk_analytics_allows_valid_data(mocker, settings, environment, feature):
-    # Given
-    settings.INFLUXDB_TOKEN = "some-token"
-
-    data = {feature.name: 12}
-    request = mocker.MagicMock(
-        data=data,
-        environment=environment,
-        query_params={},
-    )
-
-    view = SDKAnalyticsFlags(request=request)
-
-    mocked_track_feature_eval = mocker.patch(
-        "app_analytics.views.track_feature_evaluation_influxdb"
-    )
-
-    # When
-    response = view.post(request)
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    mocked_track_feature_eval.run_in_thread.assert_called_once_with(
-        args=(environment.id, data)
-    )
+    mocked_feature_eval_cache.track_feature_evaluation.assert_not_called()
 
 
 def test_get_usage_data(mocker, admin_client, organisation):
@@ -168,8 +141,8 @@ def test_get_usage_data__current_billing_period(
         organisation_id=organisation.id,
         environment_id=None,
         project_id=None,
-        date_start="-28d",
-        date_stop="now()",
+        date_start=four_weeks_ago,
+        date_stop=now,
     )
 
 
@@ -195,6 +168,7 @@ def test_get_usage_data__previous_billing_period(
     now = timezone.now()
     week_from_now = now + timedelta(days=7)
     four_weeks_ago = now - timedelta(days=28)
+    target_start_at = now - timedelta(days=59)
 
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
@@ -229,8 +203,8 @@ def test_get_usage_data__previous_billing_period(
         organisation_id=organisation.id,
         environment_id=None,
         project_id=None,
-        date_start="-59d",
-        date_stop="-28d",
+        date_start=target_start_at,
+        date_stop=four_weeks_ago,
     )
 
 
@@ -256,7 +230,7 @@ def test_get_usage_data__ninety_day_period(
     now = timezone.now()
     week_from_now = now + timedelta(days=7)
     four_weeks_ago = now - timedelta(days=28)
-
+    ninety_days_ago = now - timedelta(days=90)
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         current_billing_term_starts_at=four_weeks_ago,
@@ -290,8 +264,8 @@ def test_get_usage_data__ninety_day_period(
         organisation_id=organisation.id,
         environment_id=None,
         project_id=None,
-        date_start="-90d",
-        date_stop="now()",
+        date_start=ninety_days_ago,
+        date_stop=now,
     )
 
 
@@ -432,24 +406,20 @@ def test_set_sdk_analytics_flags_without_identifier(
     assert feature_evaluation_raw.evaluation_count is feature_request_count
 
 
-def test_set_sdk_analytics_flags_v1_to_influxdb(
+def test_sdk_analytics_flags_v1(
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
-    identity: Identity,
-    settings: SettingsWrapper,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    settings.INFLUXDB_TOKEN = "some-token"
-
     url = reverse("api-v1:analytics-flags")
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     feature_request_count = 2
     data = {feature.name: feature_request_count}
 
-    mocked_track_feature_eval = mocker.patch(
-        "app_analytics.views.track_feature_evaluation_influxdb"
+    mocked_feature_evaluation_cache = mocker.patch(
+        "app_analytics.views.feature_evaluation_cache"
     )
 
     # When
@@ -459,9 +429,6 @@ def test_set_sdk_analytics_flags_v1_to_influxdb(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    mocked_track_feature_eval.run_in_thread.assert_called_once_with(
-        args=(
-            environment.id,
-            data,
-        )
+    mocked_feature_evaluation_cache.track_feature_evaluation.assert_called_once_with(
+        environment.id, feature.name, feature_request_count
     )

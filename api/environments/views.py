@@ -225,7 +225,10 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(responses={200: SDKEnvironmentDocumentModel})
     @action(detail=True, methods=["GET"], url_path="document")
     def get_document(self, request, api_key: str):
-        return Response(Environment.get_environment_document(api_key))
+        environment = (
+            self.get_object()
+        )  # use get_object to ensure permissions check is performed
+        return Response(Environment.get_environment_document(environment.api_key))
 
     @swagger_auto_schema(request_body=no_body, responses={202: ""})
     @action(detail=True, methods=["POST"], url_path="enable-v2-versioning")

@@ -569,7 +569,7 @@ def test_view_environment_with_staff__query_count_is_expected(
     url = reverse("api-v1:environments:environment-list")
     data = {"project": project.id}
 
-    expected_query_count = 7
+    expected_query_count = 9
     # When
     with django_assert_num_queries(expected_query_count):
         response = staff_client.get(url, data=data, content_type="application/json")
@@ -766,11 +766,13 @@ def test_audit_log_entry_created_when_environment_updated(
 def test_get_document(
     environment: Environment,
     project: Project,
-    admin_client_new: APIClient,
+    staff_client: APIClient,
     feature: Feature,
     segment: Segment,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
     # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])
 
     # and some sample data to make sure we're testing all of the document
     segment_rule = SegmentRule.objects.create(
@@ -786,11 +788,26 @@ def test_get_document(
     )
 
     # When
-    response = admin_client_new.get(url)
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()
+
+
+def test_cannot_get_environment_document_without_permission(
+    staff_client: APIClient, environment: Environment
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-get-document", args=[environment.api_key]
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_get_all_trait_keys_for_environment_only_returns_distinct_keys(

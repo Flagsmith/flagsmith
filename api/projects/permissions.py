@@ -48,12 +48,14 @@ class ProjectPermissions(IsAuthenticated):
             subscription_metadata = (
                 organisation.subscription.get_subscription_metadata()
             )
+
             total_projects_created = Project.objects.filter(
                 organisation=organisation
             ).count()
             if (
                 subscription_metadata.projects
                 and total_projects_created >= subscription_metadata.projects
+                and not getattr(request, "is_e2e", False) is True
             ):
                 return False
             if organisation.restrict_project_create_to_admin:

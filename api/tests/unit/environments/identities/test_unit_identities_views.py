@@ -1,7 +1,9 @@
 import json
 import urllib
+from typing import Any
 from unittest import mock
 
+import pytest
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER, STRING
 from django.test import override_settings
 from django.urls import reverse
@@ -1143,20 +1145,31 @@ def test_post_identities__server_key_only_feature__server_key_auth__return_expec
     assert response.json()["flags"]
 
 
+@pytest.mark.parametrize(
+    "identity_data",
+    [
+        pytest.param(
+            {"identifier": "transient", "transient": True},
+            id="new-identifier-transient-true",
+        ),
+        pytest.param({"identifier": ""}, id="blank-identifier"),
+        pytest.param({"identifier": None}, id="null-identifier"),
+        pytest.param({}, id="missing_identifier"),
+    ],
+)
 def test_post_identities__transient__no_persistence(
     environment: Environment,
     api_client: APIClient,
+    identity_data: dict[str, Any],
 ) -> None:
     # Given
-    identifier = "transient"
     trait_key = "trait_key"
 
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     url = reverse("api-v1:sdk-identities")
     data = {
-        "identifier": identifier,
+        **identity_data,
         "traits": [{"trait_key": trait_key, "trait_value": "bar"}],
-        "transient": True,
     }
 
     # When
@@ -1166,8 +1179,72 @@ def test_post_identities__transient__no_persistence(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert not Identity.objects.filter(identifier=identifier).exists()
+    assert not Identity.objects.exists()
     assert not Trait.objects.filter(trait_key=trait_key).exists()
+
+
+@pytest.mark.parametrize(
+    "trait_transiency_data",
+    [
+        pytest.param({"transient": True}, id="trait-transient-true"),
+        pytest.param({"transient": False}, id="trait-transient-false"),
+        pytest.param({}, id="trait-default"),
+    ],
+)
+def test_post_identities__existing__transient__no_persistence(
+    environment: Environment,
+    identity: Identity,
+    trait: Trait,
+    identity_featurestate: FeatureState,
+    api_client: APIClient,
+    trait_transiency_data: dict[str, Any],
+) -> None:
+    # Given
+    feature_state_value = "identity override"
+    identity_featurestate.feature_state_value.string_value = feature_state_value
+    identity_featurestate.feature_state_value.save()
+
+    trait_key = "trait_key"
+
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    url = reverse("api-v1:sdk-identities")
+    data = {
+        "identifier": identity.identifier,
+        "transient": True,
+        "traits": [
+            {"trait_key": trait_key, "trait_value": "bar", **trait_transiency_data}
+        ],
+    }
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+
+    # identity overrides are correctly loaded
+    assert response_json["flags"][0]["feature_state_value"] == feature_state_value
+
+    # previously persisted traits not provided in the request
+    # are not marked as transient in the response
+    assert response_json["traits"][0]["trait_key"] == trait.trait_key
+    assert not response_json["traits"][0].get("transient")
+
+    # every trait provided in the request for a transient identity
+    # is marked as transient
+    assert response_json["traits"][1]["trait_key"] == trait_key
+    assert response_json["traits"][1]["transient"]
+
+    assert (
+        persisted_trait := Trait.objects.filter(
+            identity=identity, trait_key=trait.trait_key
+        ).first()
+    )
+    assert persisted_trait.trait_value == trait.trait_value
+    assert not Trait.objects.filter(identity=identity, trait_key=trait_key).exists()
 
 
 def test_post_identities__transient_traits__no_persistence(

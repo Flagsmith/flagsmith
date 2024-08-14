@@ -15,6 +15,7 @@ import RolePermissionsList from './RolePermissionsList'
 import ProjectFilter from './ProjectFilter'
 import OrganisationStore from 'common/stores/organisation-store'
 import PlanBasedAccess from './PlanBasedAccess'
+import WarningMessage from './WarningMessage'
 
 type PermissionsTabsType = {
   orgId?: number
@@ -56,8 +57,27 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
     return
   }
 
+  const deprecationMessage = (
+    <div>
+      Group-level permissions are deprecated. Assign{' '}
+      <a href='?type=roles' target='_blank'>
+        roles
+      </a>{' '}
+      to this group instead.{' '}
+      <a
+        href='https://docs.flagsmith.com/system-administration/rbac#deprecated-features'
+        target='_blank'
+        rel='noreferrer'
+      >
+        Learn more
+      </a>
+      .
+    </div>
+  )
+
   return (
     <PlanBasedAccess feature={'RBAC'} theme={'page'}>
+      {!!group && <WarningMessage warningMessage={deprecationMessage} />}
       <Tabs
         uncontrolled={uncontrolled}
         value={value}
