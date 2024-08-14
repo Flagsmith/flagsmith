@@ -137,11 +137,9 @@ def get_permitted_environments_for_user(
     environment_ids_from_base_filter = get_object_id_from_base_permission_filter(
         user, Environment, permission_key, tag_ids=tag_ids
     )
-    environment_ids = project.environments.filter(
-        id__in=environment_ids_from_base_filter
-    ).values_list("id", flat=True)
-
-    queryset = Environment.objects.filter(id__in=environment_ids)
+    queryset = Environment.objects.filter(
+        id__in=environment_ids_from_base_filter, project=project
+    )
 
     if prefetch_metadata:
         queryset = queryset.prefetch_related("metadata")
