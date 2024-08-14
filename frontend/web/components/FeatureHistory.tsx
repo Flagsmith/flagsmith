@@ -47,147 +47,156 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
   const [diff, setDiff] = useState<null | string>(null)
   return (
     <div>
-      <DateList<TFeatureVersion>
-        items={data}
-        isLoading={isLoading}
-        nextPage={() => setPage(page + 1)}
-        prevPage={() => setPage(page + 1)}
-        goToPage={setPage}
-        renderRow={(v: TFeatureVersion, i: number) => {
-          const user = users?.find((user) => v.published_by === user.id)
+      <h5>Change History</h5>
+      <div>
+        View and rollback history of feature values, multivariate values and
+        segment overrides.
+      </div>
+      <div className='mt-4'>
+        <DateList<TFeatureVersion>
+          items={data}
+          isLoading={isLoading}
+          nextPage={() => setPage(page + 1)}
+          prevPage={() => setPage(page + 1)}
+          goToPage={setPage}
+          renderRow={(v: TFeatureVersion, i: number) => {
+            const user = users?.find((user) => v.published_by === user.id)
 
-          return (
-            <Row className='list-item py-2 mh-auto'>
-              <div className='flex-fill overflow-hidden'>
-                <div className='flex-row flex-fill'>
-                  <div
-                    className='table-column flex-fill'
-                    style={{ width: widths[0] }}
-                  >
-                    <div className='font-weight-medium d-flex gap-2 align-items-center mb-1'>
-                      {moment(v.live_from).format('HH:mma')}
-                      <div className='text-muted fw-normal text-small'>
-                        {user
-                          ? `${user.first_name || ''} ${user.last_name || ''} `
-                          : 'System '}
-                      </div>
-                      {!i && <span className='chip chip--xs px-2'>Live</span>}
-                    </div>
-                  </div>
-                  <div className='table-column' style={{ width: widths[1] }}>
-                    <a
-                      href={`/project/${projectId}/environment/${environmentApiKey}/history/${v.uuid}/`}
-                      target='_blank'
-                      rel='noreferrer'
+            return (
+              <Row className='list-item py-2 mh-auto'>
+                <div className='flex-fill overflow-hidden'>
+                  <div className='flex-row flex-fill'>
+                    <div
+                      className='table-column flex-fill'
+                      style={{ width: widths[0] }}
                     >
-                      <Button
-                        theme='text'
-                        className='px-0 text-primary'
-                        size='xSmall'
+                      <div className='font-weight-medium d-flex gap-2 align-items-center mb-1'>
+                        {moment(v.live_from).format('HH:mma')}
+                        <div className='text-muted fw-normal text-small'>
+                          {user
+                            ? `${user.first_name || ''} ${
+                                user.last_name || ''
+                              } `
+                            : 'System '}
+                        </div>
+                        {!i && <span className='chip chip--xs px-2'>Live</span>}
+                      </div>
+                    </div>
+                    <div className='table-column' style={{ width: widths[1] }}>
+                      <a
+                        href={`/project/${projectId}/environment/${environmentApiKey}/history/${v.uuid}/`}
+                        target='_blank'
+                        rel='noreferrer'
                       >
-                        View Details
-                      </Button>
-                    </a>
-                  </div>
-                  <div className='table-column' style={{ width: widths[1] }}>
-                    {i + 1 !== data!.results.length && (
-                      <>
-                        {diff === v.uuid ? (
-                          <Button
-                            data-test={`history-item-${i}-hide`}
-                            onClick={() => {
-                              setSelected(null)
-                              setDiff(diff === v.uuid ? null : v.uuid)
-                            }}
-                            className='px-0 text-primary'
-                            theme='text'
-                            size='xSmall'
-                          >
-                            Hide Changes
-                          </Button>
-                        ) : (
-                          <div>
+                        <Button
+                          theme='text'
+                          className='px-0 text-primary'
+                          size='xSmall'
+                        >
+                          View Details
+                        </Button>
+                      </a>
+                    </div>
+                    <div className='table-column' style={{ width: widths[1] }}>
+                      {i + 1 !== data!.results.length && (
+                        <>
+                          {diff === v.uuid ? (
                             <Button
-                              data-test={`history-item-${i}-compare`}
+                              data-test={`history-item-${i}-hide`}
                               onClick={() => {
-                                if (v.uuid === live!.uuid) {
-                                  setCompareToLive(false)
-                                  setDiff(v.uuid)
-                                } else {
-                                  setSelected(v)
-                                  // setDiff(diff === v.uuid ? null : v.uuid)
-                                  setOpen(true)
-                                }
+                                setSelected(null)
+                                setDiff(diff === v.uuid ? null : v.uuid)
                               }}
                               className='px-0 text-primary'
                               theme='text'
                               size='xSmall'
                             >
-                              Quick compare
+                              Hide Changes
                             </Button>
-                          </div>
-                        )}
-                      </>
-                    )}
-                    <InlineModal
-                      hideClose
-                      title={null}
-                      isOpen={open && selected === v}
-                      onClose={() => {
-                        setTimeout(() => {
-                          setOpen(false)
-                        }, 10)
-                      }}
-                      containerClassName='px-0'
-                      className='inline-modal table-filter inline-modal--sm right'
-                    >
-                      <TableFilterItem
-                        data-test={`history-item-${i}-compare-live`}
-                        title={'Live Version'}
-                        onClick={() => {
-                          setCompareToLive(true)
-                          if (selected) {
-                            setDiff(
-                              diff === selected.uuid ? null : selected.uuid,
-                            )
-                          }
-                          setOpen(false)
+                          ) : (
+                            <div>
+                              <Button
+                                data-test={`history-item-${i}-compare`}
+                                onClick={() => {
+                                  if (v.uuid === live!.uuid) {
+                                    setCompareToLive(false)
+                                    setDiff(v.uuid)
+                                  } else {
+                                    setSelected(v)
+                                    // setDiff(diff === v.uuid ? null : v.uuid)
+                                    setOpen(true)
+                                  }
+                                }}
+                                className='px-0 text-primary'
+                                theme='text'
+                                size='xSmall'
+                              >
+                                Quick compare
+                              </Button>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      <InlineModal
+                        hideClose
+                        title={null}
+                        isOpen={open && selected === v}
+                        onClose={() => {
+                          setTimeout(() => {
+                            setOpen(false)
+                          }, 10)
                         }}
-                      />
-                      <TableFilterItem
-                        data-test={`history-item-${i}-compare-previous`}
-                        title={'Previous Version'}
-                        onClick={() => {
-                          setCompareToLive(false)
-                          if (selected) {
-                            setDiff(
-                              diff === selected.uuid ? null : selected.uuid,
-                            )
-                          }
-                          setOpen(false)
-                        }}
-                      />
-                    </InlineModal>
+                        containerClassName='px-0'
+                        className='inline-modal table-filter inline-modal--sm right'
+                      >
+                        <TableFilterItem
+                          data-test={`history-item-${i}-compare-live`}
+                          title={'Live Version'}
+                          onClick={() => {
+                            setCompareToLive(true)
+                            if (selected) {
+                              setDiff(
+                                diff === selected.uuid ? null : selected.uuid,
+                              )
+                            }
+                            setOpen(false)
+                          }}
+                        />
+                        <TableFilterItem
+                          data-test={`history-item-${i}-compare-previous`}
+                          title={'Previous Version'}
+                          onClick={() => {
+                            setCompareToLive(false)
+                            if (selected) {
+                              setDiff(
+                                diff === selected.uuid ? null : selected.uuid,
+                              )
+                            }
+                            setOpen(false)
+                          }}
+                        />
+                      </InlineModal>
+                    </div>
                   </div>
+                  {diff === v.uuid && (
+                    <FeatureVersion
+                      projectId={`${projectId}`}
+                      featureId={feature}
+                      environmentId={environmentId}
+                      newUUID={compareToLive ? live!.uuid : v.uuid}
+                      oldUUID={
+                        compareToLive
+                          ? data!.results[i]!.uuid
+                          : data!.results[i + 1]!.uuid
+                      }
+                    />
+                  )}
                 </div>
-                {diff === v.uuid && (
-                  <FeatureVersion
-                    projectId={`${projectId}`}
-                    featureId={feature}
-                    environmentId={environmentId}
-                    newUUID={compareToLive ? live!.uuid : v.uuid}
-                    oldUUID={
-                      compareToLive
-                        ? data!.results[i]!.uuid
-                        : data!.results[i + 1]!.uuid
-                    }
-                  />
-                )}
-              </div>
-            </Row>
-          )
-        }}
-      />
+              </Row>
+            )
+          }}
+        />
+      </div>
     </div>
   )
 }

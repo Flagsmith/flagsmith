@@ -144,10 +144,13 @@
     padding-right: 0 !important;
     width: 16px;
     height: 16px;
-    line-height: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 .pill .btn-tab .unread {
+  background-color: $primary400;
   margin-left: $spacer/2;
   position: static;
 }
