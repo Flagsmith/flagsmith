@@ -2,6 +2,7 @@ import copy
 import typing
 from contextlib import suppress
 
+from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 from django.db.models import Prefetch, Q
 from flag_engine.features.models import FeatureStateModel
@@ -314,11 +315,15 @@ class EdgeIdentityMeta(models.Model):
     _SEPARATOR = "<separator>"
     _EQUALITY_CHARS = "<equals>"
 
+    class Meta:
+        indexes = [GinIndex(fields=["searchable_traits"])]
+
     def update_searchable_traits(self, traits: typing.List[TraitModel]) -> None:
-        searchable_trait_keys = self.environment.trait_meta_items.filter(
-            is_searchable=True
-        ).values_list("trait_key", flat=True)
+        # searchable_trait_keys = self.environment.trait_meta_items.filter(
+        #     is_searchable=True
+        # ).values_list("trait_key", flat=True)
         self.searchable_traits = self._SEPARATOR.join(
             f"{trait.trait_key}{self._EQUALITY_CHARS}{trait.trait_value}"
-            for trait in filter(lambda t: t.trait_key in searchable_trait_keys, traits)
+            # for trait in filter(lambda t: t.trait_key in searchable_trait_keys, traits)
+            for trait in traits
         )

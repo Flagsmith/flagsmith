@@ -162,6 +162,8 @@ INSTALLED_APPS = [
     "softdelete",
     "metadata",
     "app_analytics",
+    # TODO: move this to be added iff postgres db in use
+    "django.contrib.postgres",
 ]
 
 SILENCED_SYSTEM_CHECKS = ["axes.W002"]
