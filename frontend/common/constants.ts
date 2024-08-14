@@ -1,6 +1,6 @@
 import { OAuthType } from './types/requests'
 import { SegmentCondition } from './types/responses'
-
+import Project from './project'
 const keywords = {
   FEATURE_FUNCTION: 'myCoolFeature',
   FEATURE_NAME: 'my_cool_feature',
@@ -113,7 +113,7 @@ export default {
       'PHP': require('./code-help/init/init-php')(envId, keywords),
       'Python': require('./code-help/init/init-python')(envId, keywords),
       'React': require('./code-help/init/init-react')(envId, keywords),
-      'React Native': require('./code-help/init/init-js')(
+      'React Native': require('./code-help/init/init-react')(
         envId,
         keywordsReactNative,
       ),
@@ -438,6 +438,8 @@ export default {
     githubIssue: 'GitHub Issue',
     githubPR: 'Github PR',
   },
+  isCustomFlagsmithUrl:
+    Project.flagsmithClientAPI !== 'https://edge.api.flagsmith.com/api/v1/',
   modals: {
     'PAYMENT': 'Payment Modal',
   },
