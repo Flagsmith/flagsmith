@@ -94,6 +94,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
             value={value}
           >
             <TabItem
+              className={'p-0'}
               tabLabel={
                 <div className='d-flex justify-content-center gap-1 align-items-center'>
                   Value
@@ -169,6 +170,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
             </TabItem>
             {!!variationDiffs?.diffs?.length && (
               <TabItem
+                className={'p-0'}
                 tabLabel={
                   <div>
                     Variations{' '}
@@ -185,6 +187,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
             )}
             {!!segmentDiffs?.diffs.length && (
               <TabItem
+                className={'p-0'}
                 tabLabel={
                   <div className='d-flex justify-content-center gap-1 align-items-center'>
                     Segment Overrides

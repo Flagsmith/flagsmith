@@ -11,6 +11,7 @@ import InlineModal from './InlineModal'
 import TableFilterItem from './tables/TableFilterItem'
 import moment from 'moment'
 import DateList from './DateList'
+import classNames from 'classnames'
 
 const widths = [250, 150]
 type FeatureHistoryPageType = {
@@ -64,7 +65,11 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
 
             return (
               <Row className='list-item py-2 mh-auto'>
-                <div className='flex-fill overflow-hidden'>
+                <div
+                  className={classNames('flex-fill', {
+                    'overflow-hidden': !open,
+                  })}
+                >
                   <div className='flex-row flex-fill'>
                     <div
                       className='table-column flex-fill'

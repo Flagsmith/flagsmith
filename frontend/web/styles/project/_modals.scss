@@ -143,7 +143,7 @@ $side-width: 750px;
   position: absolute;
   background: $body-bg;
   border-radius: $border-radius;
-  z-index: 2;
+  z-index: 200000000000;
   box-shadow: rgba(75, 75, 75, 0.11) 0px 1px 6px 0px,
     rgba(75, 75, 75, 0.11) 0px 1px 4px 0px;
   border: 1px solid $input-border-color;
