@@ -123,6 +123,9 @@ $side-width: 750px;
         padding-bottom: 24px;
         overflow-y: auto;
         height: calc(100vh - 110px);
+        &.p-0 {
+          height: auto;
+        }
       }
     }
     .create-feature-tab {
