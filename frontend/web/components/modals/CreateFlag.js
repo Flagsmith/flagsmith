@@ -41,6 +41,7 @@ import { getGithubIntegration } from 'common/services/useGithubIntegration'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
+import FeatureHistory from 'components/FeatureHistory'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -1702,26 +1703,51 @@ const CreateFlag = class extends Component {
                                     </TabItem>
                                   )}
                                 {!existingChangeRequest &&
-                                  !Project.disableAnalytics &&
-                                  this.props.flagId && (
+                                  this.props.flagId &&
+                                  (isVersioned ||
+                                    !Project.disableAnalytics) && (
                                     <TabItem
+                                      className='p-0'
                                       data-test='analytics'
-                                      tabLabel='Analytics'
+                                      tabLabel='History'
                                     >
-                                      <FormGroup className='mb-4'>
-                                        {!!usageData && (
-                                          <h5 className='mb-2'>
-                                            Flag events for last 30 days
-                                          </h5>
-                                        )}
-                                        {!usageData && (
-                                          <div className='text-center'>
-                                            <Loader />
-                                          </div>
-                                        )}
+                                      <Tabs
+                                        uncontrolled
+                                        onChange={() => this.forceUpdate()}
+                                        urlParam='history-tab'
+                                        history={this.props.history}
+                                        theme='pill'
+                                        hideNavOnSingleTab
+                                      >
+                                        <TabItem tabLabel={'Change History'}>
+                                          <FeatureHistory
+                                            feature={projectFlag.id}
+                                            projectId={`${this.props.projectId}`}
+                                            environmentId={environment.id}
+                                            environmentApiKey={
+                                              environment.api_key
+                                            }
+                                          />
+                                        </TabItem>
+                                        {!Project.disableAnalytics && (
+                                          <TabItem tabLabel={'Usage Analytics'}>
+                                            <FormGroup className='mb-4'>
+                                              {!!usageData && (
+                                                <h5 className='mb-2'>
+                                                  Flag events for last 30 days
+                                                </h5>
+                                              )}
+                                              {!usageData && (
+                                                <div className='text-center'>
+                                                  <Loader />
+                                                </div>
+                                              )}
 
-                                        {this.drawChart(usageData)}
-                                      </FormGroup>
+                                              {this.drawChart(usageData)}
+                                            </FormGroup>
+                                          </TabItem>
+                                        )}
+                                      </Tabs>
                                       <InfoMessage>
                                         The Flag Analytics data will be visible
                                         in the Dashboard between 30 minutes and
