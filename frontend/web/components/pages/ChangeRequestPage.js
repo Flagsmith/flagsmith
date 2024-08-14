@@ -22,6 +22,7 @@ import Breadcrumb from 'components/Breadcrumb'
 import SettingsButton from 'components/SettingsButton'
 import DiffChangeRequest from 'components/diff/DiffChangeRequest'
 import NewVersionWarning from 'components/NewVersionWarning'
+import AddEditTags from 'components/tags/AddEditTags'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -94,7 +95,35 @@ const ChangeRequestsPage = class extends Component {
       title: changeRequest.title,
     })
   }
-  componentDidMount = () => {}
+
+  addTag = (tags) => {
+    if (ChangeRequestStore.isLoading) return
+    const changeRequest = ChangeRequestStore.model[this.props.match.params.id]
+    AppActions.updateChangeRequest({
+      approvals: changeRequest.approvals,
+      description: changeRequest.description,
+      feature_states: changeRequest.feature_states,
+      group_assignments: changeRequest.group_assignments,
+      id: changeRequest.id,
+      tags: tags,
+      title: changeRequest.title,
+    })
+  }
+
+  syncTagsFromChangeRequest = () => {
+    const { id } = this.props.match.params
+    const changeRequest = ChangeRequestStore.model[id]
+
+    if (changeRequest) {
+      if (changeRequest.tags !== this.state.tags) {
+        this.setState({ tags: changeRequest.tags })
+      }
+    }
+  }
+
+  componentDidMount = () => {
+    this.syncTagsFromChangeRequest()
+  }
 
   deleteChangeRequest = () => {
     openConfirm({
@@ -430,6 +459,21 @@ const ChangeRequestsPage = class extends Component {
                         >
                           Assigned groups
                         </SettingsButton>
+                        <FormGroup className='my-2 setting'>
+                          <InputGroup
+                            title={'Tags'}
+                            component={
+                              <AddEditTags
+                                projectId={`${this.props.match.params.projectId}`}
+                                value={this.state.tags}
+                                onChange={(tags) => {
+                                  this.setState({ tags: tags })
+                                  this.addTag(tags)
+                                }}
+                              />
+                            }
+                          />
+                        </FormGroup>
                         <Row className='mt-2'>
                           {!!ownerGroups?.length &&
                             ownerGroups.map((g) => (

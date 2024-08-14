@@ -9,6 +9,8 @@ import DateSelect from 'components/DateSelect'
 import { close } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import InfoMessage from 'components/InfoMessage'
+import AddEditTags from 'components/tags/AddEditTags'
+import Constants from 'common/constants'
 
 const ChangeRequestModal = class extends Component {
   static displayName = 'ChangeRequestModal'
@@ -27,6 +29,7 @@ const ChangeRequestModal = class extends Component {
       (this.props.changeRequest &&
         this.props.changeRequest.feature_states[0].live_from) ||
       undefined,
+    tags: [],
     title: (this.props.changeRequest && this.props.changeRequest.title) || '',
   }
 
@@ -61,11 +64,12 @@ const ChangeRequestModal = class extends Component {
     groups.filter((v) => approvals.find((a) => a.group === v.id))
 
   save = () => {
-    const { approvals, description, live_from, title } = this.state
+    const { approvals, description, live_from, tags, title } = this.state
     this.props.onSave({
       approvals,
       description,
       live_from: live_from || undefined,
+      tags,
       title,
     })
   }
@@ -218,6 +222,21 @@ const ChangeRequestModal = class extends Component {
                               Add group
                             </Button>
                           </Row>
+                          <FormGroup className='my-2 setting'>
+                            <InputGroup
+                              title={'Tags'}
+                              tooltip={Constants.strings.TAGS_DESCRIPTION}
+                              component={
+                                <AddEditTags
+                                  projectId={`${this.props.projectId}`}
+                                  value={this.state.tags}
+                                  onChange={(tags) => {
+                                    this.setState({ tags: tags })
+                                  }}
+                                />
+                              }
+                            />
+                          </FormGroup>
                         </div>
                       }
                       onChange={(e) =>

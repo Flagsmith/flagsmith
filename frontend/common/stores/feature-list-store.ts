@@ -495,6 +495,7 @@ const controller = {
           approvals,
           featureStateId,
           multivariate_options,
+          tags,
           ...changeRequestData
         } = changeRequest
 
@@ -526,6 +527,7 @@ const controller = {
               ]
             : [],
           group_assignments,
+          tags,
           ...changeRequestData,
         }
         const reqType = req.id ? 'put' : 'post'

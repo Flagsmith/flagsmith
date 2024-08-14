@@ -476,6 +476,7 @@ export type Req = {
     description: string
     multivariate_options: MultivariateOption[]
     title: string
+    tags?: number[]
   }
   getFeatureStates: {
     environment?: number

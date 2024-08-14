@@ -868,10 +868,12 @@ const CreateFlag = class extends Component {
                     <ChangeRequestModal
                       showAssignees={is4Eyes}
                       changeRequest={this.props.changeRequest}
+                      projectId={this.props.projectId}
                       onSave={({
                         approvals,
                         description,
                         live_from,
+                        tags,
                         title,
                       }) => {
                         closeModal2()
@@ -917,6 +919,7 @@ const CreateFlag = class extends Component {
                                       }
                                     })
                                   : this.state.multivariate_options,
+                                tags,
                                 title,
                               },
                               !is4Eyes,
@@ -952,6 +955,7 @@ const CreateFlag = class extends Component {
                         approvals,
                         description,
                         live_from,
+                        tags,
                         title,
                       }) => {
                         closeModal2()
@@ -997,6 +1001,7 @@ const CreateFlag = class extends Component {
                                       }
                                     })
                                   : this.state.multivariate_options,
+                                tags,
                                 title,
                               },
                               !is4Eyes,

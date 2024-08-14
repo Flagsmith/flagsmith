@@ -139,6 +139,7 @@ const controller = {
               environment_feature_versions:
                 changeRequest?.environment_feature_versions?.map((v) => v.uuid),
               group_assignments: changeRequest.group_assignments,
+              tags: changeRequest.tags,
               title: changeRequest.title,
             },
           )
