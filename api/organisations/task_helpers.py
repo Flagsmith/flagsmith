@@ -69,6 +69,7 @@ def _send_api_usage_notification(
     context = {
         "organisation": organisation,
         "matched_threshold": matched_threshold,
+        "grace_period": not hasattr(organisation, "breached_grace_period"),
     }
 
     send_mail(
@@ -139,6 +140,7 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         return
 
     if OrganisationAPIUsageNotification.objects.filter(
+        organisation_id=organisation.id,
         notified_at__gt=period_starts_at,
         percent_usage__gte=matched_threshold,
     ).exists():

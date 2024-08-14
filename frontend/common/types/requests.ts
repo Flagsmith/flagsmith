@@ -397,6 +397,12 @@ export type Req = {
     organisation_id: string
     github_id: string
     id: string
+    body: {
+      project: number
+      repository_name: string
+      repository_owner: string
+      tagging_enabled: boolean
+    }
   }
   deleteGithubRepository: {
     organisation_id: string

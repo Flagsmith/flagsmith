@@ -19,6 +19,7 @@ from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
+from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
 from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
@@ -30,7 +31,6 @@ from users.serializers import (
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
-from webhooks.webhooks import WebhookEventType
 
 from .constants import INTERSECTION, UNION
 from .feature_segments.serializers import (
@@ -478,7 +478,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
 
                 call_github_task(
                     organisation_id=feature_state.feature.project.organisation_id,
-                    type=WebhookEventType.FLAG_UPDATED.value,
+                    type=GitHubEventType.FLAG_UPDATED.value,
                     feature=feature_state.feature,
                     segment_name=None,
                     url=None,

@@ -5,8 +5,6 @@ from app_analytics.track import track_feature_evaluation_influxdb
 from django.conf import settings
 from django.utils import timezone
 
-CACHE_FLUSH_INTERVAL = 60  # seconds
-
 
 class APIUsageCache:
     def __init__(self):
@@ -33,7 +31,9 @@ class APIUsageCache:
             self._cache[key] = 1
         else:
             self._cache[key] += 1
-        if (timezone.now() - self._last_flushed_at).seconds > CACHE_FLUSH_INTERVAL:
+        if (
+            timezone.now() - self._last_flushed_at
+        ).seconds > settings.PG_API_USAGE_CACHE_SECONDS:
             self._flush()
 
 

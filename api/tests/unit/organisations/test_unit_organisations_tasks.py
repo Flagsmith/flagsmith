@@ -362,11 +362,28 @@ def test_handle_api_usage_notifications_below_100(
         organisation=organisation,
     ).exists()
 
+    # Create an OrganisationApiUsageNotification object for another organisation
+    # to verify that only the correct organisation's notifications are taken into
+    # account.
+    another_organisation = Organisation.objects.create(name="Another Organisation")
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=another_organisation,
+        percent_usage=100,
+        notified_at=now - timedelta(days=1),
+    )
+
     # When
     handle_api_usage_notifications()
 
     # Then
-    mock_api_usage.assert_called_once_with(organisation.id, now - timedelta(days=14))
+    assert len(mock_api_usage.call_args_list) == 2
+
+    # We only care about the call for the main organisation,
+    # not the call for 'another_organisation'
+    assert mock_api_usage.call_args_list[0].args == (
+        organisation.id,
+        now - timedelta(days=14),
+    )
 
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
@@ -410,7 +427,12 @@ def test_handle_api_usage_notifications_below_100(
         ).count()
         == 1
     )
-    assert OrganisationAPIUsageNotification.objects.first() == api_usage_notification
+    assert (
+        OrganisationAPIUsageNotification.objects.filter(
+            organisation=organisation
+        ).first()
+        == api_usage_notification
+    )
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -642,7 +664,11 @@ def test_handle_api_usage_notifications_for_free_accounts(
     assert email.subject == "Flagsmith API use has reached 100%"
     assert email.body == render_to_string(
         "organisations/api_usage_notification_limit.txt",
-        context={"organisation": organisation, "matched_threshold": 100},
+        context={
+            "organisation": organisation,
+            "matched_threshold": 100,
+            "grace_period": True,
+        },
     )
 
     assert len(email.alternatives) == 1
@@ -651,7 +677,11 @@ def test_handle_api_usage_notifications_for_free_accounts(
 
     assert email.alternatives[0][0] == render_to_string(
         "organisations/api_usage_notification_limit.html",
-        context={"organisation": organisation, "matched_threshold": 100},
+        context={
+            "organisation": organisation,
+            "matched_threshold": 100,
+            "grace_period": True,
+        },
     )
 
     assert email.from_email == "noreply@flagsmith.com"
