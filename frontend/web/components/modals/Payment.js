@@ -292,6 +292,16 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
                               <div className='ml-2'>
+                                Feature version history (1 per feature)
+                              </div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>
                                 Two-Factor Authentication (2FA)
                               </div>
                             </Row>
@@ -516,6 +526,16 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
                               <div className='ml-2'>
+                                Feature version history (1 per feature)
+                              </div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>
                                 Two-Factor Authentication (2FA)
                               </div>
                             </Row>
@@ -716,6 +736,16 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
                               <div className='ml-2'>Scheduled Flags</div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>
+                                Unlimited feature version history
+                              </div>
                             </Row>
                           </li>
                           <li>
