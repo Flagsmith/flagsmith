@@ -16,7 +16,7 @@ In your project path `app/build.gradle` add a new dependence
 
 ```groovy
 //flagsmith
-implementation 'com.github.Flagsmith:flagsmith-kotlin-android-client:1.5.0'
+implementation("com.github.Flagsmith:flagsmith-kotlin-android-client:v1.6.1")
 ```
 
 You should be able to find the latest version in the
@@ -31,7 +31,7 @@ repositories {
     google()
     mavenCentral()
 
-    maven { url "https://jitpack.io" }
+    maven("https://jitpack.io")
 }
 ```
 
