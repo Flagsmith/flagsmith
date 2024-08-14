@@ -233,15 +233,13 @@ const OrganisationSettingsPage = class extends Component {
                     AccountStore.getUser() &&
                     AccountStore.getOrganisationRole() === 'ADMIN'
                   ) {
-                    const showSaml =
-                      Utils.getFlagsmithHasFeature('saml_configuration')
                     displayedTabs.push(
                       ...[
                         SettingsTab.General,
                         paymentsEnabled && !isAWS ? SettingsTab.Billing : null,
                         SettingsTab.Keys,
                         SettingsTab.Webhooks,
-                        showSaml ? SettingsTab.SAML : null,
+                        SettingsTab.SAML,
                       ].filter((v) => !!v),
                     )
                   } else {
@@ -316,20 +314,23 @@ const OrganisationSettingsPage = class extends Component {
                                   'restrict_project_create_to_admin',
                                 ) && (
                                   <FormGroup className='mt-4 col-md-8'>
-                                    <Setting
-                                      checked={
-                                        organisation.restrict_project_create_to_admin
-                                      }
-                                      onChange={() =>
-                                        this.setAdminCanCreateProject(
-                                          !organisation.restrict_project_create_to_admin,
-                                        )
-                                      }
-                                      title='Admin Settings'
-                                      description={
-                                        'Only allow organisation admins to create projects'
-                                      }
-                                    />
+                                    <h5>Admin Settings</h5>
+                                    <Row className='mb-2'>
+                                      <Switch
+                                        checked={
+                                          organisation.restrict_project_create_to_admin
+                                        }
+                                        onChange={() =>
+                                          this.setAdminCanCreateProject(
+                                            !organisation.restrict_project_create_to_admin,
+                                          )
+                                        }
+                                      />
+                                      <p className='fs-small ml-3 mb-0 lh-sm'>
+                                        Only allow organisation admins to create
+                                        projects
+                                      </p>
+                                    </Row>
                                   </FormGroup>
                                 )}
                               </div>
