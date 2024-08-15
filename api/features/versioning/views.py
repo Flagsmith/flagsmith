@@ -26,10 +26,6 @@ from features.models import Feature, FeatureState
 from features.serializers import (
     CustomCreateSegmentOverrideFeatureStateSerializer,
 )
-from features.versioning.constants import (
-    DEFAULT_VERSION_LIMIT_DAYS,
-    VERSION_LIMIT_DAYS_BY_PLAN,
-)
 from features.versioning.exceptions import FeatureVersionDeleteError
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.permissions import (
@@ -123,14 +119,16 @@ class EnvironmentFeatureVersionViewSet(
             )
             queryset = queryset.filter(_is_live=is_live)
 
-        subscription = self.environment.project.organisation.subscription
-        version_limit = VERSION_LIMIT_DAYS_BY_PLAN.get(
-            subscription.subscription_plan_family, DEFAULT_VERSION_LIMIT_DAYS
+        subscription_metadata = (
+            self.environment.project.organisation.subscription.get_subscription_metadata()
         )
-
-        if self.action == "list" and version_limit is not None:
+        if (
+            self.action == "list"
+            and (version_limit_days := subscription_metadata) is not None
+        ):
             limited_queryset = queryset.filter(
-                live_from__gte=timezone.now() - timedelta(days=version_limit)
+                Q(live_from__gte=timezone.now() - timedelta(days=version_limit_days))
+                | Q(live_from__isnull=True)
             )
             return limited_queryset if limited_queryset.exists() else queryset[:1]
 

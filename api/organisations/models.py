@@ -17,6 +17,7 @@ from django_lifecycle import (
 from simple_history.models import HistoricalRecords
 
 from app.utils import is_enterprise, is_saas
+from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from integrations.lead_tracking.hubspot.tasks import (
     track_hubspot_lead,
     update_hubspot_active_subscription,
@@ -386,6 +387,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         # or for a payment method that is not covered above. In this situation
         # we want the response to be what is stored in the Django database.
         # Note that Free plans are caught in the parent method above.
+        # TODO: how do we handle this for audit log / version history?
         return BaseSubscriptionMetadata(
             seats=self.max_seats, api_calls=self.max_api_calls
         )
@@ -394,11 +396,14 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         if self.organisation.has_subscription_information_cache():
             # Getting the data from the subscription information cache because
             # data is guaranteed to be up to date by using a Chargebee webhook.
+            osic = self.organisation.subscription_information_cache
             return ChargebeeObjMetadata(
-                seats=self.organisation.subscription_information_cache.allowed_seats,
-                api_calls=self.organisation.subscription_information_cache.allowed_30d_api_calls,
-                projects=self.organisation.subscription_information_cache.allowed_projects,
-                chargebee_email=self.organisation.subscription_information_cache.chargebee_email,
+                seats=osic.allowed_seats,
+                api_calls=osic.allowed_30d_api_calls,
+                projects=osic.allowed_projects,
+                chargebee_email=osic.chargebee_email,
+                audit_log_visibility_days=osic.audit_log_visibility_days,
+                feature_history_visibility_days=osic.feature_history_visibility_days,
             )
 
         return get_subscription_metadata_from_id(self.subscription_id)
@@ -411,6 +416,8 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
             seats=self.max_seats,
             api_calls=self.max_api_calls,
             projects=None,
+            audit_log_visibility_days=None,
+            feature_history_visibility_days=None,
         )
 
     def add_single_seat(self):
@@ -459,6 +466,11 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
     allowed_seats = models.IntegerField(default=1)
     allowed_30d_api_calls = models.IntegerField(default=MAX_API_CALLS_IN_FREE_PLAN)
     allowed_projects = models.IntegerField(default=1, blank=True, null=True)
+
+    audit_log_visibility_days = models.IntegerField(default=0)
+    feature_history_visibility_days = models.IntegerField(
+        default=DEFAULT_VERSION_LIMIT_DAYS
+    )
 
     chargebee_email = models.EmailField(blank=True, max_length=254, null=True)
 

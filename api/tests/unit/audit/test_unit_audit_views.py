@@ -1,7 +1,9 @@
 import typing
 
+import pytest
 from django.db.models import Model
 from django.urls import reverse
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -12,8 +14,20 @@ from environments.models import Environment
 from features.models import Feature
 from features.versioning.models import EnvironmentFeatureVersion
 from organisations.models import Organisation, OrganisationRole
+from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from projects.models import Project
 from users.models import FFAdminUser
+
+
+@pytest.fixture(autouse=True)
+def _subscription_metadata(mocker: MockerFixture) -> None:
+    metadata = BaseSubscriptionMetadata(
+        audit_log_visibility_days=None,
+    )
+    mocker.patch(
+        "organisations.models.Subscription.get_subscription_metadata",
+        return_value=metadata,
+    )
 
 
 def test_audit_log_can_be_filtered_by_environments(

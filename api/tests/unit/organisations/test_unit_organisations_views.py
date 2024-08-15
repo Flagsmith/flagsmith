@@ -23,10 +23,7 @@ from rest_framework.test import APIClient, override_settings
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature
-from features.versioning.constants import (
-    DEFAULT_VERSION_LIMIT_DAYS,
-    SCALE_UP_VERSION_LIMIT_DAYS,
-)
+from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.invites.models import Invite
 from organisations.models import (
@@ -847,6 +844,8 @@ def test_get_subscription_metadata_when_subscription_information_cache_exist(
     expected_projects = 3
     expected_api_calls = 100
     expected_chargebee_email = "test@example.com"
+    expected_feature_history_visibility_days = 30
+    expected_audit_log_visibility_days = 30
 
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
@@ -854,6 +853,8 @@ def test_get_subscription_metadata_when_subscription_information_cache_exist(
         allowed_projects=expected_projects,
         allowed_30d_api_calls=expected_api_calls,
         chargebee_email=expected_chargebee_email,
+        feature_history_visibility_days=expected_feature_history_visibility_days,
+        audit_log_visibility_days=expected_audit_log_visibility_days,
     )
 
     url = reverse(
@@ -874,7 +875,8 @@ def test_get_subscription_metadata_when_subscription_information_cache_exist(
         "max_api_calls": expected_api_calls,
         "payment_source": CHARGEBEE,
         "chargebee_email": expected_chargebee_email,
-        "version_limit": SCALE_UP_VERSION_LIMIT_DAYS,
+        "feature_history_visibility_days": expected_feature_history_visibility_days,
+        "audit_log_visibility_days": expected_audit_log_visibility_days,
     }
 
 
@@ -889,6 +891,8 @@ def test_get_subscription_metadata_when_subscription_information_cache_does_not_
     expected_projects = 5
     expected_api_calls = 100
     expected_chargebee_email = "test@example.com"
+    expected_feature_history_visibility_days = DEFAULT_VERSION_LIMIT_DAYS
+    expected_audit_log_visibility_days = 0
 
     mocker.patch("organisations.models.is_saas", return_value=True)
     get_subscription_metadata = mocker.patch(
@@ -917,7 +921,8 @@ def test_get_subscription_metadata_when_subscription_information_cache_does_not_
         "max_api_calls": expected_api_calls,
         "payment_source": CHARGEBEE,
         "chargebee_email": expected_chargebee_email,
-        "version_limit": SCALE_UP_VERSION_LIMIT_DAYS,
+        "feature_history_visibility_days": expected_feature_history_visibility_days,
+        "audit_log_visibility_days": expected_audit_log_visibility_days,
     }
     get_subscription_metadata.assert_called_once_with(
         chargebee_subscription.subscription_id
@@ -950,7 +955,8 @@ def test_get_subscription_metadata_returns_200_if_the_organisation_have_no_paid_
         "max_projects": settings.MAX_PROJECTS_IN_FREE_PLAN,
         "max_seats": 1,
         "payment_source": None,
-        "version_limit": DEFAULT_VERSION_LIMIT_DAYS,
+        "feature_history_visibility_days": DEFAULT_VERSION_LIMIT_DAYS,
+        "audit_log_visibility_days": 0,
     }
 
     get_subscription_metadata.assert_not_called()
@@ -977,7 +983,8 @@ def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
         "max_projects": settings.MAX_PROJECTS_IN_FREE_PLAN,
         "payment_source": None,
         "chargebee_email": None,
-        "version_limit": SCALE_UP_VERSION_LIMIT_DAYS,
+        "feature_history_visibility_days": DEFAULT_VERSION_LIMIT_DAYS,
+        "audit_log_visibility_days": 0,
     }
 
 

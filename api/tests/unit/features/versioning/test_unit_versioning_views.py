@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -22,9 +23,10 @@ from environments.permissions.constants import (
 )
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
-from features.versioning.constants import SCALE_UP_VERSION_LIMIT_DAYS
+from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from features.versioning.models import EnvironmentFeatureVersion
 from organisations.models import Subscription
+from organisations.subscriptions.constants import SubscriptionPlanFamily
 from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
 from tests.types import (
@@ -1129,11 +1131,11 @@ def test_create_new_version_delete_segment_override_updates_overrides_immediatel
     assert get_feature_segments_response.json()["count"] == 0
 
 
-# Note that we use the scale up version limit here as we know that it will
-# always be the largest of the limits (if different from the other non-enterprise
-# plans)
-@pytest.mark.freeze_time(now - timedelta(days=SCALE_UP_VERSION_LIMIT_DAYS + 1))
-@pytest.mark.parametrize("plan_id", ("free", "startup", "scale-up"))
+@pytest.mark.freeze_time(now - timedelta(days=DEFAULT_VERSION_LIMIT_DAYS + 1))
+@pytest.mark.parametrize(
+    "plan_id, is_saas",
+    (("free", True), ("free", False), ("startup", True), ("scale-up", True)),
+)
 def test_list_versions_only_returns_allowed_amount_for_non_enterprise_plan(
     feature: Feature,
     environment_v2_versioning: Environment,
@@ -1144,10 +1146,14 @@ def test_list_versions_only_returns_allowed_amount_for_non_enterprise_plan(
     subscription: Subscription,
     freezer: FrozenDateTimeFactory,
     plan_id: str,
+    is_saas: bool,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     with_environment_permissions([VIEW_ENVIRONMENT])
     with_project_permissions([VIEW_PROJECT])
+
+    mocker.patch("organisations.models.is_saas", return_value=is_saas)
 
     url = reverse(
         "api-v1:versioning:environment-feature-versions-list",
@@ -1187,12 +1193,12 @@ def test_list_versions_only_returns_allowed_amount_for_non_enterprise_plan(
 
     response_json = response.json()
     assert response_json["count"] == 3
-    assert [v["uuid"] for v in response_json["results"]] == [
+    assert {v["uuid"] for v in response_json["results"]} == {
         str(v.uuid) for v in inside_limit_versions
-    ]
+    }
 
 
-@pytest.mark.freeze_time(now - timedelta(days=SCALE_UP_VERSION_LIMIT_DAYS + 1))
+@pytest.mark.freeze_time(now - timedelta(days=DEFAULT_VERSION_LIMIT_DAYS + 1))
 def test_list_versions_always_returns_current_version_even_if_outside_limit(
     feature: Feature,
     environment_v2_versioning: Environment,
@@ -1212,9 +1218,7 @@ def test_list_versions_always_returns_current_version_even_if_outside_limit(
         args=[environment_v2_versioning.id, feature.id],
     )
 
-    # Let's set the subscription plan as scale up
-    subscription.plan = "scale-up"
-    subscription.save()
+    assert subscription.subscription_plan_family == SubscriptionPlanFamily.FREE
 
     # First, let's create a new version, after the initial version, but
     # still outside the limit allowed when using a non-enterprise plan
@@ -1237,7 +1241,8 @@ def test_list_versions_always_returns_current_version_even_if_outside_limit(
     assert response_json["results"][0]["uuid"] == str(latest_version.uuid)
 
 
-@pytest.mark.freeze_time(now - timedelta(days=SCALE_UP_VERSION_LIMIT_DAYS + 1))
+@pytest.mark.freeze_time(now - timedelta(days=DEFAULT_VERSION_LIMIT_DAYS + 1))
+@pytest.mark.parametrize("is_saas", (True, False))
 def test_list_versions_returns_all_versions_for_enterprise_plan(
     feature: Feature,
     environment_v2_versioning: Environment,
@@ -1247,6 +1252,8 @@ def test_list_versions_returns_all_versions_for_enterprise_plan(
     with_project_permissions: WithProjectPermissionsCallable,
     subscription: Subscription,
     freezer: FrozenDateTimeFactory,
+    is_saas: bool,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     with_environment_permissions([VIEW_ENVIRONMENT])
@@ -1256,6 +1263,8 @@ def test_list_versions_returns_all_versions_for_enterprise_plan(
         "api-v1:versioning:environment-feature-versions-list",
         args=[environment_v2_versioning.id, feature.id],
     )
+
+    mocker.patch("organisations.models.is_saas", return_value=is_saas)
 
     # Let's set the subscription plan as start up
     subscription.plan = "enterprise"
