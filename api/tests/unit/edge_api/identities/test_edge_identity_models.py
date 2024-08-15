@@ -1,3 +1,7 @@
+import logging
+import random
+import time
+import uuid
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -5,16 +9,20 @@ import pytest
 import shortuuid
 from django.utils import timezone
 from flag_engine.features.models import FeatureModel, FeatureStateModel
+from flag_engine.identities.traits.models import TraitModel
 from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
 from pytest_mock import MockerFixture
 
-from edge_api.identities.models import EdgeIdentity
+from edge_api.identities.models import EdgeIdentity, EdgeIdentityMeta
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
+from projects.models import Project
 from segments.models import Segment
+
+logger = logging.getLogger(__name__)
 
 
 def test_get_all_feature_states_for_edge_identity_uses_segment_priorities(
@@ -517,3 +525,69 @@ def test_get_all_feature_states_post_v2_versioning_migration(
     # Then
     assert len(feature_states) == 1
     assert feature_states[0] == v2_segment_override
+
+
+def test_search_edge_api_identity_meta(project: Project) -> None:
+    # Given
+    num_environments = 5
+    num_identities = 1_000_000
+    num_traits_per_identity = 5
+
+    for _environment in (
+        Environment.objects.create(name=f"environment_{i}", project=project)
+        for i in range(1, num_environments + 1)
+    ):
+        to_create = []
+        start = time.time()
+        for j in range(1, num_identities + 1):
+            edge_identity_meta = EdgeIdentityMeta(
+                identifier=f"identity_{j}",
+                edge_identity_uuid=str(uuid.uuid4()),
+                environment=_environment,
+            )
+            traits = [
+                TraitModel(
+                    trait_key=f"{_environment.name}_trait_{j}_{k}",
+                    trait_value=f"value_{j}_{k}",
+                )
+                for k in range(1, num_traits_per_identity + 1)
+            ]
+            edge_identity_meta.update_searchable_traits(traits)
+            to_create.append(edge_identity_meta)
+        EdgeIdentityMeta.objects.bulk_create(to_create)
+
+        logger.info(
+            f"Created EdgeIdentityMeta objects for environment {_environment.name} in {time.time() - start} seconds"
+        )
+
+    environment_id_to_search_for = random.choice(
+        list(Environment.objects.values_list("id", flat=True))
+    )
+    environment_name_to_search_for = Environment.objects.get(
+        id=environment_id_to_search_for
+    ).name
+    identity_id_to_search_for = random.randint(1, num_identities)
+    trait_id_to_search_for = random.randint(1, num_traits_per_identity)
+    trait_key_to_search_for = (
+        f"{environment_name_to_search_for}_trait"
+        f"_{identity_id_to_search_for}_{trait_id_to_search_for}"
+    )
+    trait_value_to_search_for = (
+        f"value_{identity_id_to_search_for}_{trait_id_to_search_for}"
+    )
+    search_string = f"{trait_key_to_search_for}{EdgeIdentityMeta._EQUALITY_CHARS}{trait_value_to_search_for}"
+
+    # When
+    start = time.time()
+    result_exists = EdgeIdentityMeta.objects.filter(
+        environment_id=environment_id_to_search_for,
+        searchable_traits__icontains=search_string,
+    ).exists()
+    end = time.time()
+
+    # Then
+    assert result_exists, search_string
+
+    query_time_ms = (end - start) * 1000
+    logger.info("query time = %sms", query_time_ms)
+    assert query_time_ms < 1

@@ -98,6 +98,8 @@ skip = ['migrations', '.venv', '.direnv']
 [tool.pytest.ini_options]
 addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings']
 console_output_style = 'count'
+log_cli = true
+log_cli_level = 'INFO'
 
 [tool.poetry]
 name = "flagsmith-api"
