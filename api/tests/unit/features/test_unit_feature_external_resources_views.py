@@ -357,7 +357,7 @@ def test_update_feature_external_resource(
     mock_generate_token.return_value = "mocked_token"
     feature_external_resource_data = {
         "type": "GITHUB_ISSUE",
-        "url": "https://github.com/userexample/example-project-repo/issues/12",
+        "url": f"https://github.com/{github_repository.repository_owner}/{github_repository.repository_name}/issues/12",
         "feature": feature.id,
         "metadata": '{"state": "open"}',
     }
