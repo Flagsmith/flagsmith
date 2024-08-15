@@ -26,7 +26,10 @@ def send_api_flags_blocked_notification(organisation: Organisation) -> None:
         userorganisation__organisation=organisation,
     )
 
-    context = {"organisation": organisation}
+    context = {
+        "organisation": organisation,
+        "grace_period": not hasattr(organisation, "breached_grace_period"),
+    }
     message = "organisations/api_flags_blocked_notification.txt"
     html_message = "organisations/api_flags_blocked_notification.html"
 
