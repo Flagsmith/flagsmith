@@ -1,12 +1,12 @@
-from core.models import SoftDeleteManager, UUIDNaturalKeyManagerMixin
+from core.models import SoftDeleteExportableManager
 from django.db.models import F
 
 
-class SegmentManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
+class SegmentManager(SoftDeleteExportableManager):
     pass
 
 
-class LiveSegmentManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
+class LiveSegmentManager(SoftDeleteExportableManager):
     def get_queryset(self):
         """
         Returns only the canonical segments, which will always be
