@@ -8,6 +8,7 @@ import { IonIcon } from '@ionic/react'
 import { getProjectFlag } from 'common/services/useProjectFlag'
 import { getStore } from 'common/store'
 import SettingsButton from './SettingsButton'
+import OrganisationProvider from 'common/providers/OrganisationProvider'
 
 class TheComponent extends Component {
   state = {}
@@ -49,41 +50,41 @@ class TheComponent extends Component {
     users ? users.filter((v) => owners.includes(v.id)) : []
 
   render() {
-    const hasPermission = Utils.getPlansPermission('FLAG_OWNERS')
-
     return (
       <OrganisationProvider>
         {({ users }) => {
           const ownerUsers = this.getOwners(users, this.state.owners || [])
-          const res = (
+          return (
             <div>
               <SettingsButton
+                content={
+                  <Row style={{ rowGap: '12px' }}>
+                    {ownerUsers.map((u) => (
+                      <Row
+                        key={u.id}
+                        onClick={() => this.removeOwner(u.id)}
+                        className='chip mr-2'
+                      >
+                        <span className='font-weight-bold'>
+                          {u.first_name} {u.last_name}
+                        </span>
+                        <span className='chip-icon ion'>
+                          <IonIcon icon={close} />
+                        </span>
+                      </Row>
+                    ))}
+                    {!ownerUsers.length && (
+                      <div>This flag has no assigned users</div>
+                    )}
+                  </Row>
+                }
+                feature={'FLAG_OWNERS'}
                 onClick={() => {
-                  if (hasPermission) this.setState({ showUsers: true })
+                  this.setState({ showUsers: !this.state.showUsers })
                 }}
               >
                 Assigned users
               </SettingsButton>
-              <Row style={{ rowGap: '12px' }}>
-                {hasPermission &&
-                  ownerUsers.map((u) => (
-                    <Row
-                      key={u.id}
-                      onClick={() => this.removeOwner(u.id)}
-                      className='chip mr-2'
-                    >
-                      <span className='font-weight-bold'>
-                        {u.first_name} {u.last_name}
-                      </span>
-                      <span className='chip-icon ion'>
-                        <IonIcon icon={close} />
-                      </span>
-                    </Row>
-                  ))}
-                {!ownerUsers.length && (
-                  <div>This flag has no assigned users</div>
-                )}
-              </Row>
 
               <UserSelect
                 users={users}
@@ -95,15 +96,6 @@ class TheComponent extends Component {
                   this.setState({ showUsers: !this.state.showUsers })
                 }
               />
-            </div>
-          )
-          return hasPermission ? (
-            res
-          ) : (
-            <div>
-              {res}
-              The add flag assignees feature is available with our{' '}
-              <strong>Scale-up</strong> plan.
             </div>
           )
         }}

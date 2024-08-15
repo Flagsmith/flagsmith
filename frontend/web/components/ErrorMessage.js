@@ -50,7 +50,7 @@ export default class ErrorMessage extends PureComponent {
           <Button
             className='btn ml-3'
             onClick={() => {
-              document.location.replace(Constants.upgradeURL)
+              document.location.replace(Constants.getUpgradeUrl())
             }}
           >
             Upgrade plan
