@@ -79,11 +79,13 @@ def send_org_subscription_cancelled_alert(
     )
 
 
+# We're redefining the task function here to register a recurring task
+# since the decorators don't stack correctly. (TODO)
 @register_recurring_task(
     run_every=timedelta(hours=6),
 )
 def update_organisation_subscription_information_influx_cache_recurring():
-    subscription_info_cache.update_caches((SubscriptionCacheEntity.INFLUX,))
+    update_organisation_subscription_information_influx_cache()
 
 
 @register_task_handler()
