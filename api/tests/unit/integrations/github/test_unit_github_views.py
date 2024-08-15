@@ -578,6 +578,7 @@ def test_fetch_issues_returns_error_on_bad_response_from_github(
 
     # Then
     assert response.status_code == status.HTTP_502_BAD_GATEWAY
+    assert "Failed to retrieve GitHub issues." in response.json()["detail"]
 
 
 @responses.activate
