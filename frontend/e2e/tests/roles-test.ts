@@ -64,9 +64,10 @@ export default async function () {
   await closeModal()
   await logout(t)
   log('Login with the user with a new Role')
+  await t.eval(() => location.reload());
+  await t.wait(2000);
   await login(E2E_NON_ADMIN_USER_WITH_A_ROLE, PASSWORD)
   await click('#project-select-0')
-
   log('User with permissions can Handle the Features')
   const flagName = 'test_feature'
   await deleteFeature(0, flagName)
