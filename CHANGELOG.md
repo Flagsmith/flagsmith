@@ -1,5 +1,47 @@
 # Changelog
 
+## [2.136.0](https://github.com/Flagsmith/flagsmith/compare/v2.135.1...v2.136.0) (2024-08-13)
+
+
+### Features
+
+* Add automatic tagging for github integration ([#4028](https://github.com/Flagsmith/flagsmith/issues/4028)) ([7920e8e](https://github.com/Flagsmith/flagsmith/commit/7920e8e22e15fc2f91dbd56582679b1f3064e4a9))
+* Add tags for GitHub integration FE ([#4035](https://github.com/Flagsmith/flagsmith/issues/4035)) ([3c46a31](https://github.com/Flagsmith/flagsmith/commit/3c46a31f6060f7a12206fa27409073da946130d8))
+* Support Aptible deployments ([#4340](https://github.com/Flagsmith/flagsmith/issues/4340)) ([3b47ae0](https://github.com/Flagsmith/flagsmith/commit/3b47ae07848c1330210d18bd8bb4194fa5d9262e))
+* Use environment feature state instead of fetching feature states ([#4188](https://github.com/Flagsmith/flagsmith/issues/4188)) ([b1d49a6](https://github.com/Flagsmith/flagsmith/commit/b1d49a63b5d7c1fe319185586f486829626840cd))
+
+
+### Bug Fixes
+
+* ensure that usage notification logic is independent of other organisations notifications ([#4480](https://github.com/Flagsmith/flagsmith/issues/4480)) ([6660af5](https://github.com/Flagsmith/flagsmith/commit/6660af56047e8d7083486b2dab20df44d0fc9303))
+* Remove warning about non-unique health namespace ([#4479](https://github.com/Flagsmith/flagsmith/issues/4479)) ([6ef7a74](https://github.com/Flagsmith/flagsmith/commit/6ef7a742f0f56aef2335da380770dc7f307d53c5))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* reduce task retention days to 7 ([#4484](https://github.com/Flagsmith/flagsmith/issues/4484)) ([4349149](https://github.com/Flagsmith/flagsmith/commit/4349149700ad92e824c115c93f1912c7009c9aa2))
+
+## [2.135.1](https://github.com/Flagsmith/flagsmith/compare/v2.135.0...v2.135.1) (2024-08-12)
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* bump feature evaluation cache to 300 ([#4471](https://github.com/Flagsmith/flagsmith/issues/4471)) ([abbf24b](https://github.com/Flagsmith/flagsmith/commit/abbf24bf987e8f74cb2ecf3ec3d82456d9892654))
+
+## [2.135.0](https://github.com/Flagsmith/flagsmith/compare/v2.134.1...v2.135.0) (2024-08-09)
+
+
+### Features
+
+* **app_analytics:** Add cache for feature evaluation ([#4418](https://github.com/Flagsmith/flagsmith/issues/4418)) ([2dfbf99](https://github.com/Flagsmith/flagsmith/commit/2dfbf99cdc8d8529aa487a4e471df46c0dbc6878))
+* Support blank identifiers, assume transient ([#4449](https://github.com/Flagsmith/flagsmith/issues/4449)) ([0014a5b](https://github.com/Flagsmith/flagsmith/commit/0014a5b4312d1ee7d7dd7b914434f26408ee18b7))
+
+
+### Bug Fixes
+
+* Identity overrides are not deleted when deleting Edge identities ([#4460](https://github.com/Flagsmith/flagsmith/issues/4460)) ([2ab73ed](https://github.com/Flagsmith/flagsmith/commit/2ab73edc7352bec8324eb808ba70d6508fe5eed6))
+* show correct SAML Frontend URL on edit ([#4462](https://github.com/Flagsmith/flagsmith/issues/4462)) ([13ad7ef](https://github.com/Flagsmith/flagsmith/commit/13ad7ef7e6613bdd640cdfca7ce99a892b3893be))
+
 ## [2.134.1](https://github.com/Flagsmith/flagsmith/compare/v2.134.0...v2.134.1) (2024-08-07)
 
 

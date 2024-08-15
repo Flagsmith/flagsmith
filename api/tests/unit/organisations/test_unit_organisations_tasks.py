@@ -362,11 +362,28 @@ def test_handle_api_usage_notifications_below_100(
         organisation=organisation,
     ).exists()
 
+    # Create an OrganisationApiUsageNotification object for another organisation
+    # to verify that only the correct organisation's notifications are taken into
+    # account.
+    another_organisation = Organisation.objects.create(name="Another Organisation")
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=another_organisation,
+        percent_usage=100,
+        notified_at=now - timedelta(days=1),
+    )
+
     # When
     handle_api_usage_notifications()
 
     # Then
-    mock_api_usage.assert_called_once_with(organisation.id, now - timedelta(days=14))
+    assert len(mock_api_usage.call_args_list) == 2
+
+    # We only care about the call for the main organisation,
+    # not the call for 'another_organisation'
+    assert mock_api_usage.call_args_list[0].args == (
+        organisation.id,
+        now - timedelta(days=14),
+    )
 
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
@@ -410,7 +427,12 @@ def test_handle_api_usage_notifications_below_100(
         ).count()
         == 1
     )
-    assert OrganisationAPIUsageNotification.objects.first() == api_usage_notification
+    assert (
+        OrganisationAPIUsageNotification.objects.filter(
+            organisation=organisation
+        ).first()
+        == api_usage_notification
+    )
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -642,7 +664,11 @@ def test_handle_api_usage_notifications_for_free_accounts(
     assert email.subject == "Flagsmith API use has reached 100%"
     assert email.body == render_to_string(
         "organisations/api_usage_notification_limit.txt",
-        context={"organisation": organisation, "matched_threshold": 100},
+        context={
+            "organisation": organisation,
+            "matched_threshold": 100,
+            "grace_period": True,
+        },
     )
 
     assert len(email.alternatives) == 1
@@ -651,7 +677,11 @@ def test_handle_api_usage_notifications_for_free_accounts(
 
     assert email.alternatives[0][0] == render_to_string(
         "organisations/api_usage_notification_limit.html",
-        context={"organisation": organisation, "matched_threshold": 100},
+        context={
+            "organisation": organisation,
+            "matched_threshold": 100,
+            "grace_period": True,
+        },
     )
 
     assert email.from_email == "noreply@flagsmith.com"
@@ -1254,6 +1284,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     organisation3 = Organisation.objects.create(name="Org #3")
     organisation4 = Organisation.objects.create(name="Org #4")
     organisation5 = Organisation.objects.create(name="Org #5")
+    organisation6 = Organisation.objects.create(name="Org #6")
 
     for org in [
         organisation,
@@ -1261,6 +1292,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
         organisation3,
         organisation4,
         organisation5,
+        organisation6,
     ]:
         OrganisationSubscriptionInformationCache.objects.create(
             organisation=org,
@@ -1279,7 +1311,13 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     mock_api_usage.return_value = 12_005
 
     # Add users to test email delivery
-    for org in [organisation2, organisation3, organisation4, organisation5]:
+    for org in [
+        organisation2,
+        organisation3,
+        organisation4,
+        organisation5,
+        organisation6,
+    ]:
         admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
         staff_user.add_organisation(org, role=OrganisationRole.USER)
 
@@ -1328,6 +1366,15 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
         percent_usage=120,
     )
 
+    # Should be immediately blocked because they've previously breached the grace
+    # period
+    OrganisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation6,
+        percent_usage=120,
+    )
+    OrganisationBreachedGracePeriod.objects.create(organisation=organisation6)
+
     # When
     restrict_use_due_to_api_limit_grace_period_over()
 
@@ -1337,6 +1384,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     organisation3.refresh_from_db()
     organisation4.refresh_from_db()
     organisation5.refresh_from_db()
+    organisation6.refresh_from_db()
 
     # Organisation without breaching 100 percent usage is ok.
     assert organisation3.stop_serving_flags is False
@@ -1360,6 +1408,9 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     assert organisation2.stop_serving_flags is True
     assert organisation2.block_access_to_admin is True
     assert organisation2.api_limit_access_block
+    assert organisation6.stop_serving_flags is True
+    assert organisation6.block_access_to_admin is True
+    assert organisation6.api_limit_access_block
 
     client_mock.get_identity_flags.call_args_list == [
         call(
@@ -1376,9 +1427,16 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
                 "subscription.plan": organisation2.subscription.plan,
             },
         ),
+        call(
+            f"org.{organisation6.id}",
+            traits={
+                "organisation_id": organisation6.id,
+                "subscription.plan": organisation6.subscription.plan,
+            },
+        ),
     ]
 
-    assert len(mailoutbox) == 2
+    assert len(mailoutbox) == 3
     email1 = mailoutbox[0]
     assert email1.subject == "Flagsmith API use has been blocked due to overuse"
     assert email1.body == render_to_string(
@@ -1398,10 +1456,23 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
 
     assert email2.alternatives[0][0] == render_to_string(
         "organisations/api_flags_blocked_notification.html",
-        context={"organisation": organisation2},
+        context={"organisation": organisation2, "grace_period": False},
     )
     assert email2.from_email == "noreply@flagsmith.com"
     assert email2.to == ["admin@example.com", "staff@example.com"]
+
+    email3 = mailoutbox[2]
+    assert email3.subject == "Flagsmith API use has been blocked due to overuse"
+    assert len(email3.alternatives) == 1
+    assert len(email3.alternatives[0]) == 2
+    assert email3.alternatives[0][1] == "text/html"
+
+    assert email3.alternatives[0][0] == render_to_string(
+        "organisations/api_flags_blocked_notification.html",
+        context={"organisation": organisation6, "grace_period": False},
+    )
+    assert email3.from_email == "noreply@flagsmith.com"
+    assert email3.to == ["admin@example.com", "staff@example.com"]
 
     # Organisations that change their subscription are unblocked.
     organisation.subscription.plan = "scale-up-v2"

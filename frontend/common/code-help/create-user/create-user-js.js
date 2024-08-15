@@ -1,3 +1,4 @@
+import Constants from 'common/constants'
 module.exports = (
   envId,
   {
@@ -13,7 +14,11 @@ module.exports = (
 
 // Option 1: initialise with an identity and traits
 ${LIB_NAME}.init({
-    environmentID: "${envId}",
+    environmentID: "${envId}",${
+  Constants.isCustomFlagsmithUrl
+    ? `\n    api: "${Project.flagsmithClientAPI}",`
+    : ''
+}
     identity: "${userId || USER_ID}",
     traits: { "${TRAIT_NAME}": 21 },
     onChange: (oldFlags, params) => { /* ... */ },

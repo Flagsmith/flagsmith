@@ -569,7 +569,7 @@ def test_view_environment_with_staff__query_count_is_expected(
     url = reverse("api-v1:environments:environment-list")
     data = {"project": project.id}
 
-    expected_query_count = 7
+    expected_query_count = 9
     # When
     with django_assert_num_queries(expected_query_count):
         response = staff_client.get(url, data=data, content_type="application/json")
