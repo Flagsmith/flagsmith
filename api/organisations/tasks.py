@@ -206,7 +206,10 @@ def charge_for_api_call_count_overages():
         api_usage = get_current_api_usage(organisation.id)
 
         # Grace period for organisations < 200% of usage.
-        if api_usage / subscription_cache.allowed_30d_api_calls < 2.0:
+        if (
+            not hasattr(organisation, "breached_grace_period")
+            and api_usage / subscription_cache.allowed_30d_api_calls < 2.0
+        ):
             logger.info("API Usage below normal usage or grace period.")
             continue
 
