@@ -195,7 +195,11 @@ def map_environment_to_engine(
     organisation: "Organisation" = project.organisation
 
     # Read relationships - grab all the data needed from the ORM here.
-    project_segments: List["Segment"] = Segment.live_objects.filter(project=project)
+
+    # Because of the queryset parameter of the calling code's
+    # Prefetch this queryset will actually load the live_objects
+    # manager for the Segment lookup.
+    project_segments: List["Segment"] = project.segments.all()
     project_segment_rules_by_segment_id: Dict[
         int,
         Iterable["SegmentRule"],
