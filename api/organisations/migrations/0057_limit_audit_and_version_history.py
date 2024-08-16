@@ -13,11 +13,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='organisationsubscriptioninformationcache',
             name='audit_log_visibility_days',
-            field=models.IntegerField(default=0),
+            field=models.IntegerField(default=0, null=True, blank=True),
         ),
         migrations.AddField(
             model_name='organisationsubscriptioninformationcache',
             name='feature_history_visibility_days',
-            field=models.IntegerField(default=7),
+            field=models.IntegerField(default=7, null=True, blank=True),
         ),
     ]

@@ -25,7 +25,10 @@ from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from features.versioning.models import EnvironmentFeatureVersion
-from organisations.models import Subscription
+from organisations.models import (
+    OrganisationSubscriptionInformationCache,
+    Subscription,
+)
 from organisations.subscriptions.constants import SubscriptionPlanFamily
 from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
@@ -1265,10 +1268,17 @@ def test_list_versions_returns_all_versions_for_enterprise_plan(
     )
 
     mocker.patch("organisations.models.is_saas", return_value=is_saas)
+    mocker.patch("organisations.models.is_enterprise", return_value=not is_saas)
 
     # Let's set the subscription plan as start up
     subscription.plan = "enterprise"
     subscription.save()
+
+    if is_saas:
+        OrganisationSubscriptionInformationCache.objects.update_or_create(
+            organisation=subscription.organisation,
+            defaults={"feature_history_visibility_days": None},
+        )
 
     initial_version = EnvironmentFeatureVersion.objects.get(
         feature=feature, environment=environment_v2_versioning

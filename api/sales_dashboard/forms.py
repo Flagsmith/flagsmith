@@ -7,7 +7,11 @@ from django.core.mail import send_mail
 
 from environments.models import Environment
 from features.models import Feature
-from organisations.models import Organisation
+from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
+from organisations.models import (
+    Organisation,
+    OrganisationSubscriptionInformationCache,
+)
 from organisations.subscriptions.constants import (
     FREE_PLAN_ID,
     MAX_API_CALLS_IN_FREE_PLAN,
@@ -47,6 +51,17 @@ class StartTrialForm(forms.Form):
         subscription.customer_id = TRIAL_SUBSCRIPTION_ID
         subscription.plan = "enterprise-saas-monthly-v2"
 
+        OrganisationSubscriptionInformationCache.objects.update_or_create(
+            organisation=organisation,
+            defaults={
+                "allowed_seats": self.cleaned_data["max_seats"],
+                "allowed_30d_api_calls": self.cleaned_data["max_api_calls"],
+                "allowed_projects": None,
+                "audit_log_visibility_days": None,
+                "feature_history_visibility_days": None,
+            },
+        )
+
         if commit:
             subscription.save()
 
@@ -63,6 +78,17 @@ class EndTrialForm(forms.Form):
         subscription.customer_id = ""
         subscription.plan = FREE_PLAN_ID
         subscription.save()
+
+        OrganisationSubscriptionInformationCache.objects.update_or_create(
+            organisation=organisation,
+            defaults={
+                "allowed_seats": MAX_SEATS_IN_FREE_PLAN,
+                "allowed_30d_api_calls": MAX_API_CALLS_IN_FREE_PLAN,
+                "allowed_projects": 1,
+                "audit_log_visibility_days": 0,
+                "feature_history_visibility_days": DEFAULT_VERSION_LIMIT_DAYS,
+            },
+        )
 
         if commit:
             subscription.save()

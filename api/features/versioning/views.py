@@ -41,6 +41,7 @@ from features.versioning.serializers import (
     EnvironmentFeatureVersionRetrieveSerializer,
     EnvironmentFeatureVersionSerializer,
 )
+from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser
 
@@ -119,12 +120,15 @@ class EnvironmentFeatureVersionViewSet(
             )
             queryset = queryset.filter(_is_live=is_live)
 
-        subscription_metadata = (
+        subscription_metadata: BaseSubscriptionMetadata = (
             self.environment.project.organisation.subscription.get_subscription_metadata()
         )
         if (
             self.action == "list"
-            and (version_limit_days := subscription_metadata) is not None
+            and (
+                version_limit_days := subscription_metadata.feature_history_visibility_days
+            )
+            is not None
         ):
             limited_queryset = queryset.filter(
                 Q(live_from__gte=timezone.now() - timedelta(days=version_limit_days))

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from typing import Any
+
 from core.models import SoftDeleteExportableModel
 from django.conf import settings
 from django.core.cache import caches
@@ -387,7 +389,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         # or for a payment method that is not covered above. In this situation
         # we want the response to be what is stored in the Django database.
         # Note that Free plans are caught in the parent method above.
-        # TODO: how do we handle this for audit log / version history?
+        if self.organisation.has_subscription_information_cache():
+            return self.organisation.subscription_information_cache.as_base_subscription_metadata(
+                seats=self.max_seats, api_calls=self.max_api_calls
+            )
         return BaseSubscriptionMetadata(
             seats=self.max_seats, api_calls=self.max_api_calls
         )
@@ -396,14 +401,8 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         if self.organisation.has_subscription_information_cache():
             # Getting the data from the subscription information cache because
             # data is guaranteed to be up to date by using a Chargebee webhook.
-            osic = self.organisation.subscription_information_cache
-            return ChargebeeObjMetadata(
-                seats=osic.allowed_seats,
-                api_calls=osic.allowed_30d_api_calls,
-                projects=osic.allowed_projects,
-                chargebee_email=osic.chargebee_email,
-                audit_log_visibility_days=osic.audit_log_visibility_days,
-                feature_history_visibility_days=osic.feature_history_visibility_days,
+            return (
+                self.organisation.subscription_information_cache.as_chargebee_subscription_metadata()
             )
 
         return get_subscription_metadata_from_id(self.subscription_id)
@@ -467,9 +466,9 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
     allowed_30d_api_calls = models.IntegerField(default=MAX_API_CALLS_IN_FREE_PLAN)
     allowed_projects = models.IntegerField(default=1, blank=True, null=True)
 
-    audit_log_visibility_days = models.IntegerField(default=0)
+    audit_log_visibility_days = models.IntegerField(default=0, null=True, blank=True)
     feature_history_visibility_days = models.IntegerField(
-        default=DEFAULT_VERSION_LIMIT_DAYS
+        default=DEFAULT_VERSION_LIMIT_DAYS, null=True, blank=True
     )
 
     chargebee_email = models.EmailField(blank=True, max_length=254, null=True)
@@ -477,6 +476,30 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
     @hook(AFTER_SAVE, when="allowed_30d_api_calls", has_changed=True)
     def erase_api_notifications(self):
         self.organisation.api_usage_notifications.all().delete()
+
+    def as_base_subscription_metadata(self, **overrides) -> BaseSubscriptionMetadata:
+        kwargs = {
+            **self._get_default_subscription_metadata_kwargs(),
+            **overrides,
+        }
+        return BaseSubscriptionMetadata(**kwargs)
+
+    def as_chargebee_subscription_metadata(self, **overrides) -> ChargebeeObjMetadata:
+        kwargs = {
+            **self._get_default_subscription_metadata_kwargs(),
+            "chargebee_email": self.chargebee_email,
+            **overrides,
+        }
+        return ChargebeeObjMetadata(**kwargs)
+
+    def _get_default_subscription_metadata_kwargs(self) -> dict[str, Any]:
+        return {
+            "seats": self.allowed_seats,
+            "api_calls": self.allowed_30d_api_calls,
+            "projects": self.allowed_projects,
+            "audit_log_visibility_days": self.audit_log_visibility_days,
+            "feature_history_visibility_days": self.feature_history_visibility_days,
+        }
 
 
 class OrganisationAPIUsageNotification(models.Model):
