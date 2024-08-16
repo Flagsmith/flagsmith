@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from django.db.models import BooleanField, ExpressionWrapper, Q
+from django.db.models import BooleanField, ExpressionWrapper, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -41,7 +41,6 @@ from features.versioning.serializers import (
     EnvironmentFeatureVersionRetrieveSerializer,
     EnvironmentFeatureVersionSerializer,
 )
-from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser
 
@@ -120,21 +119,8 @@ class EnvironmentFeatureVersionViewSet(
             )
             queryset = queryset.filter(_is_live=is_live)
 
-        subscription_metadata: BaseSubscriptionMetadata = (
-            self.environment.project.organisation.subscription.get_subscription_metadata()
-        )
-        if (
-            self.action == "list"
-            and (
-                version_limit_days := subscription_metadata.feature_history_visibility_days
-            )
-            is not None
-        ):
-            limited_queryset = queryset.filter(
-                Q(live_from__gte=timezone.now() - timedelta(days=version_limit_days))
-                | Q(live_from__isnull=True)
-            )
-            return limited_queryset if limited_queryset.exists() else queryset[:1]
+        if self.action == "list":
+            queryset = self._apply_visibility_limits(queryset)
 
         return queryset
 
@@ -159,6 +145,27 @@ class EnvironmentFeatureVersionViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save(published_by=request.user)
         return Response(serializer.data)
+
+    def _apply_visibility_limits(self, queryset: QuerySet) -> QuerySet:
+        """
+        Filter the given queryset by the visibility limits enforced
+        by the given organisation's subscription.
+        """
+        subscription = self.environment.project.organisation.subscription
+        subscription_metadata = subscription.get_subscription_metadata()
+        if (
+            subscription_metadata
+            and (
+                version_limit_days := subscription_metadata.feature_history_visibility_days
+            )
+            is not None
+        ):
+            limited_queryset = queryset.filter(
+                Q(live_from__gte=timezone.now() - timedelta(days=version_limit_days))
+                | Q(live_from__isnull=True)
+            )
+            return limited_queryset if limited_queryset.exists() else queryset[:1]
+        return queryset
 
 
 class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):
