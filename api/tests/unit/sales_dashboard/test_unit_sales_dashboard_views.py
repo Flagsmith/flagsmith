@@ -8,11 +8,19 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework.test import APIClient
 
+from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from organisations.models import (
     Organisation,
     OrganisationSubscriptionInformationCache,
     Subscription,
 )
+from organisations.subscriptions.constants import (
+    FREE_PLAN_ID,
+    MAX_API_CALLS_IN_FREE_PLAN,
+    MAX_SEATS_IN_FREE_PLAN,
+    TRIAL_SUBSCRIPTION_ID,
+)
+from sales_dashboard.forms import StartTrialForm
 from sales_dashboard.views import OrganisationList
 from users.models import FFAdminUser
 
@@ -152,3 +160,89 @@ def test_list_organisations_filter_plan(
     # Then
     assert response.status_code == 200
     assert list(response.context_data["organisation_list"]) == [organisation]
+
+
+def test_start_trial(
+    organisation: Organisation,
+    client: Client,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    url = reverse("sales_dashboard:organisation_start_trial", args=[organisation.id])
+    client.force_login(admin_user)
+
+    seats = 20
+    api_calls = 5_000_000
+
+    # When
+    response = client.post(url, data={"max_seats": seats, "max_api_calls": api_calls})
+
+    # Then
+    assert response.status_code == 302
+
+    subscription = Subscription.objects.get(organisation=organisation)
+    assert subscription.subscription_id == TRIAL_SUBSCRIPTION_ID
+    assert subscription.customer_id == TRIAL_SUBSCRIPTION_ID
+    assert subscription.plan == "enterprise-saas-monthly-v2"
+    assert subscription.max_seats == seats
+    assert subscription.max_api_calls == api_calls
+
+    subscription_information_cache = (
+        OrganisationSubscriptionInformationCache.objects.get(organisation=organisation)
+    )
+    assert subscription_information_cache.allowed_seats == seats
+    assert subscription_information_cache.allowed_30d_api_calls == api_calls
+    assert subscription_information_cache.allowed_projects is None
+    assert subscription_information_cache.audit_log_visibility_days is None
+    assert subscription_information_cache.feature_history_visibility_days is None
+
+
+@pytest.fixture()
+def in_trial_organisation(organisation: Organisation) -> Organisation:
+    form = StartTrialForm(data={"max_seats": 20, "max_api_calls": 5_000_000})
+    assert form.is_valid()
+    form.save(organisation)
+    organisation.refresh_from_db()
+    return organisation
+
+
+def test_end_trial(
+    in_trial_organisation: Organisation,
+    client: Client,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    url = reverse(
+        "sales_dashboard:organisation_end_trial", args=[in_trial_organisation.id]
+    )
+    client.force_login(admin_user)
+
+    # When
+    response = client.post(url)
+
+    # Then
+    assert response.status_code == 302
+
+    subscription = Subscription.objects.get(organisation=in_trial_organisation)
+    assert subscription.subscription_id == ""
+    assert subscription.customer_id == ""
+    assert subscription.plan == FREE_PLAN_ID
+    assert subscription.max_seats == MAX_SEATS_IN_FREE_PLAN
+    assert subscription.max_api_calls == MAX_API_CALLS_IN_FREE_PLAN
+
+    subscription_information_cache = (
+        OrganisationSubscriptionInformationCache.objects.get(
+            organisation=in_trial_organisation
+        )
+    )
+    assert subscription_information_cache.allowed_seats == MAX_SEATS_IN_FREE_PLAN
+    assert (
+        subscription_information_cache.allowed_30d_api_calls
+        == MAX_API_CALLS_IN_FREE_PLAN
+    )
+    assert subscription_information_cache.allowed_projects == 1
+    assert subscription_information_cache.audit_log_visibility_days == 0
+    assert (
+        subscription_information_cache.feature_history_visibility_days
+        == DEFAULT_VERSION_LIMIT_DAYS
+    )
