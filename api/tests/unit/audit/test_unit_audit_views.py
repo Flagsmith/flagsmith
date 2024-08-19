@@ -1,8 +1,10 @@
 import typing
+from datetime import timedelta
 
 import pytest
 from django.db.models import Model
 from django.urls import reverse
+from django.utils import timezone
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -20,7 +22,7 @@ from users.models import FFAdminUser
 
 
 @pytest.fixture(autouse=True)
-def _subscription_metadata(mocker: MockerFixture) -> None:
+def subscription_metadata(mocker: MockerFixture) -> None:
     metadata = BaseSubscriptionMetadata(
         audit_log_visibility_days=None,
     )
@@ -28,6 +30,7 @@ def _subscription_metadata(mocker: MockerFixture) -> None:
         "organisations.models.Subscription.get_subscription_metadata",
         return_value=metadata,
     )
+    return metadata
 
 
 def test_audit_log_can_be_filtered_by_environments(
@@ -200,3 +203,70 @@ def test_retrieve_environment_feature_version_published_audit_log_record_include
         response_json["log"]
         == ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE % feature.name
     )
+
+
+def test_list_audit_log_for_project_limits_logs_returned_for_non_enterprise(
+    subscription_metadata: BaseSubscriptionMetadata,
+    project: Project,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-audit-list", args=[project.id])
+
+    subscription_metadata.audit_log_visibility_days = 1
+
+    now = timezone.now()
+    two_days_ago = now - timedelta(days=2)
+
+    AuditLog.objects.create(
+        project=project, log="Something that happened today", created_date=now
+    )
+    AuditLog.objects.create(
+        project=project,
+        log="Something that happened 2 days ago",
+        created_date=two_days_ago,
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["log"] == "Something that happened today"
+
+
+def test_list_audit_log_for_organisation_limits_logs_returned_for_non_enterprise(
+    subscription_metadata: BaseSubscriptionMetadata,
+    organisation: Organisation,
+    project: Project,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    url = reverse("api-v1:organisations:audit-log-list", args=[organisation.id])
+
+    subscription_metadata.audit_log_visibility_days = 1
+
+    now = timezone.now()
+    two_days_ago = now - timedelta(days=2)
+
+    AuditLog.objects.create(
+        project=project, log="Something that happened today", created_date=now
+    )
+    AuditLog.objects.create(
+        project=project,
+        log="Something that happened 2 days ago",
+        created_date=two_days_ago,
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["log"] == "Something that happened today"
