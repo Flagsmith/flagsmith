@@ -655,9 +655,7 @@ def test_update_segment_versioned_segment_with_thrown_exception(
         rule=nested_rule, property="foo", operator=EQUAL, value="bar"
     )
 
-    assert (
-        segment.version == 2 == Segment.all_objects.filter(version_of=segment).count()
-    )
+    assert segment.version == 2 == Segment.objects.filter(version_of=segment).count()
 
     new_condition_property = "foo2"
     new_condition_value = "bar"
@@ -708,9 +706,7 @@ def test_update_segment_versioned_segment_with_thrown_exception(
     segment.refresh_from_db()
 
     # Now verify that the version of the segment has not been changed.
-    assert (
-        segment.version == 2 == Segment.all_objects.filter(version_of=segment).count()
-    )
+    assert segment.version == 2 == Segment.objects.filter(version_of=segment).count()
 
 
 @pytest.mark.parametrize(
