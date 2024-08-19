@@ -200,6 +200,12 @@ def map_environment_to_engine(
     # Prefetch this queryset will actually load the live_objects
     # manager for the Segment lookup.
     project_segments: List["Segment"] = project.segments.all()
+
+    # Even though the main calling code filters via a prefetch,
+    # we still want to gaurd this function in case there are other
+    # callers in the future.
+    project_segments = [ps for ps in project_segments if ps.id == ps.version_of_id]
+
     project_segment_rules_by_segment_id: Dict[
         int,
         Iterable["SegmentRule"],
