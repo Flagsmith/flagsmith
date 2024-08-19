@@ -36,7 +36,7 @@ const GitHubResourcesSelect: FC<GitHubResourcesSelectType> = ({
     if (!repo) {
       return {}
     }
-    const [repoOwner, repoName] = repo.split('/')
+    const [repoName, repoOwner] = repo.split('/')
     return { repoName, repoOwner }
   }, [repo])
 
