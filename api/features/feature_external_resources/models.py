@@ -15,7 +15,7 @@ from environments.models import Environment
 from features.models import Feature, FeatureState
 from integrations.github.constants import GitHubEventType, GitHubTag
 from integrations.github.github import call_github_task
-from integrations.github.models import GithubRepository
+from integrations.github.models import GitHubRepository
 from organisations.models import Organisation
 from projects.tags.models import Tag, TagType
 
@@ -88,7 +88,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
             url_match = re.search(pattern, self.url)
             owner, repo = url_match.groups()
 
-            github_repo = GithubRepository.objects.get(
+            github_repo = GitHubRepository.objects.get(
                 github_configuration=github_configuration.id,
                 project=self.feature.project,
                 repository_owner=owner,

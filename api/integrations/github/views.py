@@ -27,7 +27,7 @@ from integrations.github.github import (
     tag_by_event_type,
 )
 from integrations.github.helpers import github_webhook_payload_is_valid
-from integrations.github.models import GithubConfiguration, GithubRepository
+from integrations.github.models import GithubConfiguration, GitHubRepository
 from integrations.github.permissions import HasPermissionToGithubConfiguration
 from integrations.github.serializers import (
     GithubConfigurationSerializer,
@@ -126,7 +126,7 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
         GithubIsAdminOrganisation,
     )
     serializer_class = GithubRepositorySerializer
-    model_class = GithubRepository
+    model_class = GitHubRepository
 
     def perform_create(self, serializer):
         github_configuration_id = self.kwargs["github_pk"]
@@ -136,7 +136,7 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
         try:
             if github_pk := self.kwargs.get("github_pk"):
                 int(github_pk)
-                return GithubRepository.objects.filter(github_configuration=github_pk)
+                return GitHubRepository.objects.filter(github_configuration=github_pk)
         except ValueError:
             raise ValidationError({"github_pk": ["Must be an integer"]})
 

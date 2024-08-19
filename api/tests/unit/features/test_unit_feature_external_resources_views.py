@@ -21,7 +21,7 @@ from features.serializers import (
 )
 from features.versioning.models import EnvironmentFeatureVersion
 from integrations.github.constants import GITHUB_API_URL, GITHUB_API_VERSION
-from integrations.github.models import GithubConfiguration, GithubRepository
+from integrations.github.models import GithubConfiguration, GitHubRepository
 from projects.models import Project
 from segments.models import Segment
 from tests.types import WithEnvironmentPermissionsCallable
@@ -73,7 +73,7 @@ def test_create_feature_external_resource(
     environment: Environment,
     project: Project,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     post_request_mock: MagicMock,
     mock_github_client_generate_token: MagicMock,
 ) -> None:
@@ -186,7 +186,7 @@ def test_cannot_create_feature_external_resource_with_an_invalid_gh_url(
     feature: Feature,
     project: Project,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
 ) -> None:
     # Given
     feature_external_resource_data = {
@@ -216,7 +216,7 @@ def test_cannot_create_feature_external_resource_with_an_incorrect_gh_type(
     feature: Feature,
     project: Project,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
 ) -> None:
     # Given
     feature_external_resource_data = {
@@ -316,7 +316,7 @@ def test_cannot_create_feature_external_resource_due_to_unique_constraint(
     feature: Feature,
     project: Project,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     feature_external_resource: FeatureExternalResource,
 ) -> None:
     # Given
@@ -346,7 +346,7 @@ def test_update_feature_external_resource(
     feature_external_resource: FeatureExternalResource,
     project: Project,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     post_request_mock: MagicMock,
     mocker: MockerFixture,
 ) -> None:
@@ -378,7 +378,7 @@ def test_delete_feature_external_resource(
     feature: Feature,
     project: Project,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     feature_external_resource: FeatureExternalResource,
     post_request_mock: MagicMock,
     mocker: MockerFixture,
@@ -417,7 +417,7 @@ def test_get_feature_external_resources(
     feature: Feature,
     project: Project,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     feature_external_resource: FeatureExternalResource,
     mock_github_client_generate_token: MagicMock,
 ) -> None:
@@ -446,7 +446,7 @@ def test_get_feature_external_resource(
     feature: Feature,
     project: Project,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     feature_external_resource: FeatureExternalResource,
 ) -> None:
     # Given
@@ -472,7 +472,7 @@ def test_create_github_comment_on_feature_state_updated(
     feature: Feature,
     project: Project,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     post_request_mock: MagicMock,
     mocker: MockerFixture,
     environment: Environment,
@@ -532,7 +532,7 @@ def test_create_github_comment_on_feature_was_deleted(
     feature: Feature,
     project: Project,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     feature_external_resource: FeatureExternalResource,
     post_request_mock: MagicMock,
     mock_github_client_generate_token: MagicMock,
@@ -566,7 +566,7 @@ def test_create_github_comment_on_segment_override_updated(
     segment_override_for_feature_with_value: FeatureState,
     project: Project,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     post_request_mock: MagicMock,
     environment: Environment,
     admin_client: APIClient,
@@ -624,7 +624,7 @@ def test_create_github_comment_on_segment_override_deleted(
     segment_override_for_feature_with_value: FeatureState,
     feature_with_value_segment: FeatureSegment,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     post_request_mock: MagicMock,
     admin_client_new: APIClient,
     feature_with_value_external_resource: FeatureExternalResource,
@@ -665,7 +665,7 @@ def test_create_github_comment_using_v2(
     environment: Environment,
     project: Project,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     feature_external_resource: FeatureExternalResource,
     post_request_mock: MagicMock,
     mocker: MockerFixture,
@@ -738,7 +738,7 @@ def test_create_github_comment_using_v2_fails_on_wrong_params(
     environment: Environment,
     project: Project,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     feature_external_resource: FeatureExternalResource,
     post_request_mock: MagicMock,
     mocker: MockerFixture,
@@ -781,7 +781,7 @@ def test_create_feature_external_resource_on_environment_with_v2(
     admin_client_new: APIClient,
     project: Project,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     segment_override_for_feature_with_value: FeatureState,
     environment_v2_versioning: Environment,
     post_request_mock: MagicMock,
@@ -858,7 +858,7 @@ def test_cannot_create_feature_external_resource_for_the_same_feature_and_resour
     feature: Feature,
     project: Project,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     feature_external_resource_gh_pr: FeatureExternalResource,
 ) -> None:
     # Given
