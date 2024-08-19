@@ -928,6 +928,65 @@ def test_charge_for_api_call_count_overages_grace_period(
     # Then
     mock_chargebee_update.assert_not_called()
     assert OrganisationAPIBilling.objects.count() == 0
+    assert organisation.breached_grace_period
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_charge_for_api_call_count_overages_grace_period_over(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100_000,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    OrganisationBreachedGracePeriod.objects.create(organisation=organisation)
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
+    mock_chargebee_update = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+    )
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    # Set the return value to something less than 200% of base rate
+    mock_api_usage.return_value = 115_000
+    assert OrganisationAPIBilling.objects.count() == 0
+
+    # When
+    charge_for_api_call_count_overages()
+
+    # Then
+    # Since the OrganisationBreachedGracePeriod was created already
+    # the charges go through.
+    mock_chargebee_update.assert_called_once_with(
+        "fancy_sub_id23",
+        {
+            "addons": [{"id": "additional-api-scale-up-monthly", "quantity": 1}],
+            "prorate": False,
+            "invoice_immediately": False,
+        },
+    )
+    assert OrganisationAPIBilling.objects.count() == 1
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
