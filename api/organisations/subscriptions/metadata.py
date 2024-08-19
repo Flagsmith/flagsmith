@@ -10,6 +10,7 @@ class BaseSubscriptionMetadata:
         api_calls: int = 0,
         projects: typing.Optional[int] = None,
         chargebee_email=None,
+        **kwargs,  # allows for extra unknown attrs from CB json metadata
     ):
         self.seats = seats
         self.api_calls = api_calls

@@ -41,7 +41,7 @@ class GithubConfiguration(SoftDeleteExportableModel):
         ordering = ("id",)
 
 
-class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
+class GitHubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
     github_configuration = models.ForeignKey(
         GithubConfiguration, related_name="repository_config", on_delete=models.CASCADE
     )
