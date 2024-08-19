@@ -57,6 +57,7 @@ def test_chargebee_cache(mocker, db):
         "seats": 10,
         "api_calls": 100,
         "projects": 10,
+        "some_unknown_key": 1,
     }
     plan_id = "plan_id"
     plan_items = [
@@ -69,6 +70,7 @@ def test_chargebee_cache(mocker, db):
         "seats": 1,
         "api_calls": 10,
         "projects": 1,
+        "some_unknown_key": 1,
     }
     addon_id = "addon_id"
     addon_items = [
