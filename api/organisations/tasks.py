@@ -211,6 +211,12 @@ def charge_for_api_call_count_overages():
             and api_usage / subscription_cache.allowed_30d_api_calls < 2.0
         ):
             logger.info("API Usage below normal usage or grace period.")
+
+            # Set organisation grace period breach for following months.
+            if api_usage / subscription_cache.allowed_30d_api_calls > 1.0:
+                OrganisationBreachedGracePeriod.objects.get_or_create(
+                    organisation=organisation
+                )
             continue
 
         api_billings = OrganisationAPIBilling.objects.filter(
