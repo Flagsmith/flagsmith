@@ -458,6 +458,10 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
         self.organisation.api_usage_notifications.all().delete()
 
     def reset_to_defaults(self):
+        """
+        Resets all limits and CB related data to the defaults, leaving the
+        usage data intact.
+        """
         self.current_billing_term_starts_at = None
         self.current_billing_term_ends_at = None
 
