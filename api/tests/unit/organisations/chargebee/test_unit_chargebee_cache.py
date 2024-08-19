@@ -57,7 +57,7 @@ def test_chargebee_cache(mocker, db):
         "seats": 10,
         "api_calls": 100,
         "projects": 10,
-        "some_unknown_key": 1,
+        "some_unknown_key": 1,  # should be ignored
     }
     plan_id = "plan_id"
     plan_items = [
@@ -70,7 +70,7 @@ def test_chargebee_cache(mocker, db):
         "seats": 1,
         "api_calls": 10,
         "projects": 1,
-        "some_unknown_key": 1,
+        "some_unknown_key": 1,  # should be ignored
     }
     addon_id = "addon_id"
     addon_items = [
@@ -92,8 +92,10 @@ def test_chargebee_cache(mocker, db):
     assert cache.plans[plan_id].seats == plan_metadata["seats"]
     assert cache.plans[plan_id].api_calls == plan_metadata["api_calls"]
     assert cache.plans[plan_id].projects == plan_metadata["projects"]
+    assert not hasattr(cache.plans[plan_id], "some_unknown_key")
 
     assert len(cache.addons) == 1
     assert cache.addons[addon_id].seats == addon_metadata["seats"]
     assert cache.addons[addon_id].api_calls == addon_metadata["api_calls"]
     assert cache.addons[addon_id].projects == addon_metadata["projects"]
+    assert not hasattr(cache.addons[addon_id], "some_unknown_key")
