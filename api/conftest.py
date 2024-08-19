@@ -40,7 +40,7 @@ from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
-from integrations.github.models import GithubConfiguration, GithubRepository
+from integrations.github.models import GithubConfiguration, GitHubRepository
 from metadata.models import (
     Metadata,
     MetadataField,
@@ -1079,8 +1079,8 @@ def github_configuration(organisation: Organisation) -> GithubConfiguration:
 def github_repository(
     github_configuration: GithubConfiguration,
     project: Project,
-) -> GithubRepository:
-    return GithubRepository.objects.create(
+) -> GitHubRepository:
+    return GitHubRepository.objects.create(
         github_configuration=github_configuration,
         repository_owner="repositoryownertest",
         repository_name="repositorynametest",

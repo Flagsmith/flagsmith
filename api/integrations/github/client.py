@@ -155,9 +155,23 @@ def fetch_search_github_resource(
     headers: dict[str, str] = build_request_headers(
         github_configuration.installation_id
     )
-    response = requests.get(url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT)
-    response.raise_for_status()
-    json_response = response.json()
+    try:
+        response = requests.get(url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT)
+        response.raise_for_status()
+        json_response = response.json()
+
+    except HTTPError:
+        response_content = response.content.decode("utf-8")
+        error_message = (
+            "The resources do not exist or you do not have permission to view them"
+        )
+        error_data = json.loads(response_content)
+        if error_data.get("message", "") == "Validation Failed" and any(
+            error.get("code", "") == "invalid" for error in error_data.get("errors", [])
+        ):
+            logger.warning(error_message)
+            raise ValueError(error_message)
+
     results = [
         {
             "html_url": i["html_url"],

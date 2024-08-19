@@ -10,7 +10,7 @@ from integrations.github.client import (
     get_github_issue_pr_title_and_state,
     label_github_issue_pr,
 )
-from integrations.github.models import GithubRepository
+from integrations.github.models import GitHubRepository
 from organisations.models import Organisation
 
 from .models import FeatureExternalResource
@@ -85,7 +85,7 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
         url_match = re.search(pattern, url)
         if url_match:
             owner, repo, issue = url_match.groups()
-            if GithubRepository.objects.get(
+            if GitHubRepository.objects.get(
                 github_configuration=github_configuration,
                 repository_owner=owner,
                 repository_name=repo,

@@ -16,7 +16,7 @@ from environments.models import Environment
 from features.feature_external_resources.models import FeatureExternalResource
 from features.models import Feature
 from integrations.github.constants import GITHUB_API_URL
-from integrations.github.models import GithubConfiguration, GithubRepository
+from integrations.github.models import GithubConfiguration, GitHubRepository
 from integrations.github.views import (
     github_api_call_error_handler,
     github_webhook_payload_is_valid,
@@ -158,7 +158,7 @@ def test_delete_github_configuration(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -193,7 +193,7 @@ def test_cannot_delete_github_configuration_when_delete_github_installation_resp
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -294,7 +294,7 @@ def test_create_github_repository(
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
-    assert GithubRepository.objects.filter(repository_owner="repositoryowner").exists()
+    assert GitHubRepository.objects.filter(repository_owner="repositoryowner").exists()
 
 
 @responses.activate
@@ -341,7 +341,7 @@ def test_create_github_repository_and_label_already_Existe(
     # Then
     mocker_logger.warning.assert_called_once_with("Label already exists")
     assert response.status_code == status.HTTP_201_CREATED
-    assert GithubRepository.objects.filter(repository_owner="repositoryowner").exists()
+    assert GitHubRepository.objects.filter(repository_owner="repositoryowner").exists()
 
 
 def test_cannot_create_github_repository_when_does_not_have_permissions(
@@ -374,7 +374,7 @@ def test_cannot_create_github_repository_due_to_unique_constraint(
     organisation: Organisation,
     github_configuration: GithubConfiguration,
     project: Project,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
 ) -> None:
     # Given
     data = {
@@ -404,7 +404,7 @@ def test_github_delete_repository(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     feature_external_resource: FeatureExternalResource,
     mock_github_client_generate_token: MagicMock,
 ) -> None:
@@ -476,7 +476,7 @@ def test_fetch_pull_requests(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     mock_github_client_generate_token: MagicMock,
     mocker: MockerFixture,
 ) -> None:
@@ -511,7 +511,7 @@ def test_fetch_issues(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     mock_github_client_generate_token: MagicMock,
     mocker: MockerFixture,
 ) -> None:
@@ -547,16 +547,30 @@ def test_fetch_issues(
     )
 
 
+@responses.activate
 def test_fetch_issues_returns_error_on_bad_response_from_github(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     mock_github_client_generate_token: MagicMock,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mocker.patch("requests.get", side_effect=mocked_requests_get_error)
+
+    mock_response = {
+        "message": "Validation Failed",
+        "errors": [{"message": "Error", "code": "not_found"}],
+        "documentation_url": "https://docs.github.com/v3/search/",
+        "status": "404",
+    }
+
+    responses.add(
+        method="GET",
+        url="https://api.github.com/search/issues?q=%20repo:repo/repo%20is:issue%20is:open%20in:title%20in:body&per_page=100&page=1",  # noqa: E501
+        status=status.HTTP_404_NOT_FOUND,
+        json=mock_response,
+    )
     url = reverse("api-v1:organisations:get-github-issues", args=[organisation.id])
     data = {"repo_owner": "owner", "repo_name": "repo"}
     # When
@@ -564,9 +578,41 @@ def test_fetch_issues_returns_error_on_bad_response_from_github(
 
     # Then
     assert response.status_code == status.HTTP_502_BAD_GATEWAY
+    assert "Failed to retrieve GitHub issues." in response.json()["detail"]
+
+
+@responses.activate
+def test_search_issues_returns_error_on_bad_search_params(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    github_configuration: GithubConfiguration,
+    github_repository: GitHubRepository,
+    mock_github_client_generate_token: MagicMock,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_response = {
+        "message": "Validation Failed",
+        "errors": [{"message": "Error", "code": "invalid"}],
+        "documentation_url": "https://docs.github.com/v3/search/",
+        "status": "422",
+    }
+    responses.add(
+        method="GET",
+        url="https://api.github.com/search/issues?q=%20repo:owner/repo%20is:issue%20is:open%20in:title%20in:body&per_page=100&page=1",  # noqa: E501
+        status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        json=mock_response,
+    )
+    url = reverse("api-v1:organisations:get-github-issues", args=[organisation.id])
+    data = {"repo_owner": "owner", "repo_name": "repo"}
+    # When
+    response = admin_client_new.get(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     response_json = response.json()
     assert (
-        "Failed to retrieve GitHub issues. Error: HTTP Error 404"
+        "Failed to retrieve GitHub issues. Error: The resources do not exist or you do not have permission to view them"
         in response_json["detail"]
     )
 
@@ -576,7 +622,7 @@ def test_fetch_repositories(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     mock_github_client_generate_token: MagicMock,
 ) -> None:
     # Given
@@ -651,7 +697,7 @@ def test_cannot_fetch_issues_or_prs_when_does_not_have_permissions(
     test_user_client: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     mock_github_client_generate_token: MagicMock,
     reverse_url: str,
 ) -> None:
@@ -725,7 +771,7 @@ def test_github_webhook_merged_a_pull_request(
     api_client: APIClient,
     feature: Feature,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     feature_external_resource: FeatureExternalResource,
     set_github_webhook_secret,
 ) -> None:
@@ -870,7 +916,7 @@ def test_cannot_fetch_pull_requests_when_github_request_call_failed(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     mock_github_client_generate_token: MagicMock,
 ) -> None:
     # Given
@@ -898,7 +944,7 @@ def test_cannot_fetch_pulls_when_the_github_response_was_invalid(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     mock_github_client_generate_token: MagicMock,
 ) -> None:
     # Given
@@ -938,7 +984,7 @@ def test_fetch_github_repo_contributors(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     mock_github_client_generate_token: MagicMock,
 ) -> None:
     # Given
@@ -996,7 +1042,7 @@ def test_fetch_github_repo_contributors_with_invalid_query_params(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
 ) -> None:
     # Given
     url = reverse(
@@ -1055,7 +1101,7 @@ def test_send_the_invalid_number_page_or_page_size_param_returns_400(
     admin_client: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     page: int,
     page_size: int,
     error_detail: str,
@@ -1098,7 +1144,7 @@ def test_send_the_invalid_type_page_or_page_size_param_returns_400(
     admin_client: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     page: int,
     page_size: int,
     error_response: dict[str, Any],
@@ -1127,7 +1173,7 @@ def test_label_and_tags_no_added_when_tagging_is_disabled(
     admin_client_new: APIClient,
     project: Project,
     environment: Environment,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     feature_with_value: Feature,
     mock_github_client_generate_token: MagicMock,
     post_request_mock: MagicMock,
@@ -1166,7 +1212,7 @@ def test_update_github_repository(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
-    github_repository: GithubRepository,
+    github_repository: GitHubRepository,
     project: Project,
     mocker: MockerFixture,
     mock_github_client_generate_token: MagicMock,
@@ -1198,7 +1244,7 @@ def test_update_github_repository(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert GithubRepository.objects.filter(repository_owner="repositoryowner").exists()
-    assert GithubRepository.objects.get(
+    assert GitHubRepository.objects.filter(repository_owner="repositoryowner").exists()
+    assert GitHubRepository.objects.get(
         repository_owner="repositoryowner"
     ).tagging_enabled
