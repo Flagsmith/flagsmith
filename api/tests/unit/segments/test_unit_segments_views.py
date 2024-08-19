@@ -573,7 +573,7 @@ def test_update_segment_versioned_segment(
 
     # Before updating the segment confirm pre-existing version count which is
     # automatically set by the fixture.
-    assert Segment.all_objects.filter(version_of=segment).count() == 2
+    assert Segment.objects.filter(version_of=segment).count() == 2
 
     new_condition_property = "foo2"
     new_condition_value = "bar"
@@ -620,13 +620,11 @@ def test_update_segment_versioned_segment(
     assert response.status_code == status.HTTP_200_OK
 
     # Now verify that a new versioned segment has been set.
-    assert Segment.all_objects.filter(version_of=segment).count() == 3
+    assert Segment.objects.filter(version_of=segment).count() == 3
 
     # Now check the previously versioned segment to match former count of conditions.
 
-    versioned_segment = Segment.all_objects.filter(
-        version_of=segment, version=2
-    ).first()
+    versioned_segment = Segment.objects.filter(version_of=segment, version=2).first()
     assert versioned_segment != segment
     assert versioned_segment.rules.count() == 1
     versioned_rule = versioned_segment.rules.first()
