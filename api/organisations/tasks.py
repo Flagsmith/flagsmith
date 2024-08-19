@@ -230,19 +230,27 @@ def charge_for_api_call_count_overages():
             logger.info("API Usage below current API limit.")
             continue
 
-        if organisation.subscription.plan in {SCALE_UP, SCALE_UP_V2}:
-            add_100k_api_calls_scale_up(
-                organisation.subscription.subscription_id,
-                math.ceil(api_overage / 100_000),
-            )
-        elif organisation.subscription.plan in {STARTUP, STARTUP_V2}:
-            add_100k_api_calls_start_up(
-                organisation.subscription.subscription_id,
-                math.ceil(api_overage / 100_000),
-            )
-        else:
+        try:
+            if organisation.subscription.plan in {SCALE_UP, SCALE_UP_V2}:
+                add_100k_api_calls_scale_up(
+                    organisation.subscription.subscription_id,
+                    math.ceil(api_overage / 100_000),
+                )
+            elif organisation.subscription.plan in {STARTUP, STARTUP_V2}:
+                add_100k_api_calls_start_up(
+                    organisation.subscription.subscription_id,
+                    math.ceil(api_overage / 100_000),
+                )
+            else:
+                logger.error(
+                    f"Unable to bill for API overages for plan `{organisation.subscription.plan}` "
+                    f"for organisation {organisation.id}"
+                )
+                continue
+        except Exception:
             logger.error(
-                f"Unable to bill for API overages for plan `{organisation.subscription.plan}`"
+                f"Unable to charge organisation {organisation.id} due to billing error",
+                exc_info=True,
             )
             continue
 
