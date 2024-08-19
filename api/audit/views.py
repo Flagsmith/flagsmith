@@ -59,7 +59,7 @@ class _BaseAuditLogViewSet(
             self.action, AuditLogListSerializer
         )
 
-    def _get_base_filters(self) -> Q:
+    def _get_base_filters(self) -> Q:  # pragma: no cover
         return Q()
 
     def _apply_visibility_limits(
