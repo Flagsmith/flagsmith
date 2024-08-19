@@ -234,7 +234,8 @@ def charge_for_api_call_count_overages():
                 )
             else:
                 logger.error(
-                    f"Unable to bill for API overages for plan `{organisation.subscription.plan}`"
+                    f"Unable to bill for API overages for plan `{organisation.subscription.plan}` "
+                    f"for organisation {organisation.id}"
                 )
                 continue
         except Exception:
