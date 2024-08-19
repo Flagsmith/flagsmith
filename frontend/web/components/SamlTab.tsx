@@ -12,6 +12,8 @@ import {
 import CreateSAML from './modals/CreateSAML'
 import Switch from './Switch'
 import { SAMLConfiguration } from 'common/types/responses'
+import PlanBasedBanner from './PlanBasedAccess'
+        
 export type SamlTabType = {
   organisationId: number
 }
@@ -34,7 +36,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
   }
 
   return (
-    <div className='mt-3'>
+    <PlanBasedBanner feature={'SAML'} theme={'page'} className='mt-3'>
       <PageTitle
         title={'SAML Configurations'}
         cta={
@@ -147,7 +149,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
           )}
         />
       </FormGroup>
-    </div>
+    </PlanBasedBanner>
   )
 }
 

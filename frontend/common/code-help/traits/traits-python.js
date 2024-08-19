@@ -1,10 +1,15 @@
+import Constants from 'common/constants'
+
 module.exports = (
   envId,
   { TRAIT_NAME },
   userId,
 ) => `from flagsmith import Flagsmith
 
-flagsmith = Flagsmith(environment_key="${envId}")
+flagsmith = Flagsmith(environment_key="${envId}"${
+  Constants.isCustomFlagsmithUrl &&
+  `,\n api_url="${Project.flagsmithClientAPI}"\n`
+})
 
 traits = {"${TRAIT_NAME}": 42}
 

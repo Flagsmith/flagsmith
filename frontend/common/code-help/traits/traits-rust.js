@@ -1,9 +1,14 @@
+import Constants from 'common/constants'
+
 module.exports = (envId, { USER_ID }, userId) => `
 use flagsmith::{Flag, Flagsmith, FlagsmithOptions};
 use flagsmith_flag_engine::types::{FlagsmithValue, FlagsmithValueType};
 use flagsmith_flag_engine::identities::Trait;
 
-let options = FlagsmithOptions {..Default::default()};
+let options = FlagsmithOptions {${
+  Constants.isCustomFlagsmithUrl &&
+  `api_url: "${Project.flagsmithClientAPI}".to_string(),\n`
+}..Default::default()};
 let flagsmith = Flagsmith::new(
     "${envId}".to_string(),
     options,
