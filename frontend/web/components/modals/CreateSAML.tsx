@@ -21,6 +21,9 @@ import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import { AttributeName } from 'common/types/responses'
 import SAMLAttributeMappingTable from 'components/SAMLAttributeMappingTable'
+import Input from 'components/base/forms/Input'
+import Icon from 'components/Icon'
+import Project from 'common/project'
 
 type CreateSAML = {
   organisationId: number
@@ -51,6 +54,12 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
     { name: samlName! },
     { skip: !samlName },
   )
+
+  const acsUrl = new URL(`/auth/saml/${name}/response/`, Project.api).href
+  const copyAcsUrl = async () => {
+    await navigator.clipboard.writeText(acsUrl)
+    toast('Copied to clipboard')
+  }
 
   useEffect(() => {
     if (isSuccess && data) {
@@ -202,6 +211,35 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
       {(!!hasCreateError || !!hasUpdateError) && (
         <div className='mt-2'>
           <ErrorMessage error={createError || updateError} />
+        </div>
+      )}
+      {isEdit && (
+        <div className='mt-12'>
+          <Tooltip
+            title={
+              <label>
+                Assertion Consumer Service (ACS) URL
+                <Icon name='info-outlined' />
+              </label>
+            }
+          >
+            Also known as sign-on URL. Your identity provider needs to know this
+            URL to send SAML responses to it.
+          </Tooltip>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className='flex flex-row gap-2'
+          >
+            <Input className='w-full flex-1' value={acsUrl} readOnly />
+            <Button
+              onClick={() => {
+                copyAcsUrl()
+              }}
+              className='me-2 btn-with-icon'
+            >
+              <Icon name='copy' width={20} fill='#656D7B' />
+            </Button>
+          </div>
         </div>
       )}
       <div className='text-right py-2'>

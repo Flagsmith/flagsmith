@@ -12,18 +12,10 @@ import {
 import CreateSAML from './modals/CreateSAML'
 import Switch from './Switch'
 import { SAMLConfiguration } from 'common/types/responses'
-import Input from './base/forms/Input'
-import Project from 'common/project'
 export type SamlTabType = {
   organisationId: number
 }
 
-const copyAcsUrl = async (configurationName: string) => {
-  await navigator.clipboard.writeText(
-    `${Project.flagsmithClientAPI}auth/saml/${configurationName}/response/`,
-  )
-  toast('Copied to clipboard')
-}
 const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
   const { data } = useGetSamlConfigurationsQuery({
     organisation_id: organisationId,
@@ -74,12 +66,6 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
               </Flex>
               <div
                 className='table-column d-none d-md-block'
-                style={{ width: '400px' }}
-              >
-                Assertion Consumer Service (ACS) URL
-              </div>
-              <div
-                className='table-column d-none d-md-block'
                 style={{ width: '150px' }}
               >
                 Allow IdP-initiated
@@ -106,27 +92,6 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
               <Flex className='table-column px-3'>
                 <div className='font-weight-medium mb-1'>{samlConf.name}</div>
               </Flex>
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className='table-column flex flex-row gap-2'
-                style={{ width: '400px' }}
-              >
-                <div className='flex-1'>
-                  <Input
-                    className='full-width'
-                    value={`${Project.flagsmithClientAPI}auth/saml/${samlConf.name}/response/`}
-                    readOnly
-                  />
-                </div>
-                <Button
-                  onClick={() => {
-                    copyAcsUrl(samlConf.name)
-                  }}
-                  className='me-2 btn-with-icon'
-                >
-                  <Icon name='copy' width={20} fill='#656D7B' />
-                </Button>
-              </div>
               <div
                 className='table-column d-none d-md-flex gap-4 align-items-center'
                 style={{ width: '150px' }}
