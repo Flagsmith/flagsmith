@@ -14,6 +14,7 @@ class BaseSubscriptionMetadata:
         chargebee_email: str = None,
         audit_log_visibility_days: int | None = 0,
         feature_history_visibility_days: int | None = DEFAULT_VERSION_LIMIT_DAYS,
+        **kwargs,  # allows for extra unknown attrs from CB json metadata
     ):
         self.seats = seats
         self.api_calls = api_calls

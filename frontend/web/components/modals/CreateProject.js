@@ -4,6 +4,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
 import Constants from 'common/constants'
 import { setInterceptClose } from './base/ModalDefault'
+import PlanBasedAccess from 'components/PlanBasedAccess'
 
 const CreateProject = class extends Component {
   static displayName = 'CreateProject'
@@ -52,12 +53,11 @@ const CreateProject = class extends Component {
       <OrganisationProvider onSave={this.close}>
         {({ createProject, error, isSaving, projects }) => {
           const hasProject = !!projects && !!projects.length
-          const canCreate = !!Utils.getPlansPermission(
-            'CREATE_ADDITIONAL_PROJECT',
-          )
-          const disableCreate = !canCreate && hasProject
-
-          return (
+          const canCreate =
+            !hasProject ||
+            !!Utils.getPlansPermission('CREATE_ADDITIONAL_PROJECT')
+          const disableCreate = !canCreate
+          const inner = (
             <div className='p-4'>
               <form
                 style={{ opacity: disableCreate ? 0.5 : 1 }}
@@ -71,20 +71,6 @@ const CreateProject = class extends Component {
                   !isSaving && name && createProject(name)
                 }}
               >
-                {disableCreate && (
-                  <InfoMessage>
-                    View and manage multiple projects in your organisation with
-                    the{' '}
-                    <a
-                      href='#'
-                      onClick={() => {
-                        document.location.replace(Constants.upgradeURL)
-                      }}
-                    >
-                      Startup plan
-                    </a>
-                  </InfoMessage>
-                )}
                 <InputGroup
                   ref={(e) => (this.input = e)}
                   data-test='projectName'
@@ -108,7 +94,7 @@ const CreateProject = class extends Component {
                     type='submit'
                     data-test='create-project-btn'
                     id='create-project-btn'
-                    disabled={isSaving || !name}
+                    disabled={!canCreate || isSaving || !name}
                     className='text-right'
                   >
                     {isSaving ? 'Creating' : 'Create Project'}
@@ -117,6 +103,19 @@ const CreateProject = class extends Component {
               </form>
             </div>
           )
+          if (hasProject) {
+            return (
+              <>
+                <PlanBasedAccess
+                  className='p-4'
+                  feature={'CREATE_ADDITIONAL_PROJECT'}
+                  theme={'page'}
+                />
+                {inner}
+              </>
+            )
+          }
+          return inner
         }}
       </OrganisationProvider>
     )
