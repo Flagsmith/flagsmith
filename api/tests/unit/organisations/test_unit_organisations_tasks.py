@@ -109,6 +109,13 @@ def test_subscription_cancellation(db: None) -> None:
     organisation = Organisation.objects.create()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
+        allowed_seats=5,
+        allowed_30d_api_calls=1_000_000,
+        allowed_projects=None,
+        api_calls_24h=30_000,
+        api_calls_7d=210_000,
+        api_calls_30d=900_000,
+        chargebee_email="foo@example.com",
     )
     UserOrganisation.objects.create(
         organisation=organisation,
@@ -138,7 +145,8 @@ def test_subscription_cancellation(db: None) -> None:
     # Then
     organisation.refresh_from_db()
     subscription.refresh_from_db()
-    assert getattr(organisation, "subscription_information_cache", None) is None
+    organisation.subscription_information_cache.refresh_from_db()
+
     assert subscription.subscription_id is None
     assert subscription.subscription_date is None
     assert subscription.plan == FREE_PLAN_ID
@@ -150,6 +158,23 @@ def test_subscription_cancellation(db: None) -> None:
     assert subscription.payment_method is None
     assert subscription.cancellation_date is None
     assert subscription.notes == notes
+
+    # The CB / limit data on the subscription information cache object is reset
+    assert organisation.subscription_information_cache.chargebee_email is None
+    assert (
+        organisation.subscription_information_cache.allowed_30d_api_calls
+        == MAX_API_CALLS_IN_FREE_PLAN
+    )
+    assert organisation.subscription_information_cache.allowed_projects == 1
+    assert (
+        organisation.subscription_information_cache.allowed_seats
+        == MAX_SEATS_IN_FREE_PLAN
+    )
+
+    # But the usage data isn't
+    assert organisation.subscription_information_cache.api_calls_24h == 30_000
+    assert organisation.subscription_information_cache.api_calls_7d == 210_000
+    assert organisation.subscription_information_cache.api_calls_30d == 900_000
 
 
 @pytest.mark.freeze_time("2023-01-19T09:12:34+00:00")
