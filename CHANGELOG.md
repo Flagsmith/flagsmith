@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.137.0](https://github.com/Flagsmith/flagsmith/compare/v2.136.0...v2.137.0) (2024-08-20)
+
+
+### Features
+
+* make pg usage cache timeout configurable ([#4485](https://github.com/Flagsmith/flagsmith/issues/4485)) ([cd4fbe7](https://github.com/Flagsmith/flagsmith/commit/cd4fbe7bbf27b17a7d6bd1161c9f7c2431ae9a2f))
+* Tweak email wording for grace periods ([#4482](https://github.com/Flagsmith/flagsmith/issues/4482)) ([36e634c](https://github.com/Flagsmith/flagsmith/commit/36e634ca057e6aa55ffed41686a05df0883a1062))
+
+
+### Bug Fixes
+
+* Add decorator for running task every hour ([#4481](https://github.com/Flagsmith/flagsmith/issues/4481)) ([a395a47](https://github.com/Flagsmith/flagsmith/commit/a395a470924628f6d239fb72f964a282b61a2e6b))
+* Add logic to handle grace period breached for paid accounts ([#4512](https://github.com/Flagsmith/flagsmith/issues/4512)) ([ba8ae60](https://github.com/Flagsmith/flagsmith/commit/ba8ae60d6e3e0b7f5b84501f2c6c47763267e8be))
+* add reverse sql to versioning migration ([#4491](https://github.com/Flagsmith/flagsmith/issues/4491)) ([a6a0f91](https://github.com/Flagsmith/flagsmith/commit/a6a0f918394d0f044994d159d4e440c3a9ebcdef))
+* allow unknown attrs from cb json meta ([#4509](https://github.com/Flagsmith/flagsmith/issues/4509)) ([1e3888a](https://github.com/Flagsmith/flagsmith/commit/1e3888aae3f4429089643c478300b8d94e856caf))
+* Catch API billing errors ([#4514](https://github.com/Flagsmith/flagsmith/issues/4514)) ([33074f3](https://github.com/Flagsmith/flagsmith/commit/33074f349e24ea06cede711e797d941c0bc042c4))
+* **delete-feature-via-role:** bump rbac ([#4508](https://github.com/Flagsmith/flagsmith/issues/4508)) ([174d437](https://github.com/Flagsmith/flagsmith/commit/174d437a4a654e9ea34645d86f515fa65eb85660))
+* Make influx cache task recurring ([#4495](https://github.com/Flagsmith/flagsmith/issues/4495)) ([cb8472d](https://github.com/Flagsmith/flagsmith/commit/cb8472d669f50d2dfc3d9837d6a7049840b08a7a))
+* Remove grace period where necessary from blocked notification ([#4496](https://github.com/Flagsmith/flagsmith/issues/4496)) ([9bae21c](https://github.com/Flagsmith/flagsmith/commit/9bae21cdcba0f4d37c8d4838137f8376e3749215))
+* Rename match variable in external feature resources ([#4490](https://github.com/Flagsmith/flagsmith/issues/4490)) ([bf82b9d](https://github.com/Flagsmith/flagsmith/commit/bf82b9d64976e16cc7d598e6f5cd124cafbe30ca))
+* save feature error handling ([#4058](https://github.com/Flagsmith/flagsmith/issues/4058)) ([2517e9d](https://github.com/Flagsmith/flagsmith/commit/2517e9dfd42a58adb69a52050f4e3fc1663bc127))
+* Solve API GitHub integration issues ([#4502](https://github.com/Flagsmith/flagsmith/issues/4502)) ([19bc58e](https://github.com/Flagsmith/flagsmith/commit/19bc58ed8b1f8e689842b3181b6bf266f1a507aa))
+* subscription info cache race condition ([#4518](https://github.com/Flagsmith/flagsmith/issues/4518)) ([d273679](https://github.com/Flagsmith/flagsmith/commit/d273679b3236c3fceccfeb71c401df5a2d69ad27))
+* **views/features:** use get_environment_flags_list ([#4511](https://github.com/Flagsmith/flagsmith/issues/4511)) ([7034fa4](https://github.com/Flagsmith/flagsmith/commit/7034fa4fbe0f16e0253f11affe68e059fde88a6a))
+
 ## [2.136.0](https://github.com/Flagsmith/flagsmith/compare/v2.135.1...v2.136.0) (2024-08-13)
 
 
