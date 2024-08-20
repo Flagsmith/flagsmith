@@ -7,7 +7,6 @@ from django.core.mail import send_mail
 
 from environments.models import Environment
 from features.models import Feature
-from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from organisations.models import (
     Organisation,
     OrganisationSubscriptionInformationCache,
@@ -45,25 +44,23 @@ class StartTrialForm(forms.Form):
     def save(self, organisation: Organisation, commit: bool = True) -> Organisation:
         subscription = organisation.subscription
 
-        subscription.max_seats = self.cleaned_data["max_seats"]
-        subscription.max_api_calls = self.cleaned_data["max_api_calls"]
+        max_seats = self.cleaned_data["max_seats"]
+        max_api_calls = self.cleaned_data["max_api_calls"]
+
+        subscription.max_seats = max_seats
+        subscription.max_api_calls = max_api_calls
         subscription.subscription_id = TRIAL_SUBSCRIPTION_ID
         subscription.customer_id = TRIAL_SUBSCRIPTION_ID
         subscription.plan = "enterprise-saas-monthly-v2"
 
-        OrganisationSubscriptionInformationCache.objects.update_or_create(
-            organisation=organisation,
-            defaults={
-                "allowed_seats": self.cleaned_data["max_seats"],
-                "allowed_30d_api_calls": self.cleaned_data["max_api_calls"],
-                "allowed_projects": None,
-                "audit_log_visibility_days": None,
-                "feature_history_visibility_days": None,
-            },
-        )
+        osic = getattr(
+            organisation, "subscription_information_cache", None
+        ) or OrganisationSubscriptionInformationCache(organisation=organisation)
+        osic.upgrade_to_enterprise(seats=max_seats, api_calls=max_api_calls)
 
         if commit:
             subscription.save()
+            osic.save()
 
         return organisation
 
@@ -79,19 +76,14 @@ class EndTrialForm(forms.Form):
         subscription.plan = FREE_PLAN_ID
         subscription.save()
 
-        OrganisationSubscriptionInformationCache.objects.update_or_create(
-            organisation=organisation,
-            defaults={
-                "allowed_seats": MAX_SEATS_IN_FREE_PLAN,
-                "allowed_30d_api_calls": MAX_API_CALLS_IN_FREE_PLAN,
-                "allowed_projects": 1,
-                "audit_log_visibility_days": 0,
-                "feature_history_visibility_days": DEFAULT_VERSION_LIMIT_DAYS,
-            },
-        )
+        osic = getattr(
+            organisation, "subscription_information_cache", None
+        ) or OrganisationSubscriptionInformationCache(organisation=organisation)
+        osic.reset_to_defaults()
 
         if commit:
             subscription.save()
+            osic.save()
 
         return organisation
 

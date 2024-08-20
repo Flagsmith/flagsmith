@@ -20,7 +20,6 @@ from organisations.subscriptions.constants import (
     MAX_SEATS_IN_FREE_PLAN,
     TRIAL_SUBSCRIPTION_ID,
 )
-from sales_dashboard.forms import StartTrialForm
 from sales_dashboard.views import OrganisationList
 from users.models import FFAdminUser
 
@@ -195,15 +194,6 @@ def test_start_trial(
     assert subscription_information_cache.allowed_projects is None
     assert subscription_information_cache.audit_log_visibility_days is None
     assert subscription_information_cache.feature_history_visibility_days is None
-
-
-@pytest.fixture()
-def in_trial_organisation(organisation: Organisation) -> Organisation:
-    form = StartTrialForm(data={"max_seats": 20, "max_api_calls": 5_000_000})
-    assert form.is_valid()
-    form.save(organisation)
-    organisation.refresh_from_db()
-    return organisation
 
 
 def test_end_trial(

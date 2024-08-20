@@ -473,6 +473,14 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
     def erase_api_notifications(self):
         self.organisation.api_usage_notifications.all().delete()
 
+    def upgrade_to_enterprise(self, seats: int, api_calls: int):
+        self.allowed_seats = seats
+        self.allowed_30d_api_calls = api_calls
+
+        self.allowed_projects = None
+        self.audit_log_visibility_days = None
+        self.feature_history_visibility_days = None
+
     def reset_to_defaults(self):
         """
         Resets all limits and CB related data to the defaults, leaving the
@@ -484,6 +492,8 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
         self.allowed_seats = MAX_SEATS_IN_FREE_PLAN
         self.allowed_30d_api_calls = MAX_API_CALLS_IN_FREE_PLAN
         self.allowed_projects = 1
+        self.audit_log_visibility_days = 0
+        self.feature_history_visibility_days = DEFAULT_VERSION_LIMIT_DAYS
 
         self.chargebee_email = None
 
