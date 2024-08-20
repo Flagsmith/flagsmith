@@ -136,11 +136,6 @@ class Segment(
 
     @hook(BEFORE_CREATE, when="version_of", is_now=None)
     def set_default_version_to_one_if_new_segment(self):
-        # Change request segments default to None.
-        if hasattr(self, "change_request_id"):
-            if self.change_request_id:
-                return
-
         if self.version is None:
             self.version = 1
 
