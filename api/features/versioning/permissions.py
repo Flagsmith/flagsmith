@@ -4,10 +4,13 @@ from rest_framework.viewsets import GenericViewSet
 
 from environments.models import Environment
 from environments.permissions.constants import (
+    TAG_SUPPORTED_PERMISSIONS as TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS,
+)
+from environments.permissions.constants import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from features.models import FeatureState
+from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 
 
@@ -19,8 +22,18 @@ class EnvironmentFeatureVersionPermissions(BasePermission):
 
         environment_pk = view.kwargs["environment_pk"]
         environment = Environment.objects.get(id=environment_pk)
+
+        tag_ids = None
+        required_permission = UPDATE_FEATURE_STATE
+
+        if required_permission in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
+            feature_id = request.data.get("feature")
+            if feature_id:
+                feature = Feature.objects.get(id=feature_id)
+                tag_ids = list(feature.tags.values_list("id", flat=True))
+
         return request.user.has_environment_permission(
-            permission=UPDATE_FEATURE_STATE, environment=environment
+            permission=required_permission, environment=environment, tag_ids=tag_ids
         )
 
     def has_object_permission(
@@ -30,8 +43,14 @@ class EnvironmentFeatureVersionPermissions(BasePermission):
             # permissions for retrieving handled in view.get_queryset
             return True
 
+        tag_ids = None
+        required_permission = UPDATE_FEATURE_STATE
+
+        if required_permission in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
+            tag_ids = list(obj.feature.tags.values_list("id", flat=True))
+
         return request.user.has_environment_permission(
-            permission=UPDATE_FEATURE_STATE, environment=obj.environment
+            permission=required_permission, environment=obj.environment, tag_ids=tag_ids
         )
 
 

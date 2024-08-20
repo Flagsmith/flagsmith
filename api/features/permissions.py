@@ -1,5 +1,3 @@
-from contextlib import suppress
-
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -156,19 +154,35 @@ class EnvironmentFeatureStatePermissions(IsAuthenticated):
             return True
 
         environment_api_key = view.kwargs.get("environment_api_key")
-        with suppress(Environment.DoesNotExist):
+        try:
             environment = Environment.objects.get(api_key=environment_api_key)
+
+            tag_ids = None
+            required_permission = action_permission_map.get(view.action)
+
+            if required_permission in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
+                feature_id = request.data.get("feature")
+                if feature_id:
+                    feature = Feature.objects.get(id=feature_id)
+                    tag_ids = list(feature.tags.values_list("id", flat=True))
+
             return request.user.has_environment_permission(
-                action_permission_map.get(view.action), environment
+                required_permission, environment, tag_ids=tag_ids
             )
-        return False
+        except Environment.DoesNotExist:
+            return False
 
     def has_object_permission(self, request, view, obj):
         action_permission_map = {"retrieve": VIEW_ENVIRONMENT}
 
+        permission = action_permission_map.get(view.action, UPDATE_FEATURE_STATE)
+
+        tag_ids = None
+        if permission in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
+            tag_ids = list(obj.feature.tags.values_list("id", flat=True))
+
         return request.user.has_environment_permission(
-            permission=action_permission_map.get(view.action, UPDATE_FEATURE_STATE),
-            environment=obj.environment,
+            permission=permission, environment=obj.environment, tag_ids=tag_ids
         )
 
 
