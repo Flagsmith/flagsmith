@@ -213,8 +213,8 @@ class SegmentSerializer(serializers.ModelSerializer, SerializerWithMetadata):
 
     @staticmethod
     def _update_or_create_segment_rule(
-        rule_data: dict, segment: Segment = None, rule: SegmentRule = None
-    ) -> typing.Optional[SegmentRule]:
+        rule_data: dict, segment: None | Segment = None, rule: None | SegmentRule = None
+    ) -> None | SegmentRule:
         rule_id = rule_data.pop("id", None)
         if rule_data.get("delete"):
             SegmentRule.objects.filter(id=rule_id).delete()
