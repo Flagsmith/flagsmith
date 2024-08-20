@@ -15,19 +15,22 @@ SAML tab, you'll be able to configure it.
 
 In the UI, you will be able to configure the following fields.
 
-**Name:** (**Required**) A short name for the organisation, used as the input when clicking "Single Sign-on" at login
-(note this is unique across all tenants and will form part of the URL so should only be alphanumeric + '-,\_').
+**Name:** (**Required**) A short name for the organisation, used as the input when clicking "Single Sign-On" at login.
+This name must be unique across all Flagsmith organisations and forms part of the URL that your identity provider will
+post SAML messages to during authentication.
 
-**Frontend URL**: (**Required**) This should be the base URL of the Flagsmith dashboard.
+**Frontend URL**: (**Required**) This should be the base URL of the Flagsmith dashboard. Users will be redirected here
+after authenticating successfully.
 
-**Allow IdP initiated**: This field determines whether logins can be initiated from the IdP.
+**Allow IdP-initiated**: If enabled, users will be able to log in directly from your identity provider without needing
+to visit the Flagsmith login page.
 
-**IdP metadata xml**: The metadata from the IdP.
+**IdP metadata XML**: The metadata from your identity provider.
 
 Once you have configured your identity provider, you can download the service provider metadata XML document with the
 button "Download Service Provider Metadata".
 
-### Assertion Consumer Service URL
+### Assertion consumer service URL
 
 The assertion consumer service (ACS) URL, also known as single sign-on URL, for this SAML configuration will be at the
 following path, replacing `flagsmith.example.com` with your Flagsmith API's domain:
@@ -66,12 +69,11 @@ Flagsmith also maps user attributes from the following claims in the SAML assert
 
 | Flagsmith attribute | IdP claims                                           |
 | ------------------- | ---------------------------------------------------- |
-| `email`             | `mail`, `email` or `emailAddress`                    |
-| `first_name`        | `gn`, `givenName` or the first part of `displayName` |
-| `last_name`         | `sn`, `surname` or the second part of `displayName`  |
+| Email               | `mail`, `email` or `emailAddress`                    |
+| First name          | `gn`, `givenName` or the first part of `displayName` |
+| Last name           | `sn`, `surname` or the second part of `displayName`  |
 
-You can override these mappings by adding the corresponding IdP attribute names to your SAML configuration from the
-Django admin interface.
+To add custom attribute mappings, edit your SAML configuration and open the Attribute Mappings tab.
 
 ## Permissions for SAML users
 

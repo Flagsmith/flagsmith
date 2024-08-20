@@ -37,11 +37,11 @@ const SAMLAttributeMappingTable: FC<SAMLAttributeMappingTableType> = ({
         header={
           <Row className='table-header'>
             <Flex className='table-column px-3'>
-              <div className='font-weight-medium'>SAML Attribute Name</div>
+              <div className='font-weight-medium'>SAML attribute name</div>
             </Flex>
             <Flex className='table-column px-3'>
               <div className='table-column' style={{ width: '375px' }}>
-                IDP Attribute Name
+                IdP attribute name
               </div>
             </Flex>
           </Row>
