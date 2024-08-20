@@ -397,11 +397,22 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         if self.organisation.has_subscription_information_cache():
             # Getting the data from the subscription information cache because
             # data is guaranteed to be up to date by using a Chargebee webhook.
-            return (
+            cb_metadata = (
                 self.organisation.subscription_information_cache.as_chargebee_subscription_metadata()
             )
+        else:
+            cb_metadata = get_subscription_metadata_from_id(self.subscription_id)
 
-        return get_subscription_metadata_from_id(self.subscription_id)
+        if (
+            self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
+            and self.subscription_date < settings.VERSIONING_RELEASE_DATE
+        ):
+            # Logic to grandfather old scale up plan customers to give them
+            # full access to audit log and feature history.
+            cb_metadata.audit_log_visibility_days = None
+            cb_metadata.feature_history_visibility_days = None
+
+        return cb_metadata
 
     def _get_subscription_metadata_for_self_hosted(self) -> BaseSubscriptionMetadata:
         if not is_enterprise():
