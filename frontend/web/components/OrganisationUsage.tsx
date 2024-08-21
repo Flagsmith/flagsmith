@@ -1,4 +1,4 @@
-import Utils from 'common/utils/utils'
+import Utils, { planNames } from 'common/utils/utils'
 import React, { FC, useState } from 'react'
 import {
   Bar,
@@ -19,6 +19,10 @@ import {
   ValueType,
 } from 'recharts/types/component/DefaultTooltipContent'
 import InfoMessage from './InfoMessage'
+import { IonIcon } from '@ionic/react'
+import { checkmarkSharp } from 'ionicons/icons'
+import AccountStore from 'common/stores/account-store'
+import { billingPeriods, freePeriods, Req } from 'common/types/requests'
 
 type OrganisationUsageType = {
   organisationId: string
@@ -26,19 +30,28 @@ type OrganisationUsageType = {
 type LegendItemType = {
   title: string
   value: number
+  selection: string[]
+  onChange: (v: string) => void
   colour?: string
 }
 
-const LegendItem: FC<LegendItemType> = ({ colour, title, value }) => {
+const LegendItem: FC<LegendItemType> = ({
+  colour,
+  onChange,
+  selection,
+  title,
+  value,
+}) => {
   if (!value) {
     return null
   }
   return (
     <div className='mb-4'>
       <h3 className='mb-2'>{Utils.numberWithCommas(value)}</h3>
-      <Row>
+      <Row className='cursor-pointer' onClick={() => onChange(title)}>
         {!!colour && (
           <span
+            className='text-white text-center'
             style={{
               backgroundColor: colour,
               borderRadius: 2,
@@ -46,7 +59,11 @@ const LegendItem: FC<LegendItemType> = ({ colour, title, value }) => {
               height: 16,
               width: 16,
             }}
-          />
+          >
+            {selection.includes(title) && (
+              <IonIcon size={'8px'} color='white' icon={checkmarkSharp} />
+            )}
+          </span>
         )}
         <span className='text-muted ml-2'>{title}</span>
       </Row>
@@ -57,9 +74,14 @@ const LegendItem: FC<LegendItemType> = ({ colour, title, value }) => {
 const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
   const [project, setProject] = useState<string | undefined>()
   const [environment, setEnvironment] = useState<string | undefined>()
+  const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
+  const [billingPeriod, setBillingPeriod] = useState<
+    Req['getOrganisationUsage']['billing_period']
+  >(currentPlan === planNames.free ? '90_day_period' : 'current_billing_period')
 
   const { data } = useGetOrganisationUsageQuery(
     {
+      billing_period: billingPeriod,
       environmentId: environment,
       organisationId,
       projectId: project,
@@ -67,10 +89,33 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
     { skip: !organisationId },
   )
   const colours = ['#0AADDF', '#27AB95', '#FF9F43', '#EF4D56']
+  const [selection, setSelection] = useState([
+    'Flags',
+    'Identities',
+    'Environment Document',
+    'Traits',
+  ])
+  const updateSelection = (key) => {
+    if (selection.includes(key)) {
+      setSelection(selection.filter((v) => v !== key))
+    } else {
+      setSelection(selection.concat([key]))
+    }
+  }
 
   return data?.totals ? (
-    <div className='mt-4'>
-      <div className='col-md-6 mb-5'>
+    <div className='mt-4 row'>
+      <div className='col-md-4'>
+        <label>Period</label>
+        <Select
+          onChange={(v) => setBillingPeriod(v.value)}
+          value={billingPeriods.find((v) => v.value === billingPeriod)}
+          options={
+            currentPlan === planNames.free ? freePeriods : billingPeriods
+          }
+        />
+      </div>
+      <div className='col-md-4 mb-5'>
         <label>Project</label>
         <ProjectFilter
           showAll
@@ -78,47 +123,67 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
           onChange={setProject}
           value={project}
         />
-        {project && (
-          <div className='mt-4'>
-            <label>Environment</label>
-            <EnvironmentFilter
-              showAll
-              projectId={project}
-              onChange={setEnvironment}
-              value={environment}
-            />
-          </div>
-        )}
       </div>
-      <Row style={{ gap: '32px 64px' }}>
+      {project && (
+        <div className='col-md-4'>
+          <label>Environment</label>
+          <EnvironmentFilter
+            showAll
+            projectId={project}
+            onChange={setEnvironment}
+            value={environment}
+          />
+        </div>
+      )}
+      <div className='d-flex gap-5 align-items-center'>
         <LegendItem
+          selection={selection}
+          onChange={updateSelection}
           colour={colours[0]}
           value={data.totals.flags}
           title='Flags'
         />
         <LegendItem
+          selection={selection}
+          onChange={updateSelection}
           colour={colours[1]}
           value={data.totals.identities}
           title='Identities'
         />
         <LegendItem
+          selection={selection}
+          onChange={updateSelection}
           colour={colours[2]}
           value={data.totals.environmentDocument}
           title='Environment Document'
         />
         <LegendItem
+          selection={selection}
+          onChange={updateSelection}
           colour={colours[3]}
           value={data.totals.traits}
           title='Traits'
         />
         <LegendItem value={data.totals.total} title='Total API Calls' />
-      </Row>
+      </div>
       {data?.events_list?.length === 0 ? (
         <div className='py-4 fw-semibold text-center'>No usage recorded.</div>
       ) : (
         <ResponsiveContainer height={400} width='100%'>
           <BarChart
-            data={data.events_list}
+            data={data.events_list.map((v) => {
+              return {
+                ...v,
+                environment_document: selection.includes('Environment Document')
+                  ? v.environment_document
+                  : undefined,
+                flags: selection.includes('Flags') ? v.flags : undefined,
+                identities: selection.includes('Identities')
+                  ? v.identities
+                  : undefined,
+                traits: selection.includes('Traits') ? v.traits : undefined,
+              }
+            })}
             style={{ stroke: '#fff', strokeWidth: 1 }}
           >
             <CartesianGrid stroke='#EFF1F4' vertical={false} />
@@ -126,7 +191,7 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
               padding='gap'
               allowDataOverflow={false}
               dataKey='day'
-              interval={0}
+              interval={data.events_list?.length > 31 ? 7 : 0}
               height={120}
               angle={-90}
               textAnchor='end'
@@ -145,28 +210,39 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
               cursor={{ fill: 'transparent' }}
               content={<RechartsTooltip />}
             />
-            <Bar dataKey='flags' barSize={14} stackId='a' fill={colours[0]} />
-            <Bar
-              dataKey='identities'
-              barSize={14}
-              stackId='a'
-              fill={colours[1]}
-            />
-            <Bar
-              name='Environment Document'
-              dataKey='environment_document'
-              stackId='a'
-              fill={colours[2]}
-              barSize={14}
-            />
-            <Bar dataKey='traits' barSize={14} stackId='a' fill={colours[3]} />
+            {selection.includes('Flags') && (
+              <Bar dataKey='flags' barSize={14} stackId='a' fill={colours[0]} />
+            )}
+            {selection.includes('Identities') && (
+              <Bar
+                dataKey='identities'
+                barSize={14}
+                stackId='a'
+                fill={colours[1]}
+              />
+            )}
+            {selection.includes('Environment Document') && (
+              <Bar
+                name='Environment Document'
+                dataKey='environment_document'
+                stackId='a'
+                fill={colours[2]}
+                barSize={14}
+              />
+            )}
+            {selection.includes('Traits') && (
+              <Bar
+                dataKey='traits'
+                barSize={14}
+                stackId='a'
+                fill={colours[3]}
+              />
+            )}
           </BarChart>
         </ResponsiveContainer>
       )}
       <InfoMessage>
-        Please be aware that usage data can be delayed by up to 3 hours and that
-        these numbers show the API usage for the last 30 days, not your current
-        billing period which may differ.
+        Please be aware that usage data can be delayed by up to 3 hours.
       </InfoMessage>
       <div>
         <h4>What do these numbers mean?</h4>
