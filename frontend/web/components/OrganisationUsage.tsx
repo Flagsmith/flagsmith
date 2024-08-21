@@ -106,6 +106,16 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
 
   return data?.totals ? (
     <div className='mt-4 row'>
+      {currentPlan !== planNames.free && (
+          <div className='col-md-4'>
+            <label>Period</label>
+            <Select
+                onChange={(v) => setBillingPeriod(v.value)}
+                value={billingPeriods.find((v) => v.value === billingPeriod)}
+                options={billingPeriods}
+            />
+          </div>
+      )}
       <div className='col-md-4 mb-5'>
         <label>Project</label>
         <ProjectFilter
@@ -123,16 +133,6 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
             projectId={project}
             onChange={setEnvironment}
             value={environment}
-          />
-        </div>
-      )}
-      {currentPlan !== planNames.free && (
-        <div className='col-md-4'>
-          <label>Period</label>
-          <Select
-            onChange={(v) => setBillingPeriod(v.value)}
-            value={billingPeriods.find((v) => v.value === billingPeriod)}
-            options={billingPeriods}
           />
         </div>
       )}
