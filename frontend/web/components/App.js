@@ -608,7 +608,7 @@ const App = class extends Component {
                           <Permission
                             level='project'
                             permission='ADMIN'
-                            id={this.props.projectId}
+                            id={projectId}
                           >
                             {({ permission }) =>
                               permission && (
