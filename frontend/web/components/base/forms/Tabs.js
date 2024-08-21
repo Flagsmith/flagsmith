@@ -41,7 +41,7 @@ const Tabs = class extends React.Component {
     return (
       <div className={`tabs ${this.props.className || ''}`}>
         <div
-          className={`tabs-nav ${this.props.theme}`}
+          className={`${hideNav ? '' : 'tabs-nav'} ${this.props.theme}`}
           style={isMobile ? { flexWrap: 'wrap' } : {}}
         >
           {!hideNav &&

@@ -76,7 +76,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
   const hideValue =
     !totalChanges && (diff.newValue === null || diff.newValue === undefined)
   return (
-    <div className='p-2'>
+    <div>
       {!feature ? (
         <div className='text-center'>
           <Loader />
