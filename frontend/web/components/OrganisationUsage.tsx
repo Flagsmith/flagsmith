@@ -105,8 +105,8 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
   }
 
   return data?.totals ? (
-    <div className='mt-4'>
-      <div className='col-md-6 mb-5'>
+    <div className='mt-4 row'>
+      <div className='col-md-4 mb-5'>
         <label>Project</label>
         <ProjectFilter
           showAll
@@ -114,37 +114,26 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
           onChange={setProject}
           value={project}
         />
-        {project && (
-          <div className='mt-4'>
-            <label>Environment</label>
-            <EnvironmentFilter
-              showAll
-              projectId={project}
-              onChange={setEnvironment}
-              value={environment}
-            />
-          </div>
-        )}
       </div>
+      {project && (
+        <div className='col-md-4'>
+          <label>Environment</label>
+          <EnvironmentFilter
+            showAll
+            projectId={project}
+            onChange={setEnvironment}
+            value={environment}
+          />
+        </div>
+      )}
       {currentPlan !== planNames.free && (
-        <div className='col-md-6 mb-5'>
+        <div className='col-md-4'>
           <label>Period</label>
           <Select
             onChange={(v) => setBillingPeriod(v.value)}
             value={billingPeriods.find((v) => v.value === billingPeriod)}
             options={billingPeriods}
           />
-          {project && (
-            <div className='mt-4'>
-              <label>Environment</label>
-              <EnvironmentFilter
-                showAll
-                projectId={project}
-                onChange={setEnvironment}
-                value={environment}
-              />
-            </div>
-          )}
         </div>
       )}
       <div className='d-flex gap-5 align-items-center'>
