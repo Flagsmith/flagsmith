@@ -146,7 +146,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         deprecated=True,
-        operation_description="Please use ​​/api​/v1​/organisations​/{organisation_pk}​/usage-data​/total-count​/",
+        operation_description="Please use /api/v1/organisations/{organisation_pk}/usage-data/total-count/",
     )
     @action(
         detail=True,
@@ -224,7 +224,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         deprecated=True,
-        operation_description="Please use ​​/api​/v1​/organisations​/{organisation_pk}​/usage-data​/",
+        operation_description="Please use /api/v1/organisations/{organisation_pk}/usage-data/",
         query_serializer=InfluxDataQuerySerializer(),
     )
     @action(detail=True, methods=["GET"], url_path="influx-data")
