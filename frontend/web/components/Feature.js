@@ -138,7 +138,7 @@ export default class Feature extends PureComponent {
                 <strong>"{environmentFlag?.feature_state_value}"</strong>.
                 Saving this feature will convert its value from a string to a
                 number. If you wish to preserve this value as a string, please
-                save it via our{' '}
+                save it using the{' '}
                 <a href='https://api.flagsmith.com/api/v1/docs/#/api/api_v1_environments_featurestates_update'>
                   API
                 </a>
