@@ -156,6 +156,7 @@
                             <th>Email Address</th>
                             <th>Date Registered</th>
                             <th>Last Logged In</th>
+                            <th>User UUID</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -166,6 +167,7 @@
                             <td><a href="mailto:{{user.email}}">{{user.email}}</a></td>
                             <td>{{ user.date_joined }}</td>
                             <td>{{ user.last_login }}</td>
+                            <td><span id="user-uuid">{{ user.uuid }}</span> <button onclick='navigator.clipboard.writeText(document.getElementById("user-uuid").innerText)'>copy</button></td>
                         </tr>
                         {% endfor %}
                     </tbody>

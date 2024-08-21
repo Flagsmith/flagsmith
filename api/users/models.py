@@ -1,5 +1,6 @@
 import logging
 import typing
+import uuid
 from datetime import timedelta
 
 from django.conf import settings
@@ -111,6 +112,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     sign_up_type = models.CharField(
         choices=SignUpType.choices, max_length=100, blank=True, null=True
     )
+
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "sign_up_type"]
