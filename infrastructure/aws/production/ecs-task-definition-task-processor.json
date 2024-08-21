@@ -168,6 +168,10 @@
                 {
                     "name": "ENABLE_API_USAGE_ALERTING",
                     "value": "True"
+                },
+                {
+                    "name": "ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST",
+                    "value": "customersuccess@flagsmith.com"
                 }
             ],
             "secrets": [

@@ -253,9 +253,14 @@ def test_finish_subscription_cancellation(db: None, mocker: MockerFixture) -> No
     assert organisation4.num_seats == organisation_user_count
 
 
-def test_send_org_subscription_cancelled_alert(db: None, mocker: MockerFixture) -> None:
+def test_send_org_subscription_cancelled_alert(
+    mocker: MockerFixture, settings: SettingsWrapper
+) -> None:
     # Given
-    send_mail_mock = mocker.patch("users.models.send_mail")
+    send_mail_mock = mocker.patch("organisations.tasks.send_mail")
+
+    recipient = "foo@bar.com"
+    settings.ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = [recipient]
 
     # When
     send_org_subscription_cancelled_alert(
@@ -268,7 +273,7 @@ def test_send_org_subscription_cancelled_alert(db: None, mocker: MockerFixture) 
         subject="Organisation TestCorp has cancelled their subscription",
         message="Organisation TestCorp has cancelled their subscription on 2023-02-08 09:12:34",
         from_email="noreply@flagsmith.com",
-        recipient_list=[],
+        recipient_list=[recipient],
         fail_silently=True,
     )
 
