@@ -79,6 +79,17 @@ def send_org_subscription_cancelled_alert(
     )
 
 
+@register_recurring_task(
+    run_every=timedelta(hours=6),
+)
+def update_organisation_subscription_information_influx_cache_recurring():
+    """
+    We're redefining the task function here to register a recurring task
+    since the decorators don't stack correctly. (TODO)
+    """
+    update_organisation_subscription_information_influx_cache()  # pragma: no cover
+
+
 @register_task_handler()
 def update_organisation_subscription_information_influx_cache():
     subscription_info_cache.update_caches((SubscriptionCacheEntity.INFLUX,))
@@ -195,8 +206,17 @@ def charge_for_api_call_count_overages():
         api_usage = get_current_api_usage(organisation.id)
 
         # Grace period for organisations < 200% of usage.
-        if api_usage / subscription_cache.allowed_30d_api_calls < 2.0:
+        if (
+            not hasattr(organisation, "breached_grace_period")
+            and api_usage / subscription_cache.allowed_30d_api_calls < 2.0
+        ):
             logger.info("API Usage below normal usage or grace period.")
+
+            # Set organisation grace period breach for following months.
+            if api_usage / subscription_cache.allowed_30d_api_calls > 1.0:
+                OrganisationBreachedGracePeriod.objects.get_or_create(
+                    organisation=organisation
+                )
             continue
 
         api_billings = OrganisationAPIBilling.objects.filter(
@@ -210,19 +230,27 @@ def charge_for_api_call_count_overages():
             logger.info("API Usage below current API limit.")
             continue
 
-        if organisation.subscription.plan in {SCALE_UP, SCALE_UP_V2}:
-            add_100k_api_calls_scale_up(
-                organisation.subscription.subscription_id,
-                math.ceil(api_overage / 100_000),
-            )
-        elif organisation.subscription.plan in {STARTUP, STARTUP_V2}:
-            add_100k_api_calls_start_up(
-                organisation.subscription.subscription_id,
-                math.ceil(api_overage / 100_000),
-            )
-        else:
+        try:
+            if organisation.subscription.plan in {SCALE_UP, SCALE_UP_V2}:
+                add_100k_api_calls_scale_up(
+                    organisation.subscription.subscription_id,
+                    math.ceil(api_overage / 100_000),
+                )
+            elif organisation.subscription.plan in {STARTUP, STARTUP_V2}:
+                add_100k_api_calls_start_up(
+                    organisation.subscription.subscription_id,
+                    math.ceil(api_overage / 100_000),
+                )
+            else:
+                logger.error(
+                    f"Unable to bill for API overages for plan `{organisation.subscription.plan}` "
+                    f"for organisation {organisation.id}"
+                )
+                continue
+        except Exception:
             logger.error(
-                f"Unable to bill for API overages for plan `{organisation.subscription.plan}`"
+                f"Unable to charge organisation {organisation.id} due to billing error",
+                exc_info=True,
             )
             continue
 

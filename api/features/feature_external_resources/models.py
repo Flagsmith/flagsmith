@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 
 from django.db import models
 from django.db.models import Q
@@ -14,7 +15,7 @@ from environments.models import Environment
 from features.models import Feature, FeatureState
 from integrations.github.constants import GitHubEventType, GitHubTag
 from integrations.github.github import call_github_task
-from integrations.github.models import GithubRepository
+from integrations.github.models import GitHubRepository
 from organisations.models import Organisation
 from projects.tags.models import Tag, TagType
 
@@ -79,9 +80,19 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
             .get(id=self.feature.project.organisation_id)
             .github_config.first()
         ):
-            github_repo = GithubRepository.objects.get(
+            if self.type == "GITHUB_PR":
+                pattern = r"github.com/([^/]+)/([^/]+)/pull/\d+$"
+            elif self.type == "GITHUB_ISSUE":
+                pattern = r"github.com/([^/]+)/([^/]+)/issues/\d+$"
+
+            url_match = re.search(pattern, self.url)
+            owner, repo = url_match.groups()
+
+            github_repo = GitHubRepository.objects.get(
                 github_configuration=github_configuration.id,
                 project=self.feature.project,
+                repository_owner=owner,
+                repository_name=repo,
             )
             if github_repo.tagging_enabled:
                 github_tag = Tag.objects.get(

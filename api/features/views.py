@@ -172,11 +172,11 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 identity__isnull=True,
                 feature_segment__isnull=True,
             )
-            feature_states = FeatureState.objects.get_live_feature_states(
-                self.environment,
+            feature_states = get_environment_flags_list(
+                environment=self.environment,
                 additional_filters=q,
-            ).select_related("feature_state_value", "feature")
-
+                additional_select_related_args=["feature_state_value", "feature"],
+            )
             self._feature_states = {fs.feature_id: fs for fs in feature_states}
 
         return queryset

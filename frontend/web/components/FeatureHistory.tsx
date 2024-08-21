@@ -4,13 +4,13 @@ import { useGetFeatureVersionsQuery } from 'common/services/useFeatureVersion'
 import { useGetUsersQuery } from 'common/services/useUser'
 import AccountStore from 'common/stores/account-store'
 import { FeatureVersion as TFeatureVersion } from 'common/types/responses'
-import PageTitle from './PageTitle'
 import Button from './base/forms/Button'
 import FeatureVersion from './FeatureVersion'
 import InlineModal from './InlineModal'
 import TableFilterItem from './tables/TableFilterItem'
 import moment from 'moment'
 import DateList from './DateList'
+import PlanBasedBanner from 'components/PlanBasedAccess'
 import classNames from 'classnames'
 
 const widths = [250, 150]
@@ -44,8 +44,8 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
   const [selected, setSelected] = useState<TFeatureVersion | null>(null)
   const live = data?.results?.[0]
   const [compareToLive, setCompareToLive] = useState(false)
-
   const [diff, setDiff] = useState<null | string>(null)
+  const versionLimit = 3
   return (
     <div>
       <h5>Change History</h5>
@@ -54,6 +54,14 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
         segment overrides.
       </div>
       <div className='mt-4'>
+        {!!versionLimit && (
+          <PlanBasedBanner
+            className='mb-4'
+            force
+            feature={'VERSIONING'}
+            theme={'page'}
+          />
+        )}
         <DateList<TFeatureVersion>
           items={data}
           isLoading={isLoading}
@@ -61,15 +69,18 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
           prevPage={() => setPage(page + 1)}
           goToPage={setPage}
           renderRow={(v: TFeatureVersion, i: number) => {
+            const isOverLimit = !!versionLimit && i + 1 > versionLimit
             const user = users?.find((user) => v.published_by === user.id)
 
             return (
-              <Row className='list-item py-2 mh-auto'>
-                <div
-                  className={classNames('flex-fill', {
-                    'overflow-hidden': !open,
-                  })}
+                <Row
+                    className={classNames('list-item py-2 mh-auto', {
+                        'blur no-pointer': isOverLimit,
+                    })}
                 >
+                 <div     className={classNames('flex-fill', {
+                     'overflow-hidden': !open,
+                 })}>
                   <div className='flex-row flex-fill'>
                     <div
                       className='table-column flex-fill'
