@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from app_analytics.influxdb_wrapper import get_current_api_usage
 from django.conf import settings
+from django.core.mail import send_mail
 from django.db.models import F, Max, Q
 from django.utils import timezone
 from task_processor.decorators import (
@@ -73,10 +74,15 @@ def send_org_subscription_cancelled_alert(
     organisation_name: str,
     formatted_cancellation_date: str,
 ) -> None:
-    FFAdminUser.send_alert_to_admin_users(
-        subject=f"Organisation {organisation_name} has cancelled their subscription",
-        message=f"Organisation {organisation_name} has cancelled their subscription on {formatted_cancellation_date}",
-    )
+    if recipient_list := settings.ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST:
+        send_mail(
+            subject=f"Organisation {organisation_name} has cancelled their subscription",
+            message=f"Organisation {organisation_name} has cancelled their subscription "
+            f"on {formatted_cancellation_date}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[recipient_list],
+            fail_silently=True,
+        )
 
 
 @register_recurring_task(
