@@ -1085,12 +1085,21 @@ class FeatureStateValue(
         self.save()
 
     def get_skip_create_audit_log(self) -> bool:
-        return self.feature_state.get_skip_create_audit_log()
+        try:
+            return self.feature_state.get_skip_create_audit_log()
+        except ObjectDoesNotExist:
+            return False
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         fs = self.feature_state
 
-        changes = history_instance.diff_against(history_instance.prev_record).changes
+        # NOTE: We have some feature state values that were created before we started
+        # tracking history, resulting in no prev_record.
+        changes = (
+            history_instance.diff_against(history_instance.prev_record).changes
+            if history_instance.prev_record
+            else []
+        )
         if (
             len(changes) == 1
             and changes[0].field == "string_value"
