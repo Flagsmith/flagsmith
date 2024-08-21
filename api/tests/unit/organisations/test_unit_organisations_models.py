@@ -4,6 +4,7 @@ from unittest import mock
 import pytest
 from django.conf import settings
 from django.utils import timezone
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework.test import override_settings
 
@@ -302,6 +303,55 @@ def test_organisation_subscription_get_subscription_metadata_returns_cb_metadata
         payment_method=CHARGEBEE,
     )
     organisation.subscription.refresh_from_db()
+
+    # When
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
+
+    # Then
+    assert subscription_metadata == expected_metadata
+
+
+def test_get_subscription_metadata_returns_unlimited_values_for_audit_and_versions_when_released(
+    organisation: Organisation,
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+):
+    # Given
+    seats = 10
+    api_calls = 50000000
+    projects = 10
+    now = timezone.now()
+    yesterday = now - timedelta(days=1)
+    two_days_ago = now - timedelta(days=2)
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=seats,
+        allowed_30d_api_calls=api_calls,
+        allowed_projects=projects,
+        # values from here should be overridden
+        audit_log_visibility_days=30,
+        feature_history_visibility_days=30,
+    )
+    expected_metadata = ChargebeeObjMetadata(
+        seats=seats,
+        api_calls=api_calls,
+        projects=projects,
+        # the following values are patched on based on the
+        # VERSIONING_RELEASE_DATE setting
+        audit_log_visibility_days=None,
+        feature_history_visibility_days=None,
+    )
+    mocker.patch("organisations.models.is_saas", return_value=True)
+    Subscription.objects.filter(organisation=organisation).update(
+        plan="scale-up-v2",
+        subscription_id="subscription-id",
+        payment_method=CHARGEBEE,
+        subscription_date=two_days_ago,
+    )
+    organisation.subscription.refresh_from_db()
+
+    settings.VERSIONING_RELEASE_DATE = yesterday
 
     # When
     subscription_metadata = organisation.subscription.get_subscription_metadata()

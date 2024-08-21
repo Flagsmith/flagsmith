@@ -405,6 +405,8 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
         if (
             self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
+            and settings.VERSIONING_RELEASE_DATE is not None
+            and self.subscription_date is not None
             and self.subscription_date < settings.VERSIONING_RELEASE_DATE
         ):
             # Logic to grandfather old scale up plan customers to give them
