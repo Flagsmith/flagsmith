@@ -75,7 +75,6 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
   const [project, setProject] = useState<string | undefined>()
   const [environment, setEnvironment] = useState<string | undefined>()
   const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
-
   const [billingPeriod, setBillingPeriod] = useState<
     Req['getOrganisationUsage']['billing_period']
   >(currentPlan === planNames.free ? '90_day_period' : 'current_billing_period')
@@ -243,9 +242,7 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
         </ResponsiveContainer>
       )}
       <InfoMessage>
-        Please be aware that usage data can be delayed by up to 3 hours and that
-        these numbers show the API usage for the last 30 days, not your current
-        billing period which may differ.
+        Please be aware that usage data can be delayed by up to 3 hours.
       </InfoMessage>
       <div>
         <h4>What do these numbers mean?</h4>

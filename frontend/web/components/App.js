@@ -16,11 +16,9 @@ import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
 import Button from './base/forms/Button'
 import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
-import InfoMessage from './InfoMessage'
 import OrganisationLimit from './OrganisationLimit'
 import GithubStar from './GithubStar'
 import Tooltip from './Tooltip'
@@ -49,7 +47,6 @@ const App = class extends Component {
   }
 
   state = {
-    activeOrganisation: 0,
     asideIsVisible: !isMobile,
     lastEnvironmentId: '',
     lastProjectId: '',
@@ -106,7 +103,6 @@ const App = class extends Component {
     if (AccountStore.model) {
       this.onLogin()
     }
-    this.getOrganisationUsage()
     window.addEventListener('scroll', this.handleScroll)
     const updateLastViewed = () => {
       AsyncStorage.getItem('lastEnv').then((res) => {
@@ -121,21 +117,6 @@ const App = class extends Component {
     }
     this.props.history.listen(updateLastViewed)
     updateLastViewed()
-  }
-
-  getOrganisationUsage = () => {
-    if (
-      AccountStore.getOrganisation()?.id &&
-      this.state.activeOrganisation !== AccountStore.getOrganisation().id
-    ) {
-      getOrganisationUsage(getStore(), {
-        organisationId: AccountStore.getOrganisation()?.id,
-      }).then((res) => {
-        this.setState({
-          activeOrganisation: AccountStore.getOrganisation().id,
-        })
-      })
-    }
   }
 
   toggleDarkMode = () => {
