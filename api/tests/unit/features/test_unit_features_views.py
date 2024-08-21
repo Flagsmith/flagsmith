@@ -140,6 +140,7 @@ def test_remove_owners_only_remove_specified_owners(
         "first_name": user_3.first_name,
         "last_name": user_3.last_name,
         "last_login": None,
+        "uuid": mock.ANY,
     }
 
 
@@ -1565,6 +1566,7 @@ def test_add_owners_adds_owner(
         "first_name": staff_user.first_name,
         "last_name": staff_user.last_name,
         "last_login": None,
+        "uuid": mock.ANY,
     }
     assert json_response["owners"][1] == {
         "id": admin_user.id,
@@ -1572,6 +1574,7 @@ def test_add_owners_adds_owner(
         "first_name": admin_user.first_name,
         "last_name": admin_user.last_name,
         "last_login": None,
+        "uuid": mock.ANY,
     }
 
 
