@@ -622,6 +622,7 @@ def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and
     subscription: Subscription,
     staff_user: FFAdminUser,
     staff_client: APIClient,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     cancellation_date = datetime.now(tz=UTC) + timedelta(days=1)
@@ -639,6 +640,8 @@ def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and
         }
     }
     url = reverse("api-v1:chargebee-webhook")
+
+    settings.ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = ["foo@bar.com"]
 
     # When
     staff_client.post(url, data=json.dumps(data), content_type="application/json")
@@ -658,6 +661,7 @@ def test_when_subscription_is_cancelled_then_cancellation_date_set_and_alert_sen
     subscription: Subscription,
     staff_user: FFAdminUser,
     staff_client: APIClient,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     cancellation_date = datetime.now(tz=UTC) + timedelta(days=1)
@@ -675,6 +679,8 @@ def test_when_subscription_is_cancelled_then_cancellation_date_set_and_alert_sen
         }
     }
     url = reverse("api-v1:chargebee-webhook")
+
+    settings.ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = ["foo@bar.com"]
 
     # When
     staff_client.post(url, data=json.dumps(data), content_type="application/json")

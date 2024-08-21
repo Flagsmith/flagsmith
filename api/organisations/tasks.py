@@ -80,7 +80,7 @@ def send_org_subscription_cancelled_alert(
             message=f"Organisation {organisation_name} has cancelled their subscription "
             f"on {formatted_cancellation_date}",
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[recipient_list],
+            recipient_list=recipient_list,
             fail_silently=True,
         )
 
