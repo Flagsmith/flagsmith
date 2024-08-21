@@ -2322,6 +2322,39 @@ def test_cannot_update_environment_of_a_feature_state(
     )
 
 
+def test_update_feature_state_without_history_of_fsv(
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment.api_key, feature_state.id],
+    )
+    new_value = "new-value"
+
+    # Remove historical feature state value
+    feature_state.feature_state_value.history.all().delete()
+
+    data = {
+        "id": feature_state.id,
+        "feature_state_value": new_value,
+        "enabled": False,
+        "feature": feature.id,
+        "environment": environment.id,
+        "identity": None,
+        "feature_segment": None,
+    }
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
 def test_cannot_update_feature_of_a_feature_state(
     admin_client_new: APIClient,
     environment: Environment,
