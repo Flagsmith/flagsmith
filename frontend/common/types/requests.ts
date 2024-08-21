@@ -32,6 +32,11 @@ export const billingPeriods = [
     value: 'previous_billing_period',
   },
   { label: 'Last 90 days', value: '90_day_period' },
+  { label: 'Last 30 days', value: undefined },
+]
+export const freePeriods = [
+  { label: 'Last 90 days', value: '90_day_period' },
+  { label: 'Last 30 days', value: undefined },
 ]
 export type CreateVersionFeatureState = {
   environmentId: number
