@@ -106,8 +106,8 @@ const DiffFeature: FC<FeatureDiffType> = ({
               }
             >
               {!totalChanges && (
-                <div className='mt-4'>
-                  <InfoMessage>No Changes Found</InfoMessage>
+                <div className='mb-3 text-center fw-semibold'>
+                  No Changes Found
                 </div>
               )}
               {!!valueConflict && (

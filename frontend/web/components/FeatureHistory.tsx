@@ -10,7 +10,7 @@ import InlineModal from './InlineModal'
 import TableFilterItem from './tables/TableFilterItem'
 import moment from 'moment'
 import DateList from './DateList'
-import PlanBasedBanner from 'components/PlanBasedAccess'
+import PlanBasedBanner from './PlanBasedAccess'
 import classNames from 'classnames'
 
 const widths = [250, 150]
@@ -54,14 +54,14 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
         segment overrides.
       </div>
       <div className='mt-4'>
-        {!!versionLimit && (
-          <PlanBasedBanner
-            className='mb-4'
-            force
-            feature={'VERSIONING'}
-            theme={'page'}
-          />
-        )}
+        {/*{!!versionLimit && (*/}
+        {/*  <PlanBasedBanner*/}
+        {/*    className='mb-4'*/}
+        {/*    force*/}
+        {/*    feature={'VERSIONING'}*/}
+        {/*    theme={'page'}*/}
+        {/*  />*/}
+        {/*)}*/}
         <DateList<TFeatureVersion>
           items={data}
           isLoading={isLoading}
@@ -69,18 +69,20 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
           prevPage={() => setPage(page + 1)}
           goToPage={setPage}
           renderRow={(v: TFeatureVersion, i: number) => {
-            const isOverLimit = !!versionLimit && i + 1 > versionLimit
+            const isOverLimit = false
             const user = users?.find((user) => v.published_by === user.id)
 
             return (
-                <Row
-                    className={classNames('list-item py-2 mh-auto', {
-                        'blur no-pointer': isOverLimit,
-                    })}
+              <Row
+                className={classNames('list-item py-2 mh-auto', {
+                  'blur no-pointer': isOverLimit,
+                })}
+              >
+                <div
+                  className={classNames('flex-fill', {
+                    'overflow-hidden': !open,
+                  })}
                 >
-                 <div     className={classNames('flex-fill', {
-                     'overflow-hidden': !open,
-                 })}>
                   <div className='flex-row flex-fill'>
                     <div
                       className='table-column flex-fill'
