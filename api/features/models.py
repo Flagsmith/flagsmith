@@ -1095,7 +1095,6 @@ class FeatureStateValue(
 
         # NOTE: We have some feature state values that were created before we started
         # tracking history, resulting in no prev_record.
-
         changes = (
             history_instance.diff_against(history_instance.prev_record).changes
             if history_instance.prev_record

@@ -2351,7 +2351,7 @@ def test_update_feature_state_without_history_of_fsv(
     response = admin_client_new.put(
         url, data=json.dumps(data), content_type="application/json"
     )
-
+    # Then
     assert response.status_code == status.HTTP_200_OK
 
 

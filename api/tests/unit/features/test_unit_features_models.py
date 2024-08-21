@@ -697,15 +697,19 @@ def test_feature_state_value_get_skip_create_audit_log_if_environment_feature_ve
     assert feature_state.feature_state_value.get_skip_create_audit_log() is True
 
 
-def test_feature_state_value_get_skip_create_audit_log_for_deleted_feature_state(
-    feature: Feature,
+def test_feature_state_value__get_skip_create_audit_log_for_deleted_feature_state(
+    feature: Feature, feature_segment, environment
 ):
     # Give
-    feature_state = feature.feature_states.first()
+    feature_state = FeatureState.objects.create(
+        feature=feature, feature_segment=feature_segment, environment=environment
+    )
     feature_state_value = feature_state.feature_state_value
 
     # When
-    feature_state.delete()
+    # Delete feature segment to cascade delete feature state
+    # instead of soft delete
+    feature_segment.delete()
 
     # Then
     fsv_history_instance = FeatureStateValue.history.filter(
