@@ -698,7 +698,7 @@ def test_feature_state_value_get_skip_create_audit_log_if_environment_feature_ve
 
 
 def test_feature_state_value__get_skip_create_audit_log_for_deleted_feature_state(
-    feature: Feature, feature_segment, environment
+    feature: Feature, feature_segment: FeatureSegment, environment: Environment
 ):
     # Give
     feature_state = FeatureState.objects.create(
