@@ -506,7 +506,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
 
     const typedValue = testWithTrim ? str.trim() : str
-    const isNum = /^\d+$/.test(typedValue)
+    const isNum = /^-?\d+$/.test(typedValue)
 
     if (isNum && parseInt(typedValue) > Number.MAX_SAFE_INTEGER) {
       return `${str}`
