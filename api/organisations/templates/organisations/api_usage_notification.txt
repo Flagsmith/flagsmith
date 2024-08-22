@@ -5,11 +5,10 @@ reached {{ matched_threshold }}% of your API usage within the current subscripti
 
 {% if organisation.is_paid %}
 If this is expected, no action is required. If you are expecting to go over, you can upgrade your organisation’s account
-limits by reaching out to support@flagsmith.com. We will automatically charge for overages after our first grace period
-of 30 days.
+limits by reaching out to support@flagsmith.com. We will automatically charge for overages at the end of the pay period. For more information check the Terms of Service at https://www.flagsmith.com/terms-of-service.
 {% else %}
-Please note that once 100% use has been breached, the serving of feature flags and admin access may be disabled after a
-7-day grace period. Please reach out to support@flagsmith.com in order to upgrade your account.
+Please note that once 100% use has been breached, the serving of feature flags and admin access may be disabled{% if grace_period %}
+after a 7-day grace period{% endif %}. Please reach out to support@flagsmith.com in order to upgrade your account.
 {% endif %}
 
 Thank you!

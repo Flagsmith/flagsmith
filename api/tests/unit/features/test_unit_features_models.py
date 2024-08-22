@@ -11,7 +11,12 @@ from pytest_mock import MockerFixture
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
-from features.models import Feature, FeatureSegment, FeatureState
+from features.models import (
+    Feature,
+    FeatureSegment,
+    FeatureState,
+    FeatureStateValue,
+)
 from features.versioning.models import EnvironmentFeatureVersion
 from features.workflows.core.models import ChangeRequest
 from projects.models import Project
@@ -690,6 +695,28 @@ def test_feature_state_value_get_skip_create_audit_log_if_environment_feature_ve
 
     # Then
     assert feature_state.feature_state_value.get_skip_create_audit_log() is True
+
+
+def test_feature_state_value__get_skip_create_audit_log_for_deleted_feature_state(
+    feature: Feature, feature_segment: FeatureSegment, environment: Environment
+):
+    # Give
+    feature_state = FeatureState.objects.create(
+        feature=feature, feature_segment=feature_segment, environment=environment
+    )
+    feature_state_value = feature_state.feature_state_value
+
+    # When
+    # Delete feature segment to cascade delete feature state
+    # instead of soft delete
+    feature_segment.delete()
+
+    # Then
+    fsv_history_instance = FeatureStateValue.history.filter(
+        id=feature_state_value.id, history_type="-"
+    ).first()
+
+    assert fsv_history_instance.instance.get_skip_create_audit_log() is False
 
 
 @pytest.mark.parametrize(

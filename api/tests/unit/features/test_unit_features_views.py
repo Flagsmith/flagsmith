@@ -141,6 +141,7 @@ def test_remove_owners_only_remove_specified_owners(
         "first_name": user_3.first_name,
         "last_name": user_3.last_name,
         "last_login": None,
+        "uuid": mock.ANY,
     }
 
 
@@ -1566,6 +1567,7 @@ def test_add_owners_adds_owner(
         "first_name": staff_user.first_name,
         "last_name": staff_user.last_name,
         "last_login": None,
+        "uuid": mock.ANY,
     }
     assert json_response["owners"][1] == {
         "id": admin_user.id,
@@ -1573,6 +1575,7 @@ def test_add_owners_adds_owner(
         "first_name": admin_user.first_name,
         "last_name": admin_user.last_name,
         "last_login": None,
+        "uuid": mock.ANY,
     }
 
 
@@ -2323,6 +2326,39 @@ def test_cannot_update_environment_of_a_feature_state(
     )
 
 
+def test_update_feature_state_without_history_of_fsv(
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment.api_key, feature_state.id],
+    )
+    new_value = "new-value"
+
+    # Remove historical feature state value
+    feature_state.feature_state_value.history.all().delete()
+
+    data = {
+        "id": feature_state.id,
+        "feature_state_value": new_value,
+        "enabled": False,
+        "feature": feature.id,
+        "environment": environment.id,
+        "identity": None,
+        "feature_segment": None,
+    }
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
 def test_cannot_update_feature_of_a_feature_state(
     admin_client_new: APIClient,
     environment: Environment,
@@ -2823,18 +2859,22 @@ def test_list_features_with_feature_state(
         project=project,
     )
 
+    # This should be ignored due to versioning.
     feature_state1 = feature.feature_states.filter(environment=environment).first()
     feature_state1.enabled = True
     feature_state1.version = 1
     feature_state1.save()
 
-    feature_state_value1 = feature_state1.feature_state_value
-    feature_state_value1.string_value = None
-    feature_state_value1.integer_value = 1945
-    feature_state_value1.type = INTEGER
-    feature_state_value1.save()
-
-    # This should be ignored due to versioning.
+    # This should be ignored due to less recent live_from compared to the next feature state
+    # event though it has a higher version.
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        live_from=two_hours_ago,
+        enabled=True,
+        version=101,
+    )
+    # This should be returned
     feature_state_versioned = FeatureState.objects.create(
         feature=feature,
         environment=environment,
@@ -2905,8 +2945,8 @@ def test_list_features_with_feature_state(
 
     assert len(response.data["results"]) == 3
     results = response.data["results"]
-
     assert results[0]["environment_feature_state"]["enabled"] is True
+    assert results[0]["environment_feature_state"]["id"] == feature_state_versioned.id
     assert results[0]["environment_feature_state"]["feature_state_value"] == 2005
     assert results[0]["name"] == feature.name
     assert results[1]["environment_feature_state"]["enabled"] is True

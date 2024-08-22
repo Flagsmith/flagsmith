@@ -40,7 +40,7 @@ from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
-from integrations.github.models import GithubConfiguration, GithubRepository
+from integrations.github.models import GithubConfiguration, GitHubRepository
 from metadata.models import (
     Metadata,
     MetadataField,
@@ -1018,14 +1018,20 @@ def flagsmith_environments_v2_table(dynamodb: DynamoDBServiceResource) -> Table:
 
 
 @pytest.fixture()
-def feature_external_resource(
-    feature: Feature, post_request_mock: MagicMock, mocker: MockerFixture
-) -> FeatureExternalResource:
-    mocker.patch(
+def mock_github_client_generate_token(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch(
         "integrations.github.client.generate_token",
         return_value="mocked_token",
     )
 
+
+@pytest.fixture()
+def feature_external_resource(
+    feature: Feature,
+    post_request_mock: MagicMock,
+    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
+) -> FeatureExternalResource:
     return FeatureExternalResource.objects.create(
         url="https://github.com/repositoryownertest/repositorynametest/issues/11",
         type="GITHUB_ISSUE",
@@ -1035,16 +1041,26 @@ def feature_external_resource(
 
 
 @pytest.fixture()
+def feature_external_resource_gh_pr(
+    feature: Feature,
+    post_request_mock: MagicMock,
+    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
+) -> FeatureExternalResource:
+    return FeatureExternalResource.objects.create(
+        url="https://github.com/repositoryownertest/repositorynametest/pull/1",
+        type="GITHUB_PR",
+        feature=feature,
+        metadata='{"status": "open"}',
+    )
+
+
+@pytest.fixture()
 def feature_with_value_external_resource(
     feature_with_value: Feature,
     post_request_mock: MagicMock,
-    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
 ) -> FeatureExternalResource:
-    mocker.patch(
-        "integrations.github.client.generate_token",
-        return_value="mocked_token",
-    )
-
     return FeatureExternalResource.objects.create(
         url="https://github.com/repositoryownertest/repositorynametest/issues/11",
         type="GITHUB_ISSUE",
@@ -1063,12 +1079,13 @@ def github_configuration(organisation: Organisation) -> GithubConfiguration:
 def github_repository(
     github_configuration: GithubConfiguration,
     project: Project,
-) -> GithubRepository:
-    return GithubRepository.objects.create(
+) -> GitHubRepository:
+    return GitHubRepository.objects.create(
         github_configuration=github_configuration,
         repository_owner="repositoryownertest",
         repository_name="repositorynametest",
         project=project,
+        tagging_enabled=True,
     )
 
 
@@ -1120,3 +1137,10 @@ def inspecting_handler() -> logging.Handler:
             self.messages.append(self.format(record))
 
     return InspectingHandler()
+
+
+@pytest.fixture
+def set_github_webhook_secret() -> None:
+    from django.conf import settings
+
+    settings.GITHUB_WEBHOOK_SECRET = "secret-key"

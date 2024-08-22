@@ -20,6 +20,8 @@ import TableFilterItem from 'components/tables/TableFilterItem'
 import moment from 'moment'
 import { Link } from 'react-router-dom'
 import DateList from 'components/DateList'
+import classNames from 'classnames'
+import PlanBasedBanner from 'components/PlanBasedAccess'
 
 const widths = [250, 150]
 type FeatureHistoryPageType = {
@@ -59,8 +61,8 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
   const [selected, setSelected] = useState<TFeatureVersion | null>(null)
   const live = data?.results?.[0]
   const [compareToLive, setCompareToLive] = useState(false)
-
   const [diff, setDiff] = useState<null | string>(null)
+  const versionLimit = 3
   return (
     <div className='container app-container'>
       <PageTitle title={'History'}>
@@ -89,6 +91,14 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
         </div>
       </div>
       <div className='mt-4'>
+        {!!versionLimit && (
+          <PlanBasedBanner
+            className='mb-4'
+            force
+            feature={'VERSIONING'}
+            theme={'page'}
+          />
+        )}
         <DateList<TFeatureVersion>
           items={data}
           isLoading={isLoading}
@@ -96,10 +106,15 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
           prevPage={() => setPage(page + 1)}
           goToPage={setPage}
           renderRow={(v: TFeatureVersion, i: number) => {
+            const isOverLimit = !!versionLimit && i + 1 > versionLimit
             const user = users?.find((user) => v.published_by === user.id)
 
             return (
-              <Row className='list-item py-2 mh-auto'>
+              <Row
+                className={classNames('list-item py-2 mh-auto', {
+                  'blur no-pointer': isOverLimit,
+                })}
+              >
                 <div className='flex-fill'>
                   <div className='flex-row flex-fill'>
                     <div

@@ -12,10 +12,12 @@ import {
 import CreateSAML from './modals/CreateSAML'
 import Switch from './Switch'
 import { SAMLConfiguration } from 'common/types/responses'
-
+import PlanBasedBanner from './PlanBasedAccess'
+        
 export type SamlTabType = {
   organisationId: number
 }
+
 const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
   const { data } = useGetSamlConfigurationsQuery({
     organisation_id: organisationId,
@@ -34,9 +36,9 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
   }
 
   return (
-    <div className='mt-3'>
+    <PlanBasedBanner feature={'SAML'} theme={'page'} className='mt-3'>
       <PageTitle
-        title={'SAML Configuration'}
+        title={'SAML Configurations'}
         cta={
           <Button
             className='text-right'
@@ -44,7 +46,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
               openCreateSAML('Create SAML configuration', organisationId)
             }}
           >
-            {'Create a SAML Configuration'}
+            {'Create a SAML configuration'}
           </Button>
         }
       />
@@ -61,11 +63,17 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
           }
           header={
             <Row className='table-header'>
-              <Flex className='table-column px-3'>
-                <div className='font-weight-medium'>SAML Name</div>
+              <Flex className='table-column'>
+                <div className='font-weight-medium'>Configuration name</div>
               </Flex>
-              <div className='table-column' style={{ width: '205px' }}>
-                Allow IDP Initiated
+              <div
+                className='table-column d-none d-md-block'
+                style={{ width: '150px' }}
+              >
+                Allow IdP-initiated
+              </div>
+              <div style={{ width: 90 }} className='table-column'>
+                Action
               </div>
             </Row>
           }
@@ -80,16 +88,19 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
                 )
               }}
               space
-              className='list-item clickable cursor-pointer'
+              className='list-item py-2 py-md-0 clickable cursor-pointer'
               key={samlConf.name}
             >
               <Flex className='table-column px-3'>
                 <div className='font-weight-medium mb-1'>{samlConf.name}</div>
               </Flex>
-              <div className='table-column' style={{ width: '95px' }}>
+              <div
+                className='table-column d-none d-md-flex gap-4 align-items-center'
+                style={{ width: '150px' }}
+              >
                 <Switch checked={samlConf.allow_idp_initiated} />
               </div>
-              <div className='table-column'>
+              <div className='table-column' style={{ width: 90 }}>
                 <Button
                   id='delete-invite'
                   type='button'
@@ -138,7 +149,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
           )}
         />
       </FormGroup>
-    </div>
+    </PlanBasedBanner>
   )
 }
 
