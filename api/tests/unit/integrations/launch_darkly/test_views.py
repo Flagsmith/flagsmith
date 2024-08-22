@@ -27,6 +27,38 @@ def test_launch_darkly_import_request_view__list__wrong_project__return_expected
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
+def test_launch_darkly_import_request_view__list__return_expected(
+    import_request: LaunchDarklyImportRequest,
+    project: Project,
+    admin_client: APIClient,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:imports-launch-darkly-list", args=[project.id])
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "completed_at": None,
+            "created_at": mocker.ANY,
+            "created_by": "user@example.com",
+            "id": import_request.id,
+            "project": project.id,
+            "status": {
+                "error_messages": [],
+                "requested_environment_count": 2,
+                "requested_flag_count": 9,
+                "result": None,
+            },
+            "updated_at": mocker.ANY,
+        },
+    ]
+
+
 def test_launch_darkly_import_request_view__create__return_expected(
     ld_client_class_mock: MagicMock,
     project: Project,
