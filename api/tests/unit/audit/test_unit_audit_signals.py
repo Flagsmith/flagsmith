@@ -3,7 +3,13 @@ from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
-from audit.signals import call_webhooks, send_audit_log_event_to_grafana
+from audit.signals import (
+    call_webhooks,
+    send_audit_log_event_to_dynatrace,
+    send_audit_log_event_to_grafana,
+)
+from environments.models import Environment
+from integrations.dynatrace.models import DynatraceConfiguration
 from integrations.grafana.models import (
     GrafanaOrganisationConfiguration,
     GrafanaProjectConfiguration,
@@ -148,4 +154,39 @@ def test_send_audit_log_event_to_grafana__organisation_grafana_config__calls_exp
     )
     grafana_wrapper_instance_mock.track_event_async.assert_called_once_with(
         event=grafana_wrapper_instance_mock.generate_event_data.return_value
+    )
+
+
+def test_send_audit_log_event_to_dynatrace__environment_dynatrace_config__calls_expected(
+    mocker: MockerFixture,
+    environment: Environment,
+) -> None:
+    # Given
+    dynatrace_config = DynatraceConfiguration.objects.create(
+        base_url="http://test.com", api_key="api_123", environment=environment
+    )
+    environment.refresh_from_db()
+    audit_log_record = AuditLog.objects.create(
+        environment=environment,
+        related_object_type=RelatedObjectType.FEATURE.name,
+    )
+    dynatrace_wrapper_mock = mocker.patch(
+        "audit.signals.DynatraceWrapper", autospec=True
+    )
+    dynatrace_wrapper_instance_mock = dynatrace_wrapper_mock.return_value
+
+    # When
+    send_audit_log_event_to_dynatrace(AuditLog, audit_log_record)
+
+    # Then
+    dynatrace_wrapper_mock.assert_called_once_with(
+        base_url=dynatrace_config.base_url,
+        api_key=dynatrace_config.api_key,
+        entity_selector=dynatrace_config.entity_selector,
+    )
+    dynatrace_wrapper_instance_mock.generate_event_data.assert_called_once_with(
+        audit_log_record
+    )
+    dynatrace_wrapper_instance_mock.track_event_async.assert_called_once_with(
+        event=dynatrace_wrapper_instance_mock.generate_event_data.return_value
     )
