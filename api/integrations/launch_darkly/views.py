@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import BasePermission, IsAuthenticated
+from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -37,7 +37,6 @@ class LaunchDarklyImportRequestViewSet(
 
     def get_permissions(self) -> list[BasePermission]:
         return [
-            IsAuthenticated(),
             NestedProjectPermissions(
                 action_permission_map={
                     "retrieve": VIEW_PROJECT,
