@@ -363,45 +363,27 @@ def test_get_segment_by_uuid(client, project, segment):
     assert response.json()["uuid"] == str(segment.uuid)
 
 
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
 @pytest.mark.parametrize(
-    "client,is_admin_master_api_key_client, num_queries",
+    "client, num_queries",
     [
-        (lazy_fixture("admin_master_api_key_client"), True, 12),
-        (lazy_fixture("admin_client"), False, 14),
+        (lazy_fixture("admin_master_api_key_client"), 12),
+        (lazy_fixture("admin_client"), 14),
     ],
 )
-def test_list_segments(
+def test_list_segments_num_queries_without_rbac(
     django_assert_num_queries: DjangoAssertNumQueries,
     project: Project,
     client: APIClient,
     num_queries: int,
     required_a_segment_metadata_field: MetadataModelField,
-    is_admin_master_api_key_client: bool,
-):
+) -> None:
     # Given
     num_segments = 5
-    if (
-        settings.IS_RBAC_INSTALLED and not is_admin_master_api_key_client
-    ):  # pragma: no cover
-        num_queries += 1
-
-    segments = []
-    for i in range(num_segments):
-        segment = Segment.objects.create(project=project, name=f"segment {i}")
-        Metadata.objects.create(
-            object_id=segment.id,
-            content_type=ContentType.objects.get_for_model(segment),
-            model_field=required_a_segment_metadata_field,
-            field_value="test",
-        )
-        all_rule = SegmentRule.objects.create(
-            segment=segment, type=SegmentRule.ALL_RULE
-        )
-        any_rule = SegmentRule.objects.create(rule=all_rule, type=SegmentRule.ANY_RULE)
-        Condition.objects.create(
-            property="foo", value=str(random.randint(0, 10)), rule=any_rule
-        )
-        segments.append(segment)
+    list_segment_setup_data(project, required_a_segment_metadata_field, num_segments)
 
     # When
     with django_assert_num_queries(num_queries):
@@ -418,6 +400,63 @@ def test_list_segments(
 
     response_json = response.json()
     assert response_json["count"] == num_segments
+
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is False,
+    reason="Skip this test if RBAC is not installed",
+)
+@pytest.mark.parametrize(
+    "client, num_queries",
+    [
+        (lazy_fixture("admin_master_api_key_client"), 12),
+        (lazy_fixture("admin_client"), 15),
+    ],
+)
+def test_list_segments_num_queries_with_rbac(
+    django_assert_num_queries: DjangoAssertNumQueries,
+    project: Project,
+    client: APIClient,
+    num_queries: int,
+    required_a_segment_metadata_field: MetadataModelField,
+) -> None:
+    # Given
+    num_segments = 5
+    list_segment_setup_data(project, required_a_segment_metadata_field, num_segments)
+
+    # When
+    with django_assert_num_queries(num_queries):
+        response = client.get(
+            reverse("api-v1:projects:project-segments-list", args=[project.id])
+        )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == num_segments
+
+
+def list_segment_setup_data(
+    project: Project,
+    required_a_segment_metadata_field: MetadataModelField,
+    num_segments: int,
+) -> None:
+    for i in range(num_segments):
+        segment = Segment.objects.create(project=project, name=f"segment {i}")
+        Metadata.objects.create(
+            object_id=segment.id,
+            content_type=ContentType.objects.get_for_model(segment),
+            model_field=required_a_segment_metadata_field,
+            field_value="test",
+        )
+        all_rule = SegmentRule.objects.create(
+            segment=segment, type=SegmentRule.ALL_RULE
+        )
+        any_rule = SegmentRule.objects.create(rule=all_rule, type=SegmentRule.ANY_RULE)
+        Condition.objects.create(
+            property="foo", value=str(random.randint(0, 10)), rule=any_rule
+        )
 
 
 @pytest.mark.parametrize(
