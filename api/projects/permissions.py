@@ -151,6 +151,9 @@ class NestedProjectPermissions(IsAuthenticated):
                 self.action_permission_map[view.action], project
             )
 
+        if view.action == "create":
+            return request.user.is_project_admin(project)
+
         return view.detail
 
     def has_object_permission(self, request, view, obj):

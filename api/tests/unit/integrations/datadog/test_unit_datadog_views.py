@@ -153,3 +153,27 @@ def test_create_datadog_configuration_in_project_with_deleted_configuration(
     response_json = response.json()
     assert response_json["api_key"] == api_key
     assert response_json["base_url"] == base_url
+
+
+def test_datadog_project_view__no_permissions__return_expected(
+    test_user_client: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    data = {
+        "base_url": "http://test.com",
+        "api_key": "abc-123",
+        "use_custom_source": True,
+    }
+    url = reverse("api-v1:projects:integrations-datadog-list", args=[project.id])
+
+    # When
+    response = test_user_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert not DataDogConfiguration.objects.filter(project=project).exists()

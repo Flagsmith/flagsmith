@@ -144,3 +144,30 @@ def test_should_remove_configuration_when_delete(
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert not DynatraceConfiguration.objects.filter(environment=environment).exists()
+
+
+def test_dynatrace_environment_view__no_permissions__return_expected(
+    test_user_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    data = {
+        "base_url": "http://test.com",
+        "api_key": "abc-123",
+        "entity_selector": "type(APPLICATION),entityName(docs)",
+    }
+    url = reverse(
+        "api-v1:environments:integrations-dynatrace-list",
+        args=[environment.api_key],
+    )
+
+    # When
+    response = test_user_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert not DynatraceConfiguration.objects.filter(environment=environment).exists()
