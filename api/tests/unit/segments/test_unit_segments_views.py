@@ -383,7 +383,7 @@ def test_list_segments_num_queries_without_rbac(
 ) -> None:
     # Given
     num_segments = 5
-    list_segment_setup_data(project, required_a_segment_metadata_field, num_segments)
+    _list_segment_setup_data(project, required_a_segment_metadata_field, num_segments)
 
     # When
     with django_assert_num_queries(num_queries):
@@ -422,7 +422,7 @@ def test_list_segments_num_queries_with_rbac(
 ) -> None:  # pragma: no cover
     # Given
     num_segments = 5
-    list_segment_setup_data(project, required_a_segment_metadata_field, num_segments)
+    _list_segment_setup_data(project, required_a_segment_metadata_field, num_segments)
 
     # When
     with django_assert_num_queries(num_queries):
@@ -437,7 +437,7 @@ def test_list_segments_num_queries_with_rbac(
     assert response_json["count"] == num_segments
 
 
-def list_segment_setup_data(
+def _list_segment_setup_data(
     project: Project,
     required_a_segment_metadata_field: MetadataModelField,
     num_segments: int,

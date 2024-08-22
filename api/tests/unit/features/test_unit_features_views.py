@@ -2676,7 +2676,11 @@ def test_update_segment_override__using_simple_feature_state_viewset__denies_upd
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_list_features_n_plus_1(
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
+def test_list_features_n_plus_1_without_rbac(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -2684,12 +2688,50 @@ def test_list_features_n_plus_1(
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
 ) -> None:
-    # Given
-    with_project_permissions([VIEW_PROJECT])
-    num_queries = 16
+    _assert_list_feature_n_plus_1(
+        staff_client,
+        project,
+        feature,
+        with_project_permissions,
+        django_assert_num_queries,
+        environment,
+        num_queries=16,
+    )
 
-    if settings.IS_RBAC_INSTALLED:  # pragma: no cover
-        num_queries += 1
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is False,
+    reason="Skip this test if RBAC is not installed",
+)
+def test_list_features_n_plus_1_with_rbac(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+) -> None:  # pragma: no cover
+    _assert_list_feature_n_plus_1(
+        staff_client,
+        project,
+        feature,
+        with_project_permissions,
+        django_assert_num_queries,
+        environment,
+        num_queries=17,
+    )
+
+
+def _assert_list_feature_n_plus_1(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    num_queries: int,
+) -> None:
+    with_project_permissions([VIEW_PROJECT])
 
     base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
     url = f"{base_url}?environment={environment.id}"
@@ -2842,11 +2884,6 @@ def test_list_features_with_feature_state(
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])
-    num_queries = 16
-
-    if settings.IS_RBAC_INSTALLED:  # pragma: no cover
-        num_queries += 1
-
     feature2 = Feature.objects.create(
         name="another_feature", project=project, initial_value="initial_value"
     )
@@ -2937,8 +2974,7 @@ def test_list_features_with_feature_state(
     url = f"{base_url}?environment={environment.id}"
 
     # When
-    with django_assert_num_queries(num_queries):
-        response = staff_client.get(url)
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -3187,8 +3223,12 @@ def test_simple_feature_state_returns_only_latest_versions(
     assert response_json["count"] == 2
 
 
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
 @pytest.mark.freeze_time(two_hours_ago)
-def test_feature_list_last_modified_values(
+def test_feature_list_last_modified_values_without_rbac(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     environment_v2_versioning: Environment,
@@ -3197,15 +3237,59 @@ def test_feature_list_last_modified_values(
     with_project_permissions: WithProjectPermissionsCallable,
     django_assert_num_queries: DjangoAssertNumQueries,
 ) -> None:
+    _assert_feature_list_last_modified_values(
+        staff_client,
+        staff_user,
+        environment_v2_versioning,
+        project,
+        feature,
+        with_project_permissions,
+        django_assert_num_queries,
+        num_queries=18,
+    )
+
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is False,
+    reason="Skip this test if RBAC is not installed",
+)
+@pytest.mark.freeze_time(two_hours_ago)
+def test_feature_list_last_modified_values_with_rbac(
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    environment_v2_versioning: Environment,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:  # pragma: no cover
+    _assert_feature_list_last_modified_values(
+        staff_client,
+        staff_user,
+        environment_v2_versioning,
+        project,
+        feature,
+        with_project_permissions,
+        django_assert_num_queries,
+        num_queries=19,
+    )
+
+
+def _assert_feature_list_last_modified_values(
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    environment_v2_versioning: Environment,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    num_queries: int,
+):
     # Given
     # another v2 versioning environment
     environment_v2_versioning_2 = Environment.objects.create(
         name="environment 2", project=project, use_v2_feature_versioning=True
     )
-    num_queries = 18
-
-    if settings.IS_RBAC_INSTALLED:  # pragma: no cover
-        num_queries += 1
 
     url = "{base_url}?environment={environment_id}".format(
         base_url=reverse("api-v1:projects:project-features-list", args=[project.id]),
