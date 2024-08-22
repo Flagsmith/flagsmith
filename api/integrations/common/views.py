@@ -1,14 +1,15 @@
+from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
-from rest_framework.exceptions import (
-    NotFound,
-    PermissionDenied,
-    ValidationError,
-)
+from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import BasePermission, IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.serializers import BaseSerializer
 
 from environments.models import Environment
 from environments.permissions.constants import VIEW_ENVIRONMENT
-from projects.permissions import VIEW_PROJECT
+from environments.permissions.permissions import NestedEnvironmentPermissions
+from projects.permissions import VIEW_PROJECT, NestedProjectPermissions
 
 
 class EnvironmentIntegrationCommonViewSet(viewsets.ModelViewSet):
@@ -16,44 +17,36 @@ class EnvironmentIntegrationCommonViewSet(viewsets.ModelViewSet):
     pagination_class = None  # set here to ensure documentation is correct
     model_class = None
 
-    def get_queryset(self):
+    def initial(self, request: Request, *args, **kwargs) -> None:
+        super().initial(request, *args, **kwargs)
+        request.environment = get_object_or_404(
+            Environment,
+            api_key=self.kwargs["environment_api_key"],
+        )
+
+    def get_queryset(self) -> QuerySet:
         if getattr(self, "swagger_fake_view", False):
             return self.model_class.objects.none()
 
-        environment_api_key = self.kwargs["environment_api_key"]
+        return self.model_class.objects.filter(environment=self.request.environment)
 
-        try:
-            environment = Environment.objects.get(api_key=environment_api_key)
-            if not self.request.user.has_environment_permission(
-                VIEW_ENVIRONMENT, environment
-            ):
-                raise PermissionDenied(
-                    "User does not have permission to perform action in environment."
-                )
+    def get_permissions(self) -> list[BasePermission]:
+        return [
+            IsAuthenticated(),
+            NestedEnvironmentPermissions(
+                action_permission_map={"retrieve": VIEW_ENVIRONMENT},
+            ),
+        ]
 
-            return self.model_class.objects.filter(environment=environment)
-        except Environment.DoesNotExist:
-            raise NotFound("Environment not found.")
-
-    def perform_create(self, serializer):
-        environment = self.get_environment_from_request()
-
-        if self.model_class.objects.filter(environment=environment).exists():
+    def perform_create(self, serializer: BaseSerializer) -> None:
+        if self.get_queryset().exists():
             raise ValidationError(
-                f"{self.model_class.__name__} for environment already exist."
+                "This integration already exists for this environment."
             )
+        serializer.save(environment=self.request.environment)
 
-        serializer.save(environment=environment)
-
-    def perform_update(self, serializer):
-        environment = self.get_environment_from_request()
-        serializer.save(environment=environment)
-
-    def get_environment_from_request(self):
-        """
-        Get environment object from URL parameters in request.
-        """
-        return Environment.objects.get(api_key=self.kwargs["environment_api_key"])
+    def perform_update(self, serializer: BaseSerializer) -> None:
+        serializer.save(environment=self.request.environment)
 
 
 class ProjectIntegrationBaseViewSet(viewsets.ModelViewSet):
@@ -61,24 +54,23 @@ class ProjectIntegrationBaseViewSet(viewsets.ModelViewSet):
     pagination_class = None
     model_class = None
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet:
         if getattr(self, "swagger_fake_view", False):
             return self.model_class.objects.none()
 
-        project = get_object_or_404(
-            self.request.user.get_permitted_projects(VIEW_PROJECT),
-            pk=self.kwargs["project_pk"],
-        )
-        return self.model_class.objects.filter(project=project)
+        return self.model_class.objects.filter(project_id=self.kwargs["project_pk"])
 
-    def perform_create(self, serializer):
-        project_id = self.kwargs["project_pk"]
-        if self.model_class.objects.filter(project_id=project_id).exists():
-            raise ValidationError(
-                f"{self.model_class.__name__} for this project already exists."
-            )
-        serializer.save(project_id=project_id)
+    def get_permissions(self) -> list[BasePermission]:
+        return [
+            NestedProjectPermissions(
+                action_permission_map={"retrieve": VIEW_PROJECT},
+            ),
+        ]
 
-    def perform_update(self, serializer):
-        project_id = self.kwargs["project_pk"]
-        serializer.save(project_id=project_id)
+    def perform_create(self, serializer: BaseSerializer) -> None:
+        if self.get_queryset().exists():
+            raise ValidationError("This integration already exists for this project.")
+        serializer.save(project_id=self.kwargs["project_pk"])
+
+    def perform_update(self, serializer: BaseSerializer) -> None:
+        serializer.save(project_id=self.kwargs["project_pk"])
