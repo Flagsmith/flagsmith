@@ -419,7 +419,7 @@ def test_list_segments_num_queries_with_rbac(
     client: APIClient,
     num_queries: int,
     required_a_segment_metadata_field: MetadataModelField,
-) -> None:
+) -> None:  # pragma: no cover
     # Given
     num_segments = 5
     list_segment_setup_data(project, required_a_segment_metadata_field, num_segments)
