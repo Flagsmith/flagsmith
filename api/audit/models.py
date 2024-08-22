@@ -144,7 +144,10 @@ class AuditLog(LifecycleModel):
         when="environment_document_updated",
         is_now=True,
     )
-    def process_environment_update(self):
+    def process_environment_update(self) -> None:
+        if not self.project:
+            return
+
         from environments.models import Environment
         from environments.tasks import process_environment_update
 
