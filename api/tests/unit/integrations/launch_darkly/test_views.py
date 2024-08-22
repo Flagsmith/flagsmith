@@ -24,7 +24,7 @@ def test_launch_darkly_import_request_view__list__wrong_project__return_expected
     response = api_client.get(url)
 
     # Then
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_launch_darkly_import_request_view__create__return_expected(

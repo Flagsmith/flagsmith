@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -16,7 +17,12 @@ from integrations.launch_darkly.services import create_import_request
 from integrations.launch_darkly.tasks import (
     process_launch_darkly_import_request,
 )
-from projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
+from projects.models import Project
+from projects.permissions import (
+    CREATE_ENVIRONMENT,
+    VIEW_PROJECT,
+    NestedProjectPermissions,
+)
 
 
 class LaunchDarklyImportRequestViewSet(
@@ -29,14 +35,22 @@ class LaunchDarklyImportRequestViewSet(
     pagination_class = None  # set here to ensure documentation is correct
     model_class = LaunchDarklyImportRequest
 
+    def get_permissions(self) -> list[BasePermission]:
+        return [
+            IsAuthenticated(),
+            NestedProjectPermissions(
+                action_permission_map={
+                    "retrieve": VIEW_PROJECT,
+                    "create": CREATE_ENVIRONMENT,
+                }
+            ),
+        ]
+
     def get_queryset(self) -> QuerySet[LaunchDarklyImportRequest]:
         if getattr(self, "swagger_fake_view", False):
             return self.model_class.objects.none()
 
-        project = get_object_or_404(
-            self.request.user.get_permitted_projects(VIEW_PROJECT),
-            pk=self.kwargs["project_pk"],
-        )
+        project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
         return self.model_class.objects.filter(project=project)
 
     @swagger_auto_schema(
@@ -49,10 +63,7 @@ class LaunchDarklyImportRequestViewSet(
         )
         request_serializer.is_valid(raise_exception=True)
 
-        project = get_object_or_404(
-            self.request.user.get_permitted_projects(CREATE_ENVIRONMENT),
-            pk=self.kwargs["project_pk"],
-        )
+        project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
 
         try:
             instance = create_import_request(
