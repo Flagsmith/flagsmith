@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.138.0](https://github.com/Flagsmith/flagsmith/compare/v2.137.0...v2.138.0) (2024-08-22)
+
+
+### Features
+
+* add UUID to user model ([#4488](https://github.com/Flagsmith/flagsmith/issues/4488)) ([32be7c0](https://github.com/Flagsmith/flagsmith/commit/32be7c08aa3152fe2659d0fbe5a99c4023dcc531))
+* Copy ACS URL for SAML configurations to clipboard. Disable editing SAML configuration names ([#4494](https://github.com/Flagsmith/flagsmith/issues/4494)) ([3f561ee](https://github.com/Flagsmith/flagsmith/commit/3f561ee4591349381c63d82c2e67b92fe6cabc40))
+* usage period filter ([#4526](https://github.com/Flagsmith/flagsmith/issues/4526)) ([968b894](https://github.com/Flagsmith/flagsmith/commit/968b894f779f72c1a227acd660a3dfb06735a935))
+
+
+### Bug Fixes
+
+* audit logs generation for feature state value ([#4525](https://github.com/Flagsmith/flagsmith/issues/4525)) ([af0369c](https://github.com/Flagsmith/flagsmith/commit/af0369c82e2a7ae5dbe0c7555cc856fda6bd8fcc))
+* incorrect negative value conversion ([#4316](https://github.com/Flagsmith/flagsmith/issues/4316)) ([2931cdf](https://github.com/Flagsmith/flagsmith/commit/2931cdff176396e2bb3a95951fb06b3cb23a1a4d))
+* Missing permissions for integration API endpoints ([#4530](https://github.com/Flagsmith/flagsmith/issues/4530)) ([cd99a07](https://github.com/Flagsmith/flagsmith/commit/cd99a07ebecf78f14e2d110f3c26632621a73d27))
+* project settings permissions ([#4528](https://github.com/Flagsmith/flagsmith/issues/4528)) ([9382908](https://github.com/Flagsmith/flagsmith/commit/9382908ed17c9c5b2b2ba70ef0a65eba54efbd7e))
+* Update email wording for paid customers with API usage notifications ([#4517](https://github.com/Flagsmith/flagsmith/issues/4517)) ([5cfdaba](https://github.com/Flagsmith/flagsmith/commit/5cfdababfe043e8767e3147876dd42ce3f79c030))
+* usage and analytics data duplicates the current day ([#4529](https://github.com/Flagsmith/flagsmith/issues/4529)) ([910b3ed](https://github.com/Flagsmith/flagsmith/commit/910b3ed11f5ffe3767d967228664018578be4ed7))
+
 ## [2.137.0](https://github.com/Flagsmith/flagsmith/compare/v2.136.0...v2.137.0) (2024-08-20)
 
 
