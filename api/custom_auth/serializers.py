@@ -1,5 +1,6 @@
 from django.conf import settings
-from djoser.serializers import UserCreateSerializer
+from django.contrib.auth import authenticate
+from djoser.serializers import TokenCreateSerializer, UserCreateSerializer
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
@@ -15,6 +16,23 @@ from .constants import (
     INVALID_PASSWORD_ERROR,
     USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE,
 )
+
+
+class CustomTokenCreateSerializer(TokenCreateSerializer):
+    def validate(self, attrs):
+        password = attrs.get("password")
+        # NOTE: Some authentication backends (e.g., LDAP) support only
+        # username and password authentication. However, the front-end
+        # currently sends the email as the login key. To accommodate
+        # this, we map the provided email to the corresponding login
+        # field (which is configurable in settings).
+        params = {settings.LOGIN_FIELD: attrs.get(FFAdminUser.USERNAME_FIELD)}
+        self.user = authenticate(
+            request=self.context.get("request"), **params, password=password
+        )
+        if self.user and self.user.is_active:
+            return attrs
+        self.fail("invalid_credentials")
 
 
 class CustomTokenSerializer(serializers.ModelSerializer):

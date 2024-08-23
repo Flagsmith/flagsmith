@@ -1,12 +1,16 @@
 import pytest
 from django.test import RequestFactory
 from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 from rest_framework.exceptions import PermissionDenied
 
 from custom_auth.constants import (
     USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE,
 )
-from custom_auth.serializers import CustomUserCreateSerializer
+from custom_auth.serializers import (
+    CustomTokenCreateSerializer,
+    CustomUserCreateSerializer,
+)
 from organisations.invites.models import InviteLink
 from users.models import FFAdminUser, SignUpType
 
@@ -145,3 +149,23 @@ def test_invite_link_validation_mixin_validate_fails_if_invite_link_hash_not_val
 
     # Then
     assert exc_info.value.detail == USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
+
+
+def test_CustomTokenCreateSerializer_validate_uses_login_field_to_authenticate(
+    settings: SettingsWrapper, mocker: MockerFixture
+) -> None:
+    # Given
+    settings.LOGIN_FIELD = "username"
+
+    mocked_authenticate = mocker.patch("custom_auth.serializers.authenticate")
+    serializer = CustomTokenCreateSerializer(
+        data={"email": "some_username", "password": "some_password"}
+    )
+
+    # When
+    serializer.is_valid(raise_exception=True)
+
+    # Then
+    mocked_authenticate.assert_called_with(
+        request=None, username="some_username", password="some_password"
+    )
