@@ -34,7 +34,7 @@
         },
         {
             "source": "/deployment-overview/",
-            "destination": "/deployment/overview"
+            "destination": "/deployment"
         },
         {
             "source": "/hosted-service/",
@@ -307,6 +307,30 @@
         {
             "source": "/system-administration/importing-and-exporting/data-migration",
             "destination": "/system-administration/importing-and-exporting/organisations"
+        },
+        {
+            "source": "/system-administration/metadata",
+            "destination": "/advanced-use/custom-fields"
+        },
+        {
+            "source": "/system-administration/custom-fields",
+            "destination": "/advanced-use/custom-fields"
+        },
+        {
+            "source": "/clients/overview",
+            "destination": "/clients"
+        },
+        {
+            "source": "/basic-features/overview",
+            "destination": "/basic-features"
+        },
+        {
+            "source": "/basic-features/integrations",
+            "destination": "/integrations"
+        },
+        {
+            "source": "/deployment/overview",
+            "destination": "/deployment"
         }
     ]
 }

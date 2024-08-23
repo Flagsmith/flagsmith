@@ -6,6 +6,10 @@ import Constants from 'common/constants'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
 import firstpromoter from 'project/firstPromoter'
+import Utils from 'common/utils/utils'
+import AccountProvider from 'common/providers/AccountProvider'
+import classNames from 'classnames'
+import Switch from 'components/Switch'
 
 const PaymentButton = (props) => {
   const activeSubscription = AccountStore.getOrganisationPlan(
@@ -58,7 +62,9 @@ const Payment = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = {}
+    this.state = {
+      yearly: true,
+    }
   }
 
   componentDidMount = () => {
@@ -98,7 +104,7 @@ const Payment = class extends Component {
               ''
             return (
               <div className='col-md-12'>
-                <Row space className='mb-4'>
+                <Row space className='mb-2'>
                   <h5>Manage Payment Plan</h5>
                   {this.props.isDisableAccountText && (
                     <Row>
@@ -115,6 +121,28 @@ const Payment = class extends Component {
                     </Row>
                   )}
                 </Row>
+                <div className='d-flex mb-4 font-weight-medium justify-content-center align-items-center gap-2'>
+                  <h5
+                    className={classNames('mb-0', {
+                      'text-muted': !this.state.yearly,
+                    })}
+                  >
+                    Pay Yearly (Save 10%)
+                  </h5>
+                  <Switch
+                    checked={!this.state.yearly}
+                    onChange={() => {
+                      this.setState({ yearly: !this.state.yearly })
+                    }}
+                  />
+                  <h5
+                    className={classNames('mb-0', {
+                      'text-muted': this.state.yearly,
+                    })}
+                  >
+                    Pay Monthly
+                  </h5>
+                </div>
                 <Row className='pricing-container align-start'>
                   <Flex className='pricing-panel p-2'>
                     <div className='panel panel-default'>
@@ -133,23 +161,28 @@ const Payment = class extends Component {
                           Billed Monthly
                         </div>
                         {!viewOnly ? (
-                          this.state.yearly ? (
+                          <>
                             <PaymentButton
-                              data-cb-plan-id='startup-annual-v2'
-                              className='btn btn-primary full-width mt-3'
+                              data-cb-plan-id={Project.plans.startup.annual}
+                              className={classNames(
+                                'btn btn-primary full-width mt-3',
+                                { 'd-none': !this.state.yearly },
+                              )}
                               isDisableAccount={this.props.isDisableAccountText}
                             >
                               {plan.includes('startup') ? 'Purchased' : 'Buy'}
                             </PaymentButton>
-                          ) : (
                             <PaymentButton
-                              data-cb-plan-id='startup-v2'
-                              className='btn btn-primary full-width mt-3'
+                              data-cb-plan-id={Project.plans.startup.monthly}
+                              className={classNames(
+                                'btn btn-primary full-width mt-3',
+                                { 'd-none': this.state.yearly },
+                              )}
                               isDisableAccount={this.props.isDisableAccountText}
                             >
                               {plan.includes('startup') ? 'Purchased' : 'Buy'}
                             </PaymentButton>
-                          )
+                          </>
                         ) : null}
                       </div>
                       <div className='panel-footer mt-3'>
@@ -259,6 +292,16 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
                               <div className='ml-2'>
+                                Feature version history (1 per feature)
+                              </div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>
                                 Two-Factor Authentication (2FA)
                               </div>
                             </Row>
@@ -352,23 +395,28 @@ const Payment = class extends Component {
                           Billed Monthly
                         </div>
                         {!viewOnly ? (
-                          this.state.yearly ? (
+                          <>
                             <PaymentButton
-                              data-cb-plan-id='scale-up-annual-v2'
-                              className='btn btn-success full-width mt-3'
+                              data-cb-plan-id={Project.plans.scaleUp.annual}
+                              className={classNames(
+                                'btn btn-success full-width mt-3',
+                                { 'd-none': !this.state.yearly },
+                              )}
                               isDisableAccount={this.props.isDisableAccountText}
                             >
                               {plan.includes('scale-up') ? 'Purchased' : 'Buy'}
                             </PaymentButton>
-                          ) : (
                             <PaymentButton
-                              data-cb-plan-id='scale-up-v2'
-                              className='btn btn-success full-width mt-3'
+                              data-cb-plan-id={Project.plans.scaleUp.monthly}
+                              className={classNames(
+                                'btn btn-success full-width mt-3',
+                                { 'd-none': this.state.yearly },
+                              )}
                               isDisableAccount={this.props.isDisableAccountText}
                             >
                               {plan.includes('scale-up') ? 'Purchased' : 'Buy'}
                             </PaymentButton>
-                          )
+                          </>
                         ) : null}
                       </div>
                       <div className='panel-footer mt-3'>
@@ -470,6 +518,16 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
                               <div className='ml-2'>Scheduled Flags</div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>
+                                Feature version history (1 per feature)
+                              </div>
                             </Row>
                           </li>
                           <li>
@@ -686,6 +744,16 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
                               <div className='ml-2'>
+                                Unlimited feature version history
+                              </div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>
                                 2FA, SAML, Okta, ADFS and LDAP Authentication
                               </div>
                             </Row>
@@ -744,29 +812,47 @@ const Payment = class extends Component {
   }
 }
 
+Payment.propTypes = {}
+export const onPaymentLoad = () => {
+  if (!Project.chargebee?.site) {
+    return
+  }
+  const planId = API.getCookie('plan')
+  let link
+  if (planId && Utils.getFlagsmithHasFeature('payments_enabled')) {
+    ;(function () {
+      // Create a link element with data-cb-plan-id attribute
+      link = document.createElement('a')
+      link.setAttribute('data-cb-type', 'checkout')
+      link.setAttribute('data-cb-plan-id', planId)
+      link.setAttribute('href', 'javascript:void(0)')
+      // Append the link to the body
+      document.body.appendChild(link)
+    })()
+  }
+  Chargebee.init({
+    site: Project.chargebee.site,
+  })
+  Chargebee.registerAgain()
+  firstpromoter()
+  Chargebee.getInstance().setCheckoutCallbacks(() => ({
+    success: (hostedPageId) => {
+      AppActions.updateSubscription(hostedPageId)
+    },
+  }))
+  if (link) {
+    link.click()
+    document.body.removeChild(link)
+    API.setCookie('plan', null)
+  }
+}
+
 const WrappedPayment = makeAsyncScriptLoader(
   'https://js.chargebee.com/v2/chargebee.js',
   {
     removeOnUnmount: true,
   },
 )(ConfigProvider(Payment))
-
-Payment.propTypes = {}
-
-module.exports = (props) => (
-  <WrappedPayment
-    {...props}
-    asyncScriptOnLoad={() => {
-      Chargebee.init({
-        site: Project.chargebee.site,
-      })
-      Chargebee.registerAgain()
-      firstpromoter()
-      Chargebee.getInstance().setCheckoutCallbacks(() => ({
-        success: (hostedPageId) => {
-          AppActions.updateSubscription(hostedPageId)
-        },
-      }))
-    }}
-  />
+export default (props) => (
+  <WrappedPayment {...props} asyncScriptOnLoad={onPaymentLoad} />
 )

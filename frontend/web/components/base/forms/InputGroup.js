@@ -36,9 +36,9 @@ const InputGroup = class extends Component {
 
     return (
       <div
-        className={`${
-          this.props.className ? this.props.className : ''
-        } form-group ${this.props.isInvalid ? 'invalid' : ''}`}
+        className={`${this.props.className ? this.props.className : ''} ${
+          this.props.noMargin ? '' : 'form-group'
+        }  ${this.props.isInvalid ? 'invalid' : ''}`}
       >
         {this.props.tooltip ? (
           <Tooltip
@@ -91,6 +91,7 @@ const InputGroup = class extends Component {
                   type={props.type || 'text'}
                   id={id}
                   placeholder={props.placeholder}
+                  onBlur={props.onBlur}
                 />
               ) : (
                 <Input
@@ -104,6 +105,7 @@ const InputGroup = class extends Component {
                   onChange={props.onChange}
                   type={props.type || 'text'}
                   id={id}
+                  onBlur={props.onBlur}
                   placeholder={props.placeholder}
                   size={size}
                 />

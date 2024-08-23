@@ -1,9 +1,13 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
-import { GithubResources } from 'common/types/responses'
+import { GithubResource } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import { FixedSizeList } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
 import { useGitHubResourceSelectProvider } from './GitHubResourceSelectProvider'
+import { components } from 'react-select'
+import Button from './base/forms/Button'
+import Icon from './Icon'
+import Select from 'react-select'
 
 type MenuListType = {
   children: React.ReactNode
@@ -106,6 +110,23 @@ const MenuList: FC<MenuListType> = ({
   )
 }
 
+const CustomControl = ({
+  children,
+  ...props
+}: {
+  children: React.ReactNode
+}) => {
+  const { refresh } = useGitHubResourceSelectProvider()
+  return (
+    <components.Control {...props}>
+      {children}
+      <Button style={{ marginLeft: 'auto' }} theme='icon' onClick={refresh}>
+        <Icon name='refresh' />
+      </Button>
+    </components.Control>
+  )
+}
+
 export type GitHubResourcesSelectType = {
   onChange: (value: string) => void
   lastSavedResource: string | undefined
@@ -119,15 +140,8 @@ const GitHubResourcesSelect: FC<GitHubResourcesSelectType> = ({
   lastSavedResource,
   onChange,
 }) => {
-  const {
-    githubResources,
-    isFetching,
-    isLoading,
-    loadMore,
-    loadingCombinedData,
-    nextPage,
-    searchItems,
-  } = useGitHubResourceSelectProvider()
+  const { githubResources, isFetching, isLoading, searchItems } =
+    useGitHubResourceSelectProvider()
   const [selectedOption, setSelectedOption] =
     useState<GitHubResourcesValueType | null>(null)
   const [searchText, setSearchText] = React.useState('')
@@ -152,11 +166,10 @@ const GitHubResourcesSelect: FC<GitHubResourcesSelectType> = ({
           onChange(v?.value)
         }}
         isClearable={true}
-        options={githubResources?.map((i: GithubResources) => {
+        options={githubResources?.map((i: GithubResource) => {
           return {
             label: `${i.title} #${i.number}`,
-            status: i.state,
-            value: i.html_url,
+            value: i,
           }
         })}
         noOptionsMessage={() =>
@@ -171,6 +184,7 @@ const GitHubResourcesSelect: FC<GitHubResourcesSelectType> = ({
           searchItems(Utils.safeParseEventValue(e))
         }}
         components={{
+          Control: CustomControl,
           MenuList,
         }}
         data={{ searchText }}

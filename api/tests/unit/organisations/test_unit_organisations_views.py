@@ -351,6 +351,7 @@ def test_user_can_get_projects_for_an_organisation(
     assert response.data[0]["name"] == project.name
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @mock.patch("app_analytics.influxdb_wrapper.influxdb_client")
 def test_should_get_usage_for_organisation(
     mock_influxdb_client: MagicMock,
@@ -365,7 +366,7 @@ def test_should_get_usage_for_organisation(
     expected_query = (
         (
             f'from(bucket:"{read_bucket}") '
-            "|> range(start: -30d, stop: now()) "
+            "|> range(start: 2022-12-20T09:09:47.325132+00:00, stop: 2023-01-19T09:09:47.325132+00:00) "
             '|> filter(fn:(r) => r._measurement == "api_call")         '
             '|> filter(fn: (r) => r["_field"] == "request_count")         '
             f'|> filter(fn: (r) => r["organisation_id"] == "{organisation.id}") '
@@ -559,12 +560,14 @@ def test_get_my_permissions_for_admin(
     assert response.data["admin"] is True
 
 
+@pytest.mark.parametrize("subscription_status", ("active", "in_trial"))
 @mock.patch("organisations.chargebee.webhook_handlers.extract_subscription_metadata")
 def test_chargebee_webhook(
     mock_extract_subscription_metadata: MagicMock,
     staff_user: FFAdminUser,
     staff_client: APIClient,
     subscription: Subscription,
+    subscription_status: str,
 ) -> None:
     # Given
     seats = 3
@@ -580,7 +583,7 @@ def test_chargebee_webhook(
     data = {
         "content": {
             "subscription": {
-                "status": "active",
+                "status": subscription_status,
                 "id": subscription.subscription_id,
                 "current_term_start": 1699630389,
                 "current_term_end": 1702222389,
@@ -619,6 +622,7 @@ def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and
     subscription: Subscription,
     staff_user: FFAdminUser,
     staff_client: APIClient,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     cancellation_date = datetime.now(tz=UTC) + timedelta(days=1)
@@ -636,6 +640,8 @@ def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and
         }
     }
     url = reverse("api-v1:chargebee-webhook")
+
+    settings.ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = ["foo@bar.com"]
 
     # When
     staff_client.post(url, data=json.dumps(data), content_type="application/json")
@@ -655,6 +661,7 @@ def test_when_subscription_is_cancelled_then_cancellation_date_set_and_alert_sen
     subscription: Subscription,
     staff_user: FFAdminUser,
     staff_client: APIClient,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     cancellation_date = datetime.now(tz=UTC) + timedelta(days=1)
@@ -672,6 +679,8 @@ def test_when_subscription_is_cancelled_then_cancellation_date_set_and_alert_sen
         }
     }
     url = reverse("api-v1:chargebee-webhook")
+
+    settings.ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = ["foo@bar.com"]
 
     # When
     staff_client.post(url, data=json.dumps(data), content_type="application/json")

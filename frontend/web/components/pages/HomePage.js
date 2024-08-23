@@ -10,6 +10,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
+import PasswordRequirements from 'components/PasswordRequirements'
 import { informationCircleOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import classNames from 'classnames'
@@ -32,8 +33,16 @@ const HomePage = class extends React.Component {
     // can handle always setting the marketing consent.
     API.setCookie('marketing_consent_given', 'true')
     this.state = {
+      allRequirementsMet: false,
+      email: '',
+      first_name: '',
+      last_name: '',
       marketing_consent_given: true,
+      password: '',
     }
+
+    this.handlePasswordChange = this.handlePasswordChange.bind(this)
+    this.handleRequirementsMet = this.handleRequirementsMet.bind(this)
   }
 
   addAlbacross() {
@@ -65,6 +74,10 @@ const HomePage = class extends React.Component {
   }
 
   componentDidMount() {
+    const plan = Utils.fromParam().plan
+    if (plan) {
+      API.setCookie('plan', plan)
+    }
     if (
       Project.albacross &&
       this.props.location.pathname.indexOf('signup') !== -1
@@ -125,6 +138,14 @@ const HomePage = class extends React.Component {
         API.setInvite(id)
       }
     }
+  }
+
+  handlePasswordChange(e) {
+    this.setState({ password: e.target.value })
+  }
+
+  handleRequirementsMet(allRequirementsMet) {
+    this.setState({ allRequirementsMet })
   }
 
   showForgotPassword = (e) => {
@@ -603,11 +624,21 @@ const HomePage = class extends React.Component {
                                       name='password'
                                       id='password'
                                     />
+                                    <PasswordRequirements
+                                      password={this.state.password}
+                                      onRequirementsMet={
+                                        this.handleRequirementsMet
+                                      }
+                                    />
                                     <div className='form-cta'>
                                       <Button
                                         data-test='signup-btn'
                                         name='signup-btn'
-                                        disabled={isLoading || isSaving}
+                                        disabled={
+                                          isLoading ||
+                                          isSaving ||
+                                          !this.state.allRequirementsMet
+                                        }
                                         className='px-4 mt-3 full-width'
                                         type='submit'
                                       >

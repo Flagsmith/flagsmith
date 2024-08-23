@@ -19,6 +19,9 @@ import InlineModal from 'components/InlineModal'
 import TableFilterItem from 'components/tables/TableFilterItem'
 import moment from 'moment'
 import { Link } from 'react-router-dom'
+import DateList from 'components/DateList'
+import classNames from 'classnames'
+import PlanBasedBanner from 'components/PlanBasedAccess'
 
 const widths = [250, 150]
 type FeatureHistoryPageType = {
@@ -46,7 +49,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
     organisationId: AccountStore.getOrganisation().id,
   })
   const [page, setPage] = useState(1)
-  const { data } = useGetFeatureVersionsQuery(
+  const { data, isLoading } = useGetFeatureVersionsQuery(
     {
       environmentId,
       featureId: feature,
@@ -58,8 +61,8 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
   const [selected, setSelected] = useState<TFeatureVersion | null>(null)
   const live = data?.results?.[0]
   const [compareToLive, setCompareToLive] = useState(false)
-
   const [diff, setDiff] = useState<null | string>(null)
+  const versionLimit = 3
   return (
     <div className='container app-container'>
       <PageTitle title={'History'}>
@@ -87,40 +90,48 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
           </div>
         </div>
       </div>
-      <div>
-        <PanelSearch
-          className='no-pad overflow-visible'
-          items={data?.results}
+      <div className='mt-4'>
+        {!!versionLimit && (
+          <PlanBasedBanner
+            className='mb-4'
+            force
+            feature={'VERSIONING'}
+            theme={'page'}
+          />
+        )}
+        <DateList<TFeatureVersion>
+          items={data}
+          isLoading={isLoading}
+          nextPage={() => setPage(page + 1)}
+          prevPage={() => setPage(page + 1)}
           goToPage={setPage}
-          header={
-            <Row className='table-header'>
-              <div className='table-column' style={{ width: widths[0] }}>
-                Date
-              </div>
-              <div className='table-column text-left flex-fill'>User</div>
-              <div className='table-column' style={{ width: widths[1] }}>
-                View
-              </div>
-              <div className='table-column' style={{ width: widths[1] }}>
-                Compare
-              </div>
-            </Row>
-          }
           renderRow={(v: TFeatureVersion, i: number) => {
+            const isOverLimit = !!versionLimit && i + 1 > versionLimit
             const user = users?.find((user) => v.published_by === user.id)
 
             return (
-              <Row className='list-item py-2 mh-auto'>
+              <Row
+                className={classNames('list-item py-2 mh-auto', {
+                  'blur no-pointer': isOverLimit,
+                })}
+              >
                 <div className='flex-fill'>
                   <div className='flex-row flex-fill'>
-                    <div className='table-column' style={{ width: widths[0] }}>
-                      {moment(v.live_from).format('Do MMM HH:mma')}
-                      {!i && <span className='chip ms-2'>Live</span>}
-                    </div>
-                    <div className='table-column text-left flex-fill'>
-                      {user
-                        ? `${user.first_name || ''} ${user.last_name || ''} `
-                        : 'System '}
+                    <div
+                      className='table-column flex-fill'
+                      style={{ width: widths[0] }}
+                    >
+                      <div className='font-weight-medium d-flex gap-2 align-items-center mb-1'>
+                        {moment(v.live_from).format('HH:mma')}
+                        <div className='text-muted fw-normal text-small'>
+                          {user
+                            ? `${user.first_name || ''} ${
+                                user.last_name || ''
+                              } `
+                            : 'System '}
+                        </div>
+                        {!i && <span className='chip chip--xs px-2'>Live</span>}
+                      </div>
                     </div>
                     <div className='table-column' style={{ width: widths[1] }}>
                       <Link

@@ -139,7 +139,7 @@
                 },
                 {
                     "name": "TASK_DELETE_RETENTION_DAYS",
-                    "value": "44"
+                    "value": "7"
                 },
                 {
                     "name": "TASK_DELETE_BATCH_SIZE",
@@ -156,6 +156,22 @@
                 {
                     "name": "GITHUB_APP_ID",
                     "value": "811209"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL",
+                    "value": "https://edge.api.flagsmith.com/api/v1/"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
+                    "value": "False"
+                },
+                {
+                    "name": "ENABLE_API_USAGE_ALERTING",
+                    "value": "True"
+                },
+                {
+                    "name": "ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST",
+                    "value": "customersuccess@flagsmith.com"
                 }
             ],
             "secrets": [
@@ -218,6 +234,10 @@
                 {
                     "name": "GITHUB_PEM",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:GITHUB_PEM-E1Ot8p"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:FLAGSMITH_ON_FLAGSMITH_SERVER_KEY::"
                 }
             ],
             "logConfiguration": {

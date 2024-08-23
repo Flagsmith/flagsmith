@@ -116,7 +116,7 @@ services:
   environment:
    DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
   command:
-   - 'dump-organisation-to-local-fs'
+   - 'dumporganisationtolocalfs'
    - '1'
    - '/tmp/flagsmith-exporter/org-1.json'
   depends_on:
@@ -164,13 +164,13 @@ This is coming soon - see https://github.com/Flagsmith/flagsmith/issues/2512 for
 ### Option 2 - S3 bucket
 
 ```bash
-python manage.py import-organisation-from-s3 <bucket-name> <key>
+python manage.py importorganisationfroms3 <bucket-name> <key>
 ```
 
 e.g.
 
 ```bash
-python manage.py import-organisation-from-s3 my-export-bucket exports/organisation-1.json
+python manage.py importorganisationfroms3 my-export-bucket exports/organisation-1.json
 ```
 
 #### Using localstack to achieve local/test imports with s3 can be done using

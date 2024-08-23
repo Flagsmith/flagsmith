@@ -12,6 +12,11 @@ const config = {
     onBrokenLinks: 'throw',
     onBrokenMarkdownLinks: 'warn',
 
+    markdown: {
+        mermaid: true,
+    },
+    themes: ['@docusaurus/theme-mermaid'],
+
     themeConfig:
         /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
         ({
@@ -117,6 +122,10 @@ const config = {
                             {
                                 label: 'Podcast',
                                 href: 'https://flagsmith.com/podcast/',
+                            },
+                            {
+                                label: 'Status and Uptime',
+                                href: 'https://status.flagsmith.com/',
                             },
                         ],
                     },

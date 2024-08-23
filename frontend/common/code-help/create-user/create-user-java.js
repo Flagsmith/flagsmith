@@ -1,10 +1,17 @@
+import Constants from 'common/constants'
+
 module.exports = (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, LIB_NAME_JAVA, USER_ID },
   userId,
 ) => `${LIB_NAME_JAVA} ${LIB_NAME} = ${LIB_NAME_JAVA}
     .newBuilder()
-    .setApiKey("${envId}")
+    .setApiKey("${envId}")${
+  Constants.isCustomFlagsmithUrl &&
+  `\n    .withConfiguration(FlagsmithConfig.builder()
+        .baseUri("${Project.flagsmithClientAPI}")
+        .build())`
+}
     .build();
 
 // Identify the user

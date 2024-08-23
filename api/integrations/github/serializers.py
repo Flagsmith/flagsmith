@@ -7,7 +7,7 @@ from integrations.github.dataclasses import (
     PaginatedQueryParams,
     RepoQueryParams,
 )
-from integrations.github.models import GithubConfiguration, GithubRepository
+from integrations.github.models import GithubConfiguration, GitHubRepository
 
 
 class GithubConfigurationSerializer(ModelSerializer):
@@ -19,7 +19,7 @@ class GithubConfigurationSerializer(ModelSerializer):
 
 class GithubRepositorySerializer(ModelSerializer):
     class Meta:
-        model = GithubRepository
+        model = GitHubRepository
         optional_fields = ("search_text", "page")
         fields = (
             "id",
@@ -27,6 +27,7 @@ class GithubRepositorySerializer(ModelSerializer):
             "project",
             "repository_owner",
             "repository_name",
+            "tagging_enabled",
         )
         read_only_fields = (
             "id",

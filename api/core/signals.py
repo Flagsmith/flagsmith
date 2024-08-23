@@ -1,11 +1,16 @@
+import logging
+
 from core.models import AbstractBaseAuditableModel
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
+from task_processor.task_run_method import TaskRunMethod
 
 from audit import tasks
-from task_processor.task_run_method import TaskRunMethod
 from users.models import FFAdminUser
+
+logger = logging.getLogger(__name__)
 
 
 def create_audit_log_from_historical_record(
@@ -30,7 +35,18 @@ def create_audit_log_from_historical_record(
         else None
     )
 
-    environment, project = instance.get_environment_and_project()
+    try:
+        environment, project = instance.get_environment_and_project()
+    except ObjectDoesNotExist:
+        logger.warning(
+            "Unable to create audit log for %s %s. "
+            "Parent model does not exist - this likely means it was hard deleted.",
+            instance.related_object_type,
+            getattr(instance, "id", "uuid"),
+            exc_info=True,
+        )
+        return
+
     if project != history_instance.instance and (
         (project and project.deleted_at)
         or (environment and environment.project.deleted_at)

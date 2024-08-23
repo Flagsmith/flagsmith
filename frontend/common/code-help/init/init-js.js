@@ -1,3 +1,4 @@
+import Constants from 'common/constants'
 module.exports = (
   envId,
   { FEATURE_FUNCTION, FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, NPM_CLIENT },
@@ -5,7 +6,11 @@ module.exports = (
 ) => `import ${LIB_NAME} from "${NPM_CLIENT}"; // Add this line if you're using ${LIB_NAME} via npm
 
 ${LIB_NAME}.init({
-    environmentID: "${envId}",
+    environmentID: "${envId}",${
+  Constants.isCustomFlagsmithUrl
+    ? `\n    api: "${Project.flagsmithClientAPI}",`
+    : ''
+}
     onChange: (oldFlags, params) => { // Occurs whenever flags are changed
         // Determines if the update came from the server or local cached storage
         const { isFromServer } = params;

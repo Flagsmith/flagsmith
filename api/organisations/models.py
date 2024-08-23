@@ -303,18 +303,14 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         if not getattr(self.organisation, "subscription_information_cache", None):
             return
 
-        # There is a weird bug where the cache is present, but the id is unset.
-        # See here for more: https://flagsmith.sentry.io/issues/4945988284/
-        if not self.organisation.subscription_information_cache.id:
-            return
-
-        self.organisation.subscription_information_cache.delete()
+        self.organisation.subscription_information_cache.reset_to_defaults()
+        self.organisation.subscription_information_cache.save()
 
     def prepare_for_cancel(
         self, cancellation_date=timezone.now(), update_chargebee=True
     ) -> None:
         """
-        This method get's a subscription ready for cancelation.
+        This method gets a subscription ready for cancellation.
 
         If cancellation_date is in the future some aspects are
         reserved for a task after the date has passed.
@@ -451,8 +447,8 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
     api_calls_7d = models.IntegerField(default=0)
     api_calls_30d = models.IntegerField(default=0)
 
-    allowed_seats = models.IntegerField(default=1)
-    allowed_30d_api_calls = models.IntegerField(default=50000)
+    allowed_seats = models.IntegerField(default=MAX_SEATS_IN_FREE_PLAN)
+    allowed_30d_api_calls = models.IntegerField(default=MAX_API_CALLS_IN_FREE_PLAN)
     allowed_projects = models.IntegerField(default=1, blank=True, null=True)
 
     chargebee_email = models.EmailField(blank=True, max_length=254, null=True)
@@ -461,6 +457,20 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
     def erase_api_notifications(self):
         self.organisation.api_usage_notifications.all().delete()
 
+    def reset_to_defaults(self):
+        """
+        Resets all limits and CB related data to the defaults, leaving the
+        usage data intact.
+        """
+        self.current_billing_term_starts_at = None
+        self.current_billing_term_ends_at = None
+
+        self.allowed_seats = MAX_SEATS_IN_FREE_PLAN
+        self.allowed_30d_api_calls = MAX_API_CALLS_IN_FREE_PLAN
+        self.allowed_projects = 1
+
+        self.chargebee_email = None
+
 
 class OrganisationAPIUsageNotification(models.Model):
     organisation = models.ForeignKey(
@@ -468,10 +478,18 @@ class OrganisationAPIUsageNotification(models.Model):
     )
     percent_usage = models.IntegerField(
         null=False,
-        validators=[MinValueValidator(75), MaxValueValidator(120)],
+        validators=[MinValueValidator(75), MaxValueValidator(500)],
     )
     notified_at = models.DateTimeField(null=True)
 
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)
+
+
+class OrganisationBreachedGracePeriod(models.Model):
+    organisation = models.OneToOneField(
+        Organisation, on_delete=models.CASCADE, related_name="breached_grace_period"
+    )
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
 
