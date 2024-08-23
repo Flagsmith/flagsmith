@@ -310,7 +310,11 @@
         },
         {
             "source": "/system-administration/metadata",
-            "destination": "/system-administration/custom-fields"
+            "destination": "/advanced-use/custom-fields"
+        },
+        {
+            "source": "/system-administration/custom-fields",
+            "destination": "/advanced-use/custom-fields"
         },
         {
             "source": "/clients/overview",

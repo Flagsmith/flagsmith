@@ -246,10 +246,10 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
           }}
           renderNoResults={
             <FormGroup>
-              No custom fields configured for {entity} entity. Add custom fields
+              No custom fields configured for {entity}s. Add custom fields
               in your{' '}
               <a
-                href={`/project/${projectId}/settings?tab=metadata`}
+                href={`/project/${projectId}/settings?tab=custom-fields`}
                 target='_blank'
                 rel='noreferrer'
               >

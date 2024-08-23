@@ -115,14 +115,14 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         </Button>
       </Row>
       <p className='fs-small lh-sm'>
-        Manage custom fields for selected core identities in your project{' '}
+        Add custom fields to features, segments, environments and projects.{' '}
         <Button
           theme='text'
           target='_blank'
-          href='https://docs.flagsmith.com/system-administration/custom-fields/'
+          href='https://docs.flagsmith.com/advanced-use/custom-fields/'
           className='fw-normal'
         >
-          Learn more.
+          Learn more
         </Button>
       </p>
       <FormGroup className='mt-4'>
