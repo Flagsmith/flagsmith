@@ -23,6 +23,7 @@ from rest_framework.test import APIClient, override_settings
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature
+from integrations.lead_tracking.hubspot.constants import HUBSPOT_COOKIE_NAME
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.invites.models import Invite
 from organisations.models import (
@@ -46,6 +47,7 @@ from projects.models import Project, UserProjectPermission
 from segments.models import Segment
 from users.models import (
     FFAdminUser,
+    HubspotTracker,
     UserPermissionGroup,
     UserPermissionGroupMembership,
 )
@@ -69,6 +71,7 @@ def test_should_return_organisation_list_when_requested(
 
 def test_non_superuser_can_create_new_organisation_by_default(
     staff_client: APIClient,
+    staff_user: FFAdminUser,
 ) -> None:
     # Given
     org_name = "Test create org"
@@ -78,6 +81,8 @@ def test_non_superuser_can_create_new_organisation_by_default(
         "name": org_name,
         "webhook_notification_email": webhook_notification_email,
     }
+    staff_client.cookies[HUBSPOT_COOKIE_NAME] = "test_cookie_tracker"
+    assert not HubspotTracker.objects.filter(user=staff_user).exists()
 
     # When
     response = staff_client.post(url, data=data)
@@ -88,6 +93,7 @@ def test_non_superuser_can_create_new_organisation_by_default(
         Organisation.objects.get(name=org_name).webhook_notification_email
         == webhook_notification_email
     )
+    assert HubspotTracker.objects.filter(user=staff_user).exists()
 
 
 @override_settings(RESTRICT_ORG_CREATE_TO_SUPERUSERS=True)
