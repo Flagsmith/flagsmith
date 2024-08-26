@@ -1,6 +1,8 @@
+import json
 import logging
 
 import hubspot
+import requests
 from django.conf import settings
 from hubspot.crm.companies import (
     PublicObjectSearchRequest,
@@ -9,6 +11,11 @@ from hubspot.crm.companies import (
 )
 from hubspot.crm.contacts import BatchReadInputSimplePublicObjectId
 
+from integrations.lead_tracking.hubspot.constants import (
+    HUBSPOT_FORM_ID,
+    HUBSPOT_PORTAL_ID,
+    HUBSPOT_ROOT_FORM_URL,
+)
 from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
@@ -16,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 class HubspotClient:
     def __init__(self, client: hubspot.Client = None) -> None:
-        access_token = settings.HUBSPOT_ACCESS_TOKEN
-        self.client = client or hubspot.Client.create(access_token=access_token)
+        self.access_token = settings.HUBSPOT_ACCESS_TOKEN
+        self.client = client or hubspot.Client.create(access_token=self.access_token)
 
     def get_contact(self, user: FFAdminUser) -> None | dict:
         public_object_id = BatchReadInputSimplePublicObjectId(
@@ -41,6 +48,51 @@ class HubspotClient:
             )
 
         return results[0]
+
+    def create_lead_form(self, user: FFAdminUser, hubspot_cookie: str) -> dict:
+        fields = [
+            {
+                "objectTypeId": "0-1",
+                "name": "email",
+                "value": user.email,
+            },
+            {"objectTypeId": "0-1", "name": "firstname", "value": user.first_name},
+            {"objectTypeId": "0-1", "name": "lastname", "value": user.last_name},
+        ]
+
+        context = {
+            "hutk": hubspot_cookie,
+            "pageUri": "www.flagsmith.com",
+            "pageName": "Homepage",
+        }
+
+        legal = {
+            "consent": {
+                "consentToProcess": True,
+                "text": "I agree to allow Flagsmith to store and process my personal data.",
+                "communications": [
+                    {
+                        "value": user.marketing_consent_given,
+                        "subscriptionTypeId": 999,
+                        "text": "I agree to receive marketing communications from Flagsmith.",
+                    }
+                ],
+            }
+        }
+        payload = {"legalConsentOptions": legal, "context": context, "fields": fields}
+        headers = {
+            "Content-Type": "application/json",
+        }
+        url = f"{HUBSPOT_ROOT_FORM_URL}/{HUBSPOT_PORTAL_ID}/{HUBSPOT_FORM_ID}"
+
+        response = requests.post(url, headers=headers, data=json.dumps(payload))
+
+        if response.status_code not in {200, 201}:
+            logger.error(
+                f"Problem posting data to Hubspot's form API due to {response.status_code} "
+                f"status code and following form data {response.text}"
+            )
+        return response.json()
 
     def create_contact(self, user: FFAdminUser, hubspot_company_id: str) -> dict:
         properties = {
