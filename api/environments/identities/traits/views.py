@@ -260,6 +260,8 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
             trait_key = trait.get("trait_key")
             identifier = trait["identity"]["identifier"]
 
+            # endpoint allows users to delete existing traits by sending null values
+            # for the trait value so we need to filter those out here
             if trait.get("trait_value") is None:
                 delete_filter_query = delete_filter_query | Q(
                     trait_key=trait_key,
@@ -297,9 +299,6 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
             if not request.environment.trait_persistence_allowed(request):
                 raise BadRequest("Unable to set traits with client key.")
 
-            # endpoint allows users to delete existing traits by sending null values
-            # for the trait value so we need to filter those out here
-
             self._update_traits(request)
 
             identities = {trait["identity"]["identifier"] for trait in request.data}
@@ -310,12 +309,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
             )
 
             return Response(
-                [
-                    *SDKCreateUpdateTraitSerializer(
-                        instance=all_traits, many=True
-                    ).data,
-                ],
-                status=status.HTTP_200_OK,
+                SDKCreateUpdateTraitSerializer(instance=all_traits, many=True).data,
             )
 
         except (TypeError, AttributeError) as excinfo:
