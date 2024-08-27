@@ -23,8 +23,8 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
     NOTE: Some authentication backends (e.g., LDAP) support only
     username and password authentication. However, the front-end
     currently sends the email as the login key. To accommodate
-    this, we override the serializer to rename the email field
-    to the username(or any other field configurable using djoser settings) field.
+    this, we override the serializer to rename the username field
+    to the email (or any other field configurable using djoser settings) field.
 
     """
 
