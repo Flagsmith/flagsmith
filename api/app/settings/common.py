@@ -330,6 +330,11 @@ INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
 USE_CACHE_FOR_USAGE_DATA = env.bool("USE_CACHE_FOR_USAGE_DATA", default=False)
+PG_API_USAGE_CACHE_SECONDS = env.int("PG_API_USAGE_CACHE_SECONDS", default=60)
+
+FEATURE_EVALUATION_CACHE_SECONDS = env.int(
+    "FEATURE_EVALUATION_CACHE_SECONDS", default=60
+)
 
 ENABLE_API_USAGE_TRACKING = env.bool("ENABLE_API_USAGE_TRACKING", default=True)
 
@@ -512,6 +517,10 @@ LOGIN_URL = "/admin/login/"
 LOGOUT_URL = "/admin/logout/"
 
 # Enable E2E tests
+E2E_TEST_AUTH_TOKEN = env.str("E2E_TEST_AUTH_TOKEN", default=None)
+if E2E_TEST_AUTH_TOKEN is not None:
+    MIDDLEWARE.append("e2etests.middleware.E2ETestMiddleware")
+
 ENABLE_FE_E2E = env.bool("ENABLE_FE_E2E", default=False)
 # Email associated with user that is used by front end for end to end testing purposes
 E2E_TEST_EMAIL_DOMAIN = "flagsmithe2etestdomain.io"
@@ -521,6 +530,18 @@ E2E_SIGNUP_USER = f"e2e_signup_user@{E2E_TEST_EMAIL_DOMAIN}"
 E2E_CHANGE_EMAIL_USER = f"e2e_change_email@{E2E_TEST_EMAIL_DOMAIN}"
 # User email address used for the rest of the E2E tests
 E2E_USER = f"e2e_user@{E2E_TEST_EMAIL_DOMAIN}"
+E2E_NON_ADMIN_USER_WITH_ORG_PERMISSIONS = (
+    f"e2e_non_admin_user_with_org_permissions@{E2E_TEST_EMAIL_DOMAIN}"
+)
+E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS = (
+    f"e2e_non_admin_user_with_project_permissions@{E2E_TEST_EMAIL_DOMAIN}"
+)
+E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS = (
+    f"e2e_non_admin_user_with_env_permissions@{E2E_TEST_EMAIL_DOMAIN}"
+)
+E2E_NON_ADMIN_USER_WITH_A_ROLE = (
+    f"e2e_non_admin_user_with_a_role@{E2E_TEST_EMAIL_DOMAIN}"
+)
 #  Identity for E2E segment tests
 E2E_IDENTITY = "test-identity"
 
@@ -787,6 +808,7 @@ DJOSER = {
     "SEND_CONFIRMATION_EMAIL": False,
     "SERIALIZERS": {
         "token": "custom_auth.serializers.CustomTokenSerializer",
+        "token_create": "custom_auth.serializers.CustomTokenCreateSerializer",
         "user_create": "custom_auth.serializers.CustomUserCreateSerializer",
         "user_delete": "custom_auth.serializers.CustomUserDelete",
         "current_user": "users.serializers.CustomCurrentUserSerializer",
@@ -1110,7 +1132,7 @@ LDAP_INSTALLED = importlib.util.find_spec("flagsmith_ldap")
 # The URL of the LDAP server.
 LDAP_AUTH_URL = env.str("LDAP_AUTH_URL", None)
 
-if LDAP_INSTALLED and LDAP_AUTH_URL:
+if LDAP_INSTALLED and LDAP_AUTH_URL:  # pragma: no cover
     AUTHENTICATION_BACKENDS.insert(0, "django_python3_ldap.auth.LDAPBackend")
     INSTALLED_APPS.append("flagsmith_ldap")
 
@@ -1183,6 +1205,7 @@ if LDAP_INSTALLED and LDAP_AUTH_URL:
     # The LDAP user username and password used by `sync_ldap_users_and_groups` command
     LDAP_SYNC_USER_USERNAME = env.str("LDAP_SYNC_USER_USERNAME", None)
     LDAP_SYNC_USER_PASSWORD = env.str("LDAP_SYNC_USER_PASSWORD", None)
+    DJOSER["LOGIN_FIELD"] = "username"
 
 SEGMENT_CONDITION_VALUE_LIMIT = env.int("SEGMENT_CONDITION_VALUE_LIMIT", default=1000)
 if not 0 <= SEGMENT_CONDITION_VALUE_LIMIT < 2000000:
@@ -1216,4 +1239,8 @@ GLOBAL_DOMAIN_AUTH_METHODS = env.dict(
 EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET = env.int(
     "EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET",
     default=0,
+)
+
+ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = env.list(
+    "ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST", default=[]
 )

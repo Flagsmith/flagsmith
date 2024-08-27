@@ -27,6 +27,10 @@ on:
         description: The runner label to use. Defaults to `ubuntu-latest`
         required: false
         default: ubuntu-latest
+    secrets:
+      gcr-token:
+        description: A token to use for logging into Github Container Registry. If not provided, login does not occur.
+        required: false
 
 jobs:
   run-e2e:
@@ -38,16 +42,20 @@ jobs:
       packages: read
       id-token: write
 
+    env:
+      GCR_TOKEN: ${{ secrets.gcr-token }}
+
     steps:
       - name: Cloning repo
         uses: actions/checkout@v4
 
       - name: Login to Github Container Registry
+        if: ${{ env.GCR_TOKEN }}
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ env.GCR_TOKEN }}
 
       - name: Set up Depot CLI
         uses: depot/setup-action@v1

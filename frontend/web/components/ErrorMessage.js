@@ -28,7 +28,9 @@ export default class ErrorMessage extends PureComponent {
         <span className='icon-alert'>
           <Icon name='close-circle' />
         </span>
-        {typeof error === 'object' ? (
+        {error instanceof Error ? (
+          error.message
+        ) : typeof error === 'object' ? (
           <div
             dangerouslySetInnerHTML={{
               __html: Object.keys(error)
@@ -48,7 +50,7 @@ export default class ErrorMessage extends PureComponent {
           <Button
             className='btn ml-3'
             onClick={() => {
-              document.location.replace(Constants.upgradeURL)
+              document.location.replace(Constants.getUpgradeUrl())
             }}
           >
             Upgrade plan

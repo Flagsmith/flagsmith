@@ -2,6 +2,8 @@ import cn from 'classnames'
 import { ButtonHTMLAttributes, FC, HTMLAttributeAnchorTarget } from 'react'
 import Icon, { IconName } from 'components/Icon'
 import Constants from 'common/constants'
+import Utils, { PaidFeature } from 'common/utils/utils'
+import PlanBasedBanner from 'components/PlanBasedAccess'
 
 export const themeClassNames = {
   danger: 'btn btn-danger',
@@ -27,6 +29,7 @@ export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {
   iconLeftColour?: keyof typeof Constants.colours
   iconLeft?: IconName
   href?: string
+  feature?: PaidFeature
   target?: HTMLAttributeAnchorTarget
   theme?: keyof typeof themeClassNames
   size?: keyof typeof sizeClassNames
@@ -35,6 +38,7 @@ export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {
 export const Button: FC<ButtonType> = ({
   children,
   className,
+  feature,
   href,
   iconLeft,
   iconLeftColour,
@@ -47,11 +51,13 @@ export const Button: FC<ButtonType> = ({
   type = 'button',
   ...rest
 }) => {
-  return href ? (
+  const hasPlan = feature ? Utils.getPlansPermission(feature) : true
+  return href || !hasPlan ? (
     <a
+      onClick={rest.onClick}
       className={cn(className, themeClassNames[theme], sizeClassNames[size])}
       target={target}
-      href={href}
+      href={hasPlan ? href : Constants.getUpgradeUrl()}
       rel='noreferrer'
     >
       {!!iconLeft && (
@@ -62,6 +68,15 @@ export const Button: FC<ButtonType> = ({
         />
       )}
       {children}
+      {!!iconRight && (
+        <Icon
+          fill={
+            iconRightColour ? Constants.colours[iconRightColour] : undefined
+          }
+          className='ml-2'
+          name={iconRight}
+        />
+      )}
     </a>
   ) : (
     <button
@@ -83,7 +98,6 @@ export const Button: FC<ButtonType> = ({
         />
       )}
       {children}
-
       {!!iconRight && (
         <Icon
           fill={

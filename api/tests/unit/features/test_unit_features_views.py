@@ -140,6 +140,7 @@ def test_remove_owners_only_remove_specified_owners(
         "first_name": user_3.first_name,
         "last_name": user_3.last_name,
         "last_login": None,
+        "uuid": mock.ANY,
     }
 
 
@@ -425,6 +426,7 @@ def test_put_feature_does_not_update_feature_states(
     assert all(fs.enabled is False for fs in feature.feature_states.all())
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @mock.patch("features.views.get_multiple_event_list_for_feature")
 def test_get_project_features_influx_data(
     mock_get_event_list: mock.MagicMock,
@@ -446,6 +448,7 @@ def test_get_project_features_influx_data(
             "datetime": datetime(2021, 2, 26, 12, 0, 0, tzinfo=pytz.UTC),
         }
     ]
+    one_day_ago = timezone.now() - timedelta(days=1)
 
     # When
     response = admin_client_new.get(url)
@@ -455,9 +458,68 @@ def test_get_project_features_influx_data(
     mock_get_event_list.assert_called_once_with(
         feature_name=feature.name,
         environment_id=str(environment.id),  # provided as a GET param
-        date_start="-24h",  # this is the default but can be provided as a GET param
+        date_start=one_day_ago,  # this is the default but can be provided as a GET param
         aggregate_every="24h",  # this is the default but can be provided as a GET param
     )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+@mock.patch("features.views.get_multiple_event_list_for_feature")
+def test_get_project_features_influx_data_with_two_weeks_period(
+    mock_get_event_list: mock.MagicMock,
+    feature: Feature,
+    project: Project,
+    environment: Environment,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    base_url = reverse(
+        "api-v1:projects:project-features-get-influx-data",
+        args=[project.id, feature.id],
+    )
+    url = f"{base_url}?environment_id={environment.id}&period=14d"
+    date_start = timezone.now() - timedelta(days=14)
+
+    mock_get_event_list.return_value = [
+        {
+            feature.name: 1,
+            "datetime": datetime(2021, 2, 26, 12, 0, 0, tzinfo=pytz.UTC),
+        }
+    ]
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mock_get_event_list.assert_called_once_with(
+        feature_name=feature.name,
+        environment_id=str(environment.id),
+        date_start=date_start,
+        aggregate_every="24h",
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_project_features_influx_data_with_malformed_period(
+    feature: Feature,
+    project: Project,
+    environment: Environment,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    base_url = reverse(
+        "api-v1:projects:project-features-get-influx-data",
+        args=[project.id, feature.id],
+    )
+    url = f"{base_url}?environment_id={environment.id}&period=baddata"
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.data[0] == "Malformed period supplied"
 
 
 def test_regular_user_cannot_create_mv_options_when_creating_feature(
@@ -1504,6 +1566,7 @@ def test_add_owners_adds_owner(
         "first_name": staff_user.first_name,
         "last_name": staff_user.last_name,
         "last_login": None,
+        "uuid": mock.ANY,
     }
     assert json_response["owners"][1] == {
         "id": admin_user.id,
@@ -1511,6 +1574,7 @@ def test_add_owners_adds_owner(
         "first_name": admin_user.first_name,
         "last_name": admin_user.last_name,
         "last_login": None,
+        "uuid": mock.ANY,
     }
 
 
@@ -2261,6 +2325,39 @@ def test_cannot_update_environment_of_a_feature_state(
     )
 
 
+def test_update_feature_state_without_history_of_fsv(
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment.api_key, feature_state.id],
+    )
+    new_value = "new-value"
+
+    # Remove historical feature state value
+    feature_state.feature_state_value.history.all().delete()
+
+    data = {
+        "id": feature_state.id,
+        "feature_state_value": new_value,
+        "enabled": False,
+        "feature": feature.id,
+        "environment": environment.id,
+        "identity": None,
+        "feature_segment": None,
+    }
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
 def test_cannot_update_feature_of_a_feature_state(
     admin_client_new: APIClient,
     environment: Environment,
@@ -2753,18 +2850,22 @@ def test_list_features_with_feature_state(
         project=project,
     )
 
+    # This should be ignored due to versioning.
     feature_state1 = feature.feature_states.filter(environment=environment).first()
     feature_state1.enabled = True
     feature_state1.version = 1
     feature_state1.save()
 
-    feature_state_value1 = feature_state1.feature_state_value
-    feature_state_value1.string_value = None
-    feature_state_value1.integer_value = 1945
-    feature_state_value1.type = INTEGER
-    feature_state_value1.save()
-
-    # This should be ignored due to versioning.
+    # This should be ignored due to less recent live_from compared to the next feature state
+    # event though it has a higher version.
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        live_from=two_hours_ago,
+        enabled=True,
+        version=101,
+    )
+    # This should be returned
     feature_state_versioned = FeatureState.objects.create(
         feature=feature,
         environment=environment,
@@ -2835,8 +2936,8 @@ def test_list_features_with_feature_state(
 
     assert len(response.data["results"]) == 3
     results = response.data["results"]
-
     assert results[0]["environment_feature_state"]["enabled"] is True
+    assert results[0]["environment_feature_state"]["id"] == feature_state_versioned.id
     assert results[0]["environment_feature_state"]["feature_state_value"] == 2005
     assert results[0]["name"] == feature.name
     assert results[1]["environment_feature_state"]["enabled"] is True

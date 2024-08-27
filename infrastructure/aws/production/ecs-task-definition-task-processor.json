@@ -139,7 +139,7 @@
                 },
                 {
                     "name": "TASK_DELETE_RETENTION_DAYS",
-                    "value": "44"
+                    "value": "7"
                 },
                 {
                     "name": "TASK_DELETE_BATCH_SIZE",
@@ -168,6 +168,10 @@
                 {
                     "name": "ENABLE_API_USAGE_ALERTING",
                     "value": "True"
+                },
+                {
+                    "name": "ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST",
+                    "value": "customersuccess@flagsmith.com"
                 }
             ],
             "secrets": [
