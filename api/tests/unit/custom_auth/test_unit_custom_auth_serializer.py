@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import pytest
 from django.test import RequestFactory
 from pytest_django.fixtures import SettingsWrapper
@@ -155,9 +157,11 @@ def test_CustomTokenCreateSerializer_validate_uses_login_field_to_authenticate(
     settings: SettingsWrapper, mocker: MockerFixture
 ) -> None:
     # Given
-    settings.LOGIN_FIELD = "username"
+    djoser_settings = deepcopy(settings.DJOSER)
+    djoser_settings["LOGIN_FIELD"] = "username"
+    settings.DJOSER = djoser_settings
 
-    mocked_authenticate = mocker.patch("custom_auth.serializers.authenticate")
+    mocked_authenticate = mocker.patch("djoser.serializers.authenticate")
     serializer = CustomTokenCreateSerializer(
         data={"email": "some_username", "password": "some_password"}
     )

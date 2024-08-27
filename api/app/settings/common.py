@@ -1126,7 +1126,6 @@ GITHUB_APP_URL = env.int(
     "GITHUB_APP_URL",
     default=None,
 )
-LOGIN_FIELD = "email"
 
 # LDAP setting
 LDAP_INSTALLED = importlib.util.find_spec("flagsmith_ldap")
@@ -1206,7 +1205,7 @@ if LDAP_INSTALLED and LDAP_AUTH_URL:  # pragma: no cover
     # The LDAP user username and password used by `sync_ldap_users_and_groups` command
     LDAP_SYNC_USER_USERNAME = env.str("LDAP_SYNC_USER_USERNAME", None)
     LDAP_SYNC_USER_PASSWORD = env.str("LDAP_SYNC_USER_PASSWORD", None)
-    LOGIN_FIELD = "username"
+    DJOSER["LOGIN_FIELD"] = "username"
 
 SEGMENT_CONDITION_VALUE_LIMIT = env.int("SEGMENT_CONDITION_VALUE_LIMIT", default=1000)
 if not 0 <= SEGMENT_CONDITION_VALUE_LIMIT < 2000000:
