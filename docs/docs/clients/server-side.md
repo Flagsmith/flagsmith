@@ -877,6 +877,33 @@ end
 ```
 
 </TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+# Using the built-in local file handler
+
+let handler = offline_handler::LocalFileHandler::new("environment.json").unwrap();
+
+# Instantiate the client with offline handler
+
+  let flagsmith_options = FlagsmithOptions {
+    offline_handler: Some(Box::new(handler)),
+    ..Default::default()
+};
+
+let flagsmith = Flagsmith::new(ENVIRONMENT_KEY.to_string(), flagsmith_options);
+
+
+# Defining a custom offline handler
+impl OfflineHandler for MyCustomOfflineHandler {
+    fn get_environment(&self) -> Environment {
+      ...
+    }
+}
+
+```
+
+</TabItem>
 
 </Tabs>
 
