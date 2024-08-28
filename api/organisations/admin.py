@@ -53,9 +53,13 @@ class OrganisationAdmin(admin.ModelAdmin):
         return (
             Organisation.objects.select_related("subscription")
             .annotate(
-                num_users=Count("users", distinct=True, filter=Q(is_active=True)),
+                num_users=Count(
+                    "users", distinct=True, filter=Q(users__is_active=True)
+                ),
                 num_projects=Count(
-                    "projects", distinct=True, filter=Q(deleted_at__isnull=True)
+                    "projects",
+                    distinct=True,
+                    filter=Q(projects__deleted_at__isnull=True),
                 ),
             )
             .all()
