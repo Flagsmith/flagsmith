@@ -880,7 +880,7 @@ end
 
 <TabItem value="php" label="PHP">
 
-```ruby
+```php
 // Using the built-in local file handler
 
 $offline_handler = new LocalFileHandler("/path/to/environment.json")
