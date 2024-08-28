@@ -129,9 +129,10 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       <CreateSegmentModal
         key={id}
         segment={id}
-        onSegmentRetrieved={(segment) =>
+        onSegmentRetrieved={(segment) => {
+          setShowFeatureSpecific(!!segment?.feature)
           setModalTitle(`Edit Segment: ${segment.name}`)
-        }
+        }}
         readOnly={readOnly}
         onComplete={() => {
           refetch()
