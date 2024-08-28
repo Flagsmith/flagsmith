@@ -131,7 +131,7 @@ def test_influx_db_query_when_get_events_list_then_query_api_called(monkeypatch)
         f'|> filter(fn: (r) => r["organisation_id"] == "{org_id}") '
         f'|> drop(columns: ["organisation", "organisation_id", "type", "project", '
         f'"project_id", "environment", "environment_id", "host"])'
-        f"|> aggregateWindow(every: 24h, fn: sum)"
+        f'|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")'
     )
     mock_influxdb_client = mock.MagicMock()
     monkeypatch.setattr(
@@ -198,7 +198,7 @@ def test_influx_db_query_when_get_multiple_events_for_organisation_then_query_ap
             f"{build_filter_string(expected_filters)}"
             '|> drop(columns: ["organisation", "organisation_id", "type", "project", '
             '"project_id", "environment", "environment_id", "host"]) '
-            "|> aggregateWindow(every: 24h, fn: sum)"
+            '|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")'
         )
         .replace(" ", "")
         .replace("\n", "")
@@ -237,7 +237,7 @@ def test_influx_db_query_when_get_multiple_events_for_feature_then_query_api_cal
         f'|> filter(fn: (r) => r["feature_id"] == "{feature_name}") '
         '|> drop(columns: ["organisation", "organisation_id", "type", "project", '
         '"project_id", "environment", "environment_id", "host"])'
-        "|> aggregateWindow(every: 24h, fn: sum, createEmpty: false)                    "
+        '|> aggregateWindow(every: 24h, fn: sum, createEmpty: false, timeSrc: "_start")                    '
         '|> yield(name: "sum")'
     )
 

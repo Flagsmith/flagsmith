@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from app_analytics.influxdb_wrapper import get_current_api_usage
 from django.conf import settings
+from django.core.mail import send_mail
 from django.db.models import F, Max, Q
 from django.utils import timezone
 from task_processor.decorators import (
@@ -73,10 +74,26 @@ def send_org_subscription_cancelled_alert(
     organisation_name: str,
     formatted_cancellation_date: str,
 ) -> None:
-    FFAdminUser.send_alert_to_admin_users(
-        subject=f"Organisation {organisation_name} has cancelled their subscription",
-        message=f"Organisation {organisation_name} has cancelled their subscription on {formatted_cancellation_date}",
-    )
+    if recipient_list := settings.ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST:
+        send_mail(
+            subject=f"Organisation {organisation_name} has cancelled their subscription",
+            message=f"Organisation {organisation_name} has cancelled their subscription "
+            f"on {formatted_cancellation_date}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=recipient_list,
+            fail_silently=True,
+        )
+
+
+@register_recurring_task(
+    run_every=timedelta(hours=6),
+)
+def update_organisation_subscription_information_influx_cache_recurring():
+    """
+    We're redefining the task function here to register a recurring task
+    since the decorators don't stack correctly. (TODO)
+    """
+    update_organisation_subscription_information_influx_cache()  # pragma: no cover
 
 
 @register_task_handler()
@@ -195,8 +212,17 @@ def charge_for_api_call_count_overages():
         api_usage = get_current_api_usage(organisation.id)
 
         # Grace period for organisations < 200% of usage.
-        if api_usage / subscription_cache.allowed_30d_api_calls < 2.0:
+        if (
+            not hasattr(organisation, "breached_grace_period")
+            and api_usage / subscription_cache.allowed_30d_api_calls < 2.0
+        ):
             logger.info("API Usage below normal usage or grace period.")
+
+            # Set organisation grace period breach for following months.
+            if api_usage / subscription_cache.allowed_30d_api_calls > 1.0:
+                OrganisationBreachedGracePeriod.objects.get_or_create(
+                    organisation=organisation
+                )
             continue
 
         api_billings = OrganisationAPIBilling.objects.filter(
@@ -210,19 +236,27 @@ def charge_for_api_call_count_overages():
             logger.info("API Usage below current API limit.")
             continue
 
-        if organisation.subscription.plan in {SCALE_UP, SCALE_UP_V2}:
-            add_100k_api_calls_scale_up(
-                organisation.subscription.subscription_id,
-                math.ceil(api_overage / 100_000),
-            )
-        elif organisation.subscription.plan in {STARTUP, STARTUP_V2}:
-            add_100k_api_calls_start_up(
-                organisation.subscription.subscription_id,
-                math.ceil(api_overage / 100_000),
-            )
-        else:
+        try:
+            if organisation.subscription.plan in {SCALE_UP, SCALE_UP_V2}:
+                add_100k_api_calls_scale_up(
+                    organisation.subscription.subscription_id,
+                    math.ceil(api_overage / 100_000),
+                )
+            elif organisation.subscription.plan in {STARTUP, STARTUP_V2}:
+                add_100k_api_calls_start_up(
+                    organisation.subscription.subscription_id,
+                    math.ceil(api_overage / 100_000),
+                )
+            else:
+                logger.error(
+                    f"Unable to bill for API overages for plan `{organisation.subscription.plan}` "
+                    f"for organisation {organisation.id}"
+                )
+                continue
+        except Exception:
             logger.error(
-                f"Unable to bill for API overages for plan `{organisation.subscription.plan}`"
+                f"Unable to charge organisation {organisation.id} due to billing error",
+                exc_info=True,
             )
             continue
 
