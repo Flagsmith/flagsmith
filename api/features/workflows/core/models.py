@@ -112,6 +112,7 @@ class ChangeRequest(
         self._publish_feature_states()
         self._publish_environment_feature_versions(committed_by)
         self._publish_change_sets(committed_by)
+        self._publish_segments()
 
         self.committed_at = timezone.now()
         self.committed_by = committed_by
@@ -178,6 +179,30 @@ class ChangeRequest(
     def _publish_change_sets(self, published_by: "FFAdminUser") -> None:
         for change_set in self.change_sets.all():
             change_set.publish(user=published_by)
+
+    def _publish_segments(self) -> None:
+        segments = list(self.segments.all())
+        if not segments:
+            return
+
+        for segment in segments:
+            target_segment = segment.version_of
+            assert target_segment != segment
+
+            # Deep clone the segment to establish historical version.
+            target_segment.deep_clone()
+
+            # Set the properties of the change request's segment to the properties
+            # of the target (i.e., canonical) segment.
+            target_segment.name = segment.name
+            target_segment.description = segment.description
+            target_segment.feature = segment.feature
+            target_segment.save()
+
+            # Delete the rules in order to replace them with copies of the segment.
+            target_segment.rules.all().delete()
+            for rule in segment.rules.all():
+                rule.deep_clone(target_segment)
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title
