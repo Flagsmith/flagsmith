@@ -42,7 +42,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   const environmentId =
     ProjectStore.getEnvironment()?.api_key || 'ENVIRONMENT_API_KEY'
   const preselect = useRef(Utils.fromParam().id)
-  const hasNoOperators = !Utils.getFlagsmithValue('segment_operators')
 
   const { search, searchInput, setSearchInput } = useSearchThrottle('')
   const [page, setPage] = useState(1)

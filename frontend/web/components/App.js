@@ -352,9 +352,7 @@ const App = class extends Component {
       return <div>{this.props.children}</div>
     }
     const isOrganisationSelect = document.location.pathname === '/organisations'
-    const integrations = Object.keys(
-      JSON.parse(Utils.getFlagsmithValue('integration_data') || '{}'),
-    )
+    const integrations = Object.keys(Utils.getIntegrationData())
     return (
       <Provider store={getStore()}>
         <AccountProvider
