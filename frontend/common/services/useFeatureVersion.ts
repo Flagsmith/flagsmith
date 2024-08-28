@@ -11,6 +11,7 @@ import { getVersionFeatureState } from './useVersionFeatureState'
 import transformCorePaging from 'common/transformCorePaging'
 import Utils from 'common/utils/utils'
 import { getFeatureStateDiff, getSegmentDiff } from 'components/diff/diff-utils'
+import moment from 'moment/moment'
 
 const transformFeatureStates = (featureStates: FeatureState[]) =>
   featureStates?.map((v) => ({
@@ -254,6 +255,16 @@ export const {
   // END OF EXPORTS
 } = featureVersionService
 
+export function isVersionOverLimit(
+  versionLimitDays: number | null | undefined,
+  date: string | undefined,
+) {
+  if (!versionLimitDays) {
+    return false
+  }
+  const days = moment().diff(moment(date), 'days') + 1
+  return !!versionLimitDays && days > versionLimitDays
+}
 /* Usage examples:
 const { data, isLoading } = useGetFeatureVersionQuery({ id: 2 }, {}) //get hook
 const [createFeatureVersion, { isLoading, data, isSuccess }] = useCreateFeatureVersionMutation() //create hook

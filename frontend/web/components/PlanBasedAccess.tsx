@@ -12,7 +12,7 @@ type PlanBasedBannerType = {
   feature: keyof typeof featureDescriptions
   theme: 'page' | 'badge' | 'description'
   children?: ReactNode
-  withoutTooltip?: boolean
+  title?: ReactNode
   force?: boolean
 }
 
@@ -89,14 +89,8 @@ export const featureDescriptions: Record<PaidFeature, any> = {
   },
 }
 
-const PlanBasedBanner: FC<PlanBasedBannerType> = ({
-  children,
-  className,
-  feature,
-  force,
-  theme,
-  withoutTooltip,
-}) => {
+const PlanBasedBanner: FC<PlanBasedBannerType> = ({ children, ...props }) => {
+  const { className, feature, force, theme, title } = props
   const trackFeature = () =>
     API.trackEvent(Constants.events.VIEW_LOCKED_FEATURE(feature))
   const hasPlan = !force && Utils.getPlansPermission(feature)
@@ -182,7 +176,7 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
         )}
       >
         <div className='d-flex gap-2 justify-content-between font-weight-medium align-items-center'>
-          <div>{featureDescriptions[feature].description}</div>
+          <div>{title || featureDescriptions[feature].description}</div>
           {ctas}
         </div>
       </div>
@@ -195,19 +189,9 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
     <div className={className}>
       <h4 className='d-flex align-items-center gap-2'>
         <span>{featureDescriptions[feature].title}</span>
-        <PlanBasedBanner
-          force={force}
-          withoutTooltip
-          feature={feature}
-          theme={'badge'}
-        />
+        <PlanBasedBanner {...props} theme={'badge'} />
       </h4>
-      <PlanBasedBanner
-        force={force}
-        withoutTooltip
-        feature={feature}
-        theme={'description'}
-      />
+      <PlanBasedBanner {...props} theme={'description'} />
     </div>
   )
 }

@@ -4,7 +4,10 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import { RouterChildContext } from 'react-router'
 import Utils from 'common/utils/utils'
 import ProjectStore from 'common/stores/project-store'
-import { useGetFeatureVersionsQuery } from 'common/services/useFeatureVersion'
+import {
+  isVersionOverLimit,
+  useGetFeatureVersionsQuery,
+} from 'common/services/useFeatureVersion'
 import { useGetUsersQuery } from 'common/services/useUser'
 import AccountStore from 'common/stores/account-store'
 import PanelSearch from 'components/PanelSearch'
@@ -22,6 +25,7 @@ import { Link } from 'react-router-dom'
 import DateList from 'components/DateList'
 import classNames from 'classnames'
 import PlanBasedBanner from 'components/PlanBasedAccess'
+import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 
 const widths = [250, 150]
 type FeatureHistoryPageType = {
@@ -38,7 +42,10 @@ type FeatureHistoryPageType = {
 const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
   const feature = Utils.fromParam(router.route.location.search)?.feature
   const [open, setOpen] = useState(false)
-
+  const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
+    id: AccountStore.getOrganisation()?.id,
+  })
+  const versionLimitDays = 7
   const env: Environment | undefined = ProjectStore.getEnvironment(
     match.params.environmentId,
   ) as any
@@ -62,7 +69,6 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
   const live = data?.results?.[0]
   const [compareToLive, setCompareToLive] = useState(false)
   const [diff, setDiff] = useState<null | string>(null)
-  const versionLimit = 3
   return (
     <div className='container app-container'>
       <PageTitle title={'History'}>
@@ -91,22 +97,32 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
         </div>
       </div>
       <div className='mt-4'>
-        {!!versionLimit && (
+        {!!versionLimitDays && (
           <PlanBasedBanner
             className='mb-4'
             force
             feature={'VERSIONING'}
+            title={
+              <div>
+                Unlock your feature's entire history. Currently limited to{' '}
+                <strong>{versionLimitDays} days</strong>.
+              </div>
+            }
             theme={'page'}
           />
         )}
         <DateList<TFeatureVersion>
           items={data}
           isLoading={isLoading}
+          dateProperty={'live_from'}
           nextPage={() => setPage(page + 1)}
           prevPage={() => setPage(page + 1)}
           goToPage={setPage}
           renderRow={(v: TFeatureVersion, i: number) => {
-            const isOverLimit = !!versionLimit && i + 1 > versionLimit
+            const isOverLimit = isVersionOverLimit(
+              versionLimitDays,
+              v.live_from,
+            )
             const user = users?.find((user) => v.published_by === user.id)
 
             return (
