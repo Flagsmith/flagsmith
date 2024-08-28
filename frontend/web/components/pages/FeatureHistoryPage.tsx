@@ -45,7 +45,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
   const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
     id: AccountStore.getOrganisation()?.id,
   })
-  const versionLimitDays = 7
+  const versionLimitDays = subscriptionMeta?.feature_history_visibility_days
   const env: Environment | undefined = ProjectStore.getEnvironment(
     match.params.environmentId,
   ) as any
