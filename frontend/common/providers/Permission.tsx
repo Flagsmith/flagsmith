@@ -15,12 +15,16 @@ export const useHasPermission = ({
   level,
   permission,
 }: Omit<PermissionType, 'children'>) => {
-  const { data, isLoading } = useGetPermissionQuery(
+  const { data, isLoading, isSuccess } = useGetPermissionQuery(
     { id: `${id}`, level },
     { skip: !id || !level },
   )
   const hasPermission = !!data?.[permission] || !!data?.ADMIN
-  return { isLoading, permission: !!hasPermission || !!AccountStore.isAdmin() }
+  return {
+    isLoading,
+    isSuccess,
+    permission: !!hasPermission || !!AccountStore.isAdmin(),
+  }
 }
 
 const Permission: FC<PermissionType> = ({
