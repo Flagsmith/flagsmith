@@ -1,5 +1,6 @@
 from django.conf import settings
-from djoser.serializers import UserCreateSerializer
+from djoser.conf import settings as djoser_settings
+from djoser.serializers import TokenCreateSerializer, UserCreateSerializer
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
@@ -15,6 +16,33 @@ from .constants import (
     INVALID_PASSWORD_ERROR,
     USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE,
 )
+
+
+class CustomTokenCreateSerializer(TokenCreateSerializer):
+    """
+    NOTE: Some authentication backends (e.g., LDAP) support only
+    username and password authentication. However, the front-end
+    currently sends the email as the login key. To accommodate
+    this, we override the serializer to rename the username field
+    to the email (or any other field configurable using djoser settings) field.
+
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if djoser_settings.LOGIN_FIELD != FFAdminUser.USERNAME_FIELD:
+            # Because djoser have created a field named username(djoser_settings.LOGIN_FIELD) in the serializer
+            # We have to remove this and add the email(FFAdminUser.USERNAME_FIELD) field back
+            self.fields.pop(djoser_settings.LOGIN_FIELD)
+            self.fields[FFAdminUser.USERNAME_FIELD] = serializers.CharField(
+                required=False
+            )
+
+    def validate(self, attrs):
+        if djoser_settings.LOGIN_FIELD != FFAdminUser.USERNAME_FIELD:
+            attrs[djoser_settings.LOGIN_FIELD] = attrs.pop(FFAdminUser.USERNAME_FIELD)
+
+        return super().validate(attrs)
 
 
 class CustomTokenSerializer(serializers.ModelSerializer):
@@ -52,8 +80,9 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
             "is_active",
             "marketing_consent_given",
             "key",
+            "uuid",
         )
-        read_only_fields = ("is_active",)
+        read_only_fields = ("is_active", "uuid")
         write_only_fields = ("sign_up_type",)
         extra_kwargs = {
             "email": {
