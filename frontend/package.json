@@ -134,7 +134,7 @@
     "testcafe-react-selectors": "^5.0.3",
     "toml": "^3.0.0",
     "ts-node": "^10.9.1",
-    "webpack": "5.76.0",
+    "webpack": "5.94.0",
     "webpack-bundle-analyzer": "^4.5.0",
     "webpack-cli": "^4.10.0",
     "webpack-dev-middleware": "5.3.4",
