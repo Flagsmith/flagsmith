@@ -85,10 +85,22 @@ You have to configure the SDK to run in `Local Evaluation` mode. See the
 [SDK configuration options](server-side.md#configuring-the-sdk) for details on how to do that in your particular
 language.
 
-When the SDK is initialised in `Local Evaluation` mode, it will grab the entire set of details about the Environment
-from the Flagsmith API. This will include all the Flags, Flag values, Segment rules, Segment overrides etc for that
-Environment. This full complement of data about the Environment enables the Flagsmith SDK to run the Flag Engine
-_locally_ and _natively_ within your server infrastructure.
+When the SDK is initialised in `Local Evaluation` mode, it grabs the entire set of details about the Environment from
+the Flagsmith API. For a given Environment, this includes:
+
+- Flags and flag values
+- Segments, segment rules, and segment overrides
+- Identity overrides
+
+This full complement of Environment data enables the Flagsmith SDK to run the Flag Engine _locally_ and _natively_
+within your server infrastructure.
+
+:::info
+
+Identity overrides in local evaluation mode do not include persisted traits. You will need to provide a full set of
+traits when requesting identity flags. See [Pros, Cons and Caveats](#for-local-evaluation).
+
+:::
 
 The benefits to doing this are mainly one of latency and performance. Your server-side code does not need to hit the
 Flagsmith API each time a user requests their flags - the flags can be computed locally. Hence it does not need to block
@@ -320,13 +332,13 @@ common pattern for networking implementation is:
 
 ## Pros, Cons and Caveats
 
-### Remote Evaluation
+### For Remote Evaluation
 
 - Identities are persisted within the Flagsmith Datastore.
 - Identity overrides specified within the Dashboard.
 - All Integrations work as designed.
 
-### Local Evaluation
+### For Local Evaluation
 
 :::tip
 
@@ -345,10 +357,6 @@ are all computed locally.
 - Identities and their Traits are **not** read from or written to the Flagsmith API, and so are not persisted in the
   datastore. This means that you have to provide the full complement of Traits when requesting the Flags for a
   particular Identity. Our SDKs all provide relevant methods to achieve this.
-- [Identity overrides](../basic-features/managing-identities#identity-overrides) work with self-hosted Flagsmith
-  instances. We're rolling them out gradually for the SaaS version. If you are a SaaS customer,
-  <a class="open-chat" data-crisp-chat-message="Hi! I'm interested to try out identity overrides in Local Evaluation mode with Flagsmith SaaS!" href="#local-evaluation-1">contact
-  us</a> to try them out!
 - [Analytics-based Integrations](/integrations#analytics-platforms) do not run.
   [Flag Analytics](/advanced-use/flag-analytics) do still work, if enabled within the
   [SDK setup](/clients/server-side#configuring-the-sdk).
