@@ -23,7 +23,7 @@ const RepositoriesSelect: FC<RepositoriesSelectType> = ({
   return (
     <Select
       autoSelect
-      className='w-100'
+      className='react-select w-100'
       size='select-md full-width'
       placeholder={'Select Your Repository'}
       disabled={disabled}

@@ -9,11 +9,11 @@ import MyRepositoriesSelect from './MyRepositoriesSelect'
 
 export type GitHubResourcesSelectType = {
   onChange: (value: string) => void
-  lastSavedResource: string | undefined
   linkedExternalResources: ExternalResource[] | undefined
   orgId: string
   githubId: string
   resourceType: string
+  value: string[] | undefined // an array of resource URLs
   setResourceType: (value: string) => void
 }
 
@@ -22,11 +22,11 @@ type GitHubResourcesValueType = {
 }
 const GitHubResourcesSelect: FC<GitHubResourcesSelectType> = ({
   githubId,
-  lastSavedResource,
   onChange,
   orgId,
   resourceType,
   setResourceType,
+  value,
 }) => {
   const githubTypes = Object.values(Constants.resourceTypes).filter(
     (v) => v.type === 'GITHUB',
@@ -60,14 +60,11 @@ const GitHubResourcesSelect: FC<GitHubResourcesSelectType> = ({
     useState<GitHubResourcesValueType | null>(null)
   const [searchText, setSearchText] = React.useState('')
 
-  useEffect(() => {
-    if (selectedOption && selectedOption.value === lastSavedResource) {
-      setSelectedOption(null)
-    }
-  }, [lastSavedResource, selectedOption])
-
   return (
     <>
+      <label className='cols-sm-2 control-label'>
+        Link new Issue / Pull Request
+      </label>
       <div className='d-flex gap-2 mb-2'>
         <MyRepositoriesSelect
           githubId={githubId}
@@ -78,7 +75,7 @@ const GitHubResourcesSelect: FC<GitHubResourcesSelectType> = ({
         <div style={{ width: 200 }}>
           <Select
             autoSelect
-            className='w-100'
+            className='w-100 react-select'
             size='select-md'
             placeholder={'Select Type'}
             value={githubTypes.find((v) => v.resourceType === resourceType)}
@@ -97,9 +94,6 @@ const GitHubResourcesSelect: FC<GitHubResourcesSelectType> = ({
       </div>
       {!!repoName && !!repoOwner && (
         <div>
-          <label className='cols-sm-2 control-label'>
-            Link new Issue / Pull Request
-          </label>
           <Select
             filterOption={(options: any[]) => {
               return options
@@ -108,15 +102,17 @@ const GitHubResourcesSelect: FC<GitHubResourcesSelectType> = ({
             size='select-md'
             placeholder={'Select Your Resource'}
             onChange={(v: GitHubResourcesValueType) => {
-              setSelectedOption(v)
+              setSelectedOption(null)
               onChange(v?.value)
             }}
-            options={data?.results.map((i: GithubResource) => {
-              return {
-                label: `${i.title} #${i.number}`,
-                value: i,
-              }
-            })}
+            options={data?.results
+              .filter((v) => !value?.includes(v.html_url))
+              .map((i: GithubResource) => {
+                return {
+                  label: `${i.title} #${i.number}`,
+                  value: i,
+                }
+              })}
             noOptionsMessage={() =>
               isLoading || isFetching ? (
                 <div className='py-2'>
