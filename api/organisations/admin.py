@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.contrib import admin
-from django.db.models import Count
+from django.db.models import Count, Q
 
 from organisations.models import Organisation, Subscription, UserOrganisation
 from projects.models import Project
@@ -49,12 +49,14 @@ class OrganisationAdmin(admin.ModelAdmin):
     list_filter = ("subscription__plan",)
     search_fields = ("id", "name", "subscription__subscription_id", "users__email")
 
-    def get_queryset(self, request):
+    def get_queryset(self, request):  # pragma: no cover
         return (
             Organisation.objects.select_related("subscription")
             .annotate(
-                num_users=Count("users", distinct=True),
-                num_projects=Count("projects", distinct=True),
+                num_users=Count("users", distinct=True, filter=Q(is_active=True)),
+                num_projects=Count(
+                    "projects", distinct=True, filter=Q(deleted_at__isnull=True)
+                ),
             )
             .all()
         )
