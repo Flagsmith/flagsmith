@@ -19,5 +19,5 @@ class Command(BaseCommand):
         ).values_list("id", flat=True):
             try:
                 migrate_project_environments_to_v2(project_id)
-            except Exception:
+            except Exception:  # pragma: no cover
                 logger.exception("Error migrating project id=%d", project_id)
