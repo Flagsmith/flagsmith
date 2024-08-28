@@ -5,6 +5,7 @@ import freezegun
 import pytest
 from django.contrib.sites.models import Site
 from django.utils import timezone
+from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
 from pytest_mock import MockerFixture
 
 from audit.constants import (
@@ -33,7 +34,7 @@ from features.workflows.core.models import (
     ChangeRequestApproval,
     ChangeRequestGroupAssignment,
 )
-from segments.models import Segment
+from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
 
 now = timezone.now()
@@ -794,3 +795,61 @@ def test_change_request_live_from_for_change_request_with_change_set(
 
     # Then
     assert change_request.live_from == now
+
+
+def test_publishing_segments_as_part_of_commit(
+    segment: Segment,
+    change_request: ChangeRequest,
+) -> None:
+    # Given
+    assert segment.version == 2
+    cr_segment = segment.shallow_clone("Test Name", "Test Description", change_request)
+    assert cr_segment.rules.count() == 0
+
+    # Add some rules that the original segment will be cloning from
+    parent_rule = SegmentRule.objects.create(
+        segment=cr_segment, type=SegmentRule.ALL_RULE
+    )
+
+    child_rule1 = SegmentRule.objects.create(
+        rule=parent_rule, type=SegmentRule.ANY_RULE
+    )
+    child_rule2 = SegmentRule.objects.create(
+        rule=parent_rule, type=SegmentRule.NONE_RULE
+    )
+    Condition.objects.create(
+        rule=child_rule1,
+        property="child_rule1",
+        operator=EQUAL,
+        value="condition1",
+        created_with_segment=True,
+    )
+    Condition.objects.create(
+        rule=child_rule2,
+        property="child_rule2",
+        operator=PERCENTAGE_SPLIT,
+        value="0.2",
+        created_with_segment=False,
+    )
+
+    # When
+    change_request._publish_segments()
+
+    # Then
+    segment.refresh_from_db()
+    assert segment.version == 3
+    assert segment.name == "Test Name"
+    assert segment.description == "Test Description"
+    assert segment.rules.count() == 1
+    parent_rule2 = segment.rules.first()
+    assert parent_rule2.type == SegmentRule.ALL_RULE
+    assert parent_rule2.rules.count() == 2
+    child_rule3, child_rule4 = list(parent_rule2.rules.all())
+    assert child_rule3.type == SegmentRule.ANY_RULE
+    assert child_rule4.type == SegmentRule.NONE_RULE
+    assert child_rule3.conditions.count() == 1
+    assert child_rule4.conditions.count() == 1
+    condition1 = child_rule3.conditions.first()
+    condition2 = child_rule4.conditions.first()
+    assert condition1.value == "condition1"
+    assert condition2.value == "0.2"
