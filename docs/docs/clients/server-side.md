@@ -904,6 +904,32 @@ impl OfflineHandler for MyCustomOfflineHandler {
 ```
 
 </TabItem>
+<TabItem value="go" label="Go">
+
+```rust
+# Using the built-in local file handler
+
+envJsonPath := "./fixtures/environment.json"
+offlineHandler, err := flagsmith.NewLocalFileHandler(envJsonPath)
+
+# Instantiate the client with offline handler
+
+flagsmith := flagsmith.NewClient(fixtures.EnvironmentAPIKey, flagsmith.WithOfflineHandler(offlineHandler),
+    flagsmith.WithBaseURL(server.URL+"/api/v1/"))
+
+
+# Defining a custom offline handler
+type CustomOfflineHandler struct {
+    ...
+}
+
+func (handler *CustomOfflineHandler) GetEnvironment() *environments.EnvironmentModel {
+  ...
+}
+
+```
+
+</TabItem>
 
 </Tabs>
 
