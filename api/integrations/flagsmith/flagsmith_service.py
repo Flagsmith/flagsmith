@@ -1,6 +1,8 @@
 import json
 import os
+from copy import deepcopy
 
+import deepdiff
 import requests
 from django.conf import settings
 
@@ -37,18 +39,30 @@ def update_environment_json(environment_key: str = None, api_url: str = None) ->
             f"Couldn't get defaults from Flagsmith. Got {response.status_code} response."
         )
 
-    environment_json = _get_masked_environment_data(response.json())
+    new_environment_document = get_masked_environment_data(response.json())
     with open(ENVIRONMENT_JSON_PATH, "w+") as defaults:
-        defaults.write(json.dumps(environment_json, indent=2, sort_keys=True))
+        current_environment_document = defaults.read() or "{}"
+
+    if deepdiff.DeepDiff(
+        json.loads(current_environment_document),
+        new_environment_document,
+        exclude_regex_paths=[
+            r"root\['feature_states'\]\[\d+\]\['django_id'\]",
+            r"root\['feature_states'\]\[\d+\]\['featurestate_uuid'\]",
+        ],
+    ):
+        defaults.write(json.dumps(new_environment_document, indent=2, sort_keys=True))
 
 
-def _get_masked_environment_data(environment_document: dict) -> dict:
+def get_masked_environment_data(environment_document: dict) -> dict:
     """
     Return a cut down / masked version of the environment
     document which can be committed to VCS.
     """
 
-    project_json = environment_document.pop("project")
+    _copy = deepcopy(environment_document)
+
+    project_json = _copy.pop("project")
     organisation_json = project_json.pop("organisation")
 
     return {

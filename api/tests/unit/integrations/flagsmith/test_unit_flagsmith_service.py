@@ -1,11 +1,18 @@
 import json
+import uuid
+from copy import deepcopy
+from typing import Any
 from unittest.mock import mock_open, patch
 
 import pytest
 import responses
+from pytest_django.fixtures import SettingsWrapper
 
 from integrations.flagsmith.exceptions import FlagsmithIntegrationError
-from integrations.flagsmith.flagsmith_service import update_environment_json
+from integrations.flagsmith.flagsmith_service import (
+    get_masked_environment_data,
+    update_environment_json,
+)
 
 
 @pytest.fixture()
@@ -58,6 +65,11 @@ def environment_document():
     }
 
 
+@pytest.fixture()
+def masked_environment_document(environment_document: dict[str, Any]) -> dict[str, Any]:
+    return get_masked_environment_data(environment_document)
+
+
 @responses.activate
 def test_update_environment_json(settings, environment_document):
     """
@@ -104,3 +116,35 @@ def test_update_environment_json_throws_exception_for_failed_request(settings):
     # When
     with pytest.raises(FlagsmithIntegrationError):
         update_environment_json()
+
+
+@responses.activate
+def test_update_environment_json_does_nothing_if_ids_change(
+    environment_document: dict[str, Any],
+    masked_environment_document: dict[str, Any],
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    api_url = "https://api.flagsmith.com/api/v1"
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = api_url
+
+    current = masked_environment_document
+    new = deepcopy(environment_document)
+    new["feature_states"][0]["django_id"] += 1
+    new["feature_states"][0]["featurestate_uuid"] = str(uuid.uuid4())
+
+    responses.add(
+        method="GET",
+        url=f"{api_url}/environment-document",
+        body=json.dumps(new),
+        status=200,
+    )
+
+    # When
+    with patch(
+        "builtins.open", mock_open(read_data=json.dumps(current))
+    ) as mocked_open:
+        update_environment_json()
+
+    # Then
+    mocked_open.return_value.write.assert_not_called()
