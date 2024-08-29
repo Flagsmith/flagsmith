@@ -15,7 +15,8 @@ class Command(BaseCommand):
             edge_v2_migration_status__in=(
                 EdgeV2MigrationStatus.NOT_STARTED,
                 EdgeV2MigrationStatus.INCOMPLETE,
-            )
+            ),
+            enable_dynamo_db=True,
         ).values_list("id", flat=True):
             try:
                 migrate_project_environments_to_v2(project_id)
