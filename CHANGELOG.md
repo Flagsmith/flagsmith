@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.138.2](https://github.com/Flagsmith/flagsmith/compare/v2.138.1...v2.138.2) (2024-08-28)
+
+
+### Bug Fixes
+
+* **django-upgrade:** upgrade django major version  ([#4136](https://github.com/Flagsmith/flagsmith/issues/4136)) ([aa234e4](https://github.com/Flagsmith/flagsmith/commit/aa234e45a90d384d52bcd1ab9135d912bedf6bf8))
+* feature-specific segments link ([#4299](https://github.com/Flagsmith/flagsmith/issues/4299)) ([bb4a89c](https://github.com/Flagsmith/flagsmith/commit/bb4a89c32851e55167b350bed5af935f484f329b))
+
+### Deprecations
+
+Since this release upgrades the Django major version, this release drops support for 
+Postgres <12.
+
 ## [2.138.1](https://github.com/Flagsmith/flagsmith/compare/v2.138.0...v2.138.1) (2024-08-27)
 
 
