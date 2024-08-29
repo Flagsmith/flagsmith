@@ -78,7 +78,6 @@ const PermissionsSummary: FC<PermissionsSummaryType> = ({
 const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
   ({ filter, group, hasTags, level, mainItems, orgId, role, user }) => {
     const [expandedItems, setExpandedItems] = useState<(string | number)[]>([])
-    console.log('DEBUG: hasTags:', hasTags)
     const mainItemsFiltered =
       mainItems &&
       mainItems?.filter((v) => {

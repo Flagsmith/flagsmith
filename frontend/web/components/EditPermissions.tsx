@@ -730,30 +730,34 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                   p.key !== `VIEW_${levelUpperCase}` &&
                   !hasPermission(`VIEW_${levelUpperCase}`)
                 return (
-                  <Row
-                    key={p.key}
-                    style={admin() ? { opacity: 0.5 } : undefined}
-                    className='list-item list-item-sm px-3'
-                  >
-                    <Row space>
-                      <Flex>
-                        <strong>{Format.enumeration.get(p.key)}</strong>
-                        <div className='list-item-subtitle'>
-                          {p.description}
-                        </div>
-                      </Flex>
-                      <Switch
-                        onChange={() => {
-                          setValueChanged(true)
-                          togglePermission(p.key)
-                        }}
-                        disabled={
-                          disabled || admin() || saving || enableOnlyTBAC
-                        }
-                        checked={!disabled && hasPermission(p.key)}
-                      />
-                    </Row>
-                  </Row>
+                  <>
+                    {!enableOnlyTBAC && (
+                      <Row
+                        key={p.key}
+                        style={admin() ? { opacity: 0.5 } : undefined}
+                        className='list-item list-item-sm px-3'
+                      >
+                        <Row space>
+                          <Flex>
+                            <strong>{Format.enumeration.get(p.key)}</strong>
+                            <div className='list-item-subtitle'>
+                              {p.description}
+                            </div>
+                          </Flex>
+                          <Switch
+                            onChange={() => {
+                              setValueChanged(true)
+                              togglePermission(p.key)
+                            }}
+                            disabled={
+                              disabled || admin() || saving || enableOnlyTBAC
+                            }
+                            checked={!disabled && hasPermission(p.key)}
+                          />
+                        </Row>
+                      </Row>
+                    )}
+                  </>
                 )
               }}
             />

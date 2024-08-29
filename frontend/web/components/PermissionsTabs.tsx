@@ -56,6 +56,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
   const [project, setProject] = useState<string>('')
   const [environments, setEnvironments] = useState<Environment[]>([])
   const [tags, setTags] = useState<number[]>(roleData?.tags || [])
+  const [projectWithTags, setProjectWithTags] = useState<number[]>([])
   const [roleTagsChanged, setRoleTagsChanged] = useState<boolean>(false)
   const [hasTags, setHasTags] = useState<boolean>(
     !!roleData?.tags.length || false,
@@ -141,6 +142,10 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
                       onChange={(tags) => {
                         setRoleTagsChanged(true)
                         setTags(tags)
+                        setProjectWithTags([
+                          ...projectWithTags,
+                          parseInt(project),
+                        ])
                       }}
                     />
                   )}
