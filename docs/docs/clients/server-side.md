@@ -878,6 +878,33 @@ end
 
 </TabItem>
 
+<TabItem value="php" label="PHP">
+
+```php
+// Using the built-in local file handler
+
+$offline_handler = new LocalFileHandler("/path/to/environment.json")
+
+// Instantiate the client with offline mode set to true
+
+$flagsmith = new Flagsmith(
+    offline_mode: true,
+    offline_handler: offline_handler,
+)
+
+// Defining a custom offline handler
+
+class LocalFileHandler implements IOfflineHandler
+{
+    public function getEnvironment()
+    {
+        // Some code providing the environment for the handler
+    }
+}
+```
+
+</TabItem>
+
 </Tabs>
 
 ## Network Behaviour
@@ -1456,6 +1483,17 @@ $flagsmith = new Flagsmith(
     Optional
     */
     Closure $defaultFlagHandler = null
+
+    /*
+    (Available in 4.4.0+) Set the SDK into offline mode
+    Optional
+    */
+    bool $offlineMode = false,
+
+    # (Available in 4.4.0+) Provide an offline handler to use with offline mode, or
+    # as a means of returning default flags.
+    # Optional
+    IOfflineHandler $offlineHandler = null,
 );
 ```
 
