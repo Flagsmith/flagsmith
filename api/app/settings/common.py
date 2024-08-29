@@ -808,6 +808,7 @@ DJOSER = {
     "SEND_CONFIRMATION_EMAIL": False,
     "SERIALIZERS": {
         "token": "custom_auth.serializers.CustomTokenSerializer",
+        "token_create": "custom_auth.serializers.CustomTokenCreateSerializer",
         "user_create": "custom_auth.serializers.CustomUserCreateSerializer",
         "user_delete": "custom_auth.serializers.CustomUserDelete",
         "current_user": "users.serializers.CustomCurrentUserSerializer",
@@ -1131,7 +1132,7 @@ LDAP_INSTALLED = importlib.util.find_spec("flagsmith_ldap")
 # The URL of the LDAP server.
 LDAP_AUTH_URL = env.str("LDAP_AUTH_URL", None)
 
-if LDAP_INSTALLED and LDAP_AUTH_URL:
+if LDAP_INSTALLED and LDAP_AUTH_URL:  # pragma: no cover
     AUTHENTICATION_BACKENDS.insert(0, "django_python3_ldap.auth.LDAPBackend")
     INSTALLED_APPS.append("flagsmith_ldap")
 
@@ -1204,6 +1205,7 @@ if LDAP_INSTALLED and LDAP_AUTH_URL:
     # The LDAP user username and password used by `sync_ldap_users_and_groups` command
     LDAP_SYNC_USER_USERNAME = env.str("LDAP_SYNC_USER_USERNAME", None)
     LDAP_SYNC_USER_PASSWORD = env.str("LDAP_SYNC_USER_PASSWORD", None)
+    DJOSER["LOGIN_FIELD"] = "username"
 
 SEGMENT_CONDITION_VALUE_LIMIT = env.int("SEGMENT_CONDITION_VALUE_LIMIT", default=1000)
 if not 0 <= SEGMENT_CONDITION_VALUE_LIMIT < 2000000:
@@ -1237,4 +1239,8 @@ GLOBAL_DOMAIN_AUTH_METHODS = env.dict(
 EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET = env.int(
     "EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET",
     default=0,
+)
+
+ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = env.list(
+    "ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST", default=[]
 )

@@ -1,3 +1,4 @@
+import pytest
 from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
@@ -228,3 +229,15 @@ def test_creating_audit_logs_for_change_request_does_not_trigger_process_environ
     # Then
     process_environment_update.delay.assert_not_called()
     assert audit_log.created_date != environment.updated_at
+
+
+@pytest.mark.django_db
+def test_audit_log__organisation__empty_instance__return_expected() -> None:
+    # Given
+    audit_log = AuditLog.objects.create()
+
+    # When
+    organisation = audit_log.organisation
+
+    # Then
+    assert organisation is None

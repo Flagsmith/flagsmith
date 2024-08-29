@@ -7,6 +7,7 @@ import pytest
 import pytz
 from app_analytics.dataclasses import FeatureEvaluationData
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
+from django.conf import settings
 from django.forms import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
@@ -140,6 +141,7 @@ def test_remove_owners_only_remove_specified_owners(
         "first_name": user_3.first_name,
         "last_name": user_3.last_name,
         "last_login": None,
+        "uuid": mock.ANY,
     }
 
 
@@ -1565,6 +1567,7 @@ def test_add_owners_adds_owner(
         "first_name": staff_user.first_name,
         "last_name": staff_user.last_name,
         "last_login": None,
+        "uuid": mock.ANY,
     }
     assert json_response["owners"][1] == {
         "id": admin_user.id,
@@ -1572,6 +1575,7 @@ def test_add_owners_adds_owner(
         "first_name": admin_user.first_name,
         "last_name": admin_user.last_name,
         "last_login": None,
+        "uuid": mock.ANY,
     }
 
 
@@ -2322,6 +2326,39 @@ def test_cannot_update_environment_of_a_feature_state(
     )
 
 
+def test_update_feature_state_without_history_of_fsv(
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment.api_key, feature_state.id],
+    )
+    new_value = "new-value"
+
+    # Remove historical feature state value
+    feature_state.feature_state_value.history.all().delete()
+
+    data = {
+        "id": feature_state.id,
+        "feature_state_value": new_value,
+        "enabled": False,
+        "feature": feature.id,
+        "environment": environment.id,
+        "identity": None,
+        "feature_segment": None,
+    }
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
 def test_cannot_update_feature_of_a_feature_state(
     admin_client_new: APIClient,
     environment: Environment,
@@ -2639,7 +2676,11 @@ def test_update_segment_override__using_simple_feature_state_viewset__denies_upd
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_list_features_n_plus_1(
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
+def test_list_features_n_plus_1_without_rbac(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -2647,7 +2688,49 @@ def test_list_features_n_plus_1(
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
 ) -> None:
-    # Given
+    _assert_list_feature_n_plus_1(
+        staff_client,
+        project,
+        feature,
+        with_project_permissions,
+        django_assert_num_queries,
+        environment,
+        num_queries=16,
+    )
+
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is False,
+    reason="Skip this test if RBAC is not installed",
+)
+def test_list_features_n_plus_1_with_rbac(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+) -> None:  # pragma: no cover
+    _assert_list_feature_n_plus_1(
+        staff_client,
+        project,
+        feature,
+        with_project_permissions,
+        django_assert_num_queries,
+        environment,
+        num_queries=17,
+    )
+
+
+def _assert_list_feature_n_plus_1(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    num_queries: int,
+) -> None:
     with_project_permissions([VIEW_PROJECT])
 
     base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
@@ -2661,7 +2744,7 @@ def test_list_features_n_plus_1(
         v1_feature_state.clone(env=environment, version=i, live_from=timezone.now())
 
     # When
-    with django_assert_num_queries(16):
+    with django_assert_num_queries(num_queries):
         response = staff_client.get(url)
 
     # Then
@@ -2801,7 +2884,6 @@ def test_list_features_with_feature_state(
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])
-
     feature2 = Feature.objects.create(
         name="another_feature", project=project, initial_value="initial_value"
     )
@@ -2892,8 +2974,7 @@ def test_list_features_with_feature_state(
     url = f"{base_url}?environment={environment.id}"
 
     # When
-    with django_assert_num_queries(16):
-        response = staff_client.get(url)
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -3142,8 +3223,12 @@ def test_simple_feature_state_returns_only_latest_versions(
     assert response_json["count"] == 2
 
 
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
 @pytest.mark.freeze_time(two_hours_ago)
-def test_feature_list_last_modified_values(
+def test_feature_list_last_modified_values_without_rbac(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     environment_v2_versioning: Environment,
@@ -3152,6 +3237,54 @@ def test_feature_list_last_modified_values(
     with_project_permissions: WithProjectPermissionsCallable,
     django_assert_num_queries: DjangoAssertNumQueries,
 ) -> None:
+    _assert_feature_list_last_modified_values(
+        staff_client,
+        staff_user,
+        environment_v2_versioning,
+        project,
+        feature,
+        with_project_permissions,
+        django_assert_num_queries,
+        num_queries=18,
+    )
+
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is False,
+    reason="Skip this test if RBAC is not installed",
+)
+@pytest.mark.freeze_time(two_hours_ago)
+def test_feature_list_last_modified_values_with_rbac(
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    environment_v2_versioning: Environment,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:  # pragma: no cover
+    _assert_feature_list_last_modified_values(
+        staff_client,
+        staff_user,
+        environment_v2_versioning,
+        project,
+        feature,
+        with_project_permissions,
+        django_assert_num_queries,
+        num_queries=19,
+    )
+
+
+def _assert_feature_list_last_modified_values(
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    environment_v2_versioning: Environment,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    num_queries: int,
+):
     # Given
     # another v2 versioning environment
     environment_v2_versioning_2 = Environment.objects.create(
@@ -3186,7 +3319,7 @@ def test_feature_list_last_modified_values(
         Feature.objects.create(name=f"feature_{i}", project=project)
 
     # When
-    with django_assert_num_queries(18):  # TODO: reduce this number of queries!
+    with django_assert_num_queries(num_queries):  # TODO: reduce this number of queries!
         response = staff_client.get(url)
 
     # Then
