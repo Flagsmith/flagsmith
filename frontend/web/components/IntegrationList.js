@@ -247,9 +247,7 @@ class IntegrationList extends Component {
   }
 
   fetch = () => {
-    const integrationList =
-      Utils.getFlagsmithValue('integration_data') &&
-      JSON.parse(Utils.getFlagsmithValue('integration_data'))
+    const integrationList = Utils.getIntegrationData()
     this.setState({ isLoading: true })
     Promise.all(
       this.props.integrations.map((key) => {
@@ -299,9 +297,7 @@ class IntegrationList extends Component {
     })
     const params = Utils.fromParam()
     if (params && params.configure) {
-      const integrationList =
-        Utils.getFlagsmithValue('integration_data') &&
-        JSON.parse(Utils.getFlagsmithValue('integration_data'))
+      const integrationList = Utils.getIntegrationData()
 
       if (integrationList && integrationList[params.configure]) {
         setTimeout(() => {
@@ -396,9 +392,7 @@ class IntegrationList extends Component {
   }
 
   render() {
-    const integrationList =
-      Utils.getFlagsmithValue('integration_data') &&
-      JSON.parse(Utils.getFlagsmithValue('integration_data'))
+    const integrationList = Utils.getIntegrationData()
     return (
       <div>
         <div

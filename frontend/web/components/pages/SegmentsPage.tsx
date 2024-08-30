@@ -44,7 +44,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     ProjectStore.getEnvironment()?.api_key || 'ENVIRONMENT_API_KEY'
   const params = Utils.fromParam()
   const id = params.id
-
   const { search, searchInput, setSearchInput } = useSearchThrottle('')
   const [page, setPage] = useState(1)
   const [showFeatureSpecific, setShowFeatureSpecific] = useState(

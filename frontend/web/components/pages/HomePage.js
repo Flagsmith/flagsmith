@@ -221,7 +221,10 @@ const HomePage = class extends React.Component {
         )
       }
 
-      if (Utils.getFlagsmithHasFeature('saml')) {
+      if (
+        !Utils.flagsmithFeatureExists('saml') ||
+        Utils.getFlagsmithHasFeature('saml')
+      ) {
         oauths.push(
           <div className={oauthClasses}>
             <Button
