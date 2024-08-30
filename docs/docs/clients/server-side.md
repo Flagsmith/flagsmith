@@ -877,6 +877,59 @@ end
 ```
 
 </TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+# Using the built-in local file handler
+
+let handler = offline_handler::LocalFileHandler::new("environment.json").unwrap();
+
+# Instantiate the client with offline handler
+
+  let flagsmith_options = FlagsmithOptions {
+    offline_handler: Some(Box::new(handler)),
+    ..Default::default()
+};
+
+let flagsmith = Flagsmith::new(ENVIRONMENT_KEY.to_string(), flagsmith_options);
+
+
+# Defining a custom offline handler
+impl OfflineHandler for MyCustomOfflineHandler {
+    fn get_environment(&self) -> Environment {
+      ...
+    }
+}
+
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go
+# Using the built-in local file handler
+
+envJsonPath := "./fixtures/environment.json"
+offlineHandler, err := flagsmith.NewLocalFileHandler(envJsonPath)
+
+# Instantiate the client with offline handler
+
+flagsmith := flagsmith.NewClient(EnvironmentAPIKey, flagsmith.WithOfflineHandler(offlineHandler),
+    flagsmith.WithBaseURL(server.URL+"/api/v1/"))
+
+
+# Defining a custom offline handler
+type CustomOfflineHandler struct {
+    ...
+}
+
+func (handler *CustomOfflineHandler) GetEnvironment() *environments.EnvironmentModel {
+  ...
+}
+
+```
+
+</TabItem>
 
 <TabItem value="php" label="PHP">
 
@@ -1540,6 +1593,13 @@ client := flagsmith.NewClient(os.Getenv("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY")
         // response
         flagsmith.WithDefaultHandler(defaultFlagHandler),
 
+        // WithOfflineMode returns an Option function that enables the offline mode.
+        flagsmith.WithOfflineHandler(offlineHandler)
+
+        // WithOfflineMode returns an Option function that enables the offline mode.
+        // (before using this option, you should set the offline handler)
+        flagsmith.WithOfflineMode()
+
         // Allows the client to use any logger that implements the `Logger` interface.
         flagsmith.WithLogger(ctx),
 
@@ -1592,6 +1652,12 @@ let options = FlagsmithOptions {
     // feature is Requested
     // Defaults to None
     default_flag_handler: None
+
+    // Provide an offline handler to use with offline mode, or as a means of returning default flags
+    offline_handler: None
+
+    // Set the SDK into offline mode(offline_handler must be set)
+    offline_mode: false
 };
 
 // Required Arguments
