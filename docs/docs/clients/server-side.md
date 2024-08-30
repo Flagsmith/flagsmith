@@ -906,7 +906,7 @@ impl OfflineHandler for MyCustomOfflineHandler {
 </TabItem>
 <TabItem value="go" label="Go">
 
-```rust
+```go
 # Using the built-in local file handler
 
 envJsonPath := "./fixtures/environment.json"
@@ -914,7 +914,7 @@ offlineHandler, err := flagsmith.NewLocalFileHandler(envJsonPath)
 
 # Instantiate the client with offline handler
 
-flagsmith := flagsmith.NewClient(fixtures.EnvironmentAPIKey, flagsmith.WithOfflineHandler(offlineHandler),
+flagsmith := flagsmith.NewClient(EnvironmentAPIKey, flagsmith.WithOfflineHandler(offlineHandler),
     flagsmith.WithBaseURL(server.URL+"/api/v1/"))
 
 
@@ -1555,6 +1555,13 @@ client := flagsmith.NewClient(os.Getenv("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY")
         // response
         flagsmith.WithDefaultHandler(defaultFlagHandler),
 
+        // WithOfflineMode returns an Option function that enables the offline mode.
+        flagsmith.WithOfflineHandler(offlineHandler)
+
+        // WithOfflineMode returns an Option function that enables the offline mode.
+        // (before using this option, you should set the offline handler)
+        flagsmith.WithOfflineMode()
+
         // Allows the client to use any logger that implements the `Logger` interface.
         flagsmith.WithLogger(ctx),
 
@@ -1607,6 +1614,12 @@ let options = FlagsmithOptions {
     // feature is Requested
     // Defaults to None
     default_flag_handler: None
+
+    // Provide an offline handler to use with offline mode, or as a means of returning default flags
+    offline_handler: None
+
+    // Set the SDK into offline mode(offline_handler must be set)
+    offline_mode: false
 };
 
 // Required Arguments
