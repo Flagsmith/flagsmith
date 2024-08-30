@@ -4,6 +4,7 @@ import pytest
 from django.utils import timezone
 from pytest_mock import MockerFixture
 
+from api_keys.models import MasterAPIKey
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from edge_api.identities.tasks import (
@@ -16,7 +17,9 @@ from environments.dynamodb.types import (
     IdentityOverridesV2Changeset,
     IdentityOverrideV2,
 )
+from environments.identities.models import Identity
 from environments.models import Environment, Webhook
+from features.models import Feature
 from webhooks.webhooks import WebhookEventType
 
 
@@ -126,6 +129,49 @@ def test_call_environment_webhook_for_feature_state_change_with_previous_state_o
     assert data["previous_state"] == mock_feature_state_data
     assert data["changed_by"] == admin_user.email
     assert data["timestamp"] == now_isoformat
+
+
+def test_call_environment_webhook_for_feature_state_change_with_master_api_key_id(
+    mocker: MockerFixture,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    master_api_key_object: MasterAPIKey,
+) -> None:
+    # Given
+    mock_call_environment_webhooks = mocker.patch(
+        "edge_api.identities.tasks.call_environment_webhooks"
+    )
+    Webhook.objects.create(environment=environment, url="https://foo.com/webhook")
+
+    mock_feature_state_data = mocker.MagicMock()
+    mocker.patch.object(
+        Webhook,
+        "generate_webhook_feature_state_data",
+        return_value=mock_feature_state_data,
+    )
+
+    now_isoformat = timezone.now().isoformat()
+    previous_enabled_state = True
+    previous_value = "foo"
+
+    # When
+    call_environment_webhook_for_feature_state_change(
+        feature_id=feature.id,
+        environment_api_key=environment.api_key,
+        identity_id=identity.id,
+        identity_identifier=identity.identifier,
+        changed_by_user_id=master_api_key_object.id,
+        timestamp=now_isoformat,
+        previous_enabled_state=previous_enabled_state,
+        previous_value=previous_value,
+    )
+
+    # Then
+    call_args = mock_call_environment_webhooks.call_args
+
+    data = call_args[0][1]
+    assert data["changed_by"] == master_api_key_object.name
 
 
 @pytest.mark.parametrize(

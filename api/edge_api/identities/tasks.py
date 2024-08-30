@@ -5,6 +5,7 @@ from django.utils import timezone
 from task_processor.decorators import register_task_handler
 from task_processor.models import TaskPriority
 
+from api_keys.models import MasterAPIKey
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from edge_api.identities.types import IdentityChangeset
@@ -24,7 +25,7 @@ def call_environment_webhook_for_feature_state_change(
     environment_api_key: str,
     identity_id: typing.Union[id, str],
     identity_identifier: str,
-    changed_by_user_id: int,
+    changed_by_user_id: int | str,
     timestamp: str,
     new_enabled_state: bool = None,
     new_value: typing.Union[bool, int, str] = None,
@@ -40,10 +41,14 @@ def call_environment_webhook_for_feature_state_change(
         return
 
     feature = Feature.objects.get(id=feature_id)
-    changed_by = FFAdminUser.objects.get(id=changed_by_user_id)
+    match changed_by_user_id:
+        case str():
+            changed_by = MasterAPIKey.objects.get(id=changed_by_user_id).name
+        case _:
+            changed_by = FFAdminUser.objects.get(id=changed_by_user_id).email
 
     data = {
-        "changed_by": changed_by.email,
+        "changed_by": changed_by,
         "timestamp": timestamp,
         "new_state": None,
     }

@@ -189,7 +189,7 @@ class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):
                 "environment_api_key": identity.environment_api_key,
                 "identity_id": identity.id,
                 "identity_identifier": identity.identifier,
-                "changed_by_user_id": request.user.id,
+                "changed_by_user_id": request.user.pk,
                 "new_enabled_state": self.instance.enabled,
                 "new_value": new_value,
                 "previous_enabled_state": getattr(previous_state, "enabled", None),
