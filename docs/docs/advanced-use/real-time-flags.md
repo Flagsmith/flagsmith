@@ -54,8 +54,8 @@ Your application subscribes to real-time flag updates by opening a long-lived
 which is specific to its current environment.
 
 When the environment is updated in some way, either via the Flagsmith dashboard or the
-[Admin API](/rest#private-admin-api-endpoints), all clients connected to that environment's real-time stream will
-receive a message containing the latest update's timestamp. If your application's latest flags are older than the
+[Admin API](/clients/rest#private-admin-api-endpoints), all clients connected to that environment's real-time stream
+will receive a message containing the latest update's timestamp. If your application's latest flags are older than the
 received timestamp, it requests the latest flags from Flagsmith. When your application receives the latest flags, you
 must propagate the latest flag state throughout your application as necessary.
 
