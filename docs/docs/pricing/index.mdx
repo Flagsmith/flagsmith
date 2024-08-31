@@ -10,7 +10,7 @@ applications will need.
 
 :::tip
 
-Self-hosted installations of Flagsmith do not have API request limits.
+Self-hosted Flagsmith installations do not have API request limits.
 
 :::
 
@@ -24,15 +24,14 @@ To check your API usage for the past 90 days:
 
 From this page, you can break down usage per project and per environment.
 
-The following screenshot shows an example usage graph available from the Flagsmith dashboard:
+The following screenshot shows an example usage graph from the Flagsmith dashboard:
 
 ![img.png](usage-graph.png)
 
 ## What counts as an API request?
 
 Any operation that calls Flagsmith's API to retrieve information about the current state of flags counts as 1 billable
-API request. Requests to the [Admin API](/clients/rest#private-admin-api-endpoints) or requests made by Flagsmith SDKs
-to track [Flag Analytics](/advanced-use/flag-analytics) are not billed.
+API request.
 
 The billable API requests your application makes depends mainly on which [flag evaluation mode](/clients) it uses:
 
@@ -41,6 +40,12 @@ The billable API requests your application makes depends mainly on which [flag e
 -   Local Evaluation is optional, and only for server-side applications. Each individual application or
     [Edge Proxy](/advanced-use/edge-proxy) instance polls the Flagsmith API at a configurable interval (60 seconds by
     default) to fetch the flags for the current environment and all users in one API request.
+
+The following requests are not billable:
+
+-   [Admin API](/clients/rest#private-admin-api-endpoints) requests.
+-   Requests made by Flagsmith SDKs to track [Flag Analytics](/advanced-use/flag-analytics).
+-   Connecting to a [real-time flag updates](/advanced-use/real-time-flags) stream.
 
 ### Example: client-side application
 
