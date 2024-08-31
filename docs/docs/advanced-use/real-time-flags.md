@@ -35,16 +35,16 @@ The following sequence diagram shows how a typical application would use real-ti
 sequenceDiagram
     rect rgb(255,245,173)
         Application->>Flagsmith: Fetch initial flags
-        Flagsmith->>Application:
+        Flagsmith->>Application: #nbsp
     end
     Application->>Flagsmith: Connect to update stream
-    Flagsmith->>Application:
+    Flagsmith->>Application: #nbsp
     Flagsmith Administrator->>Flagsmith: Update flag state
-    Flagsmith->>Flagsmith Administrator:
+    Flagsmith->>Flagsmith Administrator: #nbsp
     Flagsmith-->>Application: Flag update event
     rect rgb(255,245,173)
         Application->>Flagsmith: Fetch latest flags
-        Flagsmith->>Application:
+        Flagsmith->>Application: #nbsp
     end
     Application-->Application: Store latest update timestamp
 ```
