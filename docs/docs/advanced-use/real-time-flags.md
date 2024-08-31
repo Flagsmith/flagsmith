@@ -1,82 +1,101 @@
-# Real-Time Flags
+---
+title: Real-time flag updates
+sidebar_label: Real-time Flags
+---
 
-:::tip
+When an application fetches its current feature flags, it usually caches the flags for a certain amount of time to make
+[efficient use](/guides-and-examples/efficient-api-usage) of the Flagsmith API and network resources. In some cases, you
+may want an application to be notified about feature flag updates without needing to repeatedly call the Flagsmith API.
+You can achieve this by subscribing to real-time flag updates.
 
-Real-time Flags are currently part of our SaaS Enterprise plans.
+## Prerequisites
 
-:::
+Real-time flag updates require an Enterprise subscription.
 
-## Overview
+Real-time flag updates are only available on the public SaaS Flagsmith instance. Self-hosted and private cloud Flagsmith
+installations do not support real-time flag updates.
 
-Real-time flags allow you to stream flag changes from Flagsmith downstream to connected clients.
+## Setup
+
+To enable real-time flag updates for your Flagsmith project:
+
+1. Log in to the Flagsmith dashboard as a user with project administrator permissions.
+2. Navigate to **Project Settings > SDK Settings**.
+3. Enable **Real-time updates**.
+
+Applications using a supported Flagsmith SDK do not subscribe to real-time flag updates by default. Refer to your SDK's
+documentation for subscribing to real-time flag updates.
 
 ## How it works
 
-:::info
+The following sequence diagram shows how a typical application would use real-time flag updates.
+[Billable API requests](/pricing) are highlighted in yellow.
 
-You need to enable the realtime listener in the Flagsmith SDK. Please check the docs for your SDK language on how to do
-this.
+```mermaid
+sequenceDiagram
+    rect rgb(255,245,173)
+        Application->>Flagsmith: Fetch initial flags
+        Flagsmith->>Application:
+    end
+    Application->>Flagsmith: Connect to update stream
+    Flagsmith->>Application:
+    Flagsmith Administrator->>Flagsmith: Update flag state
+    Flagsmith->>Flagsmith Administrator:
+    Flagsmith-->>Application: Flag update event
+    rect rgb(255,245,173)
+        Application->>Flagsmith: Fetch latest flags
+        Flagsmith->>Application:
+    end
+    Application-->Application: Store latest update timestamp
+```
 
-:::
+Your application subscribes to real-time flag updates by opening a long-lived
+[server-sent events (SSE)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) connection to Flagsmith,
+which is specific to its current environment.
 
-Our SDK will make a long-lived request (actually a
-[Server Sent Event](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)), to
-our real-time infrastructure. This connection will remain open for the duration of the SDK session, listening for events
-from our API.
+When the environment is updated in some way, either via the Flagsmith dashboard or the
+[Admin API](/rest#private-admin-api-endpoints), all clients connected to that environment's real-time stream will
+receive a message containing the latest update's timestamp. If your application's latest flags are older than the
+received timestamp, it requests the latest flags from Flagsmith. When your application receives the latest flags, you
+must propagate the latest flag state throughout your application as necessary.
 
-When an Environment is updated in some way, either via the Flagsmith dashboard or our API, all the clients connected to
-that Environment stream will receive a message (actually an epoch timestamp) that alerts them to refresh their flags,
-which they will go ahead and do.
+## Limitations
 
-It is then up to you, as part of the SDK integration, to reflect that new flag state within your application.
+Real-time flag update events only contain a timestamp indicating when any flag in the environment was last updated.
+Applications must still call the Flagsmith API to get the actual flags for their current environment or user.
 
-## Pricing
+Only environment-level feature changes result in flag update events. For example, the following operations will generate
+flag update events:
 
-Real-time flags are included within the Scale-Up and Enterprise plans.
+- Manually toggling a flag on or off, or changing its value.
+- A [scheduled Change Request](/advanced-use/scheduled-flags) for a feature goes live.
+- Creating or updating segment overrides for a feature.
 
-## SDK support
+Project-level or identity-level operations _will not_ generate flag update events:
 
-We are working to build out support for all our SDKs. We are going to prioritise client-side SDKs over server-side SDKs
-but are happy to take pull requests!
+- Changing a segment definition.
+- Updating an identity's traits.
+- Creating or updating an identity override.
 
-### Client Side
+The following SDK clients support subscribing to real-time flag updates:
 
-| Language       | Support |
-| -------------- | ------- |
-| Javascript     | ✅      |
-| iOS/Swift      | ❌      |
-| Android/Kotlin | ❌      |
-| Dart/Flutter   | ❌      |
+- JavaScript
+- Android
+- Flutter
+- Python
 
-### Server Side
+## Implementation details
 
-| Language | Support |
-| -------- | ------- |
-| Node.js  | ❌      |
-| Java     | ❌      |
-| .Net     | ❌      |
-| Python   | ❌      |
-| Ruby     | ❌      |
-| Rust     | ❌      |
-| Go       | ❌      |
-| Elixir   | ❌      |
+The event source URL used by Flagsmith SDKs is:
 
-## Things you should know
+```
+https://realtime.flagsmith.com/sse/environments/ENVIRONMENT_ID/stream
+```
 
-- Per-identity overrides do not trigger an update
-- Identity Trait updates do not trigger an update
+Each real-time flag event message is a JSON object containing a Unix epoch timestamp of the environment's last update:
 
-## How it works under the hood
-
-When realtime streaming is enabled within the SDK, the client will try to connect to:
-`eventSourceUrl + "sse/environments/" + environmentID + "/stream"`. The streaming services is built on top of
-[Server Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events), _not_ Websockets!
-
-By default, this `eventSourceUrl` is set to `https://realtime.flagsmith.com/`.
-
-Every time flags are fetched (via identify, get flags, set traits etc) via the REST API, we update an epoch timestamp
-internally within the SDK, storing how fresh the flags are.
-
-Whilst connected to the streaming service, the client will receive a new epoch timestamp event if the Flagsmith
-Environment state has changed. If that epoch timestamp value is greater (as in more recent) than our internal timestamp
-we refetch the flags.
+```json
+{
+ "updated_at": 3133690620000
+}
+```
