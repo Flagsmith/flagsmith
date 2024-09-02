@@ -154,7 +154,6 @@ class EdgeIdentityViewSet(
                     "get_traits": VIEW_IDENTITIES,
                     "update_traits": MANAGE_IDENTITIES,
                     "perform_destroy": MANAGE_IDENTITIES,
-                    "search_by_dashboard_alias": VIEW_IDENTITIES,
                 },
             ),
         ]
