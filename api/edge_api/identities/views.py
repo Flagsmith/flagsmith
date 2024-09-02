@@ -1,9 +1,7 @@
 import base64
 import json
-import typing
 
 import pydantic
-from boto3.dynamodb.conditions import Key
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
@@ -94,22 +92,6 @@ class EdgeIdentityViewSet(
             raise DynamoNotEnabledError()
 
         super().initial(request, *args, **kwargs)
-
-    def _get_search_function_and_value(
-        self,
-        search_query: str,
-        attribute: str = "identifier",
-    ) -> typing.Tuple[typing.Callable, str]:
-        if search_query.startswith('"') and search_query.endswith('"'):
-            return (
-                lambda search_string: Key(attribute).eq(search_string),
-                search_query[1:-1],
-            )
-
-        return (
-            lambda search_string: Key(attribute).begins_with(search_string),
-            search_query,
-        )
 
     def get_object(self):
         return EdgeIdentity.dynamo_wrapper.get_item_from_uuid_or_404(
