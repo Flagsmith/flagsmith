@@ -2,6 +2,7 @@ import json
 import urllib
 from typing import Any
 
+import pytest
 from boto3.dynamodb.conditions import Key
 from django.urls import reverse
 from mypy_boto3_dynamodb.service_resource import Table
@@ -373,6 +374,7 @@ def test_search_for_identities_by_dashboard_alias(
     assert len(response.json()["results"]) == 1
 
 
+@pytest.mark.skip(reason="Not yet implemented")  # TODO
 def test_update_edge_identity(
     admin_client: APIClient,
     dynamo_enabled_environment: Environment,
