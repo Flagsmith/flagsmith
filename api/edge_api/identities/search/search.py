@@ -1,13 +1,14 @@
-import time
 from typing import NamedTuple
 
 import boto3
+from pyathena import connect
+from pyathena.cursor import DictCursor
 
 athena = boto3.client("athena")
 
 
 class EdgeIdentitySearchResult(NamedTuple):
-    edge_identity_uuid: str
+    identity_id: str
     trait_name: str
     trait_value: str
 
@@ -15,6 +16,12 @@ class EdgeIdentitySearchResult(NamedTuple):
 def get_edge_identities_by_trait(
     environment_api_key: str, trait_key: str, trait_value: str
 ) -> list[EdgeIdentitySearchResult]:
+    cursor = connect(
+        s3_staging_dir="s3://identity-by-traits-data-results/traits/",
+        region_name="eu-west-2",
+        cursor_class=DictCursor,
+    ).cursor()
+
     query_string = (
         f"SELECT identity_id, trait_name, trait_value "
         f"FROM IdentityTraits.identity_traits "
@@ -22,42 +29,16 @@ def get_edge_identities_by_trait(
         f"AND trait_name='{trait_key}' "
         f"AND trait_value='{trait_value}'"
     )
-    exec_response = athena.start_query_execution(
-        QueryString=query_string,
-        ResultConfiguration={
-            "OutputLocation": "s3://identity-by-traits-data-results/traits/"
-        },
-    )
-    query_execution_id = exec_response["QueryExecutionId"]
 
-    while True:
-        status_response = athena.get_query_execution(
-            QueryExecutionId=query_execution_id
-        )
-        status = status_response["QueryExecution"]["Status"]["State"]
-        if status == "SUCCEEDED":
-            break
-        time.sleep(0.5)
-
-    results_response = athena.get_query_results(QueryExecutionId=query_execution_id)
-
-    edge_identities = []
-    for result in results_response["ResultSet"]["Rows"][1:]:
-        edge_identities.append(
-            EdgeIdentitySearchResult(
-                result["Data"][0]["VarCharValue"],
-                result["Data"][1]["VarCharValue"],
-                result["Data"][2]["VarCharValue"],
-            )
-        )
-
-    assert edge_identities
+    cursor.execute(query_string)
+    results = cursor.fetchall()
+    return [EdgeIdentitySearchResult(*result.values()) for result in results]
 
 
 if __name__ == "__main__":
     matching_identities = get_edge_identities_by_trait(
-        environment_api_key="HxiPySrNFWftNmCfhGUxFA",
+        environment_api_key="api_key_1",
         trait_key="app_version",
-        trait_value="1.9.4",
+        trait_value="v1.1",
     )
     print(matching_identities)
