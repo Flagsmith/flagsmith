@@ -12,6 +12,7 @@ from django.test.utils import setup_databases
 from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
+from pytest_django.fixtures import SettingsWrapper
 from pytest_django.plugin import blocking_manager_key
 from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
@@ -961,8 +962,10 @@ def dynamodb(aws_credentials):
 
 
 @pytest.fixture()
-def flagsmith_identities_table(dynamodb: DynamoDBServiceResource) -> Table:
-    return dynamodb.create_table(
+def flagsmith_identities_table(
+    dynamodb: DynamoDBServiceResource, settings: SettingsWrapper
+) -> Table:
+    table = dynamodb.create_table(
         TableName="flagsmith_identities",
         KeySchema=[
             {
@@ -975,6 +978,7 @@ def flagsmith_identities_table(dynamodb: DynamoDBServiceResource) -> Table:
             {"AttributeName": "environment_api_key", "AttributeType": "S"},
             {"AttributeName": "identifier", "AttributeType": "S"},
             {"AttributeName": "identity_uuid", "AttributeType": "S"},
+            {"AttributeName": "dashboard_alias", "AttributeType": "S"},
         ],
         GlobalSecondaryIndexes=[
             {
@@ -990,9 +994,24 @@ def flagsmith_identities_table(dynamodb: DynamoDBServiceResource) -> Table:
                 "KeySchema": [{"AttributeName": "identity_uuid", "KeyType": "HASH"}],
                 "Projection": {"ProjectionType": "ALL"},
             },
+            {
+                "IndexName": "environment_api_key-dashboard_alias-index",
+                "KeySchema": [
+                    {"AttributeName": "environment_api_key", "KeyType": "HASH"},
+                    {"AttributeName": "dashboard_alias", "KeyType": "RANGE"},
+                ],
+                "Projection": {
+                    "ProjectionType": "INCLUDE",
+                    "NonKeyAttributes": [
+                        "identifier",
+                    ],
+                },
+            },
         ],
         BillingMode="PAY_PER_REQUEST",
     )
+    settings.IDENTITIES_TABLE_NAME_DYNAMO = table.name
+    return table
 
 
 @pytest.fixture()

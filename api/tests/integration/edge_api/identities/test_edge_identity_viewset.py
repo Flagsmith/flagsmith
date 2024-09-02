@@ -4,11 +4,13 @@ from typing import Any
 
 from boto3.dynamodb.conditions import Key
 from django.urls import reverse
+from mypy_boto3_dynamodb.service_resource import Table
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.test import APIClient
 
 from edge_api.identities.search import (
+    DASHBOARD_ALIAS_SEARCH_PREFIX,
     IDENTIFIER_ATTRIBUTE,
     EdgeIdentitySearchData,
     EdgeIdentitySearchType,
@@ -19,6 +21,7 @@ from environments.dynamodb.wrappers.environment_wrapper import (
 from environments.dynamodb.wrappers.identity_wrapper import (
     DynamoIdentityWrapper,
 )
+from environments.models import Environment
 
 
 def test_get_identities_returns_bad_request_if_dynamo_is_not_enabled(
@@ -335,6 +338,39 @@ def test_search_for_identities_with_exact_match(
         limit=100,
         start_key=None,
     )
+
+
+def test_search_for_identities_by_dashboard_alias(
+    admin_client: APIClient,
+    dynamo_enabled_environment: Environment,
+    environment_api_key: str,
+    identity_document: dict[str, Any],
+    flagsmith_identities_table: Table,
+) -> None:
+    # Given
+    identifier = identity_document["identifier"]
+    dashboard_alias = identity_document["dashboard_alias"]
+
+    flagsmith_identities_table.put_item(Item=identity_document)
+
+    base_url = reverse(
+        "api-v1:environments:environment-edge-identities-list",
+        args=[environment_api_key],
+    )
+    url = "%s?%s" % (
+        base_url,
+        urllib.parse.urlencode(
+            {"q": f'{DASHBOARD_ALIAS_SEARCH_PREFIX}"{dashboard_alias}"'}
+        ),
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["results"][0]["identifier"] == identifier
+    assert len(response.json()["results"]) == 1
 
 
 def test_edge_identities_traits_list(
