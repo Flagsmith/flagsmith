@@ -104,79 +104,84 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
         theme='pill m-0'
         isRoles={true}
       >
-        <TabItem tabLabel={<Row className='justify-content-center'>Tags</Row>}>
-          <FormGroup className='mt-3 setting'>
-            <InputGroup
-              title={<h5>Permission Tags</h5>}
-              unsaved={roleTagsChanged}
-              component={
-                <>
-                  <InfoMessage>
-                    When applying tags to a role, the delete feature and update
-                    feature state permissions will only be valid for features
-                    sharing the same tag, providing more granularity.{' '}
-                    <Button
-                      theme='text'
-                      target='_blank'
-                      href='http://localhost:3000/system-administration/rbac#tags'
-                      className='fw-normal'
-                    >
-                      Learn more.
-                    </Button>
-                  </InfoMessage>
-
-                  <div className='mb-2' style={{ width: 250 }}>
-                    <ProjectFilter
-                      organisationId={orgId}
-                      onChange={(p) => {
-                        setProject(p)
-                      }}
-                      value={project}
-                    />
-                  </div>
-                  {project && (
-                    <AddEditTags
-                      readOnly={false}
-                      projectId={`${project}`}
-                      value={tags}
-                      onChange={(tags) => {
-                        setRoleTagsChanged(true)
-                        setTags(tags)
-                        setProjectWithTags([
-                          ...projectWithTags,
-                          parseInt(project),
-                        ])
-                      }}
-                    />
-                  )}
-                </>
-              }
-            />
-          </FormGroup>
-          <Button
-            onClick={() => {
-              editRole({
-                body: {
-                  description: roleData!.description!,
-                  name: roleData!.name,
-                  tags: tags,
-                },
-                organisation_id: orgId,
-                role_id: roleData!.id!,
-              }).then((res) => {
-                if (res.data?.tags?.length === 0) {
-                  setHasTags(false)
-                } else {
-                  setHasTags(true)
-                }
-                setRoleTagsChanged(false)
-                toast('Tags added successfully')
-              })
-            }}
+        {roleData && (
+          <TabItem
+            tabLabel={<Row className='justify-content-center'>Tags</Row>}
           >
-            Save Tags
-          </Button>
-        </TabItem>
+            <FormGroup className='mt-3 setting'>
+              <InputGroup
+                title={<h5>Permission Tags</h5>}
+                unsaved={roleTagsChanged}
+                component={
+                  <>
+                    <InfoMessage>
+                      When applying tags to a role, the delete feature and
+                      update feature state permissions will only be valid for
+                      features sharing the same tag, providing more granularity.{' '}
+                      <Button
+                        theme='text'
+                        target='_blank'
+                        href='http://localhost:3000/system-administration/rbac#tags'
+                        className='fw-normal'
+                      >
+                        Learn more.
+                      </Button>
+                    </InfoMessage>
+
+                    <div className='mb-2' style={{ width: 250 }}>
+                      <ProjectFilter
+                        organisationId={orgId}
+                        onChange={(p) => {
+                          setProject(p)
+                        }}
+                        value={project}
+                      />
+                    </div>
+                    {project && (
+                      <AddEditTags
+                        readOnly={false}
+                        projectId={`${project}`}
+                        value={tags}
+                        onChange={(tags) => {
+                          setRoleTagsChanged(true)
+                          setTags(tags)
+                          setProjectWithTags([
+                            ...projectWithTags,
+                            parseInt(project),
+                          ])
+                        }}
+                      />
+                    )}
+                  </>
+                }
+              />
+            </FormGroup>
+            <Button
+              onClick={() => {
+                editRole({
+                  body: {
+                    description: roleData!.description!,
+                    name: roleData!.name,
+                    tags: tags,
+                  },
+                  organisation_id: orgId,
+                  role_id: roleData!.id!,
+                }).then((res) => {
+                  if (res.data?.tags?.length === 0) {
+                    setHasTags(false)
+                  } else {
+                    setHasTags(true)
+                  }
+                  setRoleTagsChanged(false)
+                  toast('Tags added successfully')
+                })
+              }}
+            >
+              Save Tags
+            </Button>
+          </TabItem>
+        )}
+
         {!hasTags && (
           <TabItem
             tabLabel={
