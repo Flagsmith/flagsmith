@@ -94,6 +94,7 @@ class EdgeIdentityViewSet(
         super().initial(request, *args, **kwargs)
 
     def get_object(self):
+        # TODO: should this return an EdgeIdentity object instead of a dict?
         return EdgeIdentity.dynamo_wrapper.get_item_from_uuid_or_404(
             self.kwargs["identity_uuid"]
         )

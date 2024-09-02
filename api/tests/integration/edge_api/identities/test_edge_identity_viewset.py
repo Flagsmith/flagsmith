@@ -373,6 +373,35 @@ def test_search_for_identities_by_dashboard_alias(
     assert len(response.json()["results"]) == 1
 
 
+def test_update_edge_identity(
+    admin_client: APIClient,
+    dynamo_enabled_environment: Environment,
+    environment_api_key: str,
+    identity_document: dict[str, Any],
+    flagsmith_identities_table: Table,
+) -> None:
+    # Given
+    identity_uuid = identity_document["identity_uuid"]
+
+    dashboard_alias = "new-dashboard-alias"
+
+    flagsmith_identities_table.put_item(Item=identity_document)
+
+    url = reverse(
+        "api-v1:environments:environment-edge-identities-detail",
+        args=[environment_api_key, identity_uuid],
+    )
+
+    # When
+    response = admin_client.patch(url, data={"dashboard_alias": dashboard_alias})
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["dashboard_alias"] == dashboard_alias
+
+
 def test_edge_identities_traits_list(
     admin_client,
     environment_api_key,
