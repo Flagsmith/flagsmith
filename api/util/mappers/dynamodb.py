@@ -1,3 +1,4 @@
+import typing
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, TypeAlias, TypeVar, Union
@@ -76,11 +77,13 @@ def map_environment_api_key_to_environment_api_key_document(
 
 
 def map_engine_identity_to_identity_document(
-    engine_identity: "IdentityModel",
+    engine_identity: "IdentityModel", exclude_fields_if_none: typing.List[str] = None
 ) -> Document:
+    exclude_fields_if_none = exclude_fields_if_none or []
     response = {
         field_name: _map_value_to_document_value(value)
         for field_name, value in engine_identity
+        if (value is not None or field_name not in exclude_fields_if_none)
     }
     response["composite_key"] = engine_identity.composite_key
     return response

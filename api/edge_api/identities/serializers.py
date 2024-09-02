@@ -32,25 +32,39 @@ from util.mappers import (
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
 from .models import EdgeIdentity
+from .search import (
+    DASHBOARD_ALIAS_ATTRIBUTE,
+    DASHBOARD_ALIAS_SEARCH_PREFIX,
+    IDENTIFIER_ATTRIBUTE,
+    EdgeIdentitySearchData,
+    EdgeIdentitySearchType,
+)
 from .tasks import call_environment_webhook_for_feature_state_change
 
 
 class EdgeIdentitySerializer(serializers.Serializer):
     identity_uuid = serializers.CharField(read_only=True)
     identifier = serializers.CharField(required=True, max_length=2000)
+    dashboard_alias = serializers.CharField(required=False, max_length=100)
 
     def save(self, **kwargs):
         identifier = self.validated_data.get("identifier")
+        dashboard_alias = self.validated_data.get("dashboard_alias")
         environment_api_key = self.context["view"].kwargs["environment_api_key"]
         self.instance = EngineIdentity(
-            identifier=identifier, environment_api_key=environment_api_key
+            identifier=identifier,
+            environment_api_key=environment_api_key,
+            dashboard_alias=dashboard_alias,
         )
         if EdgeIdentity.dynamo_wrapper.get_item(self.instance.composite_key):
             raise ValidationError(
                 f"Identity with identifier: {identifier} already exists"
             )
         EdgeIdentity.dynamo_wrapper.put_item(
-            map_engine_identity_to_identity_document(self.instance)
+            map_engine_identity_to_identity_document(
+                self.instance,
+                exclude_fields_if_none=["dashboard_alias"],
+            )
         )
         return self.instance
 
@@ -239,6 +253,32 @@ class EdgeIdentityFsQueryparamSerializer(serializers.Serializer):
 
 class GetEdgeIdentityOverridesQuerySerializer(serializers.Serializer):
     feature = serializers.IntegerField(required=False)
+
+
+class EdgeIdentitySearchField(serializers.CharField):
+    def to_internal_value(self, data: str) -> EdgeIdentitySearchData:
+        kwargs = {}
+        search_term = data
+
+        if search_term.startswith(DASHBOARD_ALIAS_SEARCH_PREFIX):
+            kwargs["search_attribute"] = DASHBOARD_ALIAS_ATTRIBUTE
+            search_term = search_term.lstrip(DASHBOARD_ALIAS_SEARCH_PREFIX)
+        else:
+            kwargs["search_attribute"] = IDENTIFIER_ATTRIBUTE
+
+        if search_term.startswith('"') and search_term.endswith('"'):
+            kwargs["search_type"] = EdgeIdentitySearchType.EQUAL
+            search_term = search_term[1:-1]
+        else:
+            kwargs["search_type"] = EdgeIdentitySearchType.BEGINS_WITH
+
+        return EdgeIdentitySearchData(**kwargs, search_term=search_term)
+
+
+class ListEdgeIdentitiesQuerySerializer(serializers.Serializer):
+    page_size = serializers.IntegerField(required=False)
+    q = EdgeIdentitySearchField(required=False)
+    last_evaluated_key = serializers.CharField(required=False, allow_null=True)
 
 
 class GetEdgeIdentityOverridesResultSerializer(serializers.Serializer):
