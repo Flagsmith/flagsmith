@@ -1,4 +1,3 @@
-import typing
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, TypeAlias, TypeVar, Union
@@ -41,6 +40,8 @@ __all__ = (
 DocumentValue: TypeAlias = Union[Dict[str, "DocumentValue"], str, bool, None, Decimal]
 Document: TypeAlias = Dict[str, DocumentValue]
 
+_NULLABLE_IDENTITY_KEY_ATTRIBUTES = {"dashboard_alias"}
+
 
 def map_environment_to_environment_document(
     environment: "Environment",
@@ -77,13 +78,12 @@ def map_environment_api_key_to_environment_api_key_document(
 
 
 def map_engine_identity_to_identity_document(
-    engine_identity: "IdentityModel", exclude_fields_if_none: typing.List[str] = None
+    engine_identity: "IdentityModel",
 ) -> Document:
-    exclude_fields_if_none = exclude_fields_if_none or []
     response = {
         field_name: _map_value_to_document_value(value)
         for field_name, value in engine_identity
-        if (value is not None or field_name not in exclude_fields_if_none)
+        if (value is not None or field_name not in _NULLABLE_IDENTITY_KEY_ATTRIBUTES)
     }
     response["composite_key"] = engine_identity.composite_key
     return response
