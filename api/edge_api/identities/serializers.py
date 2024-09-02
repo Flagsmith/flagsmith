@@ -277,7 +277,11 @@ class EdgeIdentitySearchField(serializers.CharField):
 
 class ListEdgeIdentitiesQuerySerializer(serializers.Serializer):
     page_size = serializers.IntegerField(required=False)
-    q = EdgeIdentitySearchField(required=False)
+    q = EdgeIdentitySearchField(
+        required=False,
+        help_text="Search string to look for. Prefix with 'dashboard_alias:' "
+        "to search over aliases instead of identifiers.",
+    )
     last_evaluated_key = serializers.CharField(required=False, allow_null=True)
 
 
