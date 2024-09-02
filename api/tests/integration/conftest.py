@@ -443,6 +443,7 @@ def identity_document(
         "environment_api_key": environment_api_key,
         "identity_uuid": "59efa2a7-6a45-46d6-b953-a7073a90eacf",
         "django_id": None,
+        "dashboard_alias": None,
     }
 
 

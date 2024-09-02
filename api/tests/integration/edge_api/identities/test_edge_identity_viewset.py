@@ -8,7 +8,11 @@ from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.test import APIClient
 
-from edge_api.identities.views import EdgeIdentityViewSet
+from edge_api.identities.search import (
+    IDENTIFIER_ATTRIBUTE,
+    EdgeIdentitySearchData,
+    EdgeIdentitySearchType,
+)
 from environments.dynamodb.wrappers.environment_wrapper import (
     DynamoEnvironmentV2Wrapper,
 )
@@ -267,7 +271,7 @@ def test_search_identities_without_exact_match(
     )
 
     url = "%s?q=%s" % (base_url, identifier)
-    edge_identity_dynamo_wrapper_mock.search_items_with_identifier.return_value = {
+    edge_identity_dynamo_wrapper_mock.search_items.return_value = {
         "Items": [identity_document],
         "Count": 1,
     }
@@ -279,12 +283,15 @@ def test_search_identities_without_exact_match(
     assert response.json()["results"][0]["identifier"] == identifier
     assert len(response.json()["results"]) == 1
 
-    edge_identity_dynamo_wrapper_mock.search_items_with_identifier.assert_called_with(
-        environment_api_key,
-        identifier,
-        EdgeIdentityViewSet.dynamo_identifier_search_functions["BEGINS_WITH"],
-        100,
-        None,
+    edge_identity_dynamo_wrapper_mock.search_items.assert_called_with(
+        environment_api_key=environment_api_key,
+        search_data=EdgeIdentitySearchData(
+            search_term=identifier,
+            search_type=EdgeIdentitySearchType.BEGINS_WITH,
+            search_attribute=IDENTIFIER_ATTRIBUTE,
+        ),
+        limit=100,
+        start_key=None,
     )
 
 
@@ -306,7 +313,7 @@ def test_search_for_identities_with_exact_match(
         base_url,
         urllib.parse.urlencode({"q": f'"{identifier}"'}),
     )
-    edge_identity_dynamo_wrapper_mock.search_items_with_identifier.return_value = {
+    edge_identity_dynamo_wrapper_mock.search_items.return_value = {
         "Items": [identity_document],
         "Count": 1,
     }
@@ -318,12 +325,15 @@ def test_search_for_identities_with_exact_match(
     assert response.json()["results"][0]["identifier"] == identifier
     assert len(response.json()["results"]) == 1
 
-    edge_identity_dynamo_wrapper_mock.search_items_with_identifier.assert_called_with(
-        environment_api_key,
-        identifier,
-        EdgeIdentityViewSet.dynamo_identifier_search_functions["EQUAL"],
-        100,
-        None,
+    edge_identity_dynamo_wrapper_mock.search_items.assert_called_with(
+        environment_api_key=environment_api_key,
+        search_data=EdgeIdentitySearchData(
+            search_term=identifier,
+            search_type=EdgeIdentitySearchType.EQUAL,
+            search_attribute=IDENTIFIER_ATTRIBUTE,
+        ),
+        limit=100,
+        start_key=None,
     )
 
 
