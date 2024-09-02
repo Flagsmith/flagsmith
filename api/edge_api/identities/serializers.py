@@ -61,10 +61,7 @@ class EdgeIdentitySerializer(serializers.Serializer):
                 f"Identity with identifier: {identifier} already exists"
             )
         EdgeIdentity.dynamo_wrapper.put_item(
-            map_engine_identity_to_identity_document(
-                self.instance,
-                exclude_fields_if_none=["dashboard_alias"],
-            )
+            map_engine_identity_to_identity_document(self.instance)
         )
         return self.instance
 

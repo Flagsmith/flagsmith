@@ -130,7 +130,6 @@ def test_map_identity_to_identity_document__call_expected(
         "identity_features": [],
         "identity_traits": [{"trait_key": "key1", "trait_value": "value1"}],
         "identity_uuid": mocker.ANY,
-        "dashboard_alias": None,
     }
     assert uuid.UUID(result["identity_uuid"])
 
