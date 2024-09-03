@@ -2,7 +2,6 @@ import json
 import urllib
 from typing import Any
 
-import pytest
 from boto3.dynamodb.conditions import Key
 from django.urls import reverse
 from mypy_boto3_dynamodb.service_resource import Table
@@ -374,7 +373,6 @@ def test_search_for_identities_by_dashboard_alias(
     assert len(response.json()["results"]) == 1
 
 
-@pytest.mark.skip(reason="Not yet implemented")  # TODO
 def test_update_edge_identity(
     admin_client: APIClient,
     dynamo_enabled_environment: Environment,
@@ -384,6 +382,7 @@ def test_update_edge_identity(
 ) -> None:
     # Given
     identity_uuid = identity_document["identity_uuid"]
+    composite_key = identity_document["composite_key"]
 
     dashboard_alias = "new-dashboard-alias"
 
@@ -400,8 +399,19 @@ def test_update_edge_identity(
     # Then
     assert response.status_code == status.HTTP_200_OK
 
-    response_json = response.json()
-    assert response_json["dashboard_alias"] == dashboard_alias
+    assert response.json() == {
+        "dashboard_alias": dashboard_alias,
+        "identifier": identity_document["identifier"],
+        "identity_uuid": identity_uuid,
+    }
+
+    # Let's also validate that the fields are the same between the original document,
+    # and from the updated database, apart from the dashboard_alias which should have
+    # been updated as expected.
+    identity_from_db = flagsmith_identities_table.get_item(
+        Key={"composite_key": composite_key}
+    )["Item"]
+    assert {**identity_document, "dashboard_alias": dashboard_alias} == identity_from_db
 
 
 def test_edge_identities_traits_list(

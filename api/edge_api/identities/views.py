@@ -20,6 +20,7 @@ from rest_framework.mixins import (
     DestroyModelMixin,
     ListModelMixin,
     RetrieveModelMixin,
+    UpdateModelMixin,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -38,6 +39,7 @@ from edge_api.identities.serializers import (
     EdgeIdentitySerializer,
     EdgeIdentitySourceIdentityRequestSerializer,
     EdgeIdentityTraitsSerializer,
+    EdgeIdentityUpdateSerializer,
     EdgeIdentityWithIdentifierFeatureStateDeleteRequestBody,
     EdgeIdentityWithIdentifierFeatureStateRequestBody,
     GetEdgeIdentityOverridesQuerySerializer,
@@ -81,8 +83,8 @@ class EdgeIdentityViewSet(
     RetrieveModelMixin,
     DestroyModelMixin,
     ListModelMixin,
+    UpdateModelMixin,
 ):
-    serializer_class = EdgeIdentitySerializer
     pagination_class = EdgeIdentityPagination
     lookup_field = "identity_uuid"
 
@@ -92,6 +94,11 @@ class EdgeIdentityViewSet(
             raise DynamoNotEnabledError()
 
         super().initial(request, *args, **kwargs)
+
+    def get_serializer_class(self):
+        if self.action in ("update", "partial_update"):
+            return EdgeIdentityUpdateSerializer
+        return EdgeIdentitySerializer
 
     def get_object(self):
         # TODO: should this return an EdgeIdentity object instead of a dict?

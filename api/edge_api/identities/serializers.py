@@ -47,7 +47,7 @@ class EdgeIdentitySerializer(serializers.Serializer):
     identifier = serializers.CharField(required=True, max_length=2000)
     dashboard_alias = serializers.CharField(required=False, max_length=100)
 
-    def save(self, **kwargs):
+    def create(self, *args, **kwargs):
         identifier = self.validated_data.get("identifier")
         dashboard_alias = self.validated_data.get("dashboard_alias")
         environment_api_key = self.context["view"].kwargs["environment_api_key"]
@@ -64,6 +64,28 @@ class EdgeIdentitySerializer(serializers.Serializer):
             map_engine_identity_to_identity_document(self.instance)
         )
         return self.instance
+
+
+class EdgeIdentityUpdateSerializer(EdgeIdentitySerializer):
+    def get_fields(self):
+        fields = super().get_fields()
+        fields["identifier"].read_only = True
+        return fields
+
+    def update(
+        self, instance: dict[str, typing.Any], validated_data: dict[str, typing.Any]
+    ) -> EngineIdentity:
+        engine_identity = EngineIdentity.model_validate(instance)
+
+        engine_identity.dashboard_alias = (
+            self.validated_data.get("dashboard_alias")
+            or engine_identity.dashboard_alias
+        )
+
+        edge_identity = EdgeIdentity(engine_identity)
+        edge_identity.save()
+
+        return engine_identity
 
 
 class EdgeMultivariateFeatureOptionField(serializers.IntegerField):
