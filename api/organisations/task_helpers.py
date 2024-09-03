@@ -2,6 +2,7 @@ import logging
 from datetime import timedelta
 
 from app_analytics.influxdb_wrapper import get_current_api_usage
+from core.helpers import get_current_site_url
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.mail import send_mail
@@ -26,9 +27,11 @@ def send_api_flags_blocked_notification(organisation: Organisation) -> None:
         userorganisation__organisation=organisation,
     )
 
+    url = get_current_site_url()
     context = {
         "organisation": organisation,
         "grace_period": not hasattr(organisation, "breached_grace_period"),
+        "url": url,
     }
     message = "organisations/api_flags_blocked_notification.txt"
     html_message = "organisations/api_flags_blocked_notification.html"
