@@ -1,5 +1,8 @@
+import pytest
+from django.test import RequestFactory
 from django.utils import timezone
 from flag_engine.features.models import FeatureModel, FeatureStateModel
+from pytest_lazyfixture import lazy_fixture
 
 from edge_api.identities.models import EdgeIdentity
 from edge_api.identities.serializers import EdgeIdentityFeatureStateSerializer
@@ -51,15 +54,27 @@ def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(
     assert saved_identity_feature_state["feature"]["id"] == feature.id
 
 
+@pytest.mark.parametrize(
+    "user",
+    [
+        lazy_fixture("api_key_user"),
+        lazy_fixture("admin_user"),
+    ],
+)
 def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_override(
-    mocker, identity, feature, admin_user
+    mocker,
+    identity,
+    feature,
+    user,
+    rf: RequestFactory,
 ):
     # Given
     identity_model = EdgeIdentity.from_identity_document(
         map_identity_to_identity_document(identity)
     )
     view = mocker.MagicMock(identity=identity_model)
-    request = mocker.MagicMock(user=admin_user, master_api_key=None)
+    request = rf.post("/")
+    request.user = user
 
     new_enabled_state = True
     new_value = "foo"
@@ -93,7 +108,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_overr
             "environment_api_key": identity.environment.api_key,
             "identity_id": identity.id,
             "identity_identifier": identity.identifier,
-            "changed_by_user_id": admin_user.id,
+            "changed_by": str(user),
             "new_enabled_state": new_enabled_state,
             "new_value": new_value,
             "previous_enabled_state": None,
@@ -154,7 +169,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_update(
             "environment_api_key": identity.environment.api_key,
             "identity_id": identity.id,
             "identity_identifier": identity.identifier,
-            "changed_by_user_id": admin_user.id,
+            "changed_by": str(admin_user),
             "new_enabled_state": new_enabled_state,
             "new_value": new_value,
             "previous_enabled_state": previous_enabled_state,
