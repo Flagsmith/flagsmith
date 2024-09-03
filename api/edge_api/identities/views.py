@@ -1,5 +1,6 @@
 import base64
 import json
+import typing
 
 import pydantic
 from django.shortcuts import get_object_or_404
@@ -120,7 +121,7 @@ class EdgeIdentityViewSet(
         ):
             start_key = json.loads(base64.b64decode(previous_last_evaluated_key))
 
-        search_query: EdgeIdentitySearchData
+        search_query: typing.Optional[EdgeIdentitySearchData]
         if not (search_query := query_serializer.validated_data.get("q")):
             return EdgeIdentity.dynamo_wrapper.get_all_items(
                 self.kwargs["environment_api_key"], page_size, start_key
