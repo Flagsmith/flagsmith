@@ -22,7 +22,9 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
-from integrations.lead_tracking.hubspot.constants import HUBSPOT_COOKIE_NAME
+from integrations.lead_tracking.hubspot.services import (
+    register_hubspot_tracker,
+)
 from organisations.chargebee import webhook_event_types, webhook_handlers
 from organisations.exceptions import OrganisationHasNoPaidSubscription
 from organisations.models import (
@@ -54,7 +56,6 @@ from permissions.serializers import (
     UserObjectPermissionsSerializer,
 )
 from projects.serializers import ProjectListSerializer
-from users.models import HubspotTracker
 from users.serializers import UserIdSerializer
 from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
@@ -111,15 +112,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         """
         Override create method to add new organisation to authenticated user
         """
-        hubspot_cookie = request.COOKIES.get(HUBSPOT_COOKIE_NAME)
 
-        if hubspot_cookie:
-            if not HubspotTracker.objects.filter(user=request.user).exists():
-                HubspotTracker.objects.create(
-                    user=request.user,
-                    hubspot_cookie=hubspot_cookie,
-                )
-
+        register_hubspot_tracker(request)
         user = request.user
         serializer = OrganisationSerializerFull(data=request.data)
         if serializer.is_valid():

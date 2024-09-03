@@ -14,7 +14,9 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.viewsets import GenericViewSet
 
-from integrations.lead_tracking.hubspot.constants import HUBSPOT_COOKIE_NAME
+from integrations.lead_tracking.hubspot.services import (
+    register_hubspot_tracker,
+)
 from organisations.invites.exceptions import InviteExpiredError
 from organisations.invites.models import Invite, InviteLink
 from organisations.invites.serializers import (
@@ -33,7 +35,6 @@ from organisations.subscriptions.exceptions import (
     SubscriptionDoesNotSupportSeatUpgrade,
 )
 from users.exceptions import InvalidInviteError
-from users.models import HubspotTracker
 
 
 @api_view(["POST"])
@@ -46,14 +47,7 @@ def join_organisation_from_email(request, hash):
         error_data = {"detail": str(e)}
         return Response(data=error_data, status=status.HTTP_400_BAD_REQUEST)
 
-    hubspot_cookie = request.COOKIES.get(HUBSPOT_COOKIE_NAME)
-
-    if hubspot_cookie:
-        if not HubspotTracker.objects.filter(user=request.user).exists():
-            HubspotTracker.objects.create(
-                user=request.user,
-                hubspot_cookie=hubspot_cookie,
-            )
+    register_hubspot_tracker(request)
 
     return Response(
         OrganisationSerializerFull(
@@ -73,14 +67,7 @@ def join_organisation_from_link(request, hash):
     if invite.is_expired:
         raise InviteExpiredError()
 
-    hubspot_cookie = request.COOKIES.get(HUBSPOT_COOKIE_NAME)
-
-    if hubspot_cookie:
-        if not HubspotTracker.objects.filter(user=request.user).exists():
-            HubspotTracker.objects.create(
-                user=request.user,
-                hubspot_cookie=hubspot_cookie,
-            )
+    register_hubspot_tracker(request)
 
     request.user.join_organisation_from_invite_link(invite)
 
