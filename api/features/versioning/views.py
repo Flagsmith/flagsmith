@@ -164,7 +164,12 @@ class EnvironmentFeatureVersionViewSet(
                 Q(live_from__gte=timezone.now() - timedelta(days=version_limit_days))
                 | Q(live_from__isnull=True)
             )
-            return limited_queryset if limited_queryset.exists() else queryset[:1]
+            if not limited_queryset.exists():
+                # If there are no versions in the visible time frame for the
+                # given user, we still need to make that we return the live
+                # version, which will be the first one in the original qs.
+                return queryset[:1]
+            return limited_queryset
         return queryset
 
 
