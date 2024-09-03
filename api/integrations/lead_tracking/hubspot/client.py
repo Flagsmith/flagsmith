@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Any
 
 import hubspot
 import requests
@@ -26,7 +27,7 @@ class HubspotClient:
         self.access_token = settings.HUBSPOT_ACCESS_TOKEN
         self.client = client or hubspot.Client.create(access_token=self.access_token)
 
-    def get_contact(self, user: FFAdminUser) -> None | dict:
+    def get_contact(self, user: FFAdminUser) -> None | dict[str, Any]:
         public_object_id = BatchReadInputSimplePublicObjectId(
             id_property="email",
             inputs=[{"id": user.email}],
@@ -49,7 +50,9 @@ class HubspotClient:
 
         return results[0]
 
-    def create_lead_form(self, user: FFAdminUser, hubspot_cookie: str) -> dict:
+    def create_lead_form(
+        self, user: FFAdminUser, hubspot_cookie: str
+    ) -> dict[str, Any]:
         fields = [
             {
                 "objectTypeId": "0-1",
@@ -94,7 +97,9 @@ class HubspotClient:
             )
         return response.json()
 
-    def create_contact(self, user: FFAdminUser, hubspot_company_id: str) -> dict:
+    def create_contact(
+        self, user: FFAdminUser, hubspot_company_id: str
+    ) -> dict[str, Any]:
         properties = {
             "email": user.email,
             "firstname": user.first_name,
@@ -120,7 +125,7 @@ class HubspotClient:
         )
         return response.to_dict()
 
-    def get_company_by_domain(self, domain: str) -> dict | None:
+    def get_company_by_domain(self, domain: str) -> dict[str, Any] | None:
         """
         Domain should be unique in Hubspot by design, so we should only ever have
         0 or 1 results.
@@ -154,7 +159,7 @@ class HubspotClient:
         active_subscription: str = None,
         organisation_id: int = None,
         domain: str | None = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         properties = {"name": name}
 
         if domain:
@@ -174,7 +179,9 @@ class HubspotClient:
 
         return response.to_dict()
 
-    def update_company(self, active_subscription: str, hubspot_company_id: str) -> dict:
+    def update_company(
+        self, active_subscription: str, hubspot_company_id: str
+    ) -> dict[str, Any]:
         properties = {
             "active_subscription": active_subscription,
         }
