@@ -850,6 +850,8 @@ def test_get_subscription_metadata_when_subscription_information_cache_exist(
     expected_projects = 3
     expected_api_calls = 100
     expected_chargebee_email = "test@example.com"
+
+    settings.VERSIONING_RELEASE_DATE = timezone.now() - timedelta(days=1)
     expected_feature_history_visibility_days = 30
     expected_audit_log_visibility_days = 30
 
@@ -897,6 +899,8 @@ def test_get_subscription_metadata_when_subscription_information_cache_does_not_
     expected_projects = 5
     expected_api_calls = 100
     expected_chargebee_email = "test@example.com"
+
+    settings.VERSIONING_RELEASE_DATE = timezone.now() - timedelta(days=1)
     expected_feature_history_visibility_days = DEFAULT_VERSION_LIMIT_DAYS
     expected_audit_log_visibility_days = 0
 

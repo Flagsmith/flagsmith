@@ -282,11 +282,15 @@ def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(
 def test_organisation_subscription_get_subscription_metadata_returns_cb_metadata_for_cb_subscription(
     organisation: Organisation,
     mocker: MockerFixture,
+    settings: SettingsWrapper,
 ):
     # Given
     seats = 10
     api_calls = 50000000
     projects = 10
+
+    settings.VERSIONING_RELEASE_DATE = timezone.now() - timedelta(days=1)
+
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=seats,
