@@ -2,7 +2,7 @@
   "api_key": "masked",
   "feature_states": [
     {
-      "django_id": 517915,
+      "django_id": 585364,
       "enabled": false,
       "feature": {
         "id": 91559,
@@ -11,11 +11,11 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "632b424f-dea1-4080-ba0c-55a3772b1712",
+      "featurestate_uuid": "cc446405-e6c8-497c-a2a1-d5a6e6e0c56d",
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 564189,
+      "django_id": 582195,
       "enabled": true,
       "feature": {
         "id": 96656,
@@ -24,11 +24,11 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "9fbe6bfe-c7df-4c10-ab3e-4882f2caad0b",
+      "featurestate_uuid": "6f51d81e-f4ee-4ef3-9741-3b5d9166c512",
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 543718,
+      "django_id": 582197,
       "enabled": true,
       "feature": {
         "id": 96657,
@@ -37,7 +37,7 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "a0979efc-2ca2-4861-bd79-833064caf4b2",
+      "featurestate_uuid": "ef18b4f8-2067-4814-9e36-db50b1e7fb8b",
       "multivariate_feature_state_values": []
     },
     {
