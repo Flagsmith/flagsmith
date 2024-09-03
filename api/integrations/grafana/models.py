@@ -43,6 +43,9 @@ class GrafanaProjectConfiguration(IntegrationsModel):
         Project, on_delete=models.CASCADE, related_name="grafana_config"
     )
 
+    class Meta:
+        db_table = "grafana_grafanaconfiguration"
+
 
 class GrafanaOrganisationConfiguration(IntegrationsModel):
     organisation = models.OneToOneField(
