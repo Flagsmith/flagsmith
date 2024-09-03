@@ -403,11 +403,12 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         else:
             cb_metadata = get_subscription_metadata_from_id(self.subscription_id)
 
-        if (
-            self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
-            and settings.VERSIONING_RELEASE_DATE is not None
-            and self.subscription_date is not None
-            and self.subscription_date < settings.VERSIONING_RELEASE_DATE
+        if self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP and (
+            settings.VERSIONING_RELEASE_DATE is None
+            or (
+                self.subscription_date is not None
+                and self.subscription_date < settings.VERSIONING_RELEASE_DATE
+            )
         ):
             # Logic to grandfather old scale up plan customers to give them
             # full access to audit log and feature history.
