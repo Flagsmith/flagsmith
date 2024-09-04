@@ -33,6 +33,7 @@ from projects.models import Project
 
 @pytest.fixture
 def cache(organisation: Organisation) -> OrganisationSubscriptionInformationCache:
+    organisation.subscription_information_cache.delete()
     yield OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         current_billing_term_starts_at=timezone.now() - timedelta(days=20),
@@ -403,7 +404,8 @@ def test_get_usage_data_returns_empty_list_when_unset_subscription_information_c
     mocked_get_usage_data_from_local_db = mocker.patch(
         "app_analytics.analytics_db_service.get_usage_data_from_local_db", autospec=True
     )
-    assert getattr(organisation, "subscription_information_cache", None) is None
+    organisation.subscription_information_cache.delete()
+    organisation.refresh_from_db()
 
     # When
     usage_data = get_usage_data(organisation, period=period)

@@ -108,6 +108,7 @@ def test_get_usage_data__current_billing_period(
     week_from_now = now + timedelta(days=7)
     four_weeks_ago = now - timedelta(days=28)
 
+    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         current_billing_term_starts_at=four_weeks_ago,
@@ -170,6 +171,7 @@ def test_get_usage_data__previous_billing_period(
     four_weeks_ago = now - timedelta(days=28)
     target_start_at = now - timedelta(days=59)
 
+    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         current_billing_term_starts_at=four_weeks_ago,
@@ -231,6 +233,8 @@ def test_get_usage_data__ninety_day_period(
     week_from_now = now + timedelta(days=7)
     four_weeks_ago = now - timedelta(days=28)
     ninety_days_ago = now - timedelta(days=90)
+
+    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         current_billing_term_starts_at=four_weeks_ago,

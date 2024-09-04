@@ -28,6 +28,7 @@ def test_organisation_subscription_get_api_call_overage(
     expected_overage: int,
     rf: RequestFactory,
 ) -> None:
+    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_30d_api_calls=allowed_calls_30d,

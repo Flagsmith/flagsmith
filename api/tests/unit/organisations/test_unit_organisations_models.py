@@ -285,6 +285,7 @@ def test_organisation_subscription_get_subscription_metadata_returns_cb_metadata
     seats = 10
     api_calls = 50000000
     projects = 10
+    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=seats,
@@ -519,6 +520,7 @@ def test_organisation_update_clears_environment_caches(
 def test_reset_of_api_notifications(organisation: Organisation) -> None:
     # Given
     now = timezone.now()
+    organisation.subscription_information_cache.delete()
     osic = OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
