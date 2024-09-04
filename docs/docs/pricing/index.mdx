@@ -61,9 +61,6 @@ look like this:
 3. The user performs some action that should update their stored data in Flagsmith. The device calls Flagsmith to update
    this user's traits and receives their latest flags in return (1 API request).
 
-Because these API requests were made using Remote Evaluation, they would all send data to any analytics
-[integrations](/integrations/) you may have configured.
-
 Client-side SDKs optionally support caching and polling depending on how fresh your application needs its flags to be.
 
 Following the example above, suppose your application caches flags for 10 minutes, with each session lasting 20 minutes
