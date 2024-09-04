@@ -3,14 +3,18 @@ from django.test import RequestFactory
 from django.utils import timezone
 from flag_engine.features.models import FeatureModel, FeatureStateModel
 from pytest_lazyfixture import lazy_fixture
+from pytest_mock import MockerFixture
 
+from api_keys.user import APIKeyUser
 from edge_api.identities.models import EdgeIdentity
 from edge_api.identities.serializers import EdgeIdentityFeatureStateSerializer
+from environments.identities.models import Identity
 from environments.identities.serializers import (
     IdentityAllFeatureStatesSerializer,
 )
 from features.feature_types import STANDARD
-from features.models import FeatureState
+from features.models import Feature, FeatureState
+from users.models import FFAdminUser
 from util.mappers import map_identity_to_identity_document
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
@@ -62,10 +66,10 @@ def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(
     ],
 )
 def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_override(
-    mocker,
-    identity,
-    feature,
-    user,
+    mocker: MockerFixture,
+    identity: Identity,
+    feature: Feature,
+    user: FFAdminUser | APIKeyUser,
     rf: RequestFactory,
 ):
     # Given
