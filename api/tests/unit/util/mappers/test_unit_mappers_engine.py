@@ -386,6 +386,7 @@ def test_map_environment_to_engine__return_expected(
         allow_client_traits=environment.allow_client_traits,
         updated_at=environment.updated_at,
         use_identity_composite_key_for_hashing=environment.use_identity_composite_key_for_hashing,
+        use_identity_overrides_in_local_eval=environment.use_identity_overrides_in_local_eval,
         hide_sensitive_data=environment.hide_sensitive_data,
         hide_disabled_flags=environment.hide_disabled_flags,
         amplitude_config=None,

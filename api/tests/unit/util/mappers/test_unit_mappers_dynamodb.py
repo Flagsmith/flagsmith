@@ -76,6 +76,7 @@ def test_map_environment_to_environment_document__call_expected(
         "segment_config": None,
         "updated_at": expected_updated_at,
         "use_identity_composite_key_for_hashing": True,
+        "use_identity_overrides_in_local_eval": True,
         "webhook_config": None,
     }
 
@@ -130,6 +131,7 @@ def test_map_identity_to_identity_document__call_expected(
         "identity_features": [],
         "identity_traits": [{"trait_key": "key1", "trait_value": "value1"}],
         "identity_uuid": mocker.ANY,
+        "dashboard_alias": None,
     }
     assert uuid.UUID(result["identity_uuid"])
 
@@ -195,6 +197,7 @@ def test_map_environment_to_environment_v2_document__call_expected(
         "segment_config": None,
         "updated_at": expected_updated_at,
         "use_identity_composite_key_for_hashing": True,
+        "use_identity_overrides_in_local_eval": True,
         "webhook_config": None,
     }
 
