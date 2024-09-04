@@ -24,6 +24,12 @@ local IP.
 npm run start -- --host 0.0.0.0
 ```
 
+## OpenAPI generator
+
+We are using the https://github.com/PaloAltoNetworks/docusaurus-openapi-docs plugin to generate the OpenAPI docs. If
+`static/api-static/edge-api.yaml` changes you will need to rebuild the static files with something like
+`yarn docusaurus gen-api-docs all` and then commit them.
+
 ## Build
 
 ```console
