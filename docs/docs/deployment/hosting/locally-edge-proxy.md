@@ -238,27 +238,32 @@ specified by the [`"logging.log_format"`](#logginglog_format) setting.
 ### Health Check
 
 The Edge Proxy exposes a health check endpoint at `/proxy/health` that responds with a 200 status code if it was able to
-fetch all its configured environment documents. By default, if any environment document could not be fetched during the
-latest poll, it will respond with a 500 status code. In some cases, you may want the Edge Proxy to succeed its health
-checks even if it failed to fetch one or more environment documents, but only if it these documents were successfully
-fetched at some point in the past. You can achieve this using the `environment_update_grace_period_seconds` setting
-defined below.
+fetch all its configured environment documents. By default, if any update of the configured environment documents takes
+longer than the allowed grace period (see below), then the health check will return with a 500 status code. In some
+cases, you may want the Edge Proxy to succeed its health checks even if it failed to fetch one or more environment
+documents, but only if it these documents were successfully fetched at some point in the past. You can achieve this
+using the `environment_update_grace_period_seconds` setting defined below.
 
 #### `health_check.environment_update_grace_period_seconds`
 
 Default: `30`.
 
 The number of seconds to allow per environment key pair before the environment data stored by the Edge Proxy is
-considered stale. The calculation to work out how long before the data is considered stale is as follows (written in
-pseudo-python-code):
+considered stale. When set to `null`, the cached environment documents are never considered stale and the health check
+will only return 500 if the documents have never been updated.
+
+Since the Edge Proxy updates all environments at once on each polling interval, it only stores when it was last updated
+once it's updated all documents. Thus, the calculation to work out how long before the data is considered stale is as
+follows (written in pseudo-python-code):
 
 ```python
-current_time = datetime.now()
-total_grace_period_seconds = api_poll_frequency + (health_check.grace_period_seconds * len(environment_key_pairs))
+total_grace_period_seconds = api_poll_frequency + (environment_update_grace_period_seconds * len(environment_key_pairs))
+if last_updated_all_environments_at < datetime.now() - timedelta(seconds=total_grace_period_seconds):
+    # Data is stale
+    return 500
+# Data is not stale
+return 200
 ```
-
-To disable this functionality, set the value to `null`. When set to `null`, the health check will only serve a 500 if
-the configured environments have never been retrieved.
 
 ### Example
 
