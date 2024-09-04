@@ -21,6 +21,7 @@ from urllib3.connectionpool import HTTPConnectionPool
 from xdist import get_xdist_worker_id
 
 from api_keys.models import MasterAPIKey
+from api_keys.user import APIKeyUser
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
@@ -659,10 +660,25 @@ def master_api_key_object(
 
 
 @pytest.fixture
+def master_api_key_id(master_api_key_object: MasterAPIKey) -> str:
+    return master_api_key_object.id
+
+
+@pytest.fixture
+def admin_user_id(admin_user: FFAdminUser) -> str:
+    return admin_user.id
+
+
+@pytest.fixture
 def admin_master_api_key_object(
     admin_master_api_key: typing.Tuple[MasterAPIKey, str]
 ) -> MasterAPIKey:
     return admin_master_api_key[0]
+
+
+@pytest.fixture
+def api_key_user(master_api_key_object: MasterAPIKey) -> APIKeyUser:
+    return APIKeyUser(master_api_key_object)
 
 
 @pytest.fixture()

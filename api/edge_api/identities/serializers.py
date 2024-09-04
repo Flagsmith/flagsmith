@@ -171,10 +171,7 @@ class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):
             self.instance.multivariate_feature_state_values,
         )
 
-        identity.save(
-            user=request.user,
-            master_api_key=getattr(request, "master_api_key", None),
-        )
+        identity.save(user=request.user)
 
         new_value = self.instance.get_value(identity.id)
         previous_value = (
@@ -189,7 +186,7 @@ class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):
                 "environment_api_key": identity.environment_api_key,
                 "identity_id": identity.id,
                 "identity_identifier": identity.identifier,
-                "changed_by_user_id": request.user.id,
+                "changed_by": str(request.user),
                 "new_enabled_state": self.instance.enabled,
                 "new_value": new_value,
                 "previous_enabled_state": getattr(previous_state, "enabled", None),
