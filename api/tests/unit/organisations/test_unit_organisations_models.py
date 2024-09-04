@@ -551,3 +551,19 @@ def test_reset_of_api_notifications(organisation: Organisation) -> None:
     # Then
     assert OrganisationAPIUsageNotification.objects.count() == 1
     assert OrganisationAPIUsageNotification.objects.first() == oapiun
+
+
+def test_organisation_creates_subscription_cache(db: None) -> None:
+    # Given / When
+    organisation = Organisation.objects.create(name="Test org")
+
+    # Then
+    assert organisation.subscription_information_cache
+    assert (
+        organisation.subscription_information_cache.allowed_seats
+        == MAX_SEATS_IN_FREE_PLAN
+    )
+    assert (
+        organisation.subscription_information_cache.allowed_30d_api_calls
+        == MAX_API_CALLS_IN_FREE_PLAN
+    )
