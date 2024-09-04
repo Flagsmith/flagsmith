@@ -8,32 +8,31 @@ import {
 import { updateSegmentPriorities } from 'common/services/useSegmentPriority'
 import {
   createProjectFlag,
-  getProjectFlag,
   updateProjectFlag,
 } from 'common/services/useProjectFlag'
 import OrganisationStore from './organisation-store'
 import {
-  Approval,
+  ChangeRequest,
   Environment,
   FeatureState,
-  MultivariateOption,
   PagedResponse,
   ProjectFlag,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import Actions from 'common/dispatcher/action-constants'
 import Project from 'common/project'
-const Dispatcher = require('common/dispatcher/dispatcher')
-const BaseStore = require('./base/_store')
-const data = require('../data/base/_data')
-const { createSegmentOverride } = require('../services/useSegmentOverride')
-const { getStore } = require('../store')
 import flagsmith from 'flagsmith'
 import API from 'project/api'
 import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 import { getFeatureStates } from 'common/services/useFeatureState'
 import { getSegments } from 'common/services/useSegment'
+
+const Dispatcher = require('common/dispatcher/dispatcher')
+const BaseStore = require('./base/_store')
+const data = require('../data/base/_data')
+const { createSegmentOverride } = require('../services/useSegmentOverride')
+const { getStore } = require('../store')
 let createdFirstFeature = false
 const PAGE_SIZE = 50
 
@@ -610,62 +609,73 @@ const controller = {
           const url = req.id
             ? `${Project.api}features/workflows/change-requests/${req.id}/`
             : `${Project.api}environments/${environmentId}/create-change-request/`
-          return data[reqType](url, req).then((v) => {
-            let prom = Promise.resolve()
-            if (multivariate_options && v.feature_states?.[0]) {
-              v.feature_states[0].multivariate_feature_state_values =
-                v.feature_states[0].multivariate_feature_state_values.map(
-                  (v) => {
-                    const matching = multivariate_options.find(
-                      (m) =>
-                        (v.multivariate_feature_option || v.id) ===
-                        (m.multivariate_feature_option || m.id),
-                    )
-                    return {
-                      ...v,
-                      percentage_allocation: matching
-                        ? typeof matching.percentage_allocation === 'number'
-                          ? matching.percentage_allocation
-                          : matching.default_percentage_allocation
-                        : v.percentage_allocation,
-                    }
-                  },
-                )
-            }
+          return data[reqType](url, req).then(
+            (updatedChangeRequest: ChangeRequest) => {
+              let prom = Promise.resolve()
+              const shouldUpdateMv =
+                multivariate_options && updatedChangeRequest.feature_states?.[0]
+              if (shouldUpdateMv) {
+                updatedChangeRequest.feature_states[0].multivariate_feature_state_values =
+                  updatedChangeRequest.feature_states[0].multivariate_feature_state_values.map(
+                    (v) => {
+                      const matching = multivariate_options.find(
+                        (m) =>
+                          (v.multivariate_feature_option || v.id) ===
+                          (m.multivariate_feature_option || m.id),
+                      )
+                      return {
+                        ...v,
+                        percentage_allocation: matching
+                          ? typeof matching.percentage_allocation === 'number'
+                            ? matching.percentage_allocation
+                            : matching.default_percentage_allocation
+                          : v.percentage_allocation,
+                      }
+                    },
+                  )
+              }
 
-            prom = data
-              .put(
-                `${Project.api}features/workflows/change-requests/${v.id}/`,
-                {
-                  ...v,
-                  change_sets: changeSets,
-                },
-              )
-              .then((v) => {
+              prom = (
+                shouldUpdateMv
+                  ? data.put(
+                      `${Project.api}features/workflows/change-requests/${updatedChangeRequest.id}/`,
+                      updatedChangeRequest,
+                    )
+                  : Promise.resolve()
+              ).then(() => {
                 if (commit) {
-                  AppActions.actionChangeRequest(v.id, 'commit', () => {
-                    AppActions.refreshFeatures(projectId, environmentId)
-                  })
+                  AppActions.actionChangeRequest(
+                    updatedChangeRequest.id,
+                    'commit',
+                    () => {
+                      AppActions.refreshFeatures(projectId, environmentId)
+                    },
+                  )
                 } else {
-                  AppActions.getChangeRequest(v.id, projectId, environmentId)
+                  AppActions.getChangeRequest(
+                    updatedChangeRequest.id,
+                    projectId,
+                    environmentId,
+                  )
                 }
               })
-            prom.then(() => {
-              AppActions.getChangeRequests(environmentId, {})
-              AppActions.getChangeRequests(environmentId, { committed: true })
-              AppActions.getChangeRequests(environmentId, {
-                live_from_after: new Date().toISOString(),
-              })
+              prom.then(() => {
+                AppActions.getChangeRequests(environmentId, {})
+                AppActions.getChangeRequests(environmentId, { committed: true })
+                AppActions.getChangeRequests(environmentId, {
+                  live_from_after: new Date().toISOString(),
+                })
 
-              if (featureStateId) {
-                AppActions.getChangeRequest(
-                  changeRequestData.id,
-                  projectId,
-                  environmentId,
-                )
-              }
-            })
-          })
+                if (featureStateId) {
+                  AppActions.getChangeRequest(
+                    changeRequestData.id,
+                    projectId,
+                    environmentId,
+                  )
+                }
+              })
+            },
+          )
         })
 
       Promise.all([prom]).then(() => {
