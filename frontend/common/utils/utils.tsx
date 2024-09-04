@@ -289,6 +289,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getNextPlan: (skipFree?: boolean) => {
     const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
+    if (currentPlan !== planNames.enterprise && !Utils.isSaas()) {
+      return planNames.enterprise
+    }
     switch (currentPlan) {
       case planNames.free: {
         return skipFree ? planNames.startup : planNames.scaleUp

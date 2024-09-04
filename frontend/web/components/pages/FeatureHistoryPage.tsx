@@ -4,13 +4,9 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import { RouterChildContext } from 'react-router'
 import Utils from 'common/utils/utils'
 import ProjectStore from 'common/stores/project-store'
-import {
-  isVersionOverLimit,
-  useGetFeatureVersionsQuery,
-} from 'common/services/useFeatureVersion'
+import { useGetFeatureVersionsQuery } from 'common/services/useFeatureVersion'
 import { useGetUsersQuery } from 'common/services/useUser'
 import AccountStore from 'common/stores/account-store'
-import PanelSearch from 'components/PanelSearch'
 import {
   Environment,
   FeatureVersion as TFeatureVersion,
@@ -119,18 +115,10 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
           prevPage={() => setPage(page + 1)}
           goToPage={setPage}
           renderRow={(v: TFeatureVersion, i: number) => {
-            const isOverLimit = isVersionOverLimit(
-              versionLimitDays,
-              v.live_from,
-            )
             const user = users?.find((user) => v.published_by === user.id)
 
             return (
-              <Row
-                className={classNames('list-item py-2 mh-auto', {
-                  'blur no-pointer': isOverLimit,
-                })}
-              >
+              <Row className={classNames('list-item py-2 mh-auto')}>
                 <div className='flex-fill'>
                   <div className='flex-row flex-fill'>
                     <div
