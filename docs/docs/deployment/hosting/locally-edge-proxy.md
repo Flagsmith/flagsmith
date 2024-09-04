@@ -10,7 +10,9 @@ The Edge Proxy can be configured using a json configuration file (named `config.
 
 You can set the following configuration in `config.json` to control the behaviour of the Edge Proxy:
 
-### `environment_key_pairs`
+### Basic Settings
+
+#### `environment_key_pairs`
 
 An array of environment key pair objects:
 
@@ -21,7 +23,7 @@ An array of environment key pair objects:
 }]
 ```
 
-### `api_poll_frequency`
+#### `api_poll_frequency`
 
 :::note
 
@@ -37,7 +39,7 @@ Control how often the Edge Proxy is going to ping the server for changes, in sec
 
 Defaults to `10`.
 
-### `api_poll_timeout`
+#### `api_poll_timeout`
 
 :::note
 
@@ -53,7 +55,7 @@ Specify the request timeout when trying to retrieve new changes, in seconds:
 
 Defaults to `5`.
 
-### `api_url`
+#### `api_url`
 
 :::note
 
@@ -69,7 +71,7 @@ Set if you are running a self hosted version of Flagsmith:
 
 If not set, defaults to Flagsmith's Edge API.
 
-### `allow_origins`
+#### `allow_origins`
 
 :::note
 
@@ -85,7 +87,9 @@ Set a value for the `Access-Control-Allow-Origin` header.
 
 If not set, defaults to `*`.
 
-### `endpoint_caches`
+### Endpoint Caches
+
+#### `endpoint_caches`
 
 :::note
 
@@ -109,7 +113,9 @@ Optionally, specify the LRU cache size with `cache_max_size` (defaults to 128):
 }
 ```
 
-### `logging.log_level`
+### Logging
+
+#### `logging.log_level`
 
 :::note
 
@@ -123,7 +129,7 @@ Choose a logging level from `"CRITICAL"`, `"ERROR"`, `"WARNING"`, `"INFO"`, `"DE
 "logging": {"log_level": "DEBUG"}
 ```
 
-### `logging.log_format`
+#### `logging.log_format`
 
 :::note
 
@@ -137,7 +143,7 @@ Choose a logging forman between `"generic"` and `"json"`. Defaults to `"generic"
 "logging": {"log_format": "json"}
 ```
 
-### `logging.log_event_field_name`
+#### `logging.log_event_field_name`
 
 :::note
 
@@ -151,7 +157,7 @@ Set a name used for human-readable log entry field when logging events in JSON. 
 "logging": {"log_event_field_name": "event"}
 ```
 
-### `logging.colour`
+#### `logging.colour`
 
 :::note
 
@@ -162,7 +168,7 @@ Set a name used for human-readable log entry field when logging events in JSON. 
 
 Set to `false` to disable coloured output. Useful when outputting the log to a file.
 
-### `logging.override`
+#### `logging.override`
 
 :::note
 
@@ -229,7 +235,39 @@ Or, log access logs to file in generic format while logging everything else to s
 When adding logger configurations, you can use the `"default"` handler which writes to stdout and uses formatter
 specified by the [`"logging.log_format"`](#logginglog_format) setting.
 
-### `config.json` example
+### Health Check
+
+The health check can be configured depending on the use case for the Edge Proxy by adding the `health_check` object to
+the root of the settings file.
+
+```json
+{
+  ...
+  "health_check": {
+    "count_stale_documents_as_failing": true,
+    "grace_period_seconds": 30
+  }
+}
+```
+
+#### `count_stale_documents_as_failing`
+
+Setting this to False will mean that the health check returns a 200 response with `{"status": "ok", ...}` if the time at
+which the edge proxy was last updated is earlier than the given threshold. Usually this is helpful in environments where
+you want the Edge Proxy to continue to serve traffic in the case where the Flagsmith API is offline.
+
+#### `grace_period_seconds`
+
+The number of seconds to allow per environment key pair before the environment data stored by the Edge Proxy is
+considered stale. The calculation to work out how long before the data is considered stale is as follows (written in
+pseudo-python-code):
+
+```python
+current_time = datetime.now()
+total_grace_period_seconds = api_poll_frequency + (health_check.grace_period_seconds * len(environment_key_pairs))
+```
+
+### Example
 
 Here's an example of a minimal working Edge Proxy configuration:
 
