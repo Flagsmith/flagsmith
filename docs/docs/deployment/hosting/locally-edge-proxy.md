@@ -237,26 +237,23 @@ specified by the [`"logging.log_format"`](#logginglog_format) setting.
 
 ### Health Check
 
-The health check can be configured depending on the use case for the Edge Proxy by adding the `health_check` object to
-the root of the settings file.
+The Edge Proxy exposes a health check endpoint at `/proxy/health` that responds with a 200 status code if it was able to
+fetch all its configured environment documents. By default, if any environment document could not be fetched during the
+latest poll, it will respond with a 500 status code. In some cases, you may want the Edge Proxy to succeed its health
+checks even if it failed to fetch one or more environment documents, but only if it these documents were successfully
+fetched at some point in the past. You can achieve this using the settings defined below.
 
-```json
-{
-  ...
-  "health_check": {
-    "count_stale_documents_as_failing": true,
-    "grace_period_seconds": 30
-  }
-}
-```
+#### `health_check.count_stale_documents_as_failing`
 
-#### `count_stale_documents_as_failing`
+Default: `true`.
 
 Setting this to False will mean that the health check returns a 200 response with `{"status": "ok", ...}` if the time at
-which the edge proxy was last updated is earlier than the given threshold. Usually this is helpful in environments where
-you want the Edge Proxy to continue to serve traffic in the case where the Flagsmith API is offline.
+which the edge proxy was last updated is earlier than the allowed threshold. Usually this is helpful in environments
+where you want the Edge Proxy to continue to serve traffic in the case where the Flagsmith API is offline.
 
-#### `grace_period_seconds`
+#### `health_check.grace_period_seconds`
+
+Default: `30`.
 
 The number of seconds to allow per environment key pair before the environment data stored by the Edge Proxy is
 considered stale. The calculation to work out how long before the data is considered stale is as follows (written in
