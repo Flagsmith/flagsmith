@@ -151,7 +151,8 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @hook(AFTER_CREATE)
     def create_subscription_cache(self):
-        OrganisationSubscriptionInformationCache.objects.create(organisation=self)
+        if not self.has_subscription_information_cache():
+            OrganisationSubscriptionInformationCache.objects.create(organisation=self)
 
     @hook(AFTER_SAVE)
     def clear_environment_caches(self):
