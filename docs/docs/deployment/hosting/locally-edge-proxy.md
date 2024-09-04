@@ -238,23 +238,22 @@ specified by the [`"logging.log_format"`](#logginglog_format) setting.
 ### Health Check
 
 The Edge Proxy exposes a health check endpoint at `/proxy/health` that responds with a 200 status code if it was able to
-fetch all its configured environment documents. By default, if any update of the configured environment documents takes
-longer than the allowed grace period (see below), then the health check will return with a 500 status code. In some
-cases, you may want the Edge Proxy to succeed its health checks even if it failed to fetch one or more environment
-documents, but only if it these documents were successfully fetched at some point in the past. You can achieve this
-using the `environment_update_grace_period_seconds` setting defined below.
+fetch all its configured environment documents. If any environment document could not be fetched during a configurable
+grace period, the health check will fail with a 500 status code. This allows the Edge Proxy to continue reporting as
+healthy even if the Flagsmith API is temporarily unavailable.
 
 #### `health_check.environment_update_grace_period_seconds`
 
 Default: `30`.
 
 The number of seconds to allow per environment key pair before the environment data stored by the Edge Proxy is
-considered stale. When set to `null`, the cached environment documents are never considered stale and the health check
-will only return 500 if the documents have never been updated.
+considered stale.
 
-Since the Edge Proxy updates all environments at once on each polling interval, it only stores when it was last updated
-once it's updated all documents. Thus, the calculation to work out how long before the data is considered stale is as
-follows (written in pseudo-python-code):
+When set to `null`, cached environment documents are never considered stale, and health checks will succeed if all
+environments were successfully fetched at some point since the Edge Proxy started.
+
+The effective grace period depends on how many environments the Edge Proxy is configured to serve. It can be calculated
+using the following pseudo-Python code:
 
 ```python
 total_grace_period_seconds = api_poll_frequency + (environment_update_grace_period_seconds * len(environment_key_pairs))
