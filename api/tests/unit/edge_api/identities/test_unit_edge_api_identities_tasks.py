@@ -257,6 +257,7 @@ def test_sync_identity_document_features_removes_deleted_features(
             "feature_state_value": "feature_1_value",
             "featurestate_uuid": "4a8fbe06-d4cd-4686-a184-d924844bb422",
             "django_id": 1,
+            "dashboard_alias": None,
             "feature": {
                 "name": "feature_that_does_not_exists",
                 "type": "STANDARD",
