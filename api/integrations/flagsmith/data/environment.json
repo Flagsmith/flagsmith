@@ -2,7 +2,7 @@
   "api_key": "masked",
   "feature_states": [
     {
-      "django_id": 517915,
+      "django_id": 585364,
       "enabled": false,
       "feature": {
         "id": 91559,
@@ -11,7 +11,7 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "632b424f-dea1-4080-ba0c-55a3772b1712",
+      "featurestate_uuid": "cc446405-e6c8-497c-a2a1-d5a6e6e0c56d",
       "multivariate_feature_state_values": []
     },
     {
@@ -41,8 +41,8 @@
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 549923,
-      "enabled": false,
+      "django_id": 585956,
+      "enabled": true,
       "feature": {
         "id": 98035,
         "name": "api_usage_overage_charges",
@@ -50,7 +50,7 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "1866cc74-5fcc-4e8e-8f3c-18524f2b3122",
+      "featurestate_uuid": "ec75efdd-6d63-46b1-8b21-d8ef992f46b1",
       "multivariate_feature_state_values": []
     }
   ],
