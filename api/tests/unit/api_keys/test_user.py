@@ -17,6 +17,17 @@ def test_is_authenticated(master_api_key_object):
     assert user.is_authenticated is True
 
 
+def test__str__returns_name(master_api_key_object):
+    # Given
+    user = APIKeyUser(master_api_key_object)
+
+    # When
+    result = str(user)
+
+    # Then
+    assert result == master_api_key_object.name
+
+
 @pytest.mark.parametrize(
     "for_organisation, expected_result",
     [
