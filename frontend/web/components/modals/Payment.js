@@ -76,6 +76,7 @@ const Payment = class extends Component {
   }
   render() {
     const viewOnly = this.props.viewOnly
+    const removeScaleup = Utils.getFlagsmithHasFeature("remove_scaleup")
     const isAWS = AccountStore.getPaymentMethod() === 'AWS_MARKETPLACE'
     if (isAWS) {
       return (
@@ -153,498 +154,373 @@ const Payment = class extends Component {
                         </Row>
                         <Row className='pt-3 justify-content-center'>
                           <h5 className='mb-0 align-self-start'>$</h5>
-                          <h1 className='mb-0'>
-                            {this.state.yearly ? '40' : '45'}
+                          <h1 className='mb-0 d-flex align-items-end'>
+                            {this.state.yearly ? '40' : '45'} <h5 className="fs-lg mb-0">/mo</h5>
                           </h1>
                         </Row>
-                        <div className='pricing-type pt-1 pb-4'>
-                          Billed Monthly
-                        </div>
                         {!viewOnly ? (
                           <>
                             <PaymentButton
                               data-cb-plan-id={Project.plans.startup.annual}
                               className={classNames(
-                                'btn btn-primary full-width mt-3',
+                                'btn btn-primary btn-lg full-width mt-3',
                                 { 'd-none': !this.state.yearly },
                               )}
                               isDisableAccount={this.props.isDisableAccountText}
                             >
-                              {plan.includes('startup') ? 'Purchased' : 'Buy'}
+                              {plan.includes('startup') ? 'Purchased' : '14 Day Free Trial'}
                             </PaymentButton>
                             <PaymentButton
                               data-cb-plan-id={Project.plans.startup.monthly}
                               className={classNames(
-                                'btn btn-primary full-width mt-3',
+                                'btn btn-primary btn-lg full-width mt-3',
                                 { 'd-none': this.state.yearly },
                               )}
                               isDisableAccount={this.props.isDisableAccountText}
                             >
-                              {plan.includes('startup') ? 'Purchased' : 'Buy'}
+                              {plan.includes('startup') ? 'Purchased' : '14 Day Free Trial'}
                             </PaymentButton>
                           </>
                         ) : null}
                       </div>
-                      <div className='panel-footer mt-3'>
-                        <ul className='pricing-features mb-0 px-2'>
+                      <div className="panel-footer mt-3">
+
+                        <h5 className="m-2 mb-4">
+                          All from <span className="text-primary">Free,</span> plus
+                        </h5>
+                        <ul className="pricing-features mb-0 px-2">
                           <li>
-                            <Row className='mb-3 pricing-features-item'>
+                            <Row className="mb-3 pricing-features-item">
                               <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
+                                <Icon name="checkmark-circle" fill="#27AB95" />
                               </span>
-                              <div className='ml-2'>
+                              <div className="ml-2">
                                 Up to
                                 <strong> 1,000,000</strong> requests per month
                               </div>
                             </Row>
                           </li>
                           <li>
-                            <Row className='mb-3 pricing-features-item'>
+                            <Row className="mb-3 pricing-features-item">
                               <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
+                                <Icon name="checkmark-circle" fill="#27AB95" />
                               </span>
-                              <div className='ml-2'>
+                              <div className="ml-2">
                                 <strong>3</strong> Team Members
                               </div>
                             </Row>
                           </li>
                           <li>
-                            <Row className='mb-3 pricing-features-item'>
+                            <Row className="mb-3 pricing-features-item">
                               <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
+                                <Icon name="checkmark-circle" fill="#27AB95" />
                               </span>
-                              <div className='ml-2'>Unlimited Projects</div>
+                              <div className="ml-2">Unlimited Projects</div>
                             </Row>
                           </li>
+
                           <li>
-                            <Row className='mb-3 pricing-features-item'>
+                            <Row className="mb-3 pricing-features-item">
                               <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
+                                <Icon name="checkmark-circle" fill="#27AB95" />
                               </span>
-                              <div className='ml-2'>
-                                Unlimited Feature Flags
-                              </div>
+                              <div className="ml-2">Email Technical Support</div>
                             </Row>
                           </li>
+
                           <li>
-                            <Row className='mb-3 pricing-features-item'>
+                            <Row className="mb-3 pricing-features-item">
                               <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
+                                <Icon name="checkmark-circle" fill="#27AB95" />
                               </span>
-                              <div className='ml-2'>Unlimited Environments</div>
+                              <div className="ml-2">Scheduled Flags</div>
                             </Row>
                           </li>
                           <li>
-                            <Row className='mb-3 pricing-features-item'>
+                            <Row className="mb-3 pricing-features-item">
                               <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
+                                <Icon name="checkmark-circle" fill="#27AB95" />
                               </span>
-                              <div className='ml-2'>
-                                Unlimited Identities and Segments
-                              </div>
+                              <div className="ml-2">Two-Factor Authentication (2FA)</div>
                             </Row>
                           </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>3rd Party Integrations</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>A/B and MVT Testing</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>Online Ts and Cs</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>
-                                Email Technical Support
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>Scheduled Flags</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>
-                                Feature version history (1 per feature)
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>
-                                Two-Factor Authentication (2FA)
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <Icon
-                                name='minus-circle'
-                                fill='rgba(101, 109, 123, 0.16)'
-                              />
-                              <div className='ml-2 disabled'>
-                                User Roles and Permissions
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <Icon
-                                name='minus-circle'
-                                fill='rgba(101, 109, 123, 0.16)'
-                              />
-                              <div className='ml-2 disabled'>
-                                Change Requests
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <Icon
-                                name='minus-circle'
-                                fill='rgba(101, 109, 123, 0.16)'
-                              />
-                              <div className='ml-2 disabled'>Audit Logs</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <Icon
-                                name='minus-circle'
-                                fill='rgba(101, 109, 123, 0.16)'
-                              />
-                              <div className='ml-2 disabled'>
-                                SAML Authentication
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <Icon
-                                name='minus-circle'
-                                fill='rgba(101, 109, 123, 0.16)'
-                              />
-                              <div className='ml-2 disabled'>
-                                On-Boarding & Training
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-2 pricing-features-item'>
-                              <Icon
-                                name='minus-circle'
-                                fill='rgba(101, 109, 123, 0.16)'
-                              />
-                              <div className='ml-2 disabled'>
-                                Optional On Premises Installation
-                              </div>
-                            </Row>
-                          </li>
+
                         </ul>
                       </div>
                     </div>
                   </Flex>
-                  <Flex className='pricing-panel p-2'>
-                    <div className='panel panel-default'>
-                      <div
-                        className='panel-content  p-3 pt-4'
-                        style={{ backgroundColor: 'rgba(39, 171, 149, 0.08)' }}
-                      >
-                        <span className='featured'>Most Popular</span>
-                        <Row className='pt-4 justify-content-center'>
-                          <Icon name='layers' width={32} />
-                          <h4 className='mb-0 ml-2'>Scale-Up</h4>
-                        </Row>
-                        <Row className='pt-3 justify-content-center'>
-                          <h5 className='mb-0 align-self-start'>$</h5>
-                          <h1 className='mb-0'>
-                            {this.state.yearly ? '180' : '200'}
-                          </h1>
-                        </Row>
-                        <div className='pricing-type pt-1 pb-4'>
-                          Billed Monthly
-                        </div>
-                        {!viewOnly ? (
-                          <>
-                            <PaymentButton
-                              data-cb-plan-id={Project.plans.scaleUp.annual}
-                              className={classNames(
-                                'btn btn-success full-width mt-3',
-                                { 'd-none': !this.state.yearly },
-                              )}
-                              isDisableAccount={this.props.isDisableAccountText}
-                            >
-                              {plan.includes('scale-up') ? 'Purchased' : 'Buy'}
-                            </PaymentButton>
-                            <PaymentButton
-                              data-cb-plan-id={Project.plans.scaleUp.monthly}
-                              className={classNames(
-                                'btn btn-success full-width mt-3',
-                                { 'd-none': this.state.yearly },
-                              )}
-                              isDisableAccount={this.props.isDisableAccountText}
-                            >
-                              {plan.includes('scale-up') ? 'Purchased' : 'Buy'}
-                            </PaymentButton>
-                          </>
-                        ) : null}
-                      </div>
-                      <div className='panel-footer mt-3'>
-                        <ul className='pricing-features mb-0 px-2'>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>
-                                Up to
-                                <strong> 5,000,000</strong> requests per month
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>
-                                <strong>5+</strong> Team Members
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>Unlimited Projects</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>
-                                Unlimited Feature Flags
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>Unlimited Environments</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>
-                                Unlimited Identities and Segments
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>3rd Party Integrations</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>A/B and MVT Testing</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>Online Ts and Cs</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>
-                                Email Technical Support
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>Scheduled Flags</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>
-                                Feature version history (1 per feature)
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>
-                                Two-Factor Authentication (2FA)
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>
-                                User Roles and Permissions
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>Change Requests</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>Audit Logs</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <Icon
-                                name='minus-circle'
-                                fill='rgba(101, 109, 123, 0.16)'
-                              />
-                              <div className='ml-2 disabled'>
-                                SAML Authentication
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <Icon
-                                name='minus-circle'
-                                fill='rgba(101, 109, 123, 0.16)'
-                              />
-                              <div className='ml-2 disabled'>
-                                On-Boarding & Training
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-2 pricing-features-item'>
-                              <Icon
-                                name='minus-circle'
-                                fill='rgba(101, 109, 123, 0.16)'
-                              />
-                              <div className='ml-2 disabled'>
-                                Optional On Premises Installation
-                              </div>
-                            </Row>
-                          </li>
-                        </ul>
-                        <a
-                          onClick={() => {
-                            Utils.openChat()
-                          }}
-                          className='pricing-cta blue mt-4'
-                          style={{ width: '100%' }}
+                  {!removeScaleup && (
+                    <Flex className="pricing-panel p-2">
+                      <div className='panel panel-default'>
+                        <div
+                          className='panel-content  p-3 pt-4'
+                          style={{ backgroundColor: 'rgba(39, 171, 149, 0.08)' }}
                         >
-                          Request more API calls
-                        </a>
+                          <span className='featured'>Most Popular</span>
+                          <Row className='pt-4 justify-content-center'>
+                            <Icon name='layers' width={32} />
+                            <h4 className='mb-0 ml-2'>Scale-Up</h4>
+                          </Row>
+                          <Row className='pt-3 justify-content-center'>
+                            <h5 className='mb-0 align-self-start'>$</h5>
+                            <h1 className="mb-0 d-flex align-items-end">
+                              {this.state.yearly ? "180" : "200"} <h5 className="fs-lg mb-0">/mo</h5>
+                            </h1>
+                          </Row>
+                          {!viewOnly ? (
+                            <>
+                              <PaymentButton
+                                data-cb-plan-id={Project.plans.scaleUp.annual}
+                                className={classNames(
+                                  'btn btn-success full-width mt-3',
+                                  { 'd-none': !this.state.yearly },
+                                )}
+                                isDisableAccount={this.props.isDisableAccountText}
+                              >
+                                {plan.includes('scale-up') ? 'Purchased' : 'Buy'}
+                              </PaymentButton>
+                              <PaymentButton
+                                data-cb-plan-id={Project.plans.scaleUp.monthly}
+                                className={classNames(
+                                  'btn btn-success full-width mt-3',
+                                  { 'd-none': this.state.yearly },
+                                )}
+                                isDisableAccount={this.props.isDisableAccountText}
+                              >
+                                {plan.includes('scale-up') ? 'Purchased' : 'Buy'}
+                              </PaymentButton>
+                            </>
+                          ) : null}
+                        </div>
+                        <div className='panel-footer mt-3'>
+                          <ul className='pricing-features mb-0 px-2'>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <span>
+                                  <Icon name='checkmark-circle' fill='#27AB95' />
+                                </span>
+                                <div className='ml-2'>
+                                  Up to
+                                  <strong> 5,000,000</strong> requests per month
+                                </div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <span>
+                                  <Icon name='checkmark-circle' fill='#27AB95' />
+                                </span>
+                                <div className='ml-2'>
+                                  <strong>5+</strong> Team Members
+                                </div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <span>
+                                  <Icon name='checkmark-circle' fill='#27AB95' />
+                                </span>
+                                <div className='ml-2'>Unlimited Projects</div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <span>
+                                  <Icon name='checkmark-circle' fill='#27AB95' />
+                                </span>
+                                <div className='ml-2'>
+                                  Unlimited Feature Flags
+                                </div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <span>
+                                  <Icon name='checkmark-circle' fill='#27AB95' />
+                                </span>
+                                <div className='ml-2'>Unlimited Environments</div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <span>
+                                  <Icon name='checkmark-circle' fill='#27AB95' />
+                                </span>
+                                <div className='ml-2'>
+                                  Unlimited Identities and Segments
+                                </div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <span>
+                                  <Icon name='checkmark-circle' fill='#27AB95' />
+                                </span>
+                                <div className='ml-2'>3rd Party Integrations</div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <span>
+                                  <Icon name='checkmark-circle' fill='#27AB95' />
+                                </span>
+                                <div className='ml-2'>A/B and MVT Testing</div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <span>
+                                  <Icon name='checkmark-circle' fill='#27AB95' />
+                                </span>
+                                <div className='ml-2'>Online Ts and Cs</div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <span>
+                                  <Icon name='checkmark-circle' fill='#27AB95' />
+                                </span>
+                                <div className='ml-2'>
+                                  Email Technical Support
+                                </div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <span>
+                                  <Icon name='checkmark-circle' fill='#27AB95' />
+                                </span>
+                                <div className='ml-2'>Scheduled Flags</div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <span>
+                                  <Icon name='checkmark-circle' fill='#27AB95' />
+                                </span>
+                                <div className='ml-2'>
+                                  Feature version history (1 per feature)
+                                </div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <span>
+                                  <Icon name='checkmark-circle' fill='#27AB95' />
+                                </span>
+                                <div className='ml-2'>
+                                  Two-Factor Authentication (2FA)
+                                </div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <span>
+                                  <Icon name='checkmark-circle' fill='#27AB95' />
+                                </span>
+                                <div className='ml-2'>
+                                  User Roles and Permissions
+                                </div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <span>
+                                  <Icon name='checkmark-circle' fill='#27AB95' />
+                                </span>
+                                <div className='ml-2'>Change Requests</div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <span>
+                                  <Icon name='checkmark-circle' fill='#27AB95' />
+                                </span>
+                                <div className='ml-2'>Audit Logs</div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <Icon
+                                  name='minus-circle'
+                                  fill='rgba(101, 109, 123, 0.16)'
+                                />
+                                <div className='ml-2 disabled'>
+                                  SAML Authentication
+                                </div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-3 pricing-features-item'>
+                                <Icon
+                                  name='minus-circle'
+                                  fill='rgba(101, 109, 123, 0.16)'
+                                />
+                                <div className='ml-2 disabled'>
+                                  On-Boarding & Training
+                                </div>
+                              </Row>
+                            </li>
+                            <li>
+                              <Row className='mb-2 pricing-features-item'>
+                                <Icon
+                                  name='minus-circle'
+                                  fill='rgba(101, 109, 123, 0.16)'
+                                />
+                                <div className='ml-2 disabled'>
+                                  Optional On Premises Installation
+                                </div>
+                              </Row>
+                            </li>
+                          </ul>
+                          <a
+                            onClick={() => {
+                              Utils.openChat()
+                            }}
+                            className='pricing-cta blue mt-4'
+                            style={{ width: '100%' }}
+                          >
+                            Request more API calls
+                          </a>
+                        </div>
                       </div>
-                    </div>
-                  </Flex>
-                  <Flex className='pricing-panel p-2'>
+                    </Flex>
+                  )}
+                  <Flex className='pricing-panel bg-primary900 text-white p-2'>
                     <div className='panel panel-default'>
                       <div className='panel-content p-3 pt-4'>
-                        <span className='featured'>
+                        <span className='featured text-body'>
                           Optional On-Prem Install
                         </span>
                         <Row className='pt-4 justify-content-center'>
-                          <Icon name='flash' width={32} />
-                          <h4 className='mb-0 ml-2'>Enterprise</h4>
+                          <Icon fill="white" name='flash' width={32} />
+                          <h4 className='mb-0 ml-2 text-white'>Enterprise</h4>
                         </Row>
                         <Row className='pt-3 justify-content-center'>
-                          <h2 style={{ marginBottom: 6 }}>Contact Us</h2>
                         </Row>
-                        <div className='pricing-type pt-1 pb-4'>
-                          For Enterprise Pricing
+                        <div className='pricing-type text-secondary pt-1 pb-4'>
+                          Maximum security and control
                         </div>
                         {!viewOnly ? (
                           <Button
                             onClick={() => {
                               Utils.openChat()
                             }}
-                            className='full-width mt-3'
+                            className='full-width btn-lg btn-tertiary mt-3'
                           >
-                            Contact Us
+                            Contact Sales
                           </Button>
                         ) : null}
                       </div>
                       <div className='panel-footer mt-3'>
+                        <h5 className="text-white m-2 mb-4">
+                          All from <span className="text-secondary">Start-Up,</span> plus
+                        </h5>
                         <ul className='pricing-features mb-0 px-2'>
                           <li>
                             <Row className='mb-3 pricing-features-item'>
                               <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
+                                <Icon name='checkmark-circle' fill='#F7D56E' />
                               </span>
                               <div className='ml-2'>
                                 <strong> 5,000,000+</strong> requests per month
@@ -654,150 +530,76 @@ const Payment = class extends Component {
                           <li>
                             <Row className='mb-3 pricing-features-item'>
                               <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
+                                <Icon name='checkmark-circle' fill='#F7D56E' />
                               </span>
                               <div className='ml-2'>
-                                <strong>5+</strong> Team Members
+                                <strong>20+</strong> Team Members
                               </div>
                             </Row>
                           </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <Icon name='checkmark-circle' fill='#27AB95' />
-                              <div className='ml-2'>Unlimited Projects</div>
-                            </Row>
-                          </li>
+
                           <li>
                             <Row className='mb-3 pricing-features-item'>
                               <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
+                                <Icon name='checkmark-circle' fill='#F7D56E' />
                               </span>
                               <div className='ml-2'>
-                                Unlimited Feature Flags
-                              </div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>Unlimited Environments</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>
-                                Unlimited Identities and Segments
+                                Advanced Hosting Options
                               </div>
                             </Row>
                           </li>
                           <li>
                             <Row className='mb-3 pricing-features-item'>
                               <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>3rd Party Integrations</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>A/B and MVT Testing</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>Amendable MSA</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
+                                <Icon name='checkmark-circle' fill='#F7D56E' />
                               </span>
                               <div className='ml-2'>
-                                Priority Real Time Technical Support with the
-                                Engineering team over Slack or Discord
+                                Priority Real Time Technical Support with the Engineering team over Slack or Discord
                               </div>
                             </Row>
                           </li>
                           <li>
                             <Row className='mb-3 pricing-features-item'>
                               <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
+                                <Icon name='checkmark-circle' fill='#F7D56E' />
                               </span>
-                              <div className='ml-2'>Scheduled Flags</div>
+                              <div className='ml-2'>
+                                Governance features – roles, permissions, change requests, audit logs
+                              </div>
                             </Row>
                           </li>
+
                           <li>
                             <Row className='mb-3 pricing-features-item'>
                               <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
+                                <Icon name='checkmark-circle' fill='#F7D56E' />
                               </span>
                               <div className='ml-2'>
-                                Unlimited feature version history
+                                Features for Maximum Security
                               </div>
                             </Row>
                           </li>
                           <li>
                             <Row className='mb-3 pricing-features-item'>
                               <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
+                                <Icon name='checkmark-circle' fill='#F7D56E' />
                               </span>
                               <div className='ml-2'>
-                                2FA, SAML, Okta, ADFS and LDAP Authentication
+                                Optional On Premises Installation
                               </div>
                             </Row>
                           </li>
                           <li>
                             <Row className='mb-3 pricing-features-item'>
                               <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
+                                <Icon name='checkmark-circle' fill='#F7D56E' />
                               </span>
                               <div className='ml-2'>
-                                User Roles and Permissions
+                                On-Boarding & Training
                               </div>
                             </Row>
                           </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <Icon name='checkmark-circle' fill='#27AB95' />
-                              <div className='ml-2'>Change Requests</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>Audit Logs</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>On-Boarding & Training</div>
-                            </Row>
-                          </li>
-                          <li>
-                            <Row className='mb-2 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
-                              <div className='ml-2'>Uptime and Support SLA</div>
-                            </Row>
-                          </li>
+
                         </ul>
                       </div>
                     </div>
