@@ -3,7 +3,6 @@ import json
 import typing
 import uuid
 from unittest import mock
-from unittest.mock import MagicMock
 
 import pytest
 from core.constants import BOOLEAN, INTEGER, STRING
@@ -360,10 +359,10 @@ def test_edge_identities_create_featurestate(
     environment: int,
     environment_api_key: str,
     identity_document_without_fs: dict,
-    edge_identity_dynamo_wrapper_mock: MagicMock,
+    edge_identity_dynamo_wrapper_mock: mock.MagicMock,
     feature: int,
     feature_name: str,
-    webhook_mock: MagicMock,
+    webhook_mock: mock.MagicMock,
 ):
     # Given
     edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
@@ -505,7 +504,7 @@ def test_edge_identities_update_featurestate(
     environment_api_key: str,
     identity_document: dict[str, typing.Any],
     feature: Feature,
-    webhook_mock: MagicMock,
+    webhook_mock: mock.MagicMock,
     flagsmith_identities_table: Table,
 ):
     # Given
@@ -596,7 +595,7 @@ def test_edge_identities_update_mv_featurestate(
     feature: Feature,
     mv_option_50_percent: MultivariateFeatureOption,
     mv_option_value: str,
-    webhook_mock: MagicMock,
+    webhook_mock: mock.MagicMock,
     flagsmith_identities_table: Table,
 ):
     # Given
@@ -845,7 +844,7 @@ def test_edge_identities_with_identifier_update_featurestate(
     environment_api_key: str,
     identity_document: dict[str, typing.Any],
     feature: Feature,
-    webhook_mock: MagicMock,
+    webhook_mock: mock.MagicMock,
     flagsmith_identities_table: Table,
 ):
     # Given
