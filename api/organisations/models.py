@@ -149,6 +149,10 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     def create_subscription(self):
         Subscription.objects.create(organisation=self)
 
+    @hook(AFTER_CREATE)
+    def create_subscription_cache(self):
+        OrganisationSubscriptionInformationCache.objects.create(organisation=self)
+
     @hook(AFTER_SAVE)
     def clear_environment_caches(self):
         from environments.models import Environment
