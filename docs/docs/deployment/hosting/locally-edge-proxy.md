@@ -241,17 +241,10 @@ The Edge Proxy exposes a health check endpoint at `/proxy/health` that responds 
 fetch all its configured environment documents. By default, if any environment document could not be fetched during the
 latest poll, it will respond with a 500 status code. In some cases, you may want the Edge Proxy to succeed its health
 checks even if it failed to fetch one or more environment documents, but only if it these documents were successfully
-fetched at some point in the past. You can achieve this using the settings defined below.
+fetched at some point in the past. You can achieve this using the `environment_update_grace_period_seconds` setting
+defined below.
 
-#### `health_check.count_stale_documents_as_failing`
-
-Default: `true`.
-
-Setting this to False will mean that the health check returns a 200 response if the time at which the edge proxy was
-last updated is earlier than the allowed threshold. Usually this is helpful in environments where you want the Edge
-Proxy to continue to serve traffic in the case where the Flagsmith API is offline.
-
-#### `health_check.grace_period_seconds`
+#### `health_check.environment_update_grace_period_seconds`
 
 Default: `30`.
 
@@ -263,6 +256,9 @@ pseudo-python-code):
 current_time = datetime.now()
 total_grace_period_seconds = api_poll_frequency + (health_check.grace_period_seconds * len(environment_key_pairs))
 ```
+
+To disable this functionality, set the value to `null`. When set to `null`, the health check will only serve a 500 if
+the configured environments have never been retrieved.
 
 ### Example
 
