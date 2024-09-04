@@ -432,7 +432,7 @@ def identity_document(
     }
     return {
         "composite_key": f"{environment_api_key}_user_1_test",
-        "dashboard_alias": None,
+        "dashboard_alias": "dashboard-alias",
         "identity_traits": identity_traits,
         "identity_features": [
             _environment_feature_state_1_document,

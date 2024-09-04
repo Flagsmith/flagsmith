@@ -292,6 +292,7 @@ export type Identity = {
   id?: string
   identifier: string
   identity_uuid?: string
+  dashboard_alias?: string
 }
 
 export type AvailablePermission = {
