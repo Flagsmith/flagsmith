@@ -247,9 +247,9 @@ fetched at some point in the past. You can achieve this using the settings defin
 
 Default: `true`.
 
-Setting this to False will mean that the health check returns a 200 response with `{"status": "ok", ...}` if the time at
-which the edge proxy was last updated is earlier than the allowed threshold. Usually this is helpful in environments
-where you want the Edge Proxy to continue to serve traffic in the case where the Flagsmith API is offline.
+Setting this to False will mean that the health check returns a 200 response if the time at which the edge proxy was
+last updated is earlier than the allowed threshold. Usually this is helpful in environments where you want the Edge
+Proxy to continue to serve traffic in the case where the Flagsmith API is offline.
 
 #### `health_check.grace_period_seconds`
 
