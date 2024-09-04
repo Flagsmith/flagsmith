@@ -14,8 +14,6 @@ export type ExternalResourcesTableBase = {
   featureId: string
   projectId: string
   organisationId: string
-  repoName: string
-  repoOwner: string
 }
 
 export type ExternalResourcesTableType = ExternalResourcesTableBase & {
@@ -177,7 +175,7 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
           />
         )}
         renderNoResults={
-          <FormGroup className='text-center'>
+          <FormGroup className='text-center mt-4'>
             You have no external resources linked for this feature.
           </FormGroup>
         }
