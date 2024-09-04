@@ -446,7 +446,7 @@ export default {
     return Utils.isSaas()
       ? '/organisation-settings?tab=billing'
       : `https://www.flagsmith.com/pricing${
-          feature ? `utm_source=${feature}` : ''
+          feature ? `?utm_source=${feature}` : ''
         }`
   },
   githubType: {
