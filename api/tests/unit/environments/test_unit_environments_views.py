@@ -788,7 +788,7 @@ def test_audit_log_entry_created_when_environment_updated(
     banner_colour = "#FF0000"
     hide_disabled_flags = True
     use_identity_composite_key_for_hashing = True
-    use_identity_override_in_local_eval = True
+    use_identity_overrides_in_local_eval = True
     hide_sensitive_data = True
 
     data = {
@@ -798,7 +798,7 @@ def test_audit_log_entry_created_when_environment_updated(
         "banner_colour": banner_colour,
         "hide_disabled_flags": hide_disabled_flags,
         "use_identity_composite_key_for_hashing": use_identity_composite_key_for_hashing,
-        "use_identity_overrides_in_local_eval": use_identity_override_in_local_eval,
+        "use_identity_overrides_in_local_eval": use_identity_overrides_in_local_eval,
         "hide_sensitive_data": hide_sensitive_data,
     }
 
@@ -821,7 +821,7 @@ def test_audit_log_entry_created_when_environment_updated(
     assert response.json()["hide_sensitive_data"] == hide_sensitive_data
     assert (
         response.json()["use_identity_overrides_in_local_eval"]
-        == use_identity_override_in_local_eval
+        == use_identity_overrides_in_local_eval
     )
     assert (
         response.json()["use_identity_composite_key_for_hashing"]
