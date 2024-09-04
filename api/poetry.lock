@@ -1370,23 +1370,18 @@ resolved_reference = "f3809f6d592b2c6cfdfa88e0b345ce722ac47727"
 
 [[package]]
 name = "flagsmith-flag-engine"
-version = "5.1.1"
+version = "5.2.0"
 description = "Flag engine for the Flagsmith API."
 optional = false
 python-versions = "*"
-files = []
-develop = false
+files = [
+    {file = "flagsmith-flag-engine-5.2.0.tar.gz", hash = "sha256:247da79a9fee55a55de1440fcd112de9b56cef9d5feb8c783319a9e0620e3a72"},
+]
 
 [package.dependencies]
 pydantic = ">=2.3.0,<3"
 pydantic-collections = ">=0.5.1,<1"
 semver = ">=3.0.1"
-
-[package.source]
-type = "git"
-url = "https://github.com/Flagsmith/flagsmith-engine"
-reference = "feat/add-dashboard-alias"
-resolved_reference = "0a4e9509d4aed3063f4158b3aebc644477681b63"
 
 [[package]]
 name = "flagsmith-ldap"
@@ -4171,4 +4166,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "bc889eaf69d8b84607e2a652a9ccce5e1f001d55be9932849fa4a41ae2cb2910"
+content-hash = "992535d7cf696ab58b19e8fa256392af1265d516865b3d9e93aeddc954245184"
