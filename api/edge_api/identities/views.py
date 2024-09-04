@@ -159,10 +159,7 @@ class EdgeIdentityViewSet(
 
     def perform_destroy(self, instance):
         edge_identity = EdgeIdentity.from_identity_document(instance)
-        edge_identity.delete(
-            user=self.request.user,
-            master_api_key=getattr(self.request, "master_api_key", None),
-        )
+        edge_identity.delete(user=self.request.user)
 
     @swagger_auto_schema(
         responses={200: EdgeIdentityTraitsSerializer(many=True)},
@@ -282,10 +279,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         self.identity.remove_feature_override(instance)
-        self.identity.save(
-            user=self.request.user,
-            master_api_key=getattr(self.request, "master_api_key", None),
-        )
+        self.identity.save(user=self.request.user)
 
     @swagger_auto_schema(responses={200: IdentityAllFeatureStatesSerializer(many=True)})
     @action(detail=False, methods=["GET"])
@@ -330,10 +324,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
         )
 
         self.identity.clone_flag_states_from(source_identity)
-        self.identity.save(
-            user=request.user.id,
-            master_api_key=getattr(request, "master_api_key", None),
-        )
+        self.identity.save(user=request.user)
 
         return self.all(request, *args, **kwargs)
 
@@ -389,10 +380,7 @@ class EdgeIdentityWithIdentifierFeatureStateView(APIView):
         feature_state = self.identity.get_feature_state_by_feature_name_or_id(feature)
         if feature_state:
             self.identity.remove_feature_override(feature_state)
-            self.identity.save(
-                user=request.user.id,
-                master_api_key=getattr(request, "master_api_key", None),
-            )
+            self.identity.save(user=request.user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

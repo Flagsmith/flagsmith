@@ -355,15 +355,15 @@ def test_edge_identities_create_featurestate_returns_400_if_feature_state_alread
 
 
 def test_edge_identities_create_featurestate(
-    dynamodb_wrapper_v2,
-    admin_client,
-    environment,
-    environment_api_key,
-    identity_document_without_fs,
-    edge_identity_dynamo_wrapper_mock,
-    feature,
-    feature_name,
-    webhook_mock,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    admin_client_new: APIClient,
+    environment: int,
+    environment_api_key: str,
+    identity_document_without_fs: dict,
+    edge_identity_dynamo_wrapper_mock: MagicMock,
+    feature: int,
+    feature_name: str,
+    webhook_mock: MagicMock,
 ):
     # Given
     edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
@@ -385,7 +385,7 @@ def test_edge_identities_create_featurestate(
     }
 
     # When
-    response = admin_client.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
