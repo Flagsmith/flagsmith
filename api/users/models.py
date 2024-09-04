@@ -1,5 +1,6 @@
 import logging
 import typing
+import uuid
 from datetime import timedelta
 
 from django.conf import settings
@@ -112,6 +113,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         choices=SignUpType.choices, max_length=100, blank=True, null=True
     )
 
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "sign_up_type"]
 
@@ -152,7 +155,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def set_password(self, raw_password):
         super().set_password(raw_password)
-        self.password_reset_requests.all().delete()
+        if self.id:
+            self.password_reset_requests.all().delete()
 
     @property
     def auth_type(self):

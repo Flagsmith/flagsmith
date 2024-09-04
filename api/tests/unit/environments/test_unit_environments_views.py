@@ -3,6 +3,7 @@ from unittest import mock
 
 import pytest
 from core.constants import STRING
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from flag_engine.segments.constants import EQUAL
@@ -552,7 +553,11 @@ def test_create_environment_without_required_metadata_returns_400(
     assert "Missing required metadata field" in response.json()["metadata"][0]
 
 
-def test_view_environment_with_staff__query_count_is_expected(
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
+def test_view_environment_with_staff__query_count_is_expected_without_rbac(
     staff_client: APIClient,
     environment: Environment,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -563,13 +568,67 @@ def test_view_environment_with_staff__query_count_is_expected(
     required_a_environment_metadata_field: MetadataModelField,
     environment_content_type: ContentType,
 ) -> None:
+    _assert_view_environment_with_staff__query_count(
+        staff_client,
+        environment,
+        with_environment_permissions,
+        project,
+        django_assert_num_queries,
+        environment_metadata_a,
+        environment_metadata_b,
+        required_a_environment_metadata_field,
+        environment_content_type,
+        expected_query_count=9,
+    )
+
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is False,
+    reason="Skip this test if RBAC is not installed",
+)
+def test_view_environment_with_staff__query_count_is_expected_with_rbac(
+    staff_client: APIClient,
+    environment: Environment,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    project: Project,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment_metadata_a: Metadata,
+    environment_metadata_b: Metadata,
+    required_a_environment_metadata_field: MetadataModelField,
+    environment_content_type: ContentType,
+) -> None:  # pragma: no cover
+    _assert_view_environment_with_staff__query_count(
+        staff_client,
+        environment,
+        with_environment_permissions,
+        project,
+        django_assert_num_queries,
+        environment_metadata_a,
+        environment_metadata_b,
+        required_a_environment_metadata_field,
+        environment_content_type,
+        expected_query_count=10,
+    )
+
+
+def _assert_view_environment_with_staff__query_count(
+    staff_client: APIClient,
+    environment: Environment,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    project: Project,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment_metadata_a: Metadata,
+    environment_metadata_b: Metadata,
+    required_a_environment_metadata_field: MetadataModelField,
+    environment_content_type: ContentType,
+    expected_query_count: int,
+) -> None:
     # Given
     with_environment_permissions([VIEW_ENVIRONMENT])
 
     url = reverse("api-v1:environments:environment-list")
     data = {"project": project.id}
 
-    expected_query_count = 9
     # When
     with django_assert_num_queries(expected_query_count):
         response = staff_client.get(url, data=data, content_type="application/json")

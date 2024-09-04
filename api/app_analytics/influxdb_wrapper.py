@@ -186,7 +186,7 @@ def get_event_list_for_organisation(
     results = InfluxDBWrapper.influx_query_manager(
         filters=f'|> filter(fn:(r) => r._measurement == "api_call") \
                   |> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")',
-        extra="|> aggregateWindow(every: 24h, fn: sum)",
+        extra='|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")',
         date_start=date_start,
         date_stop=date_stop,
     )
@@ -241,7 +241,7 @@ def get_multiple_event_list_for_organisation(
         date_start=date_start,
         date_stop=date_stop,
         filters=build_filter_string(filters),
-        extra="|> aggregateWindow(every: 24h, fn: sum)",
+        extra='|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")',
     )
     if not results:
         return results
@@ -319,7 +319,7 @@ def get_multiple_event_list_for_feature(
                   |> filter(fn: (r) => r["_field"] == "request_count") \
                   |> filter(fn: (r) => r["environment_id"] == "{environment_id}") \
                   |> filter(fn: (r) => r["feature_id"] == "{feature_name}")',
-        extra=f'|> aggregateWindow(every: {aggregate_every}, fn: sum, createEmpty: false) \
+        extra=f'|> aggregateWindow(every: {aggregate_every}, fn: sum, createEmpty: false, timeSrc: "_start") \
                    |> yield(name: "sum")',
     )
     if not results:

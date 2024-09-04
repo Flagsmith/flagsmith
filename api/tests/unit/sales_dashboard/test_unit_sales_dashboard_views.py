@@ -75,18 +75,16 @@ def test_get_organisation_info__get_event_list_for_organisation(
 
 def test_list_organisations_search_by_name(
     organisation: Organisation,
-    client: Client,
-    admin_user: FFAdminUser,
+    superuser_client: Client,
 ) -> None:
     # Given
     # use the truncated organisation name to ensure fuzzy search works
     search_term = organisation.name[1:-1]
 
     url = "%s?search=%s" % (reverse("sales_dashboard:index"), search_term)
-    client.force_login(admin_user)
 
     # When
-    response = client.get(url)
+    response = superuser_client.get(url)
 
     # Then
     assert response.status_code == 200
@@ -97,17 +95,15 @@ def test_list_organisations_search_by_name(
 def test_list_organisations_search_by_subscription_id(
     organisation: Organisation,
     chargebee_subscription: Subscription,
-    client: Client,
-    admin_user: FFAdminUser,
+    superuser_client: Client,
 ) -> None:
     # Given
     search_term = chargebee_subscription.subscription_id
 
     url = "%s?search=%s" % (reverse("sales_dashboard:index"), search_term)
-    client.force_login(admin_user)
 
     # When
-    response = client.get(url)
+    response = superuser_client.get(url)
 
     # Then
     assert response.status_code == 200
@@ -116,17 +112,16 @@ def test_list_organisations_search_by_subscription_id(
 
 def test_list_organisations_search_by_user_email(
     organisation: Organisation,
-    client: Client,
+    superuser_client: Client,
     admin_user: FFAdminUser,
 ) -> None:
     # Given
     search_term = admin_user.email
 
     url = "%s?search=%s" % (reverse("sales_dashboard:index"), search_term)
-    client.force_login(admin_user)
 
     # When
-    response = client.get(url)
+    response = superuser_client.get(url)
 
     # Then
     assert response.status_code == 200
@@ -136,18 +131,16 @@ def test_list_organisations_search_by_user_email(
 def test_list_organisations_filter_plan(
     organisation: Organisation,
     chargebee_subscription: Subscription,
-    client: Client,
-    admin_user: FFAdminUser,
+    superuser_client: Client,
 ) -> None:
     # Given
     url = "%s?filter_plan=%s" % (
         reverse("sales_dashboard:index"),
         chargebee_subscription.plan,
     )
-    client.force_login(admin_user)
 
     # When
-    response = client.get(url)
+    response = superuser_client.get(url)
 
     # Then
     assert response.status_code == 200
