@@ -203,7 +203,11 @@ class EdgeIdentity:
             kwargs = {
                 "environment_api_key": self.environment_api_key,
                 "identifier": self.identifier,
-                "user_id": getattr(user, "id", None),
+                "user_id": (
+                    user.id
+                    if not getattr(user, "is_master_api_key_user", False)
+                    else None
+                ),
                 "changes": changeset,
                 "identity_uuid": str(self.identity_uuid),
                 "master_api_key_id": (
