@@ -16,7 +16,10 @@ from environments.dynamodb.types import (
     IdentityOverridesV2Changeset,
     IdentityOverrideV2,
 )
+from environments.identities.models import Identity
 from environments.models import Environment, Webhook
+from features.models import Feature
+from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType
 
 
@@ -129,8 +132,12 @@ def test_call_environment_webhook_for_feature_state_change_with_previous_state_o
 
 
 def test_call_environment_webhook_for_feature_state_change_with_changed_by_user_id(
-    mocker, environment, feature, identity, admin_user
-):
+    mocker: MockerFixture,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    admin_user: FFAdminUser,
+) -> None:
     # Given
     mock_call_environment_webhooks = mocker.patch(
         "edge_api.identities.tasks.call_environment_webhooks"
