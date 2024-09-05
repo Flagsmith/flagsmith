@@ -128,6 +128,50 @@ def test_call_environment_webhook_for_feature_state_change_with_previous_state_o
     assert data["timestamp"] == now_isoformat
 
 
+def test_call_environment_webhook_for_feature_state_change_with_changed_by_user_id(
+    mocker, environment, feature, identity, admin_user
+):
+    # Given
+    mock_call_environment_webhooks = mocker.patch(
+        "edge_api.identities.tasks.call_environment_webhooks"
+    )
+    Webhook.objects.create(environment=environment, url="https://foo.com/webhook")
+
+    mock_feature_state_data = mocker.MagicMock()
+    mock_generate_webhook_feature_state_data = mocker.patch.object(
+        Webhook,
+        "generate_webhook_feature_state_data",
+        return_value=mock_feature_state_data,
+    )
+
+    now_isoformat = timezone.now().isoformat()
+    previous_enabled_state = True
+    previous_value = "foo"
+
+    # When
+    call_environment_webhook_for_feature_state_change(
+        feature_id=feature.id,
+        environment_api_key=environment.api_key,
+        identity_id=identity.id,
+        identity_identifier=identity.identifier,
+        changed_by_user_id=admin_user.id,
+        timestamp=now_isoformat,
+        previous_enabled_state=previous_enabled_state,
+        previous_value=previous_value,
+    )
+
+    # Then
+    mock_call_environment_webhooks.assert_called_once()
+    mock_generate_webhook_feature_state_data.assert_called_once_with(
+        feature=feature,
+        environment=environment,
+        identity_id=identity.id,
+        identity_identifier=identity.identifier,
+        enabled=previous_enabled_state,
+        value=previous_value,
+    )
+
+
 @pytest.mark.parametrize(
     "previous_enabled_state, previous_value, new_enabled_state, new_value",
     (
