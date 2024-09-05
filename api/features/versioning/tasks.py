@@ -172,7 +172,9 @@ def publish_version_change_set(
     ).get(id=version_change_set_id)
     user = FFAdminUser.objects.get(id=user_id)
 
-    if is_scheduled and version_change_set.get_conflicts():
+    ignore_conflicts = version_change_set.change_request.ignore_conflicts
+
+    if not ignore_conflicts and is_scheduled and version_change_set.get_conflicts():
         _send_failed_due_to_conflict_alert_to_change_request_author(version_change_set)
         return
 

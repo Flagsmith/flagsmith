@@ -832,6 +832,7 @@ def test_ignore_conflicts_for_multiple_scheduled_change_requests(
             title="Scheduled CR1",
             environment=environment_v2_versioning,
             user=admin_user,
+            ignore_conflicts=True,
         )
         version_change_set = VersionChangeSet.objects.create(
             change_request=change_request,
