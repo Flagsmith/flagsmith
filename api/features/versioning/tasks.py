@@ -173,7 +173,6 @@ def publish_version_change_set(
     user = FFAdminUser.objects.get(id=user_id)
 
     ignore_conflicts = version_change_set.change_request.ignore_conflicts
-
     if not ignore_conflicts and is_scheduled and version_change_set.get_conflicts():
         _send_failed_due_to_conflict_alert_to_change_request_author(version_change_set)
         return
@@ -210,6 +209,10 @@ def publish_version_change_set(
             "Unable to publish version change set. Serializer errors are: %s",
             str(serializer.errors),
         )
+        if is_scheduled:
+            _send_failed_due_to_conflict_alert_to_change_request_author(
+                version_change_set
+            )
         raise FeatureVersioningError("Unable to publish version change set")
 
     version: EnvironmentFeatureVersion = serializer.save(
