@@ -57,14 +57,12 @@ def tag_feature_per_github_event(
         | Q(external_resources__type="GITHUB_ISSUE"),
         external_resources__url=metadata.get("html_url"),
     ).first()
-    repo: list[str] = repo_full_name.split("/")
-    tagging_enabled = (
-        GitHubRepository.objects.filter(
-            project=feature.project, repository_owner=repo[0], repository_name=repo[1]
-        )
-        .first()
-        .tagging_enabled
-    )
+    repository_owner, repository_name = repo_full_name.split(sep="/", maxsplit=1)
+    tagging_enabled = GitHubRepository.objects.get(
+        project=feature.project,
+        repository_owner=repository_owner,
+        repository_name=repository_name,
+    ).tagging_enabled
 
     if feature and tagging_enabled:
         if (
@@ -113,7 +111,7 @@ def handle_github_webhook_event(event_type: str, payload: dict[str, Any]) -> Non
     elif event_type in tag_by_event_type:
         action = str(payload.get("action"))
         if action in tag_by_event_type[event_type]:
-            repo_full_name = payload.get("repository", {}).get("full_name")
+            repo_full_name = payload["repository"]["full_name"]
             metadata = payload.get("issue", {}) or payload.get("pull_request", {})
             tag_feature_per_github_event(event_type, action, metadata, repo_full_name)
 
