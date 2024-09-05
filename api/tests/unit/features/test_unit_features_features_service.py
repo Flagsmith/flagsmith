@@ -12,6 +12,7 @@ from features.features_service import (
 )
 from features.models import Feature, FeatureSegment, FeatureState
 from projects.models import EdgeV2MigrationStatus
+from users.models import FFAdminUser
 from util.mappers.engine import (
     map_feature_state_to_engine,
     map_identity_to_engine,
@@ -221,6 +222,7 @@ def test_feature_get_edge_overrides_data(
     distinct_identity_featurestate: FeatureState,
     dynamodb_identity_wrapper: "DynamoIdentityWrapper",
     dynamodb_wrapper_v2: "DynamoEnvironmentV2Wrapper",
+    admin_user: FFAdminUser,
 ) -> None:
     # Given
     # replicate identity to Edge
@@ -231,7 +233,7 @@ def test_feature_get_edge_overrides_data(
     edge_identity.add_feature_override(
         map_feature_state_to_engine(distinct_identity_featurestate),
     )
-    edge_identity.save()
+    edge_identity.save(admin_user)
 
     # When
     overrides_data = get_edge_overrides_data(environment)
@@ -268,6 +270,7 @@ def test_get_edge_overrides_data_skips_deleted_features(
     distinct_identity_featurestate: FeatureState,
     dynamodb_identity_wrapper: "DynamoIdentityWrapper",
     dynamodb_wrapper_v2: "DynamoEnvironmentV2Wrapper",
+    admin_user: FFAdminUser,
 ):
     # Given
     # replicate identity to Edge
@@ -279,7 +282,7 @@ def test_get_edge_overrides_data_skips_deleted_features(
     edge_identity.add_feature_override(
         map_feature_state_to_engine(distinct_identity_featurestate),
     )
-    edge_identity.save()
+    edge_identity.save(admin_user)
 
     # Now, delete one of the feature
     feature.delete()
