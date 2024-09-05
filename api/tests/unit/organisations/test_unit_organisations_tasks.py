@@ -107,7 +107,6 @@ def test_send_org_over_limit_alert_for_organisation_with_subscription(
 def test_subscription_cancellation(db: None) -> None:
     # Given
     organisation = Organisation.objects.create()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=5,
@@ -289,7 +288,6 @@ def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_i
     organisation.subscription.plan = SCALE_UP
     organisation.subscription.subscription_id = "fancy_id"
     organisation.subscription.save()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -321,7 +319,6 @@ def test_handle_api_usage_notifications_when_feature_flag_is_off(
 ) -> None:
     # Given
     now = timezone.now()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -373,7 +370,6 @@ def test_handle_api_usage_notifications_below_100(
     organisation.subscription.plan = SCALE_UP
     organisation.subscription.subscription_id = "fancy_id"
     organisation.subscription.save()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -480,7 +476,6 @@ def test_handle_api_usage_notifications_below_api_usage_alert_thresholds(
     organisation.subscription.plan = SCALE_UP
     organisation.subscription.subscription_id = "fancy_id"
     organisation.subscription.save()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -532,7 +527,6 @@ def test_handle_api_usage_notifications_above_100(
     organisation.subscription.plan = SCALE_UP
     organisation.subscription.subscription_id = "fancy_id"
     organisation.subscription.save()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -623,7 +617,6 @@ def test_handle_api_usage_notifications_with_error(
     organisation.subscription.plan = SCALE_UP
     organisation.subscription.subscription_id = "fancy_id"
     organisation.subscription.save()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -763,8 +756,6 @@ def test_handle_api_usage_notifications_missing_info_cache(
     from organisations.task_helpers import logger
 
     logger.addHandler(inspecting_handler)
-    organisation.subscription_information_cache.delete()
-    organisation.refresh_from_db()
     assert organisation.has_subscription_information_cache() is False
 
     mock_api_usage = mocker.patch(
@@ -803,7 +794,6 @@ def test_charge_for_api_call_count_overages_scale_up(
 ) -> None:
     # Given
     now = timezone.now()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -871,7 +861,6 @@ def test_charge_for_api_call_count_overages_scale_up_when_flagsmith_client_sets_
 ) -> None:
     # Given
     now = timezone.now()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -929,7 +918,6 @@ def test_charge_for_api_call_count_overages_grace_period(
 ) -> None:
     # Given
     now = timezone.now()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -979,7 +967,6 @@ def test_charge_for_api_call_count_overages_grace_period_over(
 ) -> None:
     # Given
     now = timezone.now()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -1038,7 +1025,6 @@ def test_charge_for_api_call_count_overages_with_not_covered_plan(
 ) -> None:
     # Given
     now = timezone.now()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -1091,7 +1077,6 @@ def test_charge_for_api_call_count_overages_under_api_limit(
 ) -> None:
     # Given
     now = timezone.now()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -1141,7 +1126,6 @@ def test_charge_for_api_call_count_overages_start_up(
 ) -> None:
     # Given
     now = timezone.now()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -1222,7 +1206,6 @@ def test_charge_for_api_call_count_overages_non_standard(
 
     logger.addHandler(inspecting_handler)
 
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -1280,7 +1263,6 @@ def test_charge_for_api_call_count_overages_with_exception(
     from organisations.tasks import logger
 
     logger.addHandler(inspecting_handler)
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -1335,7 +1317,6 @@ def test_charge_for_api_call_count_overages_start_up_with_api_billing(
 ) -> None:
     # Given
     now = timezone.now()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -1404,7 +1385,6 @@ def test_charge_for_api_call_count_overages_with_yearly_account(
 ) -> None:
     # Given
     now = timezone.now()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -1450,7 +1430,6 @@ def test_charge_for_api_call_count_overages_with_bad_plan(
 ) -> None:
     # Given
     now = timezone.now()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -1520,7 +1499,6 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
         organisation5,
         organisation6,
     ]:
-        org.subscription_information_cache.delete()
         OrganisationSubscriptionInformationCache.objects.create(
             organisation=org,
             allowed_seats=10,
@@ -1728,7 +1706,6 @@ def test_restrict_use_due_to_api_limit_grace_period_breached(
     now = timezone.now()
 
     OrganisationBreachedGracePeriod.objects.create(organisation=organisation)
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -1777,8 +1754,6 @@ def test_restrict_use_due_to_api_limit_grace_period_over_missing_subscription_in
     mailoutbox: list[EmailMultiAlternatives],
 ) -> None:
     # Given
-    organisation.subscription_information_cache.delete()
-    organisation.refresh_from_db()
     assert not organisation.has_subscription_information_cache()
 
     get_client_mock = mocker.patch("organisations.tasks.get_client")
@@ -1822,8 +1797,6 @@ def test_restrict_use_due_to_api_limit_grace_period_over_with_reduced_api_usage(
     inspecting_handler: logging.Handler,
 ) -> None:
     # Given
-    organisation.subscription_information_cache.delete()
-    organisation.refresh_from_db()
     assert not organisation.has_subscription_information_cache()
 
     from organisations.tasks import logger

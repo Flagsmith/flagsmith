@@ -285,7 +285,6 @@ def test_organisation_subscription_get_subscription_metadata_returns_cb_metadata
     seats = 10
     api_calls = 50000000
     projects = 10
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=seats,
@@ -520,7 +519,6 @@ def test_organisation_update_clears_environment_caches(
 def test_reset_of_api_notifications(organisation: Organisation) -> None:
     # Given
     now = timezone.now()
-    organisation.subscription_information_cache.delete()
     osic = OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -555,8 +553,13 @@ def test_reset_of_api_notifications(organisation: Organisation) -> None:
     assert OrganisationAPIUsageNotification.objects.first() == oapiun
 
 
-def test_organisation_creates_subscription_cache(db: None) -> None:
-    # Given / When
+def test_organisation_creates_subscription_cache(
+    db: None, mocker: MockerFixture
+) -> None:
+    # Given
+    mocker.patch("organisations.models.is_saas", return_value=True)
+
+    # When
     organisation = Organisation.objects.create(name="Test org")
 
     # Then

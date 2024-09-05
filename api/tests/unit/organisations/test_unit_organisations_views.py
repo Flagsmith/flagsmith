@@ -849,7 +849,7 @@ def test_get_subscription_metadata_when_subscription_information_cache_exist(
     expected_projects = 3
     expected_api_calls = 100
     expected_chargebee_email = "test@example.com"
-    organisation.subscription_information_cache.delete()
+
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=expected_seats,
@@ -891,7 +891,6 @@ def test_get_subscription_metadata_when_subscription_information_cache_does_not_
     expected_api_calls = 100
     expected_chargebee_email = "test@example.com"
 
-    organisation.subscription_information_cache.delete()
     mocker.patch("organisations.models.is_saas", return_value=True)
     get_subscription_metadata = mocker.patch(
         "organisations.models.get_subscription_metadata_from_id",
@@ -1099,7 +1098,6 @@ def test_when_plan_is_changed_max_seats_and_max_api_calls_are_updated(
         }
     }
 
-    organisation.subscription_information_cache.delete()
     if is_updated:
         subscription_information_cache = (
             OrganisationSubscriptionInformationCache.objects.create(
@@ -1722,8 +1720,7 @@ def test_defaults_to_empty_api_notifications_when_no_subscription_information_ca
         percent_usage=90,
         notified_at=now,
     )
-    organisation.subscription_information_cache.delete()
-    organisation.refresh_from_db()
+
     assert hasattr(organisation, "subscription_information_cache") is False
 
     # When
@@ -1748,7 +1745,6 @@ def test_retrieves_api_usage_notifications(
     )
 
     now = timezone.now()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -1800,7 +1796,6 @@ def test_doesnt_retrieve_stale_api_usage_notifications(
     )
 
     now = timezone.now()
-    organisation.subscription_information_cache.delete()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
