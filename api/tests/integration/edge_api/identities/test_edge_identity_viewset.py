@@ -374,7 +374,7 @@ def test_search_for_identities_by_dashboard_alias(
 
 
 def test_update_edge_identity(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     dynamo_enabled_environment: Environment,
     environment_api_key: str,
     identity_document: dict[str, Any],
@@ -394,7 +394,7 @@ def test_update_edge_identity(
     )
 
     # When
-    response = admin_client.patch(url, data={"dashboard_alias": dashboard_alias})
+    response = admin_client_new.patch(url, data={"dashboard_alias": dashboard_alias})
 
     # Then
     assert response.status_code == status.HTTP_200_OK
