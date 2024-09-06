@@ -25,13 +25,13 @@ from permissions.models import (
     PermissionModel,
 )
 from projects.managers import ProjectManager
+from projects.services import get_project_segments_from_cache
 from projects.tasks import (
     handle_cascade_delete,
     migrate_project_environments_to_v2,
     write_environments_to_dynamodb,
 )
 
-project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
 
@@ -142,27 +142,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         return self.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE
 
     def get_segments_from_cache(self):
-        from segments.models import Segment
-
-        segments = project_segments_cache.get(self.id)
-
-        if not segments:
-            # This is optimised to account for rules nested one levels deep (since we
-            # don't support anything above that from the UI at the moment). Anything
-            # past that will require additional queries / thought on how to optimise.
-            segments = Segment.live_objects.filter(project=self).prefetch_related(
-                "rules",
-                "rules__conditions",
-                "rules__rules",
-                "rules__rules__conditions",
-                "rules__rules__rules",
-            )
-
-            project_segments_cache.set(
-                self.id, segments, timeout=settings.CACHE_PROJECT_SEGMENTS_SECONDS
-            )
-
-        return segments
+        return get_project_segments_from_cache(self.id)
 
     @hook(BEFORE_CREATE)
     def set_enable_dynamo_db(self):
