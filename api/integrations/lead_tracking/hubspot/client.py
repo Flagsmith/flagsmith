@@ -93,7 +93,7 @@ class HubspotClient:
         if response.status_code not in {200, 201}:
             logger.error(
                 f"Problem posting data to Hubspot's form API due to {response.status_code} "
-                f"status code and following form data {response.text}"
+                f"status code and following response: {response.text}"
             )
         return response.json()
 
