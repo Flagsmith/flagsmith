@@ -4041,8 +4041,8 @@ flagsmith-common = {git = "https://github.com/Flagsmith/flagsmith-common", tag =
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
-reference = "v2.4.3"
-resolved_reference = "4416374a8a4f8fc779c6e20ecfb76ee009ed33db"
+reference = "v2.5.0"
+resolved_reference = "9fd951a470de537389c8d08c186656464500f3ed"
 
 [[package]]
 name = "wrapt"
@@ -4161,4 +4161,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "992535d7cf696ab58b19e8fa256392af1265d516865b3d9e93aeddc954245184"
+content-hash = "80004eaae4f8296e4ce3f3f7459db21bd73c1f29c675e5de0ff157322715f882"
