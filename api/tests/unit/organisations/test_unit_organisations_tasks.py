@@ -756,7 +756,6 @@ def test_handle_api_usage_notifications_missing_info_cache(
     from organisations.task_helpers import logger
 
     logger.addHandler(inspecting_handler)
-
     assert organisation.has_subscription_information_cache() is False
 
     mock_api_usage = mocker.patch(
@@ -1264,7 +1263,6 @@ def test_charge_for_api_call_count_overages_with_exception(
     from organisations.tasks import logger
 
     logger.addHandler(inspecting_handler)
-
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,

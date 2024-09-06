@@ -231,6 +231,7 @@ def test_get_usage_data__ninety_day_period(
     week_from_now = now + timedelta(days=7)
     four_weeks_ago = now - timedelta(days=28)
     ninety_days_ago = now - timedelta(days=90)
+
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         current_billing_term_starts_at=four_weeks_ago,
