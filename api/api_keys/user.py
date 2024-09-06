@@ -23,6 +23,9 @@ class APIKeyUser(UserABC):
     def __init__(self, key: MasterAPIKey):
         self.key = key
 
+    def __str__(self) -> str:
+        return self.key.name
+
     @property
     def is_authenticated(self) -> bool:
         return True

@@ -29,12 +29,6 @@ logger = logging.getLogger(__name__)
     name="list",
     decorator=swagger_auto_schema(query_serializer=FeatureSegmentQuerySerializer()),
 )
-@method_decorator(
-    name="update_priorities",
-    decorator=swagger_auto_schema(
-        responses={200: FeatureSegmentListSerializer(many=True)}
-    ),
-)
 class FeatureSegmentViewSet(
     viewsets.ModelViewSet,
 ):
