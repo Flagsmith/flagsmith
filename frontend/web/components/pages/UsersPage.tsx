@@ -60,7 +60,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
     pageType: page.pageType,
     page_size: 10,
     pages: page.pages,
-    search,
+    q: search,
   })
 
   const { environmentId } = props.match.params
@@ -152,7 +152,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
             renderFooter={() => (
               <JSONReference
                 className='mx-2 mt-4'
-                title={'Identites'}
+                title={'Identities'}
                 json={identities?.results}
               />
             )}
@@ -193,7 +193,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
               })
             }}
             renderRow={(
-              { id, identifier, identity_uuid }: Identity,
+              { dashboard_alias, id, identifier, identity_uuid }: Identity,
               index: number,
             ) =>
               permission ? (
@@ -211,6 +211,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                   >
                     <div className='font-weight-medium'>
                       <IdentifierString value={identifier} />
+                      {dashboard_alias ? ` (alias: ${dashboard_alias})` : ''}
                     </div>
                     <Icon
                       name='chevron-right'

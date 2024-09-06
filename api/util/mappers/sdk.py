@@ -29,11 +29,12 @@ def map_environment_to_sdk_document(environment: "Environment") -> SDKDocument:
     """
     # Read relationships.
     identities_with_overrides = {}
-    for feature_state in environment.feature_states.all():
-        if (identity_id := feature_state.identity_id) and (
-            identity_id not in identities_with_overrides
-        ):
-            identities_with_overrides[identity_id] = feature_state.identity
+    if environment.use_identity_overrides_in_local_eval:
+        for feature_state in environment.feature_states.all():
+            if (identity_id := feature_state.identity_id) and (
+                identity_id not in identities_with_overrides
+            ):
+                identities_with_overrides[identity_id] = feature_state.identity
 
     # Get the engine data.
     engine_environment = map_environment_to_engine(environment, with_integrations=False)

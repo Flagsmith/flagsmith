@@ -91,6 +91,8 @@ class ChangeRequest(
         null=True,
     )
 
+    ignore_conflicts = models.BooleanField(default=False)
+
     def approve(self, user: "FFAdminUser"):
         if user.id == self.user_id:
             raise CannotApproveOwnChangeRequest(

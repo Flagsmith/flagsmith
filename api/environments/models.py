@@ -131,9 +131,12 @@ class Environment(
         help_text="If true, will hide sensitive data(e.g: traits, description etc) from the SDK endpoints",
     )
 
-    objects = EnvironmentManager()
-
     use_v2_feature_versioning = models.BooleanField(default=False)
+    use_identity_overrides_in_local_eval = models.BooleanField(
+        default=True,
+        help_text="When enabled, identity overrides will be included in the environment document",
+    )
+    objects = EnvironmentManager()
 
     class Meta:
         ordering = ["id"]

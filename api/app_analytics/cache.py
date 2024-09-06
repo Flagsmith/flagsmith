@@ -1,4 +1,5 @@
 from collections import defaultdict
+from threading import Lock
 
 from app_analytics.tasks import track_feature_evaluation, track_request
 from app_analytics.track import track_feature_evaluation_influxdb
@@ -10,6 +11,7 @@ class APIUsageCache:
     def __init__(self):
         self._cache = {}
         self._last_flushed_at = timezone.now()
+        self._lock = Lock()
 
     def _flush(self):
         for key, value in self._cache.items():
@@ -27,20 +29,22 @@ class APIUsageCache:
 
     def track_request(self, resource: int, host: str, environment_key: str):
         key = (resource, host, environment_key)
-        if key not in self._cache:
-            self._cache[key] = 1
-        else:
-            self._cache[key] += 1
-        if (
-            timezone.now() - self._last_flushed_at
-        ).seconds > settings.PG_API_USAGE_CACHE_SECONDS:
-            self._flush()
+        with self._lock:
+            if key not in self._cache:
+                self._cache[key] = 1
+            else:
+                self._cache[key] += 1
+            if (
+                timezone.now() - self._last_flushed_at
+            ).seconds > settings.PG_API_USAGE_CACHE_SECONDS:
+                self._flush()
 
 
 class FeatureEvaluationCache:
     def __init__(self):
         self._cache = {}
         self._last_flushed_at = timezone.now()
+        self._lock = Lock()
 
     def _flush(self):
         evaluation_data = defaultdict(dict)
@@ -71,12 +75,13 @@ class FeatureEvaluationCache:
         self, environment_id: int, feature_name: str, evaluation_count: int
     ):
         key = (environment_id, feature_name)
-        if key not in self._cache:
-            self._cache[key] = evaluation_count
-        else:
-            self._cache[key] += evaluation_count
+        with self._lock:
+            if key not in self._cache:
+                self._cache[key] = evaluation_count
+            else:
+                self._cache[key] += evaluation_count
 
-        if (
-            timezone.now() - self._last_flushed_at
-        ).seconds > settings.FEATURE_EVALUATION_CACHE_SECONDS:
-            self._flush()
+            if (
+                timezone.now() - self._last_flushed_at
+            ).seconds > settings.FEATURE_EVALUATION_CACHE_SECONDS:
+                self._flush()

@@ -142,7 +142,7 @@ environs = "~9.2.0"
 django-lifecycle = "~1.0.0"
 drf-writable-nested = "~0.6.2"
 django-filter = "~2.4.0"
-flagsmith-flag-engine = "^5.1.1"
+flagsmith-flag-engine = "^5.2.0"
 boto3 = "~1.28.78"
 slack-sdk = "~3.9.0"
 asgiref = "~3.8.1"
@@ -195,7 +195,7 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.4.3" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.5.0" }
 
 [tool.poetry.group.dev.dependencies]
 django-test-migrations = "~1.2.0"
