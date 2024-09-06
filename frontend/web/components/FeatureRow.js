@@ -141,6 +141,21 @@ class TheComponent extends Component {
     const changeRequestsEnabled = Utils.changeRequestsEnabled(
       environment && environment.minimum_change_request_approvals,
     )
+    const onChange = ()=> {
+        if(disableControls) {
+          return;
+        }
+        if (
+          projectFlag?.multivariate_options?.length ||
+          Utils.changeRequestsEnabled(
+            environment.minimum_change_request_approvals,
+          )
+        ) {
+          this.editFeature(projectFlag, environmentFlags[id])
+          return
+        }
+        this.confirmToggle()
+    }
     const isCompact = getViewMode() === 'compact'
     if (this.props.condensed) {
       return (
@@ -171,14 +186,7 @@ class TheComponent extends Component {
                     : '-off'
                 }`}
                 checked={environmentFlags[id] && environmentFlags[id].enabled}
-                onChange={() => {
-                  if (disableControls) return
-                  if (changeRequestsEnabled) {
-                    this.editFeature(projectFlag, environmentFlags[id])
-                    return
-                  }
-                  this.confirmToggle()
-                }}
+                onChange={onChange}
               />
             </Row>
           </div>
@@ -357,17 +365,7 @@ class TheComponent extends Component {
                 : '-off'
             }`}
             checked={environmentFlags[id] && environmentFlags[id].enabled}
-            onChange={() => {
-              if (
-                Utils.changeRequestsEnabled(
-                  environment.minimum_change_request_approvals,
-                )
-              ) {
-                this.editFeature(projectFlag, environmentFlags[id])
-                return
-              }
-              this.confirmToggle()
-            }}
+            onChange={onChange}
           />
         </div>
 
