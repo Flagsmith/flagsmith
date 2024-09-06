@@ -171,6 +171,7 @@ const EnvironmentSettingsPage = class extends Component {
         description: description || env.description,
         hide_disabled_flags: this.state.hide_disabled_flags,
         hide_sensitive_data: !!this.state.hide_sensitive_data,
+        use_identity_overrides_in_local_eval: this.use_identity_overrides_in_local_eval,
         minimum_change_request_approvals: has4EyesPermission
           ? this.state.minimum_change_request_approvals
           : null,
@@ -261,6 +262,7 @@ const EnvironmentSettingsPage = class extends Component {
         name,
         use_identity_composite_key_for_hashing,
         use_v2_feature_versioning,
+        use_identity_overrides_in_local_eval,
       },
     } = this
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
@@ -293,6 +295,7 @@ const EnvironmentSettingsPage = class extends Component {
                   banner_text: env.banner_text,
                   hide_disabled_flags: env.hide_disabled_flags,
                   hide_sensitive_data: !!env.hide_sensitive_data,
+                  use_identity_overrides_in_local_eval: env.use_identity_overrides_in_local_eval,
                   minimum_change_request_approvals: Utils.changeRequestsEnabled(
                     env.minimum_change_request_approvals,
                   )
@@ -518,6 +521,24 @@ const EnvironmentSettingsPage = class extends Component {
                                   from the API and could break your existing
                                   code.
                                 </div>
+                              </div>
+                            }
+                          />
+                        </div>
+                        <div className='col-md-8 mt-4'>
+                          <Setting
+                            title='Identity overrides in Local evaluation'
+                            checked={use_identity_overrides_in_local_eval}
+                            onChange={(v) => {
+                              this.confirmToggle(
+                                'Confirm Environment Setting',
+                                'use_identity_overrides_in_local_eval',
+                                use_identity_overrides_in_local_eval,
+                              )
+                            }}
+                            description={
+                              <div>
+                                Enable this to use identity overrides in local evaluation mode
                               </div>
                             }
                           />

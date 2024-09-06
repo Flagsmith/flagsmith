@@ -86,6 +86,7 @@ export type Environment = {
   hide_sensitive_data: boolean
   total_segment_overrides?: number
   use_v2_feature_versioning: boolean
+  use_identity_overrides_in_local_eval: boolean
   metadata: Metadata[] | []
 }
 export type Project = {
