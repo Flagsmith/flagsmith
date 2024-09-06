@@ -71,6 +71,7 @@ class Segment(
         "workflows_core.ChangeRequest",
         on_delete=models.CASCADE,
         null=True,
+        blank=True,
         related_name="segments",
     )
 
