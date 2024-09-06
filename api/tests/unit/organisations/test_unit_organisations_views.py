@@ -663,20 +663,17 @@ def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and
 @mock.patch("organisations.models.cancel_chargebee_subscription")
 def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and_current_term_end_is_missing(
     mocked_cancel_chargebee_subscription: MagicMock,
-    subscription: Subscription,
+    chargebee_subscription: Subscription,
     staff_user: FFAdminUser,
     staff_client: APIClient,
     settings: SettingsWrapper,
 ) -> None:
     # Given
-    subscription.subscription_id = "subscription-id"
-    subscription.save()
-
     data = {
         "content": {
             "subscription": {
                 "status": "non_renewing",
-                "id": subscription.subscription_id,
+                "id": chargebee_subscription.subscription_id,
                 # Note the missing current_term_end field.
             },
             "customer": {"email": staff_user.email},
@@ -690,9 +687,9 @@ def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and
     staff_client.post(url, data=json.dumps(data), content_type="application/json")
 
     # Then
-    subscription.refresh_from_db()
-    assert subscription.cancellation_date is None
-    assert subscription.plan == FREE_PLAN_ID
+    chargebee_subscription.refresh_from_db()
+    assert chargebee_subscription.cancellation_date is None
+    assert chargebee_subscription.plan == FREE_PLAN_ID
     assert len(mail.outbox) == 1
     mocked_cancel_chargebee_subscription.assert_not_called()
 
