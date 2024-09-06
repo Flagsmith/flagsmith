@@ -195,7 +195,7 @@ const Payment = class extends Component {
                               </span>
                               <div className="ml-2">
                                 Up to
-                                <strong> 1,000,000</strong> requests per month
+                                <strong> 1,000,000</strong> Requests per month
                               </div>
                             </Row>
                           </li>
@@ -205,7 +205,7 @@ const Payment = class extends Component {
                                 <Icon name="checkmark-circle" fill="#27AB95" />
                               </span>
                               <div className="ml-2">
-                                <strong>3</strong> Team Members
+                                <strong>3</strong> Team members
                               </div>
                             </Row>
                           </li>
@@ -214,7 +214,7 @@ const Payment = class extends Component {
                               <span>
                                 <Icon name="checkmark-circle" fill="#27AB95" />
                               </span>
-                              <div className="ml-2">Unlimited Projects</div>
+                              <div className="ml-2">Unlimited projects</div>
                             </Row>
                           </li>
 
@@ -223,7 +223,7 @@ const Payment = class extends Component {
                               <span>
                                 <Icon name="checkmark-circle" fill="#27AB95" />
                               </span>
-                              <div className="ml-2">Email Technical Support</div>
+                              <div className="ml-2">Email technical support</div>
                             </Row>
                           </li>
 
@@ -232,7 +232,7 @@ const Payment = class extends Component {
                               <span>
                                 <Icon name="checkmark-circle" fill="#27AB95" />
                               </span>
-                              <div className="ml-2">Scheduled Flags</div>
+                              <div className="ml-2">Scheduled flags</div>
                             </Row>
                           </li>
                           <li>
@@ -240,7 +240,7 @@ const Payment = class extends Component {
                               <span>
                                 <Icon name="checkmark-circle" fill="#27AB95" />
                               </span>
-                              <div className="ml-2">Two-Factor Authentication (2FA)</div>
+                              <div className="ml-2">Two-factor authentication (2FA)</div>
                             </Row>
                           </li>
 
@@ -252,7 +252,7 @@ const Payment = class extends Component {
                     <div className='panel panel-default'>
                       <div className='panel-content p-3 pt-4'>
                         <span className='featured text-body'>
-                          Optional On-Prem Install
+                          Optional <a className="text-primary fw-bold" target="_blank" href="https://www.flagsmith.com/on-premises-and-private-cloud-hosting">On Premise</a> or <a className="text-primary fw-bold" target="_blank" href="https://www.flagsmith.com/on-premises-and-private-cloud-hosting">Private Cloud</a> Install
                         </span>
                         <Row className='pt-4 justify-content-center'>
                           <Icon fill="white" name='flash' width={32} />
@@ -295,7 +295,7 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#F7D56E' />
                               </span>
                               <div className='ml-2'>
-                                <strong>20+</strong> Team Members
+                                <strong>20+</strong> Team members
                               </div>
                             </Row>
                           </li>
@@ -306,7 +306,7 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#F7D56E' />
                               </span>
                               <div className='ml-2'>
-                                Advanced Hosting Options
+                                Advanced hosting options
                               </div>
                             </Row>
                           </li>
@@ -316,7 +316,7 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#F7D56E' />
                               </span>
                               <div className='ml-2'>
-                                Priority Real Time Technical Support with the Engineering team over Slack or Discord
+                                Priority real time technical support with the engineering team over Slack or Discord
                               </div>
                             </Row>
                           </li>
@@ -337,7 +337,7 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#F7D56E' />
                               </span>
                               <div className='ml-2'>
-                                Features for Maximum Security
+                                Features for maximum security
                               </div>
                             </Row>
                           </li>
@@ -347,7 +347,7 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#F7D56E' />
                               </span>
                               <div className='ml-2'>
-                                Optional On Premises Installation
+                                Optional on premises installation
                               </div>
                             </Row>
                           </li>
@@ -357,7 +357,7 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#F7D56E' />
                               </span>
                               <div className='ml-2'>
-                                On-Boarding & Training
+                                Onboarding & training
                               </div>
                             </Row>
                           </li>
