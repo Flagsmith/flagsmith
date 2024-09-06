@@ -202,7 +202,7 @@ def map_environment_to_engine(
     project_segments: List["Segment"] = project.segments.all()
 
     # Even though the main calling code filters via a prefetch,
-    # we still want to gaurd this function in case there are other
+    # we still want to guard this function in case there are other
     # callers in the future.
     project_segments = [ps for ps in project_segments if ps.id == ps.version_of_id]
 
