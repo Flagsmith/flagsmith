@@ -8,5 +8,5 @@ ${Utils.escapeHtml('<dependency>')}
 ${Utils.escapeHtml('</dependency>')}
 
 // Gradle
-implementation 'com.flagsmith:flagsmith-java-client:5.0.0'
+implementation 'com.flagsmith:flagsmith-java-client:7.4.1'
 `
