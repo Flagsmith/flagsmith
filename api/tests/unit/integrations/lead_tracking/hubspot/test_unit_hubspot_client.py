@@ -72,7 +72,7 @@ def test_create_lead_form_error(
     # Then
     assert response == {"error": "Problem processing."}
     assert inspecting_handler.messages == [
-        "Problem posting data to Hubspot's form API due to 400 status code and following form data "
+        "Problem posting data to Hubspot's form API due to 400 status code and following response: "
         + '{"error": "Problem processing."}'
     ]
 
