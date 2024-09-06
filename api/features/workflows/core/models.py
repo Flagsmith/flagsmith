@@ -181,11 +181,7 @@ class ChangeRequest(
             change_set.publish(user=published_by)
 
     def _publish_segments(self) -> None:
-        segments = list(self.segments.all())
-        if not segments:
-            return
-
-        for segment in segments:
+        for segment in self.segments.all():
             target_segment = segment.version_of
             assert target_segment != segment
 
