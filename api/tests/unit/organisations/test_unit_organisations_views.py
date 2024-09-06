@@ -688,6 +688,9 @@ def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and
 
     # Then
     chargebee_subscription.refresh_from_db()
+    # Cancellation date is set to None because the missing current_term_end field
+    # means that the cancellation is processed immediately and the subscription
+    # reverts to being a free plan, so there's no more cancelation date set.
     assert chargebee_subscription.cancellation_date is None
     assert chargebee_subscription.plan == FREE_PLAN_ID
     assert len(mail.outbox) == 1
