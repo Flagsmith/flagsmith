@@ -22,7 +22,7 @@ def test_get_segments_from_cache(project, monkeypatch):
     mock_project_segments_cache.get.return_value = None
 
     monkeypatch.setattr(
-        "projects.models.project_segments_cache", mock_project_segments_cache
+        "projects.services.project_segments_cache", mock_project_segments_cache
     )
 
     # When
@@ -42,7 +42,7 @@ def test_get_segments_from_cache_set_not_called(project, segments, monkeypatch):
     mock_project_segments_cache.get.return_value = project.segments.all()
 
     monkeypatch.setattr(
-        "projects.models.project_segments_cache", mock_project_segments_cache
+        "projects.services.project_segments_cache", mock_project_segments_cache
     )
 
     # When
@@ -56,7 +56,6 @@ def test_get_segments_from_cache_set_not_called(project, segments, monkeypatch):
     mock_project_segments_cache.set.assert_not_called()
 
 
-@pytest.mark.django_db()
 def test_get_segments_from_cache_set_to_empty_list(
     project: Project,
     segment: Segment,
@@ -67,7 +66,7 @@ def test_get_segments_from_cache_set_to_empty_list(
     mock_project_segments_cache.get.return_value = []
 
     monkeypatch.setattr(
-        "projects.models.project_segments_cache", mock_project_segments_cache
+        "projects.services.project_segments_cache", mock_project_segments_cache
     )
 
     # When
