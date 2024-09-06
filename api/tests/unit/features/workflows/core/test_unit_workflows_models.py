@@ -800,6 +800,7 @@ def test_change_request_live_from_for_change_request_with_change_set(
 def test_publishing_segments_as_part_of_commit(
     segment: Segment,
     change_request: ChangeRequest,
+    admin_user: FFAdminUser,
 ) -> None:
     # Given
     assert segment.version == 2
@@ -833,7 +834,7 @@ def test_publishing_segments_as_part_of_commit(
     )
 
     # When
-    change_request._publish_segments()
+    change_request.commit(admin_user)
 
     # Then
     segment.refresh_from_db()
