@@ -58,8 +58,7 @@ class HubspotLeadTracker(LeadTracker):
 
         HubspotLead.objects.create(user=user, hubspot_id=response["id"])
 
-        if HubspotTracker.objects.filter(user=user).exists():
-            tracker = HubspotTracker.objects.filter(user=user).first()
+        if tracker := HubspotTracker.objects.filter(user=user).first():
             self.client.create_lead_form(
                 user=user, hubspot_cookie=tracker.hubspot_cookie
             )
