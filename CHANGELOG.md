@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.140.0](https://github.com/Flagsmith/flagsmith/compare/v2.139.0...v2.140.0) (2024-09-06)
+
+
+### Features
+
+* allow ignore conflicts on scheduled change ([#4590](https://github.com/Flagsmith/flagsmith/issues/4590)) ([a891114](https://github.com/Flagsmith/flagsmith/commit/a891114a1779d3a6cf5c4129b8dc090c9023dd7c))
+* **environment:** Add toggle for identity override in local eval ([#4576](https://github.com/Flagsmith/flagsmith/issues/4576)) ([5e82c97](https://github.com/Flagsmith/flagsmith/commit/5e82c97e7478327cf76e87205d28a6a6e984468a))
+* Improve Github integration ([#4498](https://github.com/Flagsmith/flagsmith/issues/4498)) ([65600a7](https://github.com/Flagsmith/flagsmith/commit/65600a72b97cc906cd0cf5f3433f4cbb76fd38b0))
+* search identities by dashboard alias ([#4569](https://github.com/Flagsmith/flagsmith/issues/4569)) ([5c02c1e](https://github.com/Flagsmith/flagsmith/commit/5c02c1effe450e8f2301bbeb8e614e67e119b98f))
+
+
+### Bug Fixes
+
+* 'Contact Us' link for open source product upsell messages ([#4564](https://github.com/Flagsmith/flagsmith/issues/4564)) ([a6e5b34](https://github.com/Flagsmith/flagsmith/commit/a6e5b34c3b2761cb9df7e93a2941519bb15b6dd8))
+* **edge-api/tasks:** Add change_by_user_id ([#4591](https://github.com/Flagsmith/flagsmith/issues/4591)) ([940a56d](https://github.com/Flagsmith/flagsmith/commit/940a56dc6e5951203a4bf88e4d810f56b8132aef))
+* **github-4555:** use api_key name for changed_by ([#4561](https://github.com/Flagsmith/flagsmith/issues/4561)) ([7ae2623](https://github.com/Flagsmith/flagsmith/commit/7ae26231f5aed4e8ee6989c07cfad7f4daa57e6f))
+* multivariate toggle ([#4594](https://github.com/Flagsmith/flagsmith/issues/4594)) ([4e85975](https://github.com/Flagsmith/flagsmith/commit/4e85975d231ee41e9ddf2f1c87e96b19dc234a30))
+* update change request after create ([#4551](https://github.com/Flagsmith/flagsmith/issues/4551)) ([c353798](https://github.com/Flagsmith/flagsmith/commit/c35379853840d6d4506d5d8deab45aca319055e5))
+
 ## [2.139.0](https://github.com/Flagsmith/flagsmith/compare/v2.138.2...v2.139.0) (2024-09-03)
 
 
