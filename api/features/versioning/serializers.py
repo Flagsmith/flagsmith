@@ -4,6 +4,11 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
 from api_keys.user import APIKeyUser
+from environments.models import Environment
+from features.feature_segments.limits import (
+    SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
+    exceeds_segment_override_limit,
+)
 from features.serializers import (
     CustomCreateSegmentOverrideFeatureStateSerializer,
 )
@@ -17,6 +22,8 @@ from users.models import FFAdminUser
 class CustomEnvironmentFeatureVersionFeatureStateSerializer(
     CustomCreateSegmentOverrideFeatureStateSerializer
 ):
+    validate_override_limit = False
+
     class Meta(CustomCreateSegmentOverrideFeatureStateSerializer.Meta):
         read_only_fields = (
             CustomCreateSegmentOverrideFeatureStateSerializer.Meta.read_only_fields
@@ -140,9 +147,33 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             "publish_immediately",
         )
 
+    @property
+    def segment_ids_to_create_overrides(self) -> list[int]:
+        return [
+            fs["feature_segment"]["segment"]
+            for fs in self.initial_data.get("feature_states_to_create", [])
+            if fs["feature_segment"] is not None
+        ]
+
+    @property
+    def num_segment_overrides_to_create(self) -> int:
+        return len(self.segment_ids_to_create_overrides)
+
+    @property
+    def num_segment_overrides_to_delete(self) -> int:
+        return len(
+            self.initial_data.get("segment_ids_to_delete_overrides", [])
+        )  # TODO: validate that these all actually exist
+
     def create(
         self, validated_data: dict[str, typing.Any]
     ) -> EnvironmentFeatureVersion:
+        # Since the environment is passed as a keyword argument to save, we have
+        # to perform this validation here instead of in the `validate` method.
+        environment = validated_data["environment"]
+        self._validate_segment_override_limit(environment)
+        self._validate_v2_versioning(environment)
+
         # Note that we use self.initial_data below for handling the feature states
         # since we want the raw data (rather than the serialized ORM objects) to pass
         # into the serializers in the separate private methods used for modifying the
@@ -281,6 +312,26 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
 
     def _is_segment_override(self, feature_state: dict) -> bool:
         return feature_state.get("feature_segment") is not None
+
+    def _validate_segment_override_limit(self, environment: Environment) -> None:
+        if exceeds_segment_override_limit(
+            environment=environment,
+            extra=(
+                self.num_segment_overrides_to_create
+                - self.num_segment_overrides_to_delete
+            ),
+            exclusive=True,
+        ):
+            raise serializers.ValidationError(
+                {"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE}
+            )
+
+    def _validate_v2_versioning(self, environment: Environment) -> None:
+        if not environment.use_v2_feature_versioning:
+            # TODO: test this
+            raise serializers.ValidationError(
+                {"environment": "Environment must use v2 feature versioning."}
+            )
 
 
 class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):
