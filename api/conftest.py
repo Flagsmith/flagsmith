@@ -638,6 +638,11 @@ def environment_api_key(environment):
 
 
 @pytest.fixture()
+def master_api_key_name() -> str:
+    return "test-key"
+
+
+@pytest.fixture()
 def admin_master_api_key(organisation: Organisation) -> typing.Tuple[MasterAPIKey, str]:
     master_api_key, key = MasterAPIKey.objects.create_key(
         name="test_key", organisation=organisation, is_admin=True
@@ -646,11 +651,18 @@ def admin_master_api_key(organisation: Organisation) -> typing.Tuple[MasterAPIKe
 
 
 @pytest.fixture()
-def master_api_key(organisation: Organisation) -> typing.Tuple[MasterAPIKey, str]:
+def master_api_key(
+    master_api_key_name: str, organisation: Organisation
+) -> typing.Tuple[MasterAPIKey, str]:
     master_api_key, key = MasterAPIKey.objects.create_key(
-        name="test_key", organisation=organisation, is_admin=False
+        name=master_api_key_name, organisation=organisation, is_admin=False
     )
     return master_api_key, key
+
+
+@pytest.fixture()
+def admin_user_email(admin_user: FFAdminUser) -> str:
+    return admin_user.email
 
 
 @pytest.fixture
