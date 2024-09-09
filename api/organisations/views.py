@@ -22,6 +22,9 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
+from integrations.lead_tracking.hubspot.services import (
+    register_hubspot_tracker,
+)
 from organisations.chargebee import webhook_event_types, webhook_handlers
 from organisations.exceptions import OrganisationHasNoPaidSubscription
 from organisations.models import (
@@ -109,6 +112,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         """
         Override create method to add new organisation to authenticated user
         """
+
+        register_hubspot_tracker(request)
         user = request.user
         serializer = OrganisationSerializerFull(data=request.data)
         if serializer.is_valid():

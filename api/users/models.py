@@ -440,3 +440,14 @@ class HubspotLead(models.Model):
     hubspot_id = models.CharField(unique=True, max_length=100, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class HubspotTracker(models.Model):
+    user = models.OneToOneField(
+        FFAdminUser,
+        related_name="hubspot_tracker",
+        on_delete=models.CASCADE,
+    )
+    hubspot_cookie = models.CharField(unique=True, max_length=100, null=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
