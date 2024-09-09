@@ -10,5 +10,5 @@ class SDKTraitValueData(typing.TypedDict):
 
 class SDKTraitData(typing.TypedDict):
     trait_key: str
-    trait_value: SDKTraitValueData
+    trait_value: SDKTraitValueData | None
     transient: NotRequired[bool]
