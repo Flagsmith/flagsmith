@@ -38,6 +38,7 @@ from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import CREATE_PROJECT
 from organisations.subscriptions.constants import (
     CHARGEBEE,
+    FREE_PLAN_ID,
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
     SUBSCRIPTION_BILLING_STATUS_ACTIVE,
@@ -635,6 +636,7 @@ def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and
     current_term_end = int(datetime.timestamp(cancellation_date))
     subscription.subscription_id = "subscription-id"
     subscription.save()
+
     data = {
         "content": {
             "subscription": {
@@ -659,6 +661,44 @@ def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and
     ).replace(tzinfo=timezone.utc)
 
     # and
+    assert len(mail.outbox) == 1
+    mocked_cancel_chargebee_subscription.assert_not_called()
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+@mock.patch("organisations.models.cancel_chargebee_subscription")
+def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and_current_term_end_is_missing(
+    mocked_cancel_chargebee_subscription: MagicMock,
+    chargebee_subscription: Subscription,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    data = {
+        "content": {
+            "subscription": {
+                "status": "non_renewing",
+                "id": chargebee_subscription.subscription_id,
+                # Note the missing current_term_end field.
+            },
+            "customer": {"email": staff_user.email},
+        }
+    }
+    url = reverse("api-v1:chargebee-webhook")
+
+    settings.ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = ["foo@bar.com"]
+
+    # When
+    staff_client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    chargebee_subscription.refresh_from_db()
+    # Cancellation date is set to None because the missing current_term_end field
+    # means that the cancellation is processed immediately and the subscription
+    # reverts to being a free plan, so there's no more cancelation date set.
+    assert chargebee_subscription.cancellation_date is None
+    assert chargebee_subscription.plan == FREE_PLAN_ID
     assert len(mail.outbox) == 1
     mocked_cancel_chargebee_subscription.assert_not_called()
 
