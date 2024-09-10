@@ -85,8 +85,14 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
             const user = users?.find((user) => v.published_by === user.id)
 
             return (
-              <Row className={classNames('list-item py-2 mh-auto')}>
-                <div className='flex-fill'>
+                <Row
+                    className={'list-item py-2 mh-auto'}
+                >
+                    <div
+                        className={classNames('flex-fill', {
+                            'overflow-hidden': !open,
+                        })}
+                    >
                   <div className='flex-row flex-fill'>
                     <div
                       className='table-column flex-fill'
