@@ -124,9 +124,7 @@ def test_add_versioning_to_segments_forwards(migrator: Migrator) -> None:
 
     # Next, create the setup data.
     organisation = Organisation.objects.create(name="Test Org")
-    project = Project.objects.create(
-        name="Test Project", organisation_id=organisation.id
-    )
+    project = Project.objects.create(name="Test Project", organisation_id=organisation.id)
 
     segment = Segment.objects.create(name="Segment1", project_id=project.id)
     segment_rule_1 = SegmentRule.objects.create(
