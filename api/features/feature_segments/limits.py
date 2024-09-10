@@ -16,6 +16,9 @@ def exceeds_segment_override_limit(
 ) -> bool:
     q = Q()
 
+    segment_ids_to_create_overrides = segment_ids_to_create_overrides or []
+    segment_ids_to_delete_overrides = segment_ids_to_delete_overrides or []
+
     def _check(left: int, right: int) -> bool:
         if exclusive:
             return left > right
