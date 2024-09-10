@@ -5,6 +5,7 @@ import RepositoriesSelect from './RepositoriesSelect'
 type MyRepositoriesSelectType = {
   githubId: string
   orgId: string
+  value?: string
   onChange: (value: string) => void
 }
 
@@ -12,6 +13,7 @@ const MyRepositoriesSelect: FC<MyRepositoriesSelectType> = ({
   githubId,
   onChange,
   orgId,
+  value,
 }) => {
   const { data } = useGetGithubRepositoriesQuery({
     github_id: githubId,
@@ -27,16 +29,11 @@ const MyRepositoriesSelect: FC<MyRepositoriesSelectType> = ({
   }, [data])
 
   return (
-    <div className='mt-4'>
-      {!!data?.results.length && data?.results.length !== 1 && (
-        <>
-          <RepositoriesSelect
-            repositories={data?.results}
-            onChange={onChange}
-          />
-        </>
-      )}
-    </div>
+    <RepositoriesSelect
+      value={value}
+      repositories={data?.results}
+      onChange={onChange}
+    />
   )
 }
 

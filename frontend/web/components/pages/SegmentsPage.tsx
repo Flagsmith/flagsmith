@@ -25,6 +25,7 @@ import Switch from 'components/Switch'
 import { setModalTitle } from 'components/modals/base/ModalDefault'
 import classNames from 'classnames'
 import InfoMessage from 'components/InfoMessage'
+import { withRouter } from 'react-router-dom'
 
 const CodeHelp = require('../../components/CodeHelp')
 type SegmentsPageType = {
@@ -41,13 +42,22 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   const { projectId } = props.match.params
   const environmentId =
     ProjectStore.getEnvironment()?.api_key || 'ENVIRONMENT_API_KEY'
-  const preselect = useRef(Utils.fromParam().id)
-  const hasNoOperators = !Utils.getFlagsmithValue('segment_operators')
-
+  const params = Utils.fromParam()
+  const id = params.id
   const { search, searchInput, setSearchInput } = useSearchThrottle('')
   const [page, setPage] = useState(1)
-  const [showFeatureSpecific, setShowFeatureSpecific] = useState(false)
+  const [showFeatureSpecific, setShowFeatureSpecific] = useState(
+    params.featureSpecific === 'true',
+  )
 
+  console.log('id is', id)
+  useEffect(() => {
+    if (id) {
+      editSegment(id, !manageSegmentsPermission)
+    } else if (!id && typeof closeModal !== 'undefined') {
+      closeModal()
+    }
+  }, [id])
   const { data, error, isLoading, refetch } = useGetSegmentsQuery({
     include_feature_specific: showFeatureSpecific,
     page,
@@ -71,6 +81,16 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       props.router.history.replace(Utils.getOrganisationHomePage())
     }
   }, [error, props.router.history])
+
+  useEffect(() => {
+    props.router.history.replace(
+      `${document.location.pathname}?${Utils.toParam({
+        ...Utils.fromParam(),
+        featureSpecific: showFeatureSpecific,
+      })}`,
+    )
+  }, [showFeatureSpecific])
+
   const newSegment = () => {
     openModal(
       'New Segment',
@@ -102,15 +122,16 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
 
   const editSegment = (id: number, readOnly?: boolean) => {
     API.trackEvent(Constants.events.VIEW_SEGMENT)
-    history.replaceState({}, '', `${document.location.pathname}?id=${id}`)
 
     openModal(
       `Edit Segment`,
       <CreateSegmentModal
+        key={id}
         segment={id}
-        onSegmentRetrieved={(segment) =>
+        onSegmentRetrieved={(segment) => {
+          setShowFeatureSpecific(!!segment?.feature)
           setModalTitle(`Edit Segment: ${segment.name}`)
-        }
+        }}
         readOnly={readOnly}
         onComplete={() => {
           refetch()
@@ -121,7 +142,12 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       />,
       'side-modal create-segment-modal',
       () => {
-        history.replaceState({}, '', `${document.location.pathname}`)
+        props.router.history.push(
+          `${document.location.pathname}?${Utils.toParam({
+            ...Utils.fromParam(),
+            id: undefined,
+          })}`,
+        )
       },
     )
   }
@@ -201,7 +227,10 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                   filterElement={
                     <div className='text-right me-2'>
                       <label className='me-2'>Include Feature-Specific</label>
-                      <Switch onChange={setShowFeatureSpecific} />
+                      <Switch
+                        checked={showFeatureSpecific}
+                        onChange={setShowFeatureSpecific}
+                      />
                     </div>
                   }
                   renderSearchWithNoResults
@@ -222,19 +251,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                     { description, feature, id, name }: Segment,
                     i: number,
                   ) => {
-                    if (preselect.current === `${id}`) {
-                      editSegment(preselect.current, !manageSegmentsPermission)
-                      preselect.current = null
-                    }
-
-                    // TODO: remove this check
-                    // I'm leaving this here for now so that we can deploy the FE and
-                    // API independently, but we should remove this once PR #3430 is
-                    // merged and released.
-                    if (feature && !showFeatureSpecific) {
-                      return null
-                    }
-
                     return renderWithPermission(
                       manageSegmentsPermission,
                       'Manage segments',
@@ -243,7 +259,15 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                           className='table-column px-3'
                           onClick={
                             manageSegmentsPermission
-                              ? () => editSegment(id, !manageSegmentsPermission)
+                              ? () =>
+                                  props.router.history.push(
+                                    `${
+                                      document.location.pathname
+                                    }?${Utils.toParam({
+                                      ...Utils.fromParam(),
+                                      id,
+                                    })}`,
+                                  )
                               : undefined
                           }
                         >
@@ -329,4 +353,4 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   )
 }
 
-module.exports = ConfigProvider(SegmentsPage)
+module.exports = ConfigProvider(withRouter(SegmentsPage))

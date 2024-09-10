@@ -12,6 +12,7 @@ from flag_engine.identities.models import IdentityModel
 from flag_engine.segments.evaluator import get_identity_segments
 from rest_framework.exceptions import NotFound
 
+from edge_api.identities.search import EdgeIdentitySearchData
 from environments.dynamodb.constants import IDENTITIES_PAGINATION_LIMIT
 from environments.dynamodb.wrappers.exceptions import CapacityBudgetExceeded
 from util.mappers import map_identity_to_identity_document
@@ -147,24 +148,29 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
             if last_evaluated_key := query_response.get("LastEvaluatedKey"):
                 get_all_items_kwargs["start_key"] = last_evaluated_key
 
-    def search_items_with_identifier(
+    def search_items(
         self,
         environment_api_key: str,
-        identifier: str,
-        search_function: typing.Callable,
+        search_data: EdgeIdentitySearchData,
         limit: int,
         start_key: dict = None,
-    ):
-        filter_expression = Key("environment_api_key").eq(
+    ) -> "QueryOutputTableTypeDef":
+        partition_key_search_expression = Key("environment_api_key").eq(
             environment_api_key
-        ) & search_function(identifier)
+        )
+        sort_key_search_expression = getattr(
+            Key(search_data.search_attribute), search_data.dynamo_search_method
+        )(search_data.search_term)
+
         query_kwargs = {
-            "IndexName": "environment_api_key-identifier-index",
+            "IndexName": search_data.dynamo_index_name,
             "Limit": limit,
-            "KeyConditionExpression": filter_expression,
+            "KeyConditionExpression": partition_key_search_expression
+            & sort_key_search_expression,
         }
         if start_key:
             query_kwargs.update(ExclusiveStartKey=start_key)
+
         return self.query_items(**query_kwargs)
 
     def get_segment_ids(

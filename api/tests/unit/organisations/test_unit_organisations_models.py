@@ -608,6 +608,27 @@ def test_reset_of_api_notifications(organisation: Organisation) -> None:
     assert OrganisationAPIUsageNotification.objects.first() == oapiun
 
 
+def test_organisation_creates_subscription_cache(
+    db: None, mocker: MockerFixture
+) -> None:
+    # Given
+    mocker.patch("organisations.models.is_saas", return_value=True)
+
+    # When
+    organisation = Organisation.objects.create(name="Test org")
+
+    # Then
+    assert organisation.subscription_information_cache
+    assert (
+        organisation.subscription_information_cache.allowed_seats
+        == MAX_SEATS_IN_FREE_PLAN
+    )
+    assert (
+        organisation.subscription_information_cache.allowed_30d_api_calls
+        == MAX_API_CALLS_IN_FREE_PLAN
+    )
+
+
 @pytest.mark.parametrize(
     "plan_id, expected_plan_family",
     (
