@@ -1124,3 +1124,77 @@ def test_create_new_version_delete_segment_override_updates_overrides_immediatel
     get_feature_segments_response = admin_client.get(get_feature_segments_url)
     assert get_feature_segments_response.status_code == status.HTTP_200_OK
     assert get_feature_segments_response.json()["count"] == 0
+
+
+def test_creating_multiple_segment_overrides_in_multiple_versions_sets_correct_priorities(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    segment: Segment,
+    another_segment: Segment,
+    admin_client_new: APIClient,
+) -> None:
+    """
+    This test is for a specific case where
+    """
+
+    def generate_segment_override_fs_payload(
+        segment: Segment, priority: int
+    ) -> dict[str, typing.Any]:
+        return {
+            "enabled": True,
+            "feature_state_value": {
+                "string_value": f"override for segment {segment.name}",
+                "type": "unicode",
+            },
+            "feature_segment": {
+                "segment": segment.id,
+                "priority": priority,
+            },
+        }
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # Now, let's create the first override with priority 0
+    data = {
+        "publish_immediately": True,
+        "feature_states_to_create": [generate_segment_override_fs_payload(segment, 0)],
+    }
+    create_segment_override_1_response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    assert create_segment_override_1_response.status_code == status.HTTP_201_CREATED
+    version_1_uuid = create_segment_override_1_response.json()["uuid"]
+    assert (
+        FeatureSegment.objects.get(
+            environment_feature_version__uuid=version_1_uuid,
+            feature=feature,
+            segment=segment,
+        ).priority
+        == 0
+    )
+
+    # Now, let's create the second override with priority 1 and (to mimic the FE behaviour)
+    # update the existing segment override (without actually changing anything).
+    data = {
+        "publish_immediately": True,
+        "feature_states_to_create": [
+            generate_segment_override_fs_payload(another_segment, 1)
+        ],
+        "feature_states_to_update": [generate_segment_override_fs_payload(segment, 0)],
+    }
+    create_segment_override_2_response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    assert create_segment_override_2_response.status_code == status.HTTP_201_CREATED
+    version_2_uuid = create_segment_override_2_response.json()["uuid"]
+    assert (
+        FeatureSegment.objects.get(
+            environment_feature_version__uuid=version_2_uuid,
+            feature=feature,
+            segment=another_segment,
+        ).priority
+        == 1
+    )

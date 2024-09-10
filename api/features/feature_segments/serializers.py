@@ -63,24 +63,21 @@ class CustomCreateSegmentOverrideFeatureSegmentSerializer(
                 kwargs["environment_feature_version"] is not None
             ), "Must provide environment_feature_version for environment using v2 versioning"
 
-        if (
-            priority is not None
-            and (
-                collision := FeatureSegment.objects.filter(
-                    environment=kwargs["environment"],
-                    feature=kwargs["feature"],
-                    environment_feature_version=kwargs.get(
-                        "environment_feature_version"
-                    ),
-                    priority=priority,
-                ).first()
+        if priority is not None:
+            collision_qs = FeatureSegment.objects.filter(
+                environment=kwargs["environment"],
+                feature=kwargs["feature"],
+                environment_feature_version=kwargs.get("environment_feature_version"),
+                priority=priority,
             )
-            is not None
-        ):
-            # Since there is no unique clause on the priority field, if a priority
-            # is set, it will just save the feature segment and not move others
-            # down. This ensures that the incoming priority space is 'free'.
-            collision.to(priority + 1)
+            if self.instance is not None:
+                collision_qs = collision_qs.exclude(id=self.instance.id)
+            collision = collision_qs.first()
+            if collision:
+                # Since there is no unique clause on the priority field, if a priority
+                # is set, it will just save the feature segment and not move others
+                # down. This ensures that the incoming priority space is 'free'.
+                collision.to(priority + 1)
 
         return super().save(**kwargs)
 
