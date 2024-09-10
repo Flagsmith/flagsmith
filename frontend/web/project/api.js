@@ -30,6 +30,10 @@ global.API = {
       store.error = res.data
       store.goneABitWest()
       return
+    } else if (typeof res.text !== 'function') {
+      store.error = res
+      store.goneABitWest()
+      return
     }
 
     res

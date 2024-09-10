@@ -1069,7 +1069,7 @@ const CreateFlag = class extends Component {
                                       )}
                                     <Tooltip
                                       title={
-                                        <h5 className='mb-4'>
+                                        <h5>
                                           Environment Value{' '}
                                           <Icon name='info-outlined' />
                                         </h5>
