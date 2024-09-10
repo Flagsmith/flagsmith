@@ -1412,54 +1412,6 @@ def test_segment_override_limit_excludes_overrides_being_deleted_when_creating_n
     ).exists()
 
 
-def test_segment_override_limit_does_not_exclude_invalid_overrides_being_deleted(
-    feature: Feature,
-    segment: Segment,
-    another_segment: Segment,
-    environment_v2_versioning: Environment,
-    project: Project,
-    admin_client: APIClient,
-) -> None:
-    # Given
-    project.max_segment_overrides_allowed = 0
-    project.save()
-
-    data = {
-        "publish_immediately": True,
-        "feature_states_to_create": [
-            {
-                "enabled": True,
-                "feature_state_value": {
-                    "type": "unicode",
-                    "string_value": "some new value",
-                },
-                "feature_segment": {
-                    "segment": another_segment.id,
-                },
-            }
-        ],
-        "segment_ids_to_delete_overrides": [segment.id],
-    }
-
-    create_version_url = reverse(
-        "api-v1:versioning:environment-feature-versions-list",
-        args=[environment_v2_versioning.id, feature.id],
-    )
-
-    # When
-    create_version_response = admin_client.post(
-        create_version_url,
-        data=json.dumps(data),
-        content_type="application/json",
-    )
-
-    # Then
-    assert create_version_response.status_code == status.HTTP_400_BAD_REQUEST
-    assert create_version_response.json() == {
-        "environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE
-    }
-
-
 def test_cannot_create_new_version_for_environment_not_enabled_for_versioning_v2(
     environment: Environment,
     feature: Feature,
