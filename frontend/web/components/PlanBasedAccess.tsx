@@ -155,7 +155,7 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
         <a
           href={planUrl}
           target={Utils.isSaas() ? undefined : '_blank'}
-          className='chip cursor-pointer chip--xs d-flex align-items-center font-weight-medium text-white bg-primary800'
+          className='chip cursor-pointer chip--xs d-flex align-items-center font-weight-medium text-white bg-primary900'
           rel='noreferrer'
         >
           {<IonIcon className='me-1' icon={lockClosed} />}
@@ -177,7 +177,7 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({
       <div
         style={{ maxWidth: 650 }}
         className={classNames(
-          'p-2 rounded bg-primary800 text-white',
+          'p-2 rounded bg-primary900 text-white',
           className,
         )}
       >

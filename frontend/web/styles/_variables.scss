@@ -43,7 +43,7 @@ $primary400: #906af6;
 $primary600: #4e25db;
 $primary700: #3919b7;
 $primary800: #2a2054;
-$primary900: #1d113e;
+$primary900: #1E0D26;
 
 $danger: #ef4d56;
 $danger400: #f57c78;
@@ -353,9 +353,10 @@ $scrollbar-thumb-dark-hover: $bg-dark300;
 $theme-colors: (
         light200: $bg-light200,
         primary: $primary,
-        primary800: $primary800,
+        primary900: $primary900,
         danger: $danger,
         success: $success,
+        secondary: $secondary500,
         info: $info,
         warning: $warning,
         dark: $body-color,
