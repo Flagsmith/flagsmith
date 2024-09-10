@@ -1,6 +1,7 @@
 import {
   FeatureState,
   FeatureVersion,
+  PagedResponse,
   Res,
   Segment,
 } from 'common/types/responses'
@@ -11,6 +12,8 @@ import { getVersionFeatureState } from './useVersionFeatureState'
 import transformCorePaging from 'common/transformCorePaging'
 import Utils from 'common/utils/utils'
 import { getFeatureStateDiff, getSegmentDiff } from 'components/diff/diff-utils'
+import { getSegments } from './useSegment'
+import { getFeatureStates } from './useFeatureState'
 
 const transformFeatureStates = (featureStates: FeatureState[]) =>
   featureStates?.map((v) => ({
@@ -27,7 +30,7 @@ const transformFeatureStates = (featureStates: FeatureState[]) =>
 
 export const getFeatureStateCrud = (
   featureStates: FeatureState[],
-  oldFeatureStates?: FeatureState[],
+  oldFeatureStates: FeatureState[],
   segments?: Segment[] | null | undefined,
 ) => {
   const excludeNotChanged = (featureStates: FeatureState[]) => {
@@ -38,7 +41,10 @@ export const getFeatureStateCrud = (
       // filter out feature states that have no changes
       const segmentDiffs = getSegmentDiff(
         featureStates,
-        oldFeatureStates,
+        oldFeatureStates.map((v) => ({
+          ...v,
+          feature_state_value: Utils.featureStateToValue(v.feature_state_value),
+        })),
         segments,
       )
       return featureStates.filter((v) => {
@@ -87,11 +93,58 @@ export const featureVersionService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
         queryFn: async (query: Req['createAndSetFeatureVersion']) => {
+          // todo: this will be removed when we combine saving value and segment overrides
+          const mode = query.featureStates.find(
+            (v) => !v.feature_segment?.segment,
+          )
+            ? 'VALUE'
+            : 'SEGMENT'
+          const oldFeatureStates: { data: PagedResponse<FeatureState> } =
+            await getFeatureStates(
+              getStore(),
+              {
+                environment: query.environmentId,
+                feature: query.featureId,
+              },
+              {
+                forceRefetch: true,
+              },
+            )
+          const segments =
+            mode === 'VALUE'
+              ? undefined
+              : (
+                  await getSegments(getStore(), {
+                    include_feature_specific: true,
+                    page_size: 1000,
+                    projectId: query.projectId,
+                  })
+                ).data.results
+
           const {
             feature_states_to_create,
             feature_states_to_update,
             segment_ids_to_delete_overrides,
-          } = getFeatureStateCrud(query.featureStates)
+          } = getFeatureStateCrud(
+            query.featureStates,
+            oldFeatureStates.data.results.filter((v) => {
+              if (mode === 'VALUE') {
+                return !v.feature_segment?.segment
+              } else {
+                return !!v.feature_segment?.segment
+              }
+            }),
+            segments,
+          )
+
+          if (
+            !feature_states_to_create.length &&
+            !feature_states_to_update.length &&
+            !segment_ids_to_delete_overrides.length
+          ) {
+            throw new Error('Feature contains no changes')
+          }
+
           const versionRes: { data: FeatureVersion } =
             await createFeatureVersion(getStore(), {
               environmentId: query.environmentId,

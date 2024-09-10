@@ -320,6 +320,7 @@ export type Req = {
   getGroupWithRole: { org_id: number; group_id: number }
   deleteGroupWithRole: { org_id: number; group_id: number; role_id: number }
   createAndSetFeatureVersion: {
+    projectId: number
     environmentId: number
     featureId: number
     skipPublish?: boolean

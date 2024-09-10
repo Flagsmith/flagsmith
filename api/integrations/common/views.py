@@ -9,6 +9,9 @@ from rest_framework.serializers import BaseSerializer
 from environments.models import Environment
 from environments.permissions.constants import VIEW_ENVIRONMENT
 from environments.permissions.permissions import NestedEnvironmentPermissions
+from organisations.permissions.permissions import (
+    NestedOrganisationEntityPermission,
+)
 from projects.permissions import VIEW_PROJECT, NestedProjectPermissions
 
 
@@ -74,3 +77,29 @@ class ProjectIntegrationBaseViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer: BaseSerializer) -> None:
         serializer.save(project_id=self.kwargs["project_pk"])
+
+
+class OrganisationIntegrationBaseViewSet(viewsets.ModelViewSet):
+    serializer_class = None
+    pagination_class = None
+    model_class = None
+
+    permission_classes = [IsAuthenticated, NestedOrganisationEntityPermission]
+
+    def get_queryset(self) -> QuerySet:
+        if getattr(self, "swagger_fake_view", False):
+            return self.model_class.objects.none()
+
+        return self.model_class.objects.filter(
+            organisation_id=self.kwargs["organisation_pk"]
+        )
+
+    def perform_create(self, serializer: BaseSerializer) -> None:
+        if self.get_queryset().exists():
+            raise ValidationError(
+                "This integration already exists for this organisation."
+            )
+        serializer.save(organisation_id=self.kwargs["organisation_pk"])
+
+    def perform_update(self, serializer: BaseSerializer) -> None:
+        serializer.save(organisation_id=self.kwargs["organisation_pk"])

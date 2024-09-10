@@ -76,7 +76,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
   const hideValue =
     !totalChanges && (diff.newValue === null || diff.newValue === undefined)
   return (
-    <div className='p-2'>
+    <div>
       {!feature ? (
         <div className='text-center'>
           <Loader />
@@ -94,6 +94,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
             value={value}
           >
             <TabItem
+              className={'p-0'}
               tabLabel={
                 <div className='d-flex justify-content-center gap-1 align-items-center'>
                   Value
@@ -105,8 +106,8 @@ const DiffFeature: FC<FeatureDiffType> = ({
               }
             >
               {!totalChanges && (
-                <div className='mt-4'>
-                  <InfoMessage>No Changes Found</InfoMessage>
+                <div className='mb-3 text-center fw-semibold'>
+                  No Changes Found
                 </div>
               )}
               {!!valueConflict && (
@@ -169,6 +170,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
             </TabItem>
             {!!variationDiffs?.diffs?.length && (
               <TabItem
+                className={'p-0'}
                 tabLabel={
                   <div>
                     Variations{' '}
@@ -185,6 +187,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
             )}
             {!!segmentDiffs?.diffs.length && (
               <TabItem
+                className={'p-0'}
                 tabLabel={
                   <div className='d-flex justify-content-center gap-1 align-items-center'>
                     Segment Overrides

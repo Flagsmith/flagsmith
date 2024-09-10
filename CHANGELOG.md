@@ -1,5 +1,61 @@
 # Changelog
 
+## [2.140.0](https://github.com/Flagsmith/flagsmith/compare/v2.139.0...v2.140.0) (2024-09-06)
+
+
+### Features
+
+* allow ignore conflicts on scheduled change ([#4590](https://github.com/Flagsmith/flagsmith/issues/4590)) ([a891114](https://github.com/Flagsmith/flagsmith/commit/a891114a1779d3a6cf5c4129b8dc090c9023dd7c))
+* **environment:** Add toggle for identity override in local eval ([#4576](https://github.com/Flagsmith/flagsmith/issues/4576)) ([5e82c97](https://github.com/Flagsmith/flagsmith/commit/5e82c97e7478327cf76e87205d28a6a6e984468a))
+* Improve Github integration ([#4498](https://github.com/Flagsmith/flagsmith/issues/4498)) ([65600a7](https://github.com/Flagsmith/flagsmith/commit/65600a72b97cc906cd0cf5f3433f4cbb76fd38b0))
+* search identities by dashboard alias ([#4569](https://github.com/Flagsmith/flagsmith/issues/4569)) ([5c02c1e](https://github.com/Flagsmith/flagsmith/commit/5c02c1effe450e8f2301bbeb8e614e67e119b98f))
+
+
+### Bug Fixes
+
+* 'Contact Us' link for open source product upsell messages ([#4564](https://github.com/Flagsmith/flagsmith/issues/4564)) ([a6e5b34](https://github.com/Flagsmith/flagsmith/commit/a6e5b34c3b2761cb9df7e93a2941519bb15b6dd8))
+* **edge-api/tasks:** Add change_by_user_id ([#4591](https://github.com/Flagsmith/flagsmith/issues/4591)) ([940a56d](https://github.com/Flagsmith/flagsmith/commit/940a56dc6e5951203a4bf88e4d810f56b8132aef))
+* **github-4555:** use api_key name for changed_by ([#4561](https://github.com/Flagsmith/flagsmith/issues/4561)) ([7ae2623](https://github.com/Flagsmith/flagsmith/commit/7ae26231f5aed4e8ee6989c07cfad7f4daa57e6f))
+* multivariate toggle ([#4594](https://github.com/Flagsmith/flagsmith/issues/4594)) ([4e85975](https://github.com/Flagsmith/flagsmith/commit/4e85975d231ee41e9ddf2f1c87e96b19dc234a30))
+* update change request after create ([#4551](https://github.com/Flagsmith/flagsmith/issues/4551)) ([c353798](https://github.com/Flagsmith/flagsmith/commit/c35379853840d6d4506d5d8deab45aca319055e5))
+
+## [2.139.0](https://github.com/Flagsmith/flagsmith/compare/v2.138.2...v2.139.0) (2024-09-03)
+
+
+### Features
+
+* Add sane defaults for segment_operators, integration_data, saml flags ([#4554](https://github.com/Flagsmith/flagsmith/issues/4554)) ([ff5c0ed](https://github.com/Flagsmith/flagsmith/commit/ff5c0edd7849c457182c15be20b9beb51346ebe3))
+* Backend support for Organisation-level integrations ([#4400](https://github.com/Flagsmith/flagsmith/issues/4400)) ([3e6b96f](https://github.com/Flagsmith/flagsmith/commit/3e6b96f1679e7de856ada5968d3889c3831ead2a))
+
+
+### Bug Fixes
+
+* **app_analytics/cache:** use lock to make cache thread safe ([#4567](https://github.com/Flagsmith/flagsmith/issues/4567)) ([8e371a8](https://github.com/Flagsmith/flagsmith/commit/8e371a83ac04aa3ac497fff30d3276293a91b628))
+* **edge-v2:** Migrate only Edge API-enabled projects ([#4556](https://github.com/Flagsmith/flagsmith/issues/4556)) ([9c5ff4f](https://github.com/Flagsmith/flagsmith/commit/9c5ff4f65723255fae44415b824f72363729008c))
+* **grafana:** update migration to noop on table name ([#4571](https://github.com/Flagsmith/flagsmith/issues/4571)) ([65b63cf](https://github.com/Flagsmith/flagsmith/commit/65b63cf2abfb0c43def00bbe489dc335a7a5019e))
+* incorrect statistics in organisation admin list ([#4546](https://github.com/Flagsmith/flagsmith/issues/4546)) ([bc3ddaf](https://github.com/Flagsmith/flagsmith/commit/bc3ddafbceb9e4a8537595ed48d860063bae7046))
+
+## [2.138.2](https://github.com/Flagsmith/flagsmith/compare/v2.138.1...v2.138.2) (2024-08-28)
+
+
+### Bug Fixes
+
+* **django-upgrade:** upgrade django major version  ([#4136](https://github.com/Flagsmith/flagsmith/issues/4136)) ([aa234e4](https://github.com/Flagsmith/flagsmith/commit/aa234e45a90d384d52bcd1ab9135d912bedf6bf8))
+* feature-specific segments link ([#4299](https://github.com/Flagsmith/flagsmith/issues/4299)) ([bb4a89c](https://github.com/Flagsmith/flagsmith/commit/bb4a89c32851e55167b350bed5af935f484f329b))
+
+### Deprecations
+
+Since this release upgrades the Django major version, this release drops support for 
+Postgres <12.
+
+## [2.138.1](https://github.com/Flagsmith/flagsmith/compare/v2.138.0...v2.138.1) (2024-08-27)
+
+
+### Bug Fixes
+
+* **ldap-login:** create custom serializer to fix login field ([#4535](https://github.com/Flagsmith/flagsmith/issues/4535)) ([a704c7c](https://github.com/Flagsmith/flagsmith/commit/a704c7c9d40680ced3c4c854b9ccd1f8dcb28d3f))
+* Missing permissions for LaunchDarkly view ([#4531](https://github.com/Flagsmith/flagsmith/issues/4531)) ([5e02eb4](https://github.com/Flagsmith/flagsmith/commit/5e02eb4cca270f592b268346c7db23ebda8263ad))
+
 ## [2.138.0](https://github.com/Flagsmith/flagsmith/compare/v2.137.0...v2.138.0) (2024-08-22)
 
 

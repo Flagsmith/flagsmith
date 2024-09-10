@@ -155,7 +155,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def set_password(self, raw_password):
         super().set_password(raw_password)
-        self.password_reset_requests.all().delete()
+        if self.id:
+            self.password_reset_requests.all().delete()
 
     @property
     def auth_type(self):
@@ -437,5 +438,16 @@ class HubspotLead(models.Model):
         on_delete=models.CASCADE,
     )
     hubspot_id = models.CharField(unique=True, max_length=100, null=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class HubspotTracker(models.Model):
+    user = models.OneToOneField(
+        FFAdminUser,
+        related_name="hubspot_tracker",
+        on_delete=models.CASCADE,
+    )
+    hubspot_cookie = models.CharField(unique=True, max_length=100, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
