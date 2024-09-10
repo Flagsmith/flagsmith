@@ -155,16 +155,6 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             if fs["feature_segment"] is not None
         ]
 
-    @property
-    def num_segment_overrides_to_create(self) -> int:
-        return len(self.segment_ids_to_create_overrides)
-
-    @property
-    def num_segment_overrides_to_delete(self) -> int:
-        return len(
-            self.initial_data.get("segment_ids_to_delete_overrides", [])
-        )  # TODO: validate that these all actually exist
-
     def create(
         self, validated_data: dict[str, typing.Any]
     ) -> EnvironmentFeatureVersion:
@@ -316,9 +306,9 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
     def _validate_segment_override_limit(self, environment: Environment) -> None:
         if exceeds_segment_override_limit(
             environment=environment,
-            extra=(
-                self.num_segment_overrides_to_create
-                - self.num_segment_overrides_to_delete
+            segment_ids_to_create_overrides=self.segment_ids_to_create_overrides,
+            segment_ids_to_delete_overrides=self.initial_data.get(
+                "segment_ids_to_delete_overrides", []
             ),
             exclusive=True,
         ):
@@ -328,7 +318,6 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
 
     def _validate_v2_versioning(self, environment: Environment) -> None:
         if not environment.use_v2_feature_versioning:
-            # TODO: test this
             raise serializers.ValidationError(
                 {"environment": "Environment must use v2 feature versioning."}
             )

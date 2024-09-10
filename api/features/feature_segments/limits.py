@@ -10,7 +10,8 @@ SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE = (
 
 def exceeds_segment_override_limit(
     environment: Environment,
-    extra: int = 0,
+    segment_ids_to_create_overrides: list[int] = None,
+    segment_ids_to_delete_overrides: list[int] = None,
     exclusive: bool = False,
 ) -> bool:
     q = Q()
@@ -28,7 +29,17 @@ def exceeds_segment_override_limit(
         )
         q = q & Q(environment_feature_version__in=latest_versions)
 
-    segment_override_count = environment.feature_segments.filter(q).count()
+    existing_overridden_segment_ids = set(
+        environment.feature_segments.filter(q).values_list("segment_id", flat=True)
+    )
+    segment_override_count = len(existing_overridden_segment_ids)
+
+    extra = len(segment_ids_to_create_overrides) - len(
+        set(segment_ids_to_delete_overrides).intersection(
+            existing_overridden_segment_ids
+        )
+    )
+
     if _check(
         segment_override_count + extra,
         environment.project.max_segment_overrides_allowed,
