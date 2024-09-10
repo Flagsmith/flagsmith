@@ -10,6 +10,7 @@ import Utils from 'common/utils/utils'
 import AccountProvider from 'common/providers/AccountProvider'
 import classNames from 'classnames'
 import Switch from 'components/Switch'
+import BlockedOrgInfo from 'components/BlockedOrgInfo'
 
 const PaymentButton = (props) => {
   const activeSubscription = AccountStore.getOrganisationPlan(
@@ -104,21 +105,25 @@ const Payment = class extends Component {
               ''
             return (
               <div className='col-md-12'>
-                <Row space className='mb-2'>
-                  <h5>Manage Payment Plan</h5>
+                <Row space className='mb-4'>
                   {this.props.isDisableAccountText && (
-                    <Row>
-                      <h7>
-                        {this.props.isDisableAccountText}{' '}
-                        <a
-                          target='_blank'
-                          href='mailto:support@flagsmith.com'
-                          rel='noreferrer'
-                        >
-                          support@flagsmith.com
-                        </a>
-                      </h7>
-                    </Row>
+                    <div className='d-lg-flex flex-lg-row align-items-end justify-content-between w-100 gap-4'>
+                      <div>
+                        <h4>
+                          {this.props.isDisableAccountText}{' '}
+                          <a
+                            target='_blank'
+                            href='mailto:support@flagsmith.com'
+                            rel='noreferrer'
+                          >
+                            support@flagsmith.com
+                          </a>
+                        </h4>
+                      </div>
+                      <div>
+                        <BlockedOrgInfo />
+                      </div>
+                    </div>
                   )}
                 </Row>
                 <div className='d-flex mb-4 font-weight-medium justify-content-center align-items-center gap-2'>

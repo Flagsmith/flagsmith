@@ -1,6 +1,7 @@
 import React from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Payment from './modals/Payment'
+import BlockedOrgInfo from './BlockedOrgInfo'
 
 const Blocked = class extends React.Component {
   static contextTypes = {
@@ -19,41 +20,31 @@ const Blocked = class extends React.Component {
       {!Utils.isSaas() ? (
         <div className='col-md-6 mt-5' id='sign-up'>
           <h1>Please get in touch</h1>
-          Your organisation has been disabled. Please get in touch so we can
-          discuss enabling your account.
-          {
-            <>
-              {' '}
-              <a
-                target='_blank'
-                href='mailto:support@flagsmith.com'
-                rel='noreferrer'
-              >
-                support@flagsmith.com
-              </a>
-              .
-            </>
-          }
+          <span className='h4'>
+            Your organisation has been disabled. Please contact Flagsmith
+            support at
+            {
+              <>
+                {' '}
+                <a
+                  target='_blank'
+                  href='mailto:support@flagsmith.com'
+                  rel='noreferrer'
+                >
+                  support@flagsmith.com
+                </a>
+                .
+              </>
+            }
+          </span>
+          <BlockedOrgInfo />
         </div>
       ) : (
         <div className='col-md-8 mt-5' id='sign-up'>
           {
             <>
-              <div>
-                <Button
-                  theme='text'
-                  onClick={() => {
-                    AppActions.logout()
-                    window.location.href = `/login`
-                  }}
-                >
-                  Return to Sign in/Sign up page
-                </Button>
-              </div>
               <Payment
-                isDisableAccountText={
-                  'Your organisation has been disabled. Please upgrade your plan or get in touch so we can discuss enabling your account.'
-                }
+                isDisableAccountText={`Your organisation has been disabled. Please upgrade your plan or contact us:`}
               />
             </>
           }

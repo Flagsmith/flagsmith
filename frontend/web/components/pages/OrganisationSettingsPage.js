@@ -457,6 +457,7 @@ const OrganisationSettingsPage = class extends Component {
                                   )}
                                 </div>
                               </Row>
+                              <h5>Manage Payment Plan</h5>
                               <Payment viewOnly={false} />
                             </div>
                           </TabItem>
