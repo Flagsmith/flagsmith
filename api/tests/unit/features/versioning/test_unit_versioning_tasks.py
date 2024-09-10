@@ -10,6 +10,7 @@ from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.utils import timezone
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
@@ -463,4 +464,54 @@ def test_publish_version_change_set_uses_current_time_for_version_live_from(
         .get(feature=feature)
         .live_from
         == now
+    )
+
+
+def test_scheduled_versioning_change_set_with_ignore_conflicts_sends_email_if_validation_fails(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    admin_user: FFAdminUser,
+    freezer: FrozenDateTimeFactory,
+    mailoutbox: list[EmailMessage],
+) -> None:
+    # Given
+    now = timezone.now()
+    five_minutes_from_now = now + timezone.timedelta(minutes=5)
+
+    change_request = ChangeRequest.objects.create(
+        title="Test CR",
+        environment=environment_v2_versioning,
+        user=admin_user,
+        ignore_conflicts=True,
+    )
+    change_set = VersionChangeSet.objects.create(
+        change_request=change_request,
+        feature=feature,
+        feature_states_to_update=json.dumps(
+            [{"foo": "bar"}]
+        ),  # bad data to force serializer validation failure
+        live_from=five_minutes_from_now,
+    )
+    change_request.commit(admin_user)
+
+    # When
+    freezer.move_to(five_minutes_from_now)
+    with pytest.raises(FeatureVersioningError):
+        publish_version_change_set(
+            version_change_set_id=change_set.id,
+            user_id=admin_user.id,
+            is_scheduled=True,
+        )
+
+    # Then
+    assert len(mailoutbox) == 1
+    assert mailoutbox[0].subject == change_request.email_subject
+    assert mailoutbox[0].to == [admin_user.email]
+    assert mailoutbox[0].body == render_to_string(
+        "versioning/scheduled_change_failed_conflict_email.txt",
+        context={
+            "user": admin_user,
+            "feature": feature,
+            "change_request": change_request,
+        },
     )

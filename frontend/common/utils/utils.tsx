@@ -22,6 +22,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
 import Format from './format'
+import { defaultFlags } from 'common/stores/default-flags'
 
 const semver = require('semver')
 
@@ -165,6 +166,12 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
     return conditions.find((v) => v.value === operator)
   },
+  /** Checks whether the specified flag exists, which is different from the flag being enabled or not. This is used to
+   *  only add behaviour to Flagsmith-on-Flagsmith flags that have been explicitly created by customers.
+   */
+  flagsmithFeatureExists(flag: string) {
+    return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
+  },
   getApproveChangeRequestPermission() {
     return 'APPROVE_CHANGE_REQUEST'
   },
@@ -261,6 +268,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return 'identities'
   },
+
+  getIntegrationData() {
+    return Utils.getFlagsmithJSONValue(
+      'integration_data',
+      defaultFlags.integration_data,
+    )
+  },
+
   getIsEdge() {
     const model = ProjectStore.model as null | ProjectType
 
@@ -447,6 +462,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return Project.api
   },
+
+  getSegmentOperators() {
+    return Utils.getFlagsmithJSONValue(
+      'segment_operators',
+      defaultFlags.segment_operators,
+    )
+  },
+
   getShouldHideIdentityOverridesTab(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (!Utils.getIsEdge()) {
@@ -645,9 +668,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return true
     }
 
-    const operators = Utils.getFlagsmithValue('segment_operators')
-      ? JSON.parse(Utils.getFlagsmithValue('segment_operators'))
-      : []
+    const operators = Utils.getSegmentOperators()
     const operatorObj = Utils.findOperator(rule.operator, rule.value, operators)
 
     if (operatorObj?.type === 'number') {

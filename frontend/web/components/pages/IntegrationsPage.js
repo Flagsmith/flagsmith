@@ -21,9 +21,7 @@ const ProjectSettingsPage = class extends Component {
   }
 
   render() {
-    const integrations = Object.keys(
-      JSON.parse(Utils.getFlagsmithValue('integration_data') || '{}'),
-    )
+    const integrations = Object.keys(Utils.getIntegrationData())
     return (
       <div className='app-container container'>
         <PageTitle title={'Integrations'}>

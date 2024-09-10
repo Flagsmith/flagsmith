@@ -4,7 +4,10 @@ from datetime import timedelta
 import freezegun
 import pytest
 from django.contrib.sites.models import Site
+from django.db.models import Q
 from django.utils import timezone
+from flag_engine.segments.constants import PERCENTAGE_SPLIT
+from freezegun.api import FrozenDateTimeFactory
 from pytest_mock import MockerFixture
 
 from audit.constants import (
@@ -22,6 +25,7 @@ from features.versioning.models import (
     EnvironmentFeatureVersion,
     VersionChangeSet,
 )
+from features.versioning.tasks import publish_version_change_set
 from features.versioning.versioning_service import get_environment_flags_list
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
@@ -33,6 +37,8 @@ from features.workflows.core.models import (
     ChangeRequestApproval,
     ChangeRequestGroupAssignment,
 )
+from projects.models import Project
+from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
 
 now = timezone.now()
@@ -773,3 +779,121 @@ def test_change_request_live_from_for_change_request_with_change_set(
 
     # Then
     assert change_request.live_from == now
+
+
+def test_ignore_conflicts_for_multiple_scheduled_change_requests(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    admin_user: FFAdminUser,
+    project: Project,
+    freezer: FrozenDateTimeFactory,
+    mocker: MockerFixture,
+) -> None:
+    """
+    This test is for the specific use case where we want to schedule a slow
+    roll-out for a feature.
+    """
+    # We are going to simulate the task processor ourselves, so let's mock it so we can assert
+    # the required calls later.
+    mock_publish_version_change_set = mocker.patch(
+        "features.versioning.tasks.publish_version_change_set"
+    )
+
+    # First, let's create the 2 percentage split segments that we want to use for the roll-out
+    def _create_segment(percentage_value: int) -> Segment:
+        segment = Segment.objects.create(
+            name=f"percentage_split_segment_{percentage_value}", project=project
+        )
+        parent_rule = SegmentRule.objects.create(
+            segment=segment, type=SegmentRule.ALL_RULE
+        )
+        child_rule = SegmentRule.objects.create(
+            rule=parent_rule, type=SegmentRule.ANY_RULE
+        )
+        Condition.objects.create(
+            rule=child_rule, property=PERCENTAGE_SPLIT, value=str(percentage_value)
+        )
+        return segment
+
+    ten_percent_segment = _create_segment(10)
+    twenty_percent_segment = _create_segment(20)
+
+    now = timezone.now()
+    ten_minutes_from_now = now + timedelta(minutes=10)
+    twenty_minutes_from_now = now + timedelta(minutes=20)
+
+    # Now, let's create our change requests to create the 2 overrides in the future
+    change_requests = []
+    for segment_to_add, live_from, segments_to_delete in [
+        (ten_percent_segment, ten_minutes_from_now, []),
+        (twenty_percent_segment, twenty_minutes_from_now, [ten_percent_segment]),
+    ]:
+        change_request = ChangeRequest.objects.create(
+            title="Scheduled CR1",
+            environment=environment_v2_versioning,
+            user=admin_user,
+            ignore_conflicts=True,
+        )
+        version_change_set = VersionChangeSet.objects.create(
+            change_request=change_request,
+            feature=feature,
+            feature_states_to_create=json.dumps(
+                [
+                    {
+                        "feature_segment": {
+                            "segment": segment_to_add.id,
+                        },
+                        "enabled": True,
+                        "feature_state_value": {"type": "unicode", "string_value": ""},
+                    }
+                ]
+            ),
+            segment_ids_to_delete_overrides=json.dumps(
+                [s.id for s in segments_to_delete]
+            ),
+            live_from=live_from,
+        )
+        change_requests.append(change_request)
+        change_request.commit(committed_by=admin_user)
+        mock_publish_version_change_set.delay.assert_called_once_with(
+            kwargs={
+                "version_change_set_id": version_change_set.id,
+                "user_id": admin_user.id,
+                "is_scheduled": True,
+            },
+            delay_until=live_from,
+        )
+        mock_publish_version_change_set.reset_mock()
+
+    mock_publish_version_change_set.stop()
+
+    # Now, let's move time forward and publish the first change request (note: this is
+    # simulating the task processor picking up the task that we mock asserted earlier)
+    freezer.move_to(ten_minutes_from_now)
+    publish_version_change_set(
+        version_change_set_id=change_requests[0].change_sets.first().id,
+        user_id=admin_user.id,
+        is_scheduled=True,
+    )
+
+    after_cr_1_flags = get_environment_flags_list(
+        environment=environment_v2_versioning,
+        additional_filters=Q(feature_segment__isnull=False),
+    )
+    assert len(after_cr_1_flags) == 1
+    assert after_cr_1_flags[0].feature_segment.segment == ten_percent_segment
+
+    # Now, let's move time forward again and publish the second change request
+    freezer.move_to(twenty_minutes_from_now)
+    publish_version_change_set(
+        version_change_set_id=change_requests[1].change_sets.first().id,
+        user_id=admin_user.id,
+        is_scheduled=True,
+    )
+
+    after_cr_1_flags = get_environment_flags_list(
+        environment=environment_v2_versioning,
+        additional_filters=Q(feature_segment__isnull=False),
+    )
+    assert len(after_cr_1_flags) == 1
+    assert after_cr_1_flags[0].feature_segment.segment == twenty_percent_segment
