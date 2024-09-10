@@ -1127,6 +1127,77 @@ def test_create_new_version_delete_segment_override_updates_overrides_immediatel
     assert get_feature_segments_response.json()["count"] == 0
 
 
+def test_create_new_version_fails_when_breaching_segment_override_limit(
+    feature: Feature,
+    segment: Segment,
+    another_segment: Segment,
+    environment_v2_versioning: Environment,
+    project: Project,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
+    with_project_permissions([VIEW_PROJECT])
+
+    # We update the limit of segment overrides on the project
+    project.max_segment_overrides_allowed = 1
+    project.save()
+
+    # And we create an existing version with a segment override in it
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=version_2,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=version_2,
+        ),
+    )
+    version_2.publish()
+
+    data = {
+        "publish_immediately": True,
+        "feature_states_to_create": [
+            {
+                "feature_segment": {"segment": segment.id},
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "some new value",
+                },
+            }
+        ],
+    }
+    create_version_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # When
+    # We create a new version, without making any changes, we shouldn't receive
+    # any errors.
+    create_version_response = staff_client.post(
+        create_version_url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert create_version_response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        EnvironmentFeatureVersion.objects.filter(
+            environment=environment_v2_versioning, feature=feature
+        ).count()
+        == 2
+    )
+
+
 def test_segment_override_limit_excludes_older_versions__when_not_creating_any_new_overrides(
     feature: Feature,
     segment: Segment,
