@@ -390,9 +390,7 @@ class TheComponent extends Component {
             hideHistory={!environment?.use_v2_feature_versioning}
             onShowHistory={() => {
               if (disableControls) return
-              this.context.router.history.push(
-                `/project/${projectId}/environment/${environmentId}/history?feature=${projectFlag.id}`,
-              )
+              this.editFeature(projectFlag, environmentFlags[id], 'history')
             }}
             onShowAudit={() => {
               if (disableControls) return

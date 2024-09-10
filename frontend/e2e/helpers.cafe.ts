@@ -264,9 +264,8 @@ export const logout = async (t) => {
 }
 
 export const goToFeatureVersions = async (featureIndex:number) =>{
-  await gotoFeatures()
-  await click(byId(`feature-action-${featureIndex}`))
-  await click(byId(`feature-history-${featureIndex}`))
+  await gotoFeature(featureIndex)
+  await click(byId('change-history'))
 }
 
 export const compareVersion = async (
@@ -294,10 +293,12 @@ export const compareVersion = async (
   if(newValue) {
     await assertTextContent(byId(`old-value`), `${oldValue}`)
   }
+  await closeModal()
 }
 export const assertNumberOfVersions = async (index:number, versions:number) =>{
   await goToFeatureVersions(index)
   await waitForElementVisible(byId(`history-item-${versions-2}-compare`))
+  await closeModal()
 }
 
 export const createRemoteConfig = async (

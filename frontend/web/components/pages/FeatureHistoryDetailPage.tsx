@@ -15,6 +15,8 @@ import moment from 'moment'
 import ErrorMessage from 'components/ErrorMessage'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
+import Breadcrumb from 'components/Breadcrumb'
+import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
 
 type FeatureHistoryPageType = {
   router: RouterChildContext['router']
@@ -60,8 +62,27 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
   )
   const user = users?.find((user) => data?.published_by === user.id)
   const live = versions?.results?.[0]
+  const { data: feature } = useGetProjectFlagQuery(
+    { id: `${data?.feature}`, project: match.params.projectId },
+    {
+      skip: !data?.feature,
+    },
+  )
   return (
     <div className='container app-container'>
+      <Breadcrumb
+        items={[
+          {
+            title: 'Features',
+            url: `/project/${match.params.projectId}/environment/${match.params.environmentId}/features`,
+          },
+          {
+            title: feature?.name,
+            url: `/project/${match.params.projectId}/environment/${match.params.environmentId}/features?feature=${featureId}&tab=history`,
+          },
+        ]}
+        currentPage={'History'}
+      />
       <PageTitle title={'History'}>
         <div>
           View and rollback history of feature values, multivariate values and

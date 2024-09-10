@@ -29,7 +29,6 @@ import WidgetPage from './components/pages/WidgetPage'
 import BrokenPage from './components/pages/BrokenPage'
 import GitHubSetupPage from './components/pages/GitHubSetupPage'
 import AuditLogItemPage from './components/pages/AuditLogItemPage'
-import FeatureHistoryPage from './components/pages/FeatureHistoryPage'
 import Utils from 'common/utils/utils'
 import ProjectsPage from './components/ProjectsPage'
 import OrganisationSettingsRedirectPage from './components/pages/OrganisationSettingsRedirectPage'
@@ -42,81 +41,81 @@ import { ParameterizedRoute } from './components/base/higher-order/Parameterized
 import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPage'
 
 export const routes = {
-  'root': '/',
-  'login': '/login',
-  'not-found': '/404',
-  'signup': '/signup',
-  'home': '/home',
-  'github-setup': '/github-setup',
-  'maintenance': '/maintenance',
-  'password-reset': '/password-reset/confirm/:uid/:token/',
   'features': '/project/:projectId/environment/:environmentId/features',
   'change-requests':
     '/project/:projectId/environment/:environmentId/change-requests',
-  'scheduled-changes':
-    '/project/:projectId/environment/:environmentId/scheduled-changes',
+  'github-setup': '/github-setup',
   'change-request':
     '/project/:projectId/environment/:environmentId/change-requests/:id',
-  'scheduled-change':
-    '/project/:projectId/environment/:environmentId/scheduled-changes/:id',
-  'widget': '/widget',
+  'home': '/home',
+  'login': '/login',
+  'maintenance': '/maintenance',
   'invite': '/invite/:id',
-  'invite-link': '/invite-link/:id',
+  'not-found': '/404',
   'broken': '/broken',
-  'oauth': '/oauth/:type',
-  'saml': '/saml',
+  'root': '/',
+  'invite-link': '/invite-link/:id',
   'environment-settings':
     '/project/:projectId/environment/:environmentId/settings',
-  'sdk-keys': '/project/:projectId/environment/:environmentId/sdk-keys',
+  'signup': '/signup',
   'integrations': '/project/:projectId/integrations',
-  'users': '/project/:projectId/environment/:environmentId/users',
-  'user-id': '/project/:projectId/environment/:environmentId/users/:identity',
-  'user': '/project/:projectId/environment/:environmentId/users/:identity/:id',
+  'oauth': '/oauth/:type',
+  'password-reset': '/password-reset/confirm/:uid/:token/',
   'create-environment': '/project/:projectId/environment/create',
-  'project-settings-in-environment':
-    '/project/:projectId/environment/:environmentId/project-settings',
+  'scheduled-change':
+    '/project/:projectId/environment/:environmentId/scheduled-changes/:id',
   'compare': '/project/:projectId/compare',
+  'scheduled-changes':
+    '/project/:projectId/environment/:environmentId/scheduled-changes',
   'feature-history': '/project/:projectId/environment/:environmentId/history',
   'feature-history-detail':
     '/project/:projectId/environment/:environmentId/history/:id/',
-  'project-settings': '/project/:projectId/settings',
-  'permissions': '/project/:projectId/permissions',
-  'segments': '/project/:projectId/segments',
+  'widget': '/widget',
   'organisation-settings': '/organisation/:organisationId/settings',
   'organisation-permissions': '/organisation/:organisationId/permissions',
-  'organisation-usage': '/organisation/:organisationId/usage',
+  'saml': '/saml',
   'organisation-settings-redirect': '/organisation-settings',
-  'organisation-projects': '/organisation/:organisationId/projects',
+  'sdk-keys': '/project/:projectId/environment/:environmentId/sdk-keys',
   'account-settings': '/project/:projectId/environment/:environmentId/account',
+  'user-id': '/project/:projectId/environment/:environmentId/users/:identity',
   'audit-log': '/project/:projectId/audit-log',
-  'organisations': '/organisations',
+  'users': '/project/:projectId/environment/:environmentId/users',
   'audit-log-item': '/project/:projectId/audit-log/:id',
+  'user': '/project/:projectId/environment/:environmentId/users/:identity/:id',
   'create-organisation': '/create',
-  'project-redirect': '/project/:projectId',
+  'project-settings-in-environment':
+    '/project/:projectId/environment/:environmentId/project-settings',
   'account': '/account',
+  'permissions': '/project/:projectId/permissions',
+  'organisation-projects': '/organisation/:organisationId/projects',
+  'project-settings': '/project/:projectId/settings',
+  'organisation-usage': '/organisation/:organisationId/usage',
+  'segments': '/project/:projectId/segments',
+  'organisations': '/organisations',
+  'project-redirect': '/project/:projectId',
 }
 export default (
   <App>
     <Switch>
-      <Route path={routes['root']} exact component={HomePage} />
-      <Route path={routes['login']} exact component={HomePage} />
+      <Route path={routes.root} exact component={HomePage} />
+      <Route path={routes.login} exact component={HomePage} />
       <Route path={routes['not-found']} exact component={NotFoundErrorPage} />
-      <Route path={routes['signup']} exact component={HomePage} />
-      <Route path={routes['home']} exact component={HomePage} />
+      <Route path={routes.signup} exact component={HomePage} />
+      <Route path={routes.home} exact component={HomePage} />
       {Utils.getFlagsmithHasFeature('github_integration') && (
-        <Route path={routes['github-setup']} exact component={GitHubSetupPage} />
+        <Route
+          path={routes['github-setup']}
+          exact
+          component={GitHubSetupPage}
+        />
       )}
-      <Route path={routes['maintenance']} exact component={Maintenance} />
+      <Route path={routes.maintenance} exact component={Maintenance} />
       <Route
         path={routes['password-reset']}
         exact
         component={PasswordResetPage}
       />
-      <ParameterizedRoute
-        path={routes['features']}
-        exact
-        component={FlagsPage}
-      />
+      <ParameterizedRoute path={routes.features} exact component={FlagsPage} />
       <ParameterizedRoute
         path={routes['change-requests']}
         exact
@@ -137,12 +136,12 @@ export default (
         exact
         component={ChangeRequestPage}
       />
-      <Route path={routes['widget']} exact component={WidgetPage} />
-      <Route path={routes['invite']} exact component={InvitePage} />
+      <Route path={routes.widget} exact component={WidgetPage} />
+      <Route path={routes.invite} exact component={InvitePage} />
       <Route path={routes['invite-link']} exact component={InvitePage} />
-      <Route path={routes['broken']} exact component={BrokenPage} />
-      <Route path={routes['oauth']} exact component={HomePage} />
-      <Route path={routes['saml']} exact component={HomePage} />
+      <Route path={routes.broken} exact component={BrokenPage} />
+      <Route path={routes.oauth} exact component={HomePage} />
+      <Route path={routes.saml} exact component={HomePage} />
       <ParameterizedRoute
         path={routes['environment-settings']}
         exact
@@ -154,17 +153,17 @@ export default (
         component={SDKKeysPage}
       />
       <ParameterizedRoute
-        path={routes['integrations']}
+        path={routes.integrations}
         exact
         component={IntegrationsPage}
       />
-      <ParameterizedRoute path={routes['users']} exact component={UsersPage} />
+      <ParameterizedRoute path={routes.users} exact component={UsersPage} />
       <ParameterizedRoute
         path={routes['user-id']}
         exact
         component={UserIdPage}
       />
-      <ParameterizedRoute path={routes['user']} exact component={UserPage} />
+      <ParameterizedRoute path={routes.user} exact component={UserPage} />
       <ParameterizedRoute
         path={routes['create-environment']}
         exact
@@ -175,16 +174,7 @@ export default (
         exact
         component={ProjectSettingsPage}
       />
-      <ParameterizedRoute
-        path={routes['compare']}
-        exact
-        component={ComparePage}
-      />
-      <ParameterizedRoute
-        path={routes['feature-history']}
-        exact
-        component={FeatureHistoryPage}
-      />
+      <ParameterizedRoute path={routes.compare} exact component={ComparePage} />
       <ParameterizedRoute
         path={routes['feature-history-detail']}
         exact
@@ -196,12 +186,12 @@ export default (
         component={ProjectSettingsPage}
       />
       <ParameterizedRoute
-        path={routes['permissions']}
+        path={routes.permissions}
         exact
         component={ProjectSettingsPage}
       />
       <ParameterizedRoute
-        path={routes['segments']}
+        path={routes.segments}
         exact
         component={SegmentsPage}
       />
@@ -240,17 +230,13 @@ export default (
         exact
         component={ProjectRedirectPage}
       />
-      <Route path={routes['account']} exact component={AccountSettingsPage} />
+      <Route path={routes.account} exact component={AccountSettingsPage} />
       <ParameterizedRoute
         path={routes['audit-log']}
         exact
         component={AuditLogPage}
       />
-      <Route
-        path={routes['organisations']}
-        exact
-        component={OrganisationsPage}
-      />
+      <Route path={routes.organisations} exact component={OrganisationsPage} />
       <ParameterizedRoute
         path={routes['audit-log-item']}
         exact

@@ -4,6 +4,7 @@ type TabItemType = {
   tabLabelString?: string
   tabLabel: ReactNode
   children: ReactNode
+  className?: string
 }
 
 const TabItem: FC<TabItemType> = ({ children }) => {
