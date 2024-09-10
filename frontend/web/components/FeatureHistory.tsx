@@ -1,18 +1,18 @@
-import React, { FC, useState } from 'react'
-import ConfigProvider from 'common/providers/ConfigProvider'
-import { useGetFeatureVersionsQuery } from 'common/services/useFeatureVersion'
-import { useGetUsersQuery } from 'common/services/useUser'
-import AccountStore from 'common/stores/account-store'
-import { FeatureVersion as TFeatureVersion } from 'common/types/responses'
-import Button from './base/forms/Button'
-import FeatureVersion from './FeatureVersion'
-import InlineModal from './InlineModal'
-import TableFilterItem from './tables/TableFilterItem'
-import moment from 'moment'
-import DateList from './DateList'
-import PlanBasedBanner from './PlanBasedAccess'
-import classNames from 'classnames'
-import PlanBasedBanner from 'components/PlanBasedAccess'
+import React, { FC, useState } from 'react';
+import ConfigProvider from 'common/providers/ConfigProvider';
+import { useGetFeatureVersionsQuery } from 'common/services/useFeatureVersion';
+import { useGetUsersQuery } from 'common/services/useUser';
+import AccountStore from 'common/stores/account-store';
+import { FeatureVersion as TFeatureVersion } from 'common/types/responses';
+import Button from './base/forms/Button';
+import FeatureVersion from './FeatureVersion';
+import InlineModal from './InlineModal';
+import TableFilterItem from './tables/TableFilterItem';
+import moment from 'moment';
+import DateList from './DateList';
+import classNames from 'classnames';
+import PlanBasedBanner from 'components/PlanBasedAccess';
+import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata';
 
 const widths = [250, 150]
 type FeatureHistoryPageType = {
@@ -34,12 +34,7 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
     })
     const versionLimitDays = subscriptionMeta?.feature_history_visibility_days
 
-  const env: Environment | undefined = ProjectStore.getEnvironment(
-    match.params.environmentId,
-  ) as any
   // @ts-ignore
-  const environmentId = `${env?.id}`
-  const environmentApiKey = `${env?.api_key}`
   const { data: users } = useGetUsersQuery({
     organisationId: AccountStore.getOrganisation().id,
   })
@@ -57,7 +52,6 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
   const live = data?.results?.[0]
   const [compareToLive, setCompareToLive] = useState(false)
   const [diff, setDiff] = useState<null | string>(null)
-  const versionLimit = 3
   return (
     <div>
       <h5>Change History</h5>

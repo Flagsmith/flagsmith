@@ -13,6 +13,7 @@ import Utils from 'common/utils/utils'
 import { getFeatureStateDiff, getSegmentDiff } from 'components/diff/diff-utils'
 import { getSegments } from 'common/services/useSegment';
 import { getFeatureStates } from 'common/services/useFeatureState';
+import moment from 'moment';
 
 const transformFeatureStates = (featureStates: FeatureState[]) =>
     featureStates?.map((v) => ({
@@ -293,6 +294,17 @@ export const {
   useGetFeatureVersionsQuery,
   // END OF EXPORTS
 } = featureVersionService
+
+export function isVersionOverLimit(
+    versionLimitDays: number | null | undefined,
+    date: string | undefined,
+) {
+    if (!versionLimitDays) {
+        return false
+    }
+    const days = moment().diff(moment(date), 'days') + 1
+    return !!versionLimitDays && days > versionLimitDays
+}
 
 /* Usage examples:
 const { data, isLoading } = useGetFeatureVersionQuery({ id: 2 }, {}) //get hook
