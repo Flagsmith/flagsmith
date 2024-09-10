@@ -1,6 +1,6 @@
 environment_webhook_data = {
     "data": {
-        "changed_by": "John Doe",
+        "changed_by": "user@domain.com",
         "new_state": {
             "enabled": True,
             "environment": {"id": 1, "name": "Development"},

@@ -28,11 +28,14 @@ def trigger_feature_state_change_webhooks(
         else ""
     )
     changed_by = (
-        str(history_instance.history_user)
+        history_instance.history_user.email
         if history_instance and history_instance.history_user
-        else ""
+        else (
+            history_instance.master_api_key.name
+            if history_instance and history_instance.master_api_key
+            else ""
+        )
     )
-
     new_state = (
         None
         if event_type == WebhookEventType.FLAG_DELETED
