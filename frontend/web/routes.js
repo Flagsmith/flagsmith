@@ -39,6 +39,7 @@ import ProjectRedirectPage from './components/pages/ProjectRedirectPage'
 import SDKKeysPage from './components/SDKKeysPage'
 import { ParameterizedRoute } from './components/base/higher-order/ParameterizedRoute'
 import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPage'
+import SplitTestPage from './components/pages/SplitTestPage'
 
 export const routes = {
   'features': '/project/:projectId/environment/:environmentId/features',
@@ -57,6 +58,8 @@ export const routes = {
   'invite-link': '/invite-link/:id',
   'environment-settings':
     '/project/:projectId/environment/:environmentId/settings',
+  'split-tests':
+    '/project/:projectId/environment/:environmentId/split-tests',
   'signup': '/signup',
   'integrations': '/project/:projectId/integrations',
   'oauth': '/oauth/:type',
@@ -146,6 +149,11 @@ export default (
         path={routes['environment-settings']}
         exact
         component={EnvironmentSettingsPage}
+      />
+      <ParameterizedRoute
+        path={routes['split-tests']}
+        exact
+        component={SplitTestPage}
       />
       <ParameterizedRoute
         path={routes['sdk-keys']}
