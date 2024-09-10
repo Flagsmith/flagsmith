@@ -1124,3 +1124,73 @@ def test_create_new_version_delete_segment_override_updates_overrides_immediatel
     get_feature_segments_response = admin_client.get(get_feature_segments_url)
     assert get_feature_segments_response.status_code == status.HTTP_200_OK
     assert get_feature_segments_response.json()["count"] == 0
+
+
+def test_rollback_to(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
+
+    version_1 = EnvironmentFeatureVersion.objects.get(
+        feature=feature, environment=environment_v2_versioning
+    )
+
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+    )
+    version_2.publish(staff_user)
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-rollback-to",
+        args=[environment_v2_versioning.id, feature.id, version_1.uuid],
+    )
+
+    # use a local variable for 'now' instead of module attribute because
+    # we want to ensure that the time is _after_ the versions were
+    # created / published
+    _now = timezone.now()
+
+    # When
+    with freeze_time(_now):
+        response = staff_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    queryset = EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(
+        environment_id=environment_v2_versioning.id
+    )
+    assert queryset.count() == 1
+    current_live_version = queryset.first()
+    assert current_live_version == version_1
+
+    version_2.refresh_from_db()
+    assert version_2.rolled_back_at == _now
+
+    audit_log_record_1 = (
+        AuditLog.objects.filter(related_object_uuid=version_1.uuid)
+        .order_by("-created_date")
+        .first()
+    )
+    assert (
+        audit_log_record_1.log
+        == f"Version '{version_1.uuid}' was reinstated for feature '{feature.name}' after a rollback."
+    )
+
+    audit_log_record_2 = (
+        AuditLog.objects.filter(related_object_uuid=version_2.uuid)
+        .order_by("-created_date")
+        .first()
+    )
+    assert (
+        audit_log_record_2.log
+        == f"Version '{version_2.uuid}' was rolled back for feature '{feature.name}'."
+    )
