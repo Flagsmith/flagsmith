@@ -11,6 +11,16 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
+            model_name='feature',
+            name='initial_value',
+            field=models.CharField(blank=True, max_length=settings.FEATURE_VALUE_LIMIT, null=True, default=None),
+        ),
+        migrations.AlterField(
+            model_name='historicalfeature',
+            name='initial_value',
+            field=models.CharField(blank=True, max_length=settings.FEATURE_VALUE_LIMIT, null=True, default=None),
+        ),
+        migrations.AlterField(
             model_name='featurestatevalue',
             name='string_value',
             field=models.CharField(blank=True, max_length=settings.FEATURE_VALUE_LIMIT, null=True),
