@@ -695,7 +695,7 @@ const EnvironmentSettingsPage = class extends Component {
                                 <div className='mt-4'>
                                   <Setting
                                       title='Use identity overrides in local evaluation'
-                                      description={`This determines whether server-side SDKs running in local evaluation mode will have access to identity overrides.`}
+                                      description={`This determines whether server-side SDKs running in local evaluation mode receive identity overrides in the environment document.`}
                                       checked={use_identity_overrides_in_local_eval}
                                       onChange={(v) => {
                                         this.setState(
