@@ -19,6 +19,9 @@ from environments.permissions.constants import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
+from features.feature_segments.limits import (
+    SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
+)
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.models import EnvironmentFeatureVersion
@@ -1190,6 +1193,9 @@ def test_create_new_version_fails_when_breaching_segment_override_limit(
 
     # Then
     assert create_version_response.status_code == status.HTTP_400_BAD_REQUEST
+    assert create_version_response.json() == {
+        "environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE
+    }
     assert (
         EnvironmentFeatureVersion.objects.filter(
             environment=environment_v2_versioning, feature=feature
@@ -1410,3 +1416,30 @@ def test_segment_override_limit_excludes_overrides_being_deleted_when_creating_n
         environment=environment_v2_versioning,
         environment_feature_version__uuid=version_3_uuid,
     ).exists()
+
+
+def test_cannot_create_new_version_for_environment_not_enabled_for_versioning_v2(
+    environment: Environment,
+    feature: Feature,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
+    with_project_permissions([VIEW_PROJECT])
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment.id, feature.id],
+    )
+
+    # When
+    response = staff_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    assert response.json() == {
+        "environment": "Environment must use v2 feature versioning."
+    }
