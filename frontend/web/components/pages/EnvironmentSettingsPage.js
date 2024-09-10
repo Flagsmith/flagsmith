@@ -168,6 +168,7 @@ const EnvironmentSettingsPage = class extends Component {
         allow_client_traits: !!this.state.allow_client_traits,
         banner_colour: this.state.banner_colour,
         banner_text: this.state.banner_text,
+        use_identity_overrides_in_local_eval: this.state.use_identity_overrides_in_local_eval,
         description: description || env.description,
         hide_disabled_flags: this.state.hide_disabled_flags,
         hide_sensitive_data: !!this.state.hide_sensitive_data,
@@ -257,6 +258,7 @@ const EnvironmentSettingsPage = class extends Component {
       props: { webhooks, webhooksLoading },
       state: {
         allow_client_traits,
+        use_identity_overrides_in_local_eval,
         hide_sensitive_data,
         name,
         use_identity_composite_key_for_hashing,
@@ -288,6 +290,7 @@ const EnvironmentSettingsPage = class extends Component {
             ) {
               setTimeout(() => {
                 this.setState({
+                  use_identity_overrides_in_local_eval: !!env.use_identity_overrides_in_local_eval,
                   allow_client_traits: !!env.allow_client_traits,
                   banner_colour: env.banner_colour || Constants.tagColors[0],
                   banner_text: env.banner_text,
@@ -688,20 +691,36 @@ const EnvironmentSettingsPage = class extends Component {
                                 }}
                               />
                             </div>
+                            {Utils.getFlagsmithHasFeature("use_identity_overrides_in_local_eval") && (
+                                <div className='mt-4'>
+                                  <Setting
+                                      title='Use identity overrides in local evaluation'
+                                      description={`This determines whether server-side SDKs running in local evaluation mode will have access to identity overrides.`}
+                                      checked={use_identity_overrides_in_local_eval}
+                                      onChange={(v) => {
+                                        this.setState(
+                                            { use_identity_overrides_in_local_eval: v },
+                                            this.saveEnv,
+                                        );
+                                      }}
+                                  />
+                                </div>
+                            )}
+
                             <div className='mt-4'>
                               <Setting
-                                checked={use_identity_composite_key_for_hashing}
-                                onChange={(v) => {
-                                  this.setState(
-                                    {
-                                      use_identity_composite_key_for_hashing: v,
-                                    },
-                                    this.saveEnv,
-                                  )
-                                }}
-                                title={`Use Consistent Hashing`}
-                                description={
-                                  <div>
+                                  checked={use_identity_composite_key_for_hashing}
+                                  onChange={(v) => {
+                                    this.setState(
+                                        {
+                                          use_identity_composite_key_for_hashing: v,
+                                        },
+                                        this.saveEnv,
+                                    );
+                                  }}
+                                  title={`Use Consistent Hashing`}
+                                  description={
+                                    <div>
                                     Enabling this setting will ensure that
                                     multivariate and percentage split
                                     evaluations made by the API are consistent
