@@ -21,6 +21,9 @@ import InfoMessage from './InfoMessage'
 import { useGetRoleQuery, useUpdateRoleMutation } from 'common/services/useRole'
 import PlanBasedAccess from './PlanBasedAccess'
 import WarningMessage from './WarningMessage'
+import { getTags } from 'common/services/useTag'
+import { getStore } from 'common/store'
+import { Tag } from 'common/types/responses'
 
 type PermissionsTabsType = {
   orgId?: number
@@ -56,12 +59,50 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
   const [project, setProject] = useState<string>('')
   const [environments, setEnvironments] = useState<Environment[]>([])
   const [tags, setTags] = useState<number[]>(roleData?.tags || [])
-  const [projectWithTags, setProjectWithTags] = useState<number[]>([])
+  const [projectWithTags, setProjectWithTags] = useState<Project[]>([])
   const [roleTagsChanged, setRoleTagsChanged] = useState<boolean>(false)
   const [hasTags, setHasTags] = useState<boolean>(
     !!roleData?.tags.length || false,
   )
   const [editRole] = useUpdateRoleMutation()
+
+  async function fetchTagsForProjects() {
+    const projectIds = projectData.map((project) => project.id)
+
+    const promises = projectIds.map((projectId) => {
+      return getTags(
+        getStore(),
+        { projectId: `${projectId}` },
+        { forceRefetch: true },
+      ).then((res) => {
+        return { projectId, tags: res.data }
+      })
+    })
+
+    try {
+      const results = await Promise.all(promises)
+      const filteredProjectIds = results
+        .filter((projectData) =>
+          projectData.tags.some((tag: Tag) => tags.includes(tag.id)),
+        )
+        .map((projectData) => projectData.projectId)
+
+      const filteredProjects = projectData.filter((project) =>
+        filteredProjectIds.includes(project.id),
+      )
+
+      setProjectWithTags(filteredProjects)
+      return results
+    } catch (error) {
+      throw error
+    }
+  }
+
+  useEffect(() => {
+    if (tags) {
+      fetchTagsForProjects()
+    }
+  }, [projectData, tags])
 
   useEffect(() => {
     if (project && projectData) {
@@ -145,10 +186,6 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
                         onChange={(tags) => {
                           setRoleTagsChanged(true)
                           setTags(tags)
-                          setProjectWithTags([
-                            ...projectWithTags,
-                            parseInt(project),
-                          ])
                         }}
                       />
                     )}
@@ -221,7 +258,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
             group={group}
             orgId={orgId}
             filter={searchProject}
-            mainItems={projectData}
+            mainItems={projectWithTags || projectData}
             role={role}
             hasTags={tags.length !== 0}
             level={'project'}
