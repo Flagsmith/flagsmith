@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useCallback, useEffect, useState } from 'react'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import TryIt from 'components/TryIt'
 import CreateSegmentModal from 'components/modals/CreateSegment'
@@ -114,30 +114,41 @@ const UserPage: FC<UserPageType> = (props) => {
   const [valueSearch, setValueSearch] = useState(params.value_search || '')
   const [actualFlags, setActualFlags] =
     useState<Record<string, IdentityFeatureState>>()
-  const [showEditAlias, setShowEditAlias] = useState(false)
 
-  const getFilter = () => ({
-    group_owners: groupOwners.length ? groupOwners : undefined,
-    is_archived: showArchived,
-    is_enabled: isEnabled === null ? undefined : isEnabled,
-    owners: owners.length ? owners : undefined,
-    tag_strategy: tagStrategy,
-    tags: tags.length ? tags.join(',') : undefined,
-    value_search: valueSearch ? valueSearch : undefined,
-  })
-
+  const getFilter = useCallback(
+    () => ({
+      group_owners: groupOwners.length ? groupOwners : undefined,
+      is_archived: showArchived,
+      is_enabled: isEnabled === null ? undefined : isEnabled,
+      owners: owners.length ? owners : undefined,
+      tag_strategy: tagStrategy,
+      tags: tags.length ? tags.join(',') : undefined,
+      value_search: valueSearch ? valueSearch : undefined,
+    }),
+    [
+      groupOwners,
+      showArchived,
+      isEnabled,
+      owners,
+      tagStrategy,
+      tags,
+      valueSearch,
+    ],
+  )
   useEffect(() => {
-    AppActions.getIdentity(environmentId, id)
-    AppActions.getIdentitySegments(projectId, id)
-    AppActions.getFeatures(
+    AppActions.searchFeatures(
       projectId,
       environmentId,
       true,
       search,
       sort,
-      0,
       getFilter(),
     )
+  }, [search, sort, getFilter, environmentId, projectId])
+
+  useEffect(() => {
+    AppActions.getIdentity(environmentId, id)
+    AppActions.getIdentitySegments(projectId, id)
     getTags(getStore(), { projectId: `${projectId}` })
     getActualFlags()
     API.trackPage(Constants.pages.USER)
@@ -361,7 +372,13 @@ const UserPage: FC<UserPageType> = (props) => {
                           {showAliases && (
                             <>
                               <h6>
-                                <Tooltip title={<span className="user-select-none">Alias: </span> }>
+                                <Tooltip
+                                  title={
+                                    <span className='user-select-none'>
+                                      Alias:{' '}
+                                    </span>
+                                  }
+                                >
                                   Aliases allow you to add searchable names to
                                   an identity
                                 </Tooltip>
@@ -437,7 +454,6 @@ const UserPage: FC<UserPageType> = (props) => {
                                             setSearch(
                                               Utils.safeParseEventValue(e),
                                             )
-                                            filter()
                                           }}
                                           value={search}
                                         />
@@ -449,7 +465,6 @@ const UserPage: FC<UserPageType> = (props) => {
                                             tagStrategy={tagStrategy}
                                             onChangeStrategy={(strategy) => {
                                               setTagStrategy(strategy)
-                                              filter()
                                             }}
                                             isLoading={
                                               FeatureListStore.isLoading
@@ -459,7 +474,6 @@ const UserPage: FC<UserPageType> = (props) => {
                                                 FeatureListStore.isLoading =
                                                   true
                                                 setShowArchived(!showArchived)
-                                                filter()
                                               }
                                             }}
                                             showArchived={showArchived}
@@ -471,7 +485,6 @@ const UserPage: FC<UserPageType> = (props) => {
                                                   ? ['']
                                                   : newTags,
                                               )
-                                              filter()
                                             }}
                                           />
                                           <TableValueFilter
@@ -486,7 +499,6 @@ const UserPage: FC<UserPageType> = (props) => {
                                             }) => {
                                               setIsEnabled(enabled)
                                               setValueSearch(valueSearch)
-                                              filter()
                                             }}
                                           />
                                           <TableOwnerFilter
@@ -495,7 +507,6 @@ const UserPage: FC<UserPageType> = (props) => {
                                             onChange={(newOwners) => {
                                               FeatureListStore.isLoading = true
                                               setOwners(newOwners)
-                                              filter()
                                             }}
                                           />
                                           <TableGroupsFilter
@@ -508,7 +519,6 @@ const UserPage: FC<UserPageType> = (props) => {
                                             onChange={(newGroupOwners) => {
                                               FeatureListStore.isLoading = true
                                               setGroupOwners(newGroupOwners)
-                                              filter()
                                             }}
                                           />
                                           <TableFilterOptions
@@ -545,7 +555,6 @@ const UserPage: FC<UserPageType> = (props) => {
                                             onChange={(newSort) => {
                                               FeatureListStore.isLoading = true
                                               setSort(newSort)
-                                              filter()
                                             }}
                                           />
                                         </Row>
