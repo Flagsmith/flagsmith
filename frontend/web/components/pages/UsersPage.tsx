@@ -209,19 +209,14 @@ const UsersPage: FC<UsersPageType> = (props) => {
                     }/users/${encodeURIComponent(identifier)}/${id}`}
                     className='flex-row flex flex-1 table-column'
                   >
-                    <div className='font-weight-medium'>
-                      <IdentifierString value={identifier} />
-                      {dashboard_alias ? ` (alias: ${dashboard_alias})` : ''}
+                    <div>
+                      <div className='font-weight-medium'>
+                        <IdentifierString value={identifier} />
+                      </div>
+                      <div className={'list-item-subtitle mt-1'}>
+                        {dashboard_alias ? `${dashboard_alias}` : ''}
+                      </div>
                     </div>
-                    <Icon
-                      name='chevron-right'
-                      width={22}
-                      fill={
-                        Utils.getFlagsmithHasFeature('dark_mode')
-                          ? '#FFF'
-                          : '#656D7B'
-                      }
-                    />
                   </Link>
                   <div className='table-column'>
                     <Button
