@@ -6,13 +6,14 @@ import ToggleChip from 'components/ToggleChip'
 import Input from 'components/base/forms/Input'
 import InputGroup from 'components/base/forms/InputGroup'
 import PanelSearch from 'components/PanelSearch'
+import CodeHelp from 'components/CodeHelp'
 import AccountStore from 'common/stores/account-store'
 import Tooltip from 'components/Tooltip'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import AccountProvider from 'common/providers/AccountProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Panel from 'components/base/grid/Panel'
-import { checkmark, checkmarkCircle } from 'ionicons/icons'
+import { checkmarkCircle } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 
 window.AppActions = require('../../common/dispatcher/app-actions')
@@ -39,7 +40,7 @@ window.Panel = Panel
 window.FormGroup = require('../components/base/grid/FormGroup')
 
 window.PanelSearch = PanelSearch
-window.CodeHelp = require('../components/CodeHelp')
+window.CodeHelp = CodeHelp
 
 // Useful for components used all the time within a project
 window.Loader = class extends PureComponent {

@@ -19,10 +19,8 @@ import JSONReference from 'components/JSONReference' // we need this to make JSX
 import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
-import Format from 'common/utils/format'
 import IdentifierString from 'components/IdentifierString'
-
-const CodeHelp = require('../CodeHelp')
+import CodeHelp from 'components/CodeHelp'
 
 type UsersPageType = {
   router: RouterChildContext['router']

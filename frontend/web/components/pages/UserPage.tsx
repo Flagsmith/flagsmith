@@ -1,52 +1,56 @@
 import React, { FC, useCallback, useEffect, useState } from 'react'
-import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
-import TryIt from 'components/TryIt'
-import CreateSegmentModal from 'components/modals/CreateSegment'
-import FeatureListStore from 'common/stores/feature-list-store'
-import { getTags } from 'common/services/useTag'
-import { getStore } from 'common/store'
-import TagValues from 'components/tags/TagValues'
-import _data from 'common/data/base/_data'
-import JSONReference from 'components/JSONReference'
-import Constants from 'common/constants'
-import IdentitySegmentsProvider from 'common/providers/IdentitySegmentsProvider'
-import ConfigProvider from 'common/providers/ConfigProvider'
-import Permission from 'common/providers/Permission'
-import Icon from 'components/Icon'
-import FeatureValue from 'components/FeatureValue'
-import PageTitle from 'components/PageTitle'
-import TableTagFilter from 'components/tables/TableTagFilter'
-import TableSearchFilter from 'components/tables/TableSearchFilter'
-import TableFilterOptions from 'components/tables/TableFilterOptions'
-import TableSortFilter from 'components/tables/TableSortFilter'
-import { getViewMode, setViewMode } from 'common/useViewMode'
-import classNames from 'classnames'
-import IdentifierString from 'components/IdentifierString'
-import Button from 'components/base/forms/Button'
-import { removeUserOverride } from 'components/RemoveUserOverride'
-import TableOwnerFilter from 'components/tables/TableOwnerFilter'
-import TableGroupsFilter from 'components/tables/TableGroupsFilter'
-import TableValueFilter from 'components/tables/TableValueFilter'
-import Format from 'common/utils/format'
-import InfoMessage from 'components/InfoMessage'
-import Utils from 'common/utils/utils'
-import ModalDefault from 'components/modals/base/ModalDefault'
-import AppActions from 'common/dispatcher/app-actions'
-import API from 'project/api'
-import IdentityProvider from 'common/providers/IdentityProvider'
-import Project from 'common/project'
-import AccountStore from 'common/stores/account-store'
-import Switch from 'components/Switch'
-import PanelSearch from 'components/PanelSearch'
-import Panel from 'components/base/grid/Panel'
-import moment from 'moment'
-import CodeHelp from 'components/CodeHelp'
 import { RouterChildContext } from 'react-router'
 import keyBy from 'lodash/keyBy'
-import { IdentityFeatureState } from 'common/types/responses'
+
+import { getStore } from 'common/store'
+import { getTags } from 'common/services/useTag'
+import { getViewMode, setViewMode } from 'common/useViewMode'
+import { removeUserOverride } from 'components/RemoveUserOverride'
+import {
+  FeatureState,
+  IdentityFeatureState,
+  ProjectFlag,
+} from 'common/types/responses'
+import API from 'project/api'
+import AccountStore from 'common/stores/account-store'
+import AppActions from 'common/dispatcher/app-actions'
+import Button from 'components/base/forms/Button'
+import CodeHelp from 'components/CodeHelp'
+import ConfigProvider from 'common/providers/ConfigProvider'
+import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
+import Constants from 'common/constants'
 import CreateFlagModal from 'components/modals/CreateFlag'
+import CreateSegmentModal from 'components/modals/CreateSegment'
 import CreateTraitModal from 'components/modals/CreateTrait'
 import EditIdentity from 'components/EditIdentity'
+import FeatureListStore from 'common/stores/feature-list-store'
+import FeatureValue from 'components/FeatureValue'
+import Format from 'common/utils/format'
+import Icon from 'components/Icon'
+import IdentifierString from 'components/IdentifierString'
+import IdentityProvider from 'common/providers/IdentityProvider'
+import IdentitySegmentsProvider from 'common/providers/IdentitySegmentsProvider'
+import InfoMessage from 'components/InfoMessage'
+import JSONReference from 'components/JSONReference'
+import PageTitle from 'components/PageTitle'
+import Panel from 'components/base/grid/Panel'
+import PanelSearch from 'components/PanelSearch'
+import Permission from 'common/providers/Permission'
+import Project from 'common/project'
+import Switch from 'components/Switch'
+import TableFilterOptions from 'components/tables/TableFilterOptions'
+import TableGroupsFilter from 'components/tables/TableGroupsFilter'
+import TableOwnerFilter from 'components/tables/TableOwnerFilter'
+import TableSearchFilter from 'components/tables/TableSearchFilter'
+import TableSortFilter from 'components/tables/TableSortFilter'
+import TableTagFilter from 'components/tables/TableTagFilter'
+import TableValueFilter from 'components/tables/TableValueFilter'
+import TagValues from 'components/tags/TagValues'
+import TryIt from 'components/TryIt'
+import Utils from 'common/utils/utils'
+import _data from 'common/data/base/_data'
+import classNames from 'classnames'
+import moment from 'moment'
 
 const width = [200, 48, 78]
 
@@ -160,7 +164,7 @@ const UserPage: FC<UserPageType> = (props) => {
       Project.api
     }environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${id}/${Utils.getFeatureStatesEndpoint()}/all/`
     _data.get(url).then((res: IdentityFeatureState[]) => {
-      setActualFlags(keyBy(res, (v: any) => v.feature.name))
+      setActualFlags(keyBy(res, (v: IdentityFeatureState) => v.feature.name))
     })
   }
 
@@ -197,14 +201,14 @@ const UserPage: FC<UserPageType> = (props) => {
     )
   }
   const editFeature = (
-    projectFlag,
-    environmentFlag,
-    identityFlag,
-    multivariate_feature_state_values,
+    projectFlag: ProjectFlag,
+    environmentFlag: FeatureState,
+    identityFlag: IdentityFeatureState,
+    multivariate_feature_state_values: IdentityFeatureState['multivariate_feature_state_values'],
   ) => {
     history.replaceState(
       {},
-      null,
+      '',
       `${document.location.pathname}?flag=${projectFlag.name}`,
     )
     API.trackEvent(Constants.events.VIEW_USER_FEATURE)
@@ -239,7 +243,7 @@ const UserPage: FC<UserPageType> = (props) => {
       />,
       'side-modal create-feature-modal overflow-y-auto',
       () => {
-        history.replaceState({}, null, `${document.location.pathname}`)
+        history.replaceState({}, '', `${document.location.pathname}`)
       },
     )
   }
@@ -347,8 +351,8 @@ const UserPage: FC<UserPageType> = (props) => {
                       isLoading,
                       projectFlags,
                       traits,
-                    },
-                    { toggleFlag },
+                    }: any,
+                    { toggleFlag }: any,
                   ) =>
                     isLoading &&
                     !tags.length &&
@@ -383,7 +387,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                   an identity
                                 </Tooltip>
                                 <EditIdentity
-                                  data={identity.identity}
+                                  data={identity?.identity}
                                   environmentId={environmentId}
                                 />
                               </h6>
@@ -1014,7 +1018,29 @@ const UserPage: FC<UserPageType> = (props) => {
                                       </Row>
                                     )}
                                     renderNoResults={
-                                      <Panel title='Traits' className='no-pad'>
+                                      <Panel
+                                        title='Traits'
+                                        className='no-pad'
+                                        action={
+                                          <div>
+                                            {Utils.renderWithPermission(
+                                              manageUserPermission,
+                                              Constants.environmentPermissions(
+                                                Utils.getManageUserPermissionDescription(),
+                                              ),
+                                              <Button
+                                                disabled={!manageUserPermission}
+                                                className='mb-2'
+                                                id='add-trait'
+                                                onClick={createTrait}
+                                                size='small'
+                                              >
+                                                Add new trait
+                                              </Button>,
+                                            )}
+                                          </div>
+                                        }
+                                      >
                                         <div className='search-list'>
                                           <Row className='list-item text-muted px-3'>
                                             This user has no traits.
