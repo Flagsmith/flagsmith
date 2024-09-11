@@ -19,8 +19,6 @@ window.AppActions = require('../../common/dispatcher/app-actions')
 window.Actions = require('../../common/dispatcher/action-constants')
 window.ES6Component = require('../../common/ES6Component')
 
-window.IdentityProvider = require('../../common/providers/IdentityProvider')
-window.IdentityProvider = require('../../common/providers/IdentityProvider')
 window.AccountProvider = AccountProvider
 window.AccountStore = AccountStore
 window.FeatureListProvider = require('../../common/providers/FeatureListProvider')

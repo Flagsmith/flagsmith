@@ -13,6 +13,7 @@ import {
   Environment,
   UserGroup,
   AttributeName,
+  Identity,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -521,6 +522,10 @@ export type Req = {
       django_attribute_name: AttributeName
       idp_attribute_name: string
     }
+  }
+  updateIdentity: {
+    environmentId: string
+    data: Identity
   }
   // END OF TYPES
 }

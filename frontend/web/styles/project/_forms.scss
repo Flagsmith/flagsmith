@@ -199,3 +199,7 @@ label,
 .transform-none {
     text-transform: none !important;
 }
+
+span[contenteditable]:focus-visible {
+    outline: none !important;
+}

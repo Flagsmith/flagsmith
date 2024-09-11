@@ -46,6 +46,7 @@ import keyBy from 'lodash/keyBy'
 import { IdentityFeatureState } from 'common/types/responses'
 import CreateFlagModal from 'components/modals/CreateFlag'
 import CreateTraitModal from 'components/modals/CreateTrait'
+import EditIdentity from 'components/EditIdentity'
 
 const width = [200, 48, 78]
 
@@ -361,26 +362,11 @@ const UserPage: FC<UserPageType> = (props) => {
                             <>
                               <h6>
                                 Alias:{' '}
-                                <span className='fw-normal'>
-                                  {identity?.identity.dashboard_alias || 'None'}
-                                </span>
-                                <Button
-                                  iconSize={18}
-                                  theme='text'
-                                  className='ms-2 text-primary'
-                                  iconRightColour='primary'
-                                  iconRight={'edit'}
-                                  onClick={() => setShowEditAlias(true)}
-                                >
-                                  Edit
-                                </Button>
+                                <EditIdentity
+                                  data={identity.identity}
+                                  environmentId={environmentId}
+                                />
                               </h6>
-                              <ModalDefault
-                                title={'Edit alias'}
-                                isOpen={showEditAlias}
-                                onDismiss={() => setShowEditAlias(false)}
-                                toggle={() => setShowEditAlias(!showEditAlias)}
-                              />
                             </>
                           )}
                           View and manage feature states and traits for this
@@ -566,10 +552,11 @@ const UserPage: FC<UserPageType> = (props) => {
                                   isLoading={FeatureListStore.isLoading}
                                   items={projectFlags}
                                   renderRow={(
-                                    { description, id:featureId, name }: any,
+                                    { description, id: featureId, name }: any,
                                     i: number,
                                   ) => {
-                                    const identityFlag = identityFlags[featureId] || {}
+                                    const identityFlag =
+                                      identityFlags[featureId] || {}
                                     const environmentFlag =
                                       (environmentFlags &&
                                         environmentFlags[featureId]) ||
@@ -819,7 +806,9 @@ const UserPage: FC<UserPageType> = (props) => {
                                                       environmentId,
                                                       identity: id,
                                                       identityFlag,
-                                                      projectFlag: { id:featureId },
+                                                      projectFlag: {
+                                                        id: featureId,
+                                                      },
                                                     }),
                                                 )
                                               }
