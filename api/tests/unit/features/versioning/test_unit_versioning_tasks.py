@@ -400,6 +400,14 @@ def test_publish_version_change_set_raises_error_when_segment_override_does_not_
         f"An unresolvable conflict occurred: segment override does not exist for segment '{segment.name}'."
     )
 
+    # and we should still only have a single version for the feature
+    assert (
+        EnvironmentFeatureVersion.objects.filter(
+            environment=environment_v2_versioning, feature=feature
+        ).count()
+        == 1
+    )
+
 
 def test_publish_version_change_set_raises_error_when_serializer_not_valid(
     change_request: ChangeRequest,

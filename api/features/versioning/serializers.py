@@ -1,6 +1,7 @@
 import typing
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from rest_framework import serializers
 
 from api_keys.user import APIKeyUser
@@ -140,6 +141,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             "publish_immediately",
         )
 
+    @transaction.atomic
     def create(
         self, validated_data: dict[str, typing.Any]
     ) -> EnvironmentFeatureVersion:
