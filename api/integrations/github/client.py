@@ -124,7 +124,8 @@ def delete_github_installation(installation_id: str) -> requests.Response:
         return response
     except HTTPError:
         response_content = response.content.decode("utf-8")
-        if response_content == "Not Found" and response.status_code == 404:
+        error_data = json.loads(response_content)
+        if error_data.get("message") == "Not Found" and response.status_code == 404:
             logger.info(
                 f"The GitHub application with the installation ID: {installation_id} was not found."
             )

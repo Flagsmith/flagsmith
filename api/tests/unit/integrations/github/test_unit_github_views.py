@@ -213,7 +213,7 @@ def test_can_delete_github_configuration_when_delete_github_installation_respons
         method="DELETE",
         url=f"{GITHUB_API_URL}app/installations/{github_configuration.installation_id}",
         status=404,
-        json={"message": "not found"},
+        json={"message": "Not Found", "status": "404"},
     )
 
     # When
