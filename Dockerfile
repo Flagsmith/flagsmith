@@ -108,10 +108,11 @@ FROM build-python AS build-python-private
 # and integrate private modules
 ARG SAML_REVISION
 ARG RBAC_REVISION
+# TODO: split-testing should not be included here if this is merged!
 RUN --mount=type=secret,id=github_private_cloud_token \
   echo "https://$(cat /run/secrets/github_private_cloud_token):@github.com" > ${HOME}/.git-credentials && \
   git config --global credential.helper store && \
-  make install-packages opts='--without dev --with saml,auth-controller,ldap,workflows' && \
+  make install-packages opts='--without dev --with saml,auth-controller,ldap,workflows,split-testing' && \
   make install-private-modules
 
 # * api-runtime
