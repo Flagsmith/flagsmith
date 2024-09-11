@@ -361,7 +361,10 @@ const UserPage: FC<UserPageType> = (props) => {
                           {showAliases && (
                             <>
                               <h6>
-                                Alias:{' '}
+                                <Tooltip title={<span className="user-select-none">Alias: </span> }>
+                                  Aliases allow you to add searchable names to
+                                  an identity
+                                </Tooltip>
                                 <EditIdentity
                                   data={identity.identity}
                                   environmentId={environmentId}
