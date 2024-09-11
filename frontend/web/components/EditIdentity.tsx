@@ -79,7 +79,7 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
         className='ms-2 text-primary'
         iconRightColour='primary'
         iconRight={'edit'}
-        onClick={handleFocus} // Clear the span content on click
+        onClick={handleFocus}
       >
         Edit
       </Button>
