@@ -2,6 +2,7 @@ import React, { FC, useEffect, useRef, useState } from 'react'
 import { Identity } from 'common/types/responses'
 import { useUpdateIdentityMutation } from 'common/services/useIdentity'
 import Button from './base/forms/Button'
+import ErrorMessage from './ErrorMessage'
 
 type EditIdentityType = {
   data: Identity
@@ -19,14 +20,12 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
 
   const [updateIdentity, { error, isLoading }] = useUpdateIdentityMutation({})
 
-  // Handles updating alias when the span loses focus and removing line breaks
   const handleBlur = () => {
     if (aliasRef.current) {
-      let updatedAlias = aliasRef.current.textContent || ''
-      // Replace line breaks with spaces and trim leading/trailing whitespace
-      updatedAlias = updatedAlias.replace(/\n/g, ' ').trim()
+      const updatedAlias = (aliasRef.current.textContent || '')
+        .replace(/\n/g, ' ')
+        .trim()
 
-      // If the updated alias is empty, revert to the old value
       if (!updatedAlias) {
         aliasRef.current.textContent = alias
       } else if (updatedAlias !== alias) {
@@ -45,19 +44,17 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
     }
   }
 
-  // Clears the content of the span when clicked (focus)
   const handleFocus = () => {
     if (aliasRef.current) {
-      aliasRef.current.textContent = '' // Clear the text content
+      aliasRef.current.textContent = ''
       aliasRef.current.focus()
     }
   }
 
-  // Handles preventing the Enter key from creating new lines and blurs on Enter
   const handleKeyDown = (e: React.KeyboardEvent<HTMLSpanElement>) => {
     if (e.key === 'Enter') {
-      e.preventDefault() // Prevent new line insertion
-      aliasRef.current?.blur() // Trigger blur on Enter
+      e.preventDefault()
+      aliasRef.current?.blur()
     }
   }
 
@@ -68,8 +65,8 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
         className='fw-normal'
         contentEditable={true}
         suppressContentEditableWarning={true}
-        onBlur={handleBlur} // Preserve the old alias if no value
-        onKeyDown={handleKeyDown} // Prevent new lines on Enter and blur on Enter
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
         role='textbox'
         aria-label='Alias'
       >
@@ -86,6 +83,7 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
       >
         Edit
       </Button>
+      <ErrorMessage>{error}</ErrorMessage>
     </>
   )
 }
