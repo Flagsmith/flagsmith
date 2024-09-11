@@ -197,6 +197,12 @@ optional = true
 [tool.poetry.group.workflows.dependencies]
 workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.5.0" }
 
+[tool.poetry.group.split-testing]
+optional = true
+
+[tool.poetry.group.split-testing.dependencies]
+flagsmith-split-testing = { git = "https://github.com/flagsmith/flagsmith-split-testing", tag = "v0.1.3" }
+
 [tool.poetry.group.dev.dependencies]
 django-test-migrations = "~1.2.0"
 responses = "~0.22.0"
