@@ -88,10 +88,10 @@ const SplitTestPage: FC<AuditLogType> = (props) => {
           <Row className='table-header'>
             <div className='table-column flex-fill'>Value</div>
             <div className='table-column' style={{ width: innerWidths[0] }}>
-              Conversion
+              Conversion Events
             </div>
             <div className='table-column' style={{ width: innerWidths[1] }}>
-              Total Events
+              Evaluations
             </div>
             <div className='table-column' style={{ width: innerWidths[2] }}>
               Conversion %
