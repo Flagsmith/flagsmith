@@ -10,8 +10,8 @@ SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE = (
 
 def exceeds_segment_override_limit(
     environment: Environment,
-    segment_ids_to_create_overrides: list[int] = None,
-    segment_ids_to_delete_overrides: list[int] = None,
+    segment_ids_to_create_overrides: list[int] | None = None,
+    segment_ids_to_delete_overrides: list[int] | None = None,
     exclusive: bool = False,
 ) -> bool:
     q = Q()
@@ -43,10 +43,7 @@ def exceeds_segment_override_limit(
         )
     )
 
-    if _check(
+    return _check(
         segment_override_count + extra,
         environment.project.max_segment_overrides_allowed,
-    ):
-        return True
-
-    return False
+    )

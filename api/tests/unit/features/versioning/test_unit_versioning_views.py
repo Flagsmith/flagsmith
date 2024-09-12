@@ -1259,8 +1259,6 @@ def test_create_new_version_fails_when_breaching_segment_override_limit(
     )
 
     # When
-    # We create a new version, without making any changes, we shouldn't receive
-    # any errors.
     create_version_response = staff_client.post(
         create_version_url, data=json.dumps(data), content_type="application/json"
     )
