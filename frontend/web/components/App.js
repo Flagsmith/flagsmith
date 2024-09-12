@@ -219,7 +219,7 @@ const App = class extends Component {
               id: lastEnv.orgId,
             })
             if (!lastOrg) {
-              this.context.router.history.replace('/select-organistion')
+              this.context.router.history.replace('/organisations')
               return
             }
 
