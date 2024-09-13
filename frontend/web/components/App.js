@@ -299,7 +299,7 @@ const App = class extends Component {
       amplitude.init(Project.amplitude, { serverZone: 'EU' })
       sessionReplay.init(Project.amplitude, {
         serverZone: 'EU',
-        sampleRate: 0.5,
+        sampleRate: 0.1,
       })
     }
     if (
