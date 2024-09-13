@@ -1,5 +1,4 @@
 import * as amplitude from '@amplitude/analytics-browser'
-import * as sessionReplay from '@amplitude/session-replay-browser'
 import data from 'common/data/base/_data'
 const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
 import freeEmailDomains from 'free-email-domains'
@@ -337,11 +336,9 @@ global.API = {
       })
     }
     if (Project.amplitude) {
-      const sessionReplayProperties = sessionReplay.getSessionReplayProperties()
       const eventData = {
         category: data.category,
         ...(data.extra || {}),
-        ...sessionReplayProperties,
       }
 
       amplitude.track(data.event, eventData)
