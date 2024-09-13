@@ -1,7 +1,8 @@
 import React, { Component, Fragment } from 'react'
 import { matchPath } from 'react-router'
 import { Link, withRouter } from 'react-router-dom'
-import amplitude from 'amplitude-js'
+import * as amplitude from '@amplitude/analytics-browser'
+import * as sessionReplay from '@amplitude/session-replay-browser'
 import NavLink from 'react-router-dom/NavLink'
 import TwoFactorPrompt from './SimpleTwoFactor/prompt'
 import Maintenance from './Maintenance'
@@ -295,7 +296,11 @@ const App = class extends Component {
       pathname === '/github-setup' ||
       pathname.includes('/invite')
     if (Project.amplitude) {
-      amplitude.getInstance().init(Project.amplitude)
+      amplitude.init(Project.amplitude, { serverZone: 'EU' })
+      sessionReplay.init(Project.amplitude, {
+        serverZone: 'EU',
+        sampleRate: 0.5,
+      })
     }
     if (
       AccountStore.getOrganisation() &&
