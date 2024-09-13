@@ -295,7 +295,7 @@ const App = class extends Component {
       pathname === '/signup' ||
       pathname === '/github-setup' ||
       pathname.includes('/invite')
-    if (Pr@amplitude/plugin-session-replay-browseroject.amplitude) {
+    if (Project.amplitude) {
       amplitude.init(Project.amplitude, { serverZone: 'EU' })
       const sessionReplayTracking = sessionReplayPlugin({
         sampleRate: 0.5,
