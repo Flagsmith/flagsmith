@@ -128,7 +128,9 @@ class SegmentSerializer(serializers.ModelSerializer, SerializerWithMetadata):
             return
 
         count = self._calculate_condition_count(rules_data)
-        logger.info(f"Segment {self.instance.id} has count of conditions {count}")
+
+        if self.instance:
+            logger.info(f"Segment {self.instance.id} has count of conditions {count}")
 
         if count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
             raise ValidationError(
