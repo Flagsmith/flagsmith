@@ -93,6 +93,17 @@ const App = class extends Component {
   }
 
   componentDidMount = () => {
+    if (Project.amplitude) {
+      amplitude.init(Project.amplitude, {
+        defaultTracking: true,
+        serverZone: 'EU',
+      })
+      const sessionReplayTracking = sessionReplayPlugin({
+        sampleRate: 0.5,
+        serverZone: 'EU',
+      })
+      amplitude.add(sessionReplayTracking)
+    }
     getBuildVersion()
     this.state.projectId = this.getProjectId(this.props)
     if (this.state.projectId) {
@@ -295,14 +306,6 @@ const App = class extends Component {
       pathname === '/signup' ||
       pathname === '/github-setup' ||
       pathname.includes('/invite')
-    if (Project.amplitude) {
-      amplitude.init(Project.amplitude, { serverZone: 'EU' })
-      const sessionReplayTracking = sessionReplayPlugin({
-        sampleRate: 0.5,
-        serverZone: 'EU',
-      })
-      amplitude.add(sessionReplayTracking)
-    }
     if (
       AccountStore.getOrganisation() &&
       AccountStore.getOrganisation().block_access_to_admin &&
