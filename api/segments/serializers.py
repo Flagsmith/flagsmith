@@ -9,7 +9,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ListSerializer
 from rest_framework_recursive.fields import RecursiveField
 
-from app.utils import is_saas
 from metadata.models import Metadata
 from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
@@ -93,10 +92,9 @@ class SegmentSerializer(serializers.ModelSerializer, SerializerWithMetadata):
 
         # Create a version of the segment now that we're updating.
         cloned_segment = instance.deep_clone()
-        if is_saas():
-            logger.info(
-                f"Updating cloned segment {cloned_segment.id} for original segment {instance.id}"
-            )
+        logger.info(
+            f"Updating cloned segment {cloned_segment.id} for original segment {instance.id}"
+        )
 
         try:
             self._update_segment_rules(rules_data, segment=instance)
@@ -130,8 +128,7 @@ class SegmentSerializer(serializers.ModelSerializer, SerializerWithMetadata):
             return
 
         count = self._calculate_condition_count(rules_data)
-        if is_saas():
-            logger.info(f"Segment {self.instance.id} has count of conditions {count}")
+        logger.info(f"Segment {self.instance.id} has count of conditions {count}")
 
         if count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
             raise ValidationError(

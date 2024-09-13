@@ -20,7 +20,6 @@ from django_lifecycle import (
 )
 from flag_engine.segments import constants
 
-from app.utils import is_saas
 from audit.constants import (
     SEGMENT_CREATED_MESSAGE,
     SEGMENT_DELETED_MESSAGE,
@@ -247,10 +246,9 @@ class SegmentRule(SoftDeleteExportableModel):
         cloned_rule.uuid = uuid.uuid4()
         cloned_rule.id = None
         cloned_rule.save()
-        if is_saas():
-            logger.info(
-                f"Deep copying rule {self.id} for cloned rule {cloned_rule.id} for cloned segment {cloned_segment.id}"
-            )
+        logger.info(
+            f"Deep copying rule {self.id} for cloned rule {cloned_rule.id} for cloned segment {cloned_segment.id}"
+        )
 
         # Conditions are only part of the sub-rules.
         assert self.conditions.exists() is False
@@ -264,11 +262,10 @@ class SegmentRule(SoftDeleteExportableModel):
             cloned_sub_rule.uuid = uuid.uuid4()
             cloned_sub_rule.id = None
             cloned_sub_rule.save()
-            if is_saas():
-                logger.info(
-                    f"Deep copying sub rule {sub_rule.id} for cloned sub rule {cloned_sub_rule.id} "
-                    f"for cloned segment {cloned_segment.id}"
-                )
+            logger.info(
+                f"Deep copying sub rule {sub_rule.id} for cloned sub rule {cloned_sub_rule.id} "
+                f"for cloned segment {cloned_segment.id}"
+            )
 
             cloned_conditions = []
             for condition in sub_rule.conditions.all():
@@ -277,11 +274,10 @@ class SegmentRule(SoftDeleteExportableModel):
                 cloned_condition.uuid = uuid.uuid4()
                 cloned_condition.id = None
                 cloned_conditions.append(cloned_condition)
-                if is_saas():
-                    logger.info(
-                        f"Cloning condition {condition.id} for cloned condition {cloned_condition.uuid} "
-                        f"for cloned segment {cloned_segment.id}"
-                    )
+                logger.info(
+                    f"Cloning condition {condition.id} for cloned condition {cloned_condition.uuid} "
+                    f"for cloned segment {cloned_segment.id}"
+                )
 
             Condition.objects.bulk_create(cloned_conditions)
 
