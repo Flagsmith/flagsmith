@@ -16,7 +16,7 @@ def add_manage_tags_permission(apps: Apps, schema_editor: BaseDatabaseSchemaEdit
     )
 
 
-def reverse(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
+def reverse(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:  # pragma: no cover
     permission_model_class = apps.get_model("permissions", "permissionmodel")
     permission_model_class.objects.filter(key=MANAGE_TAGS).delete()
 
