@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.141.0](https://github.com/Flagsmith/flagsmith/compare/v2.140.0...v2.141.0) (2024-09-13)
+
+
+### Features
+
+* Add hubspot cookie tracking ([#4539](https://github.com/Flagsmith/flagsmith/issues/4539)) ([6714384](https://github.com/Flagsmith/flagsmith/commit/67143847508a492c25a3c188922b012076d48945))
+* Add subscription cache for new organisations ([#4587](https://github.com/Flagsmith/flagsmith/issues/4587)) ([b2a1899](https://github.com/Flagsmith/flagsmith/commit/b2a18995663b3e894a4f8510016ee1139a9685a6))
+* Add use_identity_overrides_in_local_eval setting ([#4612](https://github.com/Flagsmith/flagsmith/issues/4612)) ([f8a048e](https://github.com/Flagsmith/flagsmith/commit/f8a048ef4abd2c23e99f2785a0b5ad35d584e9e6))
+* Detect unchanged feature states when saving versions ([#4609](https://github.com/Flagsmith/flagsmith/issues/4609)) ([0e53baf](https://github.com/Flagsmith/flagsmith/commit/0e53bafa6e2857f9cbb6d6b9170636f16e2a4217))
+* Move versioned feature history into feature details modal ([#4499](https://github.com/Flagsmith/flagsmith/issues/4499)) ([ae47db1](https://github.com/Flagsmith/flagsmith/commit/ae47db111e9b3198d67b9d35b7847a8d4d425016))
+
+
+### Bug Fixes
+
+* 404 when last organisation doesn't exist ([#4624](https://github.com/Flagsmith/flagsmith/issues/4624)) ([d60b3b7](https://github.com/Flagsmith/flagsmith/commit/d60b3b73a79302d6b7b091a23ab6be110a004f1e))
+* Allow switching organisations if current one is blocked ([#4606](https://github.com/Flagsmith/flagsmith/issues/4606)) ([6ef774b](https://github.com/Flagsmith/flagsmith/commit/6ef774be945304bf05ad43515eccef51db3a5063))
+* Don't include null traits in transient identifier ([#4598](https://github.com/Flagsmith/flagsmith/issues/4598)) ([4bf7b9d](https://github.com/Flagsmith/flagsmith/commit/4bf7b9dc9535695f551e49cb35c3574659f3963f))
+* Handle null cancellation dates ([#4589](https://github.com/Flagsmith/flagsmith/issues/4589)) ([603889c](https://github.com/Flagsmith/flagsmith/commit/603889c88f5ffed12c4d5be269ea1ed6d5966042))
+* ignore old versions when validating segment override limit ([#4618](https://github.com/Flagsmith/flagsmith/issues/4618)) ([52b9780](https://github.com/Flagsmith/flagsmith/commit/52b978023ed10a36652ad41369c003dc1c31f4bd))
+* incorrect Java SDK installation and initialization code examples ([#4596](https://github.com/Flagsmith/flagsmith/issues/4596)) ([d12cf8b](https://github.com/Flagsmith/flagsmith/commit/d12cf8b3897f663160a0e732d9a0fbdf780c6408))
+* **versioning:** fix issue creating duplicate priority segment overrides ([#4603](https://github.com/Flagsmith/flagsmith/issues/4603)) ([1e357b8](https://github.com/Flagsmith/flagsmith/commit/1e357b89e5755231558dc4135349d5a8249db590))
+* **versioning:** use transaction.atomic to prevent corrupt versions being created ([#4617](https://github.com/Flagsmith/flagsmith/issues/4617)) ([7ac05cd](https://github.com/Flagsmith/flagsmith/commit/7ac05cda86a05c924f742c7f0e20eaf1a090a4b7))
+* **webhook/changed_by:** Return name of the master api key ([#4602](https://github.com/Flagsmith/flagsmith/issues/4602)) ([1b22cf5](https://github.com/Flagsmith/flagsmith/commit/1b22cf5847bdf1843fe53e4943067a56189f3856))
+
 ## [2.140.0](https://github.com/Flagsmith/flagsmith/compare/v2.139.0...v2.140.0) (2024-09-06)
 
 
