@@ -21,7 +21,7 @@
             "environment": [
                 {
                     "name": "LOG_LEVEL",
-                    "value": "info"
+                    "value": "INFO"
                 },
                 {
                     "name": "AWS_REGION",
