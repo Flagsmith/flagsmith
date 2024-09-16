@@ -386,7 +386,7 @@ def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_loca
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_usage_data_returns_empty_list_when_unset_subscription_information_cache_for_previous_billing_period(
+def test_get_usage_data_returns_30d_of_60d_when_unset_subscription_information_cache_for_previous_billing_period(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -413,7 +413,7 @@ def test_get_usage_data_returns_empty_list_when_unset_subscription_information_c
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_usage_data_returns_empty_list_when_unset_subscription_information_cache_for_current_billing_period(
+def test_get_usage_data_returns_30d_when_unset_subscription_information_cache_for_current_billing_period(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
