@@ -250,7 +250,7 @@ const SegmentOverrideInner = class Override extends React.Component {
           </div>
           {showValue ? (
             <>
-              <div className='flex-fill'>
+              <div className='flex-fill overflow-hidden'>
                 <label>Value</label>
                 <ValueEditor
                   readOnly={readOnly}
