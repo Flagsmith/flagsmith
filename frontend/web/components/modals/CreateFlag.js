@@ -757,7 +757,7 @@ const CreateFlag = class extends Component {
                   {!!regex && !isEdit && (
                     <div className='mt-2'>
                       {' '}
-                      <InfoMessage>
+                      <InfoMessage collapseId={'flag-regex'}>
                         {' '}
                         This must conform to the regular expression{' '}
                         <pre>{regex}</pre>
@@ -1496,7 +1496,11 @@ const CreateFlag = class extends Component {
                                                 }
                                               </Tooltip>
                                               <div className='fw-normal transform-none mt-4'>
-                                                <InfoMessage>
+                                                <InfoMessage
+                                                  collapseId={
+                                                    'identity-overrides'
+                                                  }
+                                                >
                                                   Identity overrides override
                                                   feature values for individual
                                                   identities. The overrides take
@@ -1854,7 +1858,10 @@ const CreateFlag = class extends Component {
                                 {!identity && (
                                   <div className='text-right mb-3'>
                                     {project.prevent_flag_defaults ? (
-                                      <InfoMessage className='text-right modal-caption fs-small lh-sm'>
+                                      <InfoMessage
+                                        collapseId={'create-flag'}
+                                        className='text-right modal-caption fs-small lh-sm'
+                                      >
                                         This will create the feature for{' '}
                                         <strong>all environments</strong>, you
                                         can edit this feature per environment
@@ -1862,7 +1869,10 @@ const CreateFlag = class extends Component {
                                         environment once the feature is created.
                                       </InfoMessage>
                                     ) : (
-                                      <InfoMessage className='text-right modal-caption fs-small lh-sm'>
+                                      <InfoMessage
+                                        collapseId={'create-flag'}
+                                        className='text-right modal-caption fs-small lh-sm'
+                                      >
                                         This will create the feature for{' '}
                                         <strong>all environments</strong>, you
                                         can edit this feature per environment
