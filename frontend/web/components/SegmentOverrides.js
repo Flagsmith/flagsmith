@@ -96,7 +96,7 @@ const SegmentOverrideInner = class Override extends React.Component {
       <div
         data-test={`segment-override-${index}`}
         style={{ zIndex: 9999999999 }}
-        className={`segment-overrides mb-2${
+        className={`segment-overrides mb-3${
           this.props.id
             ? ''
             : ' panel user-select-none panel-without-heading panel--draggable pb-0'
@@ -634,7 +634,7 @@ class TheComponent extends Component {
             !this.props.showCreateSegment && (
               <div className='overflow-visible'>
                 {!this.props.id && (
-                  <div className='mt-4'>
+                  <div className='mt-3'>
                     <InfoMessage className='text-left faint'>
                       Segment overrides override the feature's environment
                       default value and enabled state, prioritise them by
