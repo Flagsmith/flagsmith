@@ -15,7 +15,6 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from environments.identities.models import Identity
-from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
@@ -33,6 +32,10 @@ from util.drf_writable_nested.serializers import (
 )
 
 from .constants import INTERSECTION, UNION
+from .feature_segments.limits import (
+    SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
+    exceeds_segment_override_limit,
+)
 from .feature_segments.serializers import (
     CustomCreateSegmentOverrideFeatureSegmentSerializer,
 )
@@ -599,6 +602,8 @@ class SDKFeatureStatesQuerySerializer(serializers.Serializer):
 class CustomCreateSegmentOverrideFeatureStateSerializer(
     CreateSegmentOverrideFeatureStateSerializer
 ):
+    validate_override_limit = True
+
     feature_segment = CustomCreateSegmentOverrideFeatureSegmentSerializer(
         required=False, allow_null=True
     )
@@ -615,18 +620,8 @@ class CustomCreateSegmentOverrideFeatureStateSerializer(
 
     def create(self, validated_data: dict) -> FeatureState:
         environment = validated_data["environment"]
-        self.validate_environment_segment_override_limit(environment)
-        return super().create(validated_data)
-
-    def validate_environment_segment_override_limit(
-        self, environment: Environment
-    ) -> None:
-        if (
-            environment.feature_segments.count()
-            >= environment.project.max_segment_overrides_allowed
-        ):
+        if self.validate_override_limit and exceeds_segment_override_limit(environment):
             raise serializers.ValidationError(
-                {
-                    "environment": "The environment has reached the maximum allowed segments overrides limit."
-                }
+                {"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE}
             )
+        return super().create(validated_data)

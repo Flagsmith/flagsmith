@@ -219,7 +219,7 @@ const App = class extends Component {
               id: lastEnv.orgId,
             })
             if (!lastOrg) {
-              this.context.router.history.replace('/select-organistion')
+              this.context.router.history.replace('/organisations')
               return
             }
 
@@ -299,7 +299,8 @@ const App = class extends Component {
     }
     if (
       AccountStore.getOrganisation() &&
-      AccountStore.getOrganisation().block_access_to_admin
+      AccountStore.getOrganisation().block_access_to_admin &&
+      pathname !== '/organisations'
     ) {
       return <Blocked />
     }

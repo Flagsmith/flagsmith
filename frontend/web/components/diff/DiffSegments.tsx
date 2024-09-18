@@ -116,6 +116,7 @@ const DiffSegments: FC<DiffSegmentsType> = ({
     <Tabs className='mt-4' uncontrolled theme='pill'>
       {!!created.length && (
         <TabItem
+          className='p-0'
           tabLabel={
             <div>
               Created <div className='unread'>{created.length}</div>
@@ -135,6 +136,7 @@ const DiffSegments: FC<DiffSegmentsType> = ({
       )}
       {!!deleted.length && (
         <TabItem
+          className='p-0'
           tabLabel={
             <div>
               Deleted <div className='unread'>{deleted.length}</div>
@@ -154,6 +156,7 @@ const DiffSegments: FC<DiffSegmentsType> = ({
       )}
       {!!modified.length && (
         <TabItem
+          className='p-0'
           tabLabel={
             <div>
               Modified <div className='unread'>{modified.length}</div>
@@ -173,6 +176,7 @@ const DiffSegments: FC<DiffSegmentsType> = ({
       )}
       {!!unChanged.length && (
         <TabItem
+          className='p-0'
           tabLabel={
             <div>
               Unchanged <div className='unread'>{unChanged.length}</div>

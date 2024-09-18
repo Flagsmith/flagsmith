@@ -1,16 +1,35 @@
 import pytest
+from pytest_lazyfixture import lazy_fixture
 from pytest_mock import MockerFixture
 
+from api_keys.models import MasterAPIKey
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from features.tasks import trigger_feature_state_change_webhooks
 from organisations.models import Organisation
 from projects.models import Project
+from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType
 
 
+@pytest.mark.parametrize(
+    "user, api_key, changed_by",
+    [
+        (lazy_fixture("admin_user"), None, lazy_fixture("admin_user_email")),
+        (
+            None,
+            lazy_fixture("master_api_key_object"),
+            lazy_fixture("master_api_key_name"),
+        ),
+    ],
+)
 @pytest.mark.django_db
-def test_trigger_feature_state_change_webhooks(mocker: MockerFixture):
+def test_trigger_feature_state_change_webhooks(
+    mocker: MockerFixture,
+    user: FFAdminUser | None,
+    api_key: MasterAPIKey | None,
+    changed_by: str,
+) -> None:
     # Given
     initial_value = "initial"
     new_value = "new"
@@ -22,6 +41,11 @@ def test_trigger_feature_state_change_webhooks(mocker: MockerFixture):
         name="Test feature", project=project, initial_value=initial_value
     )
     feature_state = FeatureState.objects.get(feature=feature, environment=environment)
+
+    # Set user/master_api_key
+    mocked_historical_record = mocker.patch("core.signals.HistoricalRecords")
+    mocked_historical_record.thread.request.user.key = api_key
+    feature_state._history_user = user
 
     # update the feature state value and save both objects to ensure that the history is updated
     feature_state.feature_state_value.string_value = new_value
@@ -56,6 +80,7 @@ def test_trigger_feature_state_change_webhooks(mocker: MockerFixture):
     event_type = environment_webhook_call_args[2]
     assert data["new_state"]["feature_state_value"] == new_value
     assert data["previous_state"]["feature_state_value"] == initial_value
+    assert data["changed_by"] == changed_by
     assert event_type == WebhookEventType.FLAG_UPDATED.value
 
 
