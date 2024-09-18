@@ -171,3 +171,12 @@ Permissions can be assigned at four levels: user group, organisation, project, a
 | Create Change Request    | Allows creating change requests for features in this environment.                                                       |
 | Approve Change Request   | Allows approving or denying change requests in this environment.                                                        |
 | View Identities          | Grants read-only access to identities in this environment.                                                              |
+
+### Tags
+
+When tags are applied to a role, the following permissions apply:
+
+- If the role does not have project admin permissions, users will only be able to delete features that have a matching
+  tag.
+- For all environments within the project where the role is not set as admin, users will only be able to update Feature
+  States, Segment Overrides, and Change Requests for features with a matching tag.

@@ -205,24 +205,26 @@ const AddEditTags: FC<AddEditTagsType> = ({
                           tag={tag}
                         />
                       </Flex>
-                      {!readOnly &&
-                        !!projectAdminPermission &&
-                        !tag.is_system_tag && (
-                          <>
-                            <div
-                              onClick={() => editTag(tag)}
-                              className='clickable'
-                            >
-                              <Icon name='setting' fill='#9DA4AE' />
-                            </div>
-                            <div
-                              onClick={() => confirmDeleteTag(tag)}
-                              className='ml-3 clickable'
-                            >
-                              <Icon name='trash-2' fill='#9DA4AE' />
-                            </div>
-                          </>
-                        )}
+                      {!!projectAdminPermission && !tag.is_system_tag && (
+                        <>
+                          <div
+                            onClick={() => editTag(tag)}
+                            className={
+                              !readOnly
+                                ? 'clickable'
+                                : 'opacity-0 pointer-events-none'
+                            }
+                          >
+                            <Icon name='setting' fill='#9DA4AE' />
+                          </div>
+                          <div
+                            onClick={() => confirmDeleteTag(tag)}
+                            className='ml-3 clickable'
+                          >
+                            <Icon name='trash-2' fill='#9DA4AE' />
+                          </div>
+                        </>
+                      )}
                     </Row>
                   </div>
                 ))}

@@ -12,8 +12,8 @@ import {
   ProjectFlag,
   Environment,
   UserGroup,
-  AttributeName,
-} from './responses'
+  AttributeName, Role,
+} from './responses';
 
 export type PagedRequest<T> = T & {
   page?: number
@@ -157,7 +157,7 @@ export type Req = {
   updateRole: {
     organisation_id: number
     role_id: number
-    body: { description: string | null; name: string }
+    body: Role
   }
   deleteRole: { organisation_id: number; role_id: number }
   getRolePermissionEnvironment: {
