@@ -1,8 +1,7 @@
 import React, { Component, Fragment } from 'react'
 import { matchPath } from 'react-router'
 import { Link, withRouter } from 'react-router-dom'
-import * as amplitude from '@amplitude/analytics-browser'
-import { sessionReplayPlugin } from '@amplitude/plugin-session-replay-browser'
+import amplitude from 'amplitude-js'
 import NavLink from 'react-router-dom/NavLink'
 import TwoFactorPrompt from './SimpleTwoFactor/prompt'
 import Maintenance from './Maintenance'
@@ -93,17 +92,6 @@ const App = class extends Component {
   }
 
   componentDidMount = () => {
-    if (Project.amplitude) {
-      amplitude.init(Project.amplitude, {
-        defaultTracking: true,
-        serverZone: 'EU',
-      })
-      const sessionReplayTracking = sessionReplayPlugin({
-        sampleRate: 0.5,
-        serverZone: 'EU',
-      })
-      amplitude.add(sessionReplayTracking)
-    }
     getBuildVersion()
     this.state.projectId = this.getProjectId(this.props)
     if (this.state.projectId) {
@@ -306,6 +294,9 @@ const App = class extends Component {
       pathname === '/signup' ||
       pathname === '/github-setup' ||
       pathname.includes('/invite')
+    if (Project.amplitude) {
+      amplitude.getInstance().init(Project.amplitude)
+    }
     if (
       AccountStore.getOrganisation() &&
       AccountStore.getOrganisation().block_access_to_admin &&
