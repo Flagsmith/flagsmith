@@ -42,6 +42,7 @@ def handle_cascade_delete(project_id: int) -> None:
 
     from environments.tasks import delete_environment
     from features.tasks import delete_feature
+    from features.workflows.core.tasks import delete_change_request
     from projects.models import Project
     from segments.tasks import delete_segment
 
@@ -55,3 +56,6 @@ def handle_cascade_delete(project_id: int) -> None:
 
     for feature_id in project.features.values_list("id", flat=True):
         delete_feature.delay(kwargs={"feature_id": feature_id})
+
+    for change_request_id in project.change_requests.values_list("id", flat=True):
+        delete_change_request.delay(kwargs={"change_request_id": change_request_id})
