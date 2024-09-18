@@ -196,7 +196,11 @@ class ChangeRequest(
             target_segment = segment.version_of
             assert target_segment != segment
 
-            # Deep clone the segment to establish historical version.
+            # Deep clone the segment to establish historical version this is required
+            # because the target segment will be altered when the segment is published.
+            # Think of it like a regular update to a segment where we create the clone
+            # to create the version, then modifying the new 'draft' version with the
+            # data from the change request.
             target_segment.deep_clone()
 
             # Set the properties of the change request's segment to the properties
