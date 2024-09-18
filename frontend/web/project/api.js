@@ -1,4 +1,4 @@
-import amplitude from 'amplitude-js'
+import * as amplitude from '@amplitude/analytics-browser'
 import data from 'common/data/base/_data'
 const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
 import freeEmailDomains from 'free-email-domains'
@@ -93,9 +93,9 @@ global.API = {
       })
     }
     if (Project.amplitude) {
-      amplitude.getInstance().setUserId(id)
+      amplitude.setUserId(id)
       const identify = new amplitude.Identify().set('email', id)
-      amplitude.getInstance().identify(identify)
+      amplitude.identify(identify)
     }
     API.flagsmithIdentify()
   },
@@ -223,12 +223,12 @@ global.API = {
       }
 
       if (Project.amplitude) {
-        amplitude.getInstance().setUserId(id)
+        amplitude.setUserId(id)
         const identify = new amplitude.Identify()
           .set('email', id)
           .set('name', { 'first': user.first_name, 'last': user.last_name })
 
-        amplitude.getInstance().identify(identify)
+        amplitude.identify(identify)
       }
       API.flagsmithIdentify()
     } catch (e) {
@@ -334,6 +334,14 @@ global.API = {
       heap.track(data.event, {
         category: data.category,
       })
+    }
+    if (Project.amplitude) {
+      const eventData = {
+        category: data.category,
+        ...(data.extra || {}),
+      }
+
+      amplitude.track(data.event, eventData)
     }
     if (Project.mixpanel) {
       if (!data) {
