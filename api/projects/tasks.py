@@ -48,6 +48,9 @@ def handle_cascade_delete(project_id: int) -> None:
 
     project = Project.objects.all_with_deleted().get(id=project_id)
 
+    for change_request_id in project.change_requests.values_list("id", flat=True):
+        delete_change_request.delay(kwargs={"change_request_id": change_request_id})
+
     for environment_id in project.environments.values_list("id", flat=True):
         delete_environment.delay(kwargs={"environment_id": environment_id})
 
@@ -56,6 +59,3 @@ def handle_cascade_delete(project_id: int) -> None:
 
     for feature_id in project.features.values_list("id", flat=True):
         delete_feature.delay(kwargs={"feature_id": feature_id})
-
-    for change_request_id in project.change_requests.values_list("id", flat=True):
-        delete_change_request.delay(kwargs={"change_request_id": change_request_id})
