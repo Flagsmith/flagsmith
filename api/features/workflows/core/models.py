@@ -77,10 +77,19 @@ class ChangeRequest(
         null=True,
     )
 
+    # Change requests get deleted in a delegated task when a project is deleted.
+    project = models.ForeignKey(
+        "projects.Project",
+        on_delete=models.SET_NULL,
+        related_name="change_requests",
+        null=True,
+    )
+
     environment = models.ForeignKey(
         "environments.Environment",
         on_delete=models.CASCADE,
         related_name="change_requests",
+        null=True,
     )
 
     committed_at = models.DateTimeField(null=True)
