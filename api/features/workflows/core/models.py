@@ -243,7 +243,7 @@ class ChangeRequest(
         return self.environment
 
     def _get_project(self) -> typing.Optional["Project"]:
-        return self.project or self.environment.project
+        return self.project or (self.environment and self.environment.project)
 
     def is_approved(self):
         return self.environment.minimum_change_request_approvals is None or (
