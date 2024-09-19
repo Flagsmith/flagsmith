@@ -55,16 +55,21 @@ if settings.SAML_INSTALLED:
 
 if settings.WORKFLOWS_LOGIC_INSTALLED:
     workflow_views = importlib.import_module("workflows_logic.views")
+    from project.views import ProjectViewSet
+
     router = routers.DefaultRouter()
-    router.register(
-        "projects/<int:project_id>/change-requests",
+    router.register(r"", ProjectViewSet, basename="project")
+
+    project_router = routers.NestedSimpleRouter(router, r"projects", lookup="project")
+    project_router.register(
+        r"change-requests",
         workflow_views.ProjectChangeRequestViewSet,
         basename="project-change-requests",
     )
 
     urlpatterns.extend(
         [
-            path("api/v1/", include(router.urls)),
+            path("api/v1/", include(project_router.urls)),
             path("api/v1/features/workflows/", include("workflows_logic.urls")),
             path(
                 "api/v1/environments/<str:environment_api_key>/create-change-request/",
