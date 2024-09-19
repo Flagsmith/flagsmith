@@ -55,7 +55,7 @@ if settings.SAML_INSTALLED:
 
 if settings.WORKFLOWS_LOGIC_INSTALLED:
     workflow_views = importlib.import_module("workflows_logic.views")
-    from project.views import ProjectViewSet
+    from projects.views import ProjectViewSet
 
     router = routers.DefaultRouter()
     router.register(r"", ProjectViewSet, basename="project")
