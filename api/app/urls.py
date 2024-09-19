@@ -69,6 +69,7 @@ if settings.WORKFLOWS_LOGIC_INSTALLED:
 
     urlpatterns.extend(
         [
+            path("api/v1/", include(router.urls)),
             path("api/v1/", include(project_router.urls)),
             path("api/v1/features/workflows/", include("workflows_logic.urls")),
             path(
