@@ -58,7 +58,7 @@ if settings.WORKFLOWS_LOGIC_INSTALLED:
     from projects.views import ProjectViewSet
 
     router = routers.DefaultRouter()
-    router.register(r"", ProjectViewSet, basename="project")
+    router.register(r"projects", ProjectViewSet, basename="project")
 
     project_router = routers.NestedSimpleRouter(router, r"projects", lookup="project")
     project_router.register(
