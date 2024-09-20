@@ -1,8 +1,11 @@
+from typing import Set, Any
+
 from django.conf import settings
 from django.core.exceptions import BadRequest
 from django.db.models import Q
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.request import Request
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -238,7 +241,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         return Response(serializer.data, status=200)
 
-    def _update_traits(self, request):
+    def _update_traits(self, request: Request) -> Set[str]:
 
         identities = {trait["identity"]["identifier"] for trait in request.data}
 
@@ -292,6 +295,8 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
                     )
                 )
 
+        return identities
+
     @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer(many=True))
     @action(detail=False, methods=["PUT"], url_path="bulk")
     def bulk_create(self, request):
@@ -299,9 +304,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
             if not request.environment.trait_persistence_allowed(request):
                 raise BadRequest("Unable to set traits with client key.")
 
-            self._update_traits(request)
-
-            identities = {trait["identity"]["identifier"] for trait in request.data}
+            identities = self._update_traits(request)
 
             all_traits = Trait.objects.filter(
                 identity__identifier__in=identities,
