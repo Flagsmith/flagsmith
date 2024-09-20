@@ -11,7 +11,7 @@ from webhooks.models import AbstractBaseSoftDeleteExportableWebhookModel
 
 
 class WebhookConfiguration(
-    AbstractBaseSoftDeleteExportableWebhookModel, LifecycleModelMixin
+    LifecycleModelMixin, AbstractBaseSoftDeleteExportableWebhookModel
 ):
     environment = models.OneToOneField(
         Environment, related_name="webhook_config", on_delete=models.CASCADE
