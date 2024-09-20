@@ -1,5 +1,7 @@
 from django.conf import settings
+from django.views import View
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.request import Request
 
 
 class CurrentUser(IsAuthenticated):
@@ -15,5 +17,5 @@ class CurrentUser(IsAuthenticated):
 
 
 class IsSignupAllowed(AllowAny):
-    def has_permission(self, request, view):
+    def has_permission(self, request: Request, view: View) -> bool:
         return not settings.PREVENT_SIGNUP
