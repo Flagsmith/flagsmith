@@ -1,14 +1,14 @@
-from typing import Set, Any
+from typing import Any, Set
 
 from django.conf import settings
 from django.core.exceptions import BadRequest
 from django.db.models import Q
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.request import Request
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from edge_api.identities.edge_request_forwarder import (
