@@ -106,6 +106,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         default=30,
         help_text="Number of days without modification in any environment before a flag is considered stale.",
     )
+    minimum_change_request_approvals = models.IntegerField(blank=True, null=True)
 
     objects = ProjectManager()
 
