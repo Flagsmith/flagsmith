@@ -262,8 +262,13 @@ class ChangeRequest(
                 "Change request must be saved before it has a url attribute."
             )
         url = get_current_site_url()
-        url += f"/project/{self.environment.project_id}"
-        url += f"/environment/{self.environment.api_key}"
+        if self.environment:
+            url += f"/project/{self.environment.project_id}"
+            url += f"/environment/{self.environment.api_key}"
+        elif self.project_id:
+            url += f"/projects/{self.project_id}"
+        else:
+            raise RuntimeError("Change request missing fields for URL")
         url += f"/change-requests/{self.id}"
         return url
 
