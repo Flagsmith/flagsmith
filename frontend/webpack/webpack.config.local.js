@@ -11,6 +11,7 @@ module.exports = {
     mode: 'development',
     stats: 'errors-only',
     entry: [
+        'webpack-hot-middleware/client?reload=false',
         './web/main.js',
     ],
     devServer: {

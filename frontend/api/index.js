@@ -13,8 +13,8 @@ const SLACK_TOKEN = process.env.SLACK_TOKEN
 const slackClient = SLACK_TOKEN && require('./slack-client')
 
 const postToSlack = process.env.VERCEL_ENV === 'production'
-console.log(process.env.NODE_ENV, "Node env")
-const isDev = process.env.NODE_ENV !== 'production'
+
+const isDev = process.env.NODE_ENV !== 'production' && !process.env.VERCEL
 const port = process.env.PORT || 8080
 
 // Setup Pipedrive Client
