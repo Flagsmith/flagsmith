@@ -246,6 +246,21 @@ class ChangeRequest(
         return self.project or (self.environment and self.environment.project)
 
     def is_approved(self):
+        if self.environment:
+            return self.is_approved_via_environment()
+        if self.project:
+            return self.is_approved_via_project()
+        raise RuntimeError(
+            "Unable to approve change request without environment or project"
+        )
+
+    def is_approved_via_project(self):
+        return self.project.minimum_change_request_approvals is None or (
+            self.approvals.filter(approved_at__isnull=False).count()
+            >= self.project.minimum_change_request_approvals
+        )
+
+    def is_approved_via_environment(self):
         return self.environment.minimum_change_request_approvals is None or (
             self.approvals.filter(approved_at__isnull=False).count()
             >= self.environment.minimum_change_request_approvals
@@ -406,6 +421,9 @@ class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factor
 
     def _get_environment(self):
         return self.change_request.environment
+
+    def _get_project(self):
+        return self.change_request._get_project()
 
 
 class ChangeRequestGroupAssignment(AbstractBaseExportableModel, LifecycleModel):
