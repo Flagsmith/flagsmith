@@ -2,7 +2,6 @@
 
 const webpack = require('webpack')
 const webpackDevMiddleware = require('webpack-dev-middleware')
-const webpackHotMiddleware = require('webpack-hot-middleware')
 const config = require('../../webpack/webpack.config.local')
 
 const compiler = webpack(config)
@@ -33,14 +32,7 @@ module.exports = function webpackMiddleware(app) {
       process.send({ done: true })
     }
   })
-  app.use(
-    webpackHotMiddleware(compiler, {
-      heartbeat: 10 * 1000,
-      // eslint-disable-next-line
-log: console.log,
-      path: '/__webpack_hmr',
-    }),
-  )
+
 
   return middleware
 }
