@@ -795,7 +795,7 @@ TRENCH_AUTH = {
 }
 
 USER_CREATE_PERMISSIONS = env.list(
-    "USER_CREATE_PERMISSIONS", default=["rest_framework.permissions.AllowAny"]
+    "USER_CREATE_PERMISSIONS", default=["custom_auth.permissions.IsSignupAllowed"]
 )
 
 DJOSER = {

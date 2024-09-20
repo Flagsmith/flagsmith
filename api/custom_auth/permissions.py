@@ -1,4 +1,5 @@
-from rest_framework.permissions import IsAuthenticated
+from django.conf import settings
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 
 class CurrentUser(IsAuthenticated):
@@ -11,3 +12,8 @@ class CurrentUser(IsAuthenticated):
 
     def has_object_permission(self, request, view, obj):
         return obj.id == request.user.id
+
+
+class IsSignupAllowed(AllowAny):
+    def has_permission(self, request, view):
+        return not settings.PREVENT_SIGNUP
