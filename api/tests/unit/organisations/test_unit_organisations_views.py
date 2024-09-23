@@ -143,7 +143,7 @@ def test_should_update_organisation_data(
 
 def test_should_invite_users_to_organisation(
     settings: SettingsWrapper,
-    staff_client: APIClient,
+    admin_client: APIClient,
     organisation: Organisation,
 ) -> None:
     # Given
@@ -153,7 +153,7 @@ def test_should_invite_users_to_organisation(
     data = {"emails": ["test@example.com"]}
 
     # When
-    response = staff_client.post(
+    response = admin_client.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
