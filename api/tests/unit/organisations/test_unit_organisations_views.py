@@ -188,6 +188,28 @@ def test_should_fail_if_invite_exists_already(
     assert Invite.objects.filter(email=email, organisation=organisation).count() == 1
 
 
+def test_organisation_invite__non_admin__return_expected(
+    settings: SettingsWrapper,
+    staff_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["invite"] = None
+
+    email = "test_2@example.com"
+    data = {"invites": [{"email": email, "role": "ADMIN"}]}
+    url = reverse("api-v1:organisations:organisation-invite", args=[organisation.pk])
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert not Invite.objects.filter(email=email, organisation=organisation).exists()
+
+
 def test_should_return_all_invites_and_can_resend(
     settings: SettingsWrapper,
     admin_client: APIClient,
