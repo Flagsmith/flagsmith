@@ -795,7 +795,7 @@ TRENCH_AUTH = {
 }
 
 USER_CREATE_PERMISSIONS = env.list(
-    "USER_CREATE_PERMISSIONS", default=["rest_framework.permissions.AllowAny"]
+    "USER_CREATE_PERMISSIONS", default=["custom_auth.permissions.IsSignupAllowed"]
 )
 
 DJOSER = {
@@ -892,7 +892,6 @@ PROJECT_METADATA_TABLE_NAME_DYNAMO = env.str("PROJECT_METADATA_TABLE_NAME_DYNAMO
 API_URL = env("API_URL", default="/api/v1/")
 ASSET_URL = env("ASSET_URL", default="/")
 MAINTENANCE_MODE = env.bool("MAINTENANCE_MODE", default=False)
-PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
 PREVENT_EMAIL_PASSWORD = env.bool("PREVENT_EMAIL_PASSWORD", default=False)
 DISABLE_ANALYTICS_FEATURES = env.bool(
     "DISABLE_INFLUXDB_FEATURES", default=False
@@ -1038,6 +1037,7 @@ BUCKETED_ANALYTICS_DATA_RETENTION_DAYS = env.int(
 )
 
 DISABLE_INVITE_LINKS = env.bool("DISABLE_INVITE_LINKS", False)
+PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
 
 # use a separate boolean setting so that we add it to the API containers in environments
 # where we're running the task processor, so we avoid creating unnecessary tasks
