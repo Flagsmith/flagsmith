@@ -153,7 +153,7 @@ const JSONReference: FC<JSONReferenceType> = ({
               </Button>
             </Row>
             <div className='hljs-container'>
-              <Highlight forceExpanded preventEscape className={'json p-0'}>
+              <Highlight forceExpanded className={'json p-0'}>
                 {condensed ? idsOnly : value}
               </Highlight>
             </div>
