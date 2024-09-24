@@ -473,9 +473,9 @@ const controller = {
           environment: environmentFlag.environment,
           feature: projectFlag.id,
         },
-          {
-              forceRefetch: true
-          }
+        {
+          forceRefetch: true,
+        },
       )
       let segments = null
       if (mode === 'SEGMENT') {
@@ -526,16 +526,9 @@ const controller = {
           oldFeatureStates,
           segments,
         )
-        const convertFeatureStateToValue = (v: any) => ({
-          ...v,
-          feature_state_value: Utils.featureStateToValue(v.feature_state_value),
-        })
-        feature_states_to_create = version.feature_states_to_create?.map(
-          convertFeatureStateToValue,
-        )
-        feature_states_to_update = version.feature_states_to_update?.map(
-          convertFeatureStateToValue,
-        )
+
+        feature_states_to_create = version.feature_states_to_create
+        feature_states_to_update = version.feature_states_to_update
         segment_ids_to_delete_overrides =
           version.segment_ids_to_delete_overrides
 
@@ -712,8 +705,8 @@ const controller = {
         return createAndSetFeatureVersion(getStore(), {
           environmentId: res,
           featureId: projectFlag.id,
-          projectId,
           featureStates,
+          projectId,
         }).then((version) => {
           if (version.error) {
             throw version.error
@@ -768,10 +761,10 @@ const controller = {
               feature_state_value: flag.initial_value,
             })
             return createAndSetFeatureVersion(getStore(), {
-              projectId,
               environmentId: res,
               featureId: projectFlag.id,
               featureStates: [data],
+              projectId,
             }).then((version) => {
               if (version.error) {
                 throw version.error
