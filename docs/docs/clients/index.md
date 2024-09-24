@@ -97,10 +97,13 @@ within your server infrastructure.
 
 :::info
 
-- Identity overrides in local evaluation mode do not include persisted traits. You will need to provide a full set of
-  traits when requesting identity flags. See [Pros, Cons and Caveats](#for-local-evaluation).
-- If your project was created before January 2024, make sure to toggle **Environment Settings > SDK Settings > Use
-  identity overrides in local evaluation**.
+When using identity overrides in local evaluation:
+
+- Keep overrides count under 1500-2000, depending on flag value size.
+- Make sure your environment settings enable it.
+- Provide a full set of traits when requesting identity flags.
+
+See [Pros, Cons and Caveats](#for-local-evaluation).
 
 :::
 
@@ -346,11 +349,29 @@ serverless platforms.
 The benefit of running in Local Evaluation mode is that you can process flag evaluations much more efficiently as they
 are all computed locally.
 
+- Make sure **Environment Settings > SDK Settings > Use identity overrides in local evaluation** is toggled on. To keep
+  evaluation consistent, it's off by default for projects created before January 2024.
 - Identities and their Traits are **not** read from or written to the Flagsmith API, and so are not persisted in the
   datastore. This means that you have to provide the full complement of Traits when requesting the Flags for a
   particular Identity. Our SDKs all provide relevant methods to achieve this.
 - [Analytics-based Integrations](/integrations#analytics-platforms) do not run.
   [Flag Analytics](/advanced-use/flag-analytics) do still work, if enabled within the
   [SDK setup](/clients/server-side#configuring-the-sdk).
-- In circumstances where you need to target a specific identity, you can do this by creating a segment to target that
-  specific user and subsequently adding a segment override for that segment.
+- Currently, Flagsmith SDKs support up to 1500-2000 identity overrides, depending on flag value sizes, when used with
+  Edge API. If you store more than 1MB of override data, you will need to query the Edge API endpoint directly and use
+  pagination:
+
+```bash
+curl https://edge.api.flagsmith.com/api/v1/environment-document \
+  -H 'x-environment-key: <Your Server-Side Env Key>' \
+  --verbose
+```
+
+The `link` response header will contain the url to next page:
+
+```
+content-type: application/json
+...
+link: </api/v1/environment-document/?page_id=identity_override%3A60074%lastreadid>; rel="next"
+...
+```
