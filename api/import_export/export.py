@@ -10,6 +10,7 @@ from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Model, Q
 
+from edge_api.identities.export import export_edge_identity_and_overrides
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey, Webhook
@@ -76,6 +77,7 @@ def full_export(organisation_id: int) -> typing.List[dict]:
         *export_identities(organisation_id),
         *export_features(organisation_id),
         *export_metadata(organisation_id),
+        *export_edge_identities(organisation_id),
     ]
 
 
@@ -153,6 +155,7 @@ def export_identities(organisation_id: int) -> typing.List[dict]:
             Q(identity__environment__project__organisation__id=organisation_id),
         ),
     )
+
     identities = _export_entities(
         _EntityExportConfig(
             Identity, Q(environment__project__organisation__id=organisation_id)
@@ -164,6 +167,20 @@ def export_identities(organisation_id: int) -> typing.List[dict]:
     # identities during the export process and the identity doesn't exist in the import.
     # We then need to reverse the order so that the identities are imported first.
     return [*identities, *traits]
+
+
+def export_edge_identities(organisation_id: int) -> typing.List[dict]:
+    identities = []
+    traits = []
+    identity_overrides = []
+    for environment in Environment.objects.filter(
+        project__organisation__id=organisation_id, project__enable_dynamo_db=True
+    ):
+        result = export_edge_identity_and_overrides(environment.api_key)
+        identities.extend(result[0])
+        traits.extend(result[1])
+        identity_overrides.extend(result[2])
+    return [*identities, *traits, *identity_overrides]
 
 
 def export_features(organisation_id: int) -> typing.List[dict]:
