@@ -15,11 +15,16 @@ feature_id_to_uuid: Dict[int, str] = {}
 
 mv_feature_option_id_to_uuid: Dict[int, str] = {}
 
+EXPORT_EDGE_IDENTITY_PAGINATION_LIMIT = 1000
+
 
 def export_edge_identity_and_overrides(
     environment_api_key: str,
 ) -> Tuple[List, List, List]:
-    kwargs = {"environment_api_key": environment_api_key, "limit": 1000}
+    kwargs = {
+        "environment_api_key": environment_api_key,
+        "limit": EXPORT_EDGE_IDENTITY_PAGINATION_LIMIT,
+    }
     identity_export = []
     traits_export = []
     identity_override_export = []

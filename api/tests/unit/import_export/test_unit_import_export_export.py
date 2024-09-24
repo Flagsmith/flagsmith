@@ -12,6 +12,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from flag_engine.segments.constants import ALL_RULE, EQUAL
 from moto import mock_s3
 from mypy_boto3_dynamodb.service_resource import Table
+from pytest_mock import MockerFixture
 
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey, Webhook
@@ -289,6 +290,7 @@ def test_export_edge_identities(
     environment: Environment,
     multivariate_feature: Feature,
     multivariate_options: typing.List[MultivariateFeatureOption],
+    mocker: MockerFixture,
 ):
     # Given
     project.enable_dynamo_db = True
@@ -395,8 +397,17 @@ def test_export_edge_identities(
         "identity_uuid": "37ecaac3-70dd-4135-b2ee-9b2e3ffdc028",
     }
     flagsmith_identities_table.put_item(Item=identity_document)
+    # another identity to test pagination
+    flagsmith_identities_table.put_item(
+        Item={
+            "composite_key": f"{environment.api_key}_identity_one",
+            "environment_api_key": environment.api_key,
+            "identifier": "identity_two",
+        }
+    )
 
     # When
+    mocker.patch("edge_api.identities.export.EXPORT_EDGE_IDENTITY_PAGINATION_LIMIT", 1)
     export_json = export_edge_identities(project.organisation_id)
 
     # Let's load the data
@@ -408,6 +419,7 @@ def test_export_edge_identities(
         call_command("loaddata", f.name, format="json")
     # Then
     # the identity was created
+    assert Identity.objects.count() == 2
     identity = Identity.objects.get(identifier=identity_identifier)
 
     # With the traits that were part of the document
