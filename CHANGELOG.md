@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.142.0](https://github.com/Flagsmith/flagsmith/compare/v2.141.0...v2.142.0) (2024-09-23)
+
+
+### Features
+
+* Update amplitude / add session replay ([#4626](https://github.com/Flagsmith/flagsmith/issues/4626)) ([17276bc](https://github.com/Flagsmith/flagsmith/commit/17276bcab7ce3f624cabf734ff894bc9e1cbb04b))
+
+
+### Bug Fixes
+
+* Escape json references ([#4651](https://github.com/Flagsmith/flagsmith/issues/4651)) ([2780aa8](https://github.com/Flagsmith/flagsmith/commit/2780aa8b435241d98b9eec9d8a9d07de15d353f1))
+* Non-admin users can create invites ([#4653](https://github.com/Flagsmith/flagsmith/issues/4653)) ([025f178](https://github.com/Flagsmith/flagsmith/commit/025f1788e5b15149890b67b23509efef3b4905b0))
+* Prevent signup in backend when `PREVENT_SIGNUP` set to false ([#4650](https://github.com/Flagsmith/flagsmith/issues/4650)) ([24ce3bd](https://github.com/Flagsmith/flagsmith/commit/24ce3bd44c8dd8183f33825c367de11e3bb9c531))
+* Solve delete GitHub integration issue ([#4622](https://github.com/Flagsmith/flagsmith/issues/4622)) ([b4d3310](https://github.com/Flagsmith/flagsmith/commit/b4d3310b50a3a0e33647687955906d5d76d372eb))
+* Webhook integration not rebuilding environment ([#4641](https://github.com/Flagsmith/flagsmith/issues/4641)) ([37db0e0](https://github.com/Flagsmith/flagsmith/commit/37db0e092335b5fad485f6c7f44d1c2b79b7707a))
+
 ## [2.141.0](https://github.com/Flagsmith/flagsmith/compare/v2.140.0...v2.141.0) (2024-09-13)
 
 
