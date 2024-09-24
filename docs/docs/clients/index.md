@@ -55,8 +55,8 @@ treated as secret.
 
 The Server-side SDKs can operate in 2 different modes:
 
-1. `Remote Evaluation`
-2. `Local Evaluation`
+1. Remote Evaluation
+2. Local Evaluation
 
 It's important to understand which mode is right for your use case, and what the pros and cons of each one are. This is
 detailed below.
@@ -70,7 +70,7 @@ the particular request.
 
 ![Remote Evaluation Diagram](/img/sdk-remote-evaluation.svg)
 
-`Remote Evaluation` is the default mode; initialise the SDK and you will be running in `Remote Evaluation` mode.
+Remote Evaluation is the default mode; initialise the SDK and you will be running in Remote Evaluation mode.
 
 This is the same way that the [Client-side SDKs](#client-side-sdks) work.
 
@@ -81,12 +81,12 @@ the Flag Engine, and the engine runs within your server environment within the F
 
 ![Local Evaluation Diagram](/img/sdk-local-evaluation.svg)
 
-You have to configure the SDK to run in `Local Evaluation` mode. See the
+You have to configure the SDK to run in Local Evaluation mode. See the
 [SDK configuration options](server-side.md#configuring-the-sdk) for details on how to do that in your particular
 language.
 
-When the SDK is initialised in `Local Evaluation` mode, it grabs the entire set of details about the Environment from
-the Flagsmith API. For a given Environment, this includes:
+When the SDK is initialised in Local Evaluation mode, it grabs the entire set of details about the Environment from the
+Flagsmith API. For a given Environment, this includes:
 
 - Flags and flag values
 - Segments, segment rules, and segment overrides
@@ -97,8 +97,18 @@ within your server infrastructure.
 
 :::info
 
-Identity overrides in local evaluation mode do not include persisted traits. You will need to provide a full set of
-traits when requesting identity flags. See [Pros, Cons and Caveats](#for-local-evaluation).
+- Identity overrides in local evaluation mode do not include persisted traits. You will need to provide a full set of
+  traits when requesting identity flags. See [Pros, Cons and Caveats](#for-local-evaluation).
+- If your project was created before January 2024, make sure to toggle **Environment Settings > SDK Settings > Use
+  identity overrides in local evaluation**.
+
+:::
+
+:::tip
+
+The SDK has to request all of the data about an Environment in order to run. Because some of this data could be
+sensitive (for example, your Segment Rules), the SDK requires a specific
+[Server-side Environment Key](#server-side-sdk).
 
 :::
 
@@ -106,36 +116,18 @@ The benefits to doing this are mainly one of latency and performance. Your serve
 Flagsmith API each time a user requests their flags - the flags can be computed locally. Hence it does not need to block
 and wait for a response back from the Flagsmith API.
 
-:::tip
-
-The SDK has to request all of the data about an Environment in order to run. Because some of this data could be
-sensitive (for example, your Segment Rules), the SDK requires a specific
-[`Server-side Environment Key`](#server-side-sdk).
-
-:::
-
-In order to keep their Environment data up-to-date, SDKs running in `Local Evaluation` mode will poll the Flagsmith API
+In order to keep their Environment data up-to-date, SDKs running in Local Evaluation mode will poll the Flagsmith API
 regularly and update their local Environment data with any changes from the Flagsmith API. By default the SDK will poll
-the Flagsmith every `60` seconds; this rate is configurable within each SDK.
+the Flagsmith every 60 seconds; this rate is configurable within each SDK.
 
-It's important to understand the [pros and cons](#pros-cons-and-caveats) for running `Local Evaluation`.
+It's important to understand the [pros and cons](#pros-cons-and-caveats) for running Local Evaluation.
 
-:::info
-
-Identities and their Traits are **not** read from or written to the Flagsmith API, and so are not persisted in the
-datastore. This means that you have to provide the full complement of Traits when requesting the Flags for a particular
-Identity. Our SDKs all provide relevant methods to achieve this.
-
-[Read up on the other pros, cons and caveats.](#pros-cons-and-caveats)
-
-:::
-
-All our Client-side SDKs run in `Remote Evaluation` mode only; they cannot run in `Local Evaluation mode`. The reason
-for this is down to data sensitivity. Because some of this data could be sensitive (for example, your Segment Rules), we
-only allow Client-side SDKs to run in `Remote Evaluation` mode.
+All our Client-side SDKs run in Remote Evaluation mode only; they cannot run in Local Evaluation mode. The reason for
+this is down to data sensitivity. Because some of this data could be sensitive (for example, your Segment Rules), we
+only allow Client-side SDKs to run in Remote Evaluation mode.
 
 Because Clients are almost always operating remotely from your server infrastructure, there is little benefit to them
-running in `Local Evaluation` mode.
+running in Local Evaluation mode.
 
 ## Networking Model
 
