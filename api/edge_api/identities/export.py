@@ -72,11 +72,11 @@ def export_edge_identity_and_overrides(
     return identity_export, traits_export, identity_override_export
 
 
-def get_feature_uuid(feature_id: int) -> str:
+def _get_feature_uuid(feature_id: int) -> str:
     return Feature.objects.get(id=feature_id).uuid
 
 
-def get_mv_feature_option_uuid(mv_feature_option_id: int) -> str:
+def _get_mv_feature_option_uuid(mv_feature_option_id: int) -> str:
     return MultivariateFeatureOption.objects.get(id=mv_feature_option_id).uuid
 
 
@@ -116,7 +116,7 @@ def export_edge_feature_state(
 ) -> dict:
     global feature_id_to_uuid
     if feature_id not in feature_id_to_uuid:
-        feature_id_to_uuid[feature_id] = get_feature_uuid(feature_id)
+        feature_id_to_uuid[feature_id] = _get_feature_uuid(feature_id)
     feature_uuid = feature_id_to_uuid[feature_id]
 
     return {
@@ -165,8 +165,8 @@ def export_mv_featurestate_value(
 
     global mv_feature_option_id_to_uuid
     if mv_feature_option_id not in mv_feature_option_id_to_uuid:
-        mv_feature_option_id_to_uuid[mv_feature_option_id] = get_mv_feature_option_uuid(
-            mv_feature_option_id
+        mv_feature_option_id_to_uuid[mv_feature_option_id] = (
+            _get_mv_feature_option_uuid(mv_feature_option_id)
         )
     mv_feature_option_uuid = mv_feature_option_id_to_uuid[mv_feature_option_id]
 

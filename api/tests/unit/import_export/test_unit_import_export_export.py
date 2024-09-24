@@ -291,7 +291,10 @@ def test_export_edge_identities(
     multivariate_options: typing.List[MultivariateFeatureOption],
 ):
     # Given
-    # 4 Features
+    project.enable_dynamo_db = True
+    project.save()
+
+    # First, let's create some features(to override)
     int_feature = Feature.objects.create(
         project=project, name="int_feature", initial_value=11
     )
@@ -301,18 +304,18 @@ def test_export_edge_identities(
     bool_feature = Feature.objects.create(
         project=project, name="bool_feature", initial_value=True
     )
-    # A feature that we will not override
+
+    # Let's create another feature that we are not going to override
     Feature.objects.create(project=project, name="string_feature", initial_value="foo")
 
-    identity_identifier = "Development_user_123456"
-    project.enable_dynamo_db = True
-    project.save()
-    project.refresh_from_db()
     mv_option = multivariate_options[0]
+
+    identity_identifier = "Development_user_123456"
     mv_override_fs_uuid = "b7c3d9e9-0bcc-4e60-8264-43e84b00fcbd"
     int_override_fs_uuid = "c6f9cec7-f27b-4e4f-80ff-5a2dfa3d4d20"
     float_override_fs_uuid = "b90eafdc-56f3-45ba-965f-e245007f3050"
     bool_override_fs_uuid = "2dab9fe3-49df-41ec-adc1-30f5dfe0b855"
+
     identity_document = {
         "composite_key": f"{environment.api_key}_{identity_identifier}",
         "created_date": "2024-09-22T07:27:27.770956+00:00",
@@ -392,18 +395,22 @@ def test_export_edge_identities(
         "identity_uuid": "37ecaac3-70dd-4135-b2ee-9b2e3ffdc028",
     }
     flagsmith_identities_table.put_item(Item=identity_document)
+
     # When
     export_json = export_edge_identities(project.organisation_id)
-    # Then
-    # Next, let's load the data
+
+    # Let's load the data
     file_path = f"/tmp/{uuid.uuid4()}.json"
     with open(file_path, "a+") as f:
         f.write(json.dumps(export_json, cls=DjangoJSONEncoder))
         f.seek(0)
 
         call_command("loaddata", f.name, format="json")
+    # Then
+    # the identity was created
     identity = Identity.objects.get(identifier=identity_identifier)
 
+    # With the traits that were part of the document
     traits = identity.get_all_user_traits()
     all_feature_states = identity.get_all_feature_states()
 
@@ -424,7 +431,9 @@ def test_export_edge_identities(
     assert bool_trait.trait_key == "bool_trait"
     assert bool_trait.trait_value is True
 
+    # And the feature states that were part of the document
     assert len(all_feature_states) == 5
+
     actual_mv_override = all_feature_states[0]
     assert str(actual_mv_override.uuid) == mv_override_fs_uuid
     assert (
