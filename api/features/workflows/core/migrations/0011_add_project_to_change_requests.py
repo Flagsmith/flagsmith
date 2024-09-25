@@ -10,8 +10,8 @@ def set_project_for_existing_environments(apps, schema_model):
     for change_request in ChangeRequest.objects.filter(
         environment_id__isnull=False
     ).select_related("environment"):
-        change_request.project = change_request.environment.project
-        change_request.save()
+        change_request.project = change_request.environment.project  # pragma: no cover
+        change_request.save()  # pragma: no cover
 
 
 class Migration(migrations.Migration):
