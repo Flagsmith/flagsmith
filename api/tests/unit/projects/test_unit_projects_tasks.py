@@ -11,6 +11,7 @@ from environments.dynamodb.types import (
 )
 from environments.models import Environment
 from features.models import Feature
+from features.workflows.core.models import ChangeRequest
 from projects.models import EdgeV2MigrationStatus, Project
 from projects.tasks import (
     handle_cascade_delete,
@@ -141,6 +142,7 @@ def test_handle_cascade_delete(
     feature: Feature,
     segment: Segment,
     settings: SettingsWrapper,
+    project_change_request: ChangeRequest,
 ) -> None:
     # Given
     settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
@@ -152,3 +154,4 @@ def test_handle_cascade_delete(
     assert not Environment.objects.filter(id=environment.id).exists()
     assert not Feature.objects.filter(id=feature.id).exists()
     assert not Segment.objects.filter(id=segment.id).exists()
+    assert not ChangeRequest.objects.filter(id=project_change_request.id).exists()
