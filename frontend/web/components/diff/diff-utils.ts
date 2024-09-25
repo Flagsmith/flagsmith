@@ -6,7 +6,7 @@ import {
   Segment,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
-import { sortBy } from 'lodash'
+import { sortBy, uniq } from 'lodash'
 export function getFeatureStateDiff(
   oldFeatureState: FeatureState | undefined,
   newFeatureState: FeatureStateWithConflict | undefined,
@@ -155,30 +155,30 @@ export const getSegmentDiff = (
 export const getVariationDiff = (
   oldFeatureState: FeatureState | undefined,
   newFeatureState: FeatureState | undefined,
-  feature: ProjectFlag | undefined,
 ) => {
   let totalChanges = 0
-  const diffs = feature?.multivariate_options?.map((variationOption) => {
+  const variationOptions = uniq(
+    (oldFeatureState?.multivariate_feature_state_values || [])
+      .concat(oldFeatureState?.multivariate_feature_state_values || [])
+      .map((v) => v.multivariate_feature_option),
+  )
+  const diffs = variationOptions.map((variationOption) => {
     const oldMV = oldFeatureState?.multivariate_feature_state_values?.find(
-      (v) => v.multivariate_feature_option === variationOption.id,
+      (v) => v.multivariate_feature_option === variationOption,
     )
     const newMV = newFeatureState?.multivariate_feature_state_values?.find(
-      (v) => v.multivariate_feature_option === variationOption.id,
+      (v) => v.multivariate_feature_option === variationOption,
     )
 
-    const oldValue = variationOption.string_value
-    const newValue = variationOption.string_value // todo: This would eventually be based on the old and new feature versions
     const oldWeight = oldMV?.percentage_allocation
     const newWeight = newMV?.percentage_allocation
-    const hasChanged = oldWeight !== newWeight || oldValue !== newValue
+    const hasChanged = oldWeight !== newWeight
     if (hasChanged) {
       totalChanges += 1
     }
     return {
       hasChanged,
-      newValue,
       newWeight,
-      oldValue,
       oldWeight,
     } as TDiffVariation
   })

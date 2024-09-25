@@ -65,7 +65,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
   const segmentDiffs = disableSegments
     ? { diffs: [], totalChanges: 0 }
     : getSegmentDiff(oldState, newState, segments?.results, conflicts)
-  const variationDiffs = getVariationDiff(oldEnv, newEnv, feature)
+  const variationDiffs = getVariationDiff(oldEnv, newEnv)
   const totalSegmentChanges = segmentDiffs?.totalChanges
   const totalVariationChanges = variationDiffs?.totalChanges
   useEffect(() => {

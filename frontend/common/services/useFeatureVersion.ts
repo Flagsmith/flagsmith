@@ -12,7 +12,11 @@ import { getStore } from 'common/store'
 import { getVersionFeatureState } from './useVersionFeatureState'
 import transformCorePaging from 'common/transformCorePaging'
 import Utils from 'common/utils/utils'
-import { getFeatureStateDiff, getSegmentDiff } from 'components/diff/diff-utils'
+import {
+  getFeatureStateDiff,
+  getSegmentDiff,
+  getVariationDiff,
+} from 'components/diff/diff-utils'
 import { getSegments } from './useSegment'
 import { getFeatureStates } from './useFeatureState'
 
@@ -58,7 +62,11 @@ export const getFeatureStateCrud = (
         oldFeatureStates[0],
       )
       if (!valueDiff.totalChanges) {
-        return []
+        const variationDiff = getVariationDiff(
+          featureStates[0],
+          oldFeatureStates[0],
+        )
+        if (!variationDiff.totalChanges) return []
       }
       return featureStates
     }
