@@ -55,13 +55,15 @@ if settings.SAML_INSTALLED:
 
 if settings.WORKFLOWS_LOGIC_INSTALLED:
     workflow_views = importlib.import_module("workflows_logic.views")
-    from projects.views import ProjectViewSet
+    from projects.views import ProjectViewSet  # pragma: no cover
 
-    router = routers.DefaultRouter()
-    router.register(r"projects", ProjectViewSet, basename="project")
+    router = routers.DefaultRouter()  # pragma: no cover
+    router.register(r"projects", ProjectViewSet, basename="project")  # pragma: no cover
 
-    project_router = routers.NestedSimpleRouter(router, r"projects", lookup="project")
-    project_router.register(
+    project_router = routers.NestedSimpleRouter(  # pragma: no cover
+        router, r"projects", lookup="project"
+    )
+    project_router.register(  # pragma: no cover
         r"change-requests",
         workflow_views.ProjectChangeRequestViewSet,
         basename="project-change-requests",
