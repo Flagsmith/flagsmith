@@ -3,6 +3,7 @@ from datetime import timedelta
 
 import freezegun
 import pytest
+from core.helpers import get_current_site_url
 from django.contrib.sites.models import Site
 from django.db.models import Q
 from django.utils import timezone
@@ -976,3 +977,31 @@ def test_ignore_conflicts_for_multiple_scheduled_change_requests(
     )
     assert len(after_cr_1_flags) == 1
     assert after_cr_1_flags[0].feature_segment.segment == twenty_percent_segment
+
+
+def test_approval_via_project(project_change_request: ChangeRequest) -> None:
+    # Given - The project change request fixture
+    assert project_change_request.environment is None
+    assert project_change_request.project.minimum_change_request_approvals is None
+
+    # When
+    is_approved = project_change_request.is_approved()
+
+    # Then
+    assert is_approved is True
+
+
+def test_url_via_project(project_change_request: ChangeRequest) -> None:
+    # Given
+    assert project_change_request.environment is None
+
+    # When
+    url = project_change_request.url
+
+    # Then
+    project_id = project_change_request.project.id
+    expected_url = get_current_site_url()
+    expected_url += (
+        f"/projects/{project_id}/change-requests/{project_change_request.id}"
+    )
+    assert url == expected_url
