@@ -250,7 +250,7 @@ class ChangeRequest(
             return self.is_approved_via_environment()
         if self.project:
             return self.is_approved_via_project()
-        raise RuntimeError(
+        raise RuntimeError(  # pragma: no cover
             "Unable to approve change request without environment or project"
         )
 
@@ -283,7 +283,9 @@ class ChangeRequest(
         elif self.project_id:
             url += f"/projects/{self.project_id}"
         else:
-            raise RuntimeError("Change request missing fields for URL")
+            raise RuntimeError(  # pragma: no cover
+                "Change request missing fields for URL"
+            )
         url += f"/change-requests/{self.id}"
         return url
 
