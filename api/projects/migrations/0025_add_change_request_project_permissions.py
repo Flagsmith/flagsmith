@@ -11,9 +11,15 @@ from projects.permissions import (
 
 
 def remove_default_project_permissions(apps, schema_model):
-    PermissionModel = apps.get_model("permissions", "PermissionModel")
-    PermissionModel.objects.get(key=MANAGE_PROJECT_LEVEL_CHANGE_REQUESTS).delete()
-    PermissionModel.objects.get(key=APPROVE_PROJECT_LEVEL_CHANGE_REQUESTS).delete()
+    PermissionModel = apps.get_model(  # pragma: no cover
+        "permissions", "PermissionModel"
+    )
+    PermissionModel.objects.get(  # pragma: no cover
+        key=MANAGE_PROJECT_LEVEL_CHANGE_REQUESTS
+    ).delete()
+    PermissionModel.objects.get(  # pragma: no cover
+        key=APPROVE_PROJECT_LEVEL_CHANGE_REQUESTS
+    ).delete()
 
 
 def insert_default_project_permissions(apps, schema_model):
