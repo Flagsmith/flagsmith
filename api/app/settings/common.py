@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     # Used for managing api keys
     "rest_framework_api_key",
+    "rest_framework_simplejwt.token_blacklist",
     "djoser",
     "django.contrib.sites",
     "custom_auth",
@@ -254,6 +255,7 @@ DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", default=[])
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
+        "custom_auth.jwt_cookie.authentication.JWTCookieAuthentication",
         "rest_framework.authentication.TokenAuthentication",
         "api_keys.authentication.MasterAPIKeyAuthentication",
     ),
@@ -826,6 +828,7 @@ DJOSER = {
         "user_create": USER_CREATE_PERMISSIONS,
     },
 }
+SIMPLE_JWT = {"AUTH_TOKEN_CLASSES": ["rest_framework_simplejwt.tokens.SlidingToken"]}
 
 # Github OAuth credentials
 GITHUB_CLIENT_ID = env.str("GITHUB_CLIENT_ID", default="")
@@ -907,8 +910,6 @@ MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
 SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
 AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
 ENABLE_FLAGSMITH_REALTIME = env.bool("ENABLE_FLAGSMITH_REALTIME", default=False)
-USE_SECURE_COOKIES = env.bool("USE_SECURE_COOKIES", default=True)
-COOKIE_SAME_SITE = env.str("COOKIE_SAME_SITE", default="none")
 
 # Set this to enable create organisation for only superusers
 RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS", False)
@@ -1038,6 +1039,9 @@ BUCKETED_ANALYTICS_DATA_RETENTION_DAYS = env.int(
 
 DISABLE_INVITE_LINKS = env.bool("DISABLE_INVITE_LINKS", False)
 PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
+AUTH_JWT_COOKIE_ENABLED = env.bool("AUTH_JWT_COOKIE_ENABLED", default=False)
+USE_SECURE_COOKIES = env.bool("USE_SECURE_COOKIES", default=True)
+COOKIE_SAME_SITE = env.str("COOKIE_SAME_SITE", default="none")
 
 # use a separate boolean setting so that we add it to the API containers in environments
 # where we're running the task processor, so we avoid creating unnecessary tasks

@@ -115,8 +115,15 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
         attrs["email"] = email.lower()
         return attrs
 
+    def save(self) -> FFAdminUser:
+        instance = super().save()
+        self.context["view"].user = instance
+        return instance
+
     @staticmethod
-    def get_key(instance):
+    def get_key(instance) -> str | None:
+        if settings.AUTH_JWT_COOKIE_ENABLED:
+            return None
         token, _ = Token.objects.get_or_create(user=instance)
         return token.key
 

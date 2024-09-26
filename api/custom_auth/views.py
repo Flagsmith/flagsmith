@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.conf import settings
 from django.contrib.auth import user_logged_out
 from django.utils.decorators import method_decorator
@@ -11,6 +13,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
+from custom_auth.jwt_cookie.services import authorise_response
 from custom_auth.mfa.backends.application import CustomApplicationBackend
 from custom_auth.mfa.trench.command.authenticate_second_factor import (
     authenticate_second_step_command,
@@ -54,6 +57,8 @@ class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):
                 }
             )
         except MFAMethodDoesNotExistError:
+            if settings.AUTH_JWT_COOKIE_ENABLED:
+                return authorise_response(user, Response())
             return self._action(serializer)
 
 
@@ -74,6 +79,8 @@ class CustomAuthTokenLoginWithMFACode(TokenCreateView):
                 ephemeral_token=serializer.validated_data["ephemeral_token"],
             )
             serializer.user = user
+            if settings.AUTH_JWT_COOKIE_ENABLED:
+                return authorise_response(user, Response())
             return self._action(serializer)
         except MFAValidationError as cause:
             return ErrorResponse(error=cause, status=status.HTTP_401_UNAUTHORIZED)
@@ -104,6 +111,12 @@ class FFAdminUserViewSet(UserViewSet):
         if self.action == "create":
             throttles = [ScopedRateThrottle()]
         return throttles
+
+    def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        response = super().create(request, *args, **kwargs)
+        if settings.AUTH_JWT_COOKIE_ENABLED:
+            authorise_response(self.user, response)
+        return response
 
     def perform_destroy(self, instance):
         instance.delete(
