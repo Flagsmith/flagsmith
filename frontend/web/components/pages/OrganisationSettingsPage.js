@@ -452,7 +452,7 @@ const OrganisationSettingsPage = class extends Component {
                                       target='_blank'
                                       className='btn'
                                     >
-                                      Manage Invoices
+                                      Manage subscription
                                     </Button>
                                   )}
                                 </div>
