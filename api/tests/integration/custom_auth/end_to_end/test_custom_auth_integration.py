@@ -296,7 +296,7 @@ def test_register_and_login_workflows__jwt_cookie(
     password = FFAdminUser.objects.make_random_password()
     register_url = reverse("api-v1:custom_auth:ffadminuser-list")
     login_url = reverse("api-v1:custom_auth:custom-mfa-authtoken-login")
-    logout_url = reverse("api-v1:custom_auth:authtoken-logout")
+    logout_url = reverse("api-v1:custom_auth:jwt-logout")
     protected_resource_url = reverse("api-v1:projects:project-list")
     register_data = {
         "first_name": "test",
