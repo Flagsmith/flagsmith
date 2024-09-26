@@ -12,6 +12,7 @@ from django.test.utils import setup_databases
 from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
+from pytest_django.fixtures import SettingsWrapper
 from pytest_django.plugin import blocking_manager_key
 from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
@@ -21,6 +22,7 @@ from urllib3.connectionpool import HTTPConnectionPool
 from xdist import get_xdist_worker_id
 
 from api_keys.models import MasterAPIKey
+from api_keys.user import APIKeyUser
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
@@ -636,6 +638,11 @@ def environment_api_key(environment):
 
 
 @pytest.fixture()
+def master_api_key_name() -> str:
+    return "test-key"
+
+
+@pytest.fixture()
 def admin_master_api_key(organisation: Organisation) -> typing.Tuple[MasterAPIKey, str]:
     master_api_key, key = MasterAPIKey.objects.create_key(
         name="test_key", organisation=organisation, is_admin=True
@@ -644,11 +651,18 @@ def admin_master_api_key(organisation: Organisation) -> typing.Tuple[MasterAPIKe
 
 
 @pytest.fixture()
-def master_api_key(organisation: Organisation) -> typing.Tuple[MasterAPIKey, str]:
+def master_api_key(
+    master_api_key_name: str, organisation: Organisation
+) -> typing.Tuple[MasterAPIKey, str]:
     master_api_key, key = MasterAPIKey.objects.create_key(
-        name="test_key", organisation=organisation, is_admin=False
+        name=master_api_key_name, organisation=organisation, is_admin=False
     )
     return master_api_key, key
+
+
+@pytest.fixture()
+def admin_user_email(admin_user: FFAdminUser) -> str:
+    return admin_user.email
 
 
 @pytest.fixture
@@ -659,10 +673,25 @@ def master_api_key_object(
 
 
 @pytest.fixture
+def master_api_key_id(master_api_key_object: MasterAPIKey) -> str:
+    return master_api_key_object.id
+
+
+@pytest.fixture
+def admin_user_id(admin_user: FFAdminUser) -> str:
+    return admin_user.id
+
+
+@pytest.fixture
 def admin_master_api_key_object(
     admin_master_api_key: typing.Tuple[MasterAPIKey, str]
 ) -> MasterAPIKey:
     return admin_master_api_key[0]
+
+
+@pytest.fixture
+def api_key_user(master_api_key_object: MasterAPIKey) -> APIKeyUser:
+    return APIKeyUser(master_api_key_object)
 
 
 @pytest.fixture()
@@ -961,8 +990,10 @@ def dynamodb(aws_credentials):
 
 
 @pytest.fixture()
-def flagsmith_identities_table(dynamodb: DynamoDBServiceResource) -> Table:
-    return dynamodb.create_table(
+def flagsmith_identities_table(
+    dynamodb: DynamoDBServiceResource, settings: SettingsWrapper
+) -> Table:
+    table = dynamodb.create_table(
         TableName="flagsmith_identities",
         KeySchema=[
             {
@@ -975,6 +1006,7 @@ def flagsmith_identities_table(dynamodb: DynamoDBServiceResource) -> Table:
             {"AttributeName": "environment_api_key", "AttributeType": "S"},
             {"AttributeName": "identifier", "AttributeType": "S"},
             {"AttributeName": "identity_uuid", "AttributeType": "S"},
+            {"AttributeName": "dashboard_alias", "AttributeType": "S"},
         ],
         GlobalSecondaryIndexes=[
             {
@@ -990,9 +1022,24 @@ def flagsmith_identities_table(dynamodb: DynamoDBServiceResource) -> Table:
                 "KeySchema": [{"AttributeName": "identity_uuid", "KeyType": "HASH"}],
                 "Projection": {"ProjectionType": "ALL"},
             },
+            {
+                "IndexName": "environment_api_key-dashboard_alias-index",
+                "KeySchema": [
+                    {"AttributeName": "environment_api_key", "KeyType": "HASH"},
+                    {"AttributeName": "dashboard_alias", "KeyType": "RANGE"},
+                ],
+                "Projection": {
+                    "ProjectionType": "INCLUDE",
+                    "NonKeyAttributes": [
+                        "identifier",
+                    ],
+                },
+            },
         ],
         BillingMode="PAY_PER_REQUEST",
     )
+    settings.IDENTITIES_TABLE_NAME_DYNAMO = table.name
+    return table
 
 
 @pytest.fixture()

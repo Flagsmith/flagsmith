@@ -42,6 +42,7 @@ import { removeUserOverride } from 'components/RemoveUserOverride'
 import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import PlanBasedBanner from 'components/PlanBasedAccess'
+import FeatureHistory from 'components/FeatureHistory'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -1021,7 +1022,11 @@ const CreateFlag = class extends Component {
                   project.total_features,
                   project.max_features_allowed,
                 )
-
+              const showIdentityOverrides =
+                !identity &&
+                isEdit &&
+                !existingChangeRequest &&
+                !hideIdentityOverridesTab
               return (
                 <Permission
                   level='project'
@@ -1069,7 +1074,7 @@ const CreateFlag = class extends Component {
                                       )}
                                     <Tooltip
                                       title={
-                                        <h5 className='mb-4'>
+                                        <h5>
                                           Environment Value{' '}
                                           <Icon name='info-outlined' />
                                         </h5>
@@ -1466,45 +1471,52 @@ const CreateFlag = class extends Component {
                                       data-test='identity_overrides'
                                       tabLabel='Identity Overrides'
                                     >
-                                      <InfoMessage className='mb-4 text-left faint'>
-                                        Identity overrides override feature
-                                        values for individual identities. The
-                                        overrides take priority over an segment
-                                        overrides and environment defaults.
-                                        Identity overrides will only apply when
-                                        you identify via the SDK.{' '}
-                                        <a
-                                          target='_blank'
-                                          href='https://docs.flagsmith.com/basic-features/managing-identities'
-                                          rel='noreferrer'
-                                        >
-                                          Check the Docs for more details
-                                        </a>
-                                        .
-                                      </InfoMessage>
-                                      <FormGroup className='mb-4'>
+                                      <FormGroup className='mb-4 mt-2'>
                                         <PanelSearch
                                           id='users-list'
                                           className='no-pad identity-overrides-title'
                                           title={
-                                            <Tooltip
-                                              title={
-                                                <h5 className='mb-0'>
-                                                  Identity Overrides{' '}
-                                                  <Icon
-                                                    name='info-outlined'
-                                                    width={20}
-                                                    fill='#9DA4AE'
-                                                  />
-                                                </h5>
-                                              }
-                                              place='top'
-                                            >
-                                              {
-                                                Constants.strings
-                                                  .IDENTITY_OVERRIDES_DESCRIPTION
-                                              }
-                                            </Tooltip>
+                                            <>
+                                              <Tooltip
+                                                title={
+                                                  <h5 className='mb-0'>
+                                                    Identity Overrides{' '}
+                                                    <Icon
+                                                      name='info-outlined'
+                                                      width={20}
+                                                      fill='#9DA4AE'
+                                                    />
+                                                  </h5>
+                                                }
+                                                place='top'
+                                              >
+                                                {
+                                                  Constants.strings
+                                                    .IDENTITY_OVERRIDES_DESCRIPTION
+                                                }
+                                              </Tooltip>
+                                              <div className='fw-normal transform-none mt-4'>
+                                                <InfoMessage>
+                                                  Identity overrides override
+                                                  feature values for individual
+                                                  identities. The overrides take
+                                                  priority over an segment
+                                                  overrides and environment
+                                                  defaults. Identity overrides
+                                                  will only apply when you
+                                                  identify via the SDK.{' '}
+                                                  <a
+                                                    target='_blank'
+                                                    href='https://docs.flagsmith.com/basic-features/managing-identities'
+                                                    rel='noreferrer'
+                                                  >
+                                                    Check the Docs for more
+                                                    details
+                                                  </a>
+                                                  .
+                                                </InfoMessage>
+                                              </div>
+                                            </>
                                           }
                                           action={
                                             !Utils.getIsEdge() && (
@@ -1681,40 +1693,51 @@ const CreateFlag = class extends Component {
                                     </TabItem>
                                   )}
                                 {!existingChangeRequest &&
-                                  !Project.disableAnalytics &&
-                                  this.props.flagId && (
+                                  this.props.flagId &&
+                                  (isVersioned ||
+                                    !Project.disableAnalytics) && (
                                     <TabItem
-                                      data-test='analytics'
-                                      tabLabel='Analytics'
+                                      data-test='change-history'
+                                      tabLabel='History'
                                     >
-                                      <FormGroup className='mb-4'>
-                                        {!!usageData && (
-                                          <h5 className='mb-2'>
-                                            Flag events for last 30 days
-                                          </h5>
-                                        )}
-                                        {!usageData && (
-                                          <div className='text-center'>
-                                            <Loader />
-                                          </div>
-                                        )}
-
-                                        {this.drawChart(usageData)}
-                                      </FormGroup>
-                                      <InfoMessage>
-                                        The Flag Analytics data will be visible
-                                        in the Dashboard between 30 minutes and
-                                        1 hour after it has been collected.{' '}
-                                        <a
-                                          target='_blank'
-                                          href='https://docs.flagsmith.com/advanced-use/flag-analytics'
-                                          rel='noreferrer'
-                                        >
-                                          View docs
-                                        </a>
-                                      </InfoMessage>
+                                      <FeatureHistory
+                                        feature={projectFlag.id}
+                                        projectId={`${this.props.projectId}`}
+                                        environmentId={environment.id}
+                                        environmentApiKey={environment.api_key}
+                                      />
                                     </TabItem>
                                   )}
+                                {!Project.disableAnalytics && (
+                                  <TabItem tabLabel={'Analytics'}>
+                                    <FormGroup className='mb-4'>
+                                      {!!usageData && (
+                                        <h5 className='mb-2'>
+                                          Flag events for last 30 days
+                                        </h5>
+                                      )}
+                                      {!usageData && (
+                                        <div className='text-center'>
+                                          <Loader />
+                                        </div>
+                                      )}
+
+                                      {this.drawChart(usageData)}
+                                    </FormGroup>
+                                    <InfoMessage>
+                                      The Flag Analytics data will be visible in
+                                      the Dashboard between 30 minutes and 1
+                                      hour after it has been collected.{' '}
+                                      <a
+                                        target='_blank'
+                                        href='https://docs.flagsmith.com/advanced-use/flag-analytics'
+                                        rel='noreferrer'
+                                      >
+                                        View docs
+                                      </a>
+                                    </InfoMessage>
+                                  </TabItem>
+                                )}
                                 {Utils.getFlagsmithHasFeature(
                                   'github_integration',
                                 ) &&

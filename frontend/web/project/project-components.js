@@ -100,6 +100,16 @@ const Option = (props) => {
 global.Select = class extends PureComponent {
   static displayName = 'Select'
 
+  componentDidUpdate() {
+    if (
+      this.props.autoSelect &&
+      this.props.options?.length &&
+      !this.props.value
+    ) {
+      this.props.onChange(this.props.options[0])
+    }
+  }
+
   render() {
     const props = this.props
     return E2E ? (
@@ -131,6 +141,7 @@ global.Select = class extends PureComponent {
       </div>
     ) : (
       <div
+        className={props.className}
         onClick={(e) => {
           e.stopPropagation()
         }}

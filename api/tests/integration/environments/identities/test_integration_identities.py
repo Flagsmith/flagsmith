@@ -304,6 +304,7 @@ def test_get_feature_states_for_identity__segment_match_expected(
                         "trait_value": segment_condition_value,
                     },
                     {"trait_key": "a", "trait_value": "value_a"},
+                    {"trait_key": "c", "trait_value": None},
                 ],
             }
         ),

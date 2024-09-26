@@ -95,7 +95,7 @@ class OrganisationPermission(BasePermission):
         if organisation_id and not organisation_id.isnumeric():
             raise ValidationError("Invalid organisation ID")
 
-        if view.action == "remove_users":
+        if view.action in {"remove_users", "invite"}:
             return request.user.is_organisation_admin(int(organisation_id))
 
         if organisation_id:
