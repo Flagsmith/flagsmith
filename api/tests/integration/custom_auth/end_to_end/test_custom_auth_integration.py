@@ -286,6 +286,67 @@ def test_login_workflow_with_mfa_enabled(
     assert current_user_response.json()["email"] == email
 
 
+@override_settings(AUTH_JWT_COOKIE_ENABLED=True)
+def test_register_and_login_workflows__jwt_cookie(
+    db: None,
+    api_client: APIClient,
+) -> None:
+    # Given
+    email = "test@example.com"
+    password = FFAdminUser.objects.make_random_password()
+    register_url = reverse("api-v1:custom_auth:ffadminuser-list")
+    login_url = reverse("api-v1:custom_auth:custom-mfa-authtoken-login")
+    logout_url = reverse("api-v1:custom_auth:authtoken-logout")
+    protected_resource_url = reverse("api-v1:projects:project-list")
+    register_data = {
+        "first_name": "test",
+        "last_name": "last_name",
+        "email": email,
+        "password": password,
+        "re_password": password,
+    }
+    login_data = {
+        "email": email,
+        "password": password,
+    }
+
+    # When & Then
+    # verify the cookie is returned on registration
+    response = api_client.post(register_url, data=register_data)
+    assert response.status_code == status.HTTP_201_CREATED
+    assert (jwt_access_cookie := response.cookies.get("jwt")) is not None
+    assert jwt_access_cookie["httponly"]
+
+    # verify the register cookie works when accessing a protected endpoint
+    response = api_client.get(protected_resource_url, cookies=jwt_access_cookie)
+    assert response.status_code == status.HTTP_200_OK
+
+    # now verify we can login with the same credentials
+    response = api_client.post(login_url, data=login_data)
+    assert response.status_code == status.HTTP_200_OK
+    assert (jwt_access_cookie := response.cookies.get("jwt")) is not None
+    assert jwt_access_cookie["httponly"]
+
+    # verify the login cookie works when accessing a protected endpoint
+    response = api_client.get(protected_resource_url, cookies=jwt_access_cookie)
+    assert response.status_code == status.HTTP_200_OK
+
+    # logout
+    response = api_client.post(logout_url, cookies=jwt_access_cookie)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # verify the login cookie does not work anymore
+    response = api_client.get(protected_resource_url, cookies=jwt_access_cookie)
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    # login again
+    response = api_client.post(login_url, data=login_data)
+    new_jwt_access_cookie = response.cookies.get("jwt")
+
+    # verify new token is different from the old one
+    new_jwt_access_cookie != jwt_access_cookie
+
+
 def test_throttle_login_workflows(
     api_client: APIClient,
     db: None,
