@@ -121,7 +121,8 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
 
     def save(self) -> FFAdminUser:
         instance = super().save()
-        self.context["view"].user = instance
+        if "view" in self.context:
+            self.context["view"].user = instance
         return instance
 
     @staticmethod
