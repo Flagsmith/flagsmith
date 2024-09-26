@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.conf import settings
 from djoser.conf import settings as djoser_settings
 from djoser.serializers import TokenCreateSerializer, UserCreateSerializer
@@ -73,13 +75,15 @@ class InviteLinkValidationMixin:
 
 
 class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin):
-    key = serializers.SerializerMethodField()
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        if not settings.AUTH_JWT_COOKIE_ENABLED:
+            self.fields["key"] = serializers.SerializerMethodField()
 
     class Meta(UserCreateSerializer.Meta):
         fields = UserCreateSerializer.Meta.fields + (
             "is_active",
             "marketing_consent_given",
-            "key",
             "uuid",
         )
         read_only_fields = ("is_active", "uuid")
@@ -122,8 +126,6 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
 
     @staticmethod
     def get_key(instance) -> str | None:
-        if settings.AUTH_JWT_COOKIE_ENABLED:
-            return None
         token, _ = Token.objects.get_or_create(user=instance)
         return token.key
 

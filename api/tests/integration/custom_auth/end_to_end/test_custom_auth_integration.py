@@ -317,15 +317,21 @@ def test_register_and_login_workflows__jwt_cookie(
     assert (jwt_access_cookie := response.cookies.get("jwt")) is not None
     assert jwt_access_cookie["httponly"]
 
+    # verify the old-school token is not returned on registration
+    assert "key" not in response.json()
+
     # verify the register cookie works when accessing a protected endpoint
     response = api_client.get(protected_resource_url, cookies=jwt_access_cookie)
     assert response.status_code == status.HTTP_200_OK
 
     # now verify we can login with the same credentials
     response = api_client.post(login_url, data=login_data)
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_204_NO_CONTENT
     assert (jwt_access_cookie := response.cookies.get("jwt")) is not None
     assert jwt_access_cookie["httponly"]
+
+    # verify the old-school token is not returned on login
+    assert not response.data
 
     # verify the login cookie works when accessing a protected endpoint
     response = api_client.get(protected_resource_url, cookies=jwt_access_cookie)
