@@ -828,7 +828,10 @@ DJOSER = {
         "user_create": USER_CREATE_PERMISSIONS,
     },
 }
-SIMPLE_JWT = {"AUTH_TOKEN_CLASSES": ["rest_framework_simplejwt.tokens.SlidingToken"]}
+SIMPLE_JWT = {
+    "AUTH_TOKEN_CLASSES": ["rest_framework_simplejwt.tokens.SlidingToken"],
+    "SLIDING_TOKEN_LIFETIME": timedelta(hours=10),
+}
 
 # Github OAuth credentials
 GITHUB_CLIENT_ID = env.str("GITHUB_CLIENT_ID", default="")
