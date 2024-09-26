@@ -2,9 +2,16 @@ from datetime import timedelta
 
 import pytest
 from django.utils import timezone
+from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 from task_processor.task_run_method import TaskRunMethod
 
 from organisations.chargebee.metadata import ChargebeeObjMetadata
+from organisations.models import (
+    Organisation,
+    OrganisationSubscriptionInformationCache,
+    Subscription,
+)
 from organisations.subscription_info_cache import update_caches
 from organisations.subscriptions.constants import SubscriptionCacheEntity
 
@@ -77,3 +84,46 @@ def test_update_caches(mocker, organisation, chargebee_subscription, settings):
         (day_7, ""),
         (day_1, "100"),
     ]
+
+
+def test_update_caches_empty(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    chargebee_subscription: Subscription,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.CHARGEBEE_API_KEY = "api-key"
+    settings.INFLUXDB_TOKEN = "token"
+    settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        api_calls_24h=1,
+        api_calls_7d=1,
+        api_calls_30d=1,
+    )
+
+    mocked_get_top_organisations = mocker.patch(
+        "organisations.subscription_info_cache.get_top_organisations"
+    )
+    mocked_get_top_organisations.return_value = {}
+
+    chargebee_metadata = ChargebeeObjMetadata(seats=15, api_calls=1000000)
+    mocked_get_subscription_metadata = mocker.patch(
+        "organisations.subscription_info_cache.get_subscription_metadata_from_id"
+    )
+    mocked_get_subscription_metadata.return_value = chargebee_metadata
+
+    # When
+    subscription_cache_entities = (
+        SubscriptionCacheEntity.INFLUX,
+        SubscriptionCacheEntity.CHARGEBEE,
+    )
+    update_caches(subscription_cache_entities)
+
+    # Then
+    organisation.refresh_from_db()
+    assert organisation.subscription_information_cache.api_calls_24h == 0
+    assert organisation.subscription_information_cache.api_calls_7d == 0
+    assert organisation.subscription_information_cache.api_calls_30d == 0
