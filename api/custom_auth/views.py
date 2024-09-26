@@ -11,6 +11,7 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.throttling import ScopedRateThrottle
 
 from custom_auth.jwt_cookie.services import authorise_response
@@ -58,7 +59,7 @@ class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):
             )
         except MFAMethodDoesNotExistError:
             if settings.AUTH_JWT_COOKIE_ENABLED:
-                return authorise_response(user, Response())
+                return authorise_response(user, Response(status=HTTP_204_NO_CONTENT))
             return self._action(serializer)
 
 
