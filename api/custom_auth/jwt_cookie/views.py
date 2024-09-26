@@ -6,6 +6,11 @@ from rest_framework_simplejwt.tokens import SlidingToken
 
 
 class JWTSlidingTokenLogoutView(APIView):
+    """
+    This view only invalidates the JWT cookie.
+    Currently, for clients which use token authentication, it's a no-op view.
+    """
+
     def post(self, request: Request) -> Response:
         if isinstance(request.auth, SlidingToken):
             request.auth.blacklist()
