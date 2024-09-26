@@ -152,13 +152,20 @@ def export_identities(organisation_id: int) -> typing.List[dict]:
     traits = _export_entities(
         _EntityExportConfig(
             Trait,
-            Q(identity__environment__project__organisation__id=organisation_id),
+            Q(
+                identity__environment__project__organisation__id=organisation_id,
+                identity__environment__project__enable_dynamo_db=False,
+            ),
         ),
     )
 
     identities = _export_entities(
         _EntityExportConfig(
-            Identity, Q(environment__project__organisation__id=organisation_id)
+            Identity,
+            Q(
+                environment__project__organisation__id=organisation_id,
+                environment__project__enable_dynamo_db=False,
+            ),
         ),
     )
 

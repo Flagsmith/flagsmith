@@ -291,7 +291,7 @@ def test_export_edge_identities(
     multivariate_feature: Feature,
     multivariate_options: typing.List[MultivariateFeatureOption],
     mocker: MockerFixture,
-):
+) -> None:
     # Given
     project.enable_dynamo_db = True
     project.save()
@@ -309,6 +309,12 @@ def test_export_edge_identities(
 
     # Let's create another feature that we are not going to override
     Feature.objects.create(project=project, name="string_feature", initial_value="foo")
+
+    # another mv feature that we will override
+    # using the option id that does not exists
+    second_mv_feature = Feature.objects.create(
+        project=project, name="mv_feature_with_deleted_option", type=MULTIVARIATE
+    )
 
     mv_option = multivariate_options[0]
 
@@ -387,6 +393,41 @@ def test_export_edge_identities(
                 "feature_state_value": False,
                 "multivariate_feature_state_values": [],
             },
+            # A feature that does not exists anymore(to make sure we skip it during export)
+            {
+                "django_id": None,
+                "enabled": True,
+                "featurestate_uuid": "53bd193f-da11-40c8-b694-3261f28c720c",
+                "feature": {
+                    "id": 9999,
+                    "name": "feature_that_does_not_exists",
+                    "type": "STANDARD",
+                },
+            },
+            # An mv override with an option that does not exists anymore(to make sure we skip it during export)
+            {
+                "django_id": None,
+                "enabled": False,
+                "feature": {
+                    "id": second_mv_feature.id,
+                    "name": second_mv_feature.name,
+                    "type": "MULTIVARIATE",
+                },
+                "featurestate_uuid": "53bd193f-da11-40c8-b694-3261f28c720d",
+                "feature_segment": None,
+                "feature_state_value": "control",
+                "multivariate_feature_state_values": [
+                    {
+                        "id": None,
+                        "multivariate_feature_option": {
+                            "id": 999999,  # does not exists
+                            "value": mv_option.string_value,
+                        },
+                        "mv_fs_value_uuid": "1897c9df-b8fa-4870-a077-f48eadbf3aac",
+                        "percentage_allocation": 100,
+                    }
+                ],
+            },
         ],
         "identity_traits": [
             {"trait_key": "int_trait", "trait_value": 123},
@@ -397,12 +438,16 @@ def test_export_edge_identities(
         "identity_uuid": "37ecaac3-70dd-4135-b2ee-9b2e3ffdc028",
     }
     flagsmith_identities_table.put_item(Item=identity_document)
+
     # another identity to test pagination
     flagsmith_identities_table.put_item(
         Item={
             "composite_key": f"{environment.api_key}_identity_one",
             "environment_api_key": environment.api_key,
             "identifier": "identity_two",
+            "created_date": "2024-09-22T07:27:27.770956+00:00",
+            "identity_traits": [],
+            "identity_features": [],
         }
     )
 
@@ -422,9 +467,7 @@ def test_export_edge_identities(
     assert Identity.objects.count() == 2
     identity = Identity.objects.get(identifier=identity_identifier)
 
-    # With the traits that were part of the document
     traits = identity.get_all_user_traits()
-    all_feature_states = identity.get_all_feature_states()
 
     assert len(traits) == 4
     int_trait = traits[0]
@@ -443,8 +486,8 @@ def test_export_edge_identities(
     assert bool_trait.trait_key == "bool_trait"
     assert bool_trait.trait_value is True
 
-    # And the feature states that were part of the document
-    assert len(all_feature_states) == 5
+    all_feature_states = identity.get_all_feature_states()
+    assert len(all_feature_states) == 6
 
     actual_mv_override = all_feature_states[0]
     assert str(actual_mv_override.uuid) == mv_override_fs_uuid
@@ -468,6 +511,13 @@ def test_export_edge_identities(
     actual_string_fs = all_feature_states[4]
     assert actual_string_fs.get_feature_state_value(identity=identity) == "foo"
     assert actual_string_fs.identity is None
+
+    override_without_mv_option = all_feature_states[5]
+    assert (
+        override_without_mv_option.get_feature_state_value(identity=identity)
+        == "control"
+    )
+    assert override_without_mv_option.identity == identity
 
 
 @mock_s3
