@@ -117,6 +117,9 @@ export const getSegmentDiff = (
         : '',
     )
 
+    const multivariateDiffs = getVariationDiff(oldFeatureState, newFeatureState)
+    debugger
+
     const enabledChanged = oldEnabled !== newEnabled
     const valueChanged = oldValue !== newValue
     const priorityChanged = oldPriority !== newPriority
