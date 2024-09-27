@@ -317,7 +317,7 @@ def test_register_and_login_workflows__jwt_cookie(
     assert (jwt_access_cookie := response.cookies.get("jwt")) is not None
     assert jwt_access_cookie["httponly"]
 
-    # verify the old-school token is not returned on registration
+    # verify the classic token is not returned on registration
     assert "key" not in response.json()
 
     # verify the register cookie works when accessing a protected endpoint
@@ -330,7 +330,7 @@ def test_register_and_login_workflows__jwt_cookie(
     assert (jwt_access_cookie := response.cookies.get("jwt")) is not None
     assert jwt_access_cookie["httponly"]
 
-    # verify the old-school token is not returned on login
+    # verify the classic token is not returned on login
     assert not response.data
 
     # verify the login cookie works when accessing a protected endpoint
@@ -350,7 +350,63 @@ def test_register_and_login_workflows__jwt_cookie(
     new_jwt_access_cookie = response.cookies.get("jwt")
 
     # verify new token is different from the old one
-    new_jwt_access_cookie != jwt_access_cookie
+    assert new_jwt_access_cookie != jwt_access_cookie
+
+
+@override_settings(COOKIE_AUTH_ENABLED=True)
+def test_login_workflow__jwt_cookie__mfa_enabled(
+    db: None,
+    api_client: APIClient,
+) -> None:
+    # Given
+    email = "test@example.com"
+    password = FFAdminUser.objects.make_random_password()
+    register_url = reverse("api-v1:custom_auth:ffadminuser-list")
+    create_mfa_method_url = reverse(
+        "api-v1:custom_auth:mfa-activate", kwargs={"method": "app"}
+    )
+    login_url = reverse("api-v1:custom_auth:custom-mfa-authtoken-login")
+    login_confirm_url = reverse("api-v1:custom_auth:mfa-authtoken-login-code")
+    logout_url = reverse("api-v1:custom_auth:jwt-logout")
+    register_data = {
+        "first_name": "test",
+        "last_name": "last_name",
+        "email": email,
+        "password": password,
+        "re_password": password,
+    }
+    login_data = {
+        "email": email,
+        "password": password,
+    }
+    response = api_client.post(register_url, data=register_data)
+    jwt_access_cookie = response.cookies.get("jwt")
+    response = api_client.post(
+        create_mfa_method_url,
+        cookies=jwt_access_cookie,
+    )
+    secret = response.json()["secret"]
+    totp = pyotp.TOTP(secret)
+    confirm_mfa_data = {"code": totp.now()}
+    confirm_mfa_method_url = reverse(
+        "api-v1:custom_auth:mfa-activate-confirm", kwargs={"method": "app"}
+    )
+    api_client.post(confirm_mfa_method_url, data=confirm_mfa_data)
+    api_client.post(logout_url, cookies=jwt_access_cookie)
+    api_client.logout()
+
+    # When & Then
+    # verify the cookie is returned on login
+    response = api_client.post(login_url, data=login_data)
+    ephemeral_token = response.json()["ephemeral_token"]
+    confirm_login_data = {"ephemeral_token": ephemeral_token, "code": totp.now()}
+    response = api_client.post(login_confirm_url, data=confirm_login_data)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert (jwt_access_cookie := response.cookies.get("jwt")) is not None
+    assert jwt_access_cookie["httponly"]
+
+    # verify the classic token is not returned on login
+    assert not response.data
 
 
 def test_throttle_login_workflows(

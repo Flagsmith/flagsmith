@@ -81,7 +81,7 @@ class CustomAuthTokenLoginWithMFACode(TokenCreateView):
             )
             serializer.user = user
             if settings.COOKIE_AUTH_ENABLED:
-                return authorise_response(user, Response())
+                return authorise_response(user, Response(status=HTTP_204_NO_CONTENT))
             return self._action(serializer)
         except MFAValidationError as cause:
             return ErrorResponse(error=cause, status=status.HTTP_401_UNAUTHORIZED)
