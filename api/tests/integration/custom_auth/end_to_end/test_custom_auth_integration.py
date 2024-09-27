@@ -286,7 +286,7 @@ def test_login_workflow_with_mfa_enabled(
     assert current_user_response.json()["email"] == email
 
 
-@override_settings(AUTH_JWT_COOKIE_ENABLED=True)
+@override_settings(COOKIE_AUTH_ENABLED=True)
 def test_register_and_login_workflows__jwt_cookie(
     db: None,
     api_client: APIClient,
