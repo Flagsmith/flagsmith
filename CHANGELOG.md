@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.143.0](https://github.com/Flagsmith/flagsmith/compare/v2.142.0...v2.143.0) (2024-09-27)
+
+
+### Features
+
+* Add domain to API flags blocked notification ([#4574](https://github.com/Flagsmith/flagsmith/issues/4574)) ([dd1dd32](https://github.com/Flagsmith/flagsmith/commit/dd1dd327c99d3be15eb3395eac6a95a87a1c24d7))
+* add MANAGE_TAGS permission ([#4628](https://github.com/Flagsmith/flagsmith/issues/4628)) ([566520f](https://github.com/Flagsmith/flagsmith/commit/566520f98185d4f45bd1e03609d37acbeb8a68bc))
+* allow feature value size to be configured per installation ([#4446](https://github.com/Flagsmith/flagsmith/issues/4446)) ([c28f6f1](https://github.com/Flagsmith/flagsmith/commit/c28f6f1260a5d0fc478d71809831a1146fc3d31a))
+* Set default billing terms for missing info cache ([#4614](https://github.com/Flagsmith/flagsmith/issues/4614)) ([f9069e4](https://github.com/Flagsmith/flagsmith/commit/f9069e41e19e4fdf0faa2a1b006ca55072a98920))
+
+
+### Bug Fixes
+
+* Add logging to segments code ([#4625](https://github.com/Flagsmith/flagsmith/issues/4625)) ([12a8a8e](https://github.com/Flagsmith/flagsmith/commit/12a8a8ee694cdd0eb0ef6a2ea0708a003796b738))
+* Set organisation api usage to zero ([#4611](https://github.com/Flagsmith/flagsmith/issues/4611)) ([008998c](https://github.com/Flagsmith/flagsmith/commit/008998c200c5fcfcf66d96c19f45e5f6b6887509))
+* version tab check ([#4666](https://github.com/Flagsmith/flagsmith/issues/4666)) ([91af73b](https://github.com/Flagsmith/flagsmith/commit/91af73b95d75b90ce0d563c1446a3847f0643d37))
+
 ## [2.142.0](https://github.com/Flagsmith/flagsmith/compare/v2.141.0...v2.142.0) (2024-09-23)
 
 
