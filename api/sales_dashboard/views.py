@@ -56,7 +56,7 @@ email_regex = re.compile(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
 
 
 @method_decorator(
-    name="list",
+    name="get",
     decorator=staff_member_required(),
 )
 class OrganisationList(ListView):
