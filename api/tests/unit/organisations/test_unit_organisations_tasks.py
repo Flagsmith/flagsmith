@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, call
 
 import pytest
+from core.helpers import get_current_site_url
 from django.core.mail.message import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -1646,13 +1647,13 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     assert email1.subject == "Flagsmith API use has been blocked due to overuse"
     assert email1.body == render_to_string(
         "organisations/api_flags_blocked_notification.txt",
-        context={"organisation": organisation},
+        context={"organisation": organisation, "url": get_current_site_url()},
     )
     email2 = mailoutbox[1]
     assert email2.subject == "Flagsmith API use has been blocked due to overuse"
     assert email2.body == render_to_string(
         "organisations/api_flags_blocked_notification.txt",
-        context={"organisation": organisation2},
+        context={"organisation": organisation2, "url": get_current_site_url()},
     )
 
     assert len(email2.alternatives) == 1
@@ -1661,7 +1662,11 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
 
     assert email2.alternatives[0][0] == render_to_string(
         "organisations/api_flags_blocked_notification.html",
-        context={"organisation": organisation2, "grace_period": False},
+        context={
+            "organisation": organisation2,
+            "grace_period": False,
+            "url": get_current_site_url(),
+        },
     )
     assert email2.from_email == "noreply@flagsmith.com"
     assert email2.to == ["admin@example.com", "staff@example.com"]
@@ -1674,7 +1679,11 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
 
     assert email3.alternatives[0][0] == render_to_string(
         "organisations/api_flags_blocked_notification.html",
-        context={"organisation": organisation6, "grace_period": False},
+        context={
+            "organisation": organisation6,
+            "grace_period": False,
+            "url": get_current_site_url(),
+        },
     )
     assert email3.from_email == "noreply@flagsmith.com"
     assert email3.to == ["admin@example.com", "staff@example.com"]
