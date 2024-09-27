@@ -1694,8 +1694,7 @@ const CreateFlag = class extends Component {
                                   )}
                                 {!existingChangeRequest &&
                                   this.props.flagId &&
-                                  (isVersioned ||
-                                    !Project.disableAnalytics) && (
+                                  isVersioned && (
                                     <TabItem
                                       data-test='change-history'
                                       tabLabel='History'
