@@ -126,7 +126,7 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
         return instance
 
     @staticmethod
-    def get_key(instance) -> str | None:
+    def get_key(instance) -> str:
         token, _ = Token.objects.get_or_create(user=instance)
         return token.key
 
