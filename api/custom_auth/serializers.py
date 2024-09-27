@@ -77,7 +77,7 @@ class InviteLinkValidationMixin:
 class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        if not settings.AUTH_JWT_COOKIE_ENABLED:
+        if not settings.COOKIE_AUTH_ENABLED:
             self.fields["key"] = serializers.SerializerMethodField()
 
     class Meta(UserCreateSerializer.Meta):

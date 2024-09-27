@@ -58,7 +58,7 @@ class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):
                 }
             )
         except MFAMethodDoesNotExistError:
-            if settings.AUTH_JWT_COOKIE_ENABLED:
+            if settings.COOKIE_AUTH_ENABLED:
                 return authorise_response(user, Response(status=HTTP_204_NO_CONTENT))
             return self._action(serializer)
 
@@ -80,7 +80,7 @@ class CustomAuthTokenLoginWithMFACode(TokenCreateView):
                 ephemeral_token=serializer.validated_data["ephemeral_token"],
             )
             serializer.user = user
-            if settings.AUTH_JWT_COOKIE_ENABLED:
+            if settings.COOKIE_AUTH_ENABLED:
                 return authorise_response(user, Response())
             return self._action(serializer)
         except MFAValidationError as cause:
@@ -115,7 +115,7 @@ class FFAdminUserViewSet(UserViewSet):
 
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         response = super().create(request, *args, **kwargs)
-        if settings.AUTH_JWT_COOKIE_ENABLED:
+        if settings.COOKIE_AUTH_ENABLED:
             authorise_response(self.user, response)
         return response
 
