@@ -1213,6 +1213,12 @@ if not 0 <= SEGMENT_CONDITION_VALUE_LIMIT < 2000000:
         "SEGMENT_CONDITION_VALUE_LIMIT must be between 0 and 2,000,000 (2MB)."
     )
 
+FEATURE_VALUE_LIMIT = env.int("FEATURE_VALUE_LIMIT", default=20_000)
+if not 0 <= FEATURE_VALUE_LIMIT <= 2000000:  # pragma: no cover
+    raise ImproperlyConfigured(
+        "FEATURE_VALUE_LIMIT must be between 0 and 2,000,000 (2MB)."
+    )
+
 SEGMENT_RULES_CONDITIONS_LIMIT = env.int("SEGMENT_RULES_CONDITIONS_LIMIT", 100)
 
 WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)
