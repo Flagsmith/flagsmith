@@ -11,6 +11,7 @@ from core.models import (
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
@@ -109,7 +110,7 @@ class Feature(
         on_delete=models.DO_NOTHING,
     )
     initial_value = models.CharField(
-        max_length=20000, null=True, default=None, blank=True
+        max_length=settings.FEATURE_VALUE_LIMIT, null=True, default=None, blank=True
     )
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
