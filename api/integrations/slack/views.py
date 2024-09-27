@@ -6,12 +6,13 @@ from django.core.signing import TimestampSigner
 from django.shortcuts import redirect
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from slack_sdk.oauth import AuthorizeUrlGenerator
 
 from environments.models import Environment
+from environments.permissions.permissions import NestedEnvironmentPermissions
 from integrations.common.views import EnvironmentIntegrationCommonViewSet
 from integrations.slack.models import SlackConfiguration, SlackEnvironment
 from integrations.slack.serializers import (
@@ -36,6 +37,7 @@ signer = TimestampSigner()
 class SlackGetChannelsViewSet(GenericViewSet):
     serializer_class = SlackChannelListSerializer
     pagination_class = None  # set here to ensure documentation is correct
+    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
 
     def get_api_token(self) -> str:
         environment = Environment.objects.get(
