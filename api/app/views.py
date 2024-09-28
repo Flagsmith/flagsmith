@@ -56,6 +56,7 @@ def project_overrides(request):
         "useSecureCookies": "USE_SECURE_COOKIES",
         "cookieSameSite": "COOKIE_SAME_SITE",
         "githubAppURL": "GITHUB_APP_URL",
+        "cookieAuth": "COOKIE_AUTH_ENABLED",
     }
 
     override_data = {
