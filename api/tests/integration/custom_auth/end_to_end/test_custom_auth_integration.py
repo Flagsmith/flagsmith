@@ -321,7 +321,9 @@ def test_register_and_login_workflows__jwt_cookie(
     assert "key" not in response.json()
 
     # verify the register cookie works when accessing a protected endpoint
-    response = api_client.get(protected_resource_url, cookies=jwt_access_cookie)
+    response = api_client.get(
+        protected_resource_url,
+    )
     assert response.status_code == status.HTTP_200_OK
 
     # now verify we can login with the same credentials
@@ -334,19 +336,20 @@ def test_register_and_login_workflows__jwt_cookie(
     assert not response.data
 
     # verify the login cookie works when accessing a protected endpoint
-    response = api_client.get(protected_resource_url, cookies=jwt_access_cookie)
+    response = api_client.get(protected_resource_url)
     assert response.status_code == status.HTTP_200_OK
 
     # logout
-    response = api_client.post(logout_url, cookies=jwt_access_cookie)
+    response = api_client.post(logout_url)
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # verify the login cookie does not work anymore
-    response = api_client.get(protected_resource_url, cookies=jwt_access_cookie)
+    response = api_client.get(protected_resource_url)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     # login again
     response = api_client.post(login_url, data=login_data)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
     new_jwt_access_cookie = response.cookies.get("jwt")
 
     # verify new token is different from the old one
@@ -381,10 +384,7 @@ def test_login_workflow__jwt_cookie__mfa_enabled(
     }
     response = api_client.post(register_url, data=register_data)
     jwt_access_cookie = response.cookies.get("jwt")
-    response = api_client.post(
-        create_mfa_method_url,
-        cookies=jwt_access_cookie,
-    )
+    response = api_client.post(create_mfa_method_url)
     secret = response.json()["secret"]
     totp = pyotp.TOTP(secret)
     confirm_mfa_data = {"code": totp.now()}
@@ -392,7 +392,7 @@ def test_login_workflow__jwt_cookie__mfa_enabled(
         "api-v1:custom_auth:mfa-activate-confirm", kwargs={"method": "app"}
     )
     api_client.post(confirm_mfa_method_url, data=confirm_mfa_data)
-    api_client.post(logout_url, cookies=jwt_access_cookie)
+    api_client.post(logout_url)
 
     # When & Then
     # verify the cookie is returned on login
