@@ -393,7 +393,6 @@ def test_login_workflow__jwt_cookie__mfa_enabled(
     )
     api_client.post(confirm_mfa_method_url, data=confirm_mfa_data)
     api_client.post(logout_url, cookies=jwt_access_cookie)
-    api_client.logout()
 
     # When & Then
     # verify the cookie is returned on login
