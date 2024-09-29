@@ -418,19 +418,6 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, "../../static/")
 
 MEDIA_URL = "/media/"  # unused but needs to be different from STATIC_URL in django 3
 
-# CORS settings
-
-CORS_ORIGIN_ALLOW_ALL = True
-FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS = env.list(
-    "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS", default=["sentry-trace"]
-)
-CORS_ALLOW_HEADERS = [
-    *default_headers,
-    *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
-    "X-Environment-Key",
-    "X-E2E-Test-Auth-Token",
-]
-
 DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@flagsmith.com")
 EMAIL_CONFIGURATION = {
     # Invitations with name is anticipated to take two arguments. The persons name and the
@@ -1045,6 +1032,21 @@ PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
 COOKIE_AUTH_ENABLED = env.bool("COOKIE_AUTH_ENABLED", default=False)
 USE_SECURE_COOKIES = env.bool("USE_SECURE_COOKIES", default=True)
 COOKIE_SAME_SITE = env.str("COOKIE_SAME_SITE", default="none")
+
+# CORS settings
+
+CORS_ORIGIN_ALLOW_ALL = env.bool("CORS_ORIGIN_ALLOW_ALL", not COOKIE_AUTH_ENABLED)
+CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", COOKIE_AUTH_ENABLED)
+FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS = env.list(
+    "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS", default=["sentry-trace"]
+)
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
+CORS_ALLOW_HEADERS = [
+    *default_headers,
+    *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
+    "X-Environment-Key",
+    "X-E2E-Test-Auth-Token",
+]
 
 # use a separate boolean setting so that we add it to the API containers in environments
 # where we're running the task processor, so we avoid creating unnecessary tasks

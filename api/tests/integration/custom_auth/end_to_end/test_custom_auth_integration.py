@@ -408,6 +408,44 @@ def test_login_workflow__jwt_cookie__mfa_enabled(
     assert not response.data
 
 
+# In the real world, setting `COOKIE_AUTH_ENABLED` to `True`
+# changes default CORS setting values.
+# Due to how Django settings are loaded for tests,
+# we have to override CORS settings manually.
+@override_settings(
+    COOKIE_AUTH_ENABLED=True,
+    DOMAIN_OVERRIDE="testhost.com",
+    CORS_ORIGIN_ALLOW_ALL=False,
+    CORS_ALLOW_CREDENTIALS=True,
+)
+def test_login_workflow__jwt_cookie__cors_headers_expected(
+    db: None,
+    api_client: APIClient,
+) -> None:
+    # Given
+    email = "test@example.com"
+    password = FFAdminUser.objects.make_random_password()
+    register_url = reverse("api-v1:custom_auth:ffadminuser-list")
+    protected_resource_url = reverse("api-v1:projects:project-list")
+    register_data = {
+        "first_name": "test",
+        "last_name": "last_name",
+        "email": email,
+        "password": password,
+        "re_password": password,
+    }
+    api_client.post(register_url, data=register_data)
+
+    # When
+    response = api_client.get(
+        protected_resource_url,
+        HTTP_ORIGIN="http://testhost.com",
+    )
+
+    # Then
+    assert response.headers["Access-Control-Allow-Origin"] == "http://testhost.com"
+
+
 def test_throttle_login_workflows(
     api_client: APIClient,
     db: None,
