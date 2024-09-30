@@ -97,9 +97,12 @@ def _send_api_usage_notification(
 def handle_api_usage_notification_for_organisation(organisation: Organisation) -> None:
     now = timezone.now()
 
-    if organisation.subscription.is_free_plan:
+    if (
+        organisation.subscription.is_free_plan
+        or organisation.subscription.cancellation_date is not None
+    ):
         allowed_api_calls = organisation.subscription.max_api_calls
-        # Default to a rolling month for free accounts
+        # Default to a rolling month for free accounts or canceled subscriptions.
         days = 30
         period_starts_at = now - timedelta(days)
     elif not organisation.has_subscription_information_cache():
