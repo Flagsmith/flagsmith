@@ -17,7 +17,7 @@ class OauthInitPermission(IsAuthenticated):
 
 class SlackGetChannelPermissions(IsAuthenticated):
     def has_permission(self, request, view):
-        if not super().has_permission(request, view):
+        if not super().has_permission(request, view):  # pragma: no cover
             return False
 
         environment = get_object_or_404(
