@@ -312,6 +312,33 @@ def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_i
     ]
 
 
+def test_handle_api_usage_notification_for_organisation_when_cancellation_date_is_set(
+    organisation: Organisation,
+    inspecting_handler: logging.Handler,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.cancellation_date = timezone.now()
+    organisation.subscription.save()
+    mock_api_usage = mocker.patch("organisations.task_helpers.get_current_api_usage")
+    mock_api_usage.return_value = 25
+    from organisations.task_helpers import logger
+
+    logger.addHandler(inspecting_handler)
+
+    # When
+    result = handle_api_usage_notification_for_organisation(organisation)
+
+    # Then
+    assert result is None
+    assert OrganisationAPIUsageNotification.objects.count() == 0
+
+    # Check to ensure that error messages haven't been set.
+    assert inspecting_handler.messages == []
+
+
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_handle_api_usage_notifications_when_feature_flag_is_off(
     mocker: MockerFixture,
@@ -853,6 +880,50 @@ def test_charge_for_api_call_count_overages_scale_up(
     assert api_billing.api_overage == 200_000
     assert api_billing.immediate_invoice is False
     assert api_billing.billed_at == now
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_charge_for_api_call_count_overages_cancellation_date(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100_000,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.cancellation_date = timezone.now()
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    assert OrganisationAPIBilling.objects.count() == 0
+
+    # When
+    charge_for_api_call_count_overages()
+
+    # Then
+    assert OrganisationAPIBilling.objects.count() == 0
+    mock_api_usage.assert_not_called()
+    client_mock.get_identity_flags.assert_not_called()
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")

@@ -191,7 +191,8 @@ def charge_for_api_call_count_overages():
             - month_window_end,
         )
         .exclude(
-            subscription__plan=FREE_PLAN_ID,
+            Q(subscription__plan=FREE_PLAN_ID)
+            | Q(subscription__cancellation_date__isnull=False),
         )
         .select_related(
             "subscription_information_cache",
