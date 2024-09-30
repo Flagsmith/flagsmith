@@ -28,7 +28,7 @@ from .exceptions import (
     InvalidStateError,
     SlackConfigurationDoesNotExist,
 )
-from .permissions import OauthInitPermission
+from .permissions import OauthInitPermission, SlackGetChannelPermissions
 
 signer = TimestampSigner()
 
@@ -36,6 +36,7 @@ signer = TimestampSigner()
 class SlackGetChannelsViewSet(GenericViewSet):
     serializer_class = SlackChannelListSerializer
     pagination_class = None  # set here to ensure documentation is correct
+    permission_classes = [SlackGetChannelPermissions]
 
     def get_api_token(self) -> str:
         environment = Environment.objects.get(

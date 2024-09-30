@@ -21,6 +21,7 @@ from django.shortcuts import get_object_or_404
 from django.template import loader
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
@@ -54,6 +55,10 @@ DEFAULT_ORGANISATION_SORT_DIRECTION = "DESC"
 email_regex = re.compile(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
 
 
+@method_decorator(
+    name="get",
+    decorator=staff_member_required(),
+)
 class OrganisationList(ListView):
     model = Organisation
     paginate_by = OBJECTS_PER_PAGE
@@ -261,6 +266,14 @@ def migrate_identities_to_edge(request, project_id):
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 
+@method_decorator(
+    name="get",
+    decorator=staff_member_required(),
+)
+@method_decorator(
+    name="post",
+    decorator=staff_member_required(),
+)
 class EmailUsage(FormView):
     form_class = EmailUsageForm
     template_name = "sales_dashboard/email-usage.html"

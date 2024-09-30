@@ -2,6 +2,25 @@ from dataclasses import asdict
 
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APIClient
+
+from environments.models import Environment
+
+
+def test_get_channels_fails_if_user_has_no_permission(
+    staff_client: APIClient, environment: Environment, environment_api_key: str
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:integrations-slack-channels-list",
+        args=[environment_api_key],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_get_channels_returns_400_when_slack_project_config_does_not_exist(
