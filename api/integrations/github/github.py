@@ -57,6 +57,12 @@ def tag_feature_per_github_event(
         | Q(external_resources__type="GITHUB_ISSUE"),
         external_resources__url=metadata.get("html_url"),
     ).first()
+
+    # Check to see if any feature objects match and if not return
+    # to allow the webhook processing complete.
+    if not feature:
+        return
+
     repository_owner, repository_name = repo_full_name.split(sep="/", maxsplit=1)
     tagging_enabled = GitHubRepository.objects.get(
         project=feature.project,
@@ -64,7 +70,7 @@ def tag_feature_per_github_event(
         repository_name=repository_name,
     ).tagging_enabled
 
-    if feature and tagging_enabled:
+    if tagging_enabled:
         if (
             event_type == "pull_request"
             and action == "closed"
