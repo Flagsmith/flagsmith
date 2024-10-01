@@ -241,12 +241,12 @@ const controller = {
       .post(`${Project.api}auth/users/`, {
         email,
         first_name,
+        invite_hash: API.getInvite() || undefined,
         last_name,
         marketing_consent_given,
         password,
         referrer: API.getReferrer() || '',
         sign_up_type: API.getInviteType(),
-        invite_hash: API.getInvite() || undefined,
       })
       .then((res) => {
         data.setToken(res.key)
@@ -328,12 +328,17 @@ const controller = {
     } else if (!user) {
       store.ephemeral_token = null
       AsyncStorage.clear()
-      API.setCookie('t', '')
-      data.setToken(null)
-      API.reset().finally(() => {
-        store.model = user
-        store.organisation = null
-        store.trigger('logout')
+      if (!data.token) {
+        return
+      }
+      data.post(`${Project.api}auth/logout/`, {}).finally(() => {
+        API.setCookie('t', '')
+        data.setToken(null)
+        API.reset().finally(() => {
+          store.model = user
+          store.organisation = null
+          store.trigger('logout')
+        })
       })
     }
   },

@@ -26,7 +26,7 @@ if (params.token) {
 }
 
 // Render the React application to the DOM
-const res = API.getCookie('t')
+const res = COOKIE_AUTH_ENABLED ? 'true' : API.getCookie('t')
 
 const event = API.getEvent()
 if (event) {
