@@ -148,6 +148,6 @@
   }
 }
 .pill .btn-tab .unread {
-  margin-left: $spacer/2;
+  margin-left: calc($spacer / 2);
   position: static;
 }
