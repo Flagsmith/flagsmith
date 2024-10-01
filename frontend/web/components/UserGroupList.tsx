@@ -182,7 +182,7 @@ const UserGroupList: FC<UserGroupListType> = ({
   return (
     <FormGroup>
       <div className='col-md-6'>
-        <InfoMessage>
+        <InfoMessage collapseId={'user-groups'}>
           Group admins and users with the organisation permission{' '}
           <strong>Manage Groups</strong> can invite additional members to
           groups.
