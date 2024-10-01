@@ -675,7 +675,7 @@ class TheComponent extends Component {
                   !this.props.showCreateSegment && (
                     <div className='overflow-visible'>
                       {!this.props.id && (
-                        <div className='my-4'>
+                        <div className='mt-4 mb-2'>
                           <InfoMessage className='mb-4 text-left faint'>
                             Segment overrides override the environment defaults,
                             prioritise them by dragging it to the top of the
