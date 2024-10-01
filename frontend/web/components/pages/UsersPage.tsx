@@ -59,7 +59,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
   const showAliases = isEdge && Utils.getFlagsmithHasFeature('identity_aliases')
 
   const { data: identities, isLoading } = useGetIdentitiesQuery({
-    dashboard_alias: searchType === 'alias' ? search : undefined,
+    dashboard_alias: searchType === 'alias' ? search?.toLowerCase() : undefined,
     environmentId: props.match.params.environmentId,
     isEdge,
     page: page.number,
