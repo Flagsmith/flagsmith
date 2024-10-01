@@ -38,6 +38,7 @@ class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):
     Class to handle throttling for login requests
     """
 
+    authentication_classes = []
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "login"
 
@@ -68,6 +69,7 @@ class CustomAuthTokenLoginWithMFACode(TokenCreateView):
     Override class to add throttling
     """
 
+    authentication_classes = []
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "mfa_code"
 
@@ -103,6 +105,11 @@ def delete_token(request):
 )
 class FFAdminUserViewSet(UserViewSet):
     throttle_scope = "signup"
+
+    def perform_authentication(self, request: Request) -> None:
+        if self.action == "create":
+            return
+        return super().perform_authentication(request)
 
     def get_throttles(self):
         """

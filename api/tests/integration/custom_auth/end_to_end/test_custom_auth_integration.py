@@ -9,6 +9,7 @@ from django.urls import reverse
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient, override_settings
+from rest_framework_simplejwt.tokens import SlidingToken
 
 from organisations.invites.models import Invite
 from organisations.models import Organisation
@@ -444,6 +445,37 @@ def test_login_workflow__jwt_cookie__cors_headers_expected(
 
     # Then
     assert response.headers["Access-Control-Allow-Origin"] == "http://testhost.com"
+
+
+@override_settings(COOKIE_AUTH_ENABLED=True)
+def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(
+    db: None,
+    api_client: APIClient,
+) -> None:
+    # Given
+    email = "test@example.com"
+    password = FFAdminUser.objects.make_random_password()
+    register_url = reverse("api-v1:custom_auth:ffadminuser-list")
+    protected_resource_url = reverse("api-v1:projects:project-list")
+    register_data = {
+        "first_name": "test",
+        "last_name": "last_name",
+        "email": email,
+        "password": password,
+        "re_password": password,
+    }
+    response = api_client.post(register_url, data=register_data)
+    jwt_access_cookie = response.cookies.get("jwt")
+
+    # cookie is invalidated server-side but is still attached to the client
+    SlidingToken(jwt_access_cookie.value).blacklist()
+
+    # When
+    response = api_client.get(protected_resource_url)
+
+    # Then
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert not response.cookies.get("jwt")
 
 
 def test_throttle_login_workflows(
