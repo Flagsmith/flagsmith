@@ -64,11 +64,11 @@ on:
         type: string
         description: Destination repository to store Trivy database in
         required: false
-        default: ${{ inputs.registry-url }}/flagsmith/trivy-db:latest
+        default: ghcr.io/flagsmith/trivy-db:latest
       trivy-java-db-repository:
         type: string
         description: Destination repository to store Trivy Java database in
-        default: ${{ inputs.registry-url }}/flagsmith/trivy-java-db:latest
+        default: ghcr.io/flagsmith/trivy-java-db:latest
     outputs:
       image:
         description: Resulting image specifier
