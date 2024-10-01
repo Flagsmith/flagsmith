@@ -36,7 +36,7 @@ export default function VariationOptions({
       )}
       {!preventRemove && (
         <p className='mb-4'>
-          <InfoMessage>
+          <InfoMessage collapseId={'variation-value'}>
             Changing a Variation Value will affect{' '}
             <strong>all environments</strong>, their weights are specific to
             this environment. Existing users will see the new variation value if

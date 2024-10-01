@@ -241,7 +241,7 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
           </BarChart>
         </ResponsiveContainer>
       )}
-      <InfoMessage>
+      <InfoMessage >
         Please be aware that usage data can be delayed by up to 3 hours.
       </InfoMessage>
       <div>

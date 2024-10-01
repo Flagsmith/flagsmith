@@ -676,7 +676,7 @@ class TheComponent extends Component {
                     <div className='overflow-visible'>
                       {!this.props.id && (
                         <div className='my-4'>
-                          <InfoMessage className='mb-4 text-left faint'>
+                          <InfoMessage collapseId={'segment-overrides'} className='mb-4 text-left faint'>
                             Segment overrides override the environment defaults,
                             prioritise them by dragging it to the top of the
                             list. Segment overrides will only apply when you

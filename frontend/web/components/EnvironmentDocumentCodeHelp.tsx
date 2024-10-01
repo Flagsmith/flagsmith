@@ -69,7 +69,10 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
           <Tabs uncontrolled theme='pill'>
             <TabItem tabLabel={'Client-side'}>
               <div className='mt-3'>
-                <InfoMessage className='mb-2'>
+                <InfoMessage
+                  collapseId={'server-side-only-flags'}
+                  className='mb-2'
+                >
                   <div>
                     This will not return any features marked as{' '}
                     <a
@@ -98,7 +101,7 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
                     snippets={Constants.codeHelp.OFFLINE_LOCAL(data?.[0]?.key)}
                   />
                 ) : (
-                  <InfoMessage>
+                  <InfoMessage collapseId={'local-evaluation-mode'}>
                     In order to setup local evaluation mode you need at least 1
                     API key, this can be created in{' '}
                     {envAdmin ? (

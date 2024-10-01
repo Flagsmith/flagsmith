@@ -81,7 +81,7 @@ const Payment = class extends Component {
     if (isAWS) {
       return (
         <div className='col-md-8'>
-          <InfoMessage>
+          <InfoMessage collapseId={'aws-marketplace'}>
             Customers with AWS Marketplace subscriptions will need to{' '}
             <a
               href='https://www.flagsmith.com/contact-us'

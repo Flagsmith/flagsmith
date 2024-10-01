@@ -123,7 +123,7 @@ class TheComponent extends Component {
       </div>
     ) : (
       <div className='mt-4'>
-        <InfoMessage>
+        <InfoMessage collapseId={'associated-segment-overrides'}>
           This shows the list of segment overrides associated with this segment.
           <br />
           Segment overrides will only apply when you identify via the SDK.{' '}
