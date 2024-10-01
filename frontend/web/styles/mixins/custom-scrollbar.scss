@@ -23,16 +23,25 @@
 @mixin customScrollDark {
   /* width */
   &::-webkit-scrollbar {
+    display: none;
     height: 12px;
     margin: 12px;
     width: 12px;
   }
+  &:hover {
+    &::-webkit-scrollbar {
+      cursor: default !important;
+      display: block;
+    }
+  }
   /* Track */
   &::-webkit-scrollbar-track {
+    cursor: default !important;
     background-color: $scrollbar-track-dark;
   }
   /* Handle */
   &::-webkit-scrollbar-thumb {
+    cursor: default !important;
     background-clip: content-box;
     border: 3px solid transparent;
     background-color: $scrollbar-thumb-dark;

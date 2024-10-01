@@ -13,9 +13,10 @@ const VariationValue = ({
   value,
   weightTitle,
 }) => (
-  <Row className='align-items-start mt-4'>
+  <Row className='align-items-start mb-2'>
     <div className='flex flex-1 overflow-hidden'>
       <InputGroup
+        noMargin
         component={
           <ValueEditor
             data-test={`featureVariationValue${index}`}
