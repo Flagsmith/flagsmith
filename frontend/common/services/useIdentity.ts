@@ -53,6 +53,7 @@ export const identityService = service
         providesTags: [{ id: 'LIST', type: 'Identity' }],
         query: (baseQuery) => {
           const {
+            dashboard_alias,
             environmentId,
             isEdge,
             page,
@@ -62,10 +63,11 @@ export const identityService = service
             q,
             search,
           } = baseQuery
-          let url = `${getIdentityEndpoint(
-            environmentId,
-            isEdge,
-          )}/?q=${encodeURIComponent(search || q || '')}&page_size=${page_size}`
+          let url = `${getIdentityEndpoint(environmentId, isEdge)}/?q=${
+            dashboard_alias ? 'dashboard_alias:' : ''
+          }${encodeURIComponent(
+            dashboard_alias || search || q || '',
+          )}&page_size=${page_size}`
           let last_evaluated_key = null
           if (!isEdge) {
             url += `&page=${page}`

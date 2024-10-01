@@ -98,7 +98,7 @@ export type Req = {
   getIdentities: PagedRequest<{
     environmentId: string
     pageType?: 'NEXT' | 'PREVIOUS'
-    search?: string
+    dashboard_alias?: string
     pages?: (string | undefined)[] // this is needed for edge since it returns no paging info other than a key
     isEdge: boolean
   }>

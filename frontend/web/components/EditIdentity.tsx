@@ -25,6 +25,7 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
       const updatedAlias = (aliasRef.current.textContent || '')
         .replace(/\n/g, ' ')
         .trim()
+        .toLowerCase()
 
       if (!updatedAlias) {
         aliasRef.current.textContent = alias

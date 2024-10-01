@@ -31,6 +31,10 @@ type UsersPageType = {
     }
   }
 }
+const searchTypes = [
+  { label: 'ID', value: 'id' },
+  { label: 'Alias', value: 'alias' },
+]
 const UsersPage: FC<UsersPageType> = (props) => {
   const [page, setPage] = useState<{
     number: number
@@ -50,15 +54,19 @@ const UsersPage: FC<UsersPageType> = (props) => {
   )
   const [deleteIdentity] = useDeleteIdentityMutation({})
   const isEdge = Utils.getIsEdge()
+  const [searchType, setSearchType] = useState<'id' | 'alias'>('id')
+
+  const showAliases = isEdge && Utils.getFlagsmithHasFeature('identity_aliases')
 
   const { data: identities, isLoading } = useGetIdentitiesQuery({
+    dashboard_alias: searchType === 'alias' ? search : undefined,
     environmentId: props.match.params.environmentId,
     isEdge,
     page: page.number,
     pageType: page.pageType,
     page_size: 10,
     pages: page.pages,
-    q: search,
+    q: searchType === 'alias' ? undefined : search,
   })
 
   const { environmentId } = props.match.params
@@ -147,6 +155,19 @@ const UsersPage: FC<UsersPageType> = (props) => {
         <FormGroup>
           <PanelSearch
             renderSearchWithNoResults
+            filterRowContent={
+              showAliases && (
+                <div className='ms-2' style={{ width: 100 }}>
+                  <Select
+                    options={searchTypes}
+                    value={searchTypes.find((v) => v.value === searchType)}
+                    onChange={(v) => {
+                      setSearchType(v.value)
+                    }}
+                  />
+                </div>
+              )
+            }
             renderFooter={() => (
               <JSONReference
                 className='mx-2 mt-4'
