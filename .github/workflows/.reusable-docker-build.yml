@@ -50,6 +50,25 @@ on:
         description: Whether to update the build status in a PR comment
         required: false
         default: false
+      trivy-db-repository-source:
+        type: string
+        description: Souce repository to pull Trivy database from
+        required: false
+        default: ghcr.io/aquasecurity/trivy-db:latest
+      trivy-java-db-repository-source:
+        type: string
+        description: Source repository to pull Trivy Java database from
+        required: false
+        default: ghcr.io/aquasecurity/trivy-java-db:1
+      trivy-db-repository:
+        type: string
+        description: Destination repository to store Trivy database in
+        required: false
+        default: ghcr.io/flagsmith/trivy-db:latest
+      trivy-java-db-repository:
+        type: string
+        description: Destination repository to store Trivy Java database in
+        default: ghcr.io/flagsmith/trivy-java-db:latest
     outputs:
       image:
         description: Resulting image specifier
@@ -137,6 +156,23 @@ jobs:
           build-status: 'Finished :white_check_mark:'
           security-report-status: 'Skipped'
 
+      - uses: oras-project/setup-oras@v1
+
+      - name: Pull and republish Trivy databases
+        uses: nick-fields/retry@v3
+        with:
+          shell: bash
+          command: |
+            oras pull --no-tty ${{ inputs.trivy-db-repository-source }}
+            oras pull --no-tty ${{ inputs.trivy-java-db-repository-source }}
+            oras push ${{ inputs.trivy-db-repository }} db.tar.gz:$MIME_TYPE+gzip --artifact-type $MIME_TYPE+json
+            oras push ${{ inputs.trivy-java-db-repository }} javadb.tar.gz:$MIME_TYPE+gzip --artifact-type $MIME_TYPE+json
+          max_attempts: 5
+          retry_on: error
+          timeout_minutes: 20
+        env:
+          MIME_TYPE: application/vnd.aquasec.trivy.db.layer.v1.tar
+
       - name: Run Trivy vulnerability scanner
         id: trivy
         if: inputs.scan
@@ -148,6 +184,8 @@ jobs:
         env:
           TRIVY_USERNAME: ${{ inputs.ephemeral && 'x-token' || github.actor }}
           TRIVY_PASSWORD: ${{ inputs.ephemeral && steps.depot-token.outputs.depot-token || secrets.GITHUB_TOKEN }}
+          TRIVY_DB_REPOSITORY: ${{ inputs.trivy-db-repository }}
+          TRIVY_JAVA_DB_REPOSITORY: ${{ inputs.trivy-java-db-repository }}
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v2
