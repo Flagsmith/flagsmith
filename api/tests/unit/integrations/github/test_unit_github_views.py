@@ -192,7 +192,7 @@ def test_delete_github_configuration(
 
 
 @responses.activate
-def test_cannot_delete_github_configuration_when_delete_github_installation_response_was_404(
+def test_can_delete_github_configuration_when_delete_github_installation_response_was_404(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -216,18 +216,14 @@ def test_cannot_delete_github_configuration_when_delete_github_installation_resp
         method="DELETE",
         url=f"{GITHUB_API_URL}app/installations/{github_configuration.installation_id}",
         status=404,
-        json={"message": "not found"},
+        json={"message": "Not Found", "status": "404"},
     )
 
     # When
     response = admin_client_new.delete(url)
     # Then
-    assert response.status_code == status.HTTP_502_BAD_GATEWAY
-    assert (
-        response.json()["detail"]
-        == "Failed to delete GitHub Installation. Error: 404 Client Error: Not Found for url: https://api.github.com/app/installations/1234567"  # noqa: E501
-    )
-    assert GithubConfiguration.objects.filter(id=github_configuration.id).exists()
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not GithubConfiguration.objects.filter(id=github_configuration.id).exists()
 
 
 def test_get_github_repository(

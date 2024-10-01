@@ -40,6 +40,8 @@ __all__ = (
 DocumentValue: TypeAlias = Union[Dict[str, "DocumentValue"], str, bool, None, Decimal]
 Document: TypeAlias = Dict[str, DocumentValue]
 
+_NULLABLE_IDENTITY_KEY_ATTRIBUTES = {"dashboard_alias"}
+
 
 def map_environment_to_environment_document(
     environment: "Environment",
@@ -81,6 +83,7 @@ def map_engine_identity_to_identity_document(
     response = {
         field_name: _map_value_to_document_value(value)
         for field_name, value in engine_identity
+        if (value is not None or field_name not in _NULLABLE_IDENTITY_KEY_ATTRIBUTES)
     }
     response["composite_key"] = engine_identity.composite_key
     return response

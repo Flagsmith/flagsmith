@@ -1,7 +1,8 @@
+import copy
 import json
 import typing
 import uuid
-from unittest.mock import MagicMock
+from unittest import mock
 
 import pytest
 from core.constants import BOOLEAN, INTEGER, STRING
@@ -30,6 +31,7 @@ from environments.dynamodb import (
     DynamoEnvironmentWrapper,
     DynamoIdentityWrapper,
 )
+from environments.models import Environment
 from features.models import Feature
 from features.multivariate.models import MultivariateFeatureOption
 from projects.models import Project
@@ -357,10 +359,10 @@ def test_edge_identities_create_featurestate(
     environment: int,
     environment_api_key: str,
     identity_document_without_fs: dict,
-    edge_identity_dynamo_wrapper_mock: MagicMock,
+    edge_identity_dynamo_wrapper_mock: mock.MagicMock,
     feature: int,
     feature_name: str,
-    webhook_mock: MagicMock,
+    webhook_mock: mock.MagicMock,
 ):
     # Given
     edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
@@ -496,19 +498,16 @@ def test_edge_identities_create_mv_featurestate(
 
 
 def test_edge_identities_update_featurestate(
-    dynamodb_wrapper_v2,
-    admin_client,
-    environment,
-    environment_api_key,
-    identity_document,
-    edge_identity_dynamo_wrapper_mock,
-    feature,
-    webhook_mock,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    admin_client: APIClient,
+    environment: Environment,
+    environment_api_key: str,
+    identity_document: dict[str, typing.Any],
+    feature: Feature,
+    webhook_mock: mock.MagicMock,
+    flagsmith_identities_table: Table,
 ):
     # Given
-    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
-        identity_document
-    )
     identity_uuid = identity_document["identity_uuid"]
     featurestate_uuid = identity_document["identity_features"][0]["featurestate_uuid"]
     url = reverse(
@@ -526,27 +525,25 @@ def test_edge_identities_update_featurestate(
         "identity_uuid": identity_uuid,
     }
 
+    flagsmith_identities_table.put_item(Item=identity_document)
+
     # When
     response = admin_client.put(
         url, data=json.dumps(data), content_type="application/json"
     )
+
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["feature"] == feature
     assert response.json()["feature_state_value"] == expected_feature_state_value
     assert response.json()["enabled"] == data["enabled"]
 
-    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
-        identity_uuid
-    )
-    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
-    assert name == "put_item"
-
     # Next, let's verify that the document that we put
     # have correct updates
 
     # First, let's create the copy of the original document
-    expected_identity_document = identity_document
+    expected_identity_document = copy.deepcopy(identity_document)
+
     # Next, let's modify the fs value that we updated
     expected_identity_document["identity_features"][0][
         "feature_state_value"
@@ -556,7 +553,12 @@ def test_edge_identities_update_featurestate(
     expected_identity_document["identity_features"][0]["enabled"] = expected_fs_enabled
 
     # Finally, let's compare them
-    assert args[0] == expected_identity_document
+    assert (
+        flagsmith_identities_table.get_item(
+            Key={"composite_key": identity_document["composite_key"]}
+        )["Item"]
+        == expected_identity_document
+    )
 
 
 def test_edge_identities_patch_returns_405(
@@ -585,21 +587,18 @@ def test_edge_identities_patch_returns_405(
 
 
 def test_edge_identities_update_mv_featurestate(
-    dynamodb_wrapper_v2,
-    admin_client,
-    environment,
-    environment_api_key,
-    identity_document,
-    edge_identity_dynamo_wrapper_mock,
-    feature,
-    mv_option_50_percent,
-    mv_option_value,
-    webhook_mock,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    admin_client: APIClient,
+    environment: Environment,
+    environment_api_key: str,
+    identity_document: dict[str, typing.Any],
+    feature: Feature,
+    mv_option_50_percent: MultivariateFeatureOption,
+    mv_option_value: str,
+    webhook_mock: mock.MagicMock,
+    flagsmith_identities_table: Table,
 ):
     # Given
-    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
-        identity_document
-    )
     identity_uuid = identity_document["identity_uuid"]
     featurestate_uuid = identity_document["identity_features"][2]["featurestate_uuid"]
     url = reverse(
@@ -624,6 +623,8 @@ def test_edge_identities_update_mv_featurestate(
         "feature_state_value": expected_feature_state_value,
     }
 
+    flagsmith_identities_table.put_item(Item=identity_document)
+
     # When
     response = admin_client.put(
         url, data=json.dumps(data), content_type="application/json"
@@ -636,17 +637,12 @@ def test_edge_identities_update_mv_featurestate(
         == new_mv_allocation
     )
 
-    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
-        identity_uuid
-    )
-    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
-    assert name == "put_item"
-
     # Next, let's verify that the document that we put
     # have correct updates
 
     # First, let's create the copy of the original document
-    expected_identity_document = identity_document
+    expected_identity_document = copy.deepcopy(identity_document)
+
     # Next, let's modify the fs value that we updated
     expected_identity_document["identity_features"][2][
         "feature_state_value"
@@ -666,15 +662,17 @@ def test_edge_identities_update_mv_featurestate(
                 "id": mv_option_50_percent,
                 "value": mv_option_value,
             },
+            "mv_fs_value_uuid": mock.ANY,
         }
     ]
-    # Remove the uuid before comparing because it was generated by the engine
-    # and we can't patch it
-    args[0]["identity_features"][2]["multivariate_feature_state_values"][0].pop(
-        "mv_fs_value_uuid"
-    )
+
     # Finally, let's compare them
-    assert args[0] == expected_identity_document
+    assert (
+        flagsmith_identities_table.get_item(
+            Key={"composite_key": identity_document["composite_key"]}
+        )["Item"]
+        == expected_identity_document
+    )
 
 
 def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
@@ -840,17 +838,16 @@ def test_edge_identities_with_identifier_delete_featurestate(
 
 
 def test_edge_identities_with_identifier_update_featurestate(
-    dynamodb_wrapper_v2,
-    admin_client,
-    environment,
-    environment_api_key,
-    identity_document,
-    edge_identity_dynamo_wrapper_mock,
-    feature,
-    webhook_mock,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    admin_client: APIClient,
+    environment: Environment,
+    environment_api_key: str,
+    identity_document: dict[str, typing.Any],
+    feature: Feature,
+    webhook_mock: mock.MagicMock,
+    flagsmith_identities_table: Table,
 ):
     # Given
-    edge_identity_dynamo_wrapper_mock.get_item.return_value = identity_document
     identifier = identity_document["identifier"]
     url = reverse(
         "api-v1:environments:edge-identities-with-identifier-featurestates",
@@ -866,20 +863,18 @@ def test_edge_identities_with_identifier_update_featurestate(
         "identifier": identifier,
     }
 
+    flagsmith_identities_table.put_item(Item=identity_document)
+
     # When
     response = admin_client.put(
         url, data=json.dumps(data), content_type="application/json"
     )
+
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["feature"] == feature
     assert response.json()["feature_state_value"] == expected_feature_state_value
     assert response.json()["enabled"] == data["enabled"]
-    edge_identity_dynamo_wrapper_mock.get_item.assert_called_with(
-        f"{environment_api_key}_{identifier}"
-    )
-    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
-    assert name == "put_item"
 
     # Next, let's verify that the document that we put
     # have correct updates
@@ -893,7 +888,12 @@ def test_edge_identities_with_identifier_update_featurestate(
     identity_document["identity_features"][0]["enabled"] = expected_fs_enabled
 
     # Finally, let's compare them
-    assert args[0] == identity_document
+    assert (
+        flagsmith_identities_table.get_item(
+            Key={"composite_key": identity_document["composite_key"]}
+        )["Item"]
+        == identity_document
+    )
 
 
 @pytest.mark.parametrize(
