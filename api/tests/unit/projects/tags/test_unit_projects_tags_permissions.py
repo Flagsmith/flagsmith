@@ -155,6 +155,7 @@ def test_project_user_with_manage_tags_has_permission_to_create(
     mock_view = mock.MagicMock(
         action="create",
         kwargs={"project_pk": project.id},
+        detail=False,
     )
     permissions = TagPermissions()
 
@@ -176,6 +177,7 @@ def test_project_user_with_view_project_does_not_have_permission_to_create(
     mock_view = mock.MagicMock(
         action="create",
         kwargs={"project_pk": project.id},
+        detail=False,
     )
     permissions = TagPermissions()
 
