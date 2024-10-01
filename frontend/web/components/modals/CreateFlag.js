@@ -757,7 +757,7 @@ const CreateFlag = class extends Component {
                   {!!regex && !isEdit && (
                     <div className='mt-2'>
                       {' '}
-                      <InfoMessage>
+                      <InfoMessage collapseId={'flag-regex'}>
                         {' '}
                         This must conform to the regular expression{' '}
                         <pre>{regex}</pre>
@@ -1016,17 +1016,13 @@ const CreateFlag = class extends Component {
               const onCreateFeature = saveFeatureWithValidation(() => {
                 this.save(createFlag, isSaving)
               })
+              const isLimitReached = false
 
               const featureLimitAlert =
                 Utils.calculateRemainingLimitsPercentage(
                   project.total_features,
                   project.max_features_allowed,
                 )
-              const showIdentityOverrides =
-                !identity &&
-                isEdit &&
-                !existingChangeRequest &&
-                !hideIdentityOverridesTab
               return (
                 <Permission
                   level='project'
@@ -1237,21 +1233,57 @@ const CreateFlag = class extends Component {
                                     {!identity && isEdit && (
                                       <FormGroup className='mb-4'>
                                         <div>
-                                          <Row className='justify-content-between mb-2 segment-overrides-title'>
-                                            <Tooltip
-                                              title={
-                                                <h5 className='mb-0'>
-                                                  Segment Overrides{' '}
-                                                  <Icon name='info-outlined' />
-                                                </h5>
+                                          <Row className='align-items-center mb-2 gap-4 segment-overrides-title'>
+                                            <div className='flex-fill'>
+                                              <Tooltip
+                                                title={
+                                                  <h5 className='mb-0'>
+                                                    Segment Overrides{' '}
+                                                    <Icon name='info-outlined' />
+                                                  </h5>
+                                                }
+                                                place='top'
+                                              >
+                                                {
+                                                  Constants.strings
+                                                    .SEGMENT_OVERRIDES_DESCRIPTION
+                                                }
+                                              </Tooltip>
+                                            </div>
+                                            <Permission
+                                              level='environment'
+                                              permission={
+                                                'MANAGE_SEGMENT_OVERRIDES'
                                               }
-                                              place='top'
+                                              id={this.props.environmentId}
                                             >
-                                              {
-                                                Constants.strings
-                                                  .SEGMENT_OVERRIDES_DESCRIPTION
+                                              {({
+                                                permission:
+                                                  manageSegmentOverrides,
+                                              }) =>
+                                                !this.state.showCreateSegment &&
+                                                !!manageSegmentOverrides &&
+                                                !this.props.disableCreate && (
+                                                  <div className='text-right'>
+                                                    <Button
+                                                      size='small'
+                                                      onClick={() => {
+                                                        this.setState({
+                                                          showCreateSegment: true,
+                                                        })
+                                                      }}
+                                                      theme='outline'
+                                                      disabled={
+                                                        !!isLimitReached
+                                                      }
+                                                    >
+                                                      Create Feature-Specific
+                                                      Segment
+                                                    </Button>
+                                                  </div>
+                                                )
                                               }
-                                            </Tooltip>
+                                            </Permission>
                                             {!this.state.showCreateSegment &&
                                               !noPermissions && (
                                                 <Button
@@ -1295,19 +1327,19 @@ const CreateFlag = class extends Component {
                                                       }
                                                     />
                                                     <SegmentOverrides
+                                                      setShowCreateSegment={(
+                                                        setShowCreateSegment,
+                                                      ) =>
+                                                        this.setState({
+                                                          setShowCreateSegment,
+                                                        })
+                                                      }
                                                       readOnly={isReadOnly}
                                                       is4Eyes={is4Eyes}
                                                       showEditSegment
                                                       showCreateSegment={
                                                         this.state
                                                           .showCreateSegment
-                                                      }
-                                                      setShowCreateSegment={(
-                                                        showCreateSegment,
-                                                      ) =>
-                                                        this.setState({
-                                                          showCreateSegment,
-                                                        })
                                                       }
                                                       feature={projectFlag.id}
                                                       projectId={
@@ -1496,7 +1528,11 @@ const CreateFlag = class extends Component {
                                                 }
                                               </Tooltip>
                                               <div className='fw-normal transform-none mt-4'>
-                                                <InfoMessage>
+                                                <InfoMessage
+                                                  collapseId={
+                                                    'identity-overrides'
+                                                  }
+                                                >
                                                   Identity overrides override
                                                   feature values for individual
                                                   identities. The overrides take
@@ -1694,8 +1730,7 @@ const CreateFlag = class extends Component {
                                   )}
                                 {!existingChangeRequest &&
                                   this.props.flagId &&
-                                  (isVersioned ||
-                                    !Project.disableAnalytics) && (
+                                  isVersioned && (
                                     <TabItem
                                       data-test='change-history'
                                       tabLabel='History'
@@ -1854,7 +1889,10 @@ const CreateFlag = class extends Component {
                                 {!identity && (
                                   <div className='text-right mb-3'>
                                     {project.prevent_flag_defaults ? (
-                                      <InfoMessage className='text-right modal-caption fs-small lh-sm'>
+                                      <InfoMessage
+                                        collapseId={'create-flag'}
+                                        className='text-right modal-caption fs-small lh-sm'
+                                      >
                                         This will create the feature for{' '}
                                         <strong>all environments</strong>, you
                                         can edit this feature per environment
@@ -1862,7 +1900,10 @@ const CreateFlag = class extends Component {
                                         environment once the feature is created.
                                       </InfoMessage>
                                     ) : (
-                                      <InfoMessage className='text-right modal-caption fs-small lh-sm'>
+                                      <InfoMessage
+                                        collapseId={'create-flag'}
+                                        className='text-right modal-caption fs-small lh-sm'
+                                      >
                                         This will create the feature for{' '}
                                         <strong>all environments</strong>, you
                                         can edit this feature per environment

@@ -384,7 +384,7 @@ const UserPage = class extends Component {
                                       <div>
                                         Features
                                         <div className='fw-normal mt-2 fs-medium'>
-                                          <InfoMessage>
+                                          <InfoMessage collapseId={'identity-priority'}>
                                             Overriding features here will take
                                             priority over any segment override.
                                             Any features that are not overridden

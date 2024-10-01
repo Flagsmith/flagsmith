@@ -399,7 +399,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     <form id='create-segment-modal' onSubmit={save}>
       {!condensed && (
         <div className='mt-3'>
-          <InfoMessage>
+          <InfoMessage collapseId={'value-type-conversions'}>
             Learn more about rule and trait value type conversions{' '}
             <a href='https://docs.flagsmith.com/basic-features/segments#rule-typing'>
               here
@@ -606,7 +606,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
           <TabItem tabLabel='Users'>
             <div className='my-4'>
-              <InfoMessage>
+              <InfoMessage collapseId={'random-identity-sample'}>
                 This is a random sample of Identities who are either in or out
                 of this Segment based on the current Segment rules.
               </InfoMessage>
