@@ -634,13 +634,15 @@ class TheComponent extends Component {
             !this.props.showCreateSegment && (
               <div className='overflow-visible'>
                 {!this.props.id && (
-                        <div className='my-4'>
-                          <InfoMessage collapseId={'segment-overrides'} className='mb-4 text-left faint'>
-                            Segment overrides override the environment defaults,
-                            prioritise them by dragging it to the top of the
-                            list. Segment overrides will only apply when you
-                            identify via the SDK, any identity overrides will
-                            take priority.{' '}
+                  <div className='my-4'>
+                    <InfoMessage
+                      collapseId={'segment-overrides'}
+                      className='mb-4 text-left faint'
+                    >
+                      Segment overrides override the environment defaults,
+                      prioritise them by dragging it to the top of the list.
+                      Segment overrides will only apply when you identify via
+                      the SDK, any identity overrides will take priority.{' '}
                       <a
                         target='_blank'
                         href='https://docs.flagsmith.com/basic-features/segments'
