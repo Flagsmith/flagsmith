@@ -8,6 +8,7 @@ import { createBrowserHistory } from 'history'
 import ToastMessages from './project/toast'
 import routes from './routes'
 import Utils from 'common/utils/utils'
+import Project from 'common/project'
 import AccountStore from 'common/stores/account-store'
 import data from 'common/data/base/_data'
 
@@ -26,18 +27,18 @@ if (params.token) {
 }
 
 // Render the React application to the DOM
-const res = COOKIE_AUTH_ENABLED ? 'true' : API.getCookie('t')
+const res = Project.cookieAuthEnabled ? 'true' : API.getCookie('t')
 
 const event = API.getEvent()
 if (event) {
   try {
     data
       .post('/api/event', JSON.parse(event))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => {
         API.setEvent('')
       })
-  } catch (e) {}
+  } catch (e) { }
 }
 
 const isInvite = document.location.href.includes('invite')
@@ -85,13 +86,13 @@ const isWidget = document.location.href.includes('/widget')
 if (!E2E && Project.crispChat && !isWidget) {
   window.$crisp = []
   window.CRISP_WEBSITE_ID = Project.crispChat
-  ;(function () {
-    const d = document
-    const s = d.createElement('script')
-    s.src = 'https://client.crisp.chat/l.js'
-    s.async = 1
-    d.getElementsByTagName('head')[0].appendChild(s)
-  })()
+    ; (function () {
+      const d = document
+      const s = d.createElement('script')
+      s.src = 'https://client.crisp.chat/l.js'
+      s.async = 1
+      d.getElementsByTagName('head')[0].appendChild(s)
+    })()
 }
 
 if (!E2E && Project.zendesk && !isWidget) {

@@ -37,14 +37,17 @@ def project_overrides(request):
         "amplitude": "AMPLITUDE_API_KEY",
         "api": "API_URL",
         "assetURL": "ASSET_URL",
+        "cookieAuthEnabled": "COOKIE_AUTH_ENABLED",
+        "cookieSameSite": "COOKIE_SAME_SITE",
         "crispChat": "CRISP_CHAT_API_KEY",
         "disableAnalytics": "DISABLE_ANALYTICS_FEATURES",
         "flagsmith": "FLAGSMITH_ON_FLAGSMITH_API_KEY",
         "flagsmithAnalytics": "FLAGSMITH_ANALYTICS",
-        "flagsmithRealtime": "ENABLE_FLAGSMITH_REALTIME",
         "flagsmithClientAPI": "FLAGSMITH_ON_FLAGSMITH_API_URL",
-        "ga": "GOOGLE_ANALYTICS_API_KEY",
+        "flagsmithRealtime": "ENABLE_FLAGSMITH_REALTIME",
         "fpr": "FIRST_PROMOTER_ID",
+        "ga": "GOOGLE_ANALYTICS_API_KEY",
+        "githubAppURL": "GITHUB_APP_URL",
         "headway": "HEADWAY_API_KEY",
         "hideInviteLinks": "DISABLE_INVITE_LINKS",
         "linkedinPartnerTracking": "LINKEDIN_PARTNER_TRACKING",
@@ -54,8 +57,6 @@ def project_overrides(request):
         "preventSignup": "PREVENT_SIGNUP",
         "sentry": "SENTRY_API_KEY",
         "useSecureCookies": "USE_SECURE_COOKIES",
-        "cookieSameSite": "COOKIE_SAME_SITE",
-        "githubAppURL": "GITHUB_APP_URL",
     }
 
     override_data = {
