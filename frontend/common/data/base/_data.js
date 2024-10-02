@@ -23,7 +23,7 @@ module.exports = {
       options.headers['Content-Type'] = 'application/json; charset=utf-8'
 
     if (
-      (this.token && !isExternal) ||
+      (this.token && !isExternal && !COOKIE_AUTH_ENABLED) ||
       (this.token && isExternal && method !== 'get')
     ) {
       // add auth tokens to headers of all requests
