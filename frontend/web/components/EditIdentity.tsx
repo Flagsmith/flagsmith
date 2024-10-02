@@ -3,6 +3,7 @@ import { Identity } from 'common/types/responses'
 import { useUpdateIdentityMutation } from 'common/services/useIdentity'
 import Button from './base/forms/Button'
 import ErrorMessage from './ErrorMessage'
+import classNames from 'classnames';
 
 type EditIdentityType = {
   data: Identity
@@ -43,6 +44,9 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
   }
 
   const handleFocus = () => {
+    if(!alias) {
+      aliasRef.current.textContent = ''
+    }
     if (aliasRef.current) {
       const selection = window.getSelection()
       const range = document.createRange()
@@ -86,7 +90,7 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
       <>
         <span
             ref={aliasRef}
-            className='fw-normal'
+            className={classNames('fw-normal',{'text-muted':!alias})}
             contentEditable={true}
             suppressContentEditableWarning={true}
             onBlur={handleBlur}
