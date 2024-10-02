@@ -23,9 +23,9 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
   const handleBlur = () => {
     if (aliasRef.current) {
       const updatedAlias = (aliasRef.current.textContent || '')
-        .replace(/\n/g, ' ')
-        .trim()
-        .toLowerCase()
+          .replace(/\n/g, ' ')
+          .trim()
+          .toLowerCase()
 
       aliasRef.current.textContent = alias
       setAlias(updatedAlias)
@@ -44,8 +44,15 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
 
   const handleFocus = () => {
     if (aliasRef.current) {
-      aliasRef.current.textContent = ''
-      aliasRef.current.focus()
+      const selection = window.getSelection()
+      const range = document.createRange()
+
+      const textLength = aliasRef.current.textContent?.length || 0
+      range.setStart(aliasRef.current.childNodes[0], textLength)
+      range.collapse(true)
+
+      selection?.removeAllRanges()
+      selection?.addRange(range)
     }
   }
 
@@ -56,33 +63,53 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
     }
   }
 
+  const handleInput = () => {
+    if (aliasRef.current) {
+      const selection = window.getSelection()
+      const range = selection?.getRangeAt(0)
+      const cursorPosition = range?.startOffset || 0
+
+      const lowerCaseText = aliasRef.current.textContent?.toLowerCase() || ''
+      aliasRef.current.textContent = lowerCaseText
+
+      // Restore cursor position
+      const newRange = document.createRange()
+      newRange.setStart(aliasRef.current.childNodes[0], Math.min(cursorPosition, lowerCaseText.length))
+      newRange.collapse(true)
+
+      selection?.removeAllRanges()
+      selection?.addRange(newRange)
+    }
+  }
+
   return (
-    <>
-      <span
-        ref={aliasRef}
-        className='fw-normal'
-        contentEditable={true}
-        suppressContentEditableWarning={true}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        role='textbox'
-        aria-label='Alias'
-      >
-        {alias || 'None'}
-      </span>
-      <Button
-        disabled={!data}
-        iconSize={18}
-        theme='text'
-        className='ms-2 text-primary'
-        iconRightColour='primary'
-        iconRight={'edit'}
-        onClick={handleFocus}
-      >
-        Edit
-      </Button>
-      <ErrorMessage>{error}</ErrorMessage>
-    </>
+      <>
+        <span
+            ref={aliasRef}
+            className='fw-normal'
+            contentEditable={true}
+            suppressContentEditableWarning={true}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            onInput={handleInput}
+            role='textbox'
+            aria-label='Alias'
+        >
+          {alias || 'None'}
+        </span>
+        <Button
+            disabled={!data}
+            iconSize={18}
+            theme='text'
+            className='ms-2 text-primary'
+            iconRightColour='primary'
+            iconRight={'edit'}
+            onClick={handleFocus}
+        >
+          Edit
+        </Button>
+        <ErrorMessage>{error}</ErrorMessage>
+      </>
   )
 }
 

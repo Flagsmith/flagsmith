@@ -3,6 +3,7 @@ import Icon, { IconName } from './Icon'
 import { chevronForward, close as closeIcon, chevronDown } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import { FC } from 'react'
+import Button from 'components/base/forms/Button';
 
 type InfoMessageType = {
   buttonText?: string
@@ -79,14 +80,14 @@ const InfoMessage: FC<InfoMessageType> = ({
           </div>
         </div>
         {!isCollapsed && (
-          <>
-            <div className='flex-fill mt-1'>{children}</div>
+          <div className="flex-row">
+            <div className='flex-fill'>{children}</div>
             {url && buttonText && (
-              <button className='btn my-2 ml-2' onClick={handleOpenNewWindow}>
+              <Button onClick={handleOpenNewWindow}>
                 {buttonText}
-              </button>
+              </Button>
             )}
-          </>
+          </div>
         )}
       </div>
       {isClosable && (
