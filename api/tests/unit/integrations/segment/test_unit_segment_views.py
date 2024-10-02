@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from environments.models import Environment
+from integrations.segment.constants import DEFAULT_BASE_URL
 from integrations.segment.models import SegmentConfiguration
 
 
@@ -13,6 +14,7 @@ def test_should_create_segment_config_when_post(
     admin_client: APIClient,
 ) -> None:
     # Given
+
     data = {"api_key": "abc-123"}
     url = reverse(
         "api-v1:environments:integrations-segment-list",
@@ -30,7 +32,9 @@ def test_should_create_segment_config_when_post(
     assert response.status_code == status.HTTP_201_CREATED
     qs = SegmentConfiguration.objects.filter(environment=environment)
     assert qs.count() == 1
-    assert response.data["id"] == qs.first().id
+    segment_configuration = qs.first()
+    assert response.data["id"] == segment_configuration.id
+    assert segment_configuration.base_url == DEFAULT_BASE_URL
 
 
 def test_should_return_400_when_duplicate_segment_config_is_posted(
