@@ -44,21 +44,28 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
   }
 
   const handleFocus = () => {
-    if(!alias) {
-      aliasRef.current.textContent = ''
+    if (!alias) {
+      aliasRef.current.textContent = ''; // Clear the content
     }
+
+    // Ensure that aliasRef.current has at least one child node (a text node)
+    if (aliasRef.current && aliasRef.current.childNodes.length === 0) {
+      aliasRef.current.appendChild(document.createTextNode(''));
+    }
+
     if (aliasRef.current) {
-      const selection = window.getSelection()
-      const range = document.createRange()
+      const selection = window.getSelection();
+      const range = document.createRange();
 
-      const textLength = aliasRef.current.textContent?.length || 0
-      range.setStart(aliasRef.current.childNodes[0], textLength)
-      range.collapse(true)
+      const textLength = aliasRef.current.textContent?.length || 0;
+      range.setStart(aliasRef.current.childNodes[0], textLength);
+      range.collapse(true);
 
-      selection?.removeAllRanges()
-      selection?.addRange(range)
+      selection?.removeAllRanges();
+      selection?.addRange(range);
     }
-  }
+  };
+
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLSpanElement>) => {
     if (e.key === 'Enter') {
