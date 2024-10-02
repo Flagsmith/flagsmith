@@ -304,7 +304,7 @@ const UserPage: FC<UserPageType> = (props) => {
     )
   }
 
-  const removeTrait = (id: string, trait_key: string) => {
+  const removeTrait = (traitId: string, trait_key: string) => {
     openConfirm({
       body: (
         <div>
@@ -317,7 +317,7 @@ const UserPage: FC<UserPageType> = (props) => {
       ),
       destructive: true,
       onYes: () =>
-        AppActions.deleteIdentityTrait(environmentId, id, id || trait_key),
+        AppActions.deleteIdentityTrait(environmentId, id, traitId || trait_key),
       title: 'Delete Trait',
       yesText: 'Confirm',
     })
