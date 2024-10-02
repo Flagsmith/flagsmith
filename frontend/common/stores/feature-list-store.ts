@@ -473,9 +473,9 @@ const controller = {
           environment: environmentFlag.environment,
           feature: projectFlag.id,
         },
-          {
-              forceRefetch: true
-          }
+        {
+          forceRefetch: true,
+        },
       )
       let segments = null
       if (mode === 'SEGMENT') {
@@ -712,8 +712,8 @@ const controller = {
         return createAndSetFeatureVersion(getStore(), {
           environmentId: res,
           featureId: projectFlag.id,
-          projectId,
           featureStates,
+          projectId,
         }).then((version) => {
           if (version.error) {
             throw version.error
@@ -768,10 +768,10 @@ const controller = {
               feature_state_value: flag.initial_value,
             })
             return createAndSetFeatureVersion(getStore(), {
-              projectId,
               environmentId: res,
               featureId: projectFlag.id,
               featureStates: [data],
+              projectId,
             }).then((version) => {
               if (version.error) {
                 throw version.error

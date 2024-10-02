@@ -5,6 +5,8 @@ import data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import FeatureListStore from 'common/stores/feature-list-store'
+import IdentityProvider from 'common/providers/IdentityProvider'
+
 import {
   Bar,
   BarChart,
