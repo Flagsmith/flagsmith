@@ -119,6 +119,7 @@ app.get('/config/project-overrides', (req, res) => {
     { name: 'albacross', value: process.env.ALBACROSS_CLIENT_ID },
     { name: 'useSecureCookies', value: envToBool('USE_SECURE_COOKIES', true) },
     { name: 'cookieSameSite', value: process.env.USE_SECURE_COOKIES },
+    { name: 'cookieAuthEnabled', value: envToBool(process.env.COOKIE_AUTH_ENABLED) },
     {
       name: 'githubAppURL',
       value: process.env.GITHUB_APP_URL,
