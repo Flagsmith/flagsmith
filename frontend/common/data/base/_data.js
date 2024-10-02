@@ -9,7 +9,7 @@ const getQueryString = (params) => {
 module.exports = {
   _request(method, _url, data, headers = {}) {
     const options = {
-      credentials: COOKIE_AUTH_ENABLED ? 'include' : undefined,
+      credentials: Project.cookieAuthEnabled ? 'include' : undefined,
       headers: {
         'Accept': 'application/json',
         ...headers,
@@ -23,7 +23,7 @@ module.exports = {
       options.headers['Content-Type'] = 'application/json; charset=utf-8'
 
     if (
-      (this.token && !isExternal) ||
+      (this.token && !isExternal && !Project.cookieAuthEnabled) ||
       (this.token && isExternal && method !== 'get')
     ) {
       // add auth tokens to headers of all requests

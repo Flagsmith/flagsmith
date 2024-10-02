@@ -98,7 +98,6 @@ module.exports = {
     'toast': true,
     'window': true,
     'zE': true,
-    'COOKIE_AUTH_ENABLED': true,
   },
   'ignorePatterns': ['server/index.js', 'next.config.js', 'babel.config.js'],
   'parser': '@typescript-eslint/parser',
