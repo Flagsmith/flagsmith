@@ -1328,10 +1328,10 @@ const CreateFlag = class extends Component {
                                                     />
                                                     <SegmentOverrides
                                                       setShowCreateSegment={(
-                                                        setShowCreateSegment,
+                                                        showCreateSegment,
                                                       ) =>
                                                         this.setState({
-                                                          setShowCreateSegment,
+                                                          showCreateSegment,
                                                         })
                                                       }
                                                       readOnly={isReadOnly}
