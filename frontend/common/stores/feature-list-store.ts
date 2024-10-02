@@ -964,7 +964,7 @@ const controller = {
   },
   searchFeatures: _.throttle(
     (search, environmentId, projectId, filter, pageSize) => {
-      store.search = search
+      store.search = encodeURIComponent(search)
       controller.getFeatures(
         projectId,
         environmentId,
@@ -1021,7 +1021,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     }
     case Actions.GET_FLAGS:
-      store.search = action.search || ''
+      store.search = encodeURIComponent(action.search || '')
       if (action.sort) {
         store.sort = action.sort
       }
