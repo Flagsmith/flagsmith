@@ -964,7 +964,7 @@ const controller = {
   },
   searchFeatures: _.throttle(
     (search, environmentId, projectId, filter, pageSize) => {
-      store.search = encodeURIComponent(search)
+      store.search = encodeURIComponent(search||'')
       controller.getFeatures(
         projectId,
         environmentId,
