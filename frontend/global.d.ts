@@ -13,7 +13,6 @@ import { TooltipProps } from './web/components/Tooltip'
 
 export declare const openModal: (name?: string) => Promise<void>
 declare global {
-  const COOKIE_AUTH_ENABLED: boolean
   const openModal: (
     title: ReactNode,
     body?: ReactNode,
