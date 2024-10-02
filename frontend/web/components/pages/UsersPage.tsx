@@ -232,13 +232,16 @@ const UsersPage: FC<UsersPageType> = (props) => {
                       <div className='font-weight-medium'>
                         <IdentifierString value={identifier} />
                       </div>
-                      <div className={'list-item-subtitle mt-1'}>
-                        {dashboard_alias ? `${dashboard_alias}` : ''}
-                      </div>
+                      {!!showAliases && !!dashboard_alias && (
+                          <div className={'list-item-subtitle mt-1'}>
+                            {dashboard_alias ? `${dashboard_alias}` : ''}
+                          </div>
+                      )}
+
                     </div>
                   </Link>
                   <div className='table-column'>
-                    <Button
+                  <Button
                       id='remove-feature'
                       className='btn btn-with-icon'
                       type='button'
