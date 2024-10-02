@@ -35,15 +35,16 @@ if (event) {
   try {
     data
       .post('/api/event', JSON.parse(event))
-      .catch(() => { })
+      .catch(() => {})
       .finally(() => {
         API.setEvent('')
       })
-  } catch (e) { }
+  } catch (e) {}
 }
 
 const isInvite = document.location.href.includes('invite')
-if (res && !isInvite) {
+const isOauth = document.location.href.includes('/oauth')
+if (res && !isInvite && !isOauth) {
   AppActions.setToken(res)
 }
 
@@ -87,13 +88,13 @@ const isWidget = document.location.href.includes('/widget')
 if (!E2E && Project.crispChat && !isWidget) {
   window.$crisp = []
   window.CRISP_WEBSITE_ID = Project.crispChat
-    ; (function () {
-      const d = document
-      const s = d.createElement('script')
-      s.src = 'https://client.crisp.chat/l.js'
-      s.async = 1
-      d.getElementsByTagName('head')[0].appendChild(s)
-    })()
+  ;(function () {
+    const d = document
+    const s = d.createElement('script')
+    s.src = 'https://client.crisp.chat/l.js'
+    s.async = 1
+    d.getElementsByTagName('head')[0].appendChild(s)
+  })()
 }
 
 if (!E2E && Project.zendesk && !isWidget) {
