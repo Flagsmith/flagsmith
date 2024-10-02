@@ -27,7 +27,7 @@ import classNames from 'classnames'
 import InfoMessage from 'components/InfoMessage'
 import { withRouter } from 'react-router-dom'
 
-const CodeHelp = require('../../components/CodeHelp')
+import CodeHelp from 'components/CodeHelp'
 type SegmentsPageType = {
   router: RouterChildContext['router']
   match: {
