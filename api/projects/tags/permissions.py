@@ -11,14 +11,10 @@ class TagPermissions(BasePermission):
             return False
         project = Project.objects.get(pk=project_pk)
 
-        if request.user.is_project_admin(project):
-            return True
-
-        if view.action in ["list", "get_by_uuid"]:
-            return request.user.has_project_permission(VIEW_PROJECT, project)
-
-        # move on to object specific permissions
-        return view.detail
+        permission = (
+            VIEW_PROJECT if view.action in ("list", "get_by_uuid") else MANAGE_TAGS
+        )
+        return request.user.has_project_permission(permission, project) or view.detail
 
     def has_object_permission(self, request, view, obj):
         project = obj.project
