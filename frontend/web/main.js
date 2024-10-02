@@ -1,3 +1,4 @@
+Project.cookieAuthEnabled = true
 import './project/polyfil'
 import './project/libs'
 import './project/api'
