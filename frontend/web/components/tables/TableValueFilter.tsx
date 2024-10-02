@@ -1,13 +1,6 @@
 import React, { FC, useEffect, useMemo, useRef, useState } from 'react'
 import TableFilter from './TableFilter'
-import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
-import { useGetTagsQuery } from 'common/services/useTag'
-import Tag from 'components/tags/Tag'
-import TableFilterItem from './TableFilterItem'
-import Constants from 'common/constants'
-import { TagStrategy } from 'common/types/responses'
-import { AsyncStorage } from 'polyfill-react-native'
 import InputGroup from 'components/base/forms/InputGroup'
 import useSearchThrottle from 'common/useSearchThrottle'
 
@@ -16,11 +9,9 @@ type TableFilterType = {
     enabled: boolean | null
     valueSearch: string | null
   }
-  enabled: boolean | null
-  isLoading: boolean
+  isLoading?: boolean
   onChange: (value: TableFilterType['value']) => void
   className?: string
-  projectId: string
 }
 
 const enabledOptions = [

@@ -33,6 +33,7 @@ export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {
   target?: HTMLAttributeAnchorTarget
   theme?: keyof typeof themeClassNames
   size?: keyof typeof sizeClassNames
+  iconSize?: number
 }
 
 export const Button: FC<ButtonType> = ({
@@ -44,6 +45,7 @@ export const Button: FC<ButtonType> = ({
   iconLeftColour,
   iconRight,
   iconRightColour,
+  iconSize = 24,
   onMouseUp,
   size = 'default',
   target,
@@ -65,6 +67,7 @@ export const Button: FC<ButtonType> = ({
           fill={iconLeftColour ? Constants.colours[iconLeftColour] : undefined}
           className='me-2'
           name={iconLeft}
+          width={iconSize}
         />
       )}
       {children}
@@ -75,6 +78,7 @@ export const Button: FC<ButtonType> = ({
           }
           className='ml-2'
           name={iconRight}
+          width={iconSize}
         />
       )}
     </a>
@@ -95,6 +99,7 @@ export const Button: FC<ButtonType> = ({
           fill={iconLeftColour ? Constants.colours[iconLeftColour] : undefined}
           className='mr-2'
           name={iconLeft}
+          width={iconSize}
         />
       )}
       {children}
@@ -105,6 +110,7 @@ export const Button: FC<ButtonType> = ({
           }
           className='ml-2'
           name={iconRight}
+          width={iconSize}
         />
       )}
     </button>

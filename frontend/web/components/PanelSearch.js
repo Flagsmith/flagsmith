@@ -229,6 +229,7 @@ const PanelSearch = class extends Component {
                       placeholder='Search'
                       search
                     />
+                    {this.props.filterRowContent}
                   </Row>
                 </Row>
               )}

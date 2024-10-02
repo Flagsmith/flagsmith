@@ -103,6 +103,4 @@ const TryIt = class extends Component {
   }
 }
 
-TryIt.propTypes = {}
-
-module.exports = ConfigProvider(TryIt)
+export default ConfigProvider(TryIt)

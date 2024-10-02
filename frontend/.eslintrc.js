@@ -39,7 +39,6 @@ module.exports = {
     'Flex': true,
     'FormGroup': true,
     'Headway': true,
-    'IdentityProvider': true,
     'Input': true,
     'InputGroup': true,
     'Link': true,
