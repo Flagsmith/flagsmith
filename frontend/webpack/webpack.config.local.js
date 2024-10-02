@@ -33,6 +33,7 @@ module.exports = {
         new webpack.NoEmitOnErrorsPlugin(),
     ]).concat(require('./pages').map((page) => {
         // eslint-disable-next-line no-console
+        console.log(page);
         return new HtmlWebpackPlugin({
             filename: `${page}.html`, // output
             template: `./web/${page}.html`, // template to use

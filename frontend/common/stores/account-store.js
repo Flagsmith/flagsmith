@@ -225,7 +225,7 @@ const controller = {
   },
   onLogin: (skipCaching) => {
     if (!skipCaching) {
-      API.setCookie('t', data.token)
+      API.setCookie('t', Project.cookieAuthEnabled ? 'true' : data.token)
     }
     return controller.getOrganisations()
   },
