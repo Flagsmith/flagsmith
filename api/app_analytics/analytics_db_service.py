@@ -40,22 +40,24 @@ def get_usage_data(
     match period:
         case constants.CURRENT_BILLING_PERIOD:
             if not getattr(organisation, "subscription_information_cache", None):
-                return []
-            sub_cache = organisation.subscription_information_cache
-            starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
-                days=30
-            )
+                starts_at = now - timedelta(days=30)
+            else:
+                sub_cache = organisation.subscription_information_cache
+                starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
+                    days=30
+                )
             month_delta = relativedelta(now, starts_at).months
             date_start = relativedelta(months=month_delta) + starts_at
             date_stop = now
 
         case constants.PREVIOUS_BILLING_PERIOD:
             if not getattr(organisation, "subscription_information_cache", None):
-                return []
-            sub_cache = organisation.subscription_information_cache
-            starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
-                days=30
-            )
+                starts_at = now - timedelta(days=30)
+            else:
+                sub_cache = organisation.subscription_information_cache
+                starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
+                    days=30
+                )
             month_delta = relativedelta(now, starts_at).months - 1
             month_delta += relativedelta(now, starts_at).years * 12
             date_start = relativedelta(months=month_delta) + starts_at
