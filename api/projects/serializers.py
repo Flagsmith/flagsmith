@@ -43,6 +43,7 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "show_edge_identity_overrides_for_feature",
             "stale_flags_limit_days",
             "edge_v2_migration_status",
+            "minimum_change_request_approvals",
         )
 
     def get_migration_status(self, obj: Project) -> str:
