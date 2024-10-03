@@ -4,7 +4,6 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.generic.base import TemplateView
-from rest_framework_nested import routers
 
 from users.views import password_reset_redirect
 
@@ -53,26 +52,10 @@ if settings.DEBUG:
 if settings.SAML_INSTALLED:
     urlpatterns.append(path("api/v1/auth/saml/", include("saml.urls")))
 
-if settings.WORKFLOWS_LOGIC_INSTALLED:
+if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover
     workflow_views = importlib.import_module("workflows_logic.views")
-    from projects.views import ProjectViewSet  # pragma: no cover
-
-    router = routers.DefaultRouter()  # pragma: no cover
-    router.register(r"projects", ProjectViewSet, basename="project")  # pragma: no cover
-
-    project_router = routers.NestedSimpleRouter(  # pragma: no cover
-        router, r"projects", lookup="project"
-    )
-    project_router.register(  # pragma: no cover
-        r"change-requests",
-        workflow_views.ProjectChangeRequestViewSet,
-        basename="project-change-requests",
-    )
-
     urlpatterns.extend(
         [
-            path("api/v1/", include(router.urls)),
-            path("api/v1/", include(project_router.urls)),
             path("api/v1/features/workflows/", include("workflows_logic.urls")),
             path(
                 "api/v1/environments/<str:environment_api_key>/create-change-request/",
