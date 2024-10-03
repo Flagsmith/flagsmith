@@ -243,17 +243,13 @@ class ChangeRequest(
     def _get_environment(self) -> typing.Optional["Environment"]:
         return self.environment
 
-    def _get_project(self) -> typing.Optional["Project"]:
-        return self.project or (self.environment and self.environment.project)
+    def _get_project(self) -> "Project":
+        return self.project
 
     def is_approved(self):
         if self.environment:
             return self.is_approved_via_environment()
-        if self.project:
-            return self.is_approved_via_project()
-        raise RuntimeError(  # pragma: no cover
-            "Unable to approve change request without environment or project"
-        )
+        return self.is_approved_via_project()
 
     def is_approved_via_project(self):
         return self.project.minimum_change_request_approvals is None or (
@@ -281,12 +277,8 @@ class ChangeRequest(
         if self.environment:
             url += f"/project/{self.environment.project_id}"
             url += f"/environment/{self.environment.api_key}"
-        elif self.project_id:
-            url += f"/projects/{self.project_id}"
         else:
-            raise RuntimeError(  # pragma: no cover
-                "Change request missing fields for URL"
-            )
+            url += f"/projects/{self.project_id}"
         url += f"/change-requests/{self.id}"
         return url
 
