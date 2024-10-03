@@ -8,6 +8,7 @@ import { createBrowserHistory } from 'history'
 import ToastMessages from './project/toast'
 import routes from './routes'
 import Utils from 'common/utils/utils'
+import Project from 'common/project'
 import AccountStore from 'common/stores/account-store'
 import data from 'common/data/base/_data'
 
@@ -26,7 +27,7 @@ if (params.token) {
 }
 
 // Render the React application to the DOM
-const res = API.getCookie('t')
+const res = Project.cookieAuthEnabled ? 'true' : API.getCookie('t')
 
 const event = API.getEvent()
 if (event) {
@@ -41,7 +42,8 @@ if (event) {
 }
 
 const isInvite = document.location.href.includes('invite')
-if (res && !isInvite) {
+const isOauth = document.location.href.includes('/oauth')
+if (res && !isInvite && !isOauth) {
   AppActions.setToken(res)
 }
 

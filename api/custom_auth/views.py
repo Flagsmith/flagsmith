@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.conf import settings
 from django.contrib.auth import user_logged_out
 from django.utils.decorators import method_decorator
@@ -9,8 +11,10 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.throttling import ScopedRateThrottle
 
+from custom_auth.jwt_cookie.services import authorise_response
 from custom_auth.mfa.backends.application import CustomApplicationBackend
 from custom_auth.mfa.trench.command.authenticate_second_factor import (
     authenticate_second_step_command,
@@ -34,6 +38,7 @@ class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):
     Class to handle throttling for login requests
     """
 
+    authentication_classes = []
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "login"
 
@@ -54,6 +59,8 @@ class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):
                 }
             )
         except MFAMethodDoesNotExistError:
+            if settings.COOKIE_AUTH_ENABLED:
+                return authorise_response(user, Response(status=HTTP_204_NO_CONTENT))
             return self._action(serializer)
 
 
@@ -62,6 +69,7 @@ class CustomAuthTokenLoginWithMFACode(TokenCreateView):
     Override class to add throttling
     """
 
+    authentication_classes = []
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "mfa_code"
 
@@ -74,6 +82,8 @@ class CustomAuthTokenLoginWithMFACode(TokenCreateView):
                 ephemeral_token=serializer.validated_data["ephemeral_token"],
             )
             serializer.user = user
+            if settings.COOKIE_AUTH_ENABLED:
+                return authorise_response(user, Response(status=HTTP_204_NO_CONTENT))
             return self._action(serializer)
         except MFAValidationError as cause:
             return ErrorResponse(error=cause, status=status.HTTP_401_UNAUTHORIZED)
@@ -96,6 +106,11 @@ def delete_token(request):
 class FFAdminUserViewSet(UserViewSet):
     throttle_scope = "signup"
 
+    def perform_authentication(self, request: Request) -> None:
+        if self.action == "create":
+            return
+        return super().perform_authentication(request)
+
     def get_throttles(self):
         """
         Used for throttling create(signup) action
@@ -104,6 +119,12 @@ class FFAdminUserViewSet(UserViewSet):
         if self.action == "create":
             throttles = [ScopedRateThrottle()]
         return throttles
+
+    def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        response = super().create(request, *args, **kwargs)
+        if settings.COOKIE_AUTH_ENABLED:
+            authorise_response(self.user, response)
+        return response
 
     def perform_destroy(self, instance):
         instance.delete(
