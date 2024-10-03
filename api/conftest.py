@@ -513,7 +513,7 @@ def feature(project: Project, environment: Environment) -> Feature:
 
 
 @pytest.fixture()
-def change_request(environment, admin_user):
+def change_request(environment: Environment, admin_user: FFAdminUser) -> ChangeRequest:
     return ChangeRequest.objects.create(
         environment=environment, title="Test CR", user_id=admin_user.id
     )
