@@ -1,0 +1,126 @@
+{
+    "$defs": {
+        "EnvironmentEvaluationContext": {
+            "properties": {
+                "api_key": {
+                    "title": "Api Key",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "api_key"
+            ],
+            "title": "EnvironmentEvaluationContext",
+            "type": "object"
+        },
+        "FeatureEvaluationContext": {
+            "properties": {
+                "name": {
+                    "title": "Name",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "title": "FeatureEvaluationContext",
+            "type": "object"
+        },
+        "IdentityEvaluationContext": {
+            "properties": {
+                "identifier": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "title": "Identifier"
+                },
+                "traits": {
+                    "additionalProperties": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/$defs/TraitEvaluationContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "title": "Traits",
+                    "type": "object"
+                },
+                "transient": {
+                    "anyOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Transient"
+                }
+            },
+            "required": [],
+            "title": "IdentityEvaluationContext",
+            "type": "object"
+        },
+        "TraitEvaluationContext": {
+            "properties": {
+                "value": {},
+                "transient": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "Transient"
+                }
+            },
+            "required": [
+                "value"
+            ],
+            "title": "TraitEvaluationContext",
+            "type": "object"
+        }
+    },
+    "properties": {
+        "environment": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/EnvironmentEvaluationContext"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null
+        },
+        "identity": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/IdentityEvaluationContext"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null
+        },
+        "feature": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/FeatureEvaluationContext"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null
+        }
+    },
+    "title": "FlagsmithEvaluationContext",
+    "type": "object"
+}
