@@ -59,4 +59,14 @@ class Migration(migrations.Migration):
             set_project_for_existing_change_requests,
             reverse_code=migrations.RunPython.noop,
         ),
+        migrations.AlterField(
+            model_name="changerequest",
+            name="project",
+            field=models.ForeignKey(
+                null=False,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="change_requests",
+                to="projects.project",
+            ),
+        ),
     ]
