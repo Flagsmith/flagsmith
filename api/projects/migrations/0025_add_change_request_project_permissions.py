@@ -10,30 +10,17 @@ from projects.permissions import (
 )
 
 
-def remove_default_project_permissions(apps, schema_model):
-    PermissionModel = apps.get_model(  # pragma: no cover
-        "permissions", "PermissionModel"
-    )
-    PermissionModel.objects.get(  # pragma: no cover
-        key=MANAGE_PROJECT_LEVEL_CHANGE_REQUESTS
-    ).delete()
-    PermissionModel.objects.get(  # pragma: no cover
-        key=APPROVE_PROJECT_LEVEL_CHANGE_REQUESTS
-    ).delete()
+def remove_default_project_permissions(apps, schema_model):  # pragma: no cover
+    PermissionModel = apps.get_model("permissions", "PermissionModel")
+    PermissionModel.objects.get(key=MANAGE_PROJECT_LEVEL_CHANGE_REQUESTS).delete()
+    PermissionModel.objects.get(key=APPROVE_PROJECT_LEVEL_CHANGE_REQUESTS).delete()
 
 
 def insert_default_project_permissions(apps, schema_model):
     PermissionModel = apps.get_model("permissions", "PermissionModel")
-    manage_description = approve_description = None
 
-    for project_permission in PROJECT_PERMISSIONS:
-        if project_permission[0] == MANAGE_PROJECT_LEVEL_CHANGE_REQUESTS:
-            manage_description = project_permission[1]
-        elif project_permission[0] == APPROVE_PROJECT_LEVEL_CHANGE_REQUESTS:
-            approve_description = project_permission[1]
-
-    assert manage_description
-    assert approve_description
+    manage_description = "Ability to manage change requests associated with a project."
+    approve_description = "Ability to approve project level change requests."
 
     PermissionModel.objects.get_or_create(
         key=MANAGE_PROJECT_LEVEL_CHANGE_REQUESTS,
