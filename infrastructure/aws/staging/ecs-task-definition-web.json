@@ -20,10 +20,6 @@
             "essential": true,
             "environment": [
                 {
-                    "name": "COOKIE_AUTH_ENABLED",
-                    "value": "1"
-                },
-                {
                     "name": "LOG_LEVEL",
                     "value": "INFO"
                 },
