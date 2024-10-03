@@ -106,7 +106,7 @@ FROM build-python AS build-python-private
 
 # Authenticate git with token, install private Python dependencies,
 # and integrate private modules
-ARG SAML_REVISION=feat/jwt-cookie-auth
+ARG SAML_REVISION
 ARG RBAC_REVISION
 RUN --mount=type=secret,id=github_private_cloud_token \
   echo "https://$(cat /run/secrets/github_private_cloud_token):@github.com" > ${HOME}/.git-credentials && \
