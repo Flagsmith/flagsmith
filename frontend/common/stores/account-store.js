@@ -6,6 +6,7 @@ const data = require('../data/base/_data')
 import Constants from 'common/constants'
 import dataRelay from 'data-relay'
 import { sortBy } from 'lodash'
+import Project from 'common/project'
 
 const controller = {
   acceptInvite: (id) => {
@@ -32,7 +33,7 @@ const controller = {
           ev.event + (ev.extra ? ` ${ev.extra}` : ''),
           'first_events',
         )
-          .catch(() => { })
+          .catch(() => {})
           .finally(() => {
             AsyncStorage.setItem('user', JSON.stringify(store.model))
             store.saved()
@@ -186,8 +187,7 @@ const controller = {
           return
         }
 
-        data.setToken(Project.cookieAuthEnabled ? 'true' : res.key
-        )
+        data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         return controller.onLogin()
       })
       .catch((e) => API.ajaxHandler(store, e))
@@ -219,8 +219,7 @@ const controller = {
           return
         }
 
-        data.setToken(Project.cookieAuthEnabled ? 'true' : res.key
-        )
+        data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         return controller.onLogin()
       })
       .catch((e) => API.ajaxHandler(store, e))
@@ -251,8 +250,7 @@ const controller = {
         sign_up_type: API.getInviteType(),
       })
       .then((res) => {
-        data.setToken(Project.cookieAuthEnabled ? 'true' : res.key
-        )
+        data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         API.trackEvent(Constants.events.REGISTER)
         if (API.getReferrer()) {
           API.trackEvent(
@@ -334,7 +332,10 @@ const controller = {
       if (!data.token) {
         return
       }
-      data.post(`${Project.api}auth/logout/`, {}).finally(() => {
+      ;(Project.cookieAuthEnabled
+        ? data.post(`${Project.api}auth/logout/`, {})
+        : Promise.resolve()
+      ).finally(() => {
         API.setCookie('t', '')
         data.setToken(null)
         API.reset().finally(() => {
@@ -356,8 +357,7 @@ const controller = {
       .then((res) => {
         store.model = null
         API.trackEvent(Constants.events.LOGIN)
-        data.setToken(Project.cookieAuthEnabled ? 'true' : res.key
-        )
+        data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         store.ephemeral_token = null
         controller.onLogin()
       })
@@ -386,7 +386,7 @@ const controller = {
               API.trackEvent(Constants.events.UPGRADE(res.subscription.plan))
               API.postEvent(res.subscription.plan, 'chargebee')
             }
-          } catch (e) { }
+          } catch (e) {}
           store.organisation = res
         }
         store.saved()
@@ -557,4 +557,3 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
 
 controller.store = store
 export default controller.store
-
