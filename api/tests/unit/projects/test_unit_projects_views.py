@@ -151,9 +151,8 @@ def test_can_list_project_permission(client, project):
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert (
-        len(response.json()) == 8
-    )  # hard code how many permissions we expect there to be
+    # Hard code how many permissions we expect there to be.
+    assert len(response.json()) == 9
 
 
 def test_my_permissions_for_a_project_return_400_with_master_api_key(

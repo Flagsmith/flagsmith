@@ -121,4 +121,4 @@ IdentityProvider.propTypes = {
   onSave: OptionalFunc,
 }
 
-module.exports = IdentityProvider
+export default IdentityProvider

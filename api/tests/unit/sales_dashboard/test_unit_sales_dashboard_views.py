@@ -145,3 +145,57 @@ def test_list_organisations_filter_plan(
     # Then
     assert response.status_code == 200
     assert list(response.context_data["organisation_list"]) == [organisation]
+
+
+def test_list_organisations_fails_if_not_staff(
+    organisation: Organisation,
+    client: Client,
+) -> None:
+    # Given
+    user = FFAdminUser.objects.create(email="notastaffuser@example.com")
+    client.force_login(user)
+
+    url = reverse("sales_dashboard:index")
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == 302
+    assert response.url == "/admin/login/?next=/sales-dashboard/"
+
+
+def test_get_email_usage_fails_if_not_staff(
+    organisation: Organisation,
+    client: Client,
+) -> None:
+    # Given
+    user = FFAdminUser.objects.create(email="notastaffuser@example.com")
+    client.force_login(user)
+
+    url = reverse("sales_dashboard:email-usage")
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == 302
+    assert response.url == "/admin/login/?next=/sales-dashboard/email-usage/"
+
+
+def test_post_email_usage_fails_if_not_staff(
+    organisation: Organisation,
+    client: Client,
+) -> None:
+    # Given
+    user = FFAdminUser.objects.create(email="notastaffuser@example.com")
+    client.force_login(user)
+
+    url = reverse("sales_dashboard:email-usage")
+
+    # When
+    response = client.post(url)
+
+    # Then
+    assert response.status_code == 302
+    assert response.url == "/admin/login/?next=/sales-dashboard/email-usage/"
