@@ -42,14 +42,10 @@ def handle_cascade_delete(project_id: int) -> None:
 
     from environments.tasks import delete_environment
     from features.tasks import delete_feature
-    from features.workflows.core.tasks import delete_change_request
     from projects.models import Project
     from segments.tasks import delete_segment
 
     project = Project.objects.all_with_deleted().get(id=project_id)
-
-    for change_request_id in project.change_requests.values_list("id", flat=True):
-        delete_change_request.delay(kwargs={"change_request_id": change_request_id})
 
     for environment_id in project.environments.values_list("id", flat=True):
         delete_environment.delay(kwargs={"environment_id": environment_id})
