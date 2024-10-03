@@ -999,7 +999,7 @@ def test_url_via_project(project_change_request: ChangeRequest) -> None:
     url = project_change_request.url
 
     # Then
-    project_id = project_change_request.project.id
+    project_id = project_change_request.project_id
     expected_url = get_current_site_url()
     expected_url += (
         f"/projects/{project_id}/change-requests/{project_change_request.id}"
