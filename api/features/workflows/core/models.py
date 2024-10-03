@@ -18,6 +18,7 @@ from django_lifecycle import (
     AFTER_CREATE,
     AFTER_SAVE,
     AFTER_UPDATE,
+    BEFORE_CREATE,
     BEFORE_DELETE,
     LifecycleModel,
     LifecycleModelMixin,
@@ -80,9 +81,9 @@ class ChangeRequest(
     # Change requests get deleted in a delegated task when a project is deleted.
     project = models.ForeignKey(
         "projects.Project",
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name="change_requests",
-        null=True,
+        null=False,
     )
 
     environment = models.ForeignKey(
@@ -292,6 +293,10 @@ class ChangeRequest(
     @property
     def email_subject(self):
         return f"Flagsmith Change Request: {self.title} (#{self.id})"
+
+    @hook(BEFORE_CREATE, when="project", is_now=None)
+    def set_project_from_environment(self):
+        self.project_id = self.environment.project_id
 
     @hook(AFTER_CREATE, when="committed_at", is_not=None)
     @hook(AFTER_SAVE, when="committed_at", was=None, is_not=None)
