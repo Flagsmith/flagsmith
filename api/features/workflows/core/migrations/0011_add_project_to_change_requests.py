@@ -4,14 +4,14 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
-def set_project_for_existing_environments(apps, schema_model):
+def set_project_for_existing_change_requests(apps, schema_model):
     ChangeRequest = apps.get_model("workflows_core", "ChangeRequest")
 
     for change_request in ChangeRequest.objects.filter(
         environment_id__isnull=False
     ).select_related("environment"):
-        change_request.project = change_request.environment.project  # pragma: no cover
-        change_request.save()  # pragma: no cover
+        change_request.project = change_request.environment.project
+        change_request.save()
 
 
 class Migration(migrations.Migration):
@@ -56,7 +56,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.RunPython(
-            set_project_for_existing_environments,
+            set_project_for_existing_change_requests,
             reverse_code=migrations.RunPython.noop,
         ),
     ]
