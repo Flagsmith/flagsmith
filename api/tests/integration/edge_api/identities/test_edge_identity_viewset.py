@@ -340,7 +340,7 @@ def test_search_for_identities_with_exact_match(
     )
 
 
-def test_search_for_identities_by_dashboard_alias(
+def test_search_for_identities_by_dashboard_alias_prefix(
     admin_client: APIClient,
     dynamo_enabled_environment: Environment,
     environment_api_key: str,
@@ -349,7 +349,44 @@ def test_search_for_identities_by_dashboard_alias(
 ) -> None:
     # Given
     identifier = identity_document["identifier"]
-    dashboard_alias = identity_document["dashboard_alias"]
+
+    # Using this specific email address to reproduce an issue seen in
+    # production, due to the use of lstrip instead or removeprefix.
+    identity_document["dashboard_alias"] = "hans.gruber@example.com"
+    search_string = "hans"
+
+    flagsmith_identities_table.put_item(Item=identity_document)
+
+    base_url = reverse(
+        "api-v1:environments:environment-edge-identities-list",
+        args=[environment_api_key],
+    )
+    url = "%s?%s" % (
+        base_url,
+        urllib.parse.urlencode(
+            {"q": f"{DASHBOARD_ALIAS_SEARCH_PREFIX}{search_string}"}
+        ),
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()["results"]) == 1
+    assert response.json()["results"][0]["identifier"] == identifier
+
+
+def test_search_for_identities_by_dashboard_alias_exact(
+    admin_client: APIClient,
+    dynamo_enabled_environment: Environment,
+    environment_api_key: str,
+    identity_document: dict[str, Any],
+    flagsmith_identities_table: Table,
+) -> None:
+    # Given
+    identifier = identity_document["identifier"]
+    dashboard_alias = "hans"
 
     flagsmith_identities_table.put_item(Item=identity_document)
 
@@ -369,8 +406,8 @@ def test_search_for_identities_by_dashboard_alias(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["results"][0]["identifier"] == identifier
     assert len(response.json()["results"]) == 1
+    assert response.json()["results"][0]["identifier"] == identifier
 
 
 def test_search_for_identities_by_dashboard_alias_casts_search_to_lower(
@@ -402,8 +439,8 @@ def test_search_for_identities_by_dashboard_alias_casts_search_to_lower(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["results"][0]["identifier"] == identifier
     assert len(response.json()["results"]) == 1
+    assert response.json()["results"][0]["identifier"] == identifier
 
 
 def test_update_edge_identity(

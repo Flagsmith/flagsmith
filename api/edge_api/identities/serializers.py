@@ -289,7 +289,7 @@ class EdgeIdentitySearchField(serializers.CharField):
 
         if search_term.startswith(DASHBOARD_ALIAS_SEARCH_PREFIX):
             kwargs["search_attribute"] = DASHBOARD_ALIAS_ATTRIBUTE
-            search_term = search_term.lstrip(DASHBOARD_ALIAS_SEARCH_PREFIX)
+            search_term = search_term.removeprefix(DASHBOARD_ALIAS_SEARCH_PREFIX)
         else:
             kwargs["search_attribute"] = IDENTIFIER_ATTRIBUTE
 
