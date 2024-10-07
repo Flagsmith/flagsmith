@@ -1406,7 +1406,7 @@ flagsmith-flag-engine = "*"
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-common"
 reference = "feat/add_workflows_change_request_concerns"
-resolved_reference = "963c8a3dd5efc091fe7686134c760e396e87b2db"
+resolved_reference = "25c5c7d7e12149e49dbe441e3302061de5aa047b"
 
 [[package]]
 name = "flagsmith-flag-engine"
