@@ -350,8 +350,10 @@ def test_search_for_identities_by_dashboard_alias_prefix(
     # Given
     identifier = identity_document["identifier"]
 
-    # Using this specific email address to reproduce an issue seen in
-    # production, due to the use of lstrip instead or removeprefix.
+    # This test verifies a previous bug which meant that if any of the
+    # leading characters to the search string were contained in the
+    # `string `"dashboard_alias:"` then they would also be removed
+    # and the search would fail.
     identity_document["dashboard_alias"] = "hans.gruber@example.com"
     search_string = "hans"
 
