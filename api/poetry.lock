@@ -1399,6 +1399,7 @@ develop = false
 [package.dependencies]
 django = "<5.0.0"
 djangorestframework = "*"
+djangorestframework-recursive = "*"
 drf-writable-nested = "*"
 flagsmith-flag-engine = "*"
 
@@ -1406,7 +1407,7 @@ flagsmith-flag-engine = "*"
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-common"
 reference = "feat/add_workflows_change_request_concerns"
-resolved_reference = "d9d648fd00a63d3d82542a0fc03c24633c1af54a"
+resolved_reference = "5564d1cbc1c9d1ea1a0ba18e944273ecc6373359"
 
 [[package]]
 name = "flagsmith-flag-engine"
