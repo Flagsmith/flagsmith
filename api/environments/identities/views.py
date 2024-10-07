@@ -310,7 +310,7 @@ class SDKIdentities(SDKAPIView):
             {
                 "flags": all_feature_states,
                 "identifier": identity.identifier,
-                "traits": identity.identity_traits.all(),
+                "traits": identity.identity_traits.all() if identity.id else [],
             },
             context=self.get_serializer_context(),
         )

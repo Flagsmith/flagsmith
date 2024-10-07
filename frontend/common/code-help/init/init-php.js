@@ -1,9 +1,12 @@
+import Constants from 'common/constants'
 module.exports = (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT },
 ) => `use Flagsmith\\Flagsmith;
 
-$flagsmith = new Flagsmith('${envId}');
+$flagsmith = new Flagsmith('${envId}'${
+  Constants.isCustomFlagsmithUrl && `,\n  '${Project.flagsmithClientAPI}'\n`
+});
 
 // Check for a feature
 $${FEATURE_NAME} = $flags->isFeatureEnabled('${FEATURE_NAME}');

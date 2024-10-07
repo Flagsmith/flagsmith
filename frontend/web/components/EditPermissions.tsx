@@ -61,6 +61,8 @@ import InputGroup from './base/forms/InputGroup'
 import classNames from 'classnames'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import { useHasPermission } from 'common/providers/Permission'
+import PlanBasedAccess from './PlanBasedAccess'
+
 const Project = require('common/project')
 
 type EditPermissionModalType = {
@@ -670,7 +672,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
     const rolesAdded = getRoles(roles, rolesSelected || [])
 
     const isAdmin = admin()
-    const hasRbacPermission = Utils.getPlansPermission('RBAC')
 
     const [search, setSearch] = useState()
 
@@ -679,38 +680,20 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         <Loader />
       </div>
     ) : (
-      <div>
-        <div className={classNames('modal-body', className || 'px-4 mt-4')}>
-          {level !== 'organisation' && (
-            <div className='mb-2'>
-              <Row className={role ? 'py-2' : ''}>
-                <Flex>
-                  <div className='font-weight-medium text-dark mb-1'>
-                    Administrator
-                  </div>
-                  <div className='list-item-footer faint'>
-                    {hasRbacPermission ? (
-                      `Full View and Write permissions for the given ${Format.camelCase(
-                        level,
-                      )}.`
-                    ) : (
-                      <span>
-                        Role-based access is not available on our Free Plan.
-                        Please visit{' '}
-                        <a
-                          href='https://flagsmith.com/pricing/'
-                          className='text-primary'
-                        >
-                          our Pricing Page
-                        </a>{' '}
-                        for more information on our licensing options.
-                      </span>
-                    )}
-                  </div>
-                </Flex>
-                <Switch
-                  disabled={!hasRbacPermission || saving}
-                  data-test={`admin-switch-${level}`}
+      <PlanBasedAccess className='px-4 pt-4' feature={'RBAC'} theme={'page'}>
+        <div>
+          <div className={classNames('modal-body', className || 'px-4 mt-4')}>
+            {level !== 'organisation' && (
+              <div className='mb-2'>
+                <Row className={role ? 'py-2' : ''}>
+                  <Flex>
+                    <div className='font-weight-medium text-dark mb-1'>
+                      Administrator
+                    </div>
+                  </Flex>
+                  <Switch
+                    disabled={saving}
+                    data-test={`admin-switch-${level}`}
                   onChange={() => {
                     toggleAdmin()
                     setValueChanged(true)
@@ -720,24 +703,15 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
               </Row>
             </div>
           )}
-          {!hasRbacPermission && (
-            <span>
-              Role-based access is not available on our Free Plan. Please visit{' '}
-              <a href='https://flagsmith.com/pricing/' className='text-primary'>
-                our Pricing Page
-              </a>{' '}
-              for more information on our licensing options.
-            </span>
-          )}
-          <PanelSearch
-            filterRow={(item: AvailablePermission, search) => {
-              const name = Format.enumeration.get(item.key).toLowerCase()
-              return name.includes(search?.toLowerCase() || '')
-            }}
-            title='Permissions'
-            className='no-pad mb-2'
-            items={permissions}
-            renderRow={(p: AvailablePermission, index: number) => {
+            <PanelSearch
+              filterRow={(item: AvailablePermission, search) => {
+                const name = Format.enumeration.get(item.key).toLowerCase()
+                return name.includes(search?.toLowerCase() || '')
+              }}
+              title='Permissions'
+              className='no-pad mb-2'
+              items={permissions}
+              renderRow={(p: AvailablePermission, index: number) => {
               const levelUpperCase = level.toUpperCase()
               const disabled =
                 level !== 'organisation' &&
@@ -756,120 +730,119 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                     </Flex>
                     <Switch
                       data-test={`permission-switch-${level}-${index}`}
-                      onChange={() => {
-                        setValueChanged(true)
-                        togglePermission(p.key)
-                      }}
-                      disabled={
-                        disabled || admin() || !hasRbacPermission || saving
-                      }
-                      checked={!disabled && hasPermission(p.key)}
-                    />
+                        onChange={() => {
+                          setValueChanged(true)
+                          togglePermission(p.key)
+                        }}
+                        disabled={disabled || admin() || saving}
+                        checked={!disabled && hasPermission(p.key)}
+                      />
+                    </Row>
                   </Row>
-                </Row>
-              )
-            }}
-          />
+                )
+              }}
+            />
 
-          <p className='text-right mt-5 text-dark'>
-            This will edit the permissions for{' '}
-            <strong>
-              {isGroup ? (
-                `the ${group?.name || ''} group`
-              ) : user ? (
-                <>
-                  {user.first_name || ''} {user.last_name || ''}
-                </>
-              ) : role ? (
-                ` ${role.name}`
-              ) : (
-                ` ${name}`
-              )}
-            </strong>
-            .
-          </p>
+            <p className='text-right mt-5 text-dark'>
+              This will edit the permissions for{' '}
+              <strong>
+                {isGroup ? (
+                  `the ${group?.name || ''} group`
+                ) : user ? (
+                  <>
+                    {user.first_name || ''} {user.last_name || ''}
+                  </>
+                ) : role ? (
+                  ` ${role.name}`
+                ) : (
+                  ` ${name}`
+                )}
+              </strong>
+              .
+            </p>
 
-          {parentError && !role && (
-            <div className='mt-4'>
-              <InfoMessage>
-                The selected {isGroup ? 'group' : 'user'} does not have explicit
-                user permissions to view this {parentLevel}. If the user does
-                not belong to any groups with this permissions, you may have to
-                adjust their permissions in{' '}
-                <a
-                  onClick={() => {
-                    if (parentSettingsLink) {
-                      push(parentSettingsLink)
-                    }
-                    closeModal()
-                  }}
-                >
-                  <strong>{parentLevel} settings</strong>
-                </a>
-                .
-              </InfoMessage>
+            {parentError && !role && (
+              <div className='mt-4'>
+                <InfoMessage>
+                  The selected {isGroup ? 'group' : 'user'} does not have
+                  explicit user permissions to view this {parentLevel}. If the
+                  user does not belong to any groups with this permissions, you
+                  may have to adjust their permissions in{' '}
+                  <a
+                    onClick={() => {
+                      if (parentSettingsLink) {
+                        push(parentSettingsLink)
+                      }
+                      closeModal()
+                    }}
+                  >
+                    <strong>{parentLevel} settings</strong>
+                  </a>
+                  .
+                </InfoMessage>
+              </div>
+            )}
+          </div>
+          {roles && level === 'organisation' && (
+            <FormGroup className='px-4'>
+              <InputGroup
+                component={
+                  <div>
+                    <Row>
+                      <strong style={{ width: 70 }}>Roles: </strong>
+                      {rolesAdded?.map((r) => (
+                        <Row
+                          key={r.id}
+                          onClick={() => removeOwner(r.id)}
+                          className='chip'
+                          style={{ marginBottom: 4, marginTop: 4 }}
+                        >
+                          <span className='font-weight-bold'>{r.name}</span>
+                          <span className='chip-icon ion'>
+                            <IonIcon
+                              icon={closeIcon}
+                              style={{ fontSize: '13px' }}
+                            />
+                          </span>
+                        </Row>
+                      ))}
+                      <Button
+                        theme='text'
+                        onClick={() => setShowRoles(true)}
+                        style={{ width: 70 }}
+                      >
+                        Add Role
+                      </Button>
+                    </Row>
+                  </div>
+                }
+                type='text'
+                title='Assign roles'
+                tooltip='Assigns what role the user/group will have'
+                inputProps={{
+                  className: 'full-width',
+                  style: { minHeight: 80 },
+                }}
+                className='full-width'
+                placeholder='Add an optional description...'
+              />
+            </FormGroup>
+          )}
+          {level !== 'environment' && level !== 'project' && (
+            <div className='px-4'>
+              <MyRoleSelect
+                orgId={id}
+                level={level}
+                value={rolesSelected?.map((v) => v.role)}
+                onAdd={addRole}
+                onRemove={removeOwner}
+                isOpen={showRoles}
+                onToggle={() => setShowRoles(!showRoles)}
+              />
             </div>
           )}
         </div>
-        {roles && level === 'organisation' && (
-          <FormGroup className='px-4'>
-            <InputGroup
-              component={
-                <div>
-                  <Row>
-                    <strong style={{ width: 70 }}>Roles: </strong>
-                    {rolesAdded?.map((r) => (
-                      <Row
-                        key={r.id}
-                        onClick={() => removeOwner(r.id)}
-                        className='chip'
-                        style={{ marginBottom: 4, marginTop: 4 }}
-                      >
-                        <span className='font-weight-bold'>{r.name}</span>
-                        <span className='chip-icon ion'>
-                          <IonIcon
-                            icon={closeIcon}
-                            style={{ fontSize: '13px' }}
-                          />
-                        </span>
-                      </Row>
-                    ))}
-                    <Button
-                      theme='text'
-                      onClick={() => setShowRoles(true)}
-                      style={{ width: 70 }}
-                    >
-                      Add Role
-                    </Button>
-                  </Row>
-                </div>
-              }
-              type='text'
-              title='Assign roles'
-              tooltip='Assigns what role the user/group will have'
-              inputProps={{
-                className: 'full-width',
-                style: { minHeight: 80 },
-              }}
-              className='full-width'
-              placeholder='Add an optional description...'
-            />
-          </FormGroup>
-        )}
-        {level !== 'environment' && level !== 'project' && (
-          <div className='px-4'>
-            <MyRoleSelect
-              orgId={id}
-              level={level}
-              value={rolesSelected?.map((v) => v.role)}
-              onAdd={addRole}
-              onRemove={removeOwner}
-              isOpen={showRoles}
-              onToggle={() => setShowRoles(!showRoles)}
-            />
-          </div>
-        )}
-      </div>
+      </PlanBasedAccess>
     )
   }),
 )
@@ -945,7 +918,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
       'p-0 side-modal',
     )
   }
-  const hasRbacPermission = Utils.getPlansPermission('RBAC')
   return (
     <div className='mt-4'>
       <Row>
@@ -1108,80 +1080,71 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
           </FormGroup>
         </TabItem>
         <TabItem tabLabel='Roles'>
-          {hasRbacPermission ? (
-            <>
-              <Row space className='mt-4'>
-                <h5 className='m-b-0'>{roleTabTitle}</h5>
-              </Row>
-              <PanelSearch
-                id='org-members-list'
-                title={'Roles'}
-                className='no-pad'
-                items={roles}
-                itemHeight={65}
-                header={
-                  <Row className='table-header px-3'>
-                    <div
-                      style={{
-                        width: rolesWidths[0],
-                      }}
-                    >
-                      Roles
-                    </div>
-                    <div
-                      style={{
-                        width: rolesWidths[1],
-                      }}
-                    >
-                      Description
-                    </div>
-                  </Row>
-                }
-                renderRow={(role: Role) => (
-                  <Row
-                    className='list-item clickable cursor-pointer'
-                    key={role.id}
+          <PlanBasedAccess className='mt-4' feature={'RBAC'} theme='page'>
+            <Row space className='mt-4'>
+              <h5 className='m-b-0'>{roleTabTitle}</h5>
+            </Row>
+            <PanelSearch
+              id='org-members-list'
+              title={'Roles'}
+              className='no-pad'
+              items={roles}
+              itemHeight={65}
+              header={
+                <Row className='table-header px-3'>
+                  <div
+                    style={{
+                      width: rolesWidths[0],
+                    }}
                   >
-                    <Row
-                      onClick={() => editRolePermissions(role)}
-                      className='table-column px-3'
-                      style={{
-                        width: rolesWidths[0],
-                      }}
-                    >
-                      {role.name}
-                    </Row>
-                    <Row
-                      className='table-column px-3'
-                      onClick={() => editRolePermissions(role)}
-                      style={{
-                        width: rolesWidths[1],
-                      }}
-                    >
-                      {role.description}
-                    </Row>
+                    Roles
+                  </div>
+                  <div
+                    style={{
+                      width: rolesWidths[1],
+                    }}
+                  >
+                    Description
+                  </div>
+                </Row>
+              }
+              renderRow={(role: Role) => (
+                <Row
+                  className='list-item clickable cursor-pointer'
+                  key={role.id}
+                >
+                  <Row
+                    onClick={() => editRolePermissions(role)}
+                    className='table-column px-3'
+                    style={{
+                      width: rolesWidths[0],
+                    }}
+                  >
+                    {role.name}
                   </Row>
-                )}
-                renderNoResults={
-                  <Panel title={'Roles'} className='no-pad'>
-                    <div className='search-list'>
-                      <Row className='list-item p-3 text-muted'>
-                        {`You currently have no roles with ${level} permissions.`}
-                      </Row>
-                    </div>
-                  </Panel>
-                }
-                isLoading={false}
-              />
-            </>
-          ) : (
-            <div className='mt-4'>
-              <InfoMessage>
-                To use <strong>role</strong> features you have to upgrade your
-                plan.
-              </InfoMessage>
-            </div>
-          )}
+                  <Row
+                    className='table-column px-3'
+                    onClick={() => editRolePermissions(role)}
+                    style={{
+                      width: rolesWidths[1],
+                    }}
+                  >
+                    {role.description}
+                  </Row>
+                </Row>
+              )}
+              renderNoResults={
+                <Panel title={'Roles'} className='no-pad'>
+                  <div className='search-list'>
+                    <Row className='list-item p-3 text-muted'>
+                      {`You currently have no roles with ${level} permissions.`}
+                    </Row>
+                  </div>
+                </Panel>
+              }
+              isLoading={false}
+            />
+          </PlanBasedAccess>
         </TabItem>
       </Tabs>
     </div>

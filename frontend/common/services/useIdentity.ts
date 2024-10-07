@@ -2,6 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import transformCorePaging from 'common/transformCorePaging'
+import Utils from 'common/utils/utils'
 
 const getIdentityEndpoint = (environmentId: string, isEdge: boolean) => {
   const identityPart = isEdge ? 'edge-identities' : 'identities'
@@ -52,6 +53,7 @@ export const identityService = service
         providesTags: [{ id: 'LIST', type: 'Identity' }],
         query: (baseQuery) => {
           const {
+            dashboard_alias,
             environmentId,
             isEdge,
             page,
@@ -61,10 +63,11 @@ export const identityService = service
             q,
             search,
           } = baseQuery
-          let url = `${getIdentityEndpoint(
-            environmentId,
-            isEdge,
-          )}/?q=${encodeURIComponent(search || q || '')}&page_size=${page_size}`
+          let url = `${getIdentityEndpoint(environmentId, isEdge)}/?q=${
+            dashboard_alias ? 'dashboard_alias:' : ''
+          }${encodeURIComponent(
+            dashboard_alias || search || q || '',
+          )}&page_size=${page_size}`
           let last_evaluated_key = null
           if (!isEdge) {
             url += `&page=${page}`
@@ -127,6 +130,21 @@ export const identityService = service
           return transformCorePaging(req, baseQueryReturnValue)
         },
       }),
+      updateIdentity: builder.mutation<Res['identity'], Req['updateIdentity']>({
+        invalidatesTags: (res) => [
+          { id: 'LIST', type: 'Identity' },
+          { id: res?.id, type: 'Identity' },
+        ],
+        query: (query: Req['updateIdentity']) => ({
+          body: query.data,
+          method: 'PUT',
+          url: `environments/${
+            query.environmentId
+          }/${Utils.getIdentitiesEndpoint()}/${
+            query.data.identity_uuid || query.data.id
+          }`,
+        }),
+      }),
       // END OF ENDPOINTS
     }),
   })
@@ -173,12 +191,24 @@ export async function getIdentities(
     store.dispatch(identityService.util.getRunningQueriesThunk()),
   )
 }
+export async function updateIdentity(
+  store: any,
+  data: Req['updateIdentity'],
+  options?: Parameters<
+    typeof identityService.endpoints.updateIdentity.initiate
+  >[1],
+) {
+  return store.dispatch(
+    identityService.endpoints.updateIdentity.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
   useCreateIdentitiesMutation,
   useDeleteIdentityMutation,
   useGetIdentitiesQuery,
+  useUpdateIdentityMutation,
   // END OF EXPORTS
 } = identityService
 

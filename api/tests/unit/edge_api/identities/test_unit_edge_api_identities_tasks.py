@@ -16,7 +16,10 @@ from environments.dynamodb.types import (
     IdentityOverridesV2Changeset,
     IdentityOverrideV2,
 )
+from environments.identities.models import Identity
 from environments.models import Environment, Webhook
+from features.models import Feature
+from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType
 
 
@@ -48,7 +51,7 @@ def test_call_environment_webhook_for_feature_state_change_with_new_state_only(
         environment_api_key=environment.api_key,
         identity_id=identity.id,
         identity_identifier=identity.identifier,
-        changed_by_user_id=admin_user.id,
+        changed_by=str(admin_user),
         timestamp=now_isoformat,
         new_enabled_state=new_enabled_state,
         new_value=new_value,
@@ -101,7 +104,7 @@ def test_call_environment_webhook_for_feature_state_change_with_previous_state_o
         environment_api_key=environment.api_key,
         identity_id=identity.id,
         identity_identifier=identity.identifier,
-        changed_by_user_id=admin_user.id,
+        changed_by=str(admin_user),
         timestamp=now_isoformat,
         previous_enabled_state=previous_enabled_state,
         previous_value=previous_value,
@@ -126,6 +129,54 @@ def test_call_environment_webhook_for_feature_state_change_with_previous_state_o
     assert data["previous_state"] == mock_feature_state_data
     assert data["changed_by"] == admin_user.email
     assert data["timestamp"] == now_isoformat
+
+
+def test_call_environment_webhook_for_feature_state_change_with_changed_by_user_id(
+    mocker: MockerFixture,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    mock_call_environment_webhooks = mocker.patch(
+        "edge_api.identities.tasks.call_environment_webhooks"
+    )
+    Webhook.objects.create(environment=environment, url="https://foo.com/webhook")
+
+    mock_feature_state_data = mocker.MagicMock()
+    mock_generate_webhook_feature_state_data = mocker.patch.object(
+        Webhook,
+        "generate_webhook_feature_state_data",
+        return_value=mock_feature_state_data,
+    )
+
+    now_isoformat = timezone.now().isoformat()
+    previous_enabled_state = True
+    previous_value = "foo"
+
+    # When
+    call_environment_webhook_for_feature_state_change(
+        feature_id=feature.id,
+        environment_api_key=environment.api_key,
+        identity_id=identity.id,
+        identity_identifier=identity.identifier,
+        changed_by_user_id=admin_user.id,
+        timestamp=now_isoformat,
+        previous_enabled_state=previous_enabled_state,
+        previous_value=previous_value,
+    )
+
+    # Then
+    mock_call_environment_webhooks.assert_called_once()
+    mock_generate_webhook_feature_state_data.assert_called_once_with(
+        feature=feature,
+        environment=environment,
+        identity_id=identity.id,
+        identity_identifier=identity.identifier,
+        enabled=previous_enabled_state,
+        value=previous_value,
+    )
 
 
 @pytest.mark.parametrize(
@@ -170,7 +221,7 @@ def test_call_environment_webhook_for_feature_state_change_with_both_states(
         environment_api_key=environment.api_key,
         identity_id=identity.id,
         identity_identifier=identity.identifier,
-        changed_by_user_id=admin_user.id,
+        changed_by=str(admin_user),
         timestamp=now_isoformat,
         previous_enabled_state=previous_enabled_state,
         previous_value=previous_value,
@@ -231,7 +282,7 @@ def test_call_environment_webhook_for_feature_state_change_does_nothing_if_no_we
         environment_api_key=environment.api_key,
         identity_id=identity.id,
         identity_identifier=identity.identifier,
-        changed_by_user_id=admin_user.id,
+        changed_by=str(admin_user),
         timestamp=now_isoformat,
         new_enabled_state=True,
         new_value="foo",
@@ -257,6 +308,7 @@ def test_sync_identity_document_features_removes_deleted_features(
             "feature_state_value": "feature_1_value",
             "featurestate_uuid": "4a8fbe06-d4cd-4686-a184-d924844bb422",
             "django_id": 1,
+            "dashboard_alias": None,
             "feature": {
                 "name": "feature_that_does_not_exists",
                 "type": "STANDARD",

@@ -14,6 +14,7 @@ import Utils from 'common/utils/utils'
 import RolePermissionsList from './RolePermissionsList'
 import ProjectFilter from './ProjectFilter'
 import OrganisationStore from 'common/stores/organisation-store'
+import PlanBasedAccess from './PlanBasedAccess'
 import WarningMessage from './WarningMessage'
 
 type PermissionsTabsType = {
@@ -75,7 +76,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
   )
 
   return (
-    <>
+    <PlanBasedAccess feature={'RBAC'} theme={'page'}>
       {!!group && <WarningMessage warningMessage={deprecationMessage} />}
       <Tabs
         uncontrolled={uncontrolled}
@@ -171,7 +172,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
           )}
         </TabItem>
       </Tabs>
-    </>
+    </PlanBasedAccess>
   )
 }
 

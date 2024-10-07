@@ -36,7 +36,7 @@
   color: $body-color;
 }
 
-$side-width: 660px;
+$side-width: 750px;
 .dark {
   .inline-modal {
     background: $modal-bg-dark;
@@ -123,6 +123,9 @@ $side-width: 660px;
         padding-bottom: 24px;
         overflow-y: auto;
         height: calc(100vh - 110px);
+        &.p-0 {
+          height: auto;
+        }
       }
     }
     .create-feature-tab {
@@ -143,7 +146,7 @@ $side-width: 660px;
   position: absolute;
   background: $body-bg;
   border-radius: $border-radius;
-  z-index: 2;
+  z-index: 200000000000;
   box-shadow: rgba(75, 75, 75, 0.11) 0px 1px 6px 0px,
     rgba(75, 75, 75, 0.11) 0px 1px 4px 0px;
   border: 1px solid $input-border-color;

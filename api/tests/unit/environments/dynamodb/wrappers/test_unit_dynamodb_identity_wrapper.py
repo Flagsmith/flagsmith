@@ -11,6 +11,11 @@ from mypy_boto3_dynamodb.service_resource import Table
 from pytest_mock import MockerFixture
 from rest_framework.exceptions import NotFound
 
+from edge_api.identities.search import (
+    IDENTIFIER_ATTRIBUTE,
+    EdgeIdentitySearchData,
+    EdgeIdentitySearchType,
+)
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.dynamodb.wrappers.exceptions import CapacityBudgetExceeded
 from environments.identities.models import Identity
@@ -189,8 +194,15 @@ def test_search_items_with_identifier_calls_query_with_correct_arguments(mocker)
     search_function = lambda x: Key("identifier").eq(x)  # noqa: E731
 
     # When
-    dynamo_identity_wrapper.search_items_with_identifier(
-        environment_key, identifier, search_function, 999, start_key
+    dynamo_identity_wrapper.search_items(
+        environment_key,
+        EdgeIdentitySearchData(
+            search_term=identifier,
+            search_type=EdgeIdentitySearchType.EQUAL,
+            search_attribute=IDENTIFIER_ATTRIBUTE,
+        ),
+        999,
+        start_key,
     )
 
     # Then

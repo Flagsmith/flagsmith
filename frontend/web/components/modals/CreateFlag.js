@@ -5,6 +5,8 @@ import data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import FeatureListStore from 'common/stores/feature-list-store'
+import IdentityProvider from 'common/providers/IdentityProvider'
+
 import {
   Bar,
   BarChart,
@@ -41,6 +43,8 @@ import { getGithubIntegration } from 'common/services/useGithubIntegration'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
+import PlanBasedBanner from 'components/PlanBasedAccess'
+import FeatureHistory from 'components/FeatureHistory'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -541,7 +545,6 @@ const CreateFlag = class extends Component {
     const is4Eyes =
       !!environment &&
       Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)
-    const canSchedule = Utils.getPlansPermission('SCHEDULE_FLAGS')
     const project = ProjectStore.model
     const caseSensitive = project?.only_allow_lower_case_feature_names
     const regex = project?.feature_name_regex
@@ -565,7 +568,7 @@ const CreateFlag = class extends Component {
     const Settings = (projectAdmin, createFeature, featureContentType) => (
       <>
         {!identity && this.state.tags && (
-          <FormGroup className='mb-5 setting'>
+          <FormGroup className='mb-3 setting'>
             <InputGroup
               title={identity ? 'Tags' : 'Tags'}
               tooltip={Constants.strings.TAGS_DESCRIPTION}
@@ -613,24 +616,29 @@ const CreateFlag = class extends Component {
             {({ permission }) =>
               permission && (
                 <>
-                  <FormGroup className='mb-5 setting'>
+                  <FormGroup className='mb-3 setting'>
                     <FlagOwners
                       projectId={this.props.projectId}
                       id={projectFlag.id}
                     />
                   </FormGroup>
-                  <FormGroup className='mb-5 setting'>
+                  <FormGroup className='mb-3 setting'>
                     <FlagOwnerGroups
                       projectId={this.props.projectId}
                       id={projectFlag.id}
                     />
                   </FormGroup>
+                  <PlanBasedBanner
+                    className='mb-3'
+                    feature={'FLAG_OWNERS'}
+                    theme={'description'}
+                  />
                 </>
               )
             }
           </Permission>
         )}
-        <FormGroup className='mb-5 setting'>
+        <FormGroup className='mb-3 setting'>
           <InputGroup
             value={description}
             data-test='featureDesc'
@@ -652,7 +660,7 @@ const CreateFlag = class extends Component {
         </FormGroup>
 
         {!identity && (
-          <FormGroup className='mb-5 mt-3 setting'>
+          <FormGroup className='mb-3 mt-3 setting'>
             <Row>
               <Switch
                 checked={this.state.is_server_key_only}
@@ -675,7 +683,7 @@ const CreateFlag = class extends Component {
         )}
 
         {!identity && isEdit && (
-          <FormGroup className='mb-5 setting'>
+          <FormGroup className='mb-3 setting'>
             <Row>
               <Switch
                 checked={this.state.is_archived}
@@ -751,7 +759,7 @@ const CreateFlag = class extends Component {
                   {!!regex && !isEdit && (
                     <div className='mt-2'>
                       {' '}
-                      <InfoMessage>
+                      <InfoMessage collapseId={'flag-regex'}>
                         {' '}
                         This must conform to the regular expression{' '}
                         <pre>{regex}</pre>
@@ -1010,13 +1018,13 @@ const CreateFlag = class extends Component {
               const onCreateFeature = saveFeatureWithValidation(() => {
                 this.save(createFlag, isSaving)
               })
+              const isLimitReached = false
 
               const featureLimitAlert =
                 Utils.calculateRemainingLimitsPercentage(
                   project.total_features,
                   project.max_features_allowed,
                 )
-
               return (
                 <Permission
                   level='project'
@@ -1064,7 +1072,7 @@ const CreateFlag = class extends Component {
                                       )}
                                     <Tooltip
                                       title={
-                                        <h5 className='mb-4'>
+                                        <h5>
                                           Environment Value{' '}
                                           <Icon name='info-outlined' />
                                         </h5>
@@ -1126,57 +1134,31 @@ const CreateFlag = class extends Component {
                                           <div className='text-right'>
                                             {!is4Eyes && (
                                               <>
-                                                {canSchedule ? (
-                                                  <Button
-                                                    theme='secondary'
-                                                    onClick={() =>
-                                                      saveFeatureValue(true)
-                                                    }
-                                                    className='mr-2'
-                                                    type='button'
-                                                    data-test='create-change-request'
-                                                    id='create-change-request-btn'
-                                                    disabled={
-                                                      isSaving ||
-                                                      !name ||
-                                                      invalid ||
-                                                      !savePermission
-                                                    }
-                                                  >
-                                                    {isSaving
-                                                      ? existingChangeRequest
-                                                        ? 'Updating Change Request'
-                                                        : 'Scheduling Update'
-                                                      : existingChangeRequest
-                                                      ? 'Update Change Request'
-                                                      : 'Schedule Update'}
-                                                  </Button>
-                                                ) : (
-                                                  <Tooltip
-                                                    title={
-                                                      <Button
-                                                        theme='outline'
-                                                        disabled
-                                                        className='mr-2'
-                                                        type='button'
-                                                        data-test='create-change-request'
-                                                        id='create-change-request-btn'
-                                                      >
-                                                        {isSaving
-                                                          ? existingChangeRequest
-                                                            ? 'Updating Change Request'
-                                                            : 'Scheduling Update'
-                                                          : existingChangeRequest
-                                                          ? 'Update Change Request'
-                                                          : 'Schedule Update'}
-                                                      </Button>
-                                                    }
-                                                  >
-                                                    {
-                                                      'This feature is available on our start-up plan'
-                                                    }
-                                                  </Tooltip>
-                                                )}
+                                                <Button
+                                                  feature='SCHEDULE_FLAGS'
+                                                  theme='secondary'
+                                                  onClick={() =>
+                                                    saveFeatureValue(true)
+                                                  }
+                                                  className='mr-2'
+                                                  type='button'
+                                                  data-test='create-change-request'
+                                                  id='create-change-request-btn'
+                                                  disabled={
+                                                    isSaving ||
+                                                    !name ||
+                                                    invalid ||
+                                                    !savePermission
+                                                  }
+                                                >
+                                                  {isSaving
+                                                    ? existingChangeRequest
+                                                      ? 'Updating Change Request'
+                                                      : 'Scheduling Update'
+                                                    : existingChangeRequest
+                                                    ? 'Update Change Request'
+                                                    : 'Schedule Update'}
+                                                </Button>
                                               </>
                                             )}
 
@@ -1253,21 +1235,57 @@ const CreateFlag = class extends Component {
                                     {!identity && isEdit && (
                                       <FormGroup className='mb-4'>
                                         <div>
-                                          <Row className='justify-content-between mb-2 segment-overrides-title'>
-                                            <Tooltip
-                                              title={
-                                                <h5 className='mb-0'>
-                                                  Segment Overrides{' '}
-                                                  <Icon name='info-outlined' />
-                                                </h5>
+                                          <Row className='align-items-center mb-2 gap-4 segment-overrides-title'>
+                                            <div className='flex-fill'>
+                                              <Tooltip
+                                                title={
+                                                  <h5 className='mb-0'>
+                                                    Segment Overrides{' '}
+                                                    <Icon name='info-outlined' />
+                                                  </h5>
+                                                }
+                                                place='top'
+                                              >
+                                                {
+                                                  Constants.strings
+                                                    .SEGMENT_OVERRIDES_DESCRIPTION
+                                                }
+                                              </Tooltip>
+                                            </div>
+                                            <Permission
+                                              level='environment'
+                                              permission={
+                                                'MANAGE_SEGMENT_OVERRIDES'
                                               }
-                                              place='top'
+                                              id={this.props.environmentId}
                                             >
-                                              {
-                                                Constants.strings
-                                                  .SEGMENT_OVERRIDES_DESCRIPTION
+                                              {({
+                                                permission:
+                                                  manageSegmentOverrides,
+                                              }) =>
+                                                !this.state.showCreateSegment &&
+                                                !!manageSegmentOverrides &&
+                                                !this.props.disableCreate && (
+                                                  <div className='text-right'>
+                                                    <Button
+                                                      size='small'
+                                                      onClick={() => {
+                                                        this.setState({
+                                                          showCreateSegment: true,
+                                                        })
+                                                      }}
+                                                      theme='outline'
+                                                      disabled={
+                                                        !!isLimitReached
+                                                      }
+                                                    >
+                                                      Create Feature-Specific
+                                                      Segment
+                                                    </Button>
+                                                  </div>
+                                                )
                                               }
-                                            </Tooltip>
+                                            </Permission>
                                             {!this.state.showCreateSegment &&
                                               !noPermissions && (
                                                 <Button
@@ -1311,19 +1329,19 @@ const CreateFlag = class extends Component {
                                                       }
                                                     />
                                                     <SegmentOverrides
-                                                      readOnly={isReadOnly}
-                                                      is4Eyes={is4Eyes}
-                                                      showEditSegment
-                                                      showCreateSegment={
-                                                        this.state
-                                                          .showCreateSegment
-                                                      }
                                                       setShowCreateSegment={(
                                                         showCreateSegment,
                                                       ) =>
                                                         this.setState({
                                                           showCreateSegment,
                                                         })
+                                                      }
+                                                      readOnly={isReadOnly}
+                                                      is4Eyes={is4Eyes}
+                                                      showEditSegment
+                                                      showCreateSegment={
+                                                        this.state
+                                                          .showCreateSegment
                                                       }
                                                       feature={projectFlag.id}
                                                       projectId={
@@ -1487,45 +1505,56 @@ const CreateFlag = class extends Component {
                                       data-test='identity_overrides'
                                       tabLabel='Identity Overrides'
                                     >
-                                      <InfoMessage className='mb-4 text-left faint'>
-                                        Identity overrides override feature
-                                        values for individual identities. The
-                                        overrides take priority over an segment
-                                        overrides and environment defaults.
-                                        Identity overrides will only apply when
-                                        you identify via the SDK.{' '}
-                                        <a
-                                          target='_blank'
-                                          href='https://docs.flagsmith.com/basic-features/managing-identities'
-                                          rel='noreferrer'
-                                        >
-                                          Check the Docs for more details
-                                        </a>
-                                        .
-                                      </InfoMessage>
-                                      <FormGroup className='mb-4'>
+                                      <FormGroup className='mb-4 mt-2'>
                                         <PanelSearch
                                           id='users-list'
                                           className='no-pad identity-overrides-title'
                                           title={
-                                            <Tooltip
-                                              title={
-                                                <h5 className='mb-0'>
-                                                  Identity Overrides{' '}
-                                                  <Icon
-                                                    name='info-outlined'
-                                                    width={20}
-                                                    fill='#9DA4AE'
-                                                  />
-                                                </h5>
-                                              }
-                                              place='top'
-                                            >
-                                              {
-                                                Constants.strings
-                                                  .IDENTITY_OVERRIDES_DESCRIPTION
-                                              }
-                                            </Tooltip>
+                                            <>
+                                              <Tooltip
+                                                title={
+                                                  <h5 className='mb-0'>
+                                                    Identity Overrides{' '}
+                                                    <Icon
+                                                      name='info-outlined'
+                                                      width={20}
+                                                      fill='#9DA4AE'
+                                                    />
+                                                  </h5>
+                                                }
+                                                place='top'
+                                              >
+                                                {
+                                                  Constants.strings
+                                                    .IDENTITY_OVERRIDES_DESCRIPTION
+                                                }
+                                              </Tooltip>
+                                              <div className='fw-normal transform-none mt-4'>
+                                                <InfoMessage
+                                                  collapseId={
+                                                    'identity-overrides'
+                                                  }
+                                                >
+                                                  Identity overrides override
+                                                  feature values for individual
+                                                  identities. The overrides take
+                                                  priority over an segment
+                                                  overrides and environment
+                                                  defaults. Identity overrides
+                                                  will only apply when you
+                                                  identify via the SDK.{' '}
+                                                  <a
+                                                    target='_blank'
+                                                    href='https://docs.flagsmith.com/basic-features/managing-identities'
+                                                    rel='noreferrer'
+                                                  >
+                                                    Check the Docs for more
+                                                    details
+                                                  </a>
+                                                  .
+                                                </InfoMessage>
+                                              </div>
+                                            </>
                                           }
                                           action={
                                             !Utils.getIsEdge() && (
@@ -1702,40 +1731,50 @@ const CreateFlag = class extends Component {
                                     </TabItem>
                                   )}
                                 {!existingChangeRequest &&
-                                  !Project.disableAnalytics &&
-                                  this.props.flagId && (
+                                  this.props.flagId &&
+                                  isVersioned && (
                                     <TabItem
-                                      data-test='analytics'
-                                      tabLabel='Analytics'
+                                      data-test='change-history'
+                                      tabLabel='History'
                                     >
-                                      <FormGroup className='mb-4'>
-                                        {!!usageData && (
-                                          <h5 className='mb-2'>
-                                            Flag events for last 30 days
-                                          </h5>
-                                        )}
-                                        {!usageData && (
-                                          <div className='text-center'>
-                                            <Loader />
-                                          </div>
-                                        )}
-
-                                        {this.drawChart(usageData)}
-                                      </FormGroup>
-                                      <InfoMessage>
-                                        The Flag Analytics data will be visible
-                                        in the Dashboard between 30 minutes and
-                                        1 hour after it has been collected.{' '}
-                                        <a
-                                          target='_blank'
-                                          href='https://docs.flagsmith.com/advanced-use/flag-analytics'
-                                          rel='noreferrer'
-                                        >
-                                          View docs
-                                        </a>
-                                      </InfoMessage>
+                                      <FeatureHistory
+                                        feature={projectFlag.id}
+                                        projectId={`${this.props.projectId}`}
+                                        environmentId={environment.id}
+                                        environmentApiKey={environment.api_key}
+                                      />
                                     </TabItem>
                                   )}
+                                {!Project.disableAnalytics && (
+                                  <TabItem tabLabel={'Analytics'}>
+                                    <FormGroup className='mb-4'>
+                                      {!!usageData && (
+                                        <h5 className='mb-2'>
+                                          Flag events for last 30 days
+                                        </h5>
+                                      )}
+                                      {!usageData && (
+                                        <div className='text-center'>
+                                          <Loader />
+                                        </div>
+                                      )}
+
+                                      {this.drawChart(usageData)}
+                                    </FormGroup>
+                                    <InfoMessage>
+                                      The Flag Analytics data will be visible in
+                                      the Dashboard between 30 minutes and 1
+                                      hour after it has been collected.{' '}
+                                      <a
+                                        target='_blank'
+                                        href='https://docs.flagsmith.com/advanced-use/flag-analytics'
+                                        rel='noreferrer'
+                                      >
+                                        View docs
+                                      </a>
+                                    </InfoMessage>
+                                  </TabItem>
+                                )}
                                 {Utils.getFlagsmithHasFeature(
                                   'github_integration',
                                 ) &&
@@ -1852,7 +1891,10 @@ const CreateFlag = class extends Component {
                                 {!identity && (
                                   <div className='text-right mb-3'>
                                     {project.prevent_flag_defaults ? (
-                                      <InfoMessage className='text-right modal-caption fs-small lh-sm'>
+                                      <InfoMessage
+                                        collapseId={'create-flag'}
+                                        className='text-right modal-caption fs-small lh-sm'
+                                      >
                                         This will create the feature for{' '}
                                         <strong>all environments</strong>, you
                                         can edit this feature per environment
@@ -1860,7 +1902,10 @@ const CreateFlag = class extends Component {
                                         environment once the feature is created.
                                       </InfoMessage>
                                     ) : (
-                                      <InfoMessage className='text-right modal-caption fs-small lh-sm'>
+                                      <InfoMessage
+                                        collapseId={'create-flag'}
+                                        className='text-right modal-caption fs-small lh-sm'
+                                      >
                                         This will create the feature for{' '}
                                         <strong>all environments</strong>, you
                                         can edit this feature per environment

@@ -76,6 +76,7 @@ def test_map_environment_to_environment_document__call_expected(
         "segment_config": None,
         "updated_at": expected_updated_at,
         "use_identity_composite_key_for_hashing": True,
+        "use_identity_overrides_in_local_eval": True,
         "webhook_config": None,
     }
 
@@ -195,6 +196,7 @@ def test_map_environment_to_environment_v2_document__call_expected(
         "segment_config": None,
         "updated_at": expected_updated_at,
         "use_identity_composite_key_for_hashing": True,
+        "use_identity_overrides_in_local_eval": True,
         "webhook_config": None,
     }
 
