@@ -388,7 +388,7 @@ def test_search_for_identities_by_dashboard_alias_exact(
 ) -> None:
     # Given
     identifier = identity_document["identifier"]
-    dashboard_alias = "hans"
+    dashboard_alias = identity_document["dashboard_alias"]
 
     flagsmith_identities_table.put_item(Item=identity_document)
 
