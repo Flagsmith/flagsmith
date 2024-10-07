@@ -123,3 +123,14 @@ if(Project.linkedinPartnerTracking) {
     img.setAttribute("src", "https://px.ads.linkedin.com/collect/?pid=5747572&fmt=gif");
     document.body.appendChild(img);
 }
+
+if(Project.hubspot) {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.id = "hs-script-loader";
+    script.async = true;
+    script.defer = true;
+    script.src = Project.hubspot;
+
+    document.head.appendChild(script);
+}
