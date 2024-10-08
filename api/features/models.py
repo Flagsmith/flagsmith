@@ -11,6 +11,7 @@ from core.models import (
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
@@ -74,6 +75,7 @@ from features.value_types import (
     STRING,
 )
 from features.versioning.models import EnvironmentFeatureVersion
+from integrations.github.constants import GitHubEventType
 from metadata.models import Metadata
 from projects.models import Project
 from projects.tags.models import Tag
@@ -108,7 +110,7 @@ class Feature(
         on_delete=models.DO_NOTHING,
     )
     initial_value = models.CharField(
-        max_length=20000, null=True, default=None, blank=True
+        max_length=settings.FEATURE_VALUE_LIMIT, null=True, default=None, blank=True
     )
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
@@ -139,7 +141,6 @@ class Feature(
     @hook(AFTER_SAVE)
     def create_github_comment(self) -> None:
         from integrations.github.github import call_github_task
-        from webhooks.webhooks import WebhookEventType
 
         if (
             self.external_resources.exists()
@@ -150,7 +151,7 @@ class Feature(
 
             call_github_task(
                 organisation_id=self.project.organisation_id,
-                type=WebhookEventType.FLAG_DELETED.value,
+                type=GitHubEventType.FLAG_DELETED.value,
                 feature=self,
                 segment_name=None,
                 url=None,
@@ -406,7 +407,6 @@ class FeatureSegment(
     @hook(AFTER_DELETE)
     def create_github_comment(self) -> None:
         from integrations.github.github import call_github_task
-        from webhooks.webhooks import WebhookEventType
 
         if (
             self.feature.external_resources.exists()
@@ -416,7 +416,7 @@ class FeatureSegment(
 
             call_github_task(
                 self.feature.project.organisation_id,
-                WebhookEventType.SEGMENT_OVERRIDE_DELETED.value,
+                GitHubEventType.SEGMENT_OVERRIDE_DELETED.value,
                 self.feature,
                 self.segment.name,
                 None,
@@ -1086,12 +1086,21 @@ class FeatureStateValue(
         self.save()
 
     def get_skip_create_audit_log(self) -> bool:
-        return self.feature_state.get_skip_create_audit_log()
+        try:
+            return self.feature_state.get_skip_create_audit_log()
+        except ObjectDoesNotExist:
+            return False
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         fs = self.feature_state
 
-        changes = history_instance.diff_against(history_instance.prev_record).changes
+        # NOTE: We have some feature state values that were created before we started
+        # tracking history, resulting in no prev_record.
+        changes = (
+            history_instance.diff_against(history_instance.prev_record).changes
+            if history_instance.prev_record
+            else []
+        )
         if (
             len(changes) == 1
             and changes[0].field == "string_value"

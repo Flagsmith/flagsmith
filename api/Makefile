@@ -11,8 +11,8 @@ POETRY_VERSION ?= 1.8.3
 
 GUNICORN_LOGGER_CLASS ?= util.logging.GunicornJsonCapableLogger
 
-SAML_REVISION ?= v1.6.3
-RBAC_REVISION ?= v0.7.0
+SAML_REVISION ?= v1.6.4
+RBAC_REVISION ?= v0.8.0
 
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
@@ -39,20 +39,9 @@ install-private-modules:
 .PHONY: install
 install: install-pip install-poetry install-packages
 
-.PHONY: lint-black
-lint-black:
-	poetry run black --check .
-
-.PHONY: lint-isort
-lint-isort:
-	poetry run isort  --check-only --diff .
-
-.PHONY: lint-flake8
-lint-flake8:
-	poetry run flake8
-
 .PHONY: lint
-lint: lint-black lint-isort lint-flake8
+lint:
+	poetry run pre-commit run -a
 
 .PHONY: docker-up
 docker-up:
@@ -118,9 +107,13 @@ generate-ld-client-types:
 .PHONY: integrate-private-tests
 integrate-private-tests:
 	$(eval WORKFLOW_REVISION := $(shell grep -A 1 "\[tool.poetry.group.workflows.dependencies\]" pyproject.toml | awk -F '"' '{printf $$4}'))
+	$(eval TASK_PROCESSOR_REVISION := $(shell grep -A 0 "flagsmith-task-processor" pyproject.toml | awk -F '"' '{printf $$4}'))
 	$(eval AUTH_CONTROLLER_REVISION := $(shell grep -A 1 "\[tool.poetry.group.auth-controller.dependencies\]" pyproject.toml | awk -F '"' '{printf $$4}'))
+
 	git clone https://github.com/flagsmith/flagsmith-saml --depth 1 --branch ${SAML_REVISION} && mv ./flagsmith-saml/tests tests/saml_tests
 	git clone https://github.com/flagsmith/flagsmith-rbac --depth 1 --branch ${RBAC_REVISION} && mv ./flagsmith-rbac/tests tests/rbac_tests
 	git clone https://github.com/flagsmith/flagsmith-workflows --depth 1 --branch ${WORKFLOW_REVISION} && mv ./flagsmith-workflows/tests tests/workflow_tests
 	git clone https://github.com/flagsmith/flagsmith-auth-controller --depth 1 --branch ${AUTH_CONTROLLER_REVISION} && mv ./flagsmith-auth-controller/tests tests/auth_controller_tests
-	rm -rf ./flagsmith-saml ./flagsmith-rbac ./flagsmith-workflows ./flagsmith-auth-controller
+
+	git clone https://github.com/flagsmith/flagsmith-task-processor --depth 1 --branch ${TASK_PROCESSOR_REVISION} && mv ./flagsmith-task-processor/tests tests/task_processor_tests
+	rm -rf ./flagsmith-saml ./flagsmith-rbac ./flagsmith-workflows ./flagsmith-auth-controller ./flagsmith-task-processor

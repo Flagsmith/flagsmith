@@ -44,6 +44,7 @@ You can run our Enterprise version either on-premise, or we can provide private 
 organisation.
 
 - [Role Based Access Control](/system-administration/rbac).
+- [Custom fields](/advanced-use/custom-fields.md) for features, segments and environments.
 - [Okta](/system-administration/authentication/Okta), [LDAP](/system-administration/authentication/LDAP),
   [SAML](/system-administration/authentication/SAML) and [ADFS](/system-administration/authentication/ADFS)
   authentication, as well as the ability to lock authentication to a single provider.
@@ -56,4 +57,4 @@ organisation.
 - The Open Source version has **no** API request or Identity limits - you can run as many API instances in a cluster as
   you wish.
 - The Open Source version has **no** Dashboard User limits - you can have as many team members as you wish.
-- Deploy with one click to a number of different [IaaS and PaaS providers](/deployment/overview#one-click-installers).
+- Deploy with one click to a number of different [IaaS and PaaS providers](/deployment#one-click-installers).

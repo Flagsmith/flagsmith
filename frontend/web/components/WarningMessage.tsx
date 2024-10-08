@@ -1,10 +1,10 @@
-import React, { FC } from 'react'
+import React, { FC, ReactNode } from 'react'
 import Icon from './Icon'
 import Button from './base/forms/Button'
 import Constants from 'common/constants'
 
 type WarningMessageType = {
-  warningMessage: string
+  warningMessage: ReactNode
   enabledButton?: boolean
   warningMessageClass?: string
 }
@@ -14,6 +14,9 @@ const WarningMessage: FC<WarningMessageType> = (props) => {
   const warningMessageClassName = `alert alert-warning ${
     warningMessageClass || 'flex-1 align-items-center'
   }`
+  if(!props.warningMessage) {
+    return null
+  }
   return (
     <div
       className={warningMessageClassName}

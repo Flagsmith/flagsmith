@@ -1,4 +1,6 @@
+import json
 import logging
+import re
 
 from django.db import models
 from django.db.models import Q
@@ -11,9 +13,11 @@ from django_lifecycle import (
 
 from environments.models import Environment
 from features.models import Feature, FeatureState
+from integrations.github.constants import GitHubEventType, GitHubTag
 from integrations.github.github import call_github_task
+from integrations.github.models import GitHubRepository
 from organisations.models import Organisation
-from webhooks.webhooks import WebhookEventType
+from projects.tags.models import Tag, TagType
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +26,20 @@ class ResourceType(models.TextChoices):
     # GitHub external resource types
     GITHUB_ISSUE = "GITHUB_ISSUE", "GitHub Issue"
     GITHUB_PR = "GITHUB_PR", "GitHub PR"
+
+
+tag_by_type_and_state = {
+    ResourceType.GITHUB_ISSUE.value: {
+        "open": GitHubTag.ISSUE_OPEN.value,
+        "closed": GitHubTag.ISSUE_CLOSED.value,
+    },
+    ResourceType.GITHUB_PR.value: {
+        "open": GitHubTag.PR_OPEN.value,
+        "closed": GitHubTag.PR_CLOSED.value,
+        "merged": GitHubTag.PR_MERGED.value,
+        "draft": GitHubTag.PR_DRAFT.value,
+    },
+}
 
 
 class FeatureExternalResource(LifecycleModelMixin, models.Model):
@@ -49,12 +67,43 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
 
     @hook(AFTER_SAVE)
     def execute_after_save_actions(self):
+        # Tag the feature with the external resource type
+        metadata = json.loads(self.metadata) if self.metadata else {}
+        state = metadata.get("state", "open")
+
         # Add a comment to GitHub Issue/PR when feature is linked to the GH external resource
+        # and tag the feature with the corresponding tag if tagging is enabled
         if (
-            Organisation.objects.prefetch_related("github_config")
+            github_configuration := Organisation.objects.prefetch_related(
+                "github_config"
+            )
             .get(id=self.feature.project.organisation_id)
             .github_config.first()
         ):
+            if self.type == "GITHUB_PR":
+                pattern = r"github.com/([^/]+)/([^/]+)/pull/\d+$"
+            elif self.type == "GITHUB_ISSUE":
+                pattern = r"github.com/([^/]+)/([^/]+)/issues/\d+$"
+
+            url_match = re.search(pattern, self.url)
+            owner, repo = url_match.groups()
+
+            github_repo = GitHubRepository.objects.get(
+                github_configuration=github_configuration.id,
+                project=self.feature.project,
+                repository_owner=owner,
+                repository_name=repo,
+            )
+            if github_repo.tagging_enabled:
+                github_tag = Tag.objects.get(
+                    label=tag_by_type_and_state[self.type][state],
+                    project=self.feature.project,
+                    is_system_tag=True,
+                    type=TagType.GITHUB.value,
+                )
+                self.feature.tags.add(github_tag)
+                self.feature.save()
+
             feature_states: list[FeatureState] = []
 
             environments = Environment.objects.filter(
@@ -74,7 +123,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
 
             call_github_task(
                 organisation_id=self.feature.project.organisation_id,
-                type=WebhookEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
+                type=GitHubEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
                 feature=self.feature,
                 segment_name=None,
                 url=None,
@@ -92,7 +141,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
 
             call_github_task(
                 organisation_id=self.feature.project.organisation_id,
-                type=WebhookEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
+                type=GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
                 feature=self.feature,
                 segment_name=None,
                 url=self.url,

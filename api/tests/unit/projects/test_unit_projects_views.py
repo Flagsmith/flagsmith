@@ -9,6 +9,7 @@ from pytest_lazyfixture import lazy_fixture
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
+from task_processor.task_run_method import TaskRunMethod
 
 from environments.dynamodb.types import ProjectIdentityMigrationStatus
 from environments.identities.models import Identity
@@ -31,7 +32,6 @@ from projects.permissions import (
     VIEW_PROJECT,
 )
 from segments.models import Segment
-from task_processor.task_run_method import TaskRunMethod
 from tests.types import WithProjectPermissionsCallable
 from users.models import FFAdminUser, UserPermissionGroup
 
@@ -152,7 +152,7 @@ def test_can_list_project_permission(client, project):
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert (
-        len(response.json()) == 6
+        len(response.json()) == 7
     )  # hard code how many permissions we expect there to be
 
 

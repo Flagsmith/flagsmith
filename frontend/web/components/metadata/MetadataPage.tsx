@@ -11,6 +11,7 @@ import {
   useDeleteMetadataFieldMutation,
 } from 'common/services/useMetadataField'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
+import PlanBasedBanner from 'components/PlanBasedAccess'
 
 const metadataWidth = [200, 150, 150, 90]
 type MetadataPageType = {
@@ -53,12 +54,12 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
   }, [metadataFieldList, MetadataModelFieldList])
 
   const metadataCreatedToast = () => {
-    toast('Metadata Field Created')
+    toast('Custom Field Created')
     closeModal()
   }
   const createMetadataField = () => {
     openModal(
-      `Create Metadata Field`,
+      `Create Custom Field`,
       <CreateMetadataField
         onComplete={metadataCreatedToast}
         organisationId={organisationId}
@@ -71,13 +72,13 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
 
   const editMetadata = (id: string, contentTypeList: MetadataModelField[]) => {
     openModal(
-      `Edit Metadata Field`,
+      `Edit Custom Field`,
       <CreateMetadataField
         isEdit={true}
         metadataModelFieldList={contentTypeList}
         id={id}
         onComplete={() => {
-          toast('Metadata Field Updated')
+          toast('Custom Field Updated')
         }}
         projectId={projectId}
         organisationId={organisationId}
@@ -92,36 +93,36 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         <div>
           {'Are you sure you want to delete '}
           <strong>{name}</strong>
-          {' metadata field?'}
+          {' custom field?'}
         </div>
       ),
       destructive: true,
       onYes: () =>
-        deleteMetadata({ id }).then(() => toast('Metadata Field Deleted')),
-      title: 'Delete Metadata Field',
+        deleteMetadata({ id }).then(() => toast('Custom Field Deleted')),
+      title: 'Delete Custom Field',
       yesText: 'Confirm',
     })
   }
 
   return (
-    <div>
+    <PlanBasedBanner className='mt-4' feature={'METADATA'} theme={'page'}>
       <Row space className='mb-2'>
         <Row>
-          <h5 className='mt-2'>Metadata Fields</h5>
+          <h5>Custom Fields</h5>
         </Row>
         <Button className='mt-2' onClick={() => createMetadataField()}>
-          {'Create Metadata Field'}
+          {'Create Custom Field'}
         </Button>
       </Row>
       <p className='fs-small lh-sm'>
-        Manage metadata fields for selected core identities in your project{' '}
+        Add custom fields to features, segments, environments and projects.{' '}
         <Button
           theme='text'
           target='_blank'
-          href='https://docs.flagsmith.com/system-administration/metadata/'
+          href='https://docs.flagsmith.com/advanced-use/custom-fields/'
           className='fw-normal'
         >
-          Learn more.
+          Learn more
         </Button>
       </p>
       <FormGroup className='mt-4'>
@@ -168,17 +169,17 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
             </Row>
           )}
           renderNoResults={
-            <Panel className='no-pad' title={'Metadata'}>
+            <Panel className='no-pad' title={'Custom Fields'}>
               <div className='search-list'>
                 <Row className='list-item p-3 text-muted'>
-                  You currently have no metadata configured.
+                  You currently have no custom fields configured.
                 </Row>
               </div>
             </Panel>
           }
         />
       </FormGroup>
-    </div>
+    </PlanBasedBanner>
   )
 }
 

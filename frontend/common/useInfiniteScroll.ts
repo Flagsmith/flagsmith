@@ -4,6 +4,7 @@ import { PagedRequest } from './types/requests'
 import { PagedResponse } from './types/responses'
 import { QueryDefinition } from '@reduxjs/toolkit/query'
 import useThrottle from './useThrottle'
+import { SubscriptionOptions } from '@reduxjs/toolkit/src/query/core/apiState'
 
 const useInfiniteScroll = <
   REQ extends PagedRequest<{}>,
@@ -12,17 +13,24 @@ const useInfiniteScroll = <
   useGetDataListQuery: UseQuery<QueryDefinition<REQ, any, any, RES>>,
   queryParameters: REQ,
   throttle = 100,
+  queryOptions?: SubscriptionOptions & {
+    skip?: boolean
+    refetchOnMountOrArgChange?: boolean | number
+  },
 ) => {
   const [localPage, setLocalPage] = useState(1)
   const [combinedData, setCombinedData] = useState<RES | null>(null)
   const [loadingCombinedData, setLoadingCombinedData] = useState(false)
   const [q, setQ] = useState('')
 
-  const queryResponse = useGetDataListQuery({
-    ...queryParameters,
-    page: localPage,
-    q,
-  })
+  const queryResponse = useGetDataListQuery(
+    {
+      ...queryParameters,
+      page: localPage,
+      q,
+    },
+    queryOptions,
+  )
 
   useEffect(
     () => {
@@ -55,8 +63,11 @@ const useInfiniteScroll = <
   }, throttle)
 
   const refresh = useCallback(() => {
-    setLocalPage(1)
-  }, [])
+    queryResponse.refetch().then((newData) => {
+      setCombinedData(newData as unknown as RES)
+      setLocalPage(1)
+    })
+  }, [queryResponse])
 
   const loadMore = () => {
     if (queryResponse?.data?.next) {
@@ -70,6 +81,7 @@ const useInfiniteScroll = <
     isLoading: queryResponse.isLoading,
     loadMore,
     loadingCombinedData: loadingCombinedData && queryResponse.isFetching,
+    // refetchData,
     refresh,
     response: queryResponse,
     searchItems,

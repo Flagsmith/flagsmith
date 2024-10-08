@@ -9,10 +9,11 @@ from django.urls import reverse
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient, override_settings
+from rest_framework_simplejwt.tokens import SlidingToken
 
 from organisations.invites.models import Invite
 from organisations.models import Organisation
-from users.models import FFAdminUser
+from users.models import FFAdminUser, SignUpType
 
 
 def test_register_and_login_workflows(db: None, api_client: APIClient) -> None:
@@ -124,6 +125,7 @@ def test_can_register_with_invite_if_registration_disabled_without_invite(
         "password": password,
         "first_name": "test",
         "last_name": "register",
+        "sign_up_type": SignUpType.INVITE_EMAIL.value,
     }
     Invite.objects.create(email=email, organisation=organisation)
 
@@ -283,6 +285,197 @@ def test_login_workflow_with_mfa_enabled(
     current_user_response = api_client.get(current_user_url)
     assert current_user_response.status_code == status.HTTP_200_OK
     assert current_user_response.json()["email"] == email
+
+
+@override_settings(COOKIE_AUTH_ENABLED=True)
+def test_register_and_login_workflows__jwt_cookie(
+    db: None,
+    api_client: APIClient,
+) -> None:
+    # Given
+    email = "test@example.com"
+    password = FFAdminUser.objects.make_random_password()
+    register_url = reverse("api-v1:custom_auth:ffadminuser-list")
+    login_url = reverse("api-v1:custom_auth:custom-mfa-authtoken-login")
+    logout_url = reverse("api-v1:custom_auth:jwt-logout")
+    protected_resource_url = reverse("api-v1:projects:project-list")
+    register_data = {
+        "first_name": "test",
+        "last_name": "last_name",
+        "email": email,
+        "password": password,
+        "re_password": password,
+    }
+    login_data = {
+        "email": email,
+        "password": password,
+    }
+
+    # When & Then
+    # verify the cookie is returned on registration
+    response = api_client.post(register_url, data=register_data)
+    assert response.status_code == status.HTTP_201_CREATED
+    assert (jwt_access_cookie := response.cookies.get("jwt")) is not None
+    assert jwt_access_cookie["httponly"]
+
+    # verify the classic token is not returned on registration
+    assert "key" not in response.json()
+
+    # verify the register cookie works when accessing a protected endpoint
+    response = api_client.get(
+        protected_resource_url,
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    # now verify we can login with the same credentials
+    response = api_client.post(login_url, data=login_data)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert (jwt_access_cookie := response.cookies.get("jwt")) is not None
+    assert jwt_access_cookie["httponly"]
+
+    # verify the classic token is not returned on login
+    assert not response.data
+
+    # verify the login cookie works when accessing a protected endpoint
+    response = api_client.get(protected_resource_url)
+    assert response.status_code == status.HTTP_200_OK
+
+    # logout
+    response = api_client.post(logout_url)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # verify the login cookie does not work anymore
+    response = api_client.get(protected_resource_url)
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    # login again
+    response = api_client.post(login_url, data=login_data)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    new_jwt_access_cookie = response.cookies.get("jwt")
+
+    # verify new token is different from the old one
+    assert new_jwt_access_cookie != jwt_access_cookie
+
+
+@override_settings(COOKIE_AUTH_ENABLED=True)
+def test_login_workflow__jwt_cookie__mfa_enabled(
+    db: None,
+    api_client: APIClient,
+) -> None:
+    # Given
+    email = "test@example.com"
+    password = FFAdminUser.objects.make_random_password()
+    register_url = reverse("api-v1:custom_auth:ffadminuser-list")
+    create_mfa_method_url = reverse(
+        "api-v1:custom_auth:mfa-activate", kwargs={"method": "app"}
+    )
+    login_url = reverse("api-v1:custom_auth:custom-mfa-authtoken-login")
+    login_confirm_url = reverse("api-v1:custom_auth:mfa-authtoken-login-code")
+    logout_url = reverse("api-v1:custom_auth:jwt-logout")
+    register_data = {
+        "first_name": "test",
+        "last_name": "last_name",
+        "email": email,
+        "password": password,
+        "re_password": password,
+    }
+    login_data = {
+        "email": email,
+        "password": password,
+    }
+    response = api_client.post(register_url, data=register_data)
+    jwt_access_cookie = response.cookies.get("jwt")
+    response = api_client.post(create_mfa_method_url)
+    secret = response.json()["secret"]
+    totp = pyotp.TOTP(secret)
+    confirm_mfa_data = {"code": totp.now()}
+    confirm_mfa_method_url = reverse(
+        "api-v1:custom_auth:mfa-activate-confirm", kwargs={"method": "app"}
+    )
+    api_client.post(confirm_mfa_method_url, data=confirm_mfa_data)
+    api_client.post(logout_url)
+
+    # When & Then
+    # verify the cookie is returned on login
+    response = api_client.post(login_url, data=login_data)
+    ephemeral_token = response.json()["ephemeral_token"]
+    confirm_login_data = {"ephemeral_token": ephemeral_token, "code": totp.now()}
+    response = api_client.post(login_confirm_url, data=confirm_login_data)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert (jwt_access_cookie := response.cookies.get("jwt")) is not None
+    assert jwt_access_cookie["httponly"]
+
+    # verify the classic token is not returned on login
+    assert not response.data
+
+
+# In the real world, setting `COOKIE_AUTH_ENABLED` to `True`
+# changes default CORS setting values.
+# Due to how Django settings are loaded for tests,
+# we have to override CORS settings manually.
+@override_settings(
+    COOKIE_AUTH_ENABLED=True,
+    DOMAIN_OVERRIDE="testhost.com",
+    CORS_ORIGIN_ALLOW_ALL=False,
+    CORS_ALLOW_CREDENTIALS=True,
+)
+def test_login_workflow__jwt_cookie__cors_headers_expected(
+    db: None,
+    api_client: APIClient,
+) -> None:
+    # Given
+    email = "test@example.com"
+    password = FFAdminUser.objects.make_random_password()
+    register_url = reverse("api-v1:custom_auth:ffadminuser-list")
+    protected_resource_url = reverse("api-v1:projects:project-list")
+    register_data = {
+        "first_name": "test",
+        "last_name": "last_name",
+        "email": email,
+        "password": password,
+        "re_password": password,
+    }
+    api_client.post(register_url, data=register_data)
+
+    # When
+    response = api_client.get(
+        protected_resource_url,
+        HTTP_ORIGIN="http://testhost.com",
+    )
+
+    # Then
+    assert response.headers["Access-Control-Allow-Origin"] == "http://testhost.com"
+
+
+@override_settings(COOKIE_AUTH_ENABLED=True)
+def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(
+    db: None,
+    api_client: APIClient,
+) -> None:
+    # Given
+    email = "test@example.com"
+    password = FFAdminUser.objects.make_random_password()
+    register_url = reverse("api-v1:custom_auth:ffadminuser-list")
+    protected_resource_url = reverse("api-v1:projects:project-list")
+    register_data = {
+        "first_name": "test",
+        "last_name": "last_name",
+        "email": email,
+        "password": password,
+        "re_password": password,
+    }
+    response = api_client.post(register_url, data=register_data)
+    jwt_access_cookie = response.cookies.get("jwt")
+
+    # cookie is invalidated server-side but is still attached to the client
+    SlidingToken(jwt_access_cookie.value).blacklist()
+
+    # When
+    response = api_client.get(protected_resource_url)
+
+    # Then
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert not response.cookies.get("jwt")
 
 
 def test_throttle_login_workflows(

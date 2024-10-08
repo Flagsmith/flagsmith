@@ -3,8 +3,14 @@ import re
 
 from core.models import SoftDeleteExportableModel
 from django.db import models
-from django_lifecycle import BEFORE_DELETE, LifecycleModelMixin, hook
+from django_lifecycle import (
+    AFTER_CREATE,
+    BEFORE_DELETE,
+    LifecycleModelMixin,
+    hook,
+)
 
+from integrations.github.constants import GITHUB_TAG_COLOR
 from organisations.models import Organisation
 
 logger: logging.Logger = logging.getLogger(name=__name__)
@@ -35,7 +41,7 @@ class GithubConfiguration(SoftDeleteExportableModel):
         ordering = ("id",)
 
 
-class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
+class GitHubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
     github_configuration = models.ForeignKey(
         GithubConfiguration, related_name="repository_config", on_delete=models.CASCADE
     )
@@ -48,6 +54,7 @@ class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
         null=False,
         on_delete=models.CASCADE,
     )
+    tagging_enabled = models.BooleanField(default=False)
 
     class Meta:
         constraints = [
@@ -84,3 +91,23 @@ class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
             # Filter by url containing the repository owner and name
             url__regex=pattern,
         ).delete()
+
+    @hook(AFTER_CREATE)
+    def create_github_tags(
+        self,
+    ) -> None:
+        from integrations.github.constants import (
+            GitHubTag,
+            github_tag_description,
+        )
+        from projects.tags.models import Tag, TagType
+
+        for tag_label in GitHubTag:
+            tag, created = Tag.objects.get_or_create(
+                color=GITHUB_TAG_COLOR,
+                description=github_tag_description[tag_label.value],
+                label=tag_label.value,
+                project=self.project,
+                is_system_tag=True,
+                type=TagType.GITHUB.value,
+            )

@@ -59,12 +59,14 @@ class SDKIdentitiesResponseSerializer(serializers.Serializer):
             help_text="Can be of type string, boolean, float or integer."
         )
 
+    identifier = serializers.CharField()
     flags = serializers.ListField(child=SDKFeatureStateSerializer())
     traits = serializers.ListSerializer(child=_TraitSerializer())
 
 
 class SDKIdentitiesQuerySerializer(serializers.Serializer):
     identifier = serializers.CharField(required=True)
+    transient = serializers.BooleanField(default=False)
 
 
 class IdentityAllFeatureStatesFeatureSerializer(serializers.Serializer):

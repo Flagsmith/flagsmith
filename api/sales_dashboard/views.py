@@ -1,5 +1,7 @@
 import json
+from datetime import timedelta
 
+import re2 as re
 from app_analytics.influxdb_wrapper import (
     get_event_list_for_organisation,
     get_events_for_organisation,
@@ -18,6 +20,8 @@ from django.http import (
 from django.shortcuts import get_object_or_404
 from django.template import loader
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
@@ -34,6 +38,7 @@ from organisations.tasks import (
     update_organisation_subscription_information_cache,
     update_organisation_subscription_information_influx_cache,
 )
+from users.models import FFAdminUser
 
 from .forms import (
     EmailUsageForm,
@@ -47,7 +52,13 @@ OBJECTS_PER_PAGE = 50
 DEFAULT_ORGANISATION_SORT = "subscription_information_cache__api_calls_30d"
 DEFAULT_ORGANISATION_SORT_DIRECTION = "DESC"
 
+email_regex = re.compile(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
 
+
+@method_decorator(
+    name="get",
+    decorator=staff_member_required(),
+)
 class OrganisationList(ListView):
     model = Organisation
     paginate_by = OBJECTS_PER_PAGE
@@ -65,13 +76,8 @@ class OrganisationList(ListView):
             ),
         ).select_related("subscription", "subscription_information_cache")
 
-        if self.request.GET.get("search"):
-            search_term = self.request.GET["search"]
-            queryset = queryset.filter(
-                Q(name__icontains=search_term)
-                | Q(users__email__icontains=search_term)
-                | Q(subscription__subscription_id=search_term)
-            )
+        if search_term := self.request.GET.get("search"):
+            queryset = queryset.filter(self._build_search_query(search_term))
 
         if self.request.GET.get("filter_plan"):
             filter_plan = self.request.GET["filter_plan"]
@@ -119,6 +125,16 @@ class OrganisationList(ListView):
 
         return data
 
+    def _build_search_query(self, search_term: str) -> Q:
+        if email_regex.match(search_term.lower()):
+            # Assume that the search is for the email of a given user
+            user = FFAdminUser.objects.filter(email__iexact=search_term).first()
+            return Q(id__in=user.organisations.values_list("id", flat=True))
+
+        return Q(name__icontains=search_term) | Q(
+            subscription__subscription_id=search_term
+        )
+
 
 @staff_member_required
 def organisation_info(request: HttpRequest, organisation_id: int) -> HttpResponse:
@@ -154,10 +170,11 @@ def organisation_info(request: HttpRequest, organisation_id: int) -> HttpRespons
         date_range = request.GET.get("date_range", "180d")
         context["date_range"] = date_range
 
-        date_start = f"-{date_range}"
-        date_stop = "now()"
+        assert date_range.endswith("d")
+        now = timezone.now()
+        date_start = now - timedelta(days=int(date_range[:-1]))
         event_list, labels = get_event_list_for_organisation(
-            organisation_id, date_start, date_stop
+            organisation_id, date_start
         )
         context["event_list"] = event_list
         context["traits"] = mark_safe(json.dumps(event_list["traits"]))
@@ -167,13 +184,16 @@ def organisation_info(request: HttpRequest, organisation_id: int) -> HttpRespons
             json.dumps(event_list["environment-document"])
         )
         context["labels"] = mark_safe(json.dumps(labels))
+
+        date_starts = {}
+        date_starts["24h"] = now - timedelta(days=1)
+        date_starts["7d"] = now - timedelta(days=7)
+        date_starts["30d"] = now - timedelta(days=30)
         context["api_calls"] = {
             # TODO: this could probably be reduced to a single influx request
             #  rather than 3
-            range_: get_events_for_organisation(
-                organisation_id, date_start=f"-{range_}"
-            )
-            for range_ in ("24h", "7d", "30d")
+            period: get_events_for_organisation(organisation_id, date_start=_date_start)
+            for period, _date_start in date_starts.items()
         }
 
     return HttpResponse(template.render(context, request))
@@ -246,6 +266,14 @@ def migrate_identities_to_edge(request, project_id):
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 
+@method_decorator(
+    name="get",
+    decorator=staff_member_required(),
+)
+@method_decorator(
+    name="post",
+    decorator=staff_member_required(),
+)
 class EmailUsage(FormView):
     form_class = EmailUsageForm
     template_name = "sales_dashboard/email-usage.html"

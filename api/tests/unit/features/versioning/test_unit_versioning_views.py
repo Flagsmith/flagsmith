@@ -19,9 +19,13 @@ from environments.permissions.constants import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
+from features.feature_segments.limits import (
+    SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
+)
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.models import EnvironmentFeatureVersion
+from projects.models import Project
 from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
 from tests.types import (
@@ -984,7 +988,7 @@ def test_create_environment_default_when_creating_new_version_fails(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     assert response.json() == {
-        "feature_states_to_create": "Cannot create FeatureState objects that are not segment overrides."
+        "message": "Cannot create FeatureState objects that are not segment overrides."
     }
 
 
@@ -1022,8 +1026,8 @@ def test_create_segment_override_for_existing_override_when_creating_new_version
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {
-        "feature_states_to_create": "Segment override already exists for Segment %d"
-        % segment.id
+        "message": "An unresolvable conflict occurred: segment override already exists for segment '%s'"
+        % segment.name
     }
 
 
@@ -1124,3 +1128,393 @@ def test_create_new_version_delete_segment_override_updates_overrides_immediatel
     get_feature_segments_response = admin_client.get(get_feature_segments_url)
     assert get_feature_segments_response.status_code == status.HTTP_200_OK
     assert get_feature_segments_response.json()["count"] == 0
+
+
+def test_creating_multiple_segment_overrides_in_multiple_versions_sets_correct_priorities(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    segment: Segment,
+    another_segment: Segment,
+    admin_client_new: APIClient,
+) -> None:
+    """
+    This test is for a specific case found by a customer where creating
+    multiple segment overrides consecutively ended up with the 2 segment
+    overrides having the same priority.
+
+    This was really caused by slightly odd behaviour from the FE which
+    tried to update the existing segment override at the same time as
+    creating the new one, but this test ensures that the priorities
+    are set correct even in this case.
+
+    See PR here for FE fix: https://github.com/Flagsmith/flagsmith/pull/4609
+    """
+
+    def generate_segment_override_fs_payload(
+        segment: Segment, priority: int
+    ) -> dict[str, typing.Any]:
+        return {
+            "enabled": True,
+            "feature_state_value": {
+                "string_value": f"override for segment {segment.name}",
+                "type": "unicode",
+            },
+            "feature_segment": {
+                "segment": segment.id,
+                "priority": priority,
+            },
+        }
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # Now, let's create the first override with priority 0
+    data = {
+        "publish_immediately": True,
+        "feature_states_to_create": [generate_segment_override_fs_payload(segment, 0)],
+    }
+    create_segment_override_1_response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    assert create_segment_override_1_response.status_code == status.HTTP_201_CREATED
+    version_1_uuid = create_segment_override_1_response.json()["uuid"]
+    assert (
+        FeatureSegment.objects.get(
+            environment_feature_version__uuid=version_1_uuid,
+            feature=feature,
+            segment=segment,
+        ).priority
+        == 0
+    )
+
+    # Now, let's create the second override with priority 1 and (to mimic the FE behaviour)
+    # update the existing segment override (without actually changing anything).
+    data = {
+        "publish_immediately": True,
+        "feature_states_to_create": [
+            generate_segment_override_fs_payload(another_segment, 1)
+        ],
+        "feature_states_to_update": [generate_segment_override_fs_payload(segment, 0)],
+    }
+    create_segment_override_2_response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    assert create_segment_override_2_response.status_code == status.HTTP_201_CREATED
+    version_2_uuid = create_segment_override_2_response.json()["uuid"]
+    assert (
+        FeatureSegment.objects.get(
+            environment_feature_version__uuid=version_2_uuid,
+            feature=feature,
+            segment=another_segment,
+        ).priority
+        == 1
+    )
+
+
+def test_create_new_version_fails_when_breaching_segment_override_limit(
+    feature: Feature,
+    segment: Segment,
+    another_segment: Segment,
+    environment_v2_versioning: Environment,
+    project: Project,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
+    with_project_permissions([VIEW_PROJECT])
+
+    # We update the limit of segment overrides on the project
+    project.max_segment_overrides_allowed = 1
+    project.save()
+
+    # And we create an existing version with a segment override in it
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=version_2,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=version_2,
+        ),
+    )
+    version_2.publish()
+
+    data = {
+        "publish_immediately": True,
+        "feature_states_to_create": [
+            {
+                "feature_segment": {"segment": segment.id},
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "some new value",
+                },
+            }
+        ],
+    }
+    create_version_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # When
+    create_version_response = staff_client.post(
+        create_version_url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert create_version_response.status_code == status.HTTP_400_BAD_REQUEST
+    assert create_version_response.json() == {
+        "environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE
+    }
+    assert (
+        EnvironmentFeatureVersion.objects.filter(
+            environment=environment_v2_versioning, feature=feature
+        ).count()
+        == 2
+    )
+
+
+def test_segment_override_limit_excludes_older_versions__when_not_creating_any_new_overrides(
+    feature: Feature,
+    segment: Segment,
+    environment_v2_versioning: Environment,
+    project: Project,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
+    with_project_permissions([VIEW_PROJECT])
+
+    # We update the limit of segment overrides on the project
+    project.max_segment_overrides_allowed = 1
+    project.save()
+
+    # And we create an existing version with a segment override in it
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=version_2,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=version_2,
+        ),
+    )
+    version_2.publish()
+
+    data = {"publish_immediately": True}
+    create_version_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # When
+    create_version_response = staff_client.post(
+        create_version_url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert create_version_response.status_code == status.HTTP_201_CREATED
+
+    version_3_uuid = create_version_response.json()["uuid"]
+    assert FeatureState.objects.filter(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version__uuid=version_3_uuid,
+    ).exists()
+
+
+def test_segment_override_limit_excludes_older_versions__when_creating_new_override(
+    feature: Feature,
+    segment: Segment,
+    another_segment: Segment,
+    environment_v2_versioning: Environment,
+    project: Project,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
+    with_project_permissions([VIEW_PROJECT])
+
+    # We update the limit of segment overrides on the project
+    project.max_segment_overrides_allowed = 2
+    project.save()
+
+    # And we create an existing version with a segment override in it
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=version_2,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=version_2,
+        ),
+    )
+    version_2.publish()
+
+    data = {
+        "publish_immediately": True,
+        "feature_states_to_create": [
+            {
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "some new value",
+                },
+                "feature_segment": {
+                    "segment": another_segment.id,
+                },
+            }
+        ],
+    }
+
+    create_version_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # When
+    create_version_response = staff_client.post(
+        create_version_url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert create_version_response.status_code == status.HTTP_201_CREATED
+
+    version_3_uuid = create_version_response.json()["uuid"]
+    assert FeatureState.objects.filter(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version__uuid=version_3_uuid,
+    ).exists()
+
+
+def test_segment_override_limit_excludes_overrides_being_deleted_when_creating_new_override(
+    feature: Feature,
+    segment: Segment,
+    another_segment: Segment,
+    environment_v2_versioning: Environment,
+    project: Project,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
+    with_project_permissions([VIEW_PROJECT])
+
+    # We update the limit of segment overrides on the project
+    project.max_segment_overrides_allowed = 1
+    project.save()
+
+    # And we create an existing version with a segment override in it
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=version_2,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=version_2,
+        ),
+    )
+    version_2.publish()
+
+    data = {
+        "publish_immediately": True,
+        "feature_states_to_create": [
+            {
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "some new value",
+                },
+                "feature_segment": {
+                    "segment": another_segment.id,
+                },
+            }
+        ],
+        "segment_ids_to_delete_overrides": [segment.id],
+    }
+
+    create_version_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # When
+    create_version_response = staff_client.post(
+        create_version_url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert create_version_response.status_code == status.HTTP_201_CREATED
+
+    version_3_uuid = create_version_response.json()["uuid"]
+    assert FeatureState.objects.filter(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version__uuid=version_3_uuid,
+    ).exists()
+
+
+def test_cannot_create_new_version_for_environment_not_enabled_for_versioning_v2(
+    environment: Environment,
+    feature: Feature,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
+    with_project_permissions([VIEW_PROJECT])
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment.id, feature.id],
+    )
+
+    # When
+    response = staff_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    assert response.json() == {
+        "environment": "Environment must use v2 feature versioning."
+    }

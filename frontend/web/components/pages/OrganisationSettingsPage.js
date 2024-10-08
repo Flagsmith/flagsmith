@@ -16,6 +16,8 @@ import _data from 'common/data/base/_data'
 import AccountStore from 'common/stores/account-store'
 import PageTitle from 'components/PageTitle'
 import SamlTab from 'components/SamlTab'
+import Setting from 'components/Setting'
+import AccountProvider from 'common/providers/AccountProvider'
 
 const SettingsTab = {
   'Billing': 'billing',
@@ -209,7 +211,6 @@ const OrganisationSettingsPage = class extends Component {
       props: { webhooks, webhooksLoading },
     } = this
     const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
-    const force2faPermission = Utils.getPlansPermission('FORCE_2FA')
 
     return (
       <div className='app-container container'>
@@ -232,18 +233,13 @@ const OrganisationSettingsPage = class extends Component {
                     AccountStore.getUser() &&
                     AccountStore.getOrganisationRole() === 'ADMIN'
                   ) {
-                    const showSaml =
-                      Utils.getPlanPermission(
-                        organisation.subscription?.plan,
-                        'SAML',
-                      ) && Utils.getFlagsmithHasFeature('saml_configuration')
                     displayedTabs.push(
                       ...[
                         SettingsTab.General,
                         paymentsEnabled && !isAWS ? SettingsTab.Billing : null,
                         SettingsTab.Keys,
                         SettingsTab.Webhooks,
-                        showSaml ? SettingsTab.SAML : null,
+                        SettingsTab.SAML,
                       ].filter((v) => !!v),
                     )
                   } else {
@@ -307,37 +303,17 @@ const OrganisationSettingsPage = class extends Component {
                                   </form>
                                 </div>
                                 <hr className='mt-0 mb-4' />
-                                <div className='col-md-6'>
-                                  <Row className='mt-4 mb-2'>
-                                    {!force2faPermission ? (
-                                      <Tooltip
-                                        title={
-                                          <Switch
-                                            checked={organisation.force_2fa}
-                                            onChange={this.save2FA}
-                                          />
-                                        }
-                                      >
-                                        To access this feature please upgrade
-                                        your account to scaleup or higher."
-                                      </Tooltip>
-                                    ) : (
-                                      <Switch
-                                        checked={organisation.force_2fa}
-                                        onChange={this.save2FA}
-                                      />
-                                    )}
-                                    <h5 className='mb-0 ml-3'>Enforce 2FA</h5>
-                                  </Row>
-                                  <p className='fs-small lh-sm'>
-                                    Enabling this setting forces users within
-                                    the organisation to setup 2 factor security.
-                                  </p>
+                                <div className='col-md-8'>
+                                  <Setting
+                                    feature={'FORCE_2FA'}
+                                    checked={organisation.force_2fa}
+                                    onChange={this.save2FA}
+                                  />
                                 </div>
                                 {Utils.getFlagsmithHasFeature(
                                   'restrict_project_create_to_admin',
                                 ) && (
-                                  <FormGroup className='mt-4 col-md-6'>
+                                  <FormGroup className='mt-4 col-md-8'>
                                     <h5>Admin Settings</h5>
                                     <Row className='mb-2'>
                                       <Switch
@@ -360,7 +336,7 @@ const OrganisationSettingsPage = class extends Component {
                               </div>
                             </FormGroup>
                             <hr className='my-4' />
-                            <FormGroup className='mt-4 col-md-6'>
+                            <FormGroup className='mt-4 col-md-8'>
                               <Row space>
                                 <div className='col-md-7'>
                                   <h5 className='mn-2'>Delete Organisation</h5>
@@ -476,11 +452,12 @@ const OrganisationSettingsPage = class extends Component {
                                       target='_blank'
                                       className='btn'
                                     >
-                                      Manage Invoices
+                                      Manage subscription
                                     </Button>
                                   )}
                                 </div>
                               </Row>
+                              <h5>Manage Payment Plan</h5>
                               <Payment viewOnly={false} />
                             </div>
                           </TabItem>

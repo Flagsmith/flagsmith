@@ -6,7 +6,7 @@ from django.db.models import Prefetch, Q
 from flag_engine.features.models import FeatureStateModel
 from flag_engine.identities.models import IdentityFeaturesList, IdentityModel
 
-from api_keys.models import MasterAPIKey
+from api_keys.user import APIKeyUser
 from edge_api.identities.tasks import (
     generate_audit_log_records,
     sync_identity_document_features,
@@ -165,29 +165,23 @@ class EdgeIdentity:
         with suppress(ValueError):  # ignore if feature state didn't exist
             self._engine_identity_model.identity_features.remove(feature_state)
 
-    def save(self, user: FFAdminUser = None, master_api_key: MasterAPIKey = None):
+    def save(self, user: FFAdminUser | APIKeyUser = None):
         self.dynamo_wrapper.put_item(self.to_document())
-        changes = self._get_changes()
-        if changes["feature_overrides"]:
-            # TODO: would this be simpler if we put a wrapper around FeatureStateModel instead?
-            generate_audit_log_records.delay(
-                kwargs={
-                    "environment_api_key": self.environment_api_key,
-                    "identifier": self.identifier,
-                    "user_id": getattr(user, "id", None),
-                    "changes": changes,
-                    "identity_uuid": str(self.identity_uuid),
-                    "master_api_key_id": getattr(master_api_key, "id", None),
-                }
-            )
-            update_flagsmith_environments_v2_identity_overrides.delay(
-                kwargs={
-                    "environment_api_key": self.environment_api_key,
-                    "changes": changes,
-                    "identity_uuid": str(self.identity_uuid),
-                    "identifier": self.identifier,
-                }
-            )
+        changeset = self._get_changes()
+        self._update_feature_overrides(
+            changeset=changeset,
+            user=user,
+        )
+        self._reset_initial_state()
+
+    def delete(self, user: FFAdminUser | APIKeyUser = None) -> None:
+        self.dynamo_wrapper.delete_item(self._engine_identity_model.composite_key)
+        self._engine_identity_model.identity_features.clear()
+        changeset = self._get_changes()
+        self._update_feature_overrides(
+            changeset=changeset,
+            user=user,
+        )
         self._reset_initial_state()
 
     def synchronise_features(self, valid_feature_names: typing.Collection[str]) -> None:
@@ -200,6 +194,35 @@ class EdgeIdentity:
 
     def to_document(self) -> dict:
         return map_engine_identity_to_identity_document(self._engine_identity_model)
+
+    def _update_feature_overrides(
+        self, changeset: IdentityChangeset, user: FFAdminUser | APIKeyUser
+    ) -> None:
+        if changeset["feature_overrides"]:
+            # TODO: would this be simpler if we put a wrapper around FeatureStateModel instead?
+            kwargs = {
+                "environment_api_key": self.environment_api_key,
+                "identifier": self.identifier,
+                "user_id": (
+                    user.id
+                    if not getattr(user, "is_master_api_key_user", False)
+                    else None
+                ),
+                "changes": changeset,
+                "identity_uuid": str(self.identity_uuid),
+                "master_api_key_id": (
+                    user.pk if getattr(user, "is_master_api_key_user", False) else None
+                ),
+            }
+            generate_audit_log_records.delay(kwargs=kwargs)
+            update_flagsmith_environments_v2_identity_overrides.delay(
+                kwargs={
+                    "environment_api_key": self.environment_api_key,
+                    "changes": changeset,
+                    "identity_uuid": str(self.identity_uuid),
+                    "identifier": self.identifier,
+                }
+            )
 
     def _get_changes(self) -> IdentityChangeset:
         previous_instance = self._initial_state

@@ -1,7 +1,9 @@
 import json
 
 import pytest
+from django.conf import settings
 from django.urls import reverse
+from pytest_django import DjangoAssertNumQueries
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -27,32 +29,103 @@ from tests.types import (
 from users.models import FFAdminUser
 
 
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
 @pytest.mark.parametrize(
     "client, num_queries",
     [
         (
             lazy_fixture("admin_client"),
-            3,
-        ),  # 1 for paging, 1 for result, 1 for getting the current live version
+            6,
+        ),  # 1 for paging, 3 for permissions, 1 for result, 1 for getting the current live version
         (
             lazy_fixture("admin_master_api_key_client"),
             4,
-        ),  # an extra one for master_api_key
+        ),  # one for each for master_api_key
     ],
 )
-def test_list_feature_segments(
-    segment,
-    feature,
-    environment,
-    project,
-    django_assert_num_queries,
-    client,
-    feature_segment,
-    num_queries,
-):
+def test_list_feature_segments_without_rbac(
+    segment: Segment,
+    feature: Feature,
+    environment: Environment,
+    project: Project,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    client: APIClient,
+    feature_segment: FeatureSegment,
+    num_queries: int,
+) -> None:
     # Given
     base_url = reverse("api-v1:features:feature-segment-list")
     url = f"{base_url}?environment={environment.id}&feature={feature.id}"
+    _list_feature_segment_setup_data(project, environment, feature, segment)
+
+    # When
+    with django_assert_num_queries(num_queries):
+        response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    assert response_json["count"] == 3
+    for result in response_json["results"]:
+        assert result["environment"] == environment.id
+        assert "uuid" in result
+        assert "segment_name" in result
+        assert not result["is_feature_specific"]
+
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is False,
+    reason="Skip this test if RBAC is not installed",
+)
+@pytest.mark.parametrize(
+    "client, num_queries",
+    [
+        (
+            lazy_fixture("admin_client"),
+            7,
+        ),  # 1 for paging, 4 for permissions, 1 for result, 1 for getting the current live version
+        (
+            lazy_fixture("admin_master_api_key_client"),
+            4,
+        ),  # one for each for master_api_key
+    ],
+)
+def test_list_feature_segments_with_rbac(
+    segment: Segment,
+    feature: Feature,
+    environment: Environment,
+    project: Project,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    client: APIClient,
+    feature_segment: FeatureSegment,
+    num_queries: int,
+) -> None:  # pragma: no cover
+    # Given
+    base_url = reverse("api-v1:features:feature-segment-list")
+    url = f"{base_url}?environment={environment.id}&feature={feature.id}"
+    _list_feature_segment_setup_data(project, environment, feature, segment)
+
+    # When
+    with django_assert_num_queries(num_queries):
+        response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    assert response_json["count"] == 3
+    for result in response_json["results"]:
+        assert result["environment"] == environment.id
+        assert "uuid" in result
+        assert "segment_name" in result
+        assert not result["is_feature_specific"]
+
+
+def _list_feature_segment_setup_data(
+    project: Project, environment: Environment, feature: Feature, segment: Segment
+) -> None:
     environment_2 = Environment.objects.create(
         project=project, name="Test environment 2"
     )
@@ -68,20 +141,6 @@ def test_list_feature_segments(
     FeatureSegment.objects.create(
         feature=feature, segment=segment, environment=environment_2
     )
-
-    # When
-    with django_assert_num_queries(num_queries):
-        response = client.get(url)
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    response_json = response.json()
-    assert response_json["count"] == 3
-    for result in response_json["results"]:
-        assert result["environment"] == environment.id
-        assert "uuid" in result
-        assert "segment_name" in result
-        assert not result["is_feature_specific"]
 
 
 @pytest.mark.parametrize(

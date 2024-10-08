@@ -23,6 +23,9 @@ import ProjectUsage from 'components/ProjectUsage'
 import ProjectStore from 'common/stores/project-store'
 import Tooltip from 'components/Tooltip'
 import { Link } from 'react-router-dom'
+import Setting from 'components/Setting'
+import PlanBasedBanner from 'components/PlanBasedAccess'
+import classNames from 'classnames'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -227,7 +230,7 @@ const ProjectSettingsPage = class extends Component {
                         />
                         <label>Project Name</label>
                         <FormGroup>
-                          <form className='col-md-6' onSubmit={saveProject}>
+                          <form className='col-md-8' onSubmit={saveProject}>
                             <Row className='align-items-start'>
                               <Flex className='ml-0'>
                                 <Input
@@ -248,41 +251,66 @@ const ProjectSettingsPage = class extends Component {
                               </Flex>
                             </Row>
                             {!!hasVersioning && (
-                              <Tooltip
-                                title={
-                                  <div>
-                                    <label className='mt-4'>
-                                      Days before a feature is marked as stale{' '}
-                                      <Icon name='info-outlined' />
-                                    </label>
-                                    <div style={{ width: 80 }} className='ml-0'>
-                                      <Input
-                                        disabled={!hasStaleFlagsPermission}
-                                        ref={(e) => (this.input = e)}
-                                        value={
-                                          this.state.stale_flags_limit_days
-                                        }
-                                        onChange={(e) =>
-                                          this.setState({
-                                            stale_flags_limit_days: parseInt(
-                                              Utils.safeParseEventValue(e),
-                                            ),
-                                          })
-                                        }
-                                        isValid={!!stale_flags_limit_days}
-                                        type='number'
-                                        placeholder='Number of Days'
-                                      />
-                                    </div>
+                              <>
+                                <div className='d-flex mt-4 gap-2 align-items-center'>
+                                  <Tooltip
+                                    title={
+                                      <>
+                                        <label className='mb-0'>
+                                          Stale Flag Detection{' '}
+                                        </label>
+                                        <Icon name='info-outlined' />
+                                      </>
+                                    }
+                                  >
+                                    {`If no changes have been made to a feature in any environment within this threshold the feature will be tagged as stale. You will need to enable feature versioning in your environments for stale features to be detected.`}
+                                  </Tooltip>
+                                  <PlanBasedBanner
+                                    feature={'STALE_FLAGS'}
+                                    theme={'badge'}
+                                  />
+                                </div>
+                                <div className='d-flex align-items-center gap-2'>
+                                  <label
+                                    className={classNames('mb-0', {
+                                      'opacity-50': !hasStaleFlagsPermission,
+                                    })}
+                                  >
+                                    Mark as stale after
+                                  </label>
+                                  <div style={{ width: 80 }} className='ml-0'>
+                                    <Input
+                                      disabled={!hasStaleFlagsPermission}
+                                      ref={(e) => (this.input = e)}
+                                      value={this.state.stale_flags_limit_days}
+                                      onChange={(e) =>
+                                        this.setState({
+                                          stale_flags_limit_days: parseInt(
+                                            Utils.safeParseEventValue(e),
+                                          ),
+                                        })
+                                      }
+                                      isValid={!!stale_flags_limit_days}
+                                      type='number'
+                                      placeholder='Number of Days'
+                                    />
                                   </div>
-                                }
-                              >
-                                {`${
-                                  !hasStaleFlagsPermission
-                                    ? 'This feature is available with our enterprise plan. '
-                                    : ''
-                                }If no changes have been made to a feature in any environment within this threshold the feature will be tagged as stale. You will need to enable feature versioning in your environments for stale features to be detected.`}
-                              </Tooltip>
+                                  <label
+                                    className={classNames('mb-0', {
+                                      'opacity-50': !hasStaleFlagsPermission,
+                                    })}
+                                  >
+                                    Days
+                                  </label>
+                                </div>
+                                {!hasStaleFlagsPermission && (
+                                  <PlanBasedBanner
+                                    className='mt-2'
+                                    feature={'STALE_FLAGS'}
+                                    theme={'description'}
+                                  />
+                                )}
+                              </>
                             )}
                             <div className='text-right'>
                               <Button
@@ -298,7 +326,7 @@ const ProjectSettingsPage = class extends Component {
                         </FormGroup>
                       </div>
                       <hr className='py-0 my-4' />
-                      <FormGroup className='mt-4 col-md-6'>
+                      <FormGroup className='mt-4 col-md-8'>
                         <Row className='mb-2'>
                           <Switch
                             data-test='js-prevent-flag-defaults'
@@ -318,7 +346,7 @@ const ProjectSettingsPage = class extends Component {
                           environment.
                         </p>
                       </FormGroup>
-                      <FormGroup className='mt-4 col-md-6'>
+                      <FormGroup className='mt-4 col-md-8'>
                         <Row className='mb-2'>
                           <Switch
                             data-test='js-flag-case-sensitivity'
@@ -338,7 +366,7 @@ const ProjectSettingsPage = class extends Component {
                           use upper case characters when creating features.
                         </p>
                       </FormGroup>
-                      <FormGroup className='mt-4 col-md-6'>
+                      <FormGroup className='mt-4 col-md-8'>
                         <Row className='mb-2'>
                           <Switch
                             data-test='js-flag-case-sensitivity'
@@ -435,8 +463,8 @@ const ProjectSettingsPage = class extends Component {
                           />
                         )}
                       </FormGroup>
-                      {!Utils.getIsEdge() && (
-                        <FormGroup className='mt-4 col-md-6'>
+                      {!Utils.getIsEdge() && !!Utils.isSaas() && (
+                        <FormGroup className='mt-4 col-md-8'>
                           <Row className='mb-2'>
                             <h5 className='mb-0 mr-3'>
                               Global Edge API Opt in
@@ -482,7 +510,7 @@ const ProjectSettingsPage = class extends Component {
                         </FormGroup>
                       )}
                       <hr className='py-0 my-4' />
-                      <FormGroup className='mt-4 col-md-6'>
+                      <FormGroup className='mt-4 col-md-8'>
                         <Row space>
                           <div className='col-md-7'>
                             <h5>Delete Project</h5>
@@ -516,57 +544,22 @@ const ProjectSettingsPage = class extends Component {
                       tabLabel='SDK Settings'
                     >
                       {Utils.isSaas() &&
-                        Utils.getFlagsmithHasFeature('realtime_setting') && (
-                          <FormGroup className='mt-4 col-md-6'>
-                            <Row className='mb-2'>
-                              <Switch
-                                data-test='js-prevent-flag-defaults'
-                                disabled={
-                                  isSaving ||
-                                  !Utils.getPlansPermission('REALTIME')
-                                }
-                                onChange={() =>
-                                  this.toggleRealtimeUpdates(
-                                    project,
-                                    editProject,
-                                  )
-                                }
-                                checked={project.enable_realtime_updates}
-                              />
-                              <h5 className='mb-0 ml-3'>
-                                Enable Realtime Updates
-                              </h5>
-                            </Row>
-
-                            <p className='fs-small lh-sm mb-0'>
-                              Pushes realtime updates to client-side SDKs when
-                              features and segment overrides are adjusted in the
-                              dashboard.
-                              {!Utils.getPlansPermission('REALTIME') && (
-                                <>
-                                  This feature is available with our{' '}
-                                  <Link to={Constants.upgradeURL}>
-                                    enterprise plan
-                                  </Link>
-                                  .
-                                </>
-                              )}{' '}
-                              Find out more{' '}
-                              <a
-                                target='_blank'
-                                href='https://docs.flagsmith.com/advanced-use/real-time-flags#how-it-works'
-                                className='btn-link'
-                                rel='noreferrer'
-                              >
-                                here
-                              </a>
-                              .
-                            </p>
+                        Utils.getFlagsmithHasFeature('realtime_setting') &&
+                        Utils.isSaas() && (
+                          <FormGroup className='mt-4 col-md-8'>
+                            <Setting
+                              feature='REALTIME'
+                              disabled={isSaving}
+                              onChange={() =>
+                                this.toggleRealtimeUpdates(project, editProject)
+                              }
+                              checked={project.enable_realtime_updates}
+                            />
                           </FormGroup>
                         )}
                       <div className='mt-4'>
                         <form onSubmit={saveProject}>
-                          <FormGroup className='mt-4 col-md-6'>
+                          <FormGroup className='mt-4 col-md-8'>
                             <Row className='mb-2'>
                               <Switch
                                 data-test='js-hide-disabled-flags'
@@ -613,7 +606,7 @@ const ProjectSettingsPage = class extends Component {
                       />
                     </TabItem>
                     {metadataEnable && (
-                      <TabItem tabLabel='Metadata'>
+                      <TabItem tabLabel='Custom Fields'>
                         <MetadataPage
                           organisationId={AccountStore.getOrganisation().id}
                           projectId={this.props.match.params.projectId}

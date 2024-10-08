@@ -20,6 +20,10 @@
             "essential": true,
             "environment": [
                 {
+                    "name": "LOG_LEVEL",
+                    "value": "INFO"
+                },
+                {
                     "name": "AWS_REGION",
                     "value": "eu-west-2"
                 },
@@ -154,6 +158,10 @@
                 {
                     "name": "CACHE_BAD_ENVIRONMENTS_SECONDS",
                     "value": "60"
+                },
+                {
+                    "name": "FEATURE_EVALUATION_CACHE_SECONDS",
+                    "value": "300"
                 },
                 {
                     "name": "EDGE_RELEASE_DATETIME",

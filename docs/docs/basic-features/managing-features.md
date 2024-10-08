@@ -99,14 +99,7 @@ other Environments within the Project.
 
 The primary use case for using Multi-Variate flags is to drive [A/B tests](/advanced-use/ab-testing.md).
 
-### Use Metadata
+### Custom fields
 
-When creating or updating a feature, you can add Metadata if you was created Metadata Fields in Project Settings ->
-Metadata.
-
-You can add the Metadata in the Feature Setting Tab.
-
-If you have metadata for features, a list of fields that can be filled, saved, and will be stored with the feature's
-save flag will be displayed.
-
-![Image](/img/metadata/metadata-feature-1.png)
+Optional or required custom fields can be defined when creating or updating features.
+[Learn more](/advanced-use/custom-fields.md)

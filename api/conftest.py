@@ -12,14 +12,17 @@ from django.test.utils import setup_databases
 from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
+from pytest_django.fixtures import SettingsWrapper
 from pytest_django.plugin import blocking_manager_key
 from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
+from task_processor.task_run_method import TaskRunMethod
 from urllib3.connectionpool import HTTPConnectionPool
 from xdist import get_xdist_worker_id
 
 from api_keys.models import MasterAPIKey
+from api_keys.user import APIKeyUser
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
@@ -39,7 +42,7 @@ from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
-from integrations.github.models import GithubConfiguration, GithubRepository
+from integrations.github.models import GithubConfiguration, GitHubRepository
 from metadata.models import (
     Metadata,
     MetadataField,
@@ -65,7 +68,6 @@ from projects.models import (
 from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
-from task_processor.task_run_method import TaskRunMethod
 from tests.test_helpers import fix_issue_3869
 from tests.types import (
     WithEnvironmentPermissionsCallable,
@@ -337,6 +339,11 @@ def segment(project: Project):
 
 
 @pytest.fixture()
+def another_segment(project: Project) -> Segment:
+    return Segment.objects.create(name="another_segment", project=project)
+
+
+@pytest.fixture()
 def segment_rule(segment):
     return SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
 
@@ -588,6 +595,19 @@ def segment_featurestate(feature_segment, feature, environment):
 
 
 @pytest.fixture()
+def another_segment_featurestate(
+    feature: Feature, environment: Environment, another_segment: Segment
+) -> FeatureState:
+    return FeatureState.objects.create(
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature, segment=another_segment, environment=environment
+        ),
+        feature=feature,
+        environment=environment,
+    )
+
+
+@pytest.fixture()
 def feature_with_value_segment(
     feature_with_value: Feature, segment: Segment, environment: Environment
 ) -> FeatureSegment:
@@ -618,6 +638,11 @@ def environment_api_key(environment):
 
 
 @pytest.fixture()
+def master_api_key_name() -> str:
+    return "test-key"
+
+
+@pytest.fixture()
 def admin_master_api_key(organisation: Organisation) -> typing.Tuple[MasterAPIKey, str]:
     master_api_key, key = MasterAPIKey.objects.create_key(
         name="test_key", organisation=organisation, is_admin=True
@@ -626,11 +651,18 @@ def admin_master_api_key(organisation: Organisation) -> typing.Tuple[MasterAPIKe
 
 
 @pytest.fixture()
-def master_api_key(organisation: Organisation) -> typing.Tuple[MasterAPIKey, str]:
+def master_api_key(
+    master_api_key_name: str, organisation: Organisation
+) -> typing.Tuple[MasterAPIKey, str]:
     master_api_key, key = MasterAPIKey.objects.create_key(
-        name="test_key", organisation=organisation, is_admin=False
+        name=master_api_key_name, organisation=organisation, is_admin=False
     )
     return master_api_key, key
+
+
+@pytest.fixture()
+def admin_user_email(admin_user: FFAdminUser) -> str:
+    return admin_user.email
 
 
 @pytest.fixture
@@ -641,10 +673,25 @@ def master_api_key_object(
 
 
 @pytest.fixture
+def master_api_key_id(master_api_key_object: MasterAPIKey) -> str:
+    return master_api_key_object.id
+
+
+@pytest.fixture
+def admin_user_id(admin_user: FFAdminUser) -> str:
+    return admin_user.id
+
+
+@pytest.fixture
 def admin_master_api_key_object(
     admin_master_api_key: typing.Tuple[MasterAPIKey, str]
 ) -> MasterAPIKey:
     return admin_master_api_key[0]
+
+
+@pytest.fixture
+def api_key_user(master_api_key_object: MasterAPIKey) -> APIKeyUser:
+    return APIKeyUser(master_api_key_object)
 
 
 @pytest.fixture()
@@ -943,8 +990,10 @@ def dynamodb(aws_credentials):
 
 
 @pytest.fixture()
-def flagsmith_identities_table(dynamodb: DynamoDBServiceResource) -> Table:
-    return dynamodb.create_table(
+def flagsmith_identities_table(
+    dynamodb: DynamoDBServiceResource, settings: SettingsWrapper
+) -> Table:
+    table = dynamodb.create_table(
         TableName="flagsmith_identities",
         KeySchema=[
             {
@@ -957,6 +1006,7 @@ def flagsmith_identities_table(dynamodb: DynamoDBServiceResource) -> Table:
             {"AttributeName": "environment_api_key", "AttributeType": "S"},
             {"AttributeName": "identifier", "AttributeType": "S"},
             {"AttributeName": "identity_uuid", "AttributeType": "S"},
+            {"AttributeName": "dashboard_alias", "AttributeType": "S"},
         ],
         GlobalSecondaryIndexes=[
             {
@@ -972,9 +1022,24 @@ def flagsmith_identities_table(dynamodb: DynamoDBServiceResource) -> Table:
                 "KeySchema": [{"AttributeName": "identity_uuid", "KeyType": "HASH"}],
                 "Projection": {"ProjectionType": "ALL"},
             },
+            {
+                "IndexName": "environment_api_key-dashboard_alias-index",
+                "KeySchema": [
+                    {"AttributeName": "environment_api_key", "KeyType": "HASH"},
+                    {"AttributeName": "dashboard_alias", "KeyType": "RANGE"},
+                ],
+                "Projection": {
+                    "ProjectionType": "INCLUDE",
+                    "NonKeyAttributes": [
+                        "identifier",
+                    ],
+                },
+            },
         ],
         BillingMode="PAY_PER_REQUEST",
     )
+    settings.IDENTITIES_TABLE_NAME_DYNAMO = table.name
+    return table
 
 
 @pytest.fixture()
@@ -1000,14 +1065,20 @@ def flagsmith_environments_v2_table(dynamodb: DynamoDBServiceResource) -> Table:
 
 
 @pytest.fixture()
-def feature_external_resource(
-    feature: Feature, post_request_mock: MagicMock, mocker: MockerFixture
-) -> FeatureExternalResource:
-    mocker.patch(
+def mock_github_client_generate_token(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch(
         "integrations.github.client.generate_token",
         return_value="mocked_token",
     )
 
+
+@pytest.fixture()
+def feature_external_resource(
+    feature: Feature,
+    post_request_mock: MagicMock,
+    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
+) -> FeatureExternalResource:
     return FeatureExternalResource.objects.create(
         url="https://github.com/repositoryownertest/repositorynametest/issues/11",
         type="GITHUB_ISSUE",
@@ -1017,16 +1088,26 @@ def feature_external_resource(
 
 
 @pytest.fixture()
+def feature_external_resource_gh_pr(
+    feature: Feature,
+    post_request_mock: MagicMock,
+    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
+) -> FeatureExternalResource:
+    return FeatureExternalResource.objects.create(
+        url="https://github.com/repositoryownertest/repositorynametest/pull/1",
+        type="GITHUB_PR",
+        feature=feature,
+        metadata='{"status": "open"}',
+    )
+
+
+@pytest.fixture()
 def feature_with_value_external_resource(
     feature_with_value: Feature,
     post_request_mock: MagicMock,
-    mocker: MockerFixture,
+    mock_github_client_generate_token: MagicMock,
 ) -> FeatureExternalResource:
-    mocker.patch(
-        "integrations.github.client.generate_token",
-        return_value="mocked_token",
-    )
-
     return FeatureExternalResource.objects.create(
         url="https://github.com/repositoryownertest/repositorynametest/issues/11",
         type="GITHUB_ISSUE",
@@ -1045,12 +1126,13 @@ def github_configuration(organisation: Organisation) -> GithubConfiguration:
 def github_repository(
     github_configuration: GithubConfiguration,
     project: Project,
-) -> GithubRepository:
-    return GithubRepository.objects.create(
+) -> GitHubRepository:
+    return GitHubRepository.objects.create(
         github_configuration=github_configuration,
         repository_owner="repositoryownertest",
         repository_name="repositorynametest",
         project=project,
+        tagging_enabled=True,
     )
 
 
@@ -1102,3 +1184,10 @@ def inspecting_handler() -> logging.Handler:
             self.messages.append(self.format(record))
 
     return InspectingHandler()
+
+
+@pytest.fixture
+def set_github_webhook_secret() -> None:
+    from django.conf import settings
+
+    settings.GITHUB_WEBHOOK_SECRET = "secret-key"
