@@ -390,6 +390,10 @@ export type FeatureState = {
   toRemove?: boolean
 }
 
+export type TypedFeatureState = Omit<FeatureState, 'feature_state_value'> & {
+  feature_state_value: FeatureStateValue
+}
+
 export type ProjectFlag = {
   created_date: string
   default_enabled: boolean
@@ -503,7 +507,7 @@ export type FeatureConflict = {
   published_at: string
   is_environment_default: boolean
 }
-export type FeatureStateWithConflict = FeatureState & {
+export type FeatureStateWithConflict = TypedFeatureState & {
   conflict?: FeatureConflict
 }
 export type ChangeRequest = {
