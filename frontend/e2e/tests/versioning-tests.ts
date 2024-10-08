@@ -45,9 +45,10 @@ export default async () => {
     ])
     log('Edit feature 2')
     await editRemoteConfig(1,'small',false,[
-        { value: 'big', weight: 100 },
         { value: 'medium', weight: 0 },
+        { value: 'big', weight: 100 },
     ])
+
     log('Create feature 3')
     await createFeature(2, 'c', false)
     log('Edit feature 3')
