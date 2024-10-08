@@ -3,7 +3,7 @@ import Icon, { IconName } from './Icon'
 import { chevronForward, close as closeIcon, chevronDown } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import { FC } from 'react'
-import Button from 'components/base/forms/Button';
+import Button from './base/forms/Button'
 
 type InfoMessageType = {
   buttonText?: string
@@ -17,20 +17,20 @@ type InfoMessageType = {
 }
 
 const InfoMessage: FC<InfoMessageType> = ({
-                                            buttonText,
-                                            children,
-                                            close,
-                                            collapseId,
-                                            icon,
-                                            isClosable,
-                                            title = 'NOTE',
-                                            url,
-                                          }) => {
+  buttonText,
+  children,
+  close,
+  collapseId,
+  icon,
+  isClosable,
+  title = 'NOTE',
+  url,
+}) => {
   // Retrieve initial collapse state from localStorage
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     if (collapseId) {
       return JSON.parse(
-          localStorage.getItem(`infoMessageCollapsed_${collapseId}`) || 'false',
+        localStorage.getItem(`infoMessageCollapsed_${collapseId}`) || 'false',
       )
     }
     return false
@@ -39,8 +39,8 @@ const InfoMessage: FC<InfoMessageType> = ({
   useEffect(() => {
     if (collapseId) {
       localStorage.setItem(
-          `infoMessageCollapsed_${collapseId}`,
-          JSON.stringify(isCollapsed),
+        `infoMessageCollapsed_${collapseId}`,
+        JSON.stringify(isCollapsed),
       )
     }
   }, [isCollapsed, collapseId])
@@ -57,54 +57,49 @@ const InfoMessage: FC<InfoMessageType> = ({
   }
 
   return (
-      <div className={'alert alert-info flex-1'}>
-        <div className={'flex-fill flex-column gap-2'}>
-          <div className='d-flex'>
-            <div
-                className='user-select-none flex-fill align-items-center d-flex gap-2'
-                onClick={handleToggleCollapse}
-                style={{ cursor: 'pointer' }}
-            >
-
-              <div className="flex-fill">
-                <div className='d-flex gap-2 align-items-center'>
-                  <Icon
-                      width={22}
-                      height={22}
-                      fill={'#0AADDF'}
-                      name={icon || 'info'}
-                  />
-                  <div className='title'>{title}</div>
-                </div>
-                {!isCollapsed && (
-                    <div>{children}</div>
-                )}
+    <div className={'alert alert-info flex-1'}>
+      <div className={'flex-fill flex-column gap-2'}>
+        <div className='d-flex'>
+          <div
+            className='user-select-none flex-fill align-items-center d-flex gap-2'
+            onClick={handleToggleCollapse}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className='flex-fill'>
+              <div className='d-flex gap-2 align-items-center'>
+                <Icon
+                  width={22}
+                  height={22}
+                  fill={'#0AADDF'}
+                  name={icon || 'info'}
+                />
+                <div className='title'>{title}</div>
               </div>
-              {!isCollapsed && (
-                  <>
-                    {url && buttonText && (
-                        <Button onClick={handleOpenNewWindow}>
-                          {buttonText}
-                        </Button>
-                    )}
-                  </>
-              )}
-              {collapseId && (
-                  <span className='ml-auto lh-1'>
-                    <IonIcon icon={isCollapsed ? chevronForward : chevronDown} />
-                  </span>
-              )}
+              {!isCollapsed && <div>{children}</div>}
             </div>
+            {!isCollapsed && (
+              <>
+                {url && buttonText && (
+                  <Button onClick={handleOpenNewWindow}>{buttonText}</Button>
+                )}
+              </>
+            )}
+            {collapseId && (
+              <span className='ml-auto lh-1'>
+                <IonIcon icon={isCollapsed ? chevronForward : chevronDown} />
+              </span>
+            )}
           </div>
         </div>
-        {isClosable && (
-            <a onClick={close} className='mt-n2 mr-n2 pl-2'>
-              <span className={`icon close-btn`}>
-                <IonIcon icon={closeIcon} />
-              </span>
-            </a>
-        )}
       </div>
+      {isClosable && (
+        <a onClick={close} className='mt-n2 mr-n2 pl-2'>
+          <span className={`icon close-btn`}>
+            <IonIcon icon={closeIcon} />
+          </span>
+        </a>
+      )}
+    </div>
   )
 }
 
