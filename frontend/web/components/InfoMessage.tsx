@@ -93,7 +93,7 @@ const InfoMessage: FC<InfoMessageType> = ({
         </div>
       </div>
       {isClosable && (
-        <a onClick={close} className='mt-n2 mr-n2 pl-2'>
+        <a onClick={close} className=' pl-2'>
           <span className={`icon close-btn`}>
             <IonIcon icon={closeIcon} />
           </span>
