@@ -3,7 +3,6 @@ import EnvironmentSelect from 'components/EnvironmentSelect'
 import MyGitHubRepositoriesComponent from 'components/MyGitHubRepositoriesComponent'
 import _data from 'common/data/base/_data'
 import ErrorMessage from 'components/ErrorMessage'
-import ModalHR from './ModalHR'
 import Button from 'components/base/forms/Button'
 import classNames from 'classnames'
 import { getStore } from 'common/store'
@@ -81,7 +80,9 @@ const CreateEditIntegration = class extends Component {
         const postfix = `?redirect_url=${encodeURIComponent(
           `${document.location.href}?environment=${this.state.data.flagsmithEnvironment}&configure=${this.props.id}`,
         )}&signature=${signature}`
-        document.location = isProject
+        document.location = this.props.organisationId
+          ? `${Project.api}organisations/${this.props.organisationId}/integrations/${this.props.id}/oauth/${postfix}`
+          : isProject
           ? `${Project.api}projects/${this.props.projectId}/integrations/${this.props.id}/oauth/${postfix}`
           : `${Project.api}environments/${this.state.data.flagsmithEnvironment}/integrations/${this.props.id}/oauth/${postfix}`
       }
@@ -117,7 +118,9 @@ const CreateEditIntegration = class extends Component {
     } else if (isOauth) {
       return _data
         .get(
-          `${Project.api}projects/${this.props.projectId}/integrations/${this.props.id}/signature/`,
+          this.props.organisationId
+            ? `${Project.api}organisations/${this.props.organisationId}/integrations/${this.props.id}/signature/`
+            : `${Project.api}projects/${this.props.projectId}/integrations/${this.props.id}/signature/`,
           {
             redirect_url: document.location.href,
           },
@@ -126,7 +129,9 @@ const CreateEditIntegration = class extends Component {
     } else if (isEdit) {
       _data
         .put(
-          `${Project.api}projects/${this.props.projectId}/integrations/${this.props.id}/${this.props.data.id}/`,
+          this.props.organisationId
+            ? `${Project.api}organisations/${this.props.organisationId}/integrations/${this.props.id}/`
+            : `${Project.api}projects/${this.props.projectId}/integrations/${this.props.id}/${this.props.data.id}/`,
           this.state.data,
         )
         .then(this.onComplete)
@@ -134,7 +139,9 @@ const CreateEditIntegration = class extends Component {
     } else if (this.props.id !== 'github') {
       _data
         .post(
-          `${Project.api}projects/${this.props.projectId}/integrations/${this.props.id}/`,
+          this.props.organisationId
+            ? `${Project.api}organisations/${this.props.organisationId}/integrations/${this.props.id}/`
+            : `${Project.api}projects/${this.props.projectId}/integrations/${this.props.id}/`,
           this.state.data,
         )
         .then(this.onComplete)
@@ -338,4 +345,4 @@ const CreateEditIntegration = class extends Component {
 
 CreateEditIntegration.propTypes = {}
 
-module.exports = CreateEditIntegration
+export default CreateEditIntegration
