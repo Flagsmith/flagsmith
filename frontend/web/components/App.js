@@ -643,7 +643,19 @@ const App = class extends Component {
                                   Usage
                                 </NavSubLink>
                               )}
-
+                            {Utils.getFlagsmithHasFeature(
+                              'organisation_integrations',
+                            ) && (
+                              <NavSubLink
+                                icon={<Icon name='layers' />}
+                                id='integrations-link'
+                                to={`/organisation/${
+                                  AccountStore.getOrganisation().id
+                                }/integrations`}
+                              >
+                                Organisation Integrations
+                              </NavSubLink>
+                            )}
                             {AccountStore.isAdmin() && (
                               <NavSubLink
                                 icon={<SettingsIcon />}

@@ -71,6 +71,7 @@ export const routes = {
   'feature-history-detail':
     '/project/:projectId/environment/:environmentId/history/:id/',
   'widget': '/widget',
+  'organisation-integrations': '/organisation/:organisationId/integrations',
   'organisation-settings': '/organisation/:organisationId/settings',
   'organisation-permissions': '/organisation/:organisationId/permissions',
   'saml': '/saml',
@@ -154,6 +155,11 @@ export default (
       />
       <ParameterizedRoute
         path={routes.integrations}
+        exact
+        component={IntegrationsPage}
+      />
+      <ParameterizedRoute
+        path={routes['organisation-integrations']}
         exact
         component={IntegrationsPage}
       />
