@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useState } from 'react'
+import React, { FC, FormEvent, useEffect, useState } from 'react'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import MyGitHubRepositoriesComponent from 'components/MyGitHubRepositoriesComponent'
 import _data from 'common/data/base/_data'
@@ -15,18 +15,6 @@ import { IntegrationData, IntegrationFieldOption } from 'common/types/responses'
 import cloneDeep from 'lodash/cloneDeep'
 
 const GITHUB_INSTALLATION_UPDATE = 'update'
-
-interface Props {
-  id?: string
-  data?: Record<string, any> | null
-  githubMeta?: { installationId: string; githubId: string }
-  organisationId?: string
-  projectId?: string
-  integration: IntegrationData
-  readOnly?: boolean
-  modal?: boolean
-  onComplete?: () => void
-}
 
 const constructBaseUrl = ({
   environmentId,
@@ -51,7 +39,19 @@ const constructBaseUrl = ({
   throw new Error('Unable to construct base URL: missing necessary parameters.')
 }
 
-const CreateEditIntegration: React.FC<Props> = (props) => {
+interface CreateEditIntegrationProps {
+  id?: string
+  data?: Record<string, any> | null
+  githubMeta?: { installationId: string; githubId: string }
+  organisationId?: string
+  projectId?: string
+  integration: IntegrationData
+  readOnly?: boolean
+  modal?: boolean
+  onComplete?: () => void
+}
+
+const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
   const {
     data,
     githubMeta,
@@ -76,6 +76,7 @@ const CreateEditIntegration: React.FC<Props> = (props) => {
     closeModal()
     _onComplete?.()
   }
+
   useEffect(() => {
     if (id === 'slack' && formData.flagsmithEnvironment) {
       _data
