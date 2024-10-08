@@ -917,13 +917,6 @@ GITHUB_PEM = env.str("GITHUB_PEM", default="")
 GITHUB_APP_ID: int = env.int("GITHUB_APP_ID", default=0)
 GITHUB_WEBHOOK_SECRET = env.str("GITHUB_WEBHOOK_SECRET", default="")
 
-# MailerLite
-MAILERLITE_BASE_URL = env.str(
-    "MAILERLITE_BASE_URL", default="https://api.mailerlite.com/api/v2/"
-)
-MAILERLITE_API_KEY = env.str("MAILERLITE_API_KEY", None)
-MAILERLITE_NEW_USER_GROUP_ID = env.int("MAILERLITE_NEW_USER_GROUP_ID", None)
-
 # Additional functionality for using SAML in Flagsmith SaaS
 SAML_INSTALLED = importlib.util.find_spec("saml") is not None
 
