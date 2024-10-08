@@ -285,11 +285,14 @@ class GetEdgeIdentityOverridesQuerySerializer(serializers.Serializer):
 class EdgeIdentitySearchField(serializers.CharField):
     def to_internal_value(self, data: str) -> EdgeIdentitySearchData:
         kwargs = {}
-        search_term = data.lower()
+        search_term = data
 
         if search_term.startswith(DASHBOARD_ALIAS_SEARCH_PREFIX):
             kwargs["search_attribute"] = DASHBOARD_ALIAS_ATTRIBUTE
-            search_term = search_term.lstrip(DASHBOARD_ALIAS_SEARCH_PREFIX)
+            # dashboard aliases are always stored in lower case
+            search_term = search_term.removeprefix(
+                DASHBOARD_ALIAS_SEARCH_PREFIX
+            ).lower()
         else:
             kwargs["search_attribute"] = IDENTIFIER_ATTRIBUTE
 
