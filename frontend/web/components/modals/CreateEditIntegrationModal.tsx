@@ -8,11 +8,11 @@ import classNames from 'classnames'
 import { getStore } from 'common/store'
 import { getGithubRepos } from 'common/services/useGithub'
 import Project from 'common/project'
-import cloneDeep from 'lodash/cloneDeep'
 import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
 import Input from 'components/base/forms/Input'
 import { IntegrationData, IntegrationFieldOption } from 'common/types/responses'
+import cloneDeep from 'lodash/cloneDeep'
 
 const GITHUB_INSTALLATION_UPDATE = 'update'
 
@@ -42,11 +42,11 @@ const constructBaseUrl = ({
   if (organisationId) {
     return `${Project.api}organisations/${organisationId}/integrations/${integrationId}`
   }
-  if (projectId) {
-    return `${Project.api}projects/${projectId}/integrations/${integrationId}`
-  }
   if (environmentId) {
     return `${Project.api}environments/${environmentId}/integrations/${integrationId}`
+  }
+  if (projectId) {
+    return `${Project.api}projects/${projectId}/integrations/${integrationId}`
   }
   throw new Error('Unable to construct base URL: missing necessary parameters.')
 }
@@ -58,12 +58,13 @@ const CreateEditIntegration: React.FC<Props> = (props) => {
     id,
     integration,
     modal,
-    onComplete,
+    onComplete: _onComplete,
     organisationId,
     projectId,
     readOnly,
   } = props
-  const fields = integration.fields || []
+  const [fields, setFields] = useState(cloneDeep(integration.fields || []))
+
   const [formData, setFormData] = useState<Record<string, any>>(
     data || { fields },
   )
@@ -71,6 +72,10 @@ const CreateEditIntegration: React.FC<Props> = (props) => {
   const [error, setError] = useState<string | null>(null)
   const [authorised, setAuthorised] = useState<boolean>(false)
 
+  const onComplete = () => {
+    closeModal()
+    _onComplete?.()
+  }
   useEffect(() => {
     if (id === 'slack' && formData.flagsmithEnvironment) {
       _data
@@ -83,11 +88,8 @@ const CreateEditIntegration: React.FC<Props> = (props) => {
               channels: { channel_name: string; channel_id: string }[]
             } | null,
           ) => {
-            setFormData((prevState) => ({
-              ...prevState,
-              enabled: true,
-              fields: [
-                ...prevState.fields,
+            setFields(
+              fields.concat([
                 {
                   key: 'channel_id',
                   label: 'Channel',
@@ -96,18 +98,19 @@ const CreateEditIntegration: React.FC<Props> = (props) => {
                     value: v.channel_id,
                   })),
                 },
-              ],
-            }))
+              ]),
+            )
             setAuthorised(true)
           },
         )
     }
-  }, [id, formData.flagsmithEnvironment])
+  }, [])
 
-  const update = (key: string, value: any) => {
+  const update = (key: string, e: any) => {
+    const newValue = Utils.safeParseEventValue(e)
     setFormData((prevState) => ({
       ...prevState,
-      [key]: value,
+      [key]: newValue,
     }))
   }
 
@@ -262,12 +265,15 @@ const CreateEditIntegration: React.FC<Props> = (props) => {
           )}
         {fields.map((field) => (
           <div key={field.key}>
-            <label
-              htmlFor={field.label.replace(/ /g, '')}
-              className={!modal ? 'mb-1 fw-bold' : ''}
-            >
-              {field.label}
-            </label>
+            <div>
+              <label
+                htmlFor={field.label.replace(/ /g, '')}
+                className={!modal ? 'mb-1 fw-bold' : ''}
+              >
+                {field.label}
+              </label>
+            </div>
+
             {readOnly ? (
               <div className='mb-3'>
                 {field.hidden
@@ -301,8 +307,12 @@ const CreateEditIntegration: React.FC<Props> = (props) => {
             ) : (
               <Input
                 id={field.label.replace(/ /g, '')}
-                value={formData[field.key] || field.default || ''}
-                onChange={(e: any) => update(field.key, e.target.value)}
+                value={
+                  typeof formData[field.key] !== 'undefined'
+                    ? formData[field.key]
+                    : field.default
+                }
+                onChange={(e: any) => update(field.key, e)}
                 isValid={!!formData[field.key]}
                 type={field.hidden ? 'password' : field.inputType || 'text'}
                 className='full-width mb-2'
@@ -315,7 +325,7 @@ const CreateEditIntegration: React.FC<Props> = (props) => {
             Can't see your channel? Enter your channel ID here (C0xxxxxx)
             <Input
               value={formData.channel_id}
-              onChange={(e: any) => update('channel_id', e.target.value)}
+              onChange={(e: any) => update('channel_id', e)}
               isValid={!!formData.channel_id}
               type='text'
               className='full-width mt-2'
