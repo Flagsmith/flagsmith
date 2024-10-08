@@ -45,6 +45,8 @@ const DiffFeature: FC<FeatureDiffType> = ({
   projectId,
   tabTheme,
 }) => {
+  const {data:projectFlag} = useGetProjectFlagQuery({project:projectId, id: featureId})
+
   const oldEnv = oldState?.find((v) => !v.feature_segment)
   const newEnv = newState?.find((v) => !v.feature_segment)
   const { data: feature } = useGetProjectFlagQuery({
@@ -65,7 +67,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
   const segmentDiffs = disableSegments
     ? { diffs: [], totalChanges: 0 }
     : getSegmentDiff(oldState, newState, segments?.results, conflicts)
-  const variationDiffs = getVariationDiff(oldEnv, newEnv, feature)
+  const variationDiffs = getVariationDiff(oldEnv, newEnv)
   const totalSegmentChanges = segmentDiffs?.totalChanges
   const totalVariationChanges = variationDiffs?.totalChanges
   useEffect(() => {
@@ -105,11 +107,6 @@ const DiffFeature: FC<FeatureDiffType> = ({
                 </div>
               }
             >
-              {!totalChanges && (
-                <div className='mb-3 text-center fw-semibold'>
-                  No Changes Found
-                </div>
-              )}
               {!!valueConflict && (
                 <div className='mt-4'>
                   <WarningMessage
@@ -182,7 +179,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
                   </div>
                 }
               >
-                <DiffVariations diffs={variationDiffs.diffs} />
+                <DiffVariations projectFlag={projectFlag} diffs={variationDiffs.diffs} />
               </TabItem>
             )}
             {!!segmentDiffs?.diffs.length && (
