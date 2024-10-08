@@ -43,7 +43,9 @@ runs:
     - name: Checkout trivy.yaml
       uses: actions/checkout@v4
       with:
-        sparse-checkout: trivy.yaml
+        sparse-checkout: |
+          trivy.yaml
+          .github*
         sparse-checkout-cone-mode: false
 
     - name: Run Trivy on ${{ inputs.image-tag }}
