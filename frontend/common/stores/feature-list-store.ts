@@ -115,7 +115,7 @@ const controller = {
       })
       .then(() =>
         Promise.all([
-          data.get(`${Project.api}projects/${projectId}/features/`),
+          data.get(`${Project.api}projects/${projectId}/features?environment=${ProjectStore.getEnvironmentIdFromKey(environmentId)}`),
         ]).then(([features]) => {
           const environmentFeatures = features.results.map((v) => ({
             ...v.environment_feature_state,
@@ -860,12 +860,12 @@ const controller = {
               ? page
               : `${Project.api}projects/${projectId}/features/?page=${
                   page || 1
-                }&page_size=${pageSize || PAGE_SIZE}${filterUrl}`
+                }&environment=${environment}&page_size=${pageSize || PAGE_SIZE}${filterUrl}`
           if (store.search) {
             featuresEndpoint += `&search=${store.search}`
           }
           if (store.sort) {
-            featuresEndpoint += `&environment=${environment}&sort_field=${
+            featuresEndpoint += `&sort_field=${
               store.sort.sortBy
             }&sort_direction=${store.sort.sortOrder.toUpperCase()}`
           }
