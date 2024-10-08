@@ -1146,7 +1146,16 @@ def test_creating_multiple_segment_overrides_in_multiple_versions_sets_correct_p
     admin_client_new: APIClient,
 ) -> None:
     """
-    This test is for a specific case where
+    This test is for a specific case found by a customer where creating
+    multiple segment overrides consecutively ended up with the 2 segment
+    overrides having the same priority.
+
+    This was really caused by slightly odd behaviour from the FE which
+    tried to update the existing segment override at the same time as
+    creating the new one, but this test ensures that the priorities
+    are set correct even in this case.
+
+    See PR here for FE fix: https://github.com/Flagsmith/flagsmith/pull/4609
     """
 
     def generate_segment_override_fs_payload(

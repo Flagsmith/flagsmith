@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, call
 
 import pytest
+from core.helpers import get_current_site_url
 from django.core.mail.message import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -309,6 +310,33 @@ def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_i
     assert inspecting_handler.messages == [
         f"Paid organisation {organisation.id} is missing billing_starts_at datetime"
     ]
+
+
+def test_handle_api_usage_notification_for_organisation_when_cancellation_date_is_set(
+    organisation: Organisation,
+    inspecting_handler: logging.Handler,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.cancellation_date = timezone.now()
+    organisation.subscription.save()
+    mock_api_usage = mocker.patch("organisations.task_helpers.get_current_api_usage")
+    mock_api_usage.return_value = 25
+    from organisations.task_helpers import logger
+
+    logger.addHandler(inspecting_handler)
+
+    # When
+    result = handle_api_usage_notification_for_organisation(organisation)
+
+    # Then
+    assert result is None
+    assert OrganisationAPIUsageNotification.objects.count() == 0
+
+    # Check to ensure that error messages haven't been set.
+    assert inspecting_handler.messages == []
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -852,6 +880,50 @@ def test_charge_for_api_call_count_overages_scale_up(
     assert api_billing.api_overage == 200_000
     assert api_billing.immediate_invoice is False
     assert api_billing.billed_at == now
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_charge_for_api_call_count_overages_cancellation_date(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100_000,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.cancellation_date = timezone.now()
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    assert OrganisationAPIBilling.objects.count() == 0
+
+    # When
+    charge_for_api_call_count_overages()
+
+    # Then
+    assert OrganisationAPIBilling.objects.count() == 0
+    mock_api_usage.assert_not_called()
+    client_mock.get_identity_flags.assert_not_called()
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -1646,13 +1718,13 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     assert email1.subject == "Flagsmith API use has been blocked due to overuse"
     assert email1.body == render_to_string(
         "organisations/api_flags_blocked_notification.txt",
-        context={"organisation": organisation},
+        context={"organisation": organisation, "url": get_current_site_url()},
     )
     email2 = mailoutbox[1]
     assert email2.subject == "Flagsmith API use has been blocked due to overuse"
     assert email2.body == render_to_string(
         "organisations/api_flags_blocked_notification.txt",
-        context={"organisation": organisation2},
+        context={"organisation": organisation2, "url": get_current_site_url()},
     )
 
     assert len(email2.alternatives) == 1
@@ -1661,7 +1733,11 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
 
     assert email2.alternatives[0][0] == render_to_string(
         "organisations/api_flags_blocked_notification.html",
-        context={"organisation": organisation2, "grace_period": False},
+        context={
+            "organisation": organisation2,
+            "grace_period": False,
+            "url": get_current_site_url(),
+        },
     )
     assert email2.from_email == "noreply@flagsmith.com"
     assert email2.to == ["admin@example.com", "staff@example.com"]
@@ -1674,7 +1750,11 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
 
     assert email3.alternatives[0][0] == render_to_string(
         "organisations/api_flags_blocked_notification.html",
-        context={"organisation": organisation6, "grace_period": False},
+        context={
+            "organisation": organisation6,
+            "grace_period": False,
+            "url": get_current_site_url(),
+        },
     )
     assert email3.from_email == "noreply@flagsmith.com"
     assert email3.to == ["admin@example.com", "staff@example.com"]

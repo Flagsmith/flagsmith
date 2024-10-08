@@ -13,6 +13,7 @@ import {
   Environment,
   UserGroup,
   AttributeName,
+  Identity,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -97,7 +98,7 @@ export type Req = {
   getIdentities: PagedRequest<{
     environmentId: string
     pageType?: 'NEXT' | 'PREVIOUS'
-    search?: string
+    dashboard_alias?: string
     pages?: (string | undefined)[] // this is needed for edge since it returns no paging info other than a key
     isEdge: boolean
   }>
@@ -521,6 +522,10 @@ export type Req = {
       django_attribute_name: AttributeName
       idp_attribute_name: string
     }
+  }
+  updateIdentity: {
+    environmentId: string
+    data: Identity
   }
   // END OF TYPES
 }
