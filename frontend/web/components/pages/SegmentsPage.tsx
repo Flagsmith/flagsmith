@@ -27,7 +27,7 @@ import classNames from 'classnames'
 import InfoMessage from 'components/InfoMessage'
 import { withRouter } from 'react-router-dom'
 
-const CodeHelp = require('../../components/CodeHelp')
+import CodeHelp from 'components/CodeHelp'
 type SegmentsPageType = {
   router: RouterChildContext['router']
   match: {
@@ -327,7 +327,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                 />
               </FormGroup>
 
-              <InfoMessage>
+              <InfoMessage collapseId={'segment-identify'}>
                 Segments require you to identitfy users, setting traits will add
                 users to segments.
               </InfoMessage>

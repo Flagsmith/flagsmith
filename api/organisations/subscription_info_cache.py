@@ -85,12 +85,21 @@ def _update_caches_with_influx_data(
 
         org_calls = get_top_organisations(date_start, limit)
 
+        covered_orgs = set()
+
         for org_id, calls in org_calls.items():
             subscription_info_cache = organisation_info_cache_dict.get(org_id)
+            covered_orgs.add(org_id)
+
             if not subscription_info_cache:
                 # I don't think this is a valid case but worth checking / handling
                 continue
             setattr(subscription_info_cache, key, calls)
+
+        for org_id in organisation_info_cache_dict:
+            if org_id not in covered_orgs:
+                subscription_info_cache = organisation_info_cache_dict.get(org_id)
+                setattr(subscription_info_cache, key, 0)
 
 
 def _update_caches_with_chargebee_data(
