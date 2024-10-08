@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.145.0](https://github.com/Flagsmith/flagsmith/compare/v2.144.0...v2.145.0) (2024-10-08)
+
+
+### Features
+
+* Add hubspot ([#4698](https://github.com/Flagsmith/flagsmith/issues/4698)) ([c4faf69](https://github.com/Flagsmith/flagsmith/commit/c4faf69bf968d65e16f0eb9d7f212124e66291d7))
+
+
+### Bug Fixes
+
+* diff check for versioned segment overrides and MV ([#4656](https://github.com/Flagsmith/flagsmith/issues/4656)) ([8d1c22e](https://github.com/Flagsmith/flagsmith/commit/8d1c22e898fceaa4f35c3e0a291283a8b414da07))
+* searching edge identities (dashboard_alias prefix and identifier casing) ([#4700](https://github.com/Flagsmith/flagsmith/issues/4700)) ([8e6b241](https://github.com/Flagsmith/flagsmith/commit/8e6b241fb5543c31bf8e4e8afa374bae200ceadb))
+
 ## [2.144.0](https://github.com/Flagsmith/flagsmith/compare/v2.143.0...v2.144.0) (2024-10-03)
 
 
