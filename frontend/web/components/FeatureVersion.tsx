@@ -29,7 +29,7 @@ const FeatureVersion: FC<VersionDiffType> = ({
     environmentId,
     featureId: `${featureId}`,
     uuid: oldUUID,
-  })``
+  })
   const { data: newVersion } = useGetFeatureVersionQuery({
     environmentId,
     featureId: `${featureId}`,
