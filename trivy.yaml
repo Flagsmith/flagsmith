@@ -1,4 +1,4 @@
 format: json
-exit-code: 0
+exit-code: 1
 severity: CRITICAL,HIGH
 vuln-type: os,library
