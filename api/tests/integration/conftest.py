@@ -375,9 +375,8 @@ def identity_document(
     mv_feature_name,
     mv_feature,
 ):
-    # use a mixture of cases and symbols to make sure we're testing all cases
-    _identifier = "User1-Test"
-    _dashboard_alias = "Dashboard-Alias"
+    _identifier = "User1-Test"  # use a mixture of cases and symbols to make sure we're testing all cases
+    _dashboard_alias = "dashboard-alias"
 
     _environment_feature_state_1_document = {
         "featurestate_uuid": "ad71c644-71df-4e83-9cb5-cd2cd0160200",
