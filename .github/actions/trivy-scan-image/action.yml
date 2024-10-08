@@ -70,5 +70,5 @@ runs:
       id: scan-results-url
       run: >
         echo scan-results-url=${{ format('{0}/{1}/security/code-scanning?query=is:open+tool:Trivy+{2}',
-        github.server_url, github.repository, inputs.query }} >> $GITHUB_OUTPUT
+        github.server_url, github.repository, inputs.query) }} >> $GITHUB_OUTPUT
       shell: bash
