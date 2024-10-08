@@ -183,6 +183,35 @@ export type Repository = {
   owner: { login: string }
 }
 
+export type IntegrationFieldOption = { label: string; value: string }
+export type IntegrationField = {
+  key: string
+  label: string
+  default?: string
+  hidden?: boolean
+  inputType?: 'text' | 'checkbox'
+  options?: IntegrationFieldOption[]
+}
+
+export type IntegrationData = {
+  description: string
+  docs?: string
+  external: boolean
+  image: string
+  fields: IntegrationField[] | undefined
+  isExternalInstallation: boolean
+  perEnvironment: boolean
+  title?: string
+  organisation?: string
+  project?: string
+  isOauth?: boolean
+}
+
+export type ActiveIntegration = {
+  id: string
+  flagsmithEnvironment?: string
+}
+
 export type GithubRepository = {
   id: number
   github_configuration: number
