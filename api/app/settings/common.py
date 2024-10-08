@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     # Used for managing api keys
     "rest_framework_api_key",
+    "rest_framework_simplejwt.token_blacklist",
     "djoser",
     "django.contrib.sites",
     "custom_auth",
@@ -254,6 +255,7 @@ DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", default=[])
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
+        "custom_auth.jwt_cookie.authentication.JWTCookieAuthentication",
         "rest_framework.authentication.TokenAuthentication",
         "api_keys.authentication.MasterAPIKeyAuthentication",
     ),
@@ -415,19 +417,6 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(PROJECT_ROOT, "../../static/")
 
 MEDIA_URL = "/media/"  # unused but needs to be different from STATIC_URL in django 3
-
-# CORS settings
-
-CORS_ORIGIN_ALLOW_ALL = True
-FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS = env.list(
-    "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS", default=["sentry-trace"]
-)
-CORS_ALLOW_HEADERS = [
-    *default_headers,
-    *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
-    "X-Environment-Key",
-    "X-E2E-Test-Auth-Token",
-]
 
 DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@flagsmith.com")
 EMAIL_CONFIGURATION = {
@@ -795,7 +784,7 @@ TRENCH_AUTH = {
 }
 
 USER_CREATE_PERMISSIONS = env.list(
-    "USER_CREATE_PERMISSIONS", default=["rest_framework.permissions.AllowAny"]
+    "USER_CREATE_PERMISSIONS", default=["custom_auth.permissions.IsSignupAllowed"]
 )
 
 DJOSER = {
@@ -825,6 +814,16 @@ DJOSER = {
         "user_list": ["custom_auth.permissions.CurrentUser"],
         "user_create": USER_CREATE_PERMISSIONS,
     },
+}
+SIMPLE_JWT = {
+    "AUTH_TOKEN_CLASSES": ["rest_framework_simplejwt.tokens.SlidingToken"],
+    "SLIDING_TOKEN_LIFETIME": timedelta(
+        minutes=env.int(
+            "COOKIE_AUTH_JWT_ACCESS_TOKEN_LIFETIME_MINUTES",
+            default=10 * 60,
+        )
+    ),
+    "SIGNING_KEY": env.str("COOKIE_AUTH_JWT_SIGNING_KEY", default=SECRET_KEY),
 }
 
 # Github OAuth credentials
@@ -892,7 +891,6 @@ PROJECT_METADATA_TABLE_NAME_DYNAMO = env.str("PROJECT_METADATA_TABLE_NAME_DYNAMO
 API_URL = env("API_URL", default="/api/v1/")
 ASSET_URL = env("ASSET_URL", default="/")
 MAINTENANCE_MODE = env.bool("MAINTENANCE_MODE", default=False)
-PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
 PREVENT_EMAIL_PASSWORD = env.bool("PREVENT_EMAIL_PASSWORD", default=False)
 DISABLE_ANALYTICS_FEATURES = env.bool(
     "DISABLE_INFLUXDB_FEATURES", default=False
@@ -908,8 +906,6 @@ MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
 SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
 AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
 ENABLE_FLAGSMITH_REALTIME = env.bool("ENABLE_FLAGSMITH_REALTIME", default=False)
-USE_SECURE_COOKIES = env.bool("USE_SECURE_COOKIES", default=True)
-COOKIE_SAME_SITE = env.str("COOKIE_SAME_SITE", default="none")
 
 # Set this to enable create organisation for only superusers
 RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS", False)
@@ -1038,6 +1034,25 @@ BUCKETED_ANALYTICS_DATA_RETENTION_DAYS = env.int(
 )
 
 DISABLE_INVITE_LINKS = env.bool("DISABLE_INVITE_LINKS", False)
+PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
+COOKIE_AUTH_ENABLED = env.bool("COOKIE_AUTH_ENABLED", default=False)
+USE_SECURE_COOKIES = env.bool("USE_SECURE_COOKIES", default=True)
+COOKIE_SAME_SITE = env.str("COOKIE_SAME_SITE", default="none")
+
+# CORS settings
+
+CORS_ORIGIN_ALLOW_ALL = env.bool("CORS_ORIGIN_ALLOW_ALL", not COOKIE_AUTH_ENABLED)
+CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", COOKIE_AUTH_ENABLED)
+FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS = env.list(
+    "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS", default=["sentry-trace"]
+)
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
+CORS_ALLOW_HEADERS = [
+    *default_headers,
+    *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
+    "X-Environment-Key",
+    "X-E2E-Test-Auth-Token",
+]
 
 # use a separate boolean setting so that we add it to the API containers in environments
 # where we're running the task processor, so we avoid creating unnecessary tasks
@@ -1211,6 +1226,12 @@ SEGMENT_CONDITION_VALUE_LIMIT = env.int("SEGMENT_CONDITION_VALUE_LIMIT", default
 if not 0 <= SEGMENT_CONDITION_VALUE_LIMIT < 2000000:
     raise ImproperlyConfigured(
         "SEGMENT_CONDITION_VALUE_LIMIT must be between 0 and 2,000,000 (2MB)."
+    )
+
+FEATURE_VALUE_LIMIT = env.int("FEATURE_VALUE_LIMIT", default=20_000)
+if not 0 <= FEATURE_VALUE_LIMIT <= 2000000:  # pragma: no cover
+    raise ImproperlyConfigured(
+        "FEATURE_VALUE_LIMIT must be between 0 and 2,000,000 (2MB)."
     )
 
 SEGMENT_RULES_CONDITIONS_LIMIT = env.int("SEGMENT_RULES_CONDITIONS_LIMIT", 100)

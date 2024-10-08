@@ -373,6 +373,39 @@ def test_search_for_identities_by_dashboard_alias(
     assert len(response.json()["results"]) == 1
 
 
+def test_search_for_identities_by_dashboard_alias_casts_search_to_lower(
+    admin_client: APIClient,
+    dynamo_enabled_environment: Environment,
+    environment_api_key: str,
+    identity_document: dict[str, Any],
+    flagsmith_identities_table: Table,
+) -> None:
+    # Given
+    identifier = identity_document["identifier"]
+    dashboard_alias = identity_document["dashboard_alias"]
+
+    flagsmith_identities_table.put_item(Item=identity_document)
+
+    base_url = reverse(
+        "api-v1:environments:environment-edge-identities-list",
+        args=[environment_api_key],
+    )
+    url = "%s?%s" % (
+        base_url,
+        urllib.parse.urlencode(
+            {"q": f'{DASHBOARD_ALIAS_SEARCH_PREFIX}"{dashboard_alias.upper()}"'}
+        ),
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["results"][0]["identifier"] == identifier
+    assert len(response.json()["results"]) == 1
+
+
 def test_update_edge_identity(
     admin_client_new: APIClient,
     dynamo_enabled_environment: Environment,
@@ -384,7 +417,8 @@ def test_update_edge_identity(
     identity_uuid = identity_document["identity_uuid"]
     composite_key = identity_document["composite_key"]
 
-    dashboard_alias = "new-dashboard-alias"
+    input_dashboard_alias = "New-Dashboard-Alias"
+    expected_dashboard_alias = input_dashboard_alias.lower()
 
     flagsmith_identities_table.put_item(Item=identity_document)
 
@@ -394,13 +428,15 @@ def test_update_edge_identity(
     )
 
     # When
-    response = admin_client_new.patch(url, data={"dashboard_alias": dashboard_alias})
+    response = admin_client_new.patch(
+        url, data={"dashboard_alias": input_dashboard_alias}
+    )
 
     # Then
     assert response.status_code == status.HTTP_200_OK
 
     assert response.json() == {
-        "dashboard_alias": dashboard_alias,
+        "dashboard_alias": expected_dashboard_alias,
         "identifier": identity_document["identifier"],
         "identity_uuid": identity_uuid,
     }
@@ -411,7 +447,10 @@ def test_update_edge_identity(
     identity_from_db = flagsmith_identities_table.get_item(
         Key={"composite_key": composite_key}
     )["Item"]
-    assert {**identity_document, "dashboard_alias": dashboard_alias} == identity_from_db
+    assert {
+        **identity_document,
+        "dashboard_alias": expected_dashboard_alias,
+    } == identity_from_db
 
 
 def test_edge_identities_traits_list(

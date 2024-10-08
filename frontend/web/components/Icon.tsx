@@ -21,6 +21,7 @@ export type IconName =
   | 'arrow-left'
   | 'file-text'
   | 'copy'
+  | 'paste'
   | 'copy-outlined'
   | 'trash-2'
   | 'setting'

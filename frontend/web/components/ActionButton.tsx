@@ -11,14 +11,16 @@ type ActionButtonType = {
 const ActionButton: FC<ActionButtonType> = ({ onClick, ...rest }) => {
   return (
     <Button
-      className={classNames('btn btn-with-icon btn-sm')}
+      className={classNames('btn btn-with-icon btn-xs')}
       data-test={rest['data-test']}
       onClick={(e) => {
         e.stopPropagation()
         onClick()
       }}
     >
-      <Icon name='more-vertical' width={16} fill='#656D7B' />
+      <div className='pointer-events-none'>
+        <Icon name='more-vertical' width={16} fill='#656D7B' />
+      </div>
     </Button>
   )
 }
