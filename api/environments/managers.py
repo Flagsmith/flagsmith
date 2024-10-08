@@ -3,6 +3,7 @@ from softdelete.models import SoftDeleteManager
 
 from features.models import FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from segments.models import Segment
 
 
 class EnvironmentManager(SoftDeleteManager):
@@ -21,7 +22,10 @@ class EnvironmentManager(SoftDeleteManager):
                 *extra_select_related or (),
             )
             .prefetch_related(
-                "project__segments",
+                Prefetch(
+                    "project__segments",
+                    queryset=Segment.live_objects.all(),
+                ),
                 "project__segments__rules",
                 "project__segments__rules__rules",
                 "project__segments__rules__conditions",

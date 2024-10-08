@@ -3,6 +3,10 @@ from django.db.models import F
 
 
 class SegmentManager(SoftDeleteExportableManager):
+    pass
+
+
+class LiveSegmentManager(SoftDeleteExportableManager):
     def get_queryset(self):
         """
         Returns only the canonical segments, which will always be

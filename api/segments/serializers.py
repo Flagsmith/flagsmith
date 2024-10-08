@@ -84,7 +84,9 @@ class SegmentSerializer(serializers.ModelSerializer, SerializerWithMetadata):
         self._update_or_create_metadata(metadata_data, segment=segment)
         return segment
 
-    def update(self, instance: Segment, validated_data: dict[str, typing.Any]) -> None:
+    def update(
+        self, instance: Segment, validated_data: dict[str, typing.Any]
+    ) -> Segment:
         # use the initial data since we need the ids included to determine which to update & which to create
         rules_data = self.initial_data.pop("rules", [])
         metadata_data = validated_data.pop("metadata", [])
@@ -111,6 +113,7 @@ class SegmentSerializer(serializers.ModelSerializer, SerializerWithMetadata):
             instance.save()
             cloned_segment.hard_delete()
             raise
+
         return response
 
     def validate_project_segment_limit(self, project: Project) -> None:
@@ -219,8 +222,8 @@ class SegmentSerializer(serializers.ModelSerializer, SerializerWithMetadata):
 
     @staticmethod
     def _update_or_create_segment_rule(
-        rule_data: dict, segment: Segment = None, rule: SegmentRule = None
-    ) -> typing.Optional[SegmentRule]:
+        rule_data: dict, segment: None | Segment = None, rule: None | SegmentRule = None
+    ) -> None | SegmentRule:
         rule_id = rule_data.pop("id", None)
         if rule_data.get("delete"):
             SegmentRule.objects.filter(id=rule_id).delete()

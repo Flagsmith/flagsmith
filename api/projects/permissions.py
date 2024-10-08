@@ -19,6 +19,10 @@ EDIT_FEATURE = "EDIT_FEATURE"
 MANAGE_SEGMENTS = "MANAGE_SEGMENTS"
 MANAGE_TAGS = "MANAGE_TAGS"
 
+# Note that this does not impact change requests in an environment
+MANAGE_PROJECT_LEVEL_CHANGE_REQUESTS = "MANAGE_PROJECT_LEVEL_CHANGE_REQUESTS"
+APPROVE_PROJECT_LEVEL_CHANGE_REQUESTS = "APPROVE_PROJECT_LEVEL_CHANGE_REQUESTS"
+
 TAG_SUPPORTED_PERMISSIONS = [DELETE_FEATURE]
 
 PROJECT_PERMISSIONS = [
@@ -29,6 +33,14 @@ PROJECT_PERMISSIONS = [
     (EDIT_FEATURE, "Ability to edit features in the given project."),
     (MANAGE_SEGMENTS, "Ability to manage segments in the given project."),
     (VIEW_AUDIT_LOG, "Allows the user to view the audit logs for this organisation."),
+    (
+        MANAGE_PROJECT_LEVEL_CHANGE_REQUESTS,
+        "Ability to manage change requests associated with a project.",
+    ),
+    (
+        APPROVE_PROJECT_LEVEL_CHANGE_REQUESTS,
+        "Ability to approve project level change requests.",
+    ),
     (MANAGE_TAGS, "Allows the user to manage tags in the given project."),
 ]
 

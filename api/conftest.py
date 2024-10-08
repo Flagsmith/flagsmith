@@ -18,6 +18,7 @@ from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 from task_processor.task_run_method import TaskRunMethod
+from urllib3 import HTTPResponse
 from urllib3.connectionpool import HTTPConnectionPool
 from xdist import get_xdist_worker_id
 
@@ -163,7 +164,7 @@ def restrict_http_requests(monkeypatch: pytest.MonkeyPatch) -> None:
         url: str,
         *args,
         **kwargs,
-    ) -> HTTPConnectionPool.ResponseCls:
+    ) -> HTTPResponse:
         if self.host in allowed_hosts:
             return original_urlopen(self, method, url, *args, **kwargs)
 
@@ -513,9 +514,16 @@ def feature(project: Project, environment: Environment) -> Feature:
 
 
 @pytest.fixture()
-def change_request(environment, admin_user):
+def change_request(environment: Environment, admin_user: FFAdminUser) -> ChangeRequest:
     return ChangeRequest.objects.create(
         environment=environment, title="Test CR", user_id=admin_user.id
+    )
+
+
+@pytest.fixture()
+def project_change_request(project: Project, admin_user: FFAdminUser) -> ChangeRequest:
+    return ChangeRequest.objects.create(
+        project=project, title="Test Project CR", user_id=admin_user.id
     )
 
 
