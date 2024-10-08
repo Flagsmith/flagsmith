@@ -362,7 +362,6 @@ export const editRemoteConfig = async (
   }
   await Promise.all(
       mvs.map(async (v, i) => {
-        await setText(byId(`featureVariationValue${i}`), v.value)
         await setText(byId(`featureVariationWeight${v.value}`), `${v.weight}`)
       }),
   )

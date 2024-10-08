@@ -53,6 +53,8 @@ const convertSegmentOverrideToFeatureState = (
     feature_state_value: override.value,
     id: override.id,
     live_from: changeRequest?.live_from,
+    multivariate_feature_state_values:
+      override.multivariate_options,
     toRemove: override.toRemove,
   } as Partial<FeatureState>
 }
@@ -113,7 +115,7 @@ const controller = {
       })
       .then(() =>
         Promise.all([
-          data.get(`${Project.api}projects/${projectId}/features/`),
+          data.get(`${Project.api}projects/${projectId}/features?environment=${ProjectStore.getEnvironmentIdFromKey(environmentId)}`),
         ]).then(([features]) => {
           const environmentFeatures = features.results.map((v) => ({
             ...v.environment_feature_state,
@@ -526,16 +528,9 @@ const controller = {
           oldFeatureStates,
           segments,
         )
-        const convertFeatureStateToValue = (v: any) => ({
-          ...v,
-          feature_state_value: Utils.featureStateToValue(v.feature_state_value),
-        })
-        feature_states_to_create = version.feature_states_to_create?.map(
-          convertFeatureStateToValue,
-        )
-        feature_states_to_update = version.feature_states_to_update?.map(
-          convertFeatureStateToValue,
-        )
+
+        feature_states_to_create = version.feature_states_to_create
+        feature_states_to_update = version.feature_states_to_update
         segment_ids_to_delete_overrides =
           version.segment_ids_to_delete_overrides
 
@@ -865,12 +860,12 @@ const controller = {
               ? page
               : `${Project.api}projects/${projectId}/features/?page=${
                   page || 1
-                }&page_size=${pageSize || PAGE_SIZE}${filterUrl}`
+                }&environment=${environment}&page_size=${pageSize || PAGE_SIZE}${filterUrl}`
           if (store.search) {
             featuresEndpoint += `&search=${store.search}`
           }
           if (store.sort) {
-            featuresEndpoint += `&environment=${environment}&sort_field=${
+            featuresEndpoint += `&sort_field=${
               store.sort.sortBy
             }&sort_direction=${store.sort.sortOrder.toUpperCase()}`
           }
