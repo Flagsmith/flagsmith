@@ -69,6 +69,7 @@ runs:
         sarif_file: trivy-results.sarif
 
     - name: Render scan results URL
+      if: success() || failure()
       id: scan-results-url
       run: >
         echo scan-results-url=${{ format('{0}/{1}/security/code-scanning?query=is:open+tool:Trivy+{2}',
