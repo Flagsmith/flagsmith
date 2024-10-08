@@ -9,12 +9,7 @@ from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.test import APIClient
 
-from edge_api.identities.search import (
-    DASHBOARD_ALIAS_SEARCH_PREFIX,
-    IDENTIFIER_ATTRIBUTE,
-    EdgeIdentitySearchData,
-    EdgeIdentitySearchType,
-)
+from edge_api.identities.search import DASHBOARD_ALIAS_SEARCH_PREFIX
 from environments.dynamodb.wrappers.environment_wrapper import (
     DynamoEnvironmentV2Wrapper,
 )
@@ -259,54 +254,43 @@ def test_get_identities_list(
 
 
 def test_search_identities_without_exact_match(
-    admin_client,
-    dynamo_enabled_environment,
-    environment_api_key,
-    identity_document,
-    edge_identity_dynamo_wrapper_mock,
+    admin_client: APIClient,
+    dynamo_enabled_environment: Environment,
+    environment_api_key: str,
+    identity_document: dict[str, Any],
+    flagsmith_identities_table: Table,
 ):
     # Given
     identifier = identity_document["identifier"]
+
+    flagsmith_identities_table.put_item(Item=identity_document)
 
     base_url = reverse(
         "api-v1:environments:environment-edge-identities-list",
         args=[environment_api_key],
     )
 
-    url = "%s?q=%s" % (base_url, identifier)
-    edge_identity_dynamo_wrapper_mock.search_items.return_value = {
-        "Items": [identity_document],
-        "Count": 1,
-    }
+    url = "%s?q=%s" % (base_url, identifier[:6])
 
     # When
     response = admin_client.get(url)
+
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["results"][0]["identifier"] == identifier
     assert len(response.json()["results"]) == 1
-
-    edge_identity_dynamo_wrapper_mock.search_items.assert_called_with(
-        environment_api_key=environment_api_key,
-        search_data=EdgeIdentitySearchData(
-            search_term=identifier,
-            search_type=EdgeIdentitySearchType.BEGINS_WITH,
-            search_attribute=IDENTIFIER_ATTRIBUTE,
-        ),
-        limit=100,
-        start_key=None,
-    )
+    assert response.json()["results"][0]["identifier"] == identifier
 
 
 def test_search_for_identities_with_exact_match(
-    admin_client,
-    dynamo_enabled_environment,
-    environment_api_key,
-    identity_document,
-    edge_identity_dynamo_wrapper_mock,
+    admin_client: APIClient,
+    dynamo_enabled_environment: Environment,
+    environment_api_key: str,
+    identity_document: dict[str, Any],
+    flagsmith_identities_table: Table,
 ):
     # Given
     identifier = identity_document["identifier"]
+    flagsmith_identities_table.put_item(Item=identity_document)
 
     base_url = reverse(
         "api-v1:environments:environment-edge-identities-list",
@@ -316,28 +300,14 @@ def test_search_for_identities_with_exact_match(
         base_url,
         urllib.parse.urlencode({"q": f'"{identifier}"'}),
     )
-    edge_identity_dynamo_wrapper_mock.search_items.return_value = {
-        "Items": [identity_document],
-        "Count": 1,
-    }
 
     # When
     response = admin_client.get(url)
+
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["results"][0]["identifier"] == identifier
     assert len(response.json()["results"]) == 1
-
-    edge_identity_dynamo_wrapper_mock.search_items.assert_called_with(
-        environment_api_key=environment_api_key,
-        search_data=EdgeIdentitySearchData(
-            search_term=identifier,
-            search_type=EdgeIdentitySearchType.EQUAL,
-            search_attribute=IDENTIFIER_ATTRIBUTE,
-        ),
-        limit=100,
-        start_key=None,
-    )
+    assert response.json()["results"][0]["identifier"] == identifier
 
 
 def test_search_for_identities_by_dashboard_alias_prefix(
