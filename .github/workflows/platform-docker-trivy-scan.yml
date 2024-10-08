@@ -92,10 +92,9 @@ jobs:
         id: trivy
         uses: ./.github/actions/trivy-scan-image
         with:
-          image-name: ${{ matrix.image-name }}
-          image-tag: main
+          image-tag: ${{ inputs.registry-url }}/flagsmith/${{ matrix.image-name }}:main
+          category: ${{ matrix.image-name }}
           query: branch:main
-          image-ref: ${{ inputs.registry-url }}/flagsmith/${{ matrix.image-name }}:main
           trivy-username: ${{ github.actor }}
           trivy-password: ${{ secrets.GITHUB_TOKEN }}
           trivy-db-repository: ${{ env.TRIVY_DB_REPOSITORY }}
