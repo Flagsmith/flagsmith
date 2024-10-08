@@ -69,7 +69,7 @@ jobs:
           MIME_TYPE: application/vnd.aquasec.trivy.db.layer.v1.tar
 
   scan-images:
-    name: Pull and republish Trivy databases
+    name: Scan image
     runs-on: ubuntu-latest
     needs: pull-trivy-db
 
