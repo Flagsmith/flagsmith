@@ -15,15 +15,19 @@ from rest_framework.response import Response
 
 from integrations.github.client import (
     ResourceType,
+    create_flagsmith_flag_label,
     delete_github_installation,
     fetch_github_repo_contributors,
     fetch_github_repositories,
     fetch_search_github_resource,
 )
 from integrations.github.exceptions import DuplicateGitHubIntegration
-from integrations.github.github import handle_github_webhook_event
+from integrations.github.github import (
+    handle_github_webhook_event,
+    tag_by_event_type,
+)
 from integrations.github.helpers import github_webhook_payload_is_valid
-from integrations.github.models import GithubConfiguration, GithubRepository
+from integrations.github.models import GithubConfiguration, GitHubRepository
 from integrations.github.permissions import HasPermissionToGithubConfiguration
 from integrations.github.serializers import (
     GithubConfigurationSerializer,
@@ -122,7 +126,7 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
         GithubIsAdminOrganisation,
     )
     serializer_class = GithubRepositorySerializer
-    model_class = GithubRepository
+    model_class = GitHubRepository
 
     def perform_create(self, serializer):
         github_configuration_id = self.kwargs["github_pk"]
@@ -132,14 +136,24 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
         try:
             if github_pk := self.kwargs.get("github_pk"):
                 int(github_pk)
-                return GithubRepository.objects.filter(github_configuration=github_pk)
+                return GitHubRepository.objects.filter(github_configuration=github_pk)
         except ValueError:
             raise ValidationError({"github_pk": ["Must be an integer"]})
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs) -> Response | None:
 
         try:
-            return super().create(request, *args, **kwargs)
+            response: Response = super().create(request, *args, **kwargs)
+            github_configuration: GithubConfiguration = GithubConfiguration.objects.get(
+                id=self.kwargs["github_pk"]
+            )
+            if request.data.get("tagging_enabled", False):
+                create_flagsmith_flag_label(
+                    installation_id=github_configuration.installation_id,
+                    owner=request.data.get("repository_owner"),
+                    repo=request.data.get("repository_name"),
+                )
+            return response
 
         except IntegrityError as e:
             if re.search(
@@ -149,6 +163,19 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
                 raise ValidationError(
                     detail="Duplication error. The GitHub repository already linked"
                 )
+
+    def update(self, request, *args, **kwargs) -> Response | None:
+        response: Response = super().update(request, *args, **kwargs)
+        github_configuration: GithubConfiguration = GithubConfiguration.objects.get(
+            id=self.kwargs["github_pk"]
+        )
+        if request.data.get("tagging_enabled", False):
+            create_flagsmith_flag_label(
+                installation_id=github_configuration.installation_id,
+                owner=request.data.get("repository_owner"),
+                repo=request.data.get("repository_name"),
+            )
+        return response
 
 
 @api_view(["GET"])
@@ -250,7 +277,7 @@ def github_webhook(request) -> Response:
         payload_body=payload, secret_token=secret, signature_header=signature
     ):
         data = json.loads(payload.decode("utf-8"))
-        if github_event == "installation":
+        if github_event == "installation" or github_event in tag_by_event_type:
             handle_github_webhook_event(event_type=github_event, payload=data)
             return Response({"detail": "Event processed"}, status=200)
         else:

@@ -1,24 +1,25 @@
 import { PureComponent } from 'react'
-import Select from 'react-select'
+import Select, { components } from 'react-select'
 import Button from 'components/base/forms/Button'
 import Paging from 'components/Paging'
 import ToggleChip from 'components/ToggleChip'
 import Input from 'components/base/forms/Input'
 import InputGroup from 'components/base/forms/InputGroup'
 import PanelSearch from 'components/PanelSearch'
+import CodeHelp from 'components/CodeHelp'
 import AccountStore from 'common/stores/account-store'
 import Tooltip from 'components/Tooltip'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import AccountProvider from 'common/providers/AccountProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Panel from 'components/base/grid/Panel'
+import { checkmarkCircle } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 window.AppActions = require('../../common/dispatcher/app-actions')
 window.Actions = require('../../common/dispatcher/action-constants')
 window.ES6Component = require('../../common/ES6Component')
 
-window.IdentityProvider = require('../../common/providers/IdentityProvider')
-window.IdentityProvider = require('../../common/providers/IdentityProvider')
 window.AccountProvider = AccountProvider
 window.AccountStore = AccountStore
 window.FeatureListProvider = require('../../common/providers/FeatureListProvider')
@@ -39,7 +40,7 @@ window.Panel = Panel
 window.FormGroup = require('../components/base/grid/FormGroup')
 
 window.PanelSearch = PanelSearch
-window.CodeHelp = require('../components/CodeHelp')
+window.CodeHelp = CodeHelp
 
 // Useful for components used all the time within a project
 window.Loader = class extends PureComponent {
@@ -80,8 +81,33 @@ window.Loader = class extends PureComponent {
 window.Tooltip = Tooltip
 
 global.ToggleChip = ToggleChip
+
+// Custom Option component to show the tick mark next to selected option in the dropdown
+const Option = (props) => {
+  return (
+    <components.Option {...props}>
+      <div className={'d-flex justify-content-between align-items-center'}>
+        {props.data.label}
+        {props.isSelected && (
+          <IonIcon icon={checkmarkCircle} className='text-primary' />
+        )}
+      </div>
+    </components.Option>
+  )
+}
+
 global.Select = class extends PureComponent {
   static displayName = 'Select'
+
+  componentDidUpdate() {
+    if (
+      this.props.autoSelect &&
+      this.props.options?.length &&
+      !this.props.value
+    ) {
+      this.props.onChange(this.props.options[0])
+    }
+  }
 
   render() {
     const props = this.props
@@ -114,6 +140,7 @@ global.Select = class extends PureComponent {
       </div>
     ) : (
       <div
+        className={props.className}
         onClick={(e) => {
           e.stopPropagation()
         }}
@@ -122,6 +149,7 @@ global.Select = class extends PureComponent {
           className={`react-select ${props.size ? props.size : ''}`}
           classNamePrefix='react-select'
           {...props}
+          components={{ ...(props.components || {}), Option }}
         />
       </div>
     )

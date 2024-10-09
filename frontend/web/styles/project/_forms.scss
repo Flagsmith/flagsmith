@@ -5,7 +5,7 @@
     font-size: $font-caption;
     line-height: $line-height-xsm;
     &__line {
-        margin-left: $spacer/4;
+        margin-left: calc($spacer / 4);
         height: 2px;
         border-bottom: 1px dashed $hr-border-color;
     }
@@ -16,10 +16,10 @@
     font-size: $font-caption;
     line-height: $line-height-xsm;
     &__line {
-        margin-right: $spacer/4;
+        margin-right: calc($spacer / 4);
         &:last-child {
             margin-right: 0;
-            margin-left: $spacer/4;
+            margin-left: calc($spacer / 4);
         }
         height: 2px;
         border-bottom: 1px solid $hr-border-color;
@@ -194,4 +194,12 @@ label,
 .badge-info {
     background-color: $primary;
     color: white;
+}
+
+.transform-none {
+    text-transform: none !important;
+}
+
+span[contenteditable]:focus-visible {
+    outline: none !important;
 }

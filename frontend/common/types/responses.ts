@@ -115,7 +115,7 @@ export type ExternalResource = {
   url: string
   type: string
   project?: number
-  metadata?: { state?: string; title?: string }
+  metadata?: { [key: string]: string | number | boolean }
   feature: number
 }
 
@@ -160,12 +160,14 @@ export type LaunchDarklyProjectImport = {
   project: number
 }
 
-export type GithubResources = {
+export type GithubResource = {
   html_url: string
   id: number
   number: number
   title: string
   state: string
+  merged: boolean
+  draft: boolean
 }
 
 export type GithubPaginatedRepos<T> = {
@@ -187,6 +189,7 @@ export type GithubRepository = {
   project: number
   repository_owner: string
   repository_name: string
+  tagging_enabled: boolean
 }
 
 export type githubIntegration = {
@@ -289,6 +292,7 @@ export type Identity = {
   id?: string
   identifier: string
   identity_uuid?: string
+  dashboard_alias?: string
 }
 
 export type AvailablePermission = {
@@ -472,6 +476,14 @@ export type Role = {
   organisation: number
 }
 
+export type ChangeSet = {
+  feature: number
+  live_from: string | null
+  feature_states_to_update: FeatureState[]
+  feature_states_to_create: FeatureState[]
+  segment_ids_to_delete_overrides: number[]
+}
+
 export type RolePermissionUser = {
   user: number
   role: number
@@ -483,6 +495,15 @@ export type RolePermissionGroup = {
   role: number
   id: number
   role_name: string
+}
+export type FeatureConflict = {
+  segment_id: number | null
+  original_cr_id: number | null
+  published_at: string
+  is_environment_default: boolean
+}
+export type FeatureStateWithConflict = FeatureState & {
+  conflict?: FeatureConflict
 }
 export type ChangeRequest = {
   id: number
@@ -501,6 +522,7 @@ export type ChangeRequest = {
     user: number
     approved_at: null | string
   }[]
+  change_sets?: ChangeSet[]
   is_approved: boolean
   is_committed: boolean
   group_assignments: { group: number }[]
@@ -508,6 +530,8 @@ export type ChangeRequest = {
     uuid: string
     feature_states: FeatureState[]
   }[]
+
+  conflicts: FeatureConflict[]
 }
 export type FeatureVersion = {
   created_at: string
@@ -665,7 +689,7 @@ export type Res = {
   externalResource: PagedResponse<ExternalResource>
   githubIntegrations: PagedResponse<githubIntegration>
   githubRepository: PagedResponse<GithubRepository>
-  githubResources: GitHubPagedResponse<GithubResources>
+  githubResources: GitHubPagedResponse<GithubResource>
   githubRepos: GithubPaginatedRepos<Repository>
   segmentPriorities: {}
   featureSegment: FeatureState['feature_segment']

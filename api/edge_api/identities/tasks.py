@@ -2,6 +2,8 @@ import logging
 import typing
 
 from django.utils import timezone
+from task_processor.decorators import register_task_handler
+from task_processor.models import TaskPriority
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
@@ -9,8 +11,6 @@ from edge_api.identities.types import IdentityChangeset
 from environments.dynamodb import DynamoEnvironmentV2Wrapper
 from environments.models import Environment, Webhook
 from features.models import Feature, FeatureState
-from task_processor.decorators import register_task_handler
-from task_processor.models import TaskPriority
 from users.models import FFAdminUser
 from util.mappers import map_identity_changeset_to_identity_override_changeset
 from webhooks.webhooks import WebhookEventType, call_environment_webhooks
@@ -24,8 +24,9 @@ def call_environment_webhook_for_feature_state_change(
     environment_api_key: str,
     identity_id: typing.Union[id, str],
     identity_identifier: str,
-    changed_by_user_id: int,
     timestamp: str,
+    changed_by_user_id: int = None,  # deprecated(use changed_by)
+    changed_by: str = None,
     new_enabled_state: bool = None,
     new_value: typing.Union[bool, int, str] = None,
     previous_enabled_state: bool = None,
@@ -40,10 +41,11 @@ def call_environment_webhook_for_feature_state_change(
         return
 
     feature = Feature.objects.get(id=feature_id)
-    changed_by = FFAdminUser.objects.get(id=changed_by_user_id)
+    if changed_by_user_id:
+        changed_by = FFAdminUser.objects.get(id=changed_by_user_id).email
 
     data = {
-        "changed_by": changed_by.email,
+        "changed_by": changed_by,
         "timestamp": timestamp,
         "new_state": None,
     }

@@ -13,6 +13,7 @@ import {
   Environment,
   UserGroup,
   AttributeName,
+  Identity,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -22,6 +23,22 @@ export type PagedRequest<T> = T & {
 }
 export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
+export const billingPeriods = [
+  {
+    label: 'Current billing period',
+    value: 'current_billing_period',
+  },
+  {
+    label: 'Previous billing period',
+    value: 'previous_billing_period',
+  },
+  { label: 'Last 90 days', value: '90_day_period' },
+  { label: 'Last 30 days', value: undefined },
+]
+export const freePeriods = [
+  { label: 'Last 90 days', value: '90_day_period' },
+  { label: 'Last 30 days', value: undefined },
+]
 export type CreateVersionFeatureState = {
   environmentId: number
   featureId: number
@@ -81,7 +98,7 @@ export type Req = {
   getIdentities: PagedRequest<{
     environmentId: string
     pageType?: 'NEXT' | 'PREVIOUS'
-    search?: string
+    dashboard_alias?: string
     pages?: (string | undefined)[] // this is needed for edge since it returns no paging info other than a key
     isEdge: boolean
   }>
@@ -303,25 +320,21 @@ export type Req = {
   getGroupWithRole: { org_id: number; group_id: number }
   deleteGroupWithRole: { org_id: number; group_id: number; role_id: number }
   createAndSetFeatureVersion: {
+    projectId: number
     environmentId: number
     featureId: number
     skipPublish?: boolean
-    featureStates: Pick<
-      FeatureState,
-      | 'enabled'
-      | 'feature_segment'
-      | 'uuid'
-      | 'feature_state_value'
-      | 'id'
-      | 'toRemove'
-      | 'multivariate_feature_state_values'
-    >[]
+    featureStates: FeatureState[]
     liveFrom?: string
   }
   createFeatureVersion: {
     environmentId: number
     featureId: number
-    liveFrom?: string
+    live_from?: string
+    feature_states_to_create: Omit<FeatureState, 'id'>[]
+    feature_states_to_update: Omit<FeatureState, 'id'>[]
+    publish_immediately: boolean
+    segment_ids_to_delete_overrides: number[]
   }
   publishFeatureVersion: {
     sha: string
@@ -402,6 +415,12 @@ export type Req = {
     organisation_id: string
     github_id: string
     id: string
+    body: {
+      project: number
+      repository_name: string
+      repository_owner: string
+      tagging_enabled: boolean
+    }
   }
   deleteGithubRepository: {
     organisation_id: string
@@ -503,6 +522,10 @@ export type Req = {
       django_attribute_name: AttributeName
       idp_attribute_name: string
     }
+  }
+  updateIdentity: {
+    environmentId: string
+    data: Identity
   }
   // END OF TYPES
 }

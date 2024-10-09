@@ -249,4 +249,4 @@ const CodeHelp = class extends Component {
 
 CodeHelp.propTypes = {}
 
-module.exports = ConfigProvider(CodeHelp)
+export default ConfigProvider(CodeHelp)

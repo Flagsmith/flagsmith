@@ -126,15 +126,20 @@ def process_subscription(request: Request) -> Response:  # noqa: C901
         return Response(status=status.HTTP_200_OK)
 
     if subscription["status"] in ("non_renewing", "cancelled"):
-        existing_subscription.prepare_for_cancel(
-            datetime.fromtimestamp(subscription.get("current_term_end")).replace(
+        cancellation_date = subscription.get("current_term_end")
+        if cancellation_date is not None:
+            cancellation_date = datetime.fromtimestamp(cancellation_date).replace(
                 tzinfo=timezone.utc
-            ),
+            )
+        else:
+            cancellation_date = timezone.now()
+        existing_subscription.prepare_for_cancel(
+            cancellation_date,
             update_chargebee=False,
         )
         return Response(status=status.HTTP_200_OK)
 
-    if subscription["status"] != "active":
+    if subscription["status"] not in ("active", "in_trial"):
         # Nothing to do, so return early.
         return Response(status=status.HTTP_200_OK)
 

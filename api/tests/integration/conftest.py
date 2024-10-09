@@ -342,6 +342,8 @@ def segment_featurestate(
     feature_segment: int,
 ) -> int:
     data = {
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "segment override"},
         "feature": feature,
         "environment": environment,
         "feature_segment": feature_segment,
@@ -430,6 +432,7 @@ def identity_document(
     }
     return {
         "composite_key": f"{environment_api_key}_user_1_test",
+        "dashboard_alias": "dashboard-alias",
         "identity_traits": identity_traits,
         "identity_features": [
             _environment_feature_state_1_document,
@@ -455,6 +458,7 @@ def identity_document_without_fs(environment_api_key, identity_traits):
         "environment_api_key": environment_api_key,
         "identity_uuid": "59efa2a7-6a45-46d6-b953-a7073a90eacf",
         "django_id": None,
+        "dashboard_alias": None,
     }
 
 

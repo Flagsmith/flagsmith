@@ -52,7 +52,6 @@ import AddMetadataToEntity, {
   CustomMetadataField,
 } from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
-import MetadataTitle from 'components/metadata/MetadataTitle'
 import { setInterceptClose } from './base/ModalDefault'
 
 type PageType = {
@@ -155,7 +154,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [metadata, setMetadata] = useState<CustomMetadataField[]>(
     segment.metadata,
   )
-  const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
+  const metadataEnable =
+    Utils.getPlansPermission('METADATA') &&
+    Utils.getFlagsmithHasFeature('enable_metadata')
 
   const error = createError || updateError
   const totalSegments = ProjectStore.getTotalSegments() ?? 0
@@ -287,10 +288,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     }
     //eslint-disable-next-line
   }, [updateSuccess])
-  const operators: Operator[] | null =
-    _operators || Utils.getFlagsmithValue('segment_operators')
-      ? JSON.parse(Utils.getFlagsmithValue('segment_operators'))
-      : null
+  const operators: Operator[] | null = _operators || Utils.getSegmentOperators()
   if (operators) {
     _operators = operators
   }
@@ -401,7 +399,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     <form id='create-segment-modal' onSubmit={save}>
       {!condensed && (
         <div className='mt-3'>
-          <InfoMessage>
+          <InfoMessage collapseId={'value-type-conversions'}>
             Learn more about rule and trait value type conversions{' '}
             <a href='https://docs.flagsmith.com/basic-features/segments#rule-typing'>
               here
@@ -608,7 +606,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
           <TabItem tabLabel='Users'>
             <div className='my-4'>
-              <InfoMessage>
+              <InfoMessage collapseId={'random-identity-sample'}>
                 This is a random sample of Identities who are either in or out
                 of this Segment based on the current Segment rules.
               </InfoMessage>
@@ -740,10 +738,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
           {metadataEnable && segmentContentType?.id && (
             <TabItem
-              tabLabelString='Metadata'
+              tabLabelString='Custom Fields'
               tabLabel={
                 <Row className='justify-content-center'>
-                  Metadata
+                  Custom Fields
                   {metadataValueChanged && (
                     <div className='unread ml-2 px-1'>{'*'}</div>
                   )}
@@ -763,8 +761,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
             <div className={className || 'my-3 mx-4'}>{Tab1}</div>
           </TabItem>
           <TabItem
-            tabLabelString='Metadata'
-            tabLabel={<Row className='justify-content-center'>Metadata</Row>}
+            tabLabelString='Custom Fields'
+            tabLabel={
+              <Row className='justify-content-center'>Custom Fields</Row>
+            }
           >
             <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
           </TabItem>

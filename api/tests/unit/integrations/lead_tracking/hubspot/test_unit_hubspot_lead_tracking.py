@@ -1,17 +1,25 @@
 import datetime
 
+import responses
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from rest_framework import status
+from task_processor.task_run_method import TaskRunMethod
 
+from integrations.lead_tracking.hubspot.constants import (
+    HUBSPOT_FORM_ID,
+    HUBSPOT_PORTAL_ID,
+    HUBSPOT_ROOT_FORM_URL,
+)
 from organisations.models import (
     HubspotOrganisation,
     Organisation,
     OrganisationRole,
 )
-from task_processor.task_run_method import TaskRunMethod
-from users.models import FFAdminUser, HubspotLead
+from users.models import FFAdminUser, HubspotLead, HubspotTracker
 
 
+@responses.activate
 def test_hubspot_with_new_contact_and_new_organisation(
     organisation: Organisation,
     settings: SettingsWrapper,
@@ -26,7 +34,15 @@ def test_hubspot_with_new_contact_and_new_organisation(
         last_name="Louis",
         marketing_consent_given=True,
     )
+    url = f"{HUBSPOT_ROOT_FORM_URL}/{HUBSPOT_PORTAL_ID}/{HUBSPOT_FORM_ID}"
+    responses.add(
+        method="POST",
+        url=url,
+        status=status.HTTP_200_OK,
+        json={"inlineMessage": "Thanks for submitting the form."},
+    )
 
+    HubspotTracker.objects.create(user=user, hubspot_cookie="tracker")
     future_hubspot_id = "10280696017"
     mock_create_company = mocker.patch(
         "integrations.lead_tracking.hubspot.client.HubspotClient.create_company",

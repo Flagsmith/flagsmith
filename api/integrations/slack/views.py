@@ -6,6 +6,7 @@ from django.core.signing import TimestampSigner
 from django.shortcuts import redirect
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from slack_sdk.oauth import AuthorizeUrlGenerator
@@ -27,7 +28,7 @@ from .exceptions import (
     InvalidStateError,
     SlackConfigurationDoesNotExist,
 )
-from .permissions import OauthInitPermission
+from .permissions import OauthInitPermission, SlackGetChannelPermissions
 
 signer = TimestampSigner()
 
@@ -35,6 +36,7 @@ signer = TimestampSigner()
 class SlackGetChannelsViewSet(GenericViewSet):
     serializer_class = SlackChannelListSerializer
     pagination_class = None  # set here to ensure documentation is correct
+    permission_classes = [SlackGetChannelPermissions]
 
     def get_api_token(self) -> str:
         environment = Environment.objects.get(
@@ -63,11 +65,21 @@ class SlackEnvironmentViewSet(EnvironmentIntegrationCommonViewSet):
     pagination_class = None  # set here to ensure documentation is correct
     model_class = SlackEnvironment
 
+    def get_permissions(self) -> list[BasePermission]:
+        if (action := self.action) in [
+            "slack_oauth_callback",
+            "get_temporary_signature",
+        ]:
+            return []
+        if action == "slack_oauth_init":
+            return [OauthInitPermission()]
+        return super().get_permissions()
+
     @action(detail=False, methods=["GET"], url_path="signature")
     def get_temporary_signature(self, request, *args, **kwargs):
         return Response({"signature": signer.sign(request.user.id)})
 
-    @action(detail=False, methods=["GET"], url_path="callback", permission_classes=[])
+    @action(detail=False, methods=["GET"], url_path="callback")
     def slack_oauth_callback(self, request, environment_api_key):
         code = request.GET.get("code")
         if not code:
@@ -75,14 +87,13 @@ class SlackEnvironmentViewSet(EnvironmentIntegrationCommonViewSet):
                 "code not found in query params",
                 status.HTTP_400_BAD_REQUEST,
             )
-        env = self.get_environment_from_request()
         validate_state(request.GET.get("state"), request)
         bot_token = SlackWrapper().get_bot_token(
             code, self._get_slack_callback_url(environment_api_key)
         )
 
         SlackConfiguration.objects.update_or_create(
-            project=env.project, defaults={"api_token": bot_token}
+            project=request.environment.project, defaults={"api_token": bot_token}
         )
         return redirect(self._get_front_end_redirect_url())
 
@@ -91,7 +102,6 @@ class SlackEnvironmentViewSet(EnvironmentIntegrationCommonViewSet):
         methods=["GET"],
         url_path="oauth",
         authentication_classes=[OauthInitAuthentication],
-        permission_classes=[OauthInitPermission],
     )
     def slack_oauth_init(self, request, environment_api_key):
         if not settings.SLACK_CLIENT_ID:

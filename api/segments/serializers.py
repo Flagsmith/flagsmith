@@ -1,3 +1,4 @@
+import logging
 import typing
 
 from django.conf import settings
@@ -12,6 +13,8 @@ from metadata.models import Metadata
 from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
+
+logger = logging.getLogger(__name__)
 
 
 class ConditionSerializer(serializers.ModelSerializer):
@@ -89,6 +92,9 @@ class SegmentSerializer(serializers.ModelSerializer, SerializerWithMetadata):
 
         # Create a version of the segment now that we're updating.
         cloned_segment = instance.deep_clone()
+        logger.info(
+            f"Updating cloned segment {cloned_segment.id} for original segment {instance.id}"
+        )
 
         try:
             self._update_segment_rules(rules_data, segment=instance)
@@ -122,6 +128,9 @@ class SegmentSerializer(serializers.ModelSerializer, SerializerWithMetadata):
             return
 
         count = self._calculate_condition_count(rules_data)
+
+        if self.instance:
+            logger.info(f"Segment {self.instance.id} has count of conditions {count}")
 
         if count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
             raise ValidationError(

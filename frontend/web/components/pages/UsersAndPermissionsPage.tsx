@@ -37,6 +37,7 @@ import UserAction from 'components/UserAction'
 import Icon from 'components/Icon'
 import RolesTable from 'components/RolesTable'
 import UsersGroups from 'components/UsersGroups'
+import PlanBasedBanner, { getPlanBasedOption } from 'components/PlanBasedAccess'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -93,7 +94,6 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
       'side-modal',
     )
   }
-  const hasRbacPermission = Utils.getPlansPermission('RBAC')
   const meta = subscriptionMeta || organisation.subscription || { max_seats: 1 }
   const max_seats = meta.max_seats || 1
   const isAWS = AccountStore.getPaymentMethod() === 'AWS_MARKETPLACE'
@@ -268,7 +268,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                       .
                                     </strong>
                                   ) : needsUpgradeForAdditionalSeats ? (
-                                    <strong>
+                                    <div className='fw-semibold'>
                                       If you wish to invite any additional
                                       members, please{' '}
                                       {
@@ -276,7 +276,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                           href='#'
                                           onClick={() => {
                                             router.history.replace(
-                                              Constants.upgradeURL,
+                                              Constants.getUpgradeUrl(),
                                             )
                                           }}
                                         >
@@ -284,7 +284,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                         </a>
                                       }
                                       .
-                                    </strong>
+                                    </div>
                                   ) : (
                                     <strong>
                                       You will automatically be charged
@@ -324,13 +324,13 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                           label: 'Organisation Administrator',
                                           value: 'ADMIN',
                                         },
-                                        {
-                                          isDisabled: !hasRbacPermission,
-                                          label: hasRbacPermission
-                                            ? 'User'
-                                            : 'User - Please upgrade for role based access',
-                                          value: 'USER',
-                                        },
+                                        getPlanBasedOption(
+                                          {
+                                            label: 'User',
+                                            value: 'USER',
+                                          },
+                                          'RBAC',
+                                        ),
                                       ]}
                                       className='react-select select-sm'
                                     />
@@ -528,17 +528,19 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                           }
                                           options={map(
                                             Constants.roles,
-                                            (label, value) => ({
-                                              isDisabled:
-                                                value !== 'ADMIN' &&
-                                                !hasRbacPermission,
-                                              label:
-                                                value !== 'ADMIN' &&
-                                                !hasRbacPermission
-                                                  ? `${label} - Please upgrade for role based access`
-                                                  : label,
-                                              value,
-                                            }),
+                                            (label, value) =>
+                                              value === 'ADMIN'
+                                                ? {
+                                                    label,
+                                                    value,
+                                                  }
+                                                : getPlanBasedOption(
+                                                    {
+                                                      label,
+                                                      value,
+                                                    },
+                                                    'RBAC',
+                                                  ),
                                           )}
                                           menuPortalTarget={document.body}
                                           menuPosition='absolute'
@@ -741,21 +743,16 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                       </div>
                     </TabItem>
                     <TabItem tabLabel='Roles'>
-                      {hasRbacPermission ? (
-                        <>
-                          <RolesTable
-                            organisationId={organisation.id}
-                            users={users}
-                          />
-                        </>
-                      ) : (
-                        <div className='mt-4'>
-                          <InfoMessage>
-                            To use <strong>role</strong> features you have to
-                            upgrade your plan.
-                          </InfoMessage>
-                        </div>
-                      )}
+                      <PlanBasedBanner
+                        feature='RBAC'
+                        theme={'page'}
+                        className='mt-4'
+                      >
+                        <RolesTable
+                          organisationId={organisation.id}
+                          users={users}
+                        />
+                      </PlanBasedBanner>
                     </TabItem>
                   </Tabs>
                 </div>

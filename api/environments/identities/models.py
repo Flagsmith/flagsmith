@@ -1,4 +1,5 @@
 import typing
+from itertools import chain
 
 from django.db import models
 from django.db.models import Prefetch, Q
@@ -8,6 +9,7 @@ from flag_engine.segments.evaluator import evaluate_identity_in_segment
 from environments.identities.managers import IdentityManager
 from environments.identities.traits.models import Trait
 from environments.models import Environment
+from environments.sdk.types import SDKTraitData
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from segments.models import Segment
@@ -161,7 +163,9 @@ class Identity(models.Model):
         :return: List of matching segments
         """
         matching_segments = []
-        traits = self.identity_traits.all() if traits is None else traits
+        traits = (
+            self.identity_traits.all() if (traits is None and self.id) else traits or []
+        )
 
         if overrides_only:
             all_segments = self.environment.get_segments_from_cache()
@@ -194,7 +198,11 @@ class Identity(models.Model):
     def __str__(self):
         return "Account %s" % self.identifier
 
-    def generate_traits(self, trait_data_items, persist=False):
+    def generate_traits(
+        self,
+        trait_data_items: list[SDKTraitData],
+        persist: bool = False,
+    ) -> list[Trait]:
         """
         Given a list of trait data items, validated by TraitSerializerFull, generate
         a list of TraitModel objects for the given identity.
@@ -204,28 +212,34 @@ class Identity(models.Model):
         :return: list of TraitModels
         """
         trait_models = []
+        trait_models_to_persist = []
 
-        # Remove traits having Null(None) values
-        trait_data_items = filter(
-            lambda trait: trait["trait_value"] is not None, trait_data_items
-        )
         for trait_data_item in trait_data_items:
+            # exclude traits with null values
+            if (trait_value := trait_data_item["trait_value"]) is None:
+                continue
+
             trait_key = trait_data_item["trait_key"]
-            trait_value = trait_data_item["trait_value"]
-            trait_models.append(
-                Trait(
-                    trait_key=trait_key,
-                    identity=self,
-                    **Trait.generate_trait_value_data(trait_value),
-                )
+            trait = Trait(
+                trait_key=trait_key,
+                identity=self,
+                **Trait.generate_trait_value_data(trait_value),
             )
+            if trait_data_item.get("transient"):
+                trait.transient = True
+            else:
+                trait_models_to_persist.append(trait)
+            trait_models.append(trait)
 
         if persist:
-            Trait.objects.bulk_create(trait_models)
+            Trait.objects.bulk_create(trait_models_to_persist)
 
         return trait_models
 
-    def update_traits(self, trait_data_items):
+    def update_traits(
+        self,
+        trait_data_items: list[SDKTraitData],
+    ) -> list[Trait]:
         """
         Given a list of traits, update any that already exist and create any new ones.
         Return the full list of traits for the given identity after these changes.
@@ -235,21 +249,31 @@ class Identity(models.Model):
         """
         current_traits = {t.trait_key: t for t in self.identity_traits.all()}
 
-        keys_to_delete = []
+        keys_to_delete = set()
         new_traits = []
         updated_traits = []
+        transient_traits = []
 
         for trait_data_item in trait_data_items:
             trait_key = trait_data_item["trait_key"]
             trait_value = trait_data_item["trait_value"]
+            transient = trait_data_item.get("transient")
+
+            if transient:
+                trait = Trait(
+                    **Trait.generate_trait_value_data(trait_value),
+                    trait_key=trait_key,
+                    identity=self,
+                )
+                trait.transient = True
+                transient_traits.append(trait)
+                continue
 
             if trait_value is None:
                 # build a list of trait keys to delete having been nulled by the
                 # input data
-                keys_to_delete.append(trait_key)
+                keys_to_delete.add(trait_key)
                 continue
-
-            trait_value_data = Trait.generate_trait_value_data(trait_value)
 
             if trait_key in current_traits:
                 current_trait = current_traits[trait_key]
@@ -257,16 +281,27 @@ class Identity(models.Model):
                 if current_trait.trait_value == trait_value:
                     continue
 
-                for attr, value in trait_value_data.items():
+                for attr, value in Trait.generate_trait_value_data(trait_value).items():
                     setattr(current_trait, attr, value)
                 updated_traits.append(current_trait)
-            else:
-                new_traits.append(
-                    Trait(**trait_value_data, trait_key=trait_key, identity=self)
+                continue
+
+            new_traits.append(
+                Trait(
+                    **Trait.generate_trait_value_data(trait_value),
+                    trait_key=trait_key,
+                    identity=self,
                 )
+            )
 
         # delete the traits that had their keys set to None
+        # (except the transient ones)
         if keys_to_delete:
+            current_traits = {
+                trait_key: trait
+                for trait_key, trait in current_traits.items()
+                if trait_key not in keys_to_delete
+            }
             self.identity_traits.filter(trait_key__in=keys_to_delete).delete()
 
         Trait.objects.bulk_update(updated_traits, fields=Trait.BULK_UPDATE_FIELDS)
@@ -277,6 +312,16 @@ class Identity(models.Model):
         # See: https://github.com/Flagsmith/flagsmith/issues/370
         Trait.objects.bulk_create(new_traits, ignore_conflicts=True)
 
-        # return the full list of traits for this identity by refreshing from the db
-        # TODO: handle this in the above logic to avoid a second hit to the DB
-        return self.identity_traits.all()
+        # return the full list of traits for this identity
+        # override persisted traits by transient traits in case of key collisions
+        return [
+            *{
+                trait.trait_key: trait
+                for trait in chain(
+                    current_traits.values(),
+                    updated_traits,
+                    new_traits,
+                    transient_traits,
+                )
+            }.values()
+        ]

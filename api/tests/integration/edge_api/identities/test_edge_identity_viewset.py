@@ -1,11 +1,27 @@
 import json
 import urllib
+from typing import Any
 
+from boto3.dynamodb.conditions import Key
 from django.urls import reverse
+from mypy_boto3_dynamodb.service_resource import Table
 from rest_framework import status
 from rest_framework.exceptions import NotFound
+from rest_framework.test import APIClient
 
-from edge_api.identities.views import EdgeIdentityViewSet
+from edge_api.identities.search import (
+    DASHBOARD_ALIAS_SEARCH_PREFIX,
+    IDENTIFIER_ATTRIBUTE,
+    EdgeIdentitySearchData,
+    EdgeIdentitySearchType,
+)
+from environments.dynamodb.wrappers.environment_wrapper import (
+    DynamoEnvironmentV2Wrapper,
+)
+from environments.dynamodb.wrappers.identity_wrapper import (
+    DynamoIdentityWrapper,
+)
+from environments.models import Environment
 
 
 def test_get_identities_returns_bad_request_if_dynamo_is_not_enabled(
@@ -125,12 +141,15 @@ def test_create_identity_returns_400_if_identity_already_exists(
 
 
 def test_delete_identity(
-    admin_client,
-    dynamo_enabled_environment,
-    environment_api_key,
-    identity_document,
-    edge_identity_dynamo_wrapper_mock,
-):
+    admin_client: APIClient,
+    dynamo_enabled_environment: int,
+    environment_api_key: str,
+    identity_document_without_fs: dict[str, Any],
+    identity_document: dict[str, Any],
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    identity_overrides_v2: list[str],
+) -> None:
     # Given
     identity_uuid = identity_document["identity_uuid"]
     url = reverse(
@@ -138,20 +157,22 @@ def test_delete_identity(
         args=[environment_api_key, identity_uuid],
     )
 
-    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
-        identity_document
-    )
     # When
     response = admin_client.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
-        identity_uuid
-    )
-    edge_identity_dynamo_wrapper_mock.delete_item.assert_called_with(
-        identity_document["composite_key"]
+    assert not dynamodb_identity_wrapper.query_items(
+        IndexName="identity_uuid-index",
+        KeyConditionExpression=Key("identity_uuid").eq(identity_uuid),
+    )["Count"]
+    assert not list(
+        dynamodb_wrapper_v2.query_get_all_items(
+            KeyConditionExpression=Key("environment_id").eq(
+                str(dynamo_enabled_environment)
+            )
+        )
     )
 
 
@@ -253,7 +274,7 @@ def test_search_identities_without_exact_match(
     )
 
     url = "%s?q=%s" % (base_url, identifier)
-    edge_identity_dynamo_wrapper_mock.search_items_with_identifier.return_value = {
+    edge_identity_dynamo_wrapper_mock.search_items.return_value = {
         "Items": [identity_document],
         "Count": 1,
     }
@@ -265,12 +286,15 @@ def test_search_identities_without_exact_match(
     assert response.json()["results"][0]["identifier"] == identifier
     assert len(response.json()["results"]) == 1
 
-    edge_identity_dynamo_wrapper_mock.search_items_with_identifier.assert_called_with(
-        environment_api_key,
-        identifier,
-        EdgeIdentityViewSet.dynamo_identifier_search_functions["BEGINS_WITH"],
-        100,
-        None,
+    edge_identity_dynamo_wrapper_mock.search_items.assert_called_with(
+        environment_api_key=environment_api_key,
+        search_data=EdgeIdentitySearchData(
+            search_term=identifier,
+            search_type=EdgeIdentitySearchType.BEGINS_WITH,
+            search_attribute=IDENTIFIER_ATTRIBUTE,
+        ),
+        limit=100,
+        start_key=None,
     )
 
 
@@ -292,7 +316,7 @@ def test_search_for_identities_with_exact_match(
         base_url,
         urllib.parse.urlencode({"q": f'"{identifier}"'}),
     )
-    edge_identity_dynamo_wrapper_mock.search_items_with_identifier.return_value = {
+    edge_identity_dynamo_wrapper_mock.search_items.return_value = {
         "Items": [identity_document],
         "Count": 1,
     }
@@ -304,13 +328,129 @@ def test_search_for_identities_with_exact_match(
     assert response.json()["results"][0]["identifier"] == identifier
     assert len(response.json()["results"]) == 1
 
-    edge_identity_dynamo_wrapper_mock.search_items_with_identifier.assert_called_with(
-        environment_api_key,
-        identifier,
-        EdgeIdentityViewSet.dynamo_identifier_search_functions["EQUAL"],
-        100,
-        None,
+    edge_identity_dynamo_wrapper_mock.search_items.assert_called_with(
+        environment_api_key=environment_api_key,
+        search_data=EdgeIdentitySearchData(
+            search_term=identifier,
+            search_type=EdgeIdentitySearchType.EQUAL,
+            search_attribute=IDENTIFIER_ATTRIBUTE,
+        ),
+        limit=100,
+        start_key=None,
     )
+
+
+def test_search_for_identities_by_dashboard_alias(
+    admin_client: APIClient,
+    dynamo_enabled_environment: Environment,
+    environment_api_key: str,
+    identity_document: dict[str, Any],
+    flagsmith_identities_table: Table,
+) -> None:
+    # Given
+    identifier = identity_document["identifier"]
+    dashboard_alias = identity_document["dashboard_alias"]
+
+    flagsmith_identities_table.put_item(Item=identity_document)
+
+    base_url = reverse(
+        "api-v1:environments:environment-edge-identities-list",
+        args=[environment_api_key],
+    )
+    url = "%s?%s" % (
+        base_url,
+        urllib.parse.urlencode(
+            {"q": f'{DASHBOARD_ALIAS_SEARCH_PREFIX}"{dashboard_alias}"'}
+        ),
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["results"][0]["identifier"] == identifier
+    assert len(response.json()["results"]) == 1
+
+
+def test_search_for_identities_by_dashboard_alias_casts_search_to_lower(
+    admin_client: APIClient,
+    dynamo_enabled_environment: Environment,
+    environment_api_key: str,
+    identity_document: dict[str, Any],
+    flagsmith_identities_table: Table,
+) -> None:
+    # Given
+    identifier = identity_document["identifier"]
+    dashboard_alias = identity_document["dashboard_alias"]
+
+    flagsmith_identities_table.put_item(Item=identity_document)
+
+    base_url = reverse(
+        "api-v1:environments:environment-edge-identities-list",
+        args=[environment_api_key],
+    )
+    url = "%s?%s" % (
+        base_url,
+        urllib.parse.urlencode(
+            {"q": f'{DASHBOARD_ALIAS_SEARCH_PREFIX}"{dashboard_alias.upper()}"'}
+        ),
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["results"][0]["identifier"] == identifier
+    assert len(response.json()["results"]) == 1
+
+
+def test_update_edge_identity(
+    admin_client_new: APIClient,
+    dynamo_enabled_environment: Environment,
+    environment_api_key: str,
+    identity_document: dict[str, Any],
+    flagsmith_identities_table: Table,
+) -> None:
+    # Given
+    identity_uuid = identity_document["identity_uuid"]
+    composite_key = identity_document["composite_key"]
+
+    input_dashboard_alias = "New-Dashboard-Alias"
+    expected_dashboard_alias = input_dashboard_alias.lower()
+
+    flagsmith_identities_table.put_item(Item=identity_document)
+
+    url = reverse(
+        "api-v1:environments:environment-edge-identities-detail",
+        args=[environment_api_key, identity_uuid],
+    )
+
+    # When
+    response = admin_client_new.patch(
+        url, data={"dashboard_alias": input_dashboard_alias}
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert response.json() == {
+        "dashboard_alias": expected_dashboard_alias,
+        "identifier": identity_document["identifier"],
+        "identity_uuid": identity_uuid,
+    }
+
+    # Let's also validate that the fields are the same between the original document,
+    # and from the updated database, apart from the dashboard_alias which should have
+    # been updated as expected.
+    identity_from_db = flagsmith_identities_table.get_item(
+        Key={"composite_key": composite_key}
+    )["Item"]
+    assert {
+        **identity_document,
+        "dashboard_alias": expected_dashboard_alias,
+    } == identity_from_db
 
 
 def test_edge_identities_traits_list(
