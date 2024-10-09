@@ -241,12 +241,12 @@ const controller = {
       .post(`${Project.api}auth/users/`, {
         email,
         first_name,
+        invite_hash: API.getInvite() || undefined,
         last_name,
         marketing_consent_given,
         password,
         referrer: API.getReferrer() || '',
         sign_up_type: API.getInviteType(),
-        invite_hash: API.getInvite() || undefined,
       })
       .then((res) => {
         data.setToken(res.key)
@@ -367,20 +367,15 @@ const controller = {
         { hosted_page_id: hostedPageId },
       )
       .then((res) => {
-        const idx = _.findIndex(store.model.organisations, {
-          id: store.organisation.id,
+        try {
+          if (res && res.subscription && res.subscription.plan) {
+            API.trackEvent(Constants.events.UPGRADE(res.subscription.plan))
+            API.postEvent(res.subscription.plan, 'chargebee')
+          }
+        } catch (e) {}
+        controller.getOrganisations().then(() => {
+          store.saved()
         })
-        if (idx !== -1) {
-          store.model.organisations[idx] = res
-          try {
-            if (res && res.subscription && res.subscription.plan) {
-              API.trackEvent(Constants.events.UPGRADE(res.subscription.plan))
-              API.postEvent(res.subscription.plan, 'chargebee')
-            }
-          } catch (e) {}
-          store.organisation = res
-        }
-        store.saved()
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
