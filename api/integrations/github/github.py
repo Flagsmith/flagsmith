@@ -113,13 +113,13 @@ def handle_installation_deleted(payload: dict[str, Any]) -> None:
 
 def handle_github_webhook_event(event_type: str, payload: dict[str, Any]) -> None:
     if event_type == "installation" and payload.get("action") == "deleted":
-        handle_installation_deleted(payload)
-    elif event_type in tag_by_event_type:
-        action = str(payload.get("action"))
-        if action in tag_by_event_type[event_type]:
-            repo_full_name = payload["repository"]["full_name"]
-            metadata = payload.get("issue", {}) or payload.get("pull_request", {})
-            tag_feature_per_github_event(event_type, action, metadata, repo_full_name)
+        return handle_installation_deleted(payload)
+
+    action = str(payload.get("action"))
+    if action in tag_by_event_type[event_type]:
+        repo_full_name = payload["repository"]["full_name"]
+        metadata = payload.get("issue", {}) or payload.get("pull_request", {})
+        tag_feature_per_github_event(event_type, action, metadata, repo_full_name)
 
 
 def generate_body_comment(
