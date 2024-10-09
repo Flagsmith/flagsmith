@@ -14,15 +14,17 @@ from integrations.github.constants import (
     FEATURE_ENVIRONMENT_URL,
     FEATURE_TABLE_HEADER,
     FEATURE_TABLE_ROW,
+    GITHUB_TAG_COLOR,
     LINK_FEATURE_TITLE,
     LINK_SEGMENT_TITLE,
     UNLINKED_FEATURE_TEXT,
     UPDATED_FEATURE_TEXT,
     GitHubEventType,
     GitHubTag,
+    github_tag_description,
 )
 from integrations.github.dataclasses import GithubData
-from integrations.github.models import GithubConfiguration
+from integrations.github.models import GithubConfiguration, GitHubRepository
 from integrations.github.tasks import call_github_app_webhook_for_feature_state
 from projects.tags.models import Tag, TagType
 
@@ -34,6 +36,7 @@ tag_by_event_type = {
         "converted_to_draft": GitHubTag.PR_DRAFT.value,
         "opened": GitHubTag.PR_OPEN.value,
         "reopened": GitHubTag.PR_OPEN.value,
+        "dequeued": GitHubTag.PR_DEQUEUED.value,
         "ready_for_review": GitHubTag.PR_OPEN.value,
         "merged": GitHubTag.PR_MERGED.value,
     },
@@ -46,7 +49,7 @@ tag_by_event_type = {
 
 
 def tag_feature_per_github_event(
-    event_type: str, action: str, metadata: dict[str, Any]
+    event_type: str, action: str, metadata: dict[str, Any], repo_full_name: str
 ) -> None:
 
     # Get Feature with external resource of type GITHUB and url matching the resource URL
@@ -56,17 +59,31 @@ def tag_feature_per_github_event(
         external_resources__url=metadata.get("html_url"),
     ).first()
 
-    if feature:
+    # Check to see if any feature objects match and if not return
+    # to allow the webhook processing complete.
+    if not feature:
+        return
+
+    repository_owner, repository_name = repo_full_name.split(sep="/", maxsplit=1)
+    tagging_enabled = GitHubRepository.objects.get(
+        project=feature.project,
+        repository_owner=repository_owner,
+        repository_name=repository_name,
+    ).tagging_enabled
+
+    if tagging_enabled:
         if (
             event_type == "pull_request"
             and action == "closed"
             and metadata.get("merged")
         ):
             action = "merged"
-        # Get corresponding project Tag to tag the feature
-        github_tag = Tag.objects.get(
+        # Get or create the corresponding project Tag to tag the feature
+        github_tag, _ = Tag.objects.get_or_create(
+            color=GITHUB_TAG_COLOR,
+            description=github_tag_description[tag_by_event_type[event_type][action]],
             label=tag_by_event_type[event_type][action],
-            project=feature.project_id,
+            project=feature.project,
             is_system_tag=True,
             type=TagType.GITHUB.value,
         )
@@ -97,11 +114,13 @@ def handle_installation_deleted(payload: dict[str, Any]) -> None:
 
 def handle_github_webhook_event(event_type: str, payload: dict[str, Any]) -> None:
     if event_type == "installation" and payload.get("action") == "deleted":
-        handle_installation_deleted(payload)
-    elif event_type in tag_by_event_type:
-        action = str(payload.get("action"))
+        return handle_installation_deleted(payload)
+
+    action = str(payload.get("action"))
+    if action in tag_by_event_type[event_type]:
+        repo_full_name = payload["repository"]["full_name"]
         metadata = payload.get("issue", {}) or payload.get("pull_request", {})
-        tag_feature_per_github_event(event_type, action, metadata)
+        tag_feature_per_github_event(event_type, action, metadata, repo_full_name)
 
 
 def generate_body_comment(
@@ -166,7 +185,7 @@ def generate_body_comment(
     return result
 
 
-def check_not_none(value: any) -> bool:
+def check_not_none(value: Any) -> bool:
     return value is not None
 
 
