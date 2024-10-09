@@ -258,13 +258,9 @@ const controller = {
     const segmentOverridesProm = (segmentOverrides || [])
       .map((v, i) => () => {
         if (v.toRemove) {
-          return (
-            v.id
-              ? data.delete(`${Project.api}features/feature-segments/${v.id}/`)
-              : Promise.resolve()
-          ).then(() => {
-            segmentOverrides = segmentOverrides.filter((s) => v.id !== s.id)
-          })
+          return v.id
+            ? data.delete(`${Project.api}features/feature-segments/${v.id}/`)
+            : Promise.resolve()
         }
         if (!v.id) {
           const featureFlagId = v.feature
@@ -328,6 +324,7 @@ const controller = {
     API.trackEvent(Constants.events.EDIT_FEATURE)
     segmentOverridesProm
       .then(() => {
+        segmentOverrides = segmentOverrides.filter((override) => !override.toRemove)
         if (mode !== 'VALUE') {
           prom = Promise.resolve()
         } else if (environmentFlag) {
@@ -959,7 +956,7 @@ const controller = {
   },
   searchFeatures: _.throttle(
     (search, environmentId, projectId, filter, pageSize) => {
-      store.search = encodeURIComponent(search||'')
+      store.search = encodeURIComponent(search || '')
       controller.getFeatures(
         projectId,
         environmentId,
