@@ -51,6 +51,7 @@ import Utils from 'common/utils/utils'
 import _data from 'common/data/base/_data'
 import classNames from 'classnames'
 import moment from 'moment'
+import { removeIdentity } from './UsersPage'
 
 const width = [200, 48, 78]
 
@@ -374,7 +375,7 @@ const UserPage: FC<UserPageType> = (props) => {
                           }
                         >
                           {showAliases && (
-                            <>
+                            <div className='d-flex justify-content-between'>
                               <h6>
                                 <Tooltip
                                   title={
@@ -391,7 +392,32 @@ const UserPage: FC<UserPageType> = (props) => {
                                   environmentId={environmentId}
                                 />
                               </h6>
-                            </>
+                              <Button
+                                id='remove-feature'
+                                className='btn btn-with-icon'
+                                type='button'
+                                onClick={() => {
+                                  removeIdentity(
+                                    id,
+                                    (identity &&
+                                      identity.identity.identifier) ||
+                                      id,
+                                    environmentId,
+                                    () => {
+                                      router.history.replace(
+                                        `/project/${projectId}/environment/${environmentId}/users`,
+                                      )
+                                    },
+                                  )
+                                }}
+                              >
+                                <Icon
+                                  name='trash-2'
+                                  width={20}
+                                  fill='#656D7B'
+                                />
+                              </Button>
+                            </div>
                           )}
                           View and manage feature states and traits for this
                           user.
