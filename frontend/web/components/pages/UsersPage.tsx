@@ -19,10 +19,8 @@ import JSONReference from 'components/JSONReference' // we need this to make JSX
 import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
-import Format from 'common/utils/format'
 import IdentifierString from 'components/IdentifierString'
-
-const CodeHelp = require('../CodeHelp')
+import CodeHelp from 'components/CodeHelp'
 
 type UsersPageType = {
   router: RouterChildContext['router']
@@ -33,6 +31,10 @@ type UsersPageType = {
     }
   }
 }
+const searchTypes = [
+  { label: 'ID', value: 'id' },
+  { label: 'Alias', value: 'alias' },
+]
 const UsersPage: FC<UsersPageType> = (props) => {
   const [page, setPage] = useState<{
     number: number
@@ -52,15 +54,19 @@ const UsersPage: FC<UsersPageType> = (props) => {
   )
   const [deleteIdentity] = useDeleteIdentityMutation({})
   const isEdge = Utils.getIsEdge()
+  const [searchType, setSearchType] = useState<'id' | 'alias'>('id')
+
+  const showAliases = isEdge && Utils.getFlagsmithHasFeature('identity_aliases')
 
   const { data: identities, isLoading } = useGetIdentitiesQuery({
+    dashboard_alias: searchType === 'alias' ? search?.toLowerCase() : undefined,
     environmentId: props.match.params.environmentId,
     isEdge,
     page: page.number,
     pageType: page.pageType,
     page_size: 10,
     pages: page.pages,
-    q: search,
+    q: searchType === 'alias' ? undefined : search,
   })
 
   const { environmentId } = props.match.params
@@ -149,6 +155,19 @@ const UsersPage: FC<UsersPageType> = (props) => {
         <FormGroup>
           <PanelSearch
             renderSearchWithNoResults
+            filterRowContent={
+              showAliases && (
+                <div className='ms-2' style={{ width: 100 }}>
+                  <Select
+                    options={searchTypes}
+                    value={searchTypes.find((v) => v.value === searchType)}
+                    onChange={(v) => {
+                      setSearchType(v.value)
+                    }}
+                  />
+                </div>
+              )
+            }
             renderFooter={() => (
               <JSONReference
                 className='mx-2 mt-4'
@@ -209,22 +228,20 @@ const UsersPage: FC<UsersPageType> = (props) => {
                     }/users/${encodeURIComponent(identifier)}/${id}`}
                     className='flex-row flex flex-1 table-column'
                   >
-                    <div className='font-weight-medium'>
-                      <IdentifierString value={identifier} />
-                      {dashboard_alias ? ` (alias: ${dashboard_alias})` : ''}
+                    <div>
+                      <div className='font-weight-medium'>
+                        <IdentifierString value={identifier} />
+                      </div>
+                      {!!showAliases && !!dashboard_alias && (
+                          <div className={'list-item-subtitle mt-1'}>
+                            {dashboard_alias ? `${dashboard_alias}` : ''}
+                          </div>
+                      )}
+
                     </div>
-                    <Icon
-                      name='chevron-right'
-                      width={22}
-                      fill={
-                        Utils.getFlagsmithHasFeature('dark_mode')
-                          ? '#FFF'
-                          : '#656D7B'
-                      }
-                    />
                   </Link>
                   <div className='table-column'>
-                    <Button
+                  <Button
                       id='remove-feature'
                       className='btn btn-with-icon'
                       type='button'

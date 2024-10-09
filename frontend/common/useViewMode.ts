@@ -1,6 +1,6 @@
 import flagsmith from 'flagsmith'
 
-export type ViewMode = 'compact' | 'normal'
+export type ViewMode = 'compact' | 'default'
 export function getViewMode() {
   const viewMode = flagsmith.getTrait('view_mode')
   if (viewMode === 'compact') {

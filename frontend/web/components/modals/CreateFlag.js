@@ -5,6 +5,8 @@ import data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import FeatureListStore from 'common/stores/feature-list-store'
+import IdentityProvider from 'common/providers/IdentityProvider'
+
 import {
   Bar,
   BarChart,
@@ -43,6 +45,7 @@ import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import FeatureHistory from 'components/FeatureHistory'
+import WarningMessage from 'components/WarningMessage';
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -400,7 +403,17 @@ const CreateFlag = class extends Component {
       },
     })
   }
-
+parseError = (error)=>{
+    const { projectFlag } = this.props
+  let featureError = error?.message || error?.name?.[0] || error
+  let featureWarning = ''
+  //Treat multivariate no changes as warnings
+  if(featureError?.includes?.("no changes") && projectFlag?.multivariate_options?.length) {
+    featureWarning = `Your feature contains no changes to its value, enabled state or environment weights. If you have adjusted any variation values this will have been saved for all environments.`
+    featureError = ''
+  }
+  return {featureError, featureWarning}
+}
   drawChart = (data) => {
     return data?.length ? (
       <ResponsiveContainer height={400} width='100%' className='mt-4'>
@@ -556,6 +569,7 @@ const CreateFlag = class extends Component {
     const metadataEnable =
       Utils.getPlansPermission('METADATA') &&
       Utils.getFlagsmithHasFeature('enable_metadata')
+
     try {
       if (!isEdit && name && regex) {
         regexValid = name.match(new RegExp(regex))
@@ -709,130 +723,134 @@ const CreateFlag = class extends Component {
       </>
     )
 
-    const Value = (error, projectAdmin, createFeature, hideValue) => (
-      <>
-        {!!isEdit && (
-          <ExistingChangeRequestAlert
-            className='mb-4'
-            featureId={projectFlag.id}
-            environmentId={this.props.environmentId}
-          />
-        )}
-        {!isEdit && (
-          <FormGroup className='mb-4 mt-2'>
-            <InputGroup
-              ref={(e) => (this.input = e)}
-              data-test='featureID'
-              inputProps={{
-                className: 'full-width',
-                maxLength: FEATURE_ID_MAXLENGTH,
-                name: 'featureID',
-                readOnly: isEdit,
-              }}
-              value={name}
-              onChange={(e) => {
-                const newName = Utils.safeParseEventValue(e).replace(/ /g, '_')
-                this.setState({
-                  name: caseSensitive ? newName.toLowerCase() : newName,
-                })
-              }}
-              isValid={!!name && regexValid}
-              type='text'
-              title={
-                <>
-                  <Tooltip
-                    title={
-                      <Row>
-                        <span className={'mr-1'}>
-                          {isEdit ? 'ID / Name' : 'ID / Name*'}
-                        </span>
-                        <Icon name='info-outlined' />
-                      </Row>
-                    }
-                  >
-                    The ID that will be used by SDKs to retrieve the feature
-                    value and enabled state. This cannot be edited once the
-                    feature has been created.
-                  </Tooltip>
-                  {!!regex && !isEdit && (
-                    <div className='mt-2'>
-                      {' '}
-                      <InfoMessage>
-                        {' '}
-                        This must conform to the regular expression{' '}
-                        <pre>{regex}</pre>
-                      </InfoMessage>
-                    </div>
-                  )}
-                </>
-              }
-              placeholder='E.g. header_size'
-            />
-          </FormGroup>
-        )}
-        <ErrorMessage error={error?.message || error?.name?.[0] || error} />
-        {identity && description && (
-          <FormGroup className='mb-4 mt-2 mx-3'>
-            <InputGroup
-              value={description}
-              data-test='featureDesc'
-              inputProps={{
-                className: 'full-width',
-                name: 'featureDesc',
-                readOnly: !!identity || noPermissions,
-                valueChanged: true,
-              }}
-              onChange={(e) =>
-                this.setState({ description: Utils.safeParseEventValue(e) })
-              }
-              type='text'
-              title={identity ? 'Description' : 'Description (optional)'}
-              placeholder='No description'
-            />
-          </FormGroup>
-        )}
-        {!hideValue && (
-          <div
-            className={`${identity && !description ? 'mt-4 mx-3' : ''} ${
-              identity ? 'mx-3' : ''
-            }`}
-          >
-            <Feature
-              readOnly={noPermissions}
-              multivariate_options={multivariate_options}
-              environmentVariations={environmentVariations}
-              isEdit={isEdit}
-              error={error?.initial_value?.[0]}
-              canCreateFeature={createFeature}
-              identity={identity}
-              removeVariation={this.removeVariation}
-              updateVariation={this.updateVariation}
-              addVariation={this.addVariation}
-              checked={default_enabled}
-              value={initial_value}
-              identityVariations={this.state.identityVariations}
-              onChangeIdentityVariations={(identityVariations) => {
-                this.setState({ identityVariations, valueChanged: true })
-              }}
-              environmentFlag={this.props.environmentFlag}
-              projectFlag={projectFlag}
-              onValueChange={(e) => {
-                const initial_value = Utils.getTypedValue(
-                  Utils.safeParseEventValue(e),
-                )
-                this.setState({ initial_value, valueChanged: true })
-              }}
-              onCheckedChange={(default_enabled) =>
-                this.setState({ default_enabled })
-              }
-            />
-          </div>
-        )}
-        {!isEdit &&
-          !identity &&
-          Settings(projectAdmin, createFeature, featureContentType)}
-      </>
-    )
+    const Value = (error, projectAdmin, createFeature, hideValue) => {
+      const {featureError, featureWarning}= this.parseError(error)
+      return (
+          <>
+            {!!isEdit && (
+                <ExistingChangeRequestAlert
+                    className='mb-4'
+                    featureId={projectFlag.id}
+                    environmentId={this.props.environmentId}
+                />
+            )}
+            {!isEdit && (
+                <FormGroup className='mb-4 mt-2'>
+                  <InputGroup
+                      ref={(e) => (this.input = e)}
+                      data-test='featureID'
+                      inputProps={{
+                        className: 'full-width',
+                        maxLength: FEATURE_ID_MAXLENGTH,
+                        name: 'featureID',
+                        readOnly: isEdit,
+                      }}
+                      value={name}
+                      onChange={(e) => {
+                        const newName = Utils.safeParseEventValue(e).replace(/ /g, '_')
+                        this.setState({
+                          name: caseSensitive ? newName.toLowerCase() : newName,
+                        })
+                      }}
+                      isValid={!!name && regexValid}
+                      type='text'
+                      title={
+                        <>
+                          <Tooltip
+                              title={
+                                <Row>
+                                  <span className={'mr-1'}>
+                                    {isEdit ? 'ID / Name' : 'ID / Name*'}
+                                  </span>
+                                  <Icon name='info-outlined' />
+                                </Row>
+                              }
+                          >
+                            The ID that will be used by SDKs to retrieve the feature
+                            value and enabled state. This cannot be edited once the
+                            feature has been created.
+                          </Tooltip>
+                          {!!regex && !isEdit && (
+                              <div className='mt-2'>
+                                {' '}
+                                <InfoMessage collapseId={'flag-regex'}>
+                                  {' '}
+                                  This must conform to the regular expression{' '}
+                                  <pre>{regex}</pre>
+                                </InfoMessage>
+                              </div>
+                          )}
+                        </>
+                      }
+                      placeholder='E.g. header_size'
+                  />
+                </FormGroup>
+            )}
+            <ErrorMessage error={featureError} />
+            <WarningMessage warningMessage={featureWarning} />
+            {identity && description && (
+                <FormGroup className='mb-4 mt-2 mx-3'>
+                  <InputGroup
+                      value={description}
+                      data-test='featureDesc'
+                      inputProps={{
+                        className: 'full-width',
+                        name: 'featureDesc',
+                        readOnly: !!identity || noPermissions,
+                        valueChanged: true,
+                      }}
+                      onChange={(e) =>
+                          this.setState({ description: Utils.safeParseEventValue(e) })
+                      }
+                      type='text'
+                      title={identity ? 'Description' : 'Description (optional)'}
+                      placeholder='No description'
+                  />
+                </FormGroup>
+            )}
+            {!hideValue && (
+                <div
+                    className={`${identity && !description ? 'mt-4 mx-3' : ''} ${
+                        identity ? 'mx-3' : ''
+                    }`}
+                >
+                  <Feature
+                      readOnly={noPermissions}
+                      multivariate_options={multivariate_options}
+                      environmentVariations={environmentVariations}
+                      isEdit={isEdit}
+                      error={error?.initial_value?.[0]}
+                      canCreateFeature={createFeature}
+                      identity={identity}
+                      removeVariation={this.removeVariation}
+                      updateVariation={this.updateVariation}
+                      addVariation={this.addVariation}
+                      checked={default_enabled}
+                      value={initial_value}
+                      identityVariations={this.state.identityVariations}
+                      onChangeIdentityVariations={(identityVariations) => {
+                        this.setState({ identityVariations, valueChanged: true })
+                      }}
+                      environmentFlag={this.props.environmentFlag}
+                      projectFlag={projectFlag}
+                      onValueChange={(e) => {
+                        const initial_value = Utils.getTypedValue(
+                            Utils.safeParseEventValue(e),
+                        )
+                        this.setState({ initial_value, valueChanged: true })
+                      }}
+                      onCheckedChange={(default_enabled) =>
+                          this.setState({ default_enabled })
+                      }
+                  />
+                </div>
+            )}
+            {!isEdit &&
+                !identity &&
+                Settings(projectAdmin, createFeature, featureContentType)}
+          </>
+      )
+    }
     return (
       <ProjectProvider id={this.props.projectId}>
         {({ project }) => (
@@ -1016,17 +1034,17 @@ const CreateFlag = class extends Component {
               const onCreateFeature = saveFeatureWithValidation(() => {
                 this.save(createFlag, isSaving)
               })
+              const isLimitReached = false
 
               const featureLimitAlert =
                 Utils.calculateRemainingLimitsPercentage(
                   project.total_features,
                   project.max_features_allowed,
                 )
-              const showIdentityOverrides =
-                !identity &&
-                isEdit &&
-                !existingChangeRequest &&
-                !hideIdentityOverridesTab
+              const {featureError, featureWarning}= this.parseError(error)
+
+
+
               return (
                 <Permission
                   level='project'
@@ -1237,21 +1255,57 @@ const CreateFlag = class extends Component {
                                     {!identity && isEdit && (
                                       <FormGroup className='mb-4'>
                                         <div>
-                                          <Row className='justify-content-between mb-2 segment-overrides-title'>
-                                            <Tooltip
-                                              title={
-                                                <h5 className='mb-0'>
-                                                  Segment Overrides{' '}
-                                                  <Icon name='info-outlined' />
-                                                </h5>
+                                          <Row className='align-items-center mb-2 gap-4 segment-overrides-title'>
+                                            <div className='flex-fill'>
+                                              <Tooltip
+                                                title={
+                                                  <h5 className='mb-0'>
+                                                    Segment Overrides{' '}
+                                                    <Icon name='info-outlined' />
+                                                  </h5>
+                                                }
+                                                place='top'
+                                              >
+                                                {
+                                                  Constants.strings
+                                                    .SEGMENT_OVERRIDES_DESCRIPTION
+                                                }
+                                              </Tooltip>
+                                            </div>
+                                            <Permission
+                                              level='environment'
+                                              permission={
+                                                'MANAGE_SEGMENT_OVERRIDES'
                                               }
-                                              place='top'
+                                              id={this.props.environmentId}
                                             >
-                                              {
-                                                Constants.strings
-                                                  .SEGMENT_OVERRIDES_DESCRIPTION
+                                              {({
+                                                permission:
+                                                  manageSegmentOverrides,
+                                              }) =>
+                                                !this.state.showCreateSegment &&
+                                                !!manageSegmentOverrides &&
+                                                !this.props.disableCreate && (
+                                                  <div className='text-right'>
+                                                    <Button
+                                                      size='small'
+                                                      onClick={() => {
+                                                        this.setState({
+                                                          showCreateSegment: true,
+                                                        })
+                                                      }}
+                                                      theme='outline'
+                                                      disabled={
+                                                        !!isLimitReached
+                                                      }
+                                                    >
+                                                      Create Feature-Specific
+                                                      Segment
+                                                    </Button>
+                                                  </div>
+                                                )
                                               }
-                                            </Tooltip>
+                                            </Permission>
                                             {!this.state.showCreateSegment &&
                                               !noPermissions && (
                                                 <Button
@@ -1289,25 +1343,28 @@ const CreateFlag = class extends Component {
                                                   <>
                                                     <ErrorMessage
                                                       error={
-                                                        error?.message ||
-                                                        error?.name?.[0] ||
-                                                        error
+                                                      featureError
+                                                      }
+                                                    />
+                                                    <WarningMessage
+                                                      warningMessage={
+                                                      featureWarning
                                                       }
                                                     />
                                                     <SegmentOverrides
-                                                      readOnly={isReadOnly}
-                                                      is4Eyes={is4Eyes}
-                                                      showEditSegment
-                                                      showCreateSegment={
-                                                        this.state
-                                                          .showCreateSegment
-                                                      }
                                                       setShowCreateSegment={(
                                                         showCreateSegment,
                                                       ) =>
                                                         this.setState({
                                                           showCreateSegment,
                                                         })
+                                                      }
+                                                      readOnly={isReadOnly}
+                                                      is4Eyes={is4Eyes}
+                                                      showEditSegment
+                                                      showCreateSegment={
+                                                        this.state
+                                                          .showCreateSegment
                                                       }
                                                       feature={projectFlag.id}
                                                       projectId={
@@ -1496,7 +1553,11 @@ const CreateFlag = class extends Component {
                                                 }
                                               </Tooltip>
                                               <div className='fw-normal transform-none mt-4'>
-                                                <InfoMessage>
+                                                <InfoMessage
+                                                  collapseId={
+                                                    'identity-overrides'
+                                                  }
+                                                >
                                                   Identity overrides override
                                                   feature values for individual
                                                   identities. The overrides take
@@ -1853,7 +1914,10 @@ const CreateFlag = class extends Component {
                                 {!identity && (
                                   <div className='text-right mb-3'>
                                     {project.prevent_flag_defaults ? (
-                                      <InfoMessage className='text-right modal-caption fs-small lh-sm'>
+                                      <InfoMessage
+                                        collapseId={'create-flag'}
+                                        className='text-right modal-caption fs-small lh-sm'
+                                      >
                                         This will create the feature for{' '}
                                         <strong>all environments</strong>, you
                                         can edit this feature per environment
@@ -1861,7 +1925,10 @@ const CreateFlag = class extends Component {
                                         environment once the feature is created.
                                       </InfoMessage>
                                     ) : (
-                                      <InfoMessage className='text-right modal-caption fs-small lh-sm'>
+                                      <InfoMessage
+                                        collapseId={'create-flag'}
+                                        className='text-right modal-caption fs-small lh-sm'
+                                      >
                                         This will create the feature for{' '}
                                         <strong>all environments</strong>, you
                                         can edit this feature per environment
