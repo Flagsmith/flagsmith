@@ -569,7 +569,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                   style={{
                                     width: widths[2],
                                   }}
-                                  className='table-column text-end'
+                                  className='table-column d-flex justify-content-end'
                                 >
                                   <UserAction
                                     onRemove={onRemoveClick}
