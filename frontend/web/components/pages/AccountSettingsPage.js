@@ -188,7 +188,7 @@ class TheComponent extends Component {
                     />
                     <div className='col-md-6'>
                       <form className='mb-0' onSubmit={this.save}>
-                        {!AccountStore.model.auth_type === 'EMAIL' && (
+                        {AccountStore.model.auth_type === 'EMAIL' && (
                             <div>
                               <InputGroup
                                   className='mt-2'
