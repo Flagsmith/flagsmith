@@ -36,6 +36,7 @@ tag_by_event_type = {
         "converted_to_draft": GitHubTag.PR_DRAFT.value,
         "opened": GitHubTag.PR_OPEN.value,
         "reopened": GitHubTag.PR_OPEN.value,
+        "dequeued": GitHubTag.PR_DEQUEUED.value,
         "ready_for_review": GitHubTag.PR_OPEN.value,
         "merged": GitHubTag.PR_MERGED.value,
     },
@@ -184,7 +185,7 @@ def generate_body_comment(
     return result
 
 
-def check_not_none(value: any) -> bool:
+def check_not_none(value: Any) -> bool:
     return value is not None
 
 
