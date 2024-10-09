@@ -23,7 +23,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
 
   return (
     <>
-      <input id={idRef.current} type='checkbox' />
+      <input id={idRef.current} type='checkbox' checked={checked} />
       <label
         onClick={handleChange}
         className='mb-0'
