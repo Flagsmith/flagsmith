@@ -562,8 +562,8 @@ the browser, an onChange event will be fired immediately with the local storage 
 
 5. whenever flags have been retrieved local storage will be updated.
 
-By default, these flags will be persisted indefinitely, you can clear this by removing `"FLAGSMITH_DB_$ENVIRONMENT_ID"` from
-`localStorage`.
+By default, these flags will be persisted indefinitely, you can clear this by removing `"FLAGSMITH_DB_$ENVIRONMENT_ID"`
+from `localStorage`.
 
 **Why am I seeing `ReferenceError: XMLHttpRequest is not defined`?**
 
