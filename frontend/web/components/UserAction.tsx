@@ -97,7 +97,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
   return (
     <div>
       <div ref={btnRef}>
-        <ActionButton onClick={() => setIsOpen(true)} />
+        <ActionButton size='small' onClick={() => setIsOpen(true)} />
       </div>
 
       {isOpen && (
