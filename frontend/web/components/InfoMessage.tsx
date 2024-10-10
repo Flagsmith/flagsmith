@@ -3,6 +3,7 @@ import Icon, { IconName } from './Icon'
 import { chevronForward, close as closeIcon, chevronDown } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import { FC } from 'react'
+import Button from './base/forms/Button'
 
 type InfoMessageType = {
   buttonText?: string
@@ -64,13 +65,25 @@ const InfoMessage: FC<InfoMessageType> = ({
             onClick={handleToggleCollapse}
             style={{ cursor: 'pointer' }}
           >
-            <Icon
-              width={22}
-              height={22}
-              fill={'#0AADDF'}
-              name={icon || 'info'}
-            />
-            <div className='title'>{title}</div>
+            <div className='flex-fill'>
+              <div className='d-flex gap-2 align-items-center'>
+                <Icon
+                  width={22}
+                  height={22}
+                  fill={'#0AADDF'}
+                  name={icon || 'info'}
+                />
+                <div className='title'>{title}</div>
+              </div>
+              {!isCollapsed && <div>{children}</div>}
+            </div>
+            {!isCollapsed && (
+              <>
+                {url && buttonText && (
+                  <Button onClick={handleOpenNewWindow}>{buttonText}</Button>
+                )}
+              </>
+            )}
             {collapseId && (
               <span className='ml-auto lh-1'>
                 <IonIcon icon={isCollapsed ? chevronForward : chevronDown} />
@@ -78,19 +91,9 @@ const InfoMessage: FC<InfoMessageType> = ({
             )}
           </div>
         </div>
-        {!isCollapsed && (
-          <>
-            <div className='flex-fill mt-1'>{children}</div>
-            {url && buttonText && (
-              <button className='btn my-2 ml-2' onClick={handleOpenNewWindow}>
-                {buttonText}
-              </button>
-            )}
-          </>
-        )}
       </div>
       {isClosable && (
-        <a onClick={close} className='mt-n2 mr-n2 pl-2'>
+        <a onClick={close} className=' pl-2'>
           <span className={`icon close-btn`}>
             <IonIcon icon={closeIcon} />
           </span>

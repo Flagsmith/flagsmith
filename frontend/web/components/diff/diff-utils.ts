@@ -6,7 +6,7 @@ import {
   Segment,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
-import { sortBy } from 'lodash'
+import { sortBy, uniq, uniqBy } from 'lodash'
 export function getFeatureStateDiff(
   oldFeatureState: FeatureState | undefined,
   newFeatureState: FeatureStateWithConflict | undefined,
@@ -44,14 +44,17 @@ export type TDiffSegment = {
   oldValue: string
   conflict?: FeatureConflict
   totalChanges: number
+  variationDiff?: {
+    diffs: TDiffVariation[]
+    totalChanges: number
+  }
   created: boolean
   deleted: boolean
 }
 export type TDiffVariation = {
   hasChanged: boolean
-  newValue: string
+  variationOption: number
   newWeight: number
-  oldValue: string
   oldWeight: number
 }
 export type TDiffVariations = {
@@ -97,6 +100,8 @@ export const getSegmentDiff = (
       }
     }
 
+    const variationDiff = getVariationDiff(oldFeatureState, newFeatureState)
+
     const oldEnabled = !!oldFeatureState?.enabled
     const oldPriority = oldFeatureState?.feature_segment
       ? oldFeatureState.feature_segment.priority + 1
@@ -126,6 +131,7 @@ export const getSegmentDiff = (
     const segmentChanges =
       (enabledChanged ? 1 : 0) +
       (valueChanged ? 1 : 0) +
+      variationDiff.totalChanges +
       (priorityChanged ? 1 : 0)
     if (segmentChanges) {
       totalChanges += 1
@@ -143,6 +149,7 @@ export const getSegmentDiff = (
       oldValue,
       segment,
       totalChanges: segmentChanges,
+      variationDiff,
     } as TDiffSegment
   })
   return {
@@ -155,31 +162,36 @@ export const getSegmentDiff = (
 export const getVariationDiff = (
   oldFeatureState: FeatureState | undefined,
   newFeatureState: FeatureState | undefined,
-  feature: ProjectFlag | undefined,
 ) => {
   let totalChanges = 0
-  const diffs = feature?.multivariate_options?.map((variationOption) => {
+  const variationOptions = uniqBy(
+    oldFeatureState?.multivariate_feature_state_values ||
+      [].concat(newFeatureState?.multivariate_feature_state_values || []),
+    (v) => v.multivariate_feature_option,
+  )
+  const diffs = variationOptions.map((variationOption) => {
     const oldMV = oldFeatureState?.multivariate_feature_state_values?.find(
-      (v) => v.multivariate_feature_option === variationOption.id,
+      (v) =>
+        v.multivariate_feature_option ===
+        variationOption.multivariate_feature_option,
     )
     const newMV = newFeatureState?.multivariate_feature_state_values?.find(
-      (v) => v.multivariate_feature_option === variationOption.id,
+      (v) =>
+        v.multivariate_feature_option ===
+        variationOption.multivariate_feature_option,
     )
 
-    const oldValue = variationOption.string_value
-    const newValue = variationOption.string_value // todo: This would eventually be based on the old and new feature versions
     const oldWeight = oldMV?.percentage_allocation
     const newWeight = newMV?.percentage_allocation
-    const hasChanged = oldWeight !== newWeight || oldValue !== newValue
+    const hasChanged = oldWeight !== newWeight
     if (hasChanged) {
       totalChanges += 1
     }
     return {
       hasChanged,
-      newValue,
       newWeight,
-      oldValue,
       oldWeight,
+      variationOption: variationOption.multivariate_feature_option,
     } as TDiffVariation
   })
 

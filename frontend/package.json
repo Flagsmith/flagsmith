@@ -160,7 +160,7 @@
     "@types/react-window-infinite-loader": "^1.0.9",
     "@typescript-eslint/eslint-plugin": "5.4.0",
     "@typescript-eslint/parser": "5.4.0",
-    "eslint": "^7.6.0",
+    "eslint": "^8.0.1",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "2.27.5",
     "eslint-plugin-import-alias": "^1.2.0",

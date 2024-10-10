@@ -108,7 +108,7 @@ readme = "readme.md"
 
 [tool.poetry.dependencies]
 python = ">=3.11, <3.13"
-django = "~4.2.15"
+django = "~4.2.16"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
 backoff = "~2.2.1"
@@ -172,6 +172,7 @@ pyotp = "^2.9.0"
 flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.0.2" }
 flagsmith-common = { git = "https://github.com/Flagsmith/flagsmith-common", tag = "v1.0.0" }
 tzdata = "^2024.1"
+djangorestframework-simplejwt = "^5.3.1"
 
 [tool.poetry.group.auth-controller]
 optional = true
