@@ -5,7 +5,6 @@ import pytest
 from django.conf import settings
 from django.utils import timezone
 from pytest_mock import MockerFixture
-from rest_framework.test import override_settings
 
 from environments.models import Environment
 from organisations.chargebee.metadata import ChargebeeObjMetadata
@@ -192,63 +191,6 @@ def test_organisation_default_subscription_have_one_max_seat(
 
     # Then
     assert subscription.max_seats == 1
-
-
-@override_settings(MAILERLITE_API_KEY="some-test-key")
-def test_updating_subscription_id_calls_mailer_lite_update_organisation_users(
-    mocker, db, organisation, subscription
-):
-    # Given
-    mocked_mailer_lite = mocker.MagicMock()
-    mocker.patch("organisations.models.MailerLite", return_value=mocked_mailer_lite)
-
-    # When
-    subscription.subscription_id = "some-id"
-    subscription.save()
-
-    # Then
-    mocked_mailer_lite.update_organisation_users.assert_called_with(organisation.id)
-
-
-@override_settings(MAILERLITE_API_KEY="some-test-key")
-def test_updating_a_cancelled_subscription_calls_mailer_lite_update_organisation_users(
-    mocker, db, organisation, subscription
-):
-    # Given
-    mocked_mailer_lite = mocker.MagicMock()
-    mocker.patch("organisations.models.MailerLite", return_value=mocked_mailer_lite)
-
-    subscription.cancellation_date = datetime.now()
-    subscription.save()
-
-    # reset the mock to remove the call by saving the subscription above
-    mocked_mailer_lite.reset_mock()
-
-    # When
-    subscription.cancellation_date = None
-    subscription.save()
-
-    # Then
-    mocked_mailer_lite.update_organisation_users.assert_called_with(organisation.id)
-
-
-@override_settings(MAILERLITE_API_KEY="some-test-key")
-def test_cancelling_a_subscription_calls_mailer_lite_update_organisation_users(
-    mocker, db, organisation, subscription
-):
-    # Given
-
-    mocked_mailer_lite = mocker.MagicMock()
-    mocker.patch("organisations.models.MailerLite", return_value=mocked_mailer_lite)
-
-    # When
-    subscription.cancellation_date = datetime.now()
-    subscription.save()
-
-    # Then
-    mocked_mailer_lite.update_organisation_users.assert_called_once_with(
-        organisation.id
-    )
 
 
 def test_organisation_is_paid_returns_false_if_subscription_does_not_exists(db):
