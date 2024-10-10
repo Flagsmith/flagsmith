@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.146.0](https://github.com/Flagsmith/flagsmith/compare/v2.145.0...v2.146.0) (2024-10-10)
+
+
+### Features
+
+* Set base url for segment ([#4684](https://github.com/Flagsmith/flagsmith/issues/4684)) ([4e833b8](https://github.com/Flagsmith/flagsmith/commit/4e833b89e517cdb7870f8369a07f7d8aa9d60cf0))
+
 ## [2.145.0](https://github.com/Flagsmith/flagsmith/compare/v2.144.0...v2.145.0) (2024-10-08)
 
 
