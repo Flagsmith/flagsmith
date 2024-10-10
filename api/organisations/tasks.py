@@ -27,9 +27,6 @@ from organisations.models import (
     Subscription,
 )
 from organisations.subscriptions.constants import FREE_PLAN_ID
-from organisations.subscriptions.subscription_service import (
-    get_subscription_metadata,
-)
 from users.models import FFAdminUser
 
 from .constants import (
@@ -56,7 +53,7 @@ logger = logging.getLogger(__name__)
 def send_org_over_limit_alert(organisation_id: int) -> None:
     organisation = Organisation.objects.get(id=organisation_id)
 
-    subscription_metadata = get_subscription_metadata(organisation)
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
     FFAdminUser.send_alert_to_admin_users(
         subject=ALERT_EMAIL_SUBJECT,
         message=ALERT_EMAIL_MESSAGE

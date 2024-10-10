@@ -157,6 +157,8 @@ def process_subscription(request: Request) -> Response:  # noqa: C901
         "organisation_id": existing_subscription.organisation_id,
         "allowed_projects": subscription_metadata.projects,
         "chargebee_email": subscription_metadata.chargebee_email,
+        "feature_history_visibility_days": subscription_metadata.feature_history_visibility_days,
+        "audit_log_visibility_days": subscription_metadata.audit_log_visibility_days,
     }
 
     if "current_term_end" in subscription:
