@@ -64,7 +64,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
       <CreateRole
         organisationId={role.organisation}
         isEdit
-        role={role}
+        role={role.id}
         onComplete={() => {
           toast('Role Updated')
         }}
