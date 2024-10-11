@@ -58,7 +58,7 @@ jobs:
         with:
           shell: bash
           command: |
-            echo ${{ secrets.GITHUB_TOKEN }} | oras login -u ${{ github.action }} --password-stdin
+            oras login -u ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} ${{ inputs.registry-url }}
             oras pull --no-tty $TRIVY_DB_REPOSITORY_SOURCE
             oras pull --no-tty $TRIVY_JAVA_DB_REPOSITORY_SOURCE
             oras push $TRIVY_DB_REPOSITORY db.tar.gz:$MIME_TYPE+gzip --artifact-type $MIME_TYPE+json
@@ -76,6 +76,7 @@ jobs:
 
     permissions:
       contents: read
+      packages: read
       security-events: write
 
     strategy:
@@ -89,6 +90,14 @@ jobs:
           - flagsmith-private-cloud-api
 
     steps:
+      - name: Checkout trivy.yaml
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            trivy.yaml
+            .github*
+          sparse-checkout-cone-mode: false
+
       - name: Scan ${{ matrix.image-name }}:main image
         id: trivy
         uses: ./.github/actions/trivy-scan-image
