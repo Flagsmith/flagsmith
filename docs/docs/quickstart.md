@@ -69,16 +69,8 @@ The page looks like this:
 For the purposes of this quickstart tutorial, we will import the SDK inline into our web page:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/flagsmith/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flagsmith@7.0.0/index.js"></script>
 ```
-
-:::warning
-
-Please be aware that using the CDN in this way will always give you the latest version of the Flagsmith SDK. We do not
-recommend using this in production, and always recommend pinning to a specific version. See the docs for installing the
-client using a package manager [here](clients/client-side/javascript.md).
-
-:::
 
 ## 3. Connect to the Flagsmith API
 
@@ -135,7 +127,7 @@ Our entire webpage now reads like this:
  <head>
   <meta charset="utf-8" />
   <title>Flagsmith Quickstart Guide</title>
-  <script src="https://cdn.jsdelivr.net/npm/flagsmith/index.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flagsmith@7.0.0/index.js"></script>
   <script>
    flagsmith.init({
     environmentID: 'ZfmJTbLQZrhZVHkVhXbsNi',
