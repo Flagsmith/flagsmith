@@ -174,6 +174,7 @@ DJANGO_DB_CONN_MAX_AGE = None if db_conn_max_age == -1 else db_conn_max_age
 DATABASE_ROUTERS = ["app.routers.PrimaryReplicaRouter"]
 NUM_DB_REPLICAS = 0
 NUM_CROSS_REGION_DB_REPLICAS = 0
+
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
 if "DATABASE_URL" in os.environ:
     DATABASES = {
@@ -404,7 +405,7 @@ LANGUAGE_CODE = "en-us"
 
 if (custom_time_zone := env("TIME_ZONE", default=None)) is not None:
     TIME_ZONE = custom_time_zone
-    DATABASES["TIME_ZONE"] = custom_time_zone
+    DATABASES["default"]["TIME_ZONE"] = custom_time_zone
 else:
     TIME_ZONE = "UTC"
 
