@@ -1,8 +1,11 @@
 import json
 import logging
+import logging.config
 import os
 
 import pytest
+from gunicorn.config import Config
+from pytest_django.fixtures import SettingsWrapper
 
 from util.logging import JsonFormatter
 
@@ -59,3 +62,16 @@ def test_json_formatter__outputs_expected(
             "exc_info": expected_tb_string,
         },
     ]
+
+
+def test_gunicorn_json_capable_logger__non_existent_setting__not_raises(
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    del settings.LOG_FORMAT
+    config = Config()
+
+    # When & Then
+    from util.logging import GunicornJsonCapableLogger
+
+    GunicornJsonCapableLogger(config)
