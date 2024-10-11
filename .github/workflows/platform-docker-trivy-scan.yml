@@ -39,7 +39,7 @@ env:
     ${{ github.event.inputs.trivy-java-db-repository-source || 'ghcr.io/aquasecurity/trivy-java-db:1' }}
   TRIVY_DB_REPOSITORY: ${{ github.event.inputs.trivy-db-repository || 'ghcr.io/flagsmith/trivy-db:latest' }}
   TRIVY_JAVA_DB_REPOSITORY:
-    ${{ github.event.inputs.trivy-java-db-repository || 'ghcr.io/aquasecurity/trivy-java-db:latest' }}
+    ${{ github.event.inputs.trivy-java-db-repository || 'ghcr.io/flagsmith/trivy-java-db:latest' }}
 
 jobs:
   pull-trivy-db:
@@ -58,6 +58,7 @@ jobs:
         with:
           shell: bash
           command: |
+            echo ${{ secrets.GITHUB_TOKEN }} | oras login -u ${{ github.action }} --password-stdin
             oras pull --no-tty $TRIVY_DB_REPOSITORY_SOURCE
             oras pull --no-tty $TRIVY_JAVA_DB_REPOSITORY_SOURCE
             oras push $TRIVY_DB_REPOSITORY db.tar.gz:$MIME_TYPE+gzip --artifact-type $MIME_TYPE+json
