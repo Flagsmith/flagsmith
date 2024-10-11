@@ -58,7 +58,7 @@ jobs:
         with:
           shell: bash
           command: |
-            oras login -u ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
+            oras login -u ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} ${{ inputs.registry-url }}
             oras pull --no-tty $TRIVY_DB_REPOSITORY_SOURCE
             oras pull --no-tty $TRIVY_JAVA_DB_REPOSITORY_SOURCE
             oras push $TRIVY_DB_REPOSITORY db.tar.gz:$MIME_TYPE+gzip --artifact-type $MIME_TYPE+json
