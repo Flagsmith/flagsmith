@@ -964,6 +964,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                           <Button
                                             disabled={!manageUserPermission}
                                             id='add-trait'
+                                            data-test='add-trait'
                                             onClick={createTrait}
                                             size='small'
                                           >
@@ -1064,6 +1065,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                                 disabled={!manageUserPermission}
                                                 className='mb-2'
                                                 id='add-trait'
+                                                data-test='add-trait'
                                                 onClick={createTrait}
                                                 size='small'
                                               >

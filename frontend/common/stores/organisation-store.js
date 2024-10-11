@@ -38,7 +38,11 @@ const controller = {
         )
       : ['Development', 'Production']
     data
-      .post(`${Project.api}projects/`, { name, organisation: store.id })
+      .post(
+        `${Project.api}projects/`,
+        { name, organisation: store.id },
+        E2E ? { 'X-E2E-Test-Auth-Token': Project.e2eToken } : {},
+      )
       .then((project) => {
         Promise.all(
           defaultEnvironmentNames.map((envName) => {

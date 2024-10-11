@@ -120,7 +120,10 @@ const withAdminPermissions = (InnerComponent: any) => {
     }
     if (!permission) {
       return (
-        <div className='my-4 text-center text-muted'>
+        <div
+          className='my-4 text-center text-muted'
+          data-test='no-organisation-permissions'
+        >
           To manage permissions you need to be admin of this {level}.
         </div>
       )
@@ -690,15 +693,16 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                   </Flex>
                   <Switch
                     disabled={saving}
-                    onChange={() => {
-                      toggleAdmin()
-                      setValueChanged(true)
-                    }}
-                    checked={isAdmin}
-                  />
-                </Row>
-              </div>
-            )}
+                    data-test={`admin-switch-${level}`}
+                  onChange={() => {
+                    toggleAdmin()
+                    setValueChanged(true)
+                  }}
+                  checked={isAdmin}
+                />
+              </Row>
+            </div>
+          )}
             <PanelSearch
               filterRow={(item: AvailablePermission, search) => {
                 const name = Format.enumeration.get(item.key).toLowerCase()
@@ -707,26 +711,25 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
               title='Permissions'
               className='no-pad mb-2'
               items={permissions}
-              renderRow={(p: AvailablePermission) => {
-                const levelUpperCase = level.toUpperCase()
-                const disabled =
-                  level !== 'organisation' &&
-                  p.key !== `VIEW_${levelUpperCase}` &&
-                  !hasPermission(`VIEW_${levelUpperCase}`)
-                return (
-                  <Row
-                    key={p.key}
-                    style={admin() ? { opacity: 0.5 } : undefined}
-                    className='list-item list-item-sm px-3'
-                  >
-                    <Row space>
-                      <Flex>
-                        <strong>{Format.enumeration.get(p.key)}</strong>
-                        <div className='list-item-subtitle'>
-                          {p.description}
-                        </div>
-                      </Flex>
-                      <Switch
+              renderRow={(p: AvailablePermission, index: number) => {
+              const levelUpperCase = level.toUpperCase()
+              const disabled =
+                level !== 'organisation' &&
+                p.key !== `VIEW_${levelUpperCase}` &&
+                !hasPermission(`VIEW_${levelUpperCase}`)
+              return (
+                <Row
+                  key={p.key}
+                  style={admin() ? { opacity: 0.5 } : undefined}
+                  className='list-item list-item-sm px-3'
+                >
+                  <Row space>
+                    <Flex>
+                      <strong>{Format.enumeration.get(p.key)}</strong>
+                      <div className='list-item-subtitle'>{p.description}</div>
+                    </Flex>
+                    <Switch
+                      data-test={`permission-switch-${level}-${index}`}
                         onChange={() => {
                           setValueChanged(true)
                           togglePermission(p.key)

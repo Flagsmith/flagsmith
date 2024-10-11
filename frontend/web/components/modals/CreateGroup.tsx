@@ -273,6 +273,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                   <div>
                     <Select
                       disabled={!inactiveUsers?.length}
+                      data-test='add-user-select'
                       components={{
                         Option: (props: any) => {
                           const { email, first_name, id, last_name } =
@@ -415,7 +416,11 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                 <div className='text-right'>
                   {group ? (
                     <>
-                      <Button type='submit' disabled={isSaving || !name}>
+                      <Button
+                        type='submit'
+                        disabled={isSaving || !name}
+                        data-test='update-group-btn'
+                      >
                         {isSaving ? 'Updating' : 'Update Group'}
                       </Button>
                     </>

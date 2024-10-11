@@ -26,6 +26,7 @@ const SettingsButton: FC<SettingsButtonType> = ({
             'cursor-pointer hover-color-primary': hasPlan,
           })}
           onClick={hasPlan ? onClick : undefined}
+          data-test='assigned-users'
         >
           <label
             className={classNames('cols-sm-2 control-label mb-0', {
