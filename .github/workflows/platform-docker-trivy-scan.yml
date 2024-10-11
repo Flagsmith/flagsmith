@@ -76,6 +76,7 @@ jobs:
 
     permissions:
       contents: read
+      packages: read
       security-events: write
 
     strategy:
