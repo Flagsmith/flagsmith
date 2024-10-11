@@ -402,7 +402,11 @@ DJANGO_ADMIN_SSO_OAUTH_CLIENT_SECRET = env.str("OAUTH_CLIENT_SECRET", default=""
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = env("TIME_ZONE", default="UTC")
+if (custom_time_zone := env("TIME_ZONE", default=None)) is not None:
+    TIME_ZONE = custom_time_zone
+    DATABASES["TIME_ZONE"] = custom_time_zone
+else:
+    TIME_ZONE = "UTC"
 
 USE_I18N = True
 
