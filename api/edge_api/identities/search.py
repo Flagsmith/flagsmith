@@ -6,7 +6,7 @@ DASHBOARD_ALIAS_ATTRIBUTE = "dashboard_alias"
 DASHBOARD_ALIAS_SEARCH_PREFIX = f"{DASHBOARD_ALIAS_ATTRIBUTE}:"
 
 IDENTIFIER_INDEX_NAME = "environment_api_key-identifier-index"
-DASHBOARD_ALIAS_INDEX_NAME = "environment_api_key-identifier-index-v2"
+DASHBOARD_ALIAS_INDEX_NAME = "environment_api_key-dashboard_alias-index-v2"
 
 
 class EdgeIdentitySearchType(enum.Enum):
