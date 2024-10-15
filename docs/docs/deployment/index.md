@@ -231,7 +231,8 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["logging"],
   "title": "Datadog",
-  "description": "Sends events to Datadog for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production."
+  "description": "Sends events to Datadog for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.",
+  "project": true
  },
  "dynatrace": {
   "perEnvironment": true,
@@ -254,27 +255,8 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["logging"],
   "title": "Dynatrace",
-  "description": "Sends events to Dynatrace for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production."
- },
- "grafana": {
-  "perEnvironment": false,
-  "image": "/static/images/integrations/grafana.svg",
-  "docs": "https://docs.flagsmith.com/integrations/apm/grafana",
-  "fields": [
-   {
-    "key": "base_url",
-    "label": "Base URL",
-    "default": "https://grafana.com"
-   },
-   {
-    "key": "api_key",
-    "label": "Service account token",
-    "hidden": true
-   }
-  ],
-  "tags": ["logging"],
-  "title": "Grafana",
-  "description": "Receive Flagsmith annotations to your Grafana instance on feature flag and segment changes."
+  "description": "Sends events to Dynatrace for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.",
+  "project": true
  },
  "jira": {
   "perEnvironment": false,
@@ -282,9 +264,20 @@ The list of the flags and remote config we're currently using in production is b
   "docs": "https://docs.flagsmith.com/integrations/project-management/jira",
   "external": true,
   "title": "Jira",
-  "description": "View your Flagsmith Flags inside Jira."
+  "description": "View your Flagsmith Flags inside Jira.",
+  "project": true,
+  "organisation": true
  },
-
+ "github": {
+  "perEnvironment": false,
+  "image": "https://docs.flagsmith.com/img/integrations/github/github-logo.svg",
+  "docs": "https://docs.flagsmith.com/integrations/project-management/github",
+  "external": true,
+  "title": "GitHub",
+  "isExternalInstallation": true,
+  "description": "View your Flagsmith Flags inside your GitHub Issues and Pull Request.",
+  "project": true
+ },
  "slack": {
   "perEnvironment": true,
   "isOauth": true,
@@ -292,7 +285,8 @@ The list of the flags and remote config we're currently using in production is b
   "docs": "https://docs.flagsmith.com/integrations/slack",
   "tags": ["messaging"],
   "title": "Slack",
-  "description": "Sends messages to Slack when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production."
+  "description": "Sends messages to Slack when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.",
+  "project": true
  },
  "amplitude": {
   "perEnvironment": true,
@@ -311,7 +305,8 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["analytics"],
   "title": "Amplitude",
-  "description": "Sends data on what flags served to each identity."
+  "description": "Sends data on what flags served to each identity.",
+  "project": true
  },
  "new-relic": {
   "perEnvironment": false,
@@ -334,7 +329,8 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["analytics"],
   "title": "New Relic",
-  "description": "Sends events to New Relic for when flags are created, updated and removed."
+  "description": "Sends events to New Relic for when flags are created, updated and removed.",
+  "project": true
  },
  "segment": {
   "perEnvironment": true,
@@ -349,7 +345,8 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["analytics"],
   "title": "Segment",
-  "description": "Sends data on what flags served to each identity."
+  "description": "Sends data on what flags served to each identity.",
+  "project": true
  },
  "rudderstack": {
   "perEnvironment": true,
@@ -368,7 +365,8 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["analytics"],
   "title": "Rudderstack",
-  "description": "Sends data on what flags served to each identity."
+  "description": "Sends data on what flags served to each identity.",
+  "project": true
  },
  "webhook": {
   "perEnvironment": true,
@@ -387,7 +385,8 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["analytics"],
   "title": "Webhook",
-  "description": "Sends data on what flags served to each identity to a Webhook Endpoint you provide."
+  "description": "Sends data on what flags served to each identity to a Webhook Endpoint you provide.",
+  "project": true
  },
  "heap": {
   "perEnvironment": true,
@@ -402,7 +401,8 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["analytics"],
   "title": "Heap Analytics",
-  "description": "Sends data on what flags served to each identity."
+  "description": "Sends data on what flags served to each identity.",
+  "project": true
  },
  "mixpanel": {
   "perEnvironment": true,
@@ -417,7 +417,30 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["analytics"],
   "title": "Mixpanel",
-  "description": "Sends data on what flags served to each identity."
+  "description": "Sends data on what flags served to each identity.",
+  "project": true
+ },
+ "grafana": {
+  "perEnvironment": false,
+  "image": "/static/images/integrations/grafana.svg",
+  "docs": "https://docs.flagsmith.com/integrations/apm/grafana",
+  "fields": [
+   {
+    "key": "base_url",
+    "label": "Base URL",
+    "default": "https://grafana.com"
+   },
+   {
+    "key": "api_key",
+    "label": "Service account token",
+    "hidden": true
+   }
+  ],
+  "tags": ["logging"],
+  "title": "Grafana",
+  "description": "Receive Flagsmith annotations to your Grafana instance on feature flag and segment changes.",
+  "project": true,
+  "organisation": true
  }
 }
 ```

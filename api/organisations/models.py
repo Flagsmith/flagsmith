@@ -50,7 +50,6 @@ from organisations.subscriptions.exceptions import (
 )
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
-from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseExportableWebhookModel
 
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
@@ -279,13 +278,6 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
             return
 
         update_hubspot_active_subscription.delay(args=(self.id,))
-
-    @hook(AFTER_SAVE, when="cancellation_date", has_changed=True)
-    @hook(AFTER_SAVE, when="subscription_id", has_changed=True)
-    def update_mailer_lite_subscribers(self):
-        if settings.MAILERLITE_API_KEY:
-            mailer_lite = MailerLite()
-            mailer_lite.update_organisation_users(self.organisation.id)
 
     def save_as_free_subscription(self):
         """

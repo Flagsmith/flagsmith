@@ -1,5 +1,70 @@
 # Changelog
 
+## [2.147.0](https://github.com/Flagsmith/flagsmith/compare/v2.146.0...v2.147.0) (2024-10-15)
+
+
+### Features
+
+* organisation integrations ([#4704](https://github.com/Flagsmith/flagsmith/issues/4704)) ([d76a6f0](https://github.com/Flagsmith/flagsmith/commit/d76a6f05bf958a69c418ec7fd00099f24f312b7b))
+
+
+### Bug Fixes
+
+* Invalid Segment base URLs ([#4727](https://github.com/Flagsmith/flagsmith/issues/4727)) ([8b823a7](https://github.com/Flagsmith/flagsmith/commit/8b823a7e36d14fc092753c37049bcc4151d6f786))
+* subscription state ([#4710](https://github.com/Flagsmith/flagsmith/issues/4710)) ([796fb01](https://github.com/Flagsmith/flagsmith/commit/796fb01ba5ae2af1a4aa39740d751b673cebdfc8))
+
+## [2.146.0](https://github.com/Flagsmith/flagsmith/compare/v2.145.0...v2.146.0) (2024-10-14)
+
+
+### Features
+
+* Hide change email when auth_type !== 'EMAIL' ([#4712](https://github.com/Flagsmith/flagsmith/issues/4712)) ([27109fd](https://github.com/Flagsmith/flagsmith/commit/27109fd06c81be472224bff4e2a94776a6a156ef))
+* Set base url for segment ([#4684](https://github.com/Flagsmith/flagsmith/issues/4684)) ([4e833b8](https://github.com/Flagsmith/flagsmith/commit/4e833b89e517cdb7870f8369a07f7d8aa9d60cf0))
+
+
+### Bug Fixes
+
+* **ci:** Anonymous registry pushes attempted for Tribvy databases ([#4716](https://github.com/Flagsmith/flagsmith/issues/4716)) ([205988d](https://github.com/Flagsmith/flagsmith/commit/205988db1cae9c8e998c62af7dc8097d8076fa68))
+* Remove mailer lite ([#4705](https://github.com/Flagsmith/flagsmith/issues/4705)) ([1c71905](https://github.com/Flagsmith/flagsmith/commit/1c71905fbb34d423420c52715f497f53eb8c0bd2))
+
+## [2.145.0](https://github.com/Flagsmith/flagsmith/compare/v2.144.0...v2.145.0) (2024-10-08)
+
+
+### Features
+
+* Add hubspot ([#4698](https://github.com/Flagsmith/flagsmith/issues/4698)) ([c4faf69](https://github.com/Flagsmith/flagsmith/commit/c4faf69bf968d65e16f0eb9d7f212124e66291d7))
+
+
+### Bug Fixes
+
+* diff check for versioned segment overrides and MV ([#4656](https://github.com/Flagsmith/flagsmith/issues/4656)) ([8d1c22e](https://github.com/Flagsmith/flagsmith/commit/8d1c22e898fceaa4f35c3e0a291283a8b414da07))
+* searching edge identities (dashboard_alias prefix and identifier casing) ([#4700](https://github.com/Flagsmith/flagsmith/issues/4700)) ([8e6b241](https://github.com/Flagsmith/flagsmith/commit/8e6b241fb5543c31bf8e4e8afa374bae200ceadb))
+
+## [2.144.0](https://github.com/Flagsmith/flagsmith/compare/v2.143.0...v2.144.0) (2024-10-03)
+
+
+### Features
+
+* Identity alias ([#4620](https://github.com/Flagsmith/flagsmith/issues/4620)) ([d18049b](https://github.com/Flagsmith/flagsmith/commit/d18049bc3abd6ac49334fb041bc8fca4778ed198))
+* Improve segment override UI ([#4633](https://github.com/Flagsmith/flagsmith/issues/4633)) ([a265d74](https://github.com/Flagsmith/flagsmith/commit/a265d7475aa80d00b10c7a939918741f0c64040e))
+* Introduce the SDK Evaluation Context schema ([#4414](https://github.com/Flagsmith/flagsmith/issues/4414)) ([d6c6004](https://github.com/Flagsmith/flagsmith/commit/d6c6004f0f514ba997c4c46797c58900dfc5a4e1))
+* Manage tags permission ([#4615](https://github.com/Flagsmith/flagsmith/issues/4615)) ([b3da659](https://github.com/Flagsmith/flagsmith/commit/b3da6594e11d453d9dde4a80b443f9c23fe226ab))
+* Support cookie authentication ([#4662](https://github.com/Flagsmith/flagsmith/issues/4662)) ([e65c8da](https://github.com/Flagsmith/flagsmith/commit/e65c8da425dd241d445361482ab3c12c4b97b0a6))
+
+
+### Bug Fixes
+
+* always store and search dashboard alias in lower case ([#4676](https://github.com/Flagsmith/flagsmith/issues/4676)) ([22a3083](https://github.com/Flagsmith/flagsmith/commit/22a30831d0452f94dfd02f1c90e1e22a8c3249f3))
+* **ci:** Rate-limited Trivy database pulls ([#4677](https://github.com/Flagsmith/flagsmith/issues/4677)) ([4bca509](https://github.com/Flagsmith/flagsmith/commit/4bca50909892b5f22b0042d4defa914581c65f02))
+* Clear project org search on close ([#4690](https://github.com/Flagsmith/flagsmith/issues/4690)) ([b4b48b7](https://github.com/Flagsmith/flagsmith/commit/b4b48b75c0006b667edd65422392151689bd3758))
+* encode identity search ([#4691](https://github.com/Flagsmith/flagsmith/issues/4691)) ([0485601](https://github.com/Flagsmith/flagsmith/commit/0485601f5a86359d4cc8c3cb765fce3e76184199))
+* encode search when querying features ([#4689](https://github.com/Flagsmith/flagsmith/issues/4689)) ([7c746f4](https://github.com/Flagsmith/flagsmith/commit/7c746f42f23b6b0cc2013282c05bd2b46ef85b75))
+* ensure MANAGE_TAGS permission allows create tag ([#4678](https://github.com/Flagsmith/flagsmith/issues/4678)) ([58eb9ed](https://github.com/Flagsmith/flagsmith/commit/58eb9ed8140d1a73a4d36c4f297d1f8d3162808a))
+* feature specific segment ([#4682](https://github.com/Flagsmith/flagsmith/issues/4682)) ([a867ed1](https://github.com/Flagsmith/flagsmith/commit/a867ed15204ea75029b65474c8aef41b320ec49d))
+* Handle cancellation date for api usage ([#4672](https://github.com/Flagsmith/flagsmith/issues/4672)) ([17be366](https://github.com/Flagsmith/flagsmith/commit/17be366a02f5f8ac4379f1936e4ab2af7284720c))
+* remove trait ([#4686](https://github.com/Flagsmith/flagsmith/issues/4686)) ([6dc8b7b](https://github.com/Flagsmith/flagsmith/commit/6dc8b7b4a52a32fd7f9de63ab21a129050829f19))
+* update permissions on classes with missing / unclear permissions ([#4667](https://github.com/Flagsmith/flagsmith/issues/4667)) ([19026e4](https://github.com/Flagsmith/flagsmith/commit/19026e4ced349b02f6863f7669bdf29f162141fa))
+
 ## [2.143.0](https://github.com/Flagsmith/flagsmith/compare/v2.142.0...v2.143.0) (2024-09-27)
 
 
