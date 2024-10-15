@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { RouterChildContext } from 'react-router'
 import { Link } from 'react-router-dom'
 import { useHasPermission } from 'common/providers/Permission'
@@ -90,10 +90,18 @@ const UsersPage: FC<UsersPageType> = (props) => {
     },
   )
   const isEdge = Utils.getIsEdge()
-  const [searchType, setSearchType] = useState<'id' | 'alias'>('id')
-
   const showAliases = isEdge && Utils.getFlagsmithHasFeature('identity_aliases')
 
+  const [searchType, setSearchType] = useState<'id' | 'alias'>(
+    showAliases
+      ? localStorage.getItem('identity_search_type') === 'alias'
+        ? 'alias'
+        : 'id' || 'id'
+      : 'id',
+  )
+  useEffect(() => {
+    localStorage.setItem('identity_search_type', searchType)
+  }, [searchType])
   const { data: identities, isLoading } = useGetIdentitiesQuery({
     dashboard_alias: searchType === 'alias' ? search?.toLowerCase() : undefined,
     environmentId: props.match.params.environmentId,

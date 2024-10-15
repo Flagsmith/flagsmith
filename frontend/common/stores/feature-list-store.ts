@@ -117,7 +117,7 @@ const controller = {
           data.get(
             `${
               Project.api
-            }projects/${projectId}/features?environment=${ProjectStore.getEnvironmentIdFromKey(
+            }projects/${projectId}/features/?environment=${ProjectStore.getEnvironmentIdFromKey(
               environmentId,
             )}`,
           ),
