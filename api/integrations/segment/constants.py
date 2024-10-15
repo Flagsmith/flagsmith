@@ -1,2 +1,2 @@
-DEFAULT_BASE_URL = "api.segment.io/"
-DUBLIN_BASE_URL = "events.eu1.segmentapis.com/"
+DEFAULT_BASE_URL = "https://api.segment.io/"
+DUBLIN_BASE_URL = "https://events.eu1.segmentapis.com/"
