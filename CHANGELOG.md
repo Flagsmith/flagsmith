@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.147.0](https://github.com/Flagsmith/flagsmith/compare/v2.146.0...v2.147.0) (2024-10-15)
+
+
+### Features
+
+* organisation integrations ([#4704](https://github.com/Flagsmith/flagsmith/issues/4704)) ([d76a6f0](https://github.com/Flagsmith/flagsmith/commit/d76a6f05bf958a69c418ec7fd00099f24f312b7b))
+
+
+### Bug Fixes
+
+* Invalid Segment base URLs ([#4727](https://github.com/Flagsmith/flagsmith/issues/4727)) ([8b823a7](https://github.com/Flagsmith/flagsmith/commit/8b823a7e36d14fc092753c37049bcc4151d6f786))
+* subscription state ([#4710](https://github.com/Flagsmith/flagsmith/issues/4710)) ([796fb01](https://github.com/Flagsmith/flagsmith/commit/796fb01ba5ae2af1a4aa39740d751b673cebdfc8))
+
 ## [2.146.0](https://github.com/Flagsmith/flagsmith/compare/v2.145.0...v2.146.0) (2024-10-14)
 
 
