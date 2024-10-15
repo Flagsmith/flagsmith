@@ -315,8 +315,8 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
               each(res, (envIntegrations, index) => {
                 if (envIntegrations && envIntegrations.length) {
                   allItems = allItems.concat(
-                    envIntegrations.map((int: any) => ({
-                      ...int,
+                    envIntegrations.map((integration: any) => ({
+                      ...integration,
                       flagsmithEnvironment: (
                         ProjectStore.getEnvs()?.[index] as Environment | null
                       )?.api_key,
