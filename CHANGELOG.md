@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.148.0](https://github.com/Flagsmith/flagsmith/compare/v2.147.0...v2.148.0) (2024-10-15)
+
+
+### Features
+
+* Persist identity search type ([#4729](https://github.com/Flagsmith/flagsmith/issues/4729)) ([08cdf67](https://github.com/Flagsmith/flagsmith/commit/08cdf672cb6b4b7b3a06c988ef085eba50679d88))
+
+
+### Bug Fixes
+
+* add trailing slash to endpoint to retrieve features after feature create ([#4730](https://github.com/Flagsmith/flagsmith/issues/4730)) ([cbd08f3](https://github.com/Flagsmith/flagsmith/commit/cbd08f3e4ef877be135b5fa9a4748f6870ff68dd))
+* Duplicated segment conditions on save ([#4726](https://github.com/Flagsmith/flagsmith/issues/4726)) ([8825971](https://github.com/Flagsmith/flagsmith/commit/8825971afb079dd4e31a657c57af129e27e18a8c))
+
 ## [2.147.0](https://github.com/Flagsmith/flagsmith/compare/v2.146.0...v2.147.0) (2024-10-15)
 
 
