@@ -115,7 +115,7 @@ const controller = {
       })
       .then(() =>
         Promise.all([
-          data.get(`${Project.api}projects/${projectId}/features?environment=${ProjectStore.getEnvironmentIdFromKey(environmentId)}`),
+          data.get(`${Project.api}projects/${projectId}/features/?environment=${ProjectStore.getEnvironmentIdFromKey(environmentId)}`),
         ]).then(([features]) => {
           const environmentFeatures = features.results.map((v) => ({
             ...v.environment_feature_state,
