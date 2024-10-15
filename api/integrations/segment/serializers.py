@@ -15,7 +15,7 @@ class SegmentConfigurationSerializer(BaseEnvironmentIntegrationModelSerializer):
             constants.DUBLIN_BASE_URL,
         ],
         required=False,
-        default="api.segment.io/",
+        default=constants.DEFAULT_BASE_URL,
     )
 
     class Meta:

@@ -10,7 +10,7 @@ from integrations.segment.segment import SegmentWrapper
 def test_segment_initialized_correctly():
     # Given
     api_key = "123key"
-    base_url = "api.segment.io/"
+    base_url = "https://api.segment.io/"
     config = SegmentConfiguration(api_key=api_key, base_url=base_url)
 
     # When
