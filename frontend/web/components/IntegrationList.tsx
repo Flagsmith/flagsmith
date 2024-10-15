@@ -379,21 +379,18 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
               `${Project.api}organisations/${organisationId}/integrations/${id}/${integration.id}/`,
             )
             .then(fetch)
-            .catch(() => {})
         } else if (integration.flagsmithEnvironment) {
           _data
             .delete(
               `${Project.api}environments/${integration.flagsmithEnvironment}/integrations/${id}/${integration.id}/`,
             )
             .then(fetch)
-            .catch(() => {})
         } else {
           _data
             .delete(
               `${Project.api}projects/${props.projectId}/integrations/${id}/${integration.id}/`,
             )
             .then(fetch)
-            .catch(() => {})
         }
       },
       title: 'Delete integration',
