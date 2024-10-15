@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { RouterChildContext } from 'react-router'
 import { Link } from 'react-router-dom'
 import { useHasPermission } from 'common/providers/Permission'
@@ -54,10 +54,18 @@ const UsersPage: FC<UsersPageType> = (props) => {
   )
   const [deleteIdentity] = useDeleteIdentityMutation({})
   const isEdge = Utils.getIsEdge()
-  const [searchType, setSearchType] = useState<'id' | 'alias'>('id')
-
   const showAliases = isEdge && Utils.getFlagsmithHasFeature('identity_aliases')
 
+  const [searchType, setSearchType] = useState<'id' | 'alias'>(
+    showAliases
+      ? localStorage.getItem('identity_search_type') === 'alias'
+        ? 'alias'
+        : 'id' || 'id'
+      : 'id',
+  )
+  useEffect(() => {
+    localStorage.setItem('identity_search_type', searchType)
+  }, [searchType])
   const { data: identities, isLoading } = useGetIdentitiesQuery({
     dashboard_alias: searchType === 'alias' ? search?.toLowerCase() : undefined,
     environmentId: props.match.params.environmentId,
@@ -233,15 +241,14 @@ const UsersPage: FC<UsersPageType> = (props) => {
                         <IdentifierString value={identifier} />
                       </div>
                       {!!showAliases && !!dashboard_alias && (
-                          <div className={'list-item-subtitle mt-1'}>
-                            {dashboard_alias ? `${dashboard_alias}` : ''}
-                          </div>
+                        <div className={'list-item-subtitle mt-1'}>
+                          {dashboard_alias ? `${dashboard_alias}` : ''}
+                        </div>
                       )}
-
                     </div>
                   </Link>
                   <div className='table-column'>
-                  <Button
+                    <Button
                       id='remove-feature'
                       className='btn btn-with-icon'
                       type='button'
